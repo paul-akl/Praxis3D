@@ -77,14 +77,16 @@ protected:
 
 	inline void queueForLoading(ShaderLoader::ShaderProgram &p_shader)
 	{
-		m_loadCommands.emplace_back(p_shader.m_programHandle, 
+		m_loadCommands.emplace_back(p_shader.m_shaderFilename,
+									p_shader.m_programHandle,
 									p_shader.getUniformUpdater(),
 									p_shader.m_shaderSource, 
 									p_shader.m_errorMessages);
 	}
 	inline void queueForLoading(ModelLoader::ModelHandle &p_model)
 	{
-		m_loadCommands.emplace_back(p_model.m_model->m_handle,
+		m_loadCommands.emplace_back(p_model.getFilename(),
+									p_model.m_model->m_handle,
 									p_model.m_model->m_buffers,
 									p_model.m_model->m_numElements,
 									p_model.m_model->m_bufferSize,
@@ -92,12 +94,13 @@ protected:
 	}
 	inline void queueForLoading(TextureLoader2D::Texture2DHandle &p_texture)
 	{
-		m_loadCommands.emplace_back(p_texture.getHandleRef(),
-									 p_texture.getTextureFormat(),
-									 p_texture.getMipmapLevel(),
-									 p_texture.getTextureWidth(),
-									 p_texture.getTextureHeight(),
-									 p_texture.getData());
+		m_loadCommands.emplace_back(p_texture.getFilename(),
+									p_texture.getHandleRef(),
+									p_texture.getTextureFormat(),
+									p_texture.getMipmapLevel(),
+									p_texture.getTextureWidth(),
+									p_texture.getTextureHeight(),
+									p_texture.getData());
 	}
 	inline void queueForLoading(RenderableObjectData &p_objectData)
 	{

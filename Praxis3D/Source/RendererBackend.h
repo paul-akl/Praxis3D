@@ -102,7 +102,7 @@ public:
 	// Used for loading various objects (i.e. textures, models, shader, etc) to GPU
 	struct LoadCommand
 	{
-		LoadCommand(unsigned int &p_handle, 
+		LoadCommand(unsigned int &p_handle,
 					const BufferType p_bufferType,
 					const BufferUsageHint p_bufferUsage,
 					const unsigned int p_bindingIndex,
@@ -112,24 +112,27 @@ public:
 			m_objectType(LoadObject_Buffer),
 			m_objectData(p_bufferType, p_bufferUsage, p_bindingIndex, p_size, p_data) { }
 
-		LoadCommand(unsigned int &p_handle,
+		LoadCommand(const std::string &p_name, 
+					unsigned int &p_handle,
 					unsigned int (&p_buffers)[ModelBuffer_NumAllTypes],
 					const int (&p_numElements)[ModelBuffer_NumAllTypes],
 					const int64_t(&p_size)[ModelBuffer_NumAllTypes],
 					const void **m_data) :
 			m_handle(p_handle),
 			m_objectType(LoadObject_Model),
-			m_objectData(p_buffers, p_numElements, p_size, m_data) { }
+			m_objectData(p_name, p_buffers, p_numElements, p_size, m_data) { }
 
-		LoadCommand(unsigned int &p_handle,
+		LoadCommand(const std::string(&p_names)[ShaderType_NumOfTypes],
+					unsigned int &p_handle,
 					ShaderUniformUpdater &p_uniformUpdater,
 					std::string(&p_source)[ShaderType_NumOfTypes],
 					ErrorMessage(&p_errorMessages)[ShaderType_NumOfTypes]) :
 			m_handle(p_handle),
 			m_objectType(LoadObject_Shader),
-			m_objectData(p_uniformUpdater, p_source, p_errorMessages) { }
+			m_objectData(p_names, p_uniformUpdater, p_source, p_errorMessages) { }
 
-		LoadCommand(unsigned int &p_handle,
+		LoadCommand(const std::string &p_name, 
+					unsigned int &p_handle,
 					const TextureFormat p_texFormat,
 					const int p_mipmapLevel,
 					const unsigned int p_textureWidth,
@@ -137,7 +140,7 @@ public:
 					const void *p_data) :
 			m_handle(p_handle),
 			m_objectType(LoadObject_Texture2D),
-			m_objectData(p_texFormat, p_mipmapLevel, p_textureWidth, p_textureHeight, p_data) { }
+			m_objectData(p_name, p_texFormat, p_mipmapLevel, p_textureWidth, p_textureHeight, p_data) { }
 
 		struct BufferLoadData
 		{
@@ -160,10 +163,12 @@ public:
 		};
 		struct ModelLoadData
 		{
-			ModelLoadData(unsigned int(&p_buffers)[ModelBuffer_NumAllTypes],
+			ModelLoadData(const std::string &p_name,
+						  unsigned int(&p_buffers)[ModelBuffer_NumAllTypes],
 						  const int(&p_numElements)[ModelBuffer_NumAllTypes],
 						  const int64_t(&p_size)[ModelBuffer_NumAllTypes],
 						  const void **m_data) :
+				m_name(p_name),
 				m_data(m_data),
 				m_buffers(p_buffers)
 			{
@@ -171,6 +176,7 @@ public:
 				std::copy(std::begin(p_size), std::end(p_size), std::begin(m_size));
 			}
 
+			const std::string &m_name;
 			unsigned int (&m_buffers)[ModelBuffer_NumAllTypes];
 			int m_numElements[ModelBuffer_NumAllTypes];
 			int64_t m_size[ModelBuffer_NumAllTypes];
@@ -178,9 +184,11 @@ public:
 		};
 		struct ShaderLoadData
 		{
-			ShaderLoadData(ShaderUniformUpdater &p_uniformUpdater,
+			ShaderLoadData(const std::string(&p_names)[ShaderType_NumOfTypes],
+						   ShaderUniformUpdater &p_uniformUpdater,
 						   std::string(&p_source)[ShaderType_NumOfTypes],
-						   ErrorMessage(&p_errorMessages)[ShaderType_NumOfTypes]) :
+						   ErrorMessage(&p_errorMessages)[ShaderType_NumOfTypes]):
+				m_names(p_names),
 				m_uniformUpdater(p_uniformUpdater),
 				m_errorMessages(p_errorMessages),
 				m_source(p_source) { }
@@ -188,20 +196,24 @@ public:
 			ShaderUniformUpdater &m_uniformUpdater;
 			std::string(&m_source)[ShaderType_NumOfTypes];
 			ErrorMessage (&m_errorMessages)[ShaderType_NumOfTypes];
+			const std::string (&m_names)[ShaderType_NumOfTypes];
 		};
 		struct Texture2DLoadData
 		{
-			Texture2DLoadData(const TextureFormat p_texFormat,
+			Texture2DLoadData(const std::string &p_name,
+							  const TextureFormat p_texFormat,
 							  const int p_mipmapLevel,
 							  const unsigned int p_textureWidth,
 							  const unsigned int p_textureHeight,
 							  const void *p_data) :
+				m_name(p_name),
 				m_texFormat(p_texFormat),
 				m_mipmapLevel(p_mipmapLevel),
 				m_textureWidth(p_textureWidth),
 				m_textureHeight(p_textureHeight),
 				m_data(p_data) { }
 
+			const std::string &m_name;
 			const TextureFormat m_texFormat;
 			const unsigned int m_textureWidth;
 			const unsigned int m_textureHeight;
@@ -218,23 +230,26 @@ public:
 					   const void *p_data) :
 				m_bufferData(p_bufferType, p_bufferUsage, p_bindingIndex, p_size, p_data) { }
 
-			ObjectData(unsigned int(&p_buffers)[ModelBuffer_NumAllTypes],
+			ObjectData(const std::string &p_name, 
+					   unsigned int(&p_buffers)[ModelBuffer_NumAllTypes],
 					   const int(&p_numElements)[ModelBuffer_NumAllTypes],
 					   const int64_t(&p_size)[ModelBuffer_NumAllTypes],
 					   const void **m_data) :
-				m_modelData(p_buffers, p_numElements, p_size, m_data) { }
+				m_modelData(p_name, p_buffers, p_numElements, p_size, m_data) { }
 
-			ObjectData(ShaderUniformUpdater &p_uniformUpdater,
+			ObjectData(const std::string(&p_names)[ShaderType_NumOfTypes],
+					   ShaderUniformUpdater &p_uniformUpdater,
 					   std::string(&p_source)[ShaderType_NumOfTypes],
 					   ErrorMessage(&p_errorMessages)[ShaderType_NumOfTypes]) :
-				m_shaderData(p_uniformUpdater, p_source, p_errorMessages) { }
+				m_shaderData(p_names, p_uniformUpdater, p_source, p_errorMessages) { }
 
-			ObjectData(const TextureFormat p_texFormat,
+			ObjectData(const std::string &p_name, 
+					   const TextureFormat p_texFormat,
 					   const int p_mipmapLevel,
 					   const unsigned int p_textureWidth,
 					   const unsigned int p_textureHeight,
 					   const void *p_data) :
-				m_tex2DData(p_texFormat, p_mipmapLevel, p_textureWidth, p_textureHeight, p_data) { }
+				m_tex2DData(p_name, p_texFormat, p_mipmapLevel, p_textureWidth, p_textureHeight, p_data) { }
 
 			BufferLoadData m_bufferData;
 			ModelLoadData m_modelData;
@@ -475,8 +490,14 @@ protected:
 					GLenum glError = glGetError();
 					if(glError != GL_NO_ERROR)
 					{
+						// Log an error with a shader info log
 						p_command.m_objectData.m_shaderData.m_errorMessages[i].m_errorCode = ErrorCode::Shader_creation_failed;
 						p_command.m_objectData.m_shaderData.m_errorMessages[i].m_errorSource = ErrorSource::Source_ShaderLoader;
+
+						// Log an error with the error handler
+						ErrHandlerLoc::get().log(ErrorCode::Shader_creation_failed,
+												 ErrorSource::Source_ShaderLoader,
+												 "\"" + p_command.m_objectData.m_shaderData.m_names[i] + "\":\n" + Utilities::toString(glError));
 					}
 					else
 					{
@@ -511,7 +532,9 @@ protected:
 							p_command.m_objectData.m_shaderData.m_errorMessages[i].m_errorMessage = errorMessageTemp;
 
 							// Log an error with the error handler
-							ErrHandlerLoc::get().log(ErrorCode::Shader_compile_failed, ErrorSource::Source_ShaderLoader, errorMessageTemp);
+							ErrHandlerLoc::get().log(ErrorCode::Shader_compile_failed, 
+													 ErrorSource::Source_ShaderLoader, 
+													 "\"" + p_command.m_objectData.m_shaderData.m_names[i] + "\":\n" + errorMessageTemp);
 
 							// Reset the shader handle
 							shaderHandles[i] = 0;
@@ -532,6 +555,11 @@ protected:
 								p_command.m_objectData.m_shaderData.m_errorMessages[i].m_errorCode = ErrorCode::Shader_attach_failed;
 								p_command.m_objectData.m_shaderData.m_errorMessages[i].m_errorSource = ErrorSource::Source_ShaderLoader;
 								p_command.m_objectData.m_shaderData.m_errorMessages[i].m_errorMessage = Utilities::toString(glError);
+
+								// Log an error with the error handler
+								ErrHandlerLoc::get().log(ErrorCode::Shader_compile_failed,
+														 ErrorSource::Source_ShaderLoader,
+														 "\"" + p_command.m_objectData.m_shaderData.m_names[i] + "\":\n" + Utilities::toString(glError));
 							}
 						}
 					}

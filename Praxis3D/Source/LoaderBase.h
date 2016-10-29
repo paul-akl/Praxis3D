@@ -60,7 +60,7 @@ public:
 		inline bool operator==(std::string p_string) { return m_filename == p_string; }
 
 		inline ErrorCode unloadMemory()		 { return static_cast<TObject*>(this)->unloadMemory();		}
-		inline ErrorCode unloadVideoMemory() { return static_cast<TObject*>(this)->unloadVideoMemory(); }
+		inline ErrorCode unloadVideoMemory() { return ErrorCode::Success; /*return static_cast<TObject*>(this)->unloadVideoMemory();*/ }
 
 	protected:
 		bool m_loadedToMemory;
