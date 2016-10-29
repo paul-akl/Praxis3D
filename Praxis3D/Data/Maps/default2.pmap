@@ -1,0 +1,295 @@
+{
+	"LoadInBackground": "true",
+	"Systems":
+	{
+		"Graphics":
+		{
+			"Scene":
+			{
+				"ModelPoolSize" : "10",
+				"ShaderPoolSize" : "10"
+			},
+			"Objects":
+			[
+				{
+					"Type": "ModelObject",
+					"Name": "Test1",
+					"OffsetPosition": "0.0, 0.0, 0.0",
+					"OffsetRotation": "0.0, 0.0, 0.0",
+					"Scale": "5000.0, 5000.0, 5000.0",
+					"Lighting": "false",
+					"Models":
+					{
+						"Filename": "sphere_inverted.obj"
+					},
+					"Materials":
+					{
+						"Diffuse":
+						[
+							{
+								"Filename": "gRbWE9O.jpg",
+								"Index": "1"
+							}
+						]
+//					},
+//					"Shaders":
+//					{
+//						"FragmentShader": "test2.pfrag",
+//						"VertexShader": "test2.pvert"
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Water1",
+					"Position": "0.0, -50.0, 0.0",
+					"Rotation": "0.0, 0.0, 0.0",
+					"Scale": "1000.0, 1000.0, 1000.0",
+					"Lighting": "false",
+					"Models":
+					{
+						"Filename": "terrain_plane.obj"
+					},
+					"Materials":
+					{
+						"Diffuse":
+						[
+							{
+								"Filename": "diffuse_and_heightmap_8bit_small.tif",
+								"Index": "1"
+							}
+						]
+					},
+					"Shaders":
+					{
+						"FragmentShader": "terrain3.frag",
+//						"GeometryShader": "terrain2.geom",
+						"TessControlShader": "terrain3.tesc",
+						"TessEvaluationShader": "terrain3.tese",
+						"VertexShader": "terrain3.vert"
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Dumpster 1",
+					"Position": "10.0, 0.0, 0.0",
+					"Rotation": "-90.0, 0.0, 90.0",
+					"Scale": "5.0, 5.0, 5.0",
+					"Models":
+					{
+						"Filename": "dumpster.3ds"
+					},
+					"Materials":
+					{
+						"Diffuse":
+						[
+							{
+								"Filename": "Dumpster_DIFF_2048.tga",
+								"Index": "0"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Test Object 1",
+					"Position": "2.0, 0.0, 0.0",
+					"Models":
+					{
+						"Filename": "Nanosuit.obj"
+					},
+					"Materials":
+					{
+						
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Test Object 2",
+					"Rotation": "0.0, 150.0, 0.0",
+					"Models":
+					{
+						"Filename": "Nanosuit.obj"
+					},
+					"Materials":
+					{
+						
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Quake Map",
+					"Position": "0.0, 0.0, 0.0",
+					"Rotation": "-90.0, 0.0, 0.0",
+					"Scale": "1.0, 1.0, 1.0",
+					"Models":
+					{
+						"Filename": "lostworld.pk3"
+					},
+					"Materials":
+					{
+						"Diffuse":
+						[
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "7"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "8"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "47"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "54"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "70"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "71"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "87"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "91"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "105"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "106"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "107"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "116"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "118"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "119"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "120"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "121"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "122"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": ""
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "136"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "137"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "138"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "139"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "140"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "147"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "174"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "175"
+							},
+							{
+								"Filename": "gkc18b.jpg",
+								"Index": "176"
+							}
+						],
+						"Default":
+						{
+							"Diffuse":
+							{
+								"Filename": "dark_block.jpg"
+							}
+						}
+					}
+				},
+				{
+					"Type": "Camera",
+					"Name": "Camera 1"
+				}
+			]
+		},
+		"Scripting":
+		{
+			"Objects":
+			[
+				{
+					"Type": "FreeCamera",
+					"Name": "Free Camera 1",
+					"Position": "0.0, 20.0, 0.0",
+					"Keybindings":
+					{
+						"ForwardKey": "26",
+						"BackwardKey": "22",
+						"LeftStrafeKey": "4",
+						"RightStrafeKey": "7"
+					}
+				},
+				{
+					"Type": "DebugUIScript",
+					"Name": "Debug UI Script 1",
+					"Keybindings":
+					{
+						"DebugCaptureMouseKey": "67",
+						"DebugVertSyncKey": "68"
+					}
+				}
+			]
+		}
+	},
+	"ObjectLinks":
+	[
+		{
+			"Subject": "Free Camera 1",
+			"Observer": "Camera 1"
+		},
+		{
+			"Subject": "Free Camera 1",
+			"Observer": "Test1"
+		}
+	]
+}

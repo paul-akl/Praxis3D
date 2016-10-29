@@ -1,0 +1,488 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Error Handler">
+      <UniqueIdentifier>{527078f0-5ddf-457f-905e-60c0a061b178}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Loaders">
+      <UniqueIdentifier>{1793a391-f01d-489e-ab8b-623f7c11dddb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer">
+      <UniqueIdentifier>{762a3635-e177-4908-92fc-b59df1af9011}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripting">
+      <UniqueIdentifier>{97d3a3e7-453c-44bf-96b4-1a5e3262ebd8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Service Locators">
+      <UniqueIdentifier>{159a020c-bb51-4396-9c31-ea49e1945fb7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{9a5d20b8-3826-46ae-80c7-b4f0d92833e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Task Systems">
+      <UniqueIdentifier>{7884a775-a801-4368-a5d1-bc971d20cf84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Error Handler\Header Files">
+      <UniqueIdentifier>{c0cc073d-92a1-41e3-a19d-778b74c18b23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Loaders\Header Files">
+      <UniqueIdentifier>{6c84e2b4-5138-47eb-a22b-d57c2bfd80bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Task Systems\Header Files">
+      <UniqueIdentifier>{23e5cba8-50f2-4da2-b633-d0c2daa80d1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Header Files">
+      <UniqueIdentifier>{b65b6534-32ee-424a-8221-626611204e2a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Service Locators\Header Files">
+      <UniqueIdentifier>{72ba355d-6075-41b9-9410-3082f9dc3a07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripting\Header Files">
+      <UniqueIdentifier>{a8026cf1-b125-4d8c-a821-461e3847ae72}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Header Files">
+      <UniqueIdentifier>{fdd2e934-f479-42e8-b9aa-6ea62965fb30}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Error Handler\Source Files">
+      <UniqueIdentifier>{4ed0debc-38a6-4bb1-90c8-dd0ac7d45a45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Loaders\Source Files">
+      <UniqueIdentifier>{02fb5669-6977-4d02-a630-0a9832c16488}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Task Systems\Source Files">
+      <UniqueIdentifier>{0d4807fe-34bd-4d3f-874a-e1f5aff44855}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Source Files">
+      <UniqueIdentifier>{4e0fc49e-14f8-4628-a6af-b89316867b8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Service Locators\Source Files">
+      <UniqueIdentifier>{23f31a49-9c98-421b-a92f-02c761c14bbd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripting\Source Files">
+      <UniqueIdentifier>{99cc98b8-4791-476a-b5d9-b9145cfe5dfe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Source Files">
+      <UniqueIdentifier>{6cdba2cf-f62f-4908-b999-e66e29fcfd7b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripting\Objects">
+      <UniqueIdentifier>{27407ea5-ae43-4495-8fb6-7632dbe46b52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Objects">
+      <UniqueIdentifier>{95899e83-b73c-4db4-9e86-a89e400af84b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripting\Objects\Header Files">
+      <UniqueIdentifier>{099a1c14-0bf1-4151-8504-d93efa2ef3d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripting\Objects\Source Files">
+      <UniqueIdentifier>{fd6863a9-2ba9-4867-95a0-07ec73e64e1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Objects\Header Files">
+      <UniqueIdentifier>{f910eb77-1789-4857-8cab-1c8aa943f607}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Objects\Source Files">
+      <UniqueIdentifier>{d068d5ec-015b-49b9-9ab9-d916853c91ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Shader Files">
+      <UniqueIdentifier>{8a7430b9-2eb2-4ed9-95e7-4dc4562e0cf8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine States">
+      <UniqueIdentifier>{2ede773b-3125-41f3-9d9b-995f909d6c4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine States\Header Files">
+      <UniqueIdentifier>{b0f033ce-97f6-4177-9397-f71c16a814bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine States\Source Files">
+      <UniqueIdentifier>{819ed32a-501c-459f-a502-656acde391a4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ErrorCodes.cpp">
+      <Filter>Error Handler\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ErrorHandler.cpp">
+      <Filter>Error Handler\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ConfigLoader.cpp">
+      <Filter>Loaders\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ModelLoader.cpp">
+      <Filter>Loaders\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PropertyLoader.cpp">
+      <Filter>Loaders\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\SceneLoader.cpp">
+      <Filter>Loaders\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ShaderLoader.cpp">
+      <Filter>Loaders\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TextureLoader.cpp">
+      <Filter>Loaders\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\SpinWait.cpp">
+      <Filter>Task Systems\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TaskManager.cpp">
+      <Filter>Task Systems\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TaskScheduler.cpp">
+      <Filter>Task Systems\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ClockLocator.cpp">
+      <Filter>Service Locators\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ErrorHandlerLocator.cpp">
+      <Filter>Service Locators\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Loaders.cpp">
+      <Filter>Service Locators\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TaskManagerLocator.cpp">
+      <Filter>Service Locators\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\WindowLocator.cpp">
+      <Filter>Service Locators\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ScriptingScene.cpp">
+      <Filter>Scripting\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ScriptingSystem.cpp">
+      <Filter>Scripting\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ScriptingTask.cpp">
+      <Filter>Scripting\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\DeferredRenderer.cpp">
+      <Filter>Renderer\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GeometryBuffer.cpp">
+      <Filter>Renderer\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer.cpp">
+      <Filter>Renderer\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RendererScene.cpp">
+      <Filter>Renderer\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RendererSystem.cpp">
+      <Filter>Renderer\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderTask.cpp">
+      <Filter>Renderer\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ShaderUniformUpdater.cpp">
+      <Filter>Shaders\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ChangeController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Config.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\KeyCommand.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Math.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NullSystemObjects.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ObserverBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PropertySet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scancodes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ServiceBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Universal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PlayState.cpp">
+      <Filter>Engine States\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\WorldEditState.cpp">
+      <Filter>Engine States\Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\ErrorCodes.h">
+      <Filter>Error Handler\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ErrorHandler.h">
+      <Filter>Error Handler\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ConfigLoader.h">
+      <Filter>Loaders\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\LoaderBase.h">
+      <Filter>Loaders\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ModelLoader.h">
+      <Filter>Loaders\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PropertyLoader.h">
+      <Filter>Loaders\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\SceneLoader.h">
+      <Filter>Loaders\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShaderLoader.h">
+      <Filter>Loaders\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TextureLoader.h">
+      <Filter>Loaders\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\SpinWait.h">
+      <Filter>Task Systems\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TaskManager.h">
+      <Filter>Task Systems\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TaskScheduler.h">
+      <Filter>Task Systems\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ClockLocator.h">
+      <Filter>Service Locators\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ErrorHandlerLocator.h">
+      <Filter>Service Locators\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Loaders.h">
+      <Filter>Service Locators\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TaskManagerLocator.h">
+      <Filter>Service Locators\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\WindowLocator.h">
+      <Filter>Service Locators\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ScriptingScene.h">
+      <Filter>Scripting\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ScriptingSystem.h">
+      <Filter>Scripting\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ScriptingTask.h">
+      <Filter>Scripting\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BaseScriptObject.h">
+      <Filter>Scripting\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\CameraScript.h">
+      <Filter>Scripting\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DebugUIScript.h">
+      <Filter>Scripting\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DeferredRenderer.h">
+      <Filter>Renderer\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Framebuffer.h">
+      <Filter>Renderer\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GeometryBuffer.h">
+      <Filter>Renderer\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer.h">
+      <Filter>Renderer\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RendererScene.h">
+      <Filter>Renderer\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RendererSystem.h">
+      <Filter>Renderer\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderTask.h">
+      <Filter>Renderer\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderTaskBase.h">
+      <Filter>Renderer\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BaseGraphicsObjects.h">
+      <Filter>Renderer\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShaderUniforms.h">
+      <Filter>Shaders\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShaderUniformUpdater.h">
+      <Filter>Shaders\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ChangeController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Clock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\EngineDefinitions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\EnumFactory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\KeyCommand.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Math.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NullSystemObjects.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ObjectPool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ObserverBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PropertySet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scancodes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ServiceBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\System.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Universal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ModelGraphicsObjects.h">
+      <Filter>Renderer\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\CameraGraphicsObject.h">
+      <Filter>Renderer\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShaderGraphicsObjects.h">
+      <Filter>Renderer\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\LightingGraphicsObjects.h">
+      <Filter>Renderer\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GraphicsDataSets.h">
+      <Filter>Renderer\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DebugMoveScript.h">
+      <Filter>Scripting\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\EngineState.h">
+      <Filter>Engine States\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PlayState.h">
+      <Filter>Engine States\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\WorldEditState.h">
+      <Filter>Engine States\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\WorldEditObject.h">
+      <Filter>Scripting\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\SolarTimeScript.h">
+      <Filter>Scripting\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Data\Shaders\geomBillboard.pfrag">
+      <Filter>Shaders\Shader Files</Filter>
+    </None>
+    <None Include="Data\Shaders\geomBillboard.pgeom">
+      <Filter>Shaders\Shader Files</Filter>
+    </None>
+    <None Include="Data\Shaders\geomBillboard.pvert">
+      <Filter>Shaders\Shader Files</Filter>
+    </None>
+    <None Include="Data\Shaders\geometryPass.pfrag">
+      <Filter>Shaders\Shader Files</Filter>
+    </None>
+    <None Include="Data\Shaders\geometryPass.pvert">
+      <Filter>Shaders\Shader Files</Filter>
+    </None>
+    <None Include="Data\Shaders\lightPass.pfrag">
+      <Filter>Shaders\Shader Files</Filter>
+    </None>
+    <None Include="Data\Shaders\lightPass.pvert">
+      <Filter>Shaders\Shader Files</Filter>
+    </None>
+    <None Include="Data\Shaders\test.pfrag">
+      <Filter>Shaders\Shader Files</Filter>
+    </None>
+    <None Include="Data\Shaders\test.pvert">
+      <Filter>Shaders\Shader Files</Filter>
+    </None>
+    <None Include="Data\Shaders\test2.pfrag">
+      <Filter>Shaders\Shader Files</Filter>
+    </None>
+    <None Include="Data\Shaders\test2.pvert">
+      <Filter>Shaders\Shader Files</Filter>
+    </None>
+    <None Include="Data\Shaders\test3.pfrag">
+      <Filter>Shaders\Shader Files</Filter>
+    </None>
+    <None Include="Data\Shaders\test3.pvert">
+      <Filter>Shaders\Shader Files</Filter>
+    </None>
+    <None Include="Data\config.ini" />
+    <None Include="Data\error-strings-eng.data" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Praxis3D.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\praxis icon.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,279 @@
+{
+	"LoadInBackground": "true",
+	"Systems":
+	{
+		"Graphics":
+		{
+			"Scene":
+			{
+				"ModelPoolSize" : "10",
+				"PointLightPoolSize" : "10",
+				"ShaderPoolSize" : "10",
+				"SpotLightPoolSize" : "10"
+			},
+			"Objects":
+			[
+				{
+					"Type": "ModelObject",
+					"Name": "Test1",
+					"OffsetPosition": "0.0, 0.0, 0.0",
+					"OffsetRotation": "0.0, 0.0, 0.0",
+					"Scale": "30000.0, 30000.0, 30000.0",
+					"Lighting": "false",
+					"Models":
+					{
+						"Filename": "sphere_inverted.obj"
+					},
+					"Materials":
+					{
+						"Diffuse":
+						[
+							{
+								"Filename": "gRbWE9O.jpg",
+								"Index": "1"
+							}
+						]
+					},
+					"Shaders":
+					{
+						"FragmentShader": "skybox.frag",
+						"VertexShader": "skybox.vert"
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Terrain1",
+					"OffsetPosition": "0.0, -100.0, 0.0",
+					"OffsetRotation": "0.0, 0.0, 0.0",
+					"Scale": "200.0, 200.0, 200.0",
+					"Lighting": "true",
+					"Models":
+					{
+						"Filename": "terrain_plane2.obj"
+					},
+					"Materials":
+					{
+						"Diffuse":
+						[
+							{
+								"Filename": "height\diffuse 2.jpg",
+								"Index": "1"
+							}
+						],
+						"Normal":
+						[
+							{
+								"Filename": "height\normal 2.jpg",
+								"Index": "1"
+							}
+						],
+						"Height":
+						[
+							{
+								"Filename": "height\h2.tif",
+								"Index": "1"
+							}
+						]
+					},
+					"Shaders":
+					{
+						"FragmentShader": "terrain3.frag",
+						"TessControlShader": "terrain4.tesc",
+						"TessEvaluationShader": "terrain4.tese",
+						"VertexShader": "terrain3.vert"
+					}
+				},
+				{
+					"Type": "ModelObject 2",
+					"Name": "Terrain Test 1",
+					"Position": "0.0, -100.0, 0.0",
+					"Rotation": "-90.0, 0.0, 0.0",
+					"Scale": "1.0, 1.0, 1.0",
+					"Models":
+					{
+						"Filename": "terrain1.3ds"
+					},
+					"Materials":
+					{
+						"Diffuse":
+						[
+							{
+								"Filename": "terrain1_TX.jpg",
+								"Index": "0"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Dumpster 1",
+					"Position": "10.0, 0.0, 0.0",
+					"Rotation": "-90.0, 0.0, 90.0",
+					"Scale": "5.0, 5.0, 5.0",
+					"Models":
+					{
+						"Filename": "dumpster.3ds"
+					},
+					"Materials":
+					{
+						"Diffuse":
+						[
+							{
+								"Filename": "Dumpster_DIFF_2048.tga",
+								"Index": "0"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Test Object 1",
+					"Position": "2.0, 0.0, 0.0",
+					"Models":
+					{
+						"Filename": "Nanosuit.obj"
+					},
+					"Materials":
+					{
+						
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Test Object 2",
+					"Rotation": "0.0, 150.0, 0.0",
+					"Models":
+					{
+						"Filename": "Nanosuit.obj"
+					},
+					"Materials":
+					{
+						
+					}
+				},
+				{
+					"Type": "Camera",
+					"Name": "Camera 1"
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "light 1",
+					"Position": "0.0, -20.0, 0.0",
+					"Models":
+					{
+						"Filename": "sphere_inverted.obj"
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "light 2",
+					"Position": "10.0, 1.0, 10.0",
+					"Models":
+					{
+						"Filename": "sphere_inverted.obj"
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "light 3",
+					"Position": "-10.0, -1.0, -10.0",
+					"Models":
+					{
+						"Filename": "sphere_inverted.obj"
+					}
+				},
+				{
+					"Type": "DirectionalLight",
+					"Name": "DirectionalLight 1",
+					"Color": "1.0, 1.0, 1.0",
+					"Direction": "0.0, 1.0, 00.0",
+					"Intensity": "0.0"
+				},
+				{
+					"Type": "PointLight",
+					"Name": "PointLight 1",
+					"Color": "1.0, 1.0, 1.0",
+					"Position": "0.0, -20.0, 0.0",
+					"Intensity": "100.0"
+				},
+				{
+					"Type": "PointLight",
+					"Name": "PointLight 2",
+					"Color": "1.0, 1.0, 1.0",
+					"Position": "10.0, 1.0, 10.0",
+					"Intensity": "100.0"
+				},
+				{
+					"Type": "PointLight",
+					"Name": "PointLight 3",
+					"Color": "1.0, 1.0, 1.0",
+					"Position": "-10.0, -1.0, -10.0",
+					"Intensity": "100.0"
+				},
+				{
+					"Type": "SpotLight",
+					"Name": "SpotLight 1",
+					"Color": "1.0, 0.0, 0.0",
+					"Position": "0.0, 1.0, 0.0",
+					"Direction": "0.0, 1.0, 0.0"
+				},
+				{
+					"Type": "SpotLight",
+					"Name": "SpotLight 2",
+					"Color": "0.0, 1.0, 0.0",
+					"Position": "0.0, 1.0, 0.0",
+					"Direction": "0.0, 1.0, 0.0"
+				},
+				{
+					"Type": "SpotLight",
+					"Name": "SpotLight 3",
+					"Color": "0.0, 0.0, 1.0",
+					"Position": "10.0, 0.0, 0.0",
+					"Direction": "0.0, 1.0, 0.0"
+				}
+			]
+		},
+		"Scripting":
+		{
+			"Objects":
+			[
+				{
+					"Type": "FreeCamera",
+					"Name": "Free Camera 1",
+					"Position": "0.0, 20.0, 0.0",
+					"Keybindings":
+					{
+						"ForwardKey": "26",
+						"BackwardKey": "22",
+						"LeftStrafeKey": "4",
+						"RightStrafeKey": "7"
+					}
+				},
+				{
+					"Type": "DebugUIScript",
+					"Name": "Debug UI Script 1",
+					"Keybindings":
+					{
+						"DebugCaptureMouseKey": "67",
+						"DebugVertSyncKey": "68"
+					}
+				}
+			]
+		}
+	},
+	"ObjectLinks":
+	[
+		{
+			"Subject": "Free Camera 1",
+			"Observer": "Camera 1"
+		},
+		{
+			"Subject": "Free Camera 1",
+			"Observer": "Test1"
+//		},
+//		{
+//			"Subject": "Free Camera 1",
+//			"Observer": "Terrain1"
+		}
+	]
+}

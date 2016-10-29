@@ -1,0 +1,94 @@
+#pragma once
+
+#include "EnumFactory.h"
+
+/*   ___________________________________________________________________________________________________
+	|										|					 |										|
+	|										|	 ERROR TYPES:	 |										|
+	|										|____________________|										|
+	|																									|
+	| Info		 - not actually an error, conveys a piece of information.								|
+	|				User should not be notified unless in debugging.									|
+	|---------------------------------------------------------------------------------------------------|
+	| Warning	 - low priority error, silent and easily coped with.									|
+	|				User should not be notified unless in debugging.									|
+	|---------------------------------------------------------------------------------------------------|
+	| Error		 - high priority error, can only be coped with by removing some functionality.			|
+	|				User should be notified or asked if to continue by an error window.					|
+	|---------------------------------------------------------------------------------------------------|
+	| FatalError - top priority error, cannot be dealt with, thus the whole engine must be shut down.	|
+	|				User should be notified with an error code.											|
+	|___________________________________________________________________________________________________|
+*/
+
+#define ERROR_TYPES(Code) \
+    Code(Info,) \
+    Code(Warning,) \
+    Code(Error,) \
+	Code(FatalError, ) \
+	Code(NumberOfErrorTypes, )
+DECLARE_ENUM(ErrorType, ERROR_TYPES)
+
+#define ERROR_CODES(Code) \
+	/* General errors */ \
+    Code(Undefined,) \
+    Code(Success,) \
+    Code(Failure,) \
+	/* General engine errors */\
+    Code(Destroy_obj_not_found,) \
+    Code(Glew_failed,) \
+    Code(Ifstream_failed,) \
+	/* Config Loader */\
+	/* Clock errors */ \
+	Code(Clock_QueryFrequency,) \
+	/* Frame-buffer errors */ \
+	Code(Framebuffer_failed,) \
+	Code(Geometrybuffer_failed,) \
+	/* Model loader errors */ \
+	Code(AssimpScene_failed,) \
+	/* Object pool errors */ \
+	Code(ObjectPool_full,) \
+	/* Property loader errors */ \
+	Code(Property_no_filename,) \
+	/* Shader loader errors */ \
+	Code(Shader_attach_failed,) \
+	Code(Shader_compile_failed,) \
+	Code(Shader_creation_failed,) \
+	Code(Shader_link_failed,) \
+	Code(Shader_loading_failed,) \
+	/* Texture loader errors */ \
+	Code(Texture_not_found,) \
+	Code(Texture_empty,) \
+	/* Window errors */ \
+	Code(Invalid_num_vid_displays,) \
+	Code(SDL_video_init_failed,) \
+	Code(SDL_vsync_failed,) \
+	Code(Window_creation_failed,) \
+	Code(NumberOfErrorCodes,) \
+	Code(CachedError,)
+DECLARE_ENUM(ErrorCode, ERROR_CODES)
+
+#define ERROR_SOURCE(Code) \
+    Code(Source_Unknown,) \
+    Code(Source_General,) \
+    Code(Source_Engine,) \
+    Code(Source_Renderer,) \
+    Code(Source_Scripting,) \
+    Code(Source_Config,) \
+    Code(Source_ConfigLoader,) \
+    Code(Source_TextureLoader,) \
+    Code(Source_ModelLoader,) \
+    Code(Source_ShaderLoader,) \
+    Code(Source_FileLoader,) \
+    Code(Source_SceneLoader,) \
+    Code(Source_GeometryBuffer,) \
+    Code(Source_GraphicsObject,) \
+    Code(Source_ScriptObject,) \
+    Code(Source_PlayerObject,) \
+    Code(Source_GameObject,) \
+    Code(Source_SkyObject,) \
+    Code(Source_LightObject,) \
+    Code(Source_PropertyLoader,) \
+    Code(Source_Window,) \
+    Code(Source_NumberOfErrorSources,) 
+DECLARE_ENUM(ErrorSource, ERROR_SOURCE)

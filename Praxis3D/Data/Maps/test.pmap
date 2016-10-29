@@ -1,0 +1,287 @@
+{
+	"LoadInBackground": "1",
+	"Systems": 
+	{
+		"Graphics": 
+		{
+			"Scene": 
+			{
+				"ModelPoolSize": "15",
+				"PointLightPoolSize": "10",
+				"SpotLightPoolSize": "10"
+			},
+			"Objects": 
+			{
+				{
+					"Type": "ModelObject",
+					"Name": "DirectionalLight 1",
+					"Color": "1, 1, 1",
+					"Direction": "0.847546, 0.375277, 0.375277",
+					"Intensity": "1.1f"
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Wooden Cabin 1",
+					"Position": "0.0, 0.0, 0.0",
+					"Rotation": "0.0, 0.0, 0.0",
+					"Scale": "0.5, 0.5, 0.5",
+					"Lighting": "1",
+					"AlphaThreshold": "0f",
+					"Models": 
+					{
+						"Filename": "WoodenCabinObj.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						{
+							[
+								{
+									"Filename": "Textures\WoodCabinDif.jpg",
+									"Index": "1"
+								}
+							]
+						}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Wooden Cabin 1",
+					"Position": "15, -14, 140",
+					"Rotation": "0, 180, 0",
+					"Scale": "0.5, 0.5, 0.5",
+					"Lighting": "1",
+					"AlphaThreshold": "0f",
+					"Models": 
+					{
+						"Filename": "WoodenCabinObj.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						{
+							[
+								{
+									"Filename": "Textures\WoodCabinDif.jpg",
+									"Index": "1"
+								}
+							]
+						},
+						"Normal": 
+						{
+							[
+								{
+									"Filename": "Textures\WoodCabinNM.jpg",
+									"Index": "1"
+								}
+							]
+						},
+						"Emissive": 
+						{
+						},
+						"Specular": 
+						{
+						},
+						"Gloss": 
+						{
+						},
+						"Height": 
+						{
+							[
+								{
+									"Filename": "WoodCabinNM.jpg",
+									"Index": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Wooden Cabin 3",
+					"Position": "0, 1, 0",
+					"Rotation": "0, 180, 0",
+					"Scale": "1, 1, 1",
+					"Lighting": "1",
+					"AlphaThreshold": "0f",
+					"Models": 
+					{
+						"Filename": "House_06.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						{
+							[
+								{
+									"Filename": "maps\corrugated_01_d.tga",
+									"Index": "1"
+								},
+								{
+									"Filename": "maps\stucco_03_d.tga",
+									"Index": "2"
+								},
+								{
+									"Filename": "maps\concrete_01_d.tga",
+									"Index": "3"
+								},
+								{
+									"Filename": "maps\wood_01_d.tga",
+									"Index": "4"
+								},
+								{
+									"Filename": "maps\brick_01_d.tga",
+									"Index": "5"
+								},
+								{
+									"Filename": "maps\plywood_01_d.tga",
+									"Index": "6"
+								}
+							]
+						},
+						"Normal": 
+						{
+							[
+								{
+									"Filename": "maps\corrugated_01_n.tga, maps\corrugated_01_n.tga",
+									"Index": "0"
+								},
+								{
+									"Filename": "maps\corrugated_01_n.tga, maps\corrugated_01_n.tga",
+									"Index": "1"
+								},
+								{
+									"Filename": "maps\concrete_01_n.tga",
+									"Index": "2"
+								},
+								{
+									"Filename": "maps\wood_01_n.tga, maps\concrete_01_n.tga",
+									"Index": "3"
+								},
+								{
+									"Filename": "maps\brick_01_n.tga, maps\wood_01_n.tga, maps\concrete_01_n.tga",
+									"Index": "4"
+								},
+								{
+									"Filename": "maps\plywood_01_n.tga, maps\brick_01_n.tga, maps\wood_01_n.tga, maps\concrete_01_n.tga",
+									"Index": "5"
+								}
+							]
+						},
+						"Emissive": 
+						{
+						},
+						"Specular": 
+						{
+						},
+						"Gloss": 
+						{
+						},
+						"Height": 
+						{
+							[
+								{
+									"Filename": "maps\corrugated_01_n.tga, maps\corrugated_01_n.tga",
+									"Index": "1"
+								},
+								{
+									"Filename": "maps\concrete_01_n.tga",
+									"Index": "3"
+								},
+								{
+									"Filename": "maps\wood_01_n.tga, maps\concrete_01_n.tga",
+									"Index": "4"
+								},
+								{
+									"Filename": "maps\brick_01_n.tga, maps\wood_01_n.tga, maps\concrete_01_n.tga",
+									"Index": "5"
+								},
+								{
+									"Filename": "maps\plywood_01_n.tga, maps\brick_01_n.tga, maps\wood_01_n.tga, maps\concrete_01_n.tga",
+									"Index": "6"
+								}
+							]
+						}
+					}
+				}
+			}
+		},
+		"Scripting": 
+		{
+			"Scene": 
+			{
+			},
+			"Objects": 
+			{
+				[
+					{
+						"Type": "ModelObject",
+						"Name": "Free Camera 1",
+						"Position": "0, 20, 0",
+						"Speed": "5f",
+						"SprintSpeed": "50f",
+						"Keybindings": 
+						{
+							"ForwardKey": "26",
+							"BackwardKey": "22",
+							"LeftStrafeKey": "4",
+							"RightStrafeKey": "7",
+							"SprintKey": "225"
+						}
+					},
+					{
+						"Type": "ModelObject",
+						"Name": "Debug UI Script 1",
+						"Keybindings": 
+						{
+							"DebugCaptureMouseKey": "67",
+							"DebugVertSyncKey": "68",
+							"CloseKey": "41"
+						}
+					},
+					{
+						"Type": "ModelObject",
+						"Name": "World Edit Script 1",
+						"Speed": "2.5f",
+						"SprintSpeed": "25f",
+						"Keybindings": 
+						{
+							"ForwardKey": "82",
+							"BackwardKey": "81",
+							"UpKey": "75",
+							"DownKey": "78",
+							"LeftKey": "80",
+							"RightKey": "79",
+							"NextKey": "55",
+							"PreviousKey": "54",
+							"SprintKey": "225"
+						}
+					},
+					{
+						"Type": "ModelObject",
+						"Name": "Solar Time Script 1",
+						"Hours": "12",
+						"Seconds": "0f",
+						"Latitude": "54f",
+						"Longitude": "54f",
+						"DayOfYear": "1",
+						"TimeMultiplier": "1000f",
+						"OffsetPosition": "25f"
+					}
+				]
+			}
+		}
+	},
+	"ObjectLinks": 
+	{
+		[
+			{
+				"Subject": "Free Camera 1",
+				"Observer": "Camera 1"
+			},
+			{
+				"Subject": "Solar Time Script 1",
+				"Observer": "DirectionalLight 1"
+			}
+		]
+	}
+}

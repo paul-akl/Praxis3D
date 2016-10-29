@@ -1,0 +1,1062 @@
+{
+	"LoadInBackground": "1",
+	"Systems": 
+	{
+		"Graphics": 
+		{
+			"Scene": 
+			{
+				"ModelPoolSize": "15",
+				"PointLightPoolSize": "10",
+				"SpotLightPoolSize": "10"
+			},
+			"Objects": 
+			[
+				{
+					"Type": "Camera",
+					"Name": "Camera 1"
+				},
+				{
+					"Type": "DirectionalLight",
+					"Name": "DirectionalLight 1",
+					"Color": "1.0f, 1.0f, 1.0f",
+					"Direction": "0.0233232f, -0.706914f, -0.706914f",
+					"Intensity": "1.1f"
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Terrain Mesh 1",
+					"Position": "20.0f, 0.0f, 10.0f",
+					"Rotation": "0.0f, 0.0f, 0.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "1.0f, 1.0f, 1.0f",
+					"Lighting": "1",
+					"AlphaThreshold": "0.1f",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "House3.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						[
+							{
+								"Filename": "Woodx_tiled_difuse.png",
+								"Index": "1"
+							},
+							{
+								"Filename": "Bricks2_1_difuse.png",
+								"Index": "2"
+							},
+							{
+								"Filename": "KamennyDom1_Okenice_difuse.png",
+								"Index": "3"
+							},
+							{
+								"Filename": "WoodT_difuse.png",
+								"Index": "4"
+							},
+							{
+								"Filename": "KamennyDom2_PrednaStenaV2_difuse.png",
+								"Index": "5"
+							},
+							{
+								"Filename": "KamennyDom2_PrednaStenaV4_difuse.png",
+								"Index": "6"
+							},
+							{
+								"Filename": "SpodokDomu_difuse.png",
+								"Index": "7"
+							},
+							{
+								"Filename": "Floor_difuse.png",
+								"Index": "8"
+							},
+							{
+								"Filename": "Roof_difuse.png",
+								"Index": "9"
+							},
+							{
+								"Filename": "KamennyDom2_VrchTrojuholnik_difuse.png",
+								"Index": "10"
+							},
+							{
+								"Filename": "Doors1_difuse.png",
+								"Index": "11"
+							}
+						],
+						"Normal": 
+						[
+							{
+								"Filename": "Woodx_tiled_normal.png",
+								"Index": "1"
+							},
+							{
+								"Filename": "Bricks2_1_normal.png",
+								"Index": "2"
+							},
+							{
+								"Filename": "KamennyDom1_Okenice_normal.png",
+								"Index": "3"
+							},
+							{
+								"Filename": "WoodT_normal.png",
+								"Index": "4"
+							},
+							{
+								"Filename": "KamennyDom2_PrednaStenaV2_normal.png",
+								"Index": "5"
+							},
+							{
+								"Filename": "KamennyDom2_PrednaStenaV4_normal.png",
+								"Index": "6"
+							},
+							{
+								"Filename": "SpodokDomu_normal.png",
+								"Index": "7"
+							},
+							{
+								"Filename": "Floor_normal.png",
+								"Index": "8"
+							},
+							{
+								"Filename": "Roof_normal.png",
+								"Index": "9"
+							},
+							{
+								"Filename": "KamennyDom2_VrchTrojuholnik_normal.png",
+								"Index": "10"
+							},
+							{
+								"Filename": "Doors1_normal.png",
+								"Index": "11"
+							}
+						],
+						"Emissive": 
+						{
+						},
+						"Specular": 
+						{
+						},
+						"Gloss": 
+						{
+						},
+						"Height": 
+						[
+							{
+								"Filename": "Woodx_tiled_height.png",
+								"Index": "1"
+							},
+							{
+								"Filename": "Bricks2_1_height.png",
+								"Index": "2"
+							},
+							{
+								"Filename": "KamennyDom1_Okenice_height.png",
+								"Index": "3"
+							},
+							{
+								"Filename": "WoodT_height.png",
+								"Index": "4"
+							},
+							{
+								"Filename": "KamennyDom2_PrednaStenaV2_height.png",
+								"Index": "5"
+							},
+							{
+								"Filename": "KamennyDom2_PrednaStenaV4_height.png",
+								"Index": "6"
+							},
+							{
+								"Filename": "SpodokDomu_height.png",
+								"Index": "7"
+							},
+							{
+								"Filename": "Floor_height.png",
+								"Index": "8"
+							},
+							{
+								"Filename": "Roof_height.png",
+								"Index": "9"
+							},
+							{
+								"Filename": "KamennyDom2_VrchTrojuholnik_height.png",
+								"Index": "10"
+							},
+							{
+								"Filename": "Doors1_height.png",
+								"Index": "11"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Wooden Cabin 1",
+					"Position": "-27.8774f, 0.728829f, 43.7131f",
+					"Rotation": "0.0f, 180.0f, 0.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "0.5f, 0.5f, 0.5f",
+					"Lighting": "1",
+					"AlphaThreshold": "0.0f",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "WoodenCabinObj.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						[
+							{
+								"Filename": "Textures\WoodCabinDif.jpg",
+								"Index": "1"
+							}
+						],
+						"Normal": 
+						[
+							{
+								"Filename": "Textures\WoodCabinNM.jpg",
+								"Index": "1"
+							}
+						],
+						"Emissive": 
+						{
+						},
+						"Specular": 
+						{
+						},
+						"Gloss": 
+						{
+						},
+						"Height": 
+						[
+							{
+								"Filename": "WoodCabinNM.jpg",
+								"Index": "1"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Tree 1",
+					"Position": "-11.6021f, 0.704742f, -4.05555f",
+					"Rotation": "0.0f, 0.0f, 0.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "1.0f, 1.0f, 1.0f",
+					"Lighting": "1",
+					"AlphaThreshold": "0.1f",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "palm tree 1.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						[
+							{
+								"Filename": "maps\Palm trees diffuse.tga",
+								"Index": "1"
+							}
+						],
+						"Normal": 
+						[
+							{
+								"Filename": "maps\Palm trees normal.tga",
+								"Index": "1"
+							}
+						],
+						"Emissive": 
+						{
+						},
+						"Specular": 
+						{
+						},
+						"Gloss": 
+						{
+						},
+						"Height": 
+						[
+							{
+								"Filename": "null",
+								"Index": "1"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Dumpster 1",
+					"Position": "15.0617f, 0.0f, -6.05827f",
+					"Rotation": "-90.0f, 0.0f, 90.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "5.0f, 5.0f, 5.0f",
+					"Lighting": "1",
+					"AlphaThreshold": "0.0f",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "dumpster.3ds"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						[
+							{
+								"Filename": "Dumpster_DIFF_2048.tga",
+								"Index": "0"
+							}
+						],
+						"Normal": 
+						[
+							{
+								"Filename": "Dumpster_NRM_2048.tga",
+								"Index": "0"
+							}
+						],
+						"Emissive": 
+						{
+						},
+						"Specular": 
+						{
+						},
+						"Gloss": 
+						{
+						},
+						"Height": 
+						{
+						}
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Test Object 1",
+					"Position": "2.0f, 0.0f, 0.0f",
+					"Rotation": "0.0f, 0.0f, 0.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "1.0f, 1.0f, 1.0f",
+					"Lighting": "1",
+					"AlphaThreshold": "0.0f",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "Nanosuit.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						[
+							{
+								"Filename": "nanosuit_arms_d.tga",
+								"Index": "1"
+							},
+							{
+								"Filename": "nanosuit_hands_d.tga",
+								"Index": "2"
+							},
+							{
+								"Filename": "nanosuit_helmet_d.tga",
+								"Index": "3"
+							},
+							{
+								"Filename": "nanosuit_helmet_pt_d.tga",
+								"Index": "4"
+							},
+							{
+								"Filename": "nanosuit_legs_d.tga",
+								"Index": "5"
+							},
+							{
+								"Filename": "nanosuit_torso_d.tga",
+								"Index": "6"
+							},
+							{
+								"Filename": "nanosuit_visor_d.tga",
+								"Index": "7"
+							}
+						],
+						"Normal": 
+						[
+							{
+								"Filename": "nanosuit_arms_n.tga",
+								"Index": "1"
+							},
+							{
+								"Filename": "nanosuit_hands_n.tga",
+								"Index": "2"
+							},
+							{
+								"Filename": "nanosuit_helmet_n.tga",
+								"Index": "3"
+							},
+							{
+								"Filename": "nanosuit_helmet_pt_d.tga",
+								"Index": "4"
+							},
+							{
+								"Filename": "nanosuit_legs_n.tga",
+								"Index": "5"
+							},
+							{
+								"Filename": "nanosuit_torso_n.tga",
+								"Index": "6"
+							},
+							{
+								"Filename": "nanosuit_visor_n.tga",
+								"Index": "7"
+							}
+						],
+						"Emissive": 
+						{
+						},
+						"Specular": 
+						{
+						},
+						"Gloss": 
+						{
+						},
+						"Height": 
+						[
+							{
+								"Filename": "nanosuit_arms_n.tga",
+								"Index": "1"
+							},
+							{
+								"Filename": "nanosuit_hands_n.tga",
+								"Index": "2"
+							},
+							{
+								"Filename": "nanosuit_helmet_n.tga",
+								"Index": "3"
+							},
+							{
+								"Filename": "nanosuit_legs_n.tga",
+								"Index": "5"
+							},
+							{
+								"Filename": "nanosuit_torso_n.tga",
+								"Index": "6"
+							},
+							{
+								"Filename": "nanosuit_visor_n.tga",
+								"Index": "7"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Test Object 2",
+					"Position": "0.0f, 0.0f, 0.0f",
+					"Rotation": "0.0f, 150.0f, 0.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "1.0f, 1.0f, 1.0f",
+					"Lighting": "1",
+					"AlphaThreshold": "0.0f",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "Nanosuit.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						[
+							{
+								"Filename": "nanosuit_arms_d.tga",
+								"Index": "1"
+							},
+							{
+								"Filename": "nanosuit_hands_d.tga",
+								"Index": "2"
+							},
+							{
+								"Filename": "nanosuit_helmet_d.tga",
+								"Index": "3"
+							},
+							{
+								"Filename": "nanosuit_helmet_pt_d.tga",
+								"Index": "4"
+							},
+							{
+								"Filename": "nanosuit_legs_d.tga",
+								"Index": "5"
+							},
+							{
+								"Filename": "nanosuit_torso_d.tga",
+								"Index": "6"
+							},
+							{
+								"Filename": "nanosuit_visor_d.tga",
+								"Index": "7"
+							}
+						],
+						"Normal": 
+						[
+							{
+								"Filename": "nanosuit_arms_n.tga",
+								"Index": "1"
+							},
+							{
+								"Filename": "nanosuit_hands_n.tga",
+								"Index": "2"
+							},
+							{
+								"Filename": "nanosuit_helmet_n.tga",
+								"Index": "3"
+							},
+							{
+								"Filename": "nanosuit_helmet_pt_d.tga",
+								"Index": "4"
+							},
+							{
+								"Filename": "nanosuit_legs_n.tga",
+								"Index": "5"
+							},
+							{
+								"Filename": "nanosuit_torso_n.tga",
+								"Index": "6"
+							},
+							{
+								"Filename": "nanosuit_visor_n.tga",
+								"Index": "7"
+							}
+						],
+						"Emissive": 
+						{
+						},
+						"Specular": 
+						{
+						},
+						"Gloss": 
+						{
+						},
+						"Height": 
+						[
+							{
+								"Filename": "nanosuit_arms_n.tga",
+								"Index": "1"
+							},
+							{
+								"Filename": "nanosuit_hands_n.tga",
+								"Index": "2"
+							},
+							{
+								"Filename": "nanosuit_helmet_n.tga",
+								"Index": "3"
+							},
+							{
+								"Filename": "nanosuit_legs_n.tga",
+								"Index": "5"
+							},
+							{
+								"Filename": "nanosuit_torso_n.tga",
+								"Index": "6"
+							},
+							{
+								"Filename": "nanosuit_visor_n.tga",
+								"Index": "7"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "light 1",
+					"Position": "14.8806f, 10.0f, -13.3629f",
+					"Rotation": "0.0f, 0.0f, 0.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "1.0f, 1.0f, 1.0f",
+					"Lighting": "1",
+					"AlphaThreshold": "0.0f",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "sphere_inverted.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						{
+						},
+						"Normal": 
+						{
+						},
+						"Emissive": 
+						{
+						},
+						"Specular": 
+						{
+						},
+						"Gloss": 
+						{
+						},
+						"Height": 
+						{
+						}
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "light 2",
+					"Position": "9.12898f, 7.98369f, 9.59357f",
+					"Rotation": "0.0f, 0.0f, 0.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "1.0f, 1.0f, 1.0f",
+					"Lighting": "1",
+					"AlphaThreshold": "0.0f",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "sphere_inverted.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						{
+						},
+						"Normal": 
+						{
+						},
+						"Emissive": 
+						{
+						},
+						"Specular": 
+						{
+						},
+						"Gloss": 
+						{
+						},
+						"Height": 
+						{
+						}
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "light 3",
+					"Position": "-10.0f, 3.0f, -10.0f",
+					"Rotation": "0.0f, 0.0f, 0.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "1.0f, 1.0f, 1.0f",
+					"Lighting": "1",
+					"AlphaThreshold": "0.0f",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "sphere_inverted.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						{
+						},
+						"Normal": 
+						{
+						},
+						"Emissive": 
+						{
+						},
+						"Specular": 
+						{
+						},
+						"Gloss": 
+						{
+						},
+						"Height": 
+						{
+						}
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "light 4",
+					"Position": "60.0f, 3.0f, 60.0f",
+					"Rotation": "0.0f, 0.0f, 0.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "1.0f, 1.0f, 1.0f",
+					"Lighting": "1",
+					"AlphaThreshold": "0.0f",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "sphere_inverted.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						{
+						},
+						"Normal": 
+						{
+						},
+						"Emissive": 
+						{
+						},
+						"Specular": 
+						{
+						},
+						"Gloss": 
+						{
+						},
+						"Height": 
+						{
+						}
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "light 5",
+					"Position": "-40.0f, 3.0f, -40.0f",
+					"Rotation": "0.0f, 0.0f, 0.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "1.0f, 1.0f, 1.0f",
+					"Lighting": "1",
+					"AlphaThreshold": "0.0f",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "sphere_inverted.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						{
+						},
+						"Normal": 
+						{
+						},
+						"Emissive": 
+						{
+						},
+						"Specular": 
+						{
+						},
+						"Gloss": 
+						{
+						},
+						"Height": 
+						{
+						}
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "light 6",
+					"Position": "-20.0f, 3.0f, -20.0f",
+					"Rotation": "0.0f, 0.0f, 0.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "1.0f, 1.0f, 1.0f",
+					"Lighting": "1",
+					"AlphaThreshold": "0.0f",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "sphere_inverted.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						{
+						},
+						"Normal": 
+						{
+						},
+						"Emissive": 
+						{
+						},
+						"Specular": 
+						{
+						},
+						"Gloss": 
+						{
+						},
+						"Height": 
+						{
+						}
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "sun model 1",
+					"Position": "-0.583079f, 17.6729f, 17.6729f",
+					"Rotation": "0.0233232f, -0.706914f, -0.706914f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "1.0f, 1.0f, 1.0f",
+					"Lighting": "1",
+					"AlphaThreshold": "0.0f",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "sphere_inverted.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						{
+						},
+						"Normal": 
+						{
+						},
+						"Emissive": 
+						{
+						},
+						"Specular": 
+						{
+						},
+						"Gloss": 
+						{
+						},
+						"Height": 
+						{
+						}
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Skybox 1",
+					"Position": "2.27048f, 15.3453f, -12.2715f",
+					"Rotation": "0.0f, -0.588181f, 18.5954f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "30000.0f, 30000.0f, 30000.0f",
+					"Lighting": "0",
+					"AlphaThreshold": "0.0f",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "sphere_inverted.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						[
+							{
+								"Filename": "gRbWE9O.jpg",
+								"Index": "1"
+							}
+						],
+						"Normal": 
+						{
+						},
+						"Emissive": 
+						{
+						},
+						"Specular": 
+						{
+						},
+						"Gloss": 
+						{
+						},
+						"Height": 
+						{
+						}
+					},
+					"Shaders": 
+					{
+						"FragmentShader": "skybox.frag",
+						"VertexShader": "skybox.vert"
+					}
+				},
+				{
+					"Type": "PointLight",
+					"Name": "PointLight 1",
+					"Attenuation": "0.0f, 0.0f, 1.0f",
+					"Color": "1.0f, 1.0f, 1.0f",
+					"Intensity": "100.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"Position": "14.8806f, 10.0f, -13.3629f"
+				},
+				{
+					"Type": "PointLight",
+					"Name": "PointLight 2",
+					"Attenuation": "0.0f, 0.0f, 1.0f",
+					"Color": "1.0f, 1.0f, 1.0f",
+					"Intensity": "100.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"Position": "9.12898f, 7.98369f, 9.59357f"
+				},
+				{
+					"Type": "PointLight",
+					"Name": "PointLight 3",
+					"Attenuation": "0.0f, 0.0f, 1.0f",
+					"Color": "1.0f, 1.0f, 1.0f",
+					"Intensity": "100.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"Position": "-10.0f, 3.0f, -10.0f"
+				},
+				{
+					"Type": "SpotLight",
+					"Name": "SpotLight 1",
+					"Attenuation": "0.0f, 0.0f, 1.0f",
+					"CutoffAngle": "0.999848f",
+					"Color": "1.0f, 1.0f, 1.0f",
+					"Direction": "-1.0f, 0.0f, 0.0f",
+					"Intensity": "100.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Position": "60.0f, 3.0f, 60.0f"
+				},
+				{
+					"Type": "SpotLight",
+					"Name": "SpotLight 2",
+					"Attenuation": "0.0f, 0.0f, 1.0f",
+					"CutoffAngle": "0.999848f",
+					"Color": "0.0f, 1.0f, 0.0f",
+					"Direction": "0.577353f, 0.577173f, 0.577525f",
+					"Intensity": "100.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Position": "-40.0f, 3.0f, -40.0f"
+				},
+				{
+					"Type": "SpotLight",
+					"Name": "SpotLight 3",
+					"Attenuation": "0.0f, 0.0f, 1.0f",
+					"CutoffAngle": "0.999848f",
+					"Color": "1.0f, 1.0f, 1.0f",
+					"Direction": "0.707107f, 0.0f, 0.707107f",
+					"Intensity": "100.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Position": "-20.0f, 3.0f, -20.0f"
+				}
+			]
+		},
+		"Scripting": 
+		{
+			"Scene": 
+			{
+			},
+			"Objects": 
+			[
+				{
+					"Type": "FreeCamera",
+					"Name": "Free Camera 1",
+					"Position": "2.27755f, 15.364f, -12.2987f",
+					"Angle": "18.5954f, -0.588181f",
+					"Speed": "5.0f",
+					"SprintSpeed": "50.0f",
+					"Keybindings": 
+					{
+						"ForwardKey": "26",
+						"BackwardKey": "22",
+						"LeftStrafeKey": "4",
+						"RightStrafeKey": "7",
+						"SprintKey": "225"
+					}
+				},
+				{
+					"Type": "DebugUIScript",
+					"Name": "Debug UI Script 1",
+					"Keybindings": 
+					{
+						"DebugCaptureMouseKey": "67",
+						"DebugVertSyncKey": "68",
+						"CloseKey": "41"
+					}
+				},
+				{
+					"Type": "DebugMoveScript",
+					"Name": "Debug Move Script 1",
+					"Position": "0.0f, 10.0f, 0.0f",
+					"Radius": "20.0f",
+					"Rotation": "0.0f, 1.0f, 0.0f",
+					"Speed": "20.0f"
+				},
+				{
+					"Type": "WorldEditScript",
+					"Name": "World Edit Script 1",
+					"Speed": "2.5f",
+					"SprintSpeed": "25.0f",
+					"Keybindings": 
+					{
+						"ForwardKey": "96",
+						"BackwardKey": "90",
+						"UpKey": "95",
+						"DownKey": "89",
+						"LeftKey": "92",
+						"RightKey": "94",
+						"NextKey": "85",
+						"PreviousKey": "84",
+						"SprintKey": "225"
+					}
+				},
+				{
+					"Type": "SolarTimeScript",
+					"Name": "Solar Time Script 1",
+					"Hours": "12",
+					"Seconds": "0.0f",
+					"Latitude": "54.0f",
+					"Longitude": "54.0f",
+					"DayOfYear": "1",
+					"TimeMultiplier": "1000.0f",
+					"OffsetPosition": "25.0f"
+				}
+			]
+		}
+	},
+	"ObjectLinks": 
+	[
+		{
+			"Subject": "Free Camera 1",
+			"Observer": "Camera 1"
+		},
+		{
+			"Subject": "Free Camera 1",
+			"Observer": "Skybox 1"
+		},
+		{
+			"Subject": "Solar Time Script 1",
+			"Observer": "DirectionalLight 1"
+		},
+		{
+			"Subject": "Solar Time Script 1",
+			"Observer": "sun model 1"
+		},
+		{
+			"Subject": "Debug Move Script 1",
+			"Observer": "PointLight 1"
+		},
+		{
+			"Subject": "Debug Move Script 1",
+			"Observer": "light 1"
+		},
+		{
+			"Subject": "PointLight 2",
+			"Observer": "light 2"
+		},
+		{
+			"Subject": "PointLight 3",
+			"Observer": "light 3"
+		},
+		{
+			"Subject": "SpotLight 1",
+			"Observer": "light 4"
+		},
+		{
+			"Subject": "SpotLight 2",
+			"Observer": "light 5"
+		},
+		{
+			"Subject": "SpotLight 3",
+			"Observer": "light 6"
+		}
+	]
+}

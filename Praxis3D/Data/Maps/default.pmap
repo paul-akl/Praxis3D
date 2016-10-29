@@ -1,0 +1,616 @@
+{
+	"LoadInBackground": "true",
+	"Systems":
+	{
+		"Graphics":
+		{
+			"Scene":
+			{
+				"ModelPoolSize" : "15",
+				"PointLightPoolSize" : "10",
+				"ShaderPoolSize" : "10",
+				"SpotLightPoolSize" : "10"
+			},
+			"Objects":
+			[
+				{
+					"Type": "ModelObject",
+					"Name": "Skybox 1",
+					"OffsetPosition": "0.0, 0.0, 0.0",
+					"OffsetRotation": "0.0, 0.0, 0.0",
+					"Scale": "30000.0, 30000.0, 30000.0",
+					"Lighting": "false",
+					"Models":
+					{
+						"Filename": "sphere_inverted.obj"
+					},
+					"Materials":
+					{
+						"Diffuse":
+						[
+							{
+								"Filename": "gRbWE9O.jpg",
+								"Index": "1"
+							}
+						]
+					},
+					"Shaders":
+					{
+						"FragmentShader": "skybox.frag",
+						"VertexShader": "skybox.vert"
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Terrain1",
+					"Position": "0.0, -1.0, 0.0",
+					"OffsetPosition": "0.0, 0.0, 0.0",
+					"OffsetRotation": "0.0, 0.0, 0.0",
+					"Scale": "400.0, 400.0, 400.0",
+					"Lighting": "false",
+					"Models":
+					{
+						"Filename": "terrain_plane2.obj"
+					},
+					"Materials":
+					{
+						"Diffuse":
+						[
+							{
+								"Filename": "height\terrain1_d_low.png",
+								"Index": "1"
+							}
+						],
+						"Normal":
+						[
+							{
+								"Filename": "height\terrain1_n_low.jpg",
+								"Index": "1"
+							}
+						],
+						"Height":
+						[
+							{
+								"Filename": "height\terrain1_h_low.jpg",
+								"Index": "1"
+							}
+						]
+					},
+					"Shaders":
+					{
+						"FragmentShader": "terrain3.frag",
+						"GeometryShader": "terrain3.geom",
+						"TessControlShader": "terrain4.tesc",
+						"TessEvaluationShader": "terrain4.tese",
+						"VertexShader": "terrain3.vert"
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Terrain Mesh 1",
+					"Position": "185.0, 105.0, 240.0",
+					"Rotation": "0.0, 0.0, 0.0",
+					"Scale": "1.0, 1.0, 1.0",
+					"Models":
+					{
+						"Filename": "Terrain_5_cut.obj"
+					},
+					"Materials":
+					{
+						"Diffuse":
+						[
+							{
+								"Filename": "Textures\Color.tif",
+								"Index": "1"
+							}
+						],
+						"Normal":
+						[
+							{
+								"Filename": "Textures\Normal.tif",
+								"Index": "1"
+							}
+						],
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Wooden Cabin 1",
+					"Position": "15.0, -14.0, 140.0",
+					"Rotation": "0.0, 180.0, 0.0",
+					"Scale": "0.5, 0.5, 0.5",
+					"Models":
+					{
+						"Filename": "WoodenCabinObj.obj"
+					},
+					"Materials":
+					{
+						"Diffuse":
+						[
+							{
+								"Filename": "Textures\WoodCabinDif.jpg",
+								"Index": "1"
+							}
+						],
+						"Normal":
+						[
+							{
+								"Filename": "Textures\WoodCabinNM.jpg",
+								"Index": "1"
+							}
+						],
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Wooden Cabin 2",
+					"Position": "50.0, -10.0, 130.0",
+					"Rotation": "0.0, 180.0, 0.0",
+					"Scale": "0.1, 0.1, 0.1",
+					"Models":
+					{
+						"Filename": "Furnished_House.obj"
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Wooden Cabin 3",
+					"Position": "0.0, 1.0, 0.0",
+					"Rotation": "0.0, 180.0, 0.0",
+					"Scale": "1.0, 1.0, 1.0",
+					"Models":
+					{
+						"Filename": "House_06.obj"
+					},
+					"Materials":
+					{
+						"Normal":
+						[
+							{
+								"Filename": "maps\corrugated_01_n.tga",
+								"Index": "0"
+							},
+							{
+								"Filename": "maps\corrugated_01_n.tga",
+								"Index": "1"
+							},
+							{
+								"Filename": "maps\concrete_01_n.tga",
+								"Index": "2"
+							},
+							{
+								"Filename": "maps\wood_01_n.tga",
+								"Index": "3"
+							},
+							{
+								"Filename": "maps\brick_01_n.tga",
+								"Index": "4"
+							},
+							{
+								"Filename": "maps\plywood_01_n.tga",
+								"Index": "5"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Tree 1",
+					"Position": "0.0, 1.0, 10.0",
+					"Rotation": "0.0, 0.0, 0.0",
+					"Scale": "1.0, 1.0, 1.0",
+					"AlphaThreshold": "0.1",
+					"Models":
+					{
+						"Filename": "palm tree 1.obj"
+					},
+					"Materials":
+					{
+						"Diffuse":
+						[
+							{
+								"Filename": "maps\Palm trees diffuse.tga",
+								"Index": "1"
+							}
+						],
+						"Normal":
+						[
+							{
+								"Filename": "maps\Palm trees normal.tga",
+								"Index": "1"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Ground 1",
+					"Position": "0.0, 0.0, 0.0",
+					"Rotation": "0.0, 0.0, 0.0",
+					"Scale": "50.0, 50.0, 50.0",
+					"Models":
+					{
+						"Filename": "ground_plane2.obj"
+					},
+					"Materials":
+					{
+						"Diffuse":
+						[
+							{
+								"Filename": "brick-floor-tileable_COLOR.jpg",
+								"Index": "0"
+							}
+						],
+						"Normal":
+						[
+							{
+								"Filename": "brick-floor-tileable_NRM.png",
+								"Index": "0"
+							}
+						],
+						"Specular":
+						[
+							{
+								"Filename": "brick-floor-tileable_SPEC.jpg",
+								"Index": "0"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Dumpster 1",
+					"Position": "10.0, 0.0, 0.0",
+					"Rotation": "-90.0, 0.0, 90.0",
+					"Scale": "5.0, 5.0, 5.0",
+					"Models":
+					{
+						"Filename": "dumpster.3ds"
+					},
+					"Materials":
+					{
+						"Diffuse":
+						[
+							{
+								"Filename": "Dumpster_DIFF_2048.tga",
+								"Index": "0"
+							}
+						],
+						"Normal":
+						[
+							{
+								"Filename": "Dumpster_NRM_2048.tga",
+								"Index": "0"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Test Object 1",
+					"Position": "2.0, 0.0, 0.0",
+					"Models":
+					{
+						"Filename": "Nanosuit.obj"
+					},
+					"Materials":
+					{
+						"Normal":
+						[
+							{
+								"Filename": "nanosuit_arms_n.tga",
+								"Index": "1"
+							},
+							{
+								"Filename": "nanosuit_hands_n.tga",
+								"Index": "2"
+							},
+							{
+								"Filename": "nanosuit_helmet_n.tga",
+								"Index": "3"
+							},
+							{
+								"Filename": "nanosuit_helmet_pt_d.tga",
+								"Index": "4"
+							},
+							{
+								"Filename": "nanosuit_legs_n.tga",
+								"Index": "5"
+							},
+							{
+								"Filename": "nanosuit_torso_n.tga",
+								"Index": "6"
+							},
+							{
+								"Filename": "nanosuit_visor_n.tga",
+								"Index": "7"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Test Object 2",
+					"Rotation": "0.0, 150.0, 0.0",
+					"Models":
+					{
+						"Filename": "Nanosuit.obj"
+					},
+					"Materials":
+					{
+						"Normal":
+						[
+							{
+								"Filename": "nanosuit_arms_n.tga",
+								"Index": "1"
+							},
+							{
+								"Filename": "nanosuit_hands_n.tga",
+								"Index": "2"
+							},
+							{
+								"Filename": "nanosuit_helmet_n.tga",
+								"Index": "3"
+							},
+							{
+								"Filename": "nanosuit_helmet_pt_d.tga",
+								"Index": "4"
+							},
+							{
+								"Filename": "nanosuit_legs_n.tga",
+								"Index": "5"
+							},
+							{
+								"Filename": "nanosuit_torso_n.tga",
+								"Index": "6"
+							},
+							{
+								"Filename": "nanosuit_visor_n.tga",
+								"Index": "7"
+							}
+						]
+					}
+				},
+				{
+					"Type": "Camera",
+					"Name": "Camera 1"
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "light 1",
+					"Position": "0.0, -20.0, 0.0",
+					"Models":
+					{
+						"Filename": "sphere_inverted.obj"
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "light 2",
+					"Position": "10.0, 3.0, 10.0",
+					"Models":
+					{
+						"Filename": "sphere_inverted.obj"
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "light 3",
+					"Position": "-10.0, 3.0, -10.0",
+					"Models":
+					{
+						"Filename": "sphere_inverted.obj"
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "light 4",
+					"Position": "60.0, 3.0, 60.0",
+					"Models":
+					{
+						"Filename": "sphere_inverted.obj"
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "light 5",
+					"Position": "-40.0, 3.0, -40.0",
+					"Models":
+					{
+						"Filename": "sphere_inverted.obj"
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "light 6",
+					"Position": "-20.0, 3.0, -20.0",
+					"Models":
+					{
+						"Filename": "sphere_inverted.obj"
+					}
+				},
+				{
+					"Type": "DirectionalLight",
+					"Name": "DirectionalLight 1",
+					"Color": "1.0, 1.0, 1.0",
+					"Direction": "0.0, 0.25, 1.0",
+					"Intensity": "10.1"
+				},
+				{
+					"Type": "PointLight",
+					"Name": "PointLight 1",
+					"Color": "1.0, 1.0, 1.0",
+					"Position": "0.0, -20.0, 0.0",
+					"Intensity": "100.0"
+				},
+				{
+					"Type": "PointLight",
+					"Name": "PointLight 2",
+					"Color": "1.0, 1.0, 1.0",
+					"Position": "10.0, 3.0, 10.0",
+					"Intensity": "100.0"
+				},
+				{
+					"Type": "PointLight",
+					"Name": "PointLight 3",
+					"Color": "1.0, 1.0, 1.0",
+					"Position": "-10.0, 3.0, -10.0",
+					"Intensity": "100.0"
+				},
+				{
+					"Type": "SpotLight",
+					"Name": "SpotLight 1",
+					"Color": "1.0, 1.0, 1.0",
+					"Direction": "-1.0, 0.0, 0.0",
+					"Position": "60.0, 3.0, 60.0",
+					"CutoffAngle": "60",
+					"Intensity": "100.0"
+				},
+				{
+					"Type": "SpotLight",
+					"Name": "SpotLight 2",
+					"Color": "0.0, 1.0, 0.0",
+					"Position": "-40.0, 3.0, -40.0",
+					"Direction": "1.00000525, 0.999692798, 1.00030184",
+					"CutoffAngle": "65",
+					"Intensity": "100.0"
+				},
+				{
+					"Type": "SpotLight",
+					"Name": "SpotLight 3",
+					"Color": "1.0, 1.0, 1.0",
+					"Position": "-20.0, 3.0, -20.0",
+					"Direction": "1.0, 0.0, 1.0",
+					"CutoffAngle": "55",
+					"Intensity": "100.0"
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "sun model 1",
+					"Position": "0.0, 0.0, 0.0",
+					"Models":
+					{
+						"Filename": "sphere_inverted.obj"
+					}
+				}
+			]
+		},
+		"Scripting":
+		{
+			"Objects":
+			[
+				{
+					"Type": "FreeCamera",
+					"Name": "Free Camera 1",
+					"Position": "0.0, 20.0, 0.0",
+					"Speed": "5.0",
+					"SprintSpeed": "50.0",
+					"Keybindings":
+					{
+						"ForwardKey": "26",
+						"BackwardKey": "22",
+						"LeftStrafeKey": "4",
+						"RightStrafeKey": "7",
+						"SprintKey": "225"
+					}
+				},
+				{
+					"Type": "DebugUIScript",
+					"Name": "Debug UI Script 1",
+					"Keybindings":
+					{
+						"DebugCaptureMouseKey": "67",
+						"DebugVertSyncKey": "68"
+					}
+				},
+				{
+					"Type": "DebugMoveScript",
+					"Name": "Debug Move Script 1",
+					"Position": "0.0, 10.0, 0.0",
+					"Rotation": "0.0, 1.0, 0.0",
+					"Radius": "20.0",
+					"Speed": "20.0"
+				},
+				{
+					"Type": "WorldEditScript",
+					"Name": "World Edit Script 1",
+					"Speed": "2.5",
+					"SprintSpeed": "25.0",
+					"Keybindings":
+					{
+						"ForwardKey": "96",
+						"BackwardKey": "90",
+						"UpKey": "95",
+						"DownKey": "89",
+						"LeftKey": "92",
+						"RightKey": "94",
+						"NextKey": "85",
+						"PreviousKey": "84",
+						"SaveKey": "22",
+						"ModifierKey": "224"
+					}
+				},
+				{
+					"Type": "SolarTimeScript",
+					"Name": "Solar Time Script 1",
+					"Position": "0.0, 0.0, 0.0",
+					"OffsetPosition": "25.0",
+					"Hours": "12",
+					"Minutes": "0",
+					"Seconds": "0.0",
+					"Latitude": "54.0",
+					"Longitude": "24.0",
+					"DayOfYear": "1",
+					"TimeMultiplier": "1000.0"
+				}
+			]
+		}
+	},
+	"ObjectLinks":
+	[
+		{
+			"Subject": "Free Camera 1",
+			"Observer": "Camera 1"
+		},
+		{
+			"Subject": "Free Camera 1",
+			"Observer": "Skybox 1"
+		},
+		{
+			"Subject": "Solar Time Script 1",
+			"Observer": "DirectionalLight 1"
+		},
+		{
+			"Subject": "Solar Time Script 1",
+			"Observer": "sun model 1"
+		},
+		{
+			"Subject": "Debug Move Script 1",
+			"Observer": "PointLight 1"
+		},
+		{
+			"Subject": "Debug Move Script 1",
+			"Observer": "light 1"
+		},
+		{
+			"Subject": "PointLight 2",
+			"Observer": "light 2"
+		},
+		{
+			"Subject": "PointLight 3",
+			"Observer": "light 3"
+		},
+		{
+			"Subject": "SpotLight 1",
+			"Observer": "light 4"
+		},
+		{
+			"Subject": "SpotLight 2",
+			"Observer": "light 5"
+		},
+		{
+			"Subject": "SpotLight 3",
+			"Observer": "light 6"
+		}
+	]
+}

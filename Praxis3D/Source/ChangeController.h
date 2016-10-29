@@ -1,0 +1,110 @@
+
+#include <list>
+//#include <set>
+#include <vector>
+
+#include "ObserverBase.h"
+#include "SpinWait.h"
+
+class TaskManager;
+
+class ChangeController : public Observer
+{
+public:
+	ChangeController();
+	virtual ~ChangeController();
+
+	ErrorCode registerSubject(ObservedSubject *p_subject, BitMask p_interestedBits, Observer *p_observer, BitMask p_observerBits = Systems::Types::All);
+	ErrorCode unregisterSubject(ObservedSubject *p_subject, Observer *p_observer);
+
+	ErrorCode distributeChanges(BitMask p_systemsToNotify = Systems::Types::All, BitMask p_changesToDistribute = Systems::Changes::All);
+	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType);
+
+	// Sends a one-off notification about a change, without requiring the registration of subject-observer
+	void oneTimeChange(ObservedSubject *p_subject, Observer *p_observer, BitMask p_changedBits);
+
+	ErrorCode setTaskManager(TaskManager *p_taskManager);
+
+	void shutdown() { }
+
+	void resetTaskManager();
+
+private:
+	class ObserverRequest
+	{
+	public:
+		ObserverRequest(Observer *p_observer = nullptr, BitMask p_interestBits = 0, BitMask p_idBits = Systems::Changes::All) :
+			m_observer(p_observer), m_interestBits(p_interestBits), m_observerIdBits(p_idBits) { }
+
+		Observer	*m_observer;
+		BitMask		m_interestBits;
+		BitMask		m_observerIdBits;
+
+		bool operator < (const ObserverRequest &p_observerRequest)	const { return m_observer < p_observerRequest.m_observer; }
+		bool operator > (const ObserverRequest &p_observerRequest)	const { return m_observer > p_observerRequest.m_observer; }
+		bool operator == (Observer *p_observer)						const { return m_observer == p_observer; }
+	};
+
+	struct SubjectInfo
+	{
+		SubjectInfo() : m_subject(nullptr), m_interestBits(0) { }
+
+		ObservedSubject				*m_subject;
+		BitMask						 m_interestBits;
+		std::vector<ObserverRequest> m_observersList;
+	};
+	struct Notification
+	{
+		Notification(ObservedSubject *p_subject, BitMask p_changedBits) : 
+			m_subject(p_subject), m_changedBits(p_changedBits) { }
+
+		ObservedSubject *m_subject;
+		BitMask			m_changedBits;
+	};
+	struct OneTimeNotification
+	{
+		OneTimeNotification(ObservedSubject *p_subject, Observer *p_observer, BitMask p_changedBits) :
+			m_subject(p_subject), m_observer(p_observer), m_changedBits(p_changedBits) { }
+
+		ObservedSubject *m_subject;
+		Observer		*m_observer;
+		BitMask			m_changedBits;
+	};
+	struct MappedNotification
+	{
+		MappedNotification(unsigned int p_ID, BitMask p_changedBits) : m_subjectID(p_ID), m_changedBits(p_changedBits) { }
+
+		unsigned int m_subjectID;
+		BitMask		 m_changedBits;
+	};
+
+	std::vector<unsigned int>						m_indexList;
+	std::vector<unsigned int>						m_freeIDsList;
+	std::vector<SubjectInfo>						m_subjectsList;
+	std::vector<MappedNotification>					m_cumulativeNotifyList;
+	std::list<std::vector<Notification>*>			m_notifyLists;
+	std::list<std::vector<OneTimeNotification>*>	m_oneTimeNotifyLists;
+
+	// Last ID and handles for thread local storage data
+	unsigned int m_lastID;
+	unsigned int m_tlsNotifyList;
+	unsigned int m_tlsOneTimeNotifyList;
+
+	BitMask m_systemsToNotify;
+	BitMask m_changesToDistribute;
+
+	SpinWait	m_spinWaitUpdate;
+	TaskManager *m_taskManager;
+
+	static void initThreadLocalData(void* p_controller);
+	static void freeThreadLocalData(void* p_controller);
+
+	static void distributionCallback(void *p_controller, unsigned int p_begin, unsigned int p_end);
+
+	void distributeRange(unsigned int p_begin, unsigned int p_end);
+
+	ErrorCode removeSubject(ObservedSubject *p_subject);
+
+	std::vector<Notification> &getNotifyList(unsigned int p_tlsIndex);
+	std::vector<OneTimeNotification> &getOneTimeNotifyList(unsigned int p_tlsIndex);
+};

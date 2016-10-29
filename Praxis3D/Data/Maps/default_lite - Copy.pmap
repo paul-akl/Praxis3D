@@ -1,0 +1,162 @@
+{
+	"LoadInBackground": "true",
+	"Systems":
+	{
+		"Graphics":
+		{
+			"Scene":
+			{
+				"ModelPoolSize" : "15",
+				"PointLightPoolSize" : "10",
+				"ShaderPoolSize" : "10",
+				"SpotLightPoolSize" : "10"
+			},
+			"Objects":
+			[
+				{
+					"Type": "Camera",
+					"Name": "Camera 1"
+				},
+				{
+					"Type": "DirectionalLight",
+					"Name": "DirectionalLight 1",
+					"Color": "1.0, 1.0, 1.0",
+					"Direction": "0.0, 0.25, 1.0",
+					"Intensity": "1.1"
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Ground 1",
+					"Position": "0.0, 0.0, 0.0",
+					"Rotation": "0.0, 0.0, 0.0",
+					"Scale": "50.0, 50.0, 50.0",
+					"Models":
+					{
+						"Filename": "ground_plane2.obj"
+					},
+					"Materials":
+					{
+						"Diffuse":
+						[
+							{
+								"Filename": "brick-floor-tileable_COLOR.jpg",
+								"Index": "0"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Skybox 1",
+					"OffsetPosition": "0.0, 0.0, 0.0",
+					"OffsetRotation": "0.0, 0.0, 0.0",
+					"Scale": "30000.0, 30000.0, 30000.0",
+					"Lighting": "false",
+					"Models":
+					{
+						"Filename": "sphere_inverted.obj"
+					},
+					"Materials":
+					{
+						"Diffuse":
+						[
+							{
+								"Filename": "gRbWE9O.jpg",
+								"Index": "1"
+							}
+						]
+					},
+					"Shaders":
+					{
+						"FragmentShader": "skybox.frag",
+						"VertexShader": "skybox.vert"
+					}
+				}
+			]
+		},
+		"Scripting":
+		{
+			"Objects":
+			[
+				{
+					"Type": "FreeCamera",
+					"Name": "Free Camera 1",
+					"Position": "0.0, 20.0, 0.0",
+					"Speed": "5.0",
+					"SprintSpeed": "50.0",
+					"Keybindings":
+					{
+						"ForwardKey": "26",
+						"BackwardKey": "22",
+						"LeftStrafeKey": "4",
+						"RightStrafeKey": "7",
+						"SprintKey": "225"
+					}
+				},
+				{
+					"Type": "DebugUIScript",
+					"Name": "Debug UI Script 1",
+					"Keybindings":
+					{
+						"DebugCaptureMouseKey": "67",
+						"DebugVertSyncKey": "68"
+					}
+				},
+				{
+					"Type": "DebugMoveScript",
+					"Name": "Debug Move Script 1",
+					"Position": "0.0, 10.0, 0.0",
+					"Rotation": "0.0, 1.0, 0.0",
+					"Radius": "20.0",
+					"Speed": "20.0"
+				},
+				{
+					"Type": "WorldEditScript",
+					"Name": "World Edit Script 1",
+					"Speed": "2.5",
+					"SprintSpeed": "25.0",
+					"Keybindings":
+					{
+						"ForwardKey": "96",
+						"BackwardKey": "90",
+						"UpKey": "95",
+						"DownKey": "89",
+						"LeftKey": "92",
+						"RightKey": "94",
+						"NextKey": "85",
+						"PreviousKey": "84",
+						"SprintKey": "225"
+					}
+				},
+				{
+					"Type": "SolarTimeScript",
+					"Name": "Solar Time Script 1",
+					"Position": "0.0, 0.0, 0.0",
+					"OffsetPosition": "25.0",
+					"Hours": "12",
+					"Minutes": "0",
+					"Seconds": "0.0",
+					"Latitude": "54.0",
+					"Longitude": "24.0",
+					"DayOfYear": "1",
+					"TimeMultiplier": "10000.0"
+				}
+			]
+		}
+	},
+	"ObjectLinks":
+	[
+		{
+			"Subject": "Free Camera 1",
+			"Observer": "Camera 1"
+		},
+		{
+			"Subject": "Free Camera 1",
+			"Observer": "Skybox 1"
+		},
+		{
+			"Subject": "Solar Time Script 1",
+			"Observer": "DirectionalLight 1"
+		}
+	]
+}

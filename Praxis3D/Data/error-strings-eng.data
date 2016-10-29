@@ -1,0 +1,59 @@
+{
+	"Error Codes":
+	{
+		"Undefined"					: "Undefined",
+		"Success"					: "Succeed",
+		"Failure"					: "Failed",
+		"Destroy_obj_not_found"		: "Destruction: object not found",
+		"Glew_failed"				: "OpenGL Extension Wrangler Library has failed to initialize",
+		"Ifstream_failed"			: "Unable to read input file stream",
+		"Clock_QueryFrequency"		: "Unable to query the clock frequency",
+		"Framebuffer_failed"		: "Framebuffer has failed to load",
+		"Geometrybuffer_failed"		: "Geometry buffer has failed to load",
+		"AssimpScene_failed"		: "Assimp scene has failed to load",
+		"ObjectPool_full"			: "Object pool overflow",
+		"Property_no_filename"		: "No filename specified",
+		"Shader_attach_failed"		: "Attaching shaders to GPU program has failed",
+		"Shader_compile_failed"		: "Shader compilation from source code has failed to load",
+		"Shader_creation_failed"	: "Shader handle creation has failed",
+		"Shader_link_failed"		: "Shader linking has failed",
+		"Shader_loading_failed"		: "Shader has failed to load",
+		"Texture_not_found"			: "Texture was not found",
+		"Texture_empty"				: "Texture data was not found",
+		"Invalid_num_vid_displays"	: "Invalid number of video displays",
+		"SDL_video_init_failed"		: "SDL Video has failed to initialize",
+		"SDL_vsync_failed"			: "Failed to change vertical synchronization mode",
+		"Window_creation_failed"	: "Unable to create a window"
+	},
+	"Error Sources":
+	{
+		"Source_Unknown"		: "Unknown",
+		"Source_General"		: "General",
+		"Source_Engine"			: "Engine",
+		"Source_Renderer"		: "Renderer",
+		"Source_Scripting"		: "Scripting System",
+ 		"Source_Config"			: "Configuration",
+		"Source_ConfigLoader"	: "Config Loader",
+		"Source_TextureLoader"	: "Texture Loader",
+		"Source_ModelLoader"	: "Model Loader",
+		"Source_ShaderLoader"	: "Shader Loader",
+		"Source_FileLoader"		: "File Loader",
+		"Source_SceneLoader"	: "Scene Loader",
+		"Source_GeometryBuffer"	: "Geometry Buffer",
+		"Source_GraphicsObject"	: "Graphics Object",
+		"Source_ScriptObject"	: "Script Object",
+		"Source_PlayerObject"	: "Player Object",
+		"Source_GameObject"		: "Game Object",
+		"Source_SkyObject"		: "Sky Object",
+		"Source_LightObject"	: "Light Object",
+		"Source_PropertyLoader"	: "Property Loader",
+		"Source_Window"			: "Window System"
+	},
+	"Error Types":
+	{
+		"Info"					: "Info",
+		"Warning"				: "Warning",
+		"Error"					: "Error",
+		"FatalError"			: "Fatal Error"
+	}
+}
