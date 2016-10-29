@@ -1,6 +1,5 @@
 
 #include <list>
-//#include <set>
 #include <vector>
 
 #include "ObserverBase.h"

@@ -198,6 +198,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -298,6 +299,9 @@
     <ClCompile Include="Source\PropertyLoader.cpp" />
     <ClCompile Include="Source\PropertySet.cpp" />
     <ClCompile Include="Source\Renderer.cpp" />
+    <ClCompile Include="Source\RendererBackend.cpp" />
+    <ClCompile Include="Source\RendererFrontend.cpp" />
+    <ClCompile Include="Source\RendererGL.cpp" />
     <ClCompile Include="Source\RendererScene.cpp" />
     <ClCompile Include="Source\RendererSystem.cpp" />
     <ClCompile Include="Source\RenderTask.cpp" />
@@ -306,7 +310,6 @@
     <ClCompile Include="Source\ScriptingScene.cpp" />
     <ClCompile Include="Source\ScriptingSystem.cpp" />
     <ClCompile Include="Source\ScriptingTask.cpp" />
-    <ClCompile Include="Source\ServiceBase.cpp" />
     <ClCompile Include="Source\ShaderLoader.cpp" />
     <ClCompile Include="Source\ShaderUniformUpdater.cpp" />
     <ClCompile Include="Source\SpinWait.cpp" />
@@ -328,6 +331,7 @@
     <ClInclude Include="Source\ChangeController.h" />
     <ClInclude Include="Source\Clock.h" />
     <ClInclude Include="Source\ClockLocator.h" />
+    <ClInclude Include="Source\CommonDefinitions.h" />
     <ClInclude Include="Source\Config.h" />
     <ClInclude Include="Source\ConfigLoader.h" />
     <ClInclude Include="Source\DebugMoveScript.h" />
@@ -337,15 +341,19 @@
     <ClInclude Include="Source\EngineDefinitions.h" />
     <ClInclude Include="Source\EngineState.h" />
     <ClInclude Include="Source\EnumFactory.h" />
+    <ClInclude Include="Source\EnvironmentMapObjects.h" />
     <ClInclude Include="Source\ErrorCodes.h" />
     <ClInclude Include="Source\ErrorHandler.h" />
     <ClInclude Include="Source\ErrorHandlerLocator.h" />
+    <ClInclude Include="Source\FinalPass.h" />
     <ClInclude Include="Source\Framebuffer.h" />
     <ClInclude Include="Source\GeometryBuffer.h" />
+    <ClInclude Include="Source\GeometryPass.h" />
     <ClInclude Include="Source\GraphicsDataSets.h" />
     <ClInclude Include="Source\Input.h" />
     <ClInclude Include="Source\KeyCommand.h" />
     <ClInclude Include="Source\LightingGraphicsObjects.h" />
+    <ClInclude Include="Source\LightingPass.h" />
     <ClInclude Include="Source\LoaderBase.h" />
     <ClInclude Include="Source\Loaders.h" />
     <ClInclude Include="Source\Math.h" />
@@ -357,9 +365,13 @@
     <ClInclude Include="Source\PlayState.h" />
     <ClInclude Include="Source\PropertyLoader.h" />
     <ClInclude Include="Source\PropertySet.h" />
+    <ClInclude Include="Source\ReflectionPass.h" />
     <ClInclude Include="Source\Renderer.h" />
+    <ClInclude Include="Source\RendererBackend.h" />
+    <ClInclude Include="Source\RendererFrontend.h" />
     <ClInclude Include="Source\RendererScene.h" />
     <ClInclude Include="Source\RendererSystem.h" />
+    <ClInclude Include="Source\RenderPassBase.h" />
     <ClInclude Include="Source\RenderTask.h" />
     <ClInclude Include="Source\RenderTaskBase.h" />
     <ClInclude Include="Source\Scancodes.h" />
@@ -379,6 +391,7 @@
     <ClInclude Include="Source\TaskManagerLocator.h" />
     <ClInclude Include="Source\TaskScheduler.h" />
     <ClInclude Include="Source\TextureLoader.h" />
+    <ClInclude Include="Source\UniformData.h" />
     <ClInclude Include="Source\Universal.h" />
     <ClInclude Include="Source\Utilities.h" />
     <ClInclude Include="Source\Window.h" />

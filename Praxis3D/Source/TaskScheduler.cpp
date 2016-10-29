@@ -73,7 +73,7 @@ void TaskScheduler::execute(float p_deltaTime)
 			// Get the scene's task (and increment the count)
 			tasksToExecute[numTasksToExecute++] = currentScene->getSystemTask();
 		}
-
+		
 		// Execute the tasks in parallel, by passing them to the task manager
 		m_taskManager->issueJobsForSystemTasks(tasksToExecute, numTasksToExecute, p_deltaTime);
 

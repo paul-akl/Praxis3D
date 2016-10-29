@@ -143,8 +143,6 @@ protected:
 	// Swap the object with the last element of vector and pop_back
 	inline void removeObject(UniqueObject &p_object)
 	{
-		//static_cast<TDerived*>(this)->removeObject(p_object);
-
 		auto uniqueID = p_object.getUniqueID();
 		if(!(uniqueID < 0) && uniqueID < m_objectPool.size())
 		{

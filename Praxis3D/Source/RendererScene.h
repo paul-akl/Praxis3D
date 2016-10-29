@@ -5,6 +5,7 @@
 // and creates arrays of objects to be rendered. From here, they should be sent to the renderer.
 
 #include "CameraGraphicsObject.h"
+#include "EnvironmentMapObjects.h"
 #include "GraphicsDataSets.h"
 #include "LightingGraphicsObjects.h"
 #include "Loaders.h"
@@ -22,6 +23,7 @@ struct SceneObjects
 	SceneObjects() : m_camera(nullptr) { }
 
 	const CameraObject *m_camera;
+	EnvironmentMapStatic *m_staticSkybox;
 	const DirectionalLightDataSet *m_directionalLight;
 
 	std::vector<RenderableObjectData*> m_modelObjects;
@@ -144,7 +146,7 @@ private:
 	// Object creators (factories)
 	ModelObject *loadModelObject(const PropertySet &p_properties);
 	CameraObject *loadCameraObject(const PropertySet &p_properties);
-	ShaderModelGraphicsObject *loadShaderModelObject(const PropertySet &p_properties);	// Obsolete (ModelObjects handle custom shaders)
+	EnvironmentMapStatic *loadEnvMapStatic(const PropertySet &p_properties);
 	DirectionalLightObject *loadDirectionalLight(const PropertySet &p_properties);
 	PointLightObject *loadPointLight(const PropertySet &p_properties);
 	SpotLightObject *loadSpotLight(const PropertySet &p_properties);
@@ -154,9 +156,12 @@ private:
 	ObjectPool<ModelObject> m_shaderObjPool;
 	ObjectPool<PointLightObject> m_pointLightPool;
 	ObjectPool<SpotLightObject> m_spotLightPool;
+	//ObjectPool<EnvironmentMapStatic> m_envMapPool;
 	
 	// Stores objects that are currently being loaded to memory in background thread
 	std::vector<LoadableObjectAndIndex> m_objectsBeingLoaded;
+
+	EnvironmentMapStatic *m_skybox;
 
 	// Only one camera present at a time
 	CameraObject *m_camera;

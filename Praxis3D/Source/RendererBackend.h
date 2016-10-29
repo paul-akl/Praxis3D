@@ -1,206 +1,678 @@
 #pragma once
+#pragma warning (disable : 4996)
 
 #include <stdint.h>
 
 #include "Config.h"
+#include "GeometryBuffer.h"
 #include "Loaders.h"
-
-struct UniformRendererData
-{
-	Math::Vec2i m_screenSize;
-
-	Math::Mat4f m_projMatrix,
-				m_viewProjMatrix;
-};
-
-struct UniformObjectData
-{
-	UniformObjectData()
-	{
-		m_heightScale = 0.0f;
-		m_alphaThreshold = 0.0f;
-		m_emissiveThreshold = 0.0f;
-		m_textureTilingFactor = 1.0f;
-	}
-
-	Math::Mat4f m_modelMat,
-				m_modelViewProjMatrix;
-
-	float	m_heightScale, 
-			m_alphaThreshold,
-			m_emissiveThreshold,
-			m_textureTilingFactor;
-};
-
-struct UniformData
-{
-	UniformData(const UniformObjectData &p_objectData, const UniformRendererData &p_rendererData)
-		: m_objectData(p_objectData), m_rendererData(p_rendererData) { }
-
-	const UniformObjectData &m_objectData;
-	const UniformRendererData &m_rendererData;
-};
+#include "ShaderUniformUpdater.h"
+#include "UniformData.h"
 
 class RendererBackend
 {
-public:	
-	enum MaterialTypes : unsigned int
+public:
+	// An empty buffer used to render a single triangle that covers the whole screen
+	// (the vertices are calculated inside the shader, hence an empty buffer)
+	class SingleTriangle
 	{
-		DiffuseMaterial,
-		NormalMaterial,
-		EmissiveMaterial,
-		CombinedMaterial,
-		NumMaterialTypes
-	};
-
-	/*struct RendererMesh
-	{
-		RendererMesh(const Model::Mesh &p_mesh) : m_mesh(p_mesh) { }
-
-		const Model::Mesh &m_mesh;
-	};
-	struct RendererModel
-	{
-		RendererModel()
+	public:
+		SingleTriangle() : m_vao(0), m_vbo(0) { }
+		~SingleTriangle()
 		{
-			m_numMeshes = 0;
-		}
-		RendererModel(const GLuint p_VAO) : m_VAO(p_VAO)
-		{
-			m_numMeshes = 0;
+			glDeleteBuffers(1, &m_vbo);
+			glDeleteBuffers(1, &m_vao);
 		}
 
-		GLuint m_VAO;
-		size_t m_numMeshes;
-	};
-	struct RendererShader
-	{
-		RendererShader(const ShaderUniformUpdater &p_shaderUniform, const GLuint p_shaderHandle) : m_uniformUpdater(p_shaderUniform), m_shaderHandle(p_shaderHandle)
+		// Creates an empty buffer, assigns a VAO
+		inline void load()
 		{
-			m_numModels = 0;
+			glGenBuffers(1, &m_vbo);
+			glGenVertexArrays(1, &m_vao);
+			glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+			glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_STATIC_DRAW);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
-
-		const GLuint m_shaderHandle;
-		const ShaderUniformUpdater &m_uniformUpdater;
-		size_t m_numModels;
-	};
-	struct RendererMaterial
-	{
-		RendererMaterial()
+		// Binds VAO and VBO
+		inline void bind() const
 		{
-			m_numMeshes = 0;
+			glBindVertexArray(m_vao);
+			glBindVertexBuffer(0, m_vbo, 0, 0);
 		}
+		// Issues a draw call
+		inline void render() const { glDrawArrays(GL_TRIANGLES, 0, 3); }
 
-		GLuint m_materials[NumMaterialTypes];
-		size_t m_numMeshes;
+	private:
+		GLuint	m_vao,
+				m_vbo;
 	};
 
-	struct Dataset_Mesh
-	{
-		Dataset_Mesh() : m_mesh(nullptr) { }
-
-		const Model::Mesh *m_mesh;
-	};
-	struct Dataset_Model
-	{
-		Dataset_Model() : m_VAO(0) { }
-		Dataset_Model(unsigned int p_VAO) : m_VAO(p_VAO) { }
-
-		unsigned int m_VAO;
-
-		std::vector<Dataset_Mesh> m_meshes;
-	};
-	struct Dataset_Shader
-	{
-		Dataset_Shader() : m_shaderHandle(0), m_numModels(0), m_modelVectorSize(0), m_uniformUpdater(nullptr) { }
-		Dataset_Shader(unsigned int p_shaderHandle, const ShaderUniformUpdater *p_uniformUpdater)
-			: m_shaderHandle(p_shaderHandle), m_numModels(0), m_modelVectorSize(0), m_uniformUpdater(p_uniformUpdater) { }
-
-		void clear()
-		{
-			for(std::vector<Dataset_Model>::size_type i = 0; i < m_modelVectorSize; i++)
-				m_models[i].m_meshes.clear();
-
-			m_numModels = 0;
-		}
-
-		unsigned int m_shaderHandle;
-		const ShaderUniformUpdater *m_uniformUpdater;
-
-		std::vector<Dataset_Model> m_models;
-		std::vector<Dataset_Model>::size_type m_numModels;
-		std::vector<Dataset_Shader>::size_type m_modelVectorSize;
-	};
-
-	struct Datasets
-	{
-		Datasets() : m_numShaders(0), m_shaderVectorSize(0) { }
-
-		std::vector<Dataset_Shader> m_shaders;
-		std::vector<Dataset_Shader>::size_type m_numShaders;
-		std::vector<Dataset_Shader>::size_type m_shaderVectorSize;
-	};
-	
-	struct RenderableObjects
-	{
-		RenderableObjects()
-		{
-			m_numShaders = 0;
-		}
-		void clear()
-		{
-			m_shaders.clear();
-			m_models.clear();
-			m_materials.clear();
-			m_meshes.clear();
-			m_numShaders = 0;
-		}
-
-		std::vector<RendererShader>		m_shaders;
-		std::vector<RendererModel>		m_models;
-		std::vector<RendererMaterial>	m_materials;
-		std::vector<RendererMesh>		m_meshes;
-
-		size_t m_numShaders;
-	};*/
-
+	// Draw command holds all the neccessary data to draw a piece of geometry (a mesh)
 	struct DrawCommand
 	{
-		DrawCommand(const ShaderUniformUpdater &p_uniformUpdater, unsigned int p_shaderHandle, unsigned int p_modelHandle,
-					  unsigned int p_numIndices, unsigned int p_baseVertex, unsigned int p_baseIndex) : m_uniformUpdater(p_uniformUpdater)
-		{
-			m_shaderHandle = p_shaderHandle;
-			m_modelHandle = p_modelHandle;
-			m_numIndices = p_numIndices;
-			m_baseVertex = p_baseVertex;
-			m_baseIndex = p_baseIndex;
-		}
+		DrawCommand(const ShaderUniformUpdater &p_uniformUpdater, 
+					const UniformObjectData &p_uniformObjectData, 
+					const unsigned int p_shaderHandle,
+					const unsigned int p_modelHandle,
+					const unsigned int p_numIndices,
+					const unsigned int p_baseVertex,
+					const unsigned int p_baseIndex) :
+			m_uniformUpdater(p_uniformUpdater), 
+			m_uniformObjectData(p_uniformObjectData),
+			m_shaderHandle(p_shaderHandle),
+			m_modelHandle(p_modelHandle),
+			m_numIndices(p_numIndices),
+			m_baseVertex(p_baseVertex),
+			m_baseIndex(p_baseIndex) { }
 
 		const ShaderUniformUpdater &m_uniformUpdater;
 		const UniformObjectData m_uniformObjectData;
 
-		unsigned int m_shaderHandle;
-		unsigned int m_modelHandle;
+		const unsigned int m_shaderHandle;
+		const unsigned int m_modelHandle;
 
-		unsigned int m_numIndices;
-		unsigned int m_baseVertex;
-		unsigned int m_baseIndex;
+		const unsigned int m_numIndices;
+		const unsigned int m_baseVertex;
+		const unsigned int m_baseIndex;
+	};
+	// Used to upload data to a buffer that's on GPU, in a specified manner
+	struct BufferUpdateCommand
+	{
+		BufferUpdateCommand(const unsigned int p_bufferHandle,
+					  const int64_t p_offset,
+					  const int64_t p_size,
+					  const void *p_data = NULL,
+					  const BufferUpdateType p_updateType = BufferUpdate_Data,
+					  const BufferType p_bufferType = BufferType_Uniform) :
+			m_bufferHandle(p_bufferHandle),
+			m_offset(p_offset),
+			m_size(p_size),
+			m_data(p_data),
+			m_updateType(p_updateType),
+			m_bufferType(p_bufferType) { }
+
+		const BufferUpdateType m_updateType;
+		const BufferType m_bufferType;
+
+		const unsigned int m_bufferHandle;
+		const void *m_data;
+		const int64_t	m_offset,
+						m_size;
+	};
+	// Used for loading various objects (i.e. textures, models, shader, etc) to GPU
+	struct LoadCommand
+	{
+		LoadCommand(unsigned int &p_handle, 
+					const BufferType p_bufferType,
+					const BufferUsageHint p_bufferUsage,
+					const unsigned int p_bindingIndex,
+					const int64_t p_size,
+					const void *p_data) :
+			m_handle(p_handle),
+			m_objectType(LoadObject_Buffer),
+			m_objectData(p_bufferType, p_bufferUsage, p_bindingIndex, p_size, p_data) { }
+
+		LoadCommand(unsigned int &p_handle,
+					unsigned int (&p_buffers)[ModelBuffer_NumAllTypes],
+					const int (&p_numElements)[ModelBuffer_NumAllTypes],
+					const int64_t(&p_size)[ModelBuffer_NumAllTypes],
+					const void **m_data) :
+			m_handle(p_handle),
+			m_objectType(LoadObject_Model),
+			m_objectData(p_buffers, p_numElements, p_size, m_data) { }
+
+		LoadCommand(unsigned int &p_handle,
+					ShaderUniformUpdater &p_uniformUpdater,
+					std::string(&p_source)[ShaderType_NumOfTypes],
+					ErrorMessage(&p_errorMessages)[ShaderType_NumOfTypes]) :
+			m_handle(p_handle),
+			m_objectType(LoadObject_Shader),
+			m_objectData(p_uniformUpdater, p_source, p_errorMessages) { }
+
+		LoadCommand(unsigned int &p_handle,
+					const TextureFormat p_texFormat,
+					const int p_mipmapLevel,
+					const unsigned int p_textureWidth,
+					const unsigned int p_textureHeight,
+					const void *p_data) :
+			m_handle(p_handle),
+			m_objectType(LoadObject_Texture2D),
+			m_objectData(p_texFormat, p_mipmapLevel, p_textureWidth, p_textureHeight, p_data) { }
+
+		struct BufferLoadData
+		{
+			BufferLoadData(const BufferType p_bufferType,
+						   const BufferUsageHint p_bufferUsage,
+						   const unsigned int p_bindingIndex,
+						   const int64_t p_size,
+						   const void *p_data) :
+				m_bufferType(p_bufferType),
+				m_bufferUsage(p_bufferUsage),
+				m_bindingIndex(p_bindingIndex),
+				m_size(p_size),
+				m_data(p_data) { }
+
+			const BufferType m_bufferType;
+			const BufferUsageHint m_bufferUsage;
+			const unsigned int m_bindingIndex;
+			const int64_t m_size;
+			const void *m_data;
+		};
+		struct ModelLoadData
+		{
+			ModelLoadData(unsigned int(&p_buffers)[ModelBuffer_NumAllTypes],
+						  const int(&p_numElements)[ModelBuffer_NumAllTypes],
+						  const int64_t(&p_size)[ModelBuffer_NumAllTypes],
+						  const void **m_data) :
+				m_data(m_data),
+				m_buffers(p_buffers)
+			{
+				std::copy(std::begin(p_numElements), std::end(p_numElements), std::begin(m_numElements));
+				std::copy(std::begin(p_size), std::end(p_size), std::begin(m_size));
+			}
+
+			unsigned int (&m_buffers)[ModelBuffer_NumAllTypes];
+			int m_numElements[ModelBuffer_NumAllTypes];
+			int64_t m_size[ModelBuffer_NumAllTypes];
+			const void **m_data;
+		};
+		struct ShaderLoadData
+		{
+			ShaderLoadData(ShaderUniformUpdater &p_uniformUpdater,
+						   std::string(&p_source)[ShaderType_NumOfTypes],
+						   ErrorMessage(&p_errorMessages)[ShaderType_NumOfTypes]) :
+				m_uniformUpdater(p_uniformUpdater),
+				m_errorMessages(p_errorMessages),
+				m_source(p_source) { }
+
+			ShaderUniformUpdater &m_uniformUpdater;
+			std::string(&m_source)[ShaderType_NumOfTypes];
+			ErrorMessage (&m_errorMessages)[ShaderType_NumOfTypes];
+		};
+		struct Texture2DLoadData
+		{
+			Texture2DLoadData(const TextureFormat p_texFormat,
+							  const int p_mipmapLevel,
+							  const unsigned int p_textureWidth,
+							  const unsigned int p_textureHeight,
+							  const void *p_data) :
+				m_texFormat(p_texFormat),
+				m_mipmapLevel(p_mipmapLevel),
+				m_textureWidth(p_textureWidth),
+				m_textureHeight(p_textureHeight),
+				m_data(p_data) { }
+
+			const TextureFormat m_texFormat;
+			const unsigned int m_textureWidth;
+			const unsigned int m_textureHeight;
+			const int m_mipmapLevel;
+			const void *m_data;
+		};
+
+		union ObjectData
+		{
+			ObjectData(const BufferType p_bufferType,
+					   const BufferUsageHint p_bufferUsage,
+					   const unsigned int p_bindingIndex,
+					   const int64_t p_size,
+					   const void *p_data) :
+				m_bufferData(p_bufferType, p_bufferUsage, p_bindingIndex, p_size, p_data) { }
+
+			ObjectData(unsigned int(&p_buffers)[ModelBuffer_NumAllTypes],
+					   const int(&p_numElements)[ModelBuffer_NumAllTypes],
+					   const int64_t(&p_size)[ModelBuffer_NumAllTypes],
+					   const void **m_data) :
+				m_modelData(p_buffers, p_numElements, p_size, m_data) { }
+
+			ObjectData(ShaderUniformUpdater &p_uniformUpdater,
+					   std::string(&p_source)[ShaderType_NumOfTypes],
+					   ErrorMessage(&p_errorMessages)[ShaderType_NumOfTypes]) :
+				m_shaderData(p_uniformUpdater, p_source, p_errorMessages) { }
+
+			ObjectData(const TextureFormat p_texFormat,
+					   const int p_mipmapLevel,
+					   const unsigned int p_textureWidth,
+					   const unsigned int p_textureHeight,
+					   const void *p_data) :
+				m_tex2DData(p_texFormat, p_mipmapLevel, p_textureWidth, p_textureHeight, p_data) { }
+
+			BufferLoadData m_bufferData;
+			ModelLoadData m_modelData;
+			ShaderLoadData m_shaderData;
+			Texture2DLoadData m_tex2DData;
+		};
+
+		const LoadObjectType m_objectType;
+		ObjectData m_objectData;
+		unsigned int &m_handle;
 	};
 
 	// First element is a sort key, second element is an object to draw
 	typedef std::vector<std::pair<int64_t, DrawCommand>> DrawCommands;
 
-	RendererBackend() { }
-	~RendererBackend() { }
+	typedef std::vector<LoadCommand> LoadCommands;
 
-	ErrorCode init();
+	RendererBackend();
+	~RendererBackend();
 
-	//void renderObjects(DrawCommands &p_objects);
+	ErrorCode init(const UniformFrameData &p_frameData);
 	
+	void processLoading(LoadCommands &p_loadCommands, const UniformFrameData &p_frameData);
+	void renderFrame(const DrawCommands &p_drawCommands, const UniformFrameData &p_frameData);
+
+	inline GeometryBuffer *getGeometryBuffer() { return m_gbuffer; }
+
 protected:
+	// Currently bound and last updated objects
+	struct CurrentState
+	{
+		CurrentState()
+		{
+			reset();
+		}
 
-	//const CameraObject *m_currentCamera;
-	//const GraphicsData *m_currentObjectData;
+		inline void reset()
+		{
+			m_boundUniformBuffer = 0;
+			m_boundShader = 0;
+			m_boundVAO = 0;
 
-	UniformRendererData m_uniformRendererData;
+			m_lastTexUpdate = 0;
+			m_lastFrameUpdate = 0;
+			m_lastModelUpdate = 0;
+			m_lastMeshUpdate = 0;
+		}
+
+		unsigned int m_boundUniformBuffer;
+		unsigned int m_boundShader;
+		unsigned int m_boundVAO;
+
+		unsigned int m_lastTexUpdate;
+		unsigned int m_lastFrameUpdate;
+		unsigned int m_lastModelUpdate;
+		unsigned int m_lastMeshUpdate;
+	};
+	
+	// Handle binding functions
+	inline void bindShader(const unsigned int p_shaderHandle)
+	{
+		// Check if the shader is not already bound
+		if(p_shaderHandle != m_rendererState.m_boundShader)
+		{
+			// Bind the shader
+			glUseProgram(p_shaderHandle);
+			m_rendererState.m_boundShader = p_shaderHandle;
+		}
+	}
+	inline void bindVAO(const unsigned int p_VAO)
+	{
+		// Check if the VAO is not already bound
+		if(p_VAO != m_rendererState.m_boundVAO)
+		{
+			// Bind the VAO
+			glBindVertexArray(p_VAO);
+			m_rendererState.m_boundVAO = p_VAO;
+		}
+	}
+	inline void bindUniformBuffer(const unsigned int p_bufferHandle)
+	{
+		// Check if the uniform buffer is not already bound
+		if(p_bufferHandle != m_rendererState.m_boundUniformBuffer)
+		{
+			// Bind the uniform buffer
+			glBindBuffer(GL_UNIFORM_BUFFER, p_bufferHandle);
+			m_rendererState.m_boundUniformBuffer = p_bufferHandle;
+		}
+	}
+
+	// Uniform update functions
+	inline void textureUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
+	{
+		// Check if the texture uniforms haven't been updated already
+		if(m_rendererState.m_lastTexUpdate != p_shaderHandle)
+		{
+			// Declare uniform data
+			UniformData uniformData(p_objectData, p_frameData);
+
+			// Update texture uniforms
+			p_uniformUpdater.updateTextureUniforms(uniformData);
+			m_rendererState.m_lastTexUpdate = p_shaderHandle;
+		}
+	}
+	inline void frameUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater,const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
+	{
+		// Check if the frame uniforms haven't been updated already
+		if(m_rendererState.m_lastFrameUpdate != p_shaderHandle)
+		{
+			// Declare uniform data
+			UniformData uniformData(p_objectData, p_frameData);
+
+			// Update frame uniforms
+			p_uniformUpdater.updateFrame(uniformData);
+			m_rendererState.m_lastFrameUpdate = p_shaderHandle;
+		}
+	}
+	inline void modelUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
+	{
+		// Check if the model uniforms haven't been updated already
+		if(m_rendererState.m_lastModelUpdate != p_shaderHandle)
+		{
+			// Declare uniform data
+			UniformData uniformData(p_objectData, p_frameData);
+
+			// Update model uniforms
+			p_uniformUpdater.updateModel(uniformData);
+			m_rendererState.m_lastModelUpdate = p_shaderHandle;
+		}
+	}
+	inline void meshUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater,const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
+	{
+		// Check if the mesh uniforms haven't been updated already
+		if(m_rendererState.m_lastMeshUpdate != p_shaderHandle)
+		{
+			// Declare uniform data
+			UniformData uniformData(p_objectData, p_frameData);
+
+			// Update mesh uniforms
+			p_uniformUpdater.updateMesh(uniformData);
+			m_rendererState.m_lastMeshUpdate = p_shaderHandle;
+		}
+	}
+	
+	inline void processCommand(const DrawCommand &p_command, const UniformFrameData &p_frameData)
+	{
+		// Get uniform data
+		UniformData uniformData(p_command.m_uniformObjectData, p_frameData);
+		
+		// Bind the shader
+		bindShader(p_command.m_shaderHandle);
+
+		// Update shader uniforms
+		frameUniformUpdate(	 p_command.m_shaderHandle, p_command.m_uniformUpdater, p_command.m_uniformObjectData, p_frameData);
+		modelUniformUpdate(	 p_command.m_shaderHandle, p_command.m_uniformUpdater, p_command.m_uniformObjectData, p_frameData);
+		meshUniformUpdate(	 p_command.m_shaderHandle, p_command.m_uniformUpdater, p_command.m_uniformObjectData, p_frameData);
+
+		// Bind VAO
+		bindVAO(p_command.m_modelHandle);
+
+		// Draw the geometry
+		glDrawElementsBaseVertex(GL_TRIANGLES,
+								 p_command.m_numIndices,
+								 GL_UNSIGNED_INT,
+								 (void*)(sizeof(unsigned int) * p_command.m_baseIndex),
+								 p_command.m_baseVertex);
+	}
+	inline void processCommand(const BufferUpdateCommand &p_command, const UniformFrameData &p_frameData)
+	{
+		// Bind the buffer
+		bindUniformBuffer(p_command.m_bufferHandle);
+		
+		// Update the buffer based on the specified way
+		switch(p_command.m_updateType)
+		{
+		case BufferUpdate_Data:
+			glBufferData(p_command.m_bufferType,
+						 p_command.m_size,
+						 p_command.m_data,
+						 GL_DYNAMIC_DRAW);
+			break;
+
+		case BufferUpdate_SubData:
+			glBufferSubData(p_command.m_bufferType,
+							p_command.m_offset,
+							p_command.m_size,
+							p_command.m_data);
+			break;
+		}
+	}
+	inline void processCommand(LoadCommand &p_command, const UniformFrameData &p_frameData)
+	{
+		switch(p_command.m_objectType)
+		{
+		case LoadObject_Buffer:
+		{
+			// Create the buffer
+			glGenBuffers(1, &p_command.m_handle);
+
+			// Bind the buffer
+			glBindBuffer(p_command.m_objectData.m_bufferData.m_bufferType, p_command.m_handle);
+
+			// Fill the buffer
+			glBufferData(p_command.m_objectData.m_bufferData.m_bufferType, 
+						 p_command.m_objectData.m_bufferData.m_size, 
+						 p_command.m_objectData.m_bufferData.m_data,
+						 p_command.m_objectData.m_bufferData.m_bufferUsage);
+
+			// Bind the buffer to the binding index so it can be accessed in a shader
+			glBindBufferBase(p_command.m_objectData.m_bufferData.m_bufferType, 
+							 p_command.m_objectData.m_bufferData.m_bindingIndex,
+							 p_command.m_handle);
+		}
+		break;
+
+		case LoadObject_Shader:
+		{
+			unsigned int shaderHandles[ShaderType_NumOfTypes] = {};
+			unsigned int shaderTypes[ShaderType_NumOfTypes] = {
+				GL_FRAGMENT_SHADER,
+				GL_GEOMETRY_SHADER,
+				GL_VERTEX_SHADER,
+				GL_TESS_CONTROL_SHADER,
+				GL_TESS_EVALUATION_SHADER };
+
+			// Clear error queue (TODO: remove in the future)
+			glGetError();
+
+			// Create individual shaders
+			for(unsigned int i = 0; i < ShaderType_NumOfTypes; i++)
+			{
+				if(!p_command.m_objectData.m_shaderData.m_source[i].empty())
+				{
+					// Create a shader handle
+					shaderHandles[i] = glCreateShader(shaderTypes[i]);
+
+					// Check for errors
+					GLenum glError = glGetError();
+					if(glError != GL_NO_ERROR)
+					{
+						p_command.m_objectData.m_shaderData.m_errorMessages[i].m_errorCode = ErrorCode::Shader_creation_failed;
+						p_command.m_objectData.m_shaderData.m_errorMessages[i].m_errorSource = ErrorSource::Source_ShaderLoader;
+					}
+					else
+					{
+						// Pass shader source code and compile it
+						const char *shaderSource = p_command.m_objectData.m_shaderData.m_source[i].c_str();
+						glShaderSource(shaderHandles[i], 1, &shaderSource, NULL);
+						glCompileShader(shaderHandles[i]);
+
+						// Check for shader compilation errors
+						GLint shaderCompileResult = 0;
+						glGetShaderiv(shaderHandles[i], GL_COMPILE_STATUS, &shaderCompileResult);
+
+						// If compilation failed
+						if(shaderCompileResult == 0)
+						{
+							// Assign an error
+							int shaderCompileLogLength = 0;
+							glGetShaderiv(shaderHandles[i], GL_INFO_LOG_LENGTH, &shaderCompileLogLength);
+
+							// Get the actual error message
+							std::vector<char> shaderCompileErrorMessage(shaderCompileLogLength);
+							glGetShaderInfoLog(shaderHandles[i], shaderCompileLogLength, NULL, &shaderCompileErrorMessage[0]);
+
+							// Convert vector of chars to a string
+							std::string errorMessageTemp;
+							for(int i = 0; shaderCompileErrorMessage[i]; i++)
+								errorMessageTemp += shaderCompileErrorMessage[i];
+
+							// Log an error with a shader info log
+							p_command.m_objectData.m_shaderData.m_errorMessages[i].m_errorCode = ErrorCode::Shader_compile_failed;
+							p_command.m_objectData.m_shaderData.m_errorMessages[i].m_errorSource = ErrorSource::Source_ShaderLoader;
+							p_command.m_objectData.m_shaderData.m_errorMessages[i].m_errorMessage = errorMessageTemp;
+
+							// Log an error with the error handler
+							ErrHandlerLoc::get().log(ErrorCode::Shader_compile_failed, ErrorSource::Source_ShaderLoader, errorMessageTemp);
+
+							// Reset the shader handle
+							shaderHandles[i] = 0;
+						}
+						else
+						{
+							// Attach shader to the program handle
+							glAttachShader(p_command.m_handle, shaderHandles[i]);
+
+							// Check for errors
+							GLenum glError = glGetError();
+							if(glError != GL_NO_ERROR)
+							{
+								// Reset the shader handle
+								shaderHandles[i] = 0;
+
+								// Log an error with a shader info log
+								p_command.m_objectData.m_shaderData.m_errorMessages[i].m_errorCode = ErrorCode::Shader_attach_failed;
+								p_command.m_objectData.m_shaderData.m_errorMessages[i].m_errorSource = ErrorSource::Source_ShaderLoader;
+								p_command.m_objectData.m_shaderData.m_errorMessages[i].m_errorMessage = Utilities::toString(glError);
+							}
+						}
+					}
+				}
+			}
+
+			// Create shader program handle
+			p_command.m_handle = glCreateProgram();
+
+			GLint shaderLinkingResult;
+			glLinkProgram(p_command.m_handle);
+
+			// Check for linking errors. If an error has occurred, get the error message and throw an exception
+			glGetProgramiv(p_command.m_handle, GL_LINK_STATUS, &shaderLinkingResult);
+
+			// If shader loading was successfull
+			if(shaderLinkingResult)
+			{
+				// Generate uniform update list
+				p_command.m_objectData.m_shaderData.m_uniformUpdater.generateUpdateList();
+				p_command.m_objectData.m_shaderData.m_uniformUpdater.updateTextureUniforms();
+				p_command.m_objectData.m_shaderData.m_uniformUpdater.updateBlockBindingPoints();
+			}
+			// If shader loading failed
+			else
+			{
+				// Reset shader handle
+				p_command.m_handle = 0;
+
+				GLsizei shaderLinkLogLength = 0;
+				std::string errorMessageTemp;
+				glGetShaderiv(p_command.m_handle, GL_INFO_LOG_LENGTH, &shaderLinkLogLength);
+
+				// Sometimes OpenGL cannot retrieve the error string, so check that just in case
+				if(shaderLinkLogLength > 0)
+				{
+					// Get the actual error message
+					std::vector<char> shaderLinkErrorMessage(shaderLinkLogLength);
+					glGetShaderInfoLog(p_command.m_handle, shaderLinkLogLength, NULL, &shaderLinkErrorMessage[0]);
+
+					// Convert vector of chars to a string
+					for(int i = 0; shaderLinkErrorMessage[i]; i++)
+						errorMessageTemp += shaderLinkErrorMessage[i];
+				}
+				else
+					errorMessageTemp = "Couldn't retrieve the error";
+
+				// Log an error with a shader info log
+				p_command.m_objectData.m_shaderData.m_errorMessages[0].m_errorCode = ErrorCode::Shader_link_failed;
+				p_command.m_objectData.m_shaderData.m_errorMessages[0].m_errorSource = ErrorSource::Source_ShaderLoader;
+				p_command.m_objectData.m_shaderData.m_errorMessages[0].m_errorMessage = errorMessageTemp;
+
+				// Log an error with the error handler
+				ErrHandlerLoc::get().log(ErrorCode::Shader_link_failed, ErrorSource::Source_ShaderLoader, errorMessageTemp);
+			}
+
+			// Iterate over all shaders and detach them
+			for(unsigned int i = 0; i < ShaderType_NumOfTypes; i++)
+			{
+				// If shader is valid
+				if(shaderHandles[i] != 0)
+				{
+					glDetachShader(p_command.m_handle, shaderHandles[i]);
+				}
+			}
+		}
+			break;
+
+		case LoadObject_Texture2D:
+		{
+			// Generate, bind and upload the texture
+			glGenTextures(1, &p_command.m_handle);
+			glBindTexture(GL_TEXTURE_2D, p_command.m_handle);
+			glTexImage2D(GL_TEXTURE_2D,
+						 p_command.m_objectData.m_tex2DData.m_mipmapLevel,
+						 p_command.m_objectData.m_tex2DData.m_texFormat,
+						 p_command.m_objectData.m_tex2DData.m_textureWidth, 
+						 p_command.m_objectData.m_tex2DData.m_textureHeight,
+						 0, 
+						 p_command.m_objectData.m_tex2DData.m_texFormat,
+						 GL_UNSIGNED_BYTE, 
+						 p_command.m_objectData.m_tex2DData.m_data);
+
+			// Generate  mipmaps if they are enabled
+			if(Config::textureVar().generate_mipmaps)
+				glGenerateMipmap(GL_TEXTURE_2D);
+
+			// Texture filtering mode, when image is minimized
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Config::textureVar().gl_texture_minification);
+			// Texture filtering mode, when image is magnified
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, Config::textureVar().gl_texture_magnification);
+			// Texture anisotropic filtering
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, Config::textureVar().gl_texture_anisotropy);
+		}
+			break;
+
+		case LoadObject_TextureCube:
+			break;
+
+		case LoadObject_Model:
+		{
+			// Create and bind the Vertex Array Object
+			glGenVertexArrays(1, &p_command.m_handle);
+			glBindVertexArray(p_command.m_handle);
+
+			// Create the m_buffers
+			glGenBuffers(sizeof(p_command.m_objectData.m_modelData.m_buffers) / sizeof(p_command.m_objectData.m_modelData.m_buffers[0]), p_command.m_objectData.m_modelData.m_buffers);
+
+			// Upload indices
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, p_command.m_objectData.m_modelData.m_buffers[ModelBuffer_Index]);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, 
+						 p_command.m_objectData.m_modelData.m_size[ModelBuffer_Index], 
+						 p_command.m_objectData.m_modelData.m_data[ModelBuffer_Index], 
+						 GL_STATIC_DRAW);
+
+			// Loop over all the buffer types except index buffer 
+			// (since index buffer does not share the same properties as other buffer types)
+			for(unsigned int i = 0; i < ModelBuffer_NumTypesWithoutIndex; i++)
+			{
+				// Bind a buffer and upload data to it
+				glBindBuffer(GL_ARRAY_BUFFER, p_command.m_objectData.m_modelData.m_buffers[i]);
+				glBufferData(GL_ARRAY_BUFFER,
+							 p_command.m_objectData.m_modelData.m_size[i],
+							 p_command.m_objectData.m_modelData.m_data[i],
+							 GL_STATIC_DRAW);
+
+				// Enable and bind the buffer to a vertex attribute array (so it can be accessed in the shader)
+				glEnableVertexAttribArray(i);
+				glVertexAttribPointer(i, p_command.m_objectData.m_modelData.m_numElements[i], GL_FLOAT, GL_FALSE, 0, 0);
+			}
+		}
+			break;
+
+		default:
+			break;
+		}
+	}
+
+	CurrentState m_rendererState;
+
+	static SingleTriangle m_fullscreenTriangle;
+
+	GeometryBuffer *m_gbuffer;
 };

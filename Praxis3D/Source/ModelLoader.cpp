@@ -11,6 +11,9 @@
 
 #include "Loaders.h"
 
+// This initialization depends on the order of BufferType enum entries
+const int Model::m_numElements[ModelBuffer_NumAllTypes] = { 3, 3, 2, 3, 3, 0 };
+
 ErrorCode Model::loadToMemory()
 {
 	// If the model is not currently already being loaded in another thread
@@ -27,8 +30,7 @@ ErrorCode Model::loadToMemory()
 
 		// Assign flags for assimp loader
 		unsigned int assimpFlags = 0;
-		if(Config::modelVar().calcTangentSpace)
-			assimpFlags |= aiProcess_CalcTangentSpace;
+
 		if(Config::modelVar().joinIdenticalVertices)
 			assimpFlags |= aiProcess_JoinIdenticalVertices;
 		if(Config::modelVar().makeLeftHanded)
@@ -81,58 +83,6 @@ ErrorCode Model::loadToMemory()
 
 	return m_loadingToMemoryError;
 }
-ErrorCode Model::loadToVideoMemory()
-{
-	ErrorCode returnError = ErrorCode::Success;
-	
-	// Create and bind the Vertex Array Object
-	glGenVertexArrays(1, &m_handle);
-	glBindVertexArray(m_handle);
-
-	// Create the m_buffers
-	glGenBuffers(sizeof(m_buffers) / sizeof(m_buffers[0]), m_buffers);
-
-	// Upload indices
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_buffers[IndexBuffer]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_indices[0]) * m_numVertices, &m_indices[0], GL_STATIC_DRAW);
-
-	// Upload positions
-	glBindBuffer(GL_ARRAY_BUFFER, m_buffers[PositionBuffer]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(m_positions[0]) * m_numVertices, &m_positions[0], GL_STATIC_DRAW);
-	glEnableVertexAttribArray(PositionBuffer);
-	glVertexAttribPointer(PositionBuffer, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	// Upload normals
-	glBindBuffer(GL_ARRAY_BUFFER, m_buffers[NormalBuffer]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(m_normals[0]) * m_numVertices, &m_normals[0], GL_STATIC_DRAW);
-	glEnableVertexAttribArray(NormalBuffer);
-	glVertexAttribPointer(NormalBuffer, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	// Upload texture coordinates
-	glBindBuffer(GL_ARRAY_BUFFER, m_buffers[TexCoordBuffer]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(m_texCoords[0]) * m_numVertices, &m_texCoords[0], GL_STATIC_DRAW);
-	glEnableVertexAttribArray(TexCoordBuffer);
-	glVertexAttribPointer(TexCoordBuffer, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-	// Upload tangents
-	glBindBuffer(GL_ARRAY_BUFFER, m_buffers[TangentsBuffer]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(m_tangents[0]) * m_numVertices, &m_tangents[0], GL_STATIC_DRAW);
-	glEnableVertexAttribArray(TangentsBuffer);
-	glVertexAttribPointer(TangentsBuffer, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	// Upload bitangents
-	glBindBuffer(GL_ARRAY_BUFFER, m_buffers[BitangentsBuffer]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(m_bitangents[0]) * m_numVertices, &m_bitangents[0], GL_STATIC_DRAW);
-	glEnableVertexAttribArray(BitangentsBuffer);
-	glVertexAttribPointer(BitangentsBuffer, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	// Make sure the VAO is not changed from the outside
-	glBindVertexArray(0);
-
-	setLoadedToVideoMemory(true);
-
-	return returnError;
-}
 ErrorCode Model::unloadMemory()
 {
 	ErrorCode returnError = ErrorCode::Success;
@@ -145,19 +95,19 @@ ErrorCode Model::unloadMemory()
 	m_bitangents.clear();
 	m_meshPool.clear();
 
-	for(int matType = 0; matType < Model::NumOfModelMaterials; matType++)
+	for(int matType = 0; matType < MaterialType_NumOfTypes; matType++)
 		m_materials.m_materials[matType].clear();
 
 	return returnError;
 }
-ErrorCode Model::unloadVideoMemory()
+/*ErrorCode Model::unloadVideoMemory()
 {
 	ErrorCode returnError = ErrorCode::Success;
 
 	glDeleteBuffers(NumBufferTypes, m_buffers);
 
 	return returnError;
-}
+}*/
 
 void Model::loadFromFile()
 {
@@ -201,61 +151,110 @@ ErrorCode Model::loadFromScene(const aiScene &p_assimpScene)
 	m_bitangents.resize(m_numVertices);
 	m_indices.resize(numIndicesTotal);
 
+	// Set buffer sizes
+	m_bufferSize[ModelBuffer_Position]		= sizeof(m_positions[0])	* m_numVertices;
+	m_bufferSize[ModelBuffer_Normal]		= sizeof(m_normals[0])		* m_numVertices;
+	m_bufferSize[ModelBuffer_TexCoord]		= sizeof(m_texCoords[0])	* m_numVertices;
+	m_bufferSize[ModelBuffer_Tangents]		= sizeof(m_tangents[0])		* m_numVertices;
+	m_bufferSize[ModelBuffer_Bitangents]	= sizeof(m_bitangents[0])	* m_numVertices;
+	m_bufferSize[ModelBuffer_Index]			= sizeof(m_indices[0])		* m_numVertices;
+
 	// Deal with each mesh
 	returnError = loadMeshes(p_assimpScene.mMeshes, p_assimpScene.mNumMeshes);
 	
 	// Load material file names
 	if(returnError == ErrorCode::Success)
 		returnError = loadMaterials(p_assimpScene.mMaterials, p_assimpScene.mNumMaterials);
-	
+
 	return returnError;
 }
 ErrorCode Model::loadMeshes(aiMesh **p_assimpMeshes, size_t p_numMeshes)
 {
 	ErrorCode returnError = ErrorCode::Success;
 
-	for(unsigned int meshIndex = 0, verticeIndex = 0, indicesIndex = 0; meshIndex < p_numMeshes; meshIndex++)
+	for(size_t meshIndex = 0, verticeIndex = 0, indicesIndex = 0; meshIndex < p_numMeshes; meshIndex++)
 	{
 		// Make sure that the texture coordinates array exist (by checking if the first member of the array does)
 		bool textureCoordsExist = p_assimpMeshes[meshIndex]->mTextureCoords[0] ? true : false;
 
 		// Check if arrays exist (to not cause an error if they are absent)
-		bool normalsExist = p_assimpMeshes[meshIndex]->mNormals != nullptr;
-		bool tangentsExist = p_assimpMeshes[meshIndex]->mTangents != nullptr;
-		bool bitangentsExist = p_assimpMeshes[meshIndex]->mBitangents != nullptr;
+		//bool normalsExist = p_assimpMeshes[meshIndex]->mNormals != nullptr;
+		const bool tangentsExist = p_assimpMeshes[meshIndex]->mTangents != nullptr;
+		const bool bitangentsExist = p_assimpMeshes[meshIndex]->mBitangents != nullptr;
+		for(decltype(m_positions.size()) i = 0, size = m_positions.size(); i < size; i++)
+		{
 
+		}
 		// Put the mesh data from assimp to memory
-		for(unsigned int i = 0; i < p_assimpMeshes[meshIndex]->mNumVertices; i++, verticeIndex++)
+		for(decltype(p_assimpMeshes[meshIndex]->mNumVertices) i = 0, tangentIndex = 2, size = p_assimpMeshes[meshIndex]->mNumVertices; i < size; i++, verticeIndex++)
 		{
 			m_positions[verticeIndex].x = p_assimpMeshes[meshIndex]->mVertices[i].x;
 			m_positions[verticeIndex].y = p_assimpMeshes[meshIndex]->mVertices[i].y;
 			m_positions[verticeIndex].z = p_assimpMeshes[meshIndex]->mVertices[i].z;
 
-			if(normalsExist)
-			{
-				m_normals[verticeIndex].x = p_assimpMeshes[meshIndex]->mNormals[i].x;
-				m_normals[verticeIndex].y = p_assimpMeshes[meshIndex]->mNormals[i].y;
-				m_normals[verticeIndex].z = p_assimpMeshes[meshIndex]->mNormals[i].z;
-			}
-
-			if(tangentsExist)
-			{
-				m_tangents[verticeIndex].x = p_assimpMeshes[meshIndex]->mTangents[i].x;
-				m_tangents[verticeIndex].y = p_assimpMeshes[meshIndex]->mTangents[i].y;
-				m_tangents[verticeIndex].z = p_assimpMeshes[meshIndex]->mTangents[i].z;
-			}
-
-			if(bitangentsExist)
-			{
-				m_bitangents[verticeIndex].x = p_assimpMeshes[meshIndex]->mBitangents[i].x;
-				m_bitangents[verticeIndex].y = p_assimpMeshes[meshIndex]->mBitangents[i].y;
-				m_bitangents[verticeIndex].z = p_assimpMeshes[meshIndex]->mBitangents[i].z;
-			}
+			m_normals[verticeIndex].x = p_assimpMeshes[meshIndex]->mNormals[i].x;
+			m_normals[verticeIndex].y = p_assimpMeshes[meshIndex]->mNormals[i].y;
+			m_normals[verticeIndex].z = p_assimpMeshes[meshIndex]->mNormals[i].z;
 
 			if(textureCoordsExist)
 			{
 				m_texCoords[verticeIndex].x = p_assimpMeshes[meshIndex]->mTextureCoords[0][i].x;
 				m_texCoords[verticeIndex].y = p_assimpMeshes[meshIndex]->mTextureCoords[0][i].y;
+			}
+			
+			if(!tangentsExist || !bitangentsExist)
+			{
+				if(verticeIndex == tangentIndex)
+				{
+					// Get vertex positions of the polygon
+					const Math::Vec3f &v0 = m_positions[verticeIndex - 2];
+					const Math::Vec3f &v1 = m_positions[verticeIndex - 1];
+					const Math::Vec3f &v2 = m_positions[verticeIndex - 0];
+
+					// Get texture coordinates of the polygon
+					const Math::Vec2f &uv0 = m_texCoords[verticeIndex - 2];
+					const Math::Vec2f &uv1 = m_texCoords[verticeIndex - 1];
+					const Math::Vec2f &uv2 = m_texCoords[verticeIndex - 0];
+
+					// Get normals of the polygon
+					const Math::Vec3f &n0 = m_normals[verticeIndex - 2];
+					const Math::Vec3f &n1 = m_normals[verticeIndex - 1];
+					const Math::Vec3f &n2 = m_normals[verticeIndex - 0];
+
+					// Calculate position difference
+					Math::Vec3f deltaPos1 = v1 - v0;
+					Math::Vec3f deltaPos2 = v2 - v0;
+
+					// Calculate texture coordinate difference
+					Math::Vec2f deltaUV1 = uv1 - uv0;
+					Math::Vec2f deltaUV2 = uv2 - uv0;
+
+					// Calculate tangent and bitangent
+					float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+					Math::Vec3f tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
+					Math::Vec3f bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
+
+					// Orthogonalize using Gram–Schmidt process, to make tangents and bitangents smooth based on normal
+					m_tangents[verticeIndex - 2] = Math::normalize(tangent - n0 * Math::dot(n0, tangent));
+					m_tangents[verticeIndex - 1] = Math::normalize(tangent - n1 * Math::dot(n1, tangent));
+					m_tangents[verticeIndex - 0] = Math::normalize(tangent - n2 * Math::dot(n2, tangent));
+
+					m_bitangents[verticeIndex - 2] = Math::normalize(bitangent - n0 * Math::dot(n0, bitangent));
+					m_bitangents[verticeIndex - 1] = Math::normalize(bitangent - n1 * Math::dot(n1, bitangent));
+					m_bitangents[verticeIndex - 0] = Math::normalize(bitangent - n2 * Math::dot(n2, bitangent));
+
+					tangentIndex += 3;
+				}
+			}
+			else
+			{
+				m_tangents[verticeIndex].x = p_assimpMeshes[meshIndex]->mTangents[i].x;
+				m_tangents[verticeIndex].y = p_assimpMeshes[meshIndex]->mTangents[i].y;
+				m_tangents[verticeIndex].z = p_assimpMeshes[meshIndex]->mTangents[i].z;
+
+				m_bitangents[verticeIndex].x = p_assimpMeshes[meshIndex]->mBitangents[i].x;
+				m_bitangents[verticeIndex].y = p_assimpMeshes[meshIndex]->mBitangents[i].y;
+				m_bitangents[verticeIndex].z = p_assimpMeshes[meshIndex]->mBitangents[i].z;
 			}
 		}
 
@@ -287,14 +286,16 @@ ErrorCode Model::loadMaterials(aiMaterial **p_assimpMaterials, size_t p_numMater
 	for(unsigned int index = 0, i = 0; i < m_materials.m_numMaterials; i++)
 	{
 		if(p_assimpMaterials[i]->GetTexture(aiTextureType_DIFFUSE, index, &materialPath) == aiReturn_SUCCESS)
-			m_materials.m_materials[ModelMat_diffuse][i].m_filename = materialPath.data;
+			m_materials.m_materials[MaterialType_Diffuse][i].m_filename = materialPath.data;
 
 		if(p_assimpMaterials[i]->GetTexture(aiTextureType_NORMALS, index, &materialPath) == aiReturn_SUCCESS)
-			m_materials.m_materials[ModelMat_normal][i].m_filename = materialPath.data;
+			m_materials.m_materials[MaterialType_Normal][i].m_filename = materialPath.data;
 
 		if(p_assimpMaterials[i]->GetTexture(aiTextureType_EMISSIVE, index, &materialPath) == aiReturn_SUCCESS)
-			m_materials.m_materials[ModelMat_emissive][i].m_filename = materialPath.data;
+			m_materials.m_materials[MaterialType_Emissive][i].m_filename = materialPath.data;
 
+		// Unused with the new shading model (PBS). Might be used in the future to combine textures into one (RMHAO)
+		/*
 		if(p_assimpMaterials[i]->GetTexture(aiTextureType_SPECULAR, index, &materialPath) == aiReturn_SUCCESS)
 			m_materials.m_materials[ModelMat_specular][i].m_filename = materialPath.data;
 
@@ -304,6 +305,7 @@ ErrorCode Model::loadMaterials(aiMaterial **p_assimpMaterials, size_t p_numMater
 		if((p_assimpMaterials[i]->GetTexture(aiTextureType_HEIGHT, index, &materialPath) == aiReturn_SUCCESS) ||
 		   (p_assimpMaterials[i]->GetTexture(aiTextureType_DISPLACEMENT, index, &materialPath) == aiReturn_SUCCESS))
 			m_materials.m_materials[ModelMat_height][i].m_filename = materialPath.data;
+			*/
 	}
 
 	return returnError;

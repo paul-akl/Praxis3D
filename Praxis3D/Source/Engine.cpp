@@ -163,8 +163,13 @@ ErrorCode Engine::init()
 	if(loaderError != ErrorCode::Success)
 		ErrHandlerLoc::get().log(loaderError, ErrorSource::Source_Engine);
 
-	// Initialize texture loader
-	loaderError = Loaders::texture().init();
+	// Initialize texture2D loader
+	loaderError = Loaders::texture2D().init();
+	if(loaderError != ErrorCode::Success)
+		ErrHandlerLoc::get().log(loaderError, ErrorSource::Source_Engine);
+
+	// Initialize textureCubemap loader
+	loaderError = Loaders::textureCubemap().init();
 	if(loaderError != ErrorCode::Success)
 		ErrHandlerLoc::get().log(loaderError, ErrorSource::Source_Engine);
 	

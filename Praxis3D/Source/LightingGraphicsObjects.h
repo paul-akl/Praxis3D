@@ -5,7 +5,7 @@
 
 class DirectionalLightObject : public SystemObject
 {
-	friend class RendererScene;
+	//friend class RendererScene;
 public:
 	DirectionalLightObject(SystemScene *p_systemScene, const std::string &p_name, DirectionalLightDataSet p_lightDataSet)
 		: SystemObject(p_systemScene, p_name, Properties::DirectionalLight), m_lightDataSet(p_lightDataSet), m_active(true) { }
@@ -74,7 +74,10 @@ public:
 	const inline DirectionalLightDataSet &getLightDataSet() const { return m_lightDataSet; }
 
 	// Setters
-	inline void setActive(bool p_flag) { m_active = p_flag; }
+	inline void setActive(bool p_flag)							{ m_active = p_flag;						}
+	inline void setColor(const Math::Vec3f &p_color)			{ m_lightDataSet.m_color = p_color;			}
+	inline void setDirection(const Math::Vec3f &p_direction)	{ m_lightDataSet.m_direction = p_direction; }
+	inline void setIntensity(const float p_intensity)			{ m_lightDataSet.m_intensity = p_intensity; }
 
 private:
 	DirectionalLightDataSet m_lightDataSet;
@@ -84,7 +87,7 @@ private:
 
 class PointLightObject : public SystemObject
 {
-	friend class RendererScene;
+	//friend class RendererScene;
 public:
 	PointLightObject(SystemScene *p_systemScene, const std::string &p_name, PointLightDataSet p_lightDataSet)
 		: SystemObject(p_systemScene, p_name, Properties::PointLight), m_lightDataSet(p_lightDataSet), m_active(true) { }
@@ -153,10 +156,16 @@ public:
 	// Getters
 	const inline bool active() const { return m_active; }
 	const inline PointLightDataSet &getLightDataSet() const { return m_lightDataSet; }
+	const inline Math::Vec3f &getOffsetPosition() const { return m_offsetPosition; }
 
 	// Setters
-	inline void setActive(bool p_flag) { m_active = p_flag; }
-
+	inline void setActive(bool p_flag)								{ m_active = p_flag;							}
+	inline void setColor(const Math::Vec3f &p_color)				{ m_lightDataSet.m_color = p_color;				}
+	inline void setPosition(const Math::Vec3f &p_position)			{ m_lightDataSet.m_position = p_position;		}
+	inline void setAttenuation(const Math::Vec3f &p_attenuation)	{ m_lightDataSet.m_attenuation = p_attenuation;	}
+	inline void setOffsetPosition(const Math::Vec3f &p_position)	{ m_offsetPosition = p_position;				}
+	inline void setIntensity(const float p_intensity)				{ m_lightDataSet.m_intensity = p_intensity;		}
+	
 private:
 	PointLightDataSet m_lightDataSet;
 
@@ -167,7 +176,7 @@ private:
 
 class SpotLightObject : public SystemObject
 {
-	friend class RendererScene;
+	//friend class RendererScene;
 public:
 	SpotLightObject(SystemScene *p_systemScene, const std::string &p_name, SpotLightDataSet p_lightDataSet)
 		: SystemObject(p_systemScene, p_name, Properties::SpotLight), m_lightDataSet(p_lightDataSet), m_active(true) { }
@@ -255,9 +264,19 @@ public:
 	// Getters
 	const inline bool active() const { return m_active; }
 	const inline SpotLightDataSet &getLightDataSet() const { return m_lightDataSet; }
+	const inline Math::Vec3f &getOffsetPosition() const { return m_offsetPosition; }
+	const inline Math::Vec3f &getOffsetRotation() const { return m_offsetRotation; }
 
 	// Setters
-	inline void setActive(bool p_flag) { m_active = p_flag; }
+	inline void setActive(bool p_flag)								{ m_active = p_flag;							}
+	inline void setColor(const Math::Vec3f &p_color)				{ m_lightDataSet.m_color = p_color;				}
+	inline void setPosition(const Math::Vec3f &p_position)			{ m_lightDataSet.m_position = p_position;		}
+	inline void setDirection(const Math::Vec3f &p_direction)		{ m_lightDataSet.m_direction = p_direction;		}
+	inline void setAttenuation(const Math::Vec3f &p_attenuation)	{ m_lightDataSet.m_attenuation = p_attenuation; }
+	inline void setOffsetPosition(const Math::Vec3f &p_position)	{ m_offsetPosition = p_position;				}
+	inline void setOffsetRotation(const Math::Vec3f &p_rotation)	{ m_offsetRotation = p_rotation;				}
+	inline void setCutoffAngle(const float p_cutoffAngle)			{ m_lightDataSet.m_cutoffAngle = p_cutoffAngle; }
+	inline void setIntensity(const float p_intensity)				{ m_lightDataSet.m_intensity = p_intensity;		}
 
 private:
 	SpotLightDataSet m_lightDataSet;

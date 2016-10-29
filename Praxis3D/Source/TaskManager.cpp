@@ -312,11 +312,11 @@ void TaskManager::issueJobsForSystemTasks(SystemTask **p_tasks, unsigned int p_c
 	tbb::task_list taskList;
 	unsigned int affinityCount = (unsigned int)m_affinityIDs.size();
 	
-	for (unsigned int perfHint = 0, currentTask = 0; perfHint < PerformanceHint::Task_MAX; perfHint++)
-	{
-		for (currentTask = 0; currentTask < p_count; currentTask++)
+	//for (unsigned int perfHint = 0, currentTask = 0; perfHint < PerformanceHint::Task_MAX; perfHint++)
+	//{
+		for(unsigned int perfHint = 0, currentTask = 0; currentTask < p_count; currentTask++)
 		{
-			if (p_tasks[currentTask]->isPrimaryThreadOnly())
+			if(p_tasks[currentTask]->isPrimaryThreadOnly())
 			{
 				// Put this task on the list of tasks to be run on the primary thread
 				// only do this during the first outer loop
@@ -328,7 +328,7 @@ void TaskManager::issueJobsForSystemTasks(SystemTask **p_tasks, unsigned int p_c
 			else
 			{
 				// Check if it's time to dispatch this task
-				if (getPerformanceHint(p_tasks[currentTask]) == (PerformanceHint)perfHint)
+				//if(getPerformanceHint(p_tasks[currentTask]) == (PerformanceHint)perfHint)
 				{
 					// This task can be run on an arbitrary thread - allocate it 
 					TaskManagerGlobal::GenericCallbackTask<TaskManager::JobFunct> *systemTask
@@ -349,7 +349,7 @@ void TaskManager::issueJobsForSystemTasks(SystemTask **p_tasks, unsigned int p_c
 		// We only spawn system tasks here. They in their turn will spawn descendant tasks.
 		// Waiting for the whole bunch completion happens in WaitForSystemTasks.
 		m_systemTasksRoot->spawn(taskList);
-	}
+	//}
 }
 void TaskManager::parallelFor(SystemTask *p_systemTask, ParallelForFunc p_jobFunc, void *p_param, unsigned int p_begin, unsigned int p_end, unsigned int p_minGrainSize)
 {

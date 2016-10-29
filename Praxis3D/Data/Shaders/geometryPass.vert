@@ -1,4 +1,4 @@
-#version 330 core
+#version 450 core
 
 // Mesh buffers
 layout(location = 0) in vec3 vertexPosition;
@@ -8,29 +8,44 @@ layout(location = 3) in vec3 vertexTangent;
 layout(location = 4) in vec3 vertexBitangent;
 
 // Variables passed to fragment shader
-out vec3 fragPos;
-out vec2 texCoord;
-out vec3 normal;
 out mat3 TBN;
+out vec2 texCoord;
+out vec3 fragPos;
+out vec3 normal;
+out vec3 tangentFragPos;
+out vec3 tangentCameraPos;
+out float parallaxScale;
 
 uniform mat4 MVP;
 uniform mat4 modelMat;
+uniform mat4 viewMat;
 uniform mat4 modelViewMat;
 uniform mat4 projMat;
+uniform vec3 cameraPosVec;
 uniform float textureTilingFactor;
+uniform float heightScale;
 
 void main(void)
 {		
 	// Multiply position and normal by model matrix (to convert them into world space)
     fragPos = vec3(modelMat * vec4(vertexPosition, 1.0));
-	normal = normalize(vec3(modelMat * vec4(vertexNormal, 0.0)));
+	normal = normalize(mat3(modelMat) * vertexNormal);
+	
+	// Copy the height scale value
+	parallaxScale = heightScale;
 	
 	// Multiply texture coordinates by the tiling factor. The higher the factor, the denser the tiling
 	texCoord = textureCoord * textureTilingFactor;
+		
+	// Compute TBN matrix
+    vec3 T = normalize(mat3(modelMat) * vertexTangent);
+    vec3 B = normalize(mat3(modelMat) * vertexBitangent);
 	
-	// Compute TBN matrix (method 1)
-	mat3 normalMatrix = transpose(inverse(mat3(modelMat)));
-	TBN = mat3(normalMatrix * vertexTangent, normalMatrix * vertexBitangent, normalMatrix * vertexNormal);
+	TBN = transpose(inverse(mat3(T, B, normal)));
+	mat3 TBN2 = transpose((mat3(T, B, normal)));
 	
+	tangentCameraPos = TBN2 * cameraPosVec;
+	tangentFragPos = TBN2 * fragPos;
+		
 	gl_Position = MVP * vec4(vertexPosition, 1.0);
 }

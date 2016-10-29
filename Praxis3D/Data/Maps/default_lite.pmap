@@ -6,9 +6,9 @@
 		{
 			"Scene": 
 			{
-				"ModelPoolSize": "15",
-				"PointLightPoolSize": "10",
-				"SpotLightPoolSize": "10"
+				"ModelPoolSize": "30",
+				"PointLightPoolSize": "20",
+				"SpotLightPoolSize": "20"
 			},
 			"Objects": 
 			[
@@ -20,76 +20,45 @@
 					"Type": "DirectionalLight",
 					"Name": "DirectionalLight 1",
 					"Color": "1.0f, 1.0f, 1.0f",
-					"Direction": "0.0340488f, -0.706697f, -0.706697f",
+					"Direction": "0.006461f, -0.707092f, -0.707092f",
 					"Intensity": "0.1f"
 				},
 				{
-					"Type": "ModelObject",
-					"Name": "Terrain1",
-					"Position": "100.0f, 1.0f, 0.0f",
-					"Rotation": "0.0f, 0.0f, 0.0f",
-					"OffsetPosition": "0.0f, 0.0f, 0.0f",
-					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "100.0f, 100.0f, 100.0f",
-					"Lighting": "1",
-					"AlphaThreshold": "0.0f",
-					"TextureTilingFactor": "20.0f",
-					"Models": 
-					{
-						"Filename": "plane.obj"
-					},
+					"Type": "EnvironmentMapStatic",
+					"Position": "0.0f, 0.0f, 0.0f",
 					"Materials": 
-					{
-						"Diffuse": 
-						[
-							{
-								"Filename": "Ground_SmoothRocks_2k_alb.tga",
-								"Index": "0"
-							}
-						],
-						"Normal": 
-						[
-							{
-								"Filename": "Ground_SmoothRocks_2k_n.tga",
-								"Index": "0"
-							}
-						],
-						"Emissive": 
+					[
 						{
+							"Filename": "posx.jpg"
 						},
-						"Specular": 
-						[
-							{
-								"Filename": "Ground_SmoothRocks_RMHAO.tga",
-								"Index": "0"
-							}
-						],
-						"Gloss": 
-						[
-							{
-								"Filename": "Ground_SmoothRocks_2k_g.tga",
-								"Index": "0"
-							}
-						],
-						"Height": 
-						[
-							{
-								"Filename": "Ground_SmoothRocks_2k_h.tga",
-								"Index": "0"
-							}
-						]
-					}
+						{
+							"Filename": "negx.jpg"
+						},
+						{
+							"Filename": "posy.jpg"
+						},
+						{
+							"Filename": "negy.jpg"
+						},
+						{
+							"Filename": "posz.jpg"
+						},
+						{
+							"Filename": "negz.jpg"
+						}
+					]
 				},
 				{
 					"Type": "ModelObject",
 					"Name": "Terrain2",
-					"Position": "-100.0f, 1.0f, 0.0f",
+					"Position": "-100.0f, -0.15f, 0.0f",
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
 					"Scale": "100.0f, 100.0f, 100.0f",
-					"Lighting": "1",
 					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
 					"TextureTilingFactor": "20.0f",
 					"Models": 
 					{
@@ -114,24 +83,10 @@
 						"Emissive": 
 						{
 						},
-						"Specular": 
+						"RMHAO": 
 						[
 							{
 								"Filename": "Metal_CleanPaintedWithChips_RMHAO3.tga",
-								"Index": "0"
-							}
-						],
-						"Gloss": 
-						[
-							{
-								"Filename": "Metal_CleanPaintedWithChips_2k_g.tga",
-								"Index": "0"
-							}
-						],
-						"Height": 
-						[
-							{
-								"Filename": "Metal_CleanPaintedWithChips_2k_h.tga",
 								"Index": "0"
 							}
 						]
@@ -139,63 +94,107 @@
 				},
 				{
 					"Type": "ModelObject",
-					"Name": "Dumpster 1",
-					"Position": "15.0617f, 0.0f, -6.05827f",
-					"Rotation": "-90.0f, 0.0f, 90.0f",
+					"Name": "Plane 1",
+					"Position": "-30.0f, 1.0f, 0.0f",
+					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "5.0f, 5.0f, 5.0f",
-					"Lighting": "1",
+					"Scale": "20.0f, 20.0f, 20.0f",
 					"AlphaThreshold": "0.0f",
-					"TextureTilingFactor": "1.0f",
+					"HeightScale": "0.04f",
+					"Lighting": "1",
+					"TextureTilingFactor": "10.0f",
 					"Models": 
 					{
-						"Filename": "dumpster.3ds"
+						"Filename": "plane.obj"
 					},
 					"Materials": 
 					{
 						"Diffuse": 
 						[
 							{
-								"Filename": "Dumpster_DIFF_2048.tga",
+								"Filename": "Ground_SmoothRocks_2k_alb.tga",
 								"Index": "0"
 							}
 						],
 						"Normal": 
 						[
 							{
-								"Filename": "Dumpster_NRM_2048.tga",
+								"Filename": "Ground_SmoothRocks_2k_n.tga",
 								"Index": "0"
 							}
 						],
 						"Emissive": 
 						{
 						},
-						"Specular": 
+						"RMHAO": 
+						[
+							{
+								"Filename": "Ground_SmoothRocks_RMHAO.tga",
+								"Index": "0"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Cube 1",
+					"Position": "15.0f, 5.0f, 0.0f",
+					"Rotation": "0.0f, 0.0f, 0.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "4.0f, 4.0f, 4.0f",
+					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "cube.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						[
+							{
+								"Filename": "Ground_SmoothRocks_2k_alb.tga",
+								"Index": "1"
+							}
+						],
+						"Normal": 
+						[
+							{
+								"Filename": "Ground_SmoothRocks_2k_n.tga",
+								"Index": "1"
+							}
+						],
+						"Emissive": 
 						{
 						},
-						"Gloss": 
-						{
-						},
-						"Height": 
-						{
-						}
+						"RMHAO": 
+						[
+							{
+								"Filename": "Ground_SmoothRocks_RMHAO.tga",
+								"Index": "1"
+							}
+						]
 					}
 				},
 				{
 					"Type": "ModelObject",
 					"Name": "sphere 1",
-					"Position": "0.0f, 2.0f, 10.0f",
+					"Position": "0.0f, 4.0f, 10.0f",
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "0.1f, 0.1f, 0.1f",
-					"Lighting": "1",
+					"Scale": "5.0f, 5.0f, 5.0f",
 					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
 					"TextureTilingFactor": "1.0f",
 					"Models": 
 					{
-						"Filename": "2_second_Ball.obj"
+						"Filename": "sphereNew4.3DS"
 					},
 					"Materials": 
 					{
@@ -212,35 +211,30 @@
 						"Emissive": 
 						{
 						},
-						"Specular": 
+						"RMHAO": 
 						[
 							{
 								"Filename": "test1_RM.png",
 								"Index": "0"
 							}
-						],
-						"Gloss": 
-						{
-						},
-						"Height": 
-						{
-						}
+						]
 					}
 				},
 				{
 					"Type": "ModelObject",
 					"Name": "sphere 2",
-					"Position": "0.0f, 2.0f, 5.0f",
+					"Position": "0.0f, 4.0f, 5.0f",
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "0.1f, 0.1f, 0.1f",
-					"Lighting": "1",
+					"Scale": "5.0f, 5.0f, 5.0f",
 					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
 					"TextureTilingFactor": "1.0f",
 					"Models": 
 					{
-						"Filename": "2_second_Ball.obj"
+						"Filename": "sphereNew4.3DS"
 					},
 					"Materials": 
 					{
@@ -257,35 +251,30 @@
 						"Emissive": 
 						{
 						},
-						"Specular": 
+						"RMHAO": 
 						[
 							{
 								"Filename": "test2_RM.png",
 								"Index": "0"
 							}
-						],
-						"Gloss": 
-						{
-						},
-						"Height": 
-						{
-						}
+						]
 					}
 				},
 				{
 					"Type": "ModelObject",
 					"Name": "sphere 3",
-					"Position": "0.0f, 2.0f, 0.0f",
+					"Position": "0.0f, 4.0f, 0.0f",
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "0.1f, 0.1f, 0.1f",
-					"Lighting": "1",
+					"Scale": "5.0f, 5.0f, 5.0f",
 					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
 					"TextureTilingFactor": "1.0f",
 					"Models": 
 					{
-						"Filename": "2_second_Ball.obj"
+						"Filename": "sphereNew4.3DS"
 					},
 					"Materials": 
 					{
@@ -302,35 +291,30 @@
 						"Emissive": 
 						{
 						},
-						"Specular": 
+						"RMHAO": 
 						[
 							{
 								"Filename": "test3_RM.png",
 								"Index": "0"
 							}
-						],
-						"Gloss": 
-						{
-						},
-						"Height": 
-						{
-						}
+						]
 					}
 				},
 				{
 					"Type": "ModelObject",
 					"Name": "sphere 4",
-					"Position": "0.0f, 2.0f, -5.0f",
+					"Position": "0.0f, 4.0f, -5.0f",
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "0.1f, 0.1f, 0.1f",
-					"Lighting": "1",
+					"Scale": "5.0f, 5.0f, 5.0f",
 					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
 					"TextureTilingFactor": "1.0f",
 					"Models": 
 					{
-						"Filename": "2_second_Ball.obj"
+						"Filename": "sphereNew4.3DS"
 					},
 					"Materials": 
 					{
@@ -347,35 +331,30 @@
 						"Emissive": 
 						{
 						},
-						"Specular": 
+						"RMHAO": 
 						[
 							{
 								"Filename": "test4_RM.png",
 								"Index": "0"
 							}
-						],
-						"Gloss": 
-						{
-						},
-						"Height": 
-						{
-						}
+						]
 					}
 				},
 				{
 					"Type": "ModelObject",
 					"Name": "sphere 5",
-					"Position": "0.0f, 2.0f, -10.0f",
+					"Position": "0.0f, 4.0f, -10.0f",
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "0.1f, 0.1f, 0.1f",
-					"Lighting": "1",
+					"Scale": "5.0f, 5.0f, 5.0f",
 					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
 					"TextureTilingFactor": "1.0f",
 					"Models": 
 					{
-						"Filename": "2_second_Ball.obj"
+						"Filename": "sphereNew4.3DS"
 					},
 					"Materials": 
 					{
@@ -392,35 +371,30 @@
 						"Emissive": 
 						{
 						},
-						"Specular": 
+						"RMHAO": 
 						[
 							{
 								"Filename": "test5_RM.png",
 								"Index": "0"
 							}
-						],
-						"Gloss": 
-						{
-						},
-						"Height": 
-						{
-						}
+						]
 					}
 				},
 				{
 					"Type": "ModelObject",
 					"Name": "sphere 6",
-					"Position": "0.0f, 2.0f, -15.0f",
+					"Position": "0.0f, 4.0f, -15.0f",
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "0.1f, 0.1f, 0.1f",
-					"Lighting": "1",
+					"Scale": "5.0f, 5.0f, 5.0f",
 					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
 					"TextureTilingFactor": "1.0f",
 					"Models": 
 					{
-						"Filename": "2_second_Ball.obj"
+						"Filename": "sphereNew4.3DS"
 					},
 					"Materials": 
 					{
@@ -437,35 +411,30 @@
 						"Emissive": 
 						{
 						},
-						"Specular": 
+						"RMHAO": 
 						[
 							{
 								"Filename": "test6_RM.png",
 								"Index": "0"
 							}
-						],
-						"Gloss": 
-						{
-						},
-						"Height": 
-						{
-						}
+						]
 					}
 				},
 				{
 					"Type": "ModelObject",
 					"Name": "light 1",
-					"Position": "-16.1514f, 10.0f, -11.7956f",
+					"Position": "-19.2421f, 10.0f, 5.45328f",
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "0.5f, 0.5f, 0.5f",
-					"Lighting": "1",
+					"Scale": "1.0f, 1.0f, 1.0f",
 					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
 					"TextureTilingFactor": "1.0f",
 					"Models": 
 					{
-						"Filename": "sphere.obj"
+						"Filename": "sphereNew4.3DS"
 					},
 					"Materials": 
 					{
@@ -478,13 +447,7 @@
 						"Emissive": 
 						{
 						},
-						"Specular": 
-						{
-						},
-						"Gloss": 
-						{
-						},
-						"Height": 
+						"RMHAO": 
 						{
 						}
 					}
@@ -496,13 +459,14 @@
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "0.5f, 0.5f, 0.5f",
-					"Lighting": "1",
+					"Scale": "1.0f, 1.0f, 1.0f",
 					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
 					"TextureTilingFactor": "1.0f",
 					"Models": 
 					{
-						"Filename": "sphere.obj"
+						"Filename": "sphereNew4.3DS"
 					},
 					"Materials": 
 					{
@@ -515,13 +479,7 @@
 						"Emissive": 
 						{
 						},
-						"Specular": 
-						{
-						},
-						"Gloss": 
-						{
-						},
-						"Height": 
+						"RMHAO": 
 						{
 						}
 					}
@@ -533,13 +491,14 @@
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "0.5f, 0.5f, 0.5f",
-					"Lighting": "1",
+					"Scale": "1.0f, 1.0f, 1.0f",
 					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
 					"TextureTilingFactor": "1.0f",
 					"Models": 
 					{
-						"Filename": "sphere.obj"
+						"Filename": "sphereNew4.3DS"
 					},
 					"Materials": 
 					{
@@ -552,13 +511,7 @@
 						"Emissive": 
 						{
 						},
-						"Specular": 
-						{
-						},
-						"Gloss": 
-						{
-						},
-						"Height": 
+						"RMHAO": 
 						{
 						}
 					}
@@ -570,13 +523,14 @@
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "0.5f, 0.5f, 0.5f",
-					"Lighting": "1",
+					"Scale": "1.0f, 1.0f, 1.0f",
 					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
 					"TextureTilingFactor": "1.0f",
 					"Models": 
 					{
-						"Filename": "sphere.obj"
+						"Filename": "sphereNew4.3DS"
 					},
 					"Materials": 
 					{
@@ -589,13 +543,7 @@
 						"Emissive": 
 						{
 						},
-						"Specular": 
-						{
-						},
-						"Gloss": 
-						{
-						},
-						"Height": 
+						"RMHAO": 
 						{
 						}
 					}
@@ -607,13 +555,14 @@
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "0.5f, 0.5f, 0.5f",
-					"Lighting": "1",
+					"Scale": "1.0f, 1.0f, 1.0f",
 					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
 					"TextureTilingFactor": "1.0f",
 					"Models": 
 					{
-						"Filename": "sphere.obj"
+						"Filename": "sphereNew4.3DS"
 					},
 					"Materials": 
 					{
@@ -626,13 +575,7 @@
 						"Emissive": 
 						{
 						},
-						"Specular": 
-						{
-						},
-						"Gloss": 
-						{
-						},
-						"Height": 
+						"RMHAO": 
 						{
 						}
 					}
@@ -644,13 +587,14 @@
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "0.5f, 0.5f, 0.5f",
-					"Lighting": "1",
+					"Scale": "1.0f, 1.0f, 1.0f",
 					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
 					"TextureTilingFactor": "1.0f",
 					"Models": 
 					{
-						"Filename": "sphere.obj"
+						"Filename": "sphereNew4.3DS"
 					},
 					"Materials": 
 					{
@@ -663,39 +607,83 @@
 						"Emissive": 
 						{
 						},
-						"Specular": 
-						{
-						},
-						"Gloss": 
-						{
-						},
-						"Height": 
+						"RMHAO": 
 						{
 						}
 					}
 				},
 				{
 					"Type": "ModelObject",
-					"Name": "Skybox 1",
-					"Position": "2.32071f, 8.89734f, 7.00538f",
-					"Rotation": "0.0f, -0.95052f, 23.5525f",
+					"Name": "Terrain1",
+					"Position": "100.0f, -0.5f, 0.0f",
+					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "30000.0f, 30000.0f, 30000.0f",
-					"Lighting": "0",
+					"Scale": "25000.0f, 25000.0f, 25000.0f",
 					"AlphaThreshold": "0.0f",
-					"TextureTilingFactor": "1.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
+					"TextureTilingFactor": "10.0f",
 					"Models": 
 					{
-						"Filename": "sphere_inverted.obj"
+						"Filename": "terrain_plane.obj"
 					},
 					"Materials": 
 					{
 						"Diffuse": 
 						[
 							{
-								"Filename": "gRbWE9O.jpg",
+								"Filename": "Ground_SmoothRocks_2k_alb.tga",
+								"Index": "0"
+							}
+						],
+						"Normal": 
+						[
+							{
+								"Filename": "Ground_SmoothRocks_2k_n.tga",
+								"Index": "0"
+							}
+						],
+						"Emissive": 
+						{
+						},
+						"RMHAO": 
+						[
+							{
+								"Filename": "defaultRM.png",
 								"Index": "1"
+							}
+						]
+					},
+					"Shaders": 
+					{
+						"FragmentShader": "geometryPassInf.frag",
+						"VertexShader": "geometryPassInf.vert"
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Skybox 1",
+					"Position": "-117.386f, 11.1996f, -70.2678f",
+					"Rotation": "0.0f, 0.0f, 0.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "20000.0f, 20000.0f, 20000.0f",
+					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "0",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "cube_inverted.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						[
+							{
+								"Filename": "skydome6.png",
+								"Index": "0"
 							}
 						],
 						"Normal": 
@@ -704,13 +692,7 @@
 						"Emissive": 
 						{
 						},
-						"Specular": 
-						{
-						},
-						"Gloss": 
-						{
-						},
-						"Height": 
+						"RMHAO": 
 						{
 						}
 					},
@@ -727,7 +709,7 @@
 					"Color": "1.0f, 1.0f, 1.0f",
 					"Intensity": "100.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
-					"Position": "-16.1514f, 10.0f, -11.7956f"
+					"Position": "-19.2421f, 10.0f, 5.45328f"
 				},
 				{
 					"Type": "PointLight",
@@ -795,10 +777,12 @@
 				{
 					"Type": "FreeCamera",
 					"Name": "Free Camera 1",
-					"Position": "2.32533f, 8.9038f, 7.00543f",
-					"Angle": "23.5525f, -0.95052f",
+					"Position": "-117.387f, 11.2024f, -70.272f",
+					"Angle": "25.5279f, -0.56376f",
 					"Speed": "1.0f",
 					"SprintSpeed": "50.0f",
+					"LowerLimit": "0.0f",
+					"UpperLimit": "500.0f",
 					"Keybindings": 
 					{
 						"ForwardKey": "26",

@@ -109,34 +109,47 @@ namespace Properties
 	Code(Scale,) \
 	/* Graphics */ \
 	Code(AlphaThreshold, ) \
+	Code(AmbientOcclusion, ) \
 	Code(Attenuation,) \
 	Code(Camera,) \
 	Code(Color,) \
+	Code(CombinedTexture,) \
 	Code(CutoffAngle,) \
 	Code(Diffuse,) \
 	Code(Direction,) \
 	Code(DirectionalLight,) \
 	Code(Emissive,) \
+	Code(EnvironmentMapDynamic,) \
+	Code(EnvironmentMapStatic,) \
 	Code(FragmentShader,) \
 	Code(GeometryShader,) \
-	Code(Gloss,) \
 	Code(Graphics,) \
 	Code(Height,) \
+	Code(HeightScale,) \
 	Code(Intensity,) \
 	Code(Lighting,) \
 	Code(Materials,) \
+	Code(Metalness,) \
 	Code(Models,) \
 	Code(ModelObject,) \
 	Code(ModelPoolSize,) \
+	Code(NegativeX,) \
+	Code(NegativeY,) \
+	Code(NegativeZ,) \
 	Code(Normal,) \
+	Code(ParallaxHeightScale,) \
 	Code(PointLight,) \
 	Code(PointLightPoolSize,) \
+	Code(PositiveX,) \
+	Code(PositiveY,) \
+	Code(PositiveZ,) \
 	Code(PostProcess,) \
+	Code(RMHAO,) \
+	Code(Roughness,) \
 	Code(Shaders,) \
 	Code(ShaderPoolSize,) \
 	Code(ShaderGraphicsObject,) \
 	Code(ShaderModelObject,) \
-	Code(Specular,) \
 	Code(SpotLight,) \
 	Code(SpotLightPoolSize,) \
 	Code(TessControlShader,) \
@@ -175,6 +188,7 @@ namespace Properties
 	Code(FreeCamera,) \
 	Code(Latitude,) \
 	Code(Longitude,) \
+	Code(LowerLimit,) \
 	Code(InputScript,) \
 	Code(Hours,) \
 	Code(KeyCode,) \
@@ -187,6 +201,7 @@ namespace Properties
 	Code(Speed,) \
 	Code(SprintSpeed,) \
 	Code(TimeMultiplier,) \
+	Code(UpperLimit,) \
 	Code(WorldEditScript,) \
 	/* Window */ \
 	Code(Fullscreen,) \
@@ -217,34 +232,47 @@ namespace Properties
 		GetString(Rotation),
 		GetString(Scale),
 		GetString(AlphaThreshold),
+		GetString(AmbientOcclusion),
 		GetString(Attenuation),
 		GetString(Camera),
 		GetString(Color),
+		GetString(CombinedTexture),
 		GetString(CutoffAngle),
 		GetString(Diffuse),
 		GetString(Direction),
 		GetString(DirectionalLight),
 		GetString(Emissive),
+		GetString(EnvironmentMapDynamic),
+		GetString(EnvironmentMapStatic),
 		GetString(FragmentShader),
 		GetString(GeometryShader),
-		GetString(Gloss),
 		GetString(Graphics),
 		GetString(Height),
+		GetString(HeightScale),
 		GetString(Intensity),
 		GetString(Lighting),
 		GetString(Materials),
+		GetString(Metalness),
 		GetString(Models),
 		GetString(ModelObject),
 		GetString(ModelPoolSize),
+		GetString(NegativeX),
+		GetString(NegativeY),
+		GetString(NegativeZ),
 		GetString(Normal),
+		GetString(ParallaxHeightScale),
 		GetString(PointLight),
 		GetString(PointLightPoolSize),
+		GetString(PositiveX),
+		GetString(PositiveY),
+		GetString(PositiveZ),
 		GetString(PostProcess),
+		GetString(RMHAO),
+		GetString(Roughness),
 		GetString(Shaders),
 		GetString(ShaderPoolSize),
 		GetString(ShaderGraphicsObject),
 		GetString(ShaderModelObject),
-		GetString(Specular),
 		GetString(SpotLight),
 		GetString(SpotLightPoolSize),
 		GetString(TessControlShader),
@@ -280,6 +308,7 @@ namespace Properties
 		GetString(FreeCamera),
 		GetString(Latitude),
 		GetString(Longitude),
+		GetString(LowerLimit),
 		GetString(InputScript),
 		GetString(Hours),
 		GetString(KeyCode),
@@ -292,6 +321,7 @@ namespace Properties
 		GetString(Speed),
 		GetString(SprintSpeed),
 		GetString(TimeMultiplier),
+		GetString(UpperLimit),
 		GetString(WorldEditScript),
 		GetString(Fullscreen),
 		GetString(MouseCapture),
@@ -393,8 +423,8 @@ public:
 	{
 		FramebfrVariables()
 		{
-			gl_position_buffer_internal_format = GL_RGBA32F;
-			gl_position_buffer_texture_format = GL_RGBA;
+			gl_position_buffer_internal_format = GL_RGB32F;
+			gl_position_buffer_texture_format = GL_RGB;
 			gl_position_buffer_texture_type = GL_FLOAT;
 
 			gl_diffuse_buffer_internal_format = GL_RGBA16F;
@@ -405,16 +435,20 @@ public:
 			gl_emissive_buffer_texture_format = GL_RGBA;
 			gl_emissive_buffer_texture_type = GL_FLOAT;
 
-			gl_normal_buffer_internal_format = GL_RGBA16F;
-			gl_normal_buffer_texture_format = GL_RGBA;
+			gl_normal_buffer_internal_format = GL_RGB16F;
+			gl_normal_buffer_texture_format = GL_RGB;
 			gl_normal_buffer_texture_type = GL_FLOAT;
+
+			gl_mat_properties_buffer_internal_format = GL_RGBA16F;
+			gl_mat_properties_buffer_texture_format = GL_RGBA;
+			gl_mat_properties_buffer_texture_type = GL_FLOAT;
 
 			gl_blur_buffer_internal_format = GL_RGBA16F;
 			gl_blur_buffer_texture_format = GL_RGBA;
 			gl_blur_buffer_texture_type = GL_FLOAT;
 
-			gl_final_buffer_internal_format = GL_RGBA16F;
-			gl_final_buffer_texture_format = GL_RGBA;
+			gl_final_buffer_internal_format = GL_RGB16F;
+			gl_final_buffer_texture_format = GL_RGB;
 			gl_final_buffer_texture_type = GL_FLOAT;
 
 			gl_depth_buffer_internal_format = GL_DEPTH_COMPONENT32F;
@@ -452,6 +486,10 @@ public:
 		int gl_normal_buffer_internal_format;
 		int gl_normal_buffer_texture_format;
 		int gl_normal_buffer_texture_type;
+
+		int gl_mat_properties_buffer_internal_format;
+		int gl_mat_properties_buffer_texture_format;
+		int gl_mat_properties_buffer_texture_type;
 
 		int gl_blur_buffer_internal_format;
 		int gl_blur_buffer_texture_type;
@@ -510,7 +548,6 @@ public:
 			rendering_res_y = 900;
 			alpha_threshold = 0.0f;
 			emissive_threshold = 0.3f;
-			parallax_height_scale = 0.1f;
 			fog_color_x = 0.55f;
 			fog_color_y = 0.55f;
 			fog_color_z = 0.55f;
@@ -523,6 +560,7 @@ public:
 			light_color_r = 1.0f;
 			light_color_g = 1.0f;
 			light_color_b = 1.0f;
+			height_scale = 0.0f;
 			texture_tiling_factor = 1.0f;
 			z_far = 8000.0f;
 			z_near = 0.1f;
@@ -543,7 +581,6 @@ public:
 		int rendering_res_y;
 		float alpha_threshold;
 		float emissive_threshold;
-		float parallax_height_scale;
 		float fog_color_x;
 		float fog_color_y;
 		float fog_color_z;
@@ -556,6 +593,7 @@ public:
 		float light_color_r;
 		float light_color_g;
 		float light_color_b;
+		float height_scale;
 		float texture_tiling_factor;
 		float z_far;
 		float z_near;
@@ -724,6 +762,10 @@ public:
 			gaussian_blur_horizontal_vert_shader = "gaussianBlurHorizontal.vert";
 			light_pass_vert_shader = "lightPass.vert";
 			light_pass_frag_shader = "lightPass.frag";
+			final_pass_vert_shader = "finalPass.vert";
+			final_pass_frag_shader = "finalPass.frag";
+			reflection_pass_vert_shader = "reflectionPass.vert";
+			reflection_pass_frag_shader = "reflectionPass.frag";
 			dir_light_quad_offset_x = 0.0f;
 			dir_light_quad_offset_y = 0.0f;
 			dir_light_quad_offset_z = 0.0f;
@@ -764,6 +806,10 @@ public:
 		std::string gaussian_blur_horizontal_vert_shader;
 		std::string light_pass_vert_shader;
 		std::string light_pass_frag_shader;
+		std::string final_pass_vert_shader;
+		std::string final_pass_frag_shader;
+		std::string reflection_pass_vert_shader;
+		std::string reflection_pass_frag_shader;
 		float dir_light_quad_offset_x;
 		float dir_light_quad_offset_y;
 		float dir_light_quad_offset_z;
@@ -797,7 +843,7 @@ public:
 			alphaCullingUniform = "alphaCulling";
 			alphaThresholdUniform = "alphaThreshold";
 			emissiveThresholdUniform = "emissiveThreshold";
-			parallaxHeightScale = "parallaxHeightScale";
+			heightScaleUniform = "heightScale";
 			textureTilingFactorUniform = "textureTilingFactor";
 
 			dirLightColor = "directionalLight.m_color";
@@ -823,7 +869,9 @@ public:
 			diffuseMapUniform = "diffuseMap";
 			normalMapUniform = "normalMap";
 			emissiveMapUniform = "emissiveMap";
+			matPropertiesMapUniform = "matPropertiesMap";
 			blurMapUniform = "blurMap";
+			finalMapUniform = "finalColorMap";
 
 			sunGlowTextureUniform = "sunGlowMap";
 			skyMapTextureUniform = "skyMap";
@@ -834,6 +882,10 @@ public:
 			emissiveTextureUniform = "emissiveTexture";
 			glossTextureUniform = "glossTexture";
 			heightTextureUniform = "heightTexture";
+			combinedTextureUniform = "combinedTexture";
+
+			dynamicEnvMapUniform = "dynamicEnvMap";
+			staticEnvMapUniform = "staticEnvMap";
 
 			fogDensityUniform = "fogDensity";
 			fogColorUniform = "fogColor";
@@ -857,7 +909,7 @@ public:
 		std::string alphaCullingUniform;
 		std::string alphaThresholdUniform;
 		std::string emissiveThresholdUniform;
-		std::string parallaxHeightScale;
+		std::string heightScaleUniform;
 		std::string textureTilingFactorUniform;
 
 		std::string dirLightColor;
@@ -883,7 +935,9 @@ public:
 		std::string diffuseMapUniform;
 		std::string normalMapUniform;
 		std::string emissiveMapUniform;
+		std::string matPropertiesMapUniform;
 		std::string blurMapUniform;
+		std::string finalMapUniform;
 
 		std::string sunGlowTextureUniform;
 		std::string skyMapTextureUniform;
@@ -894,6 +948,10 @@ public:
 		std::string emissiveTextureUniform;
 		std::string glossTextureUniform;
 		std::string heightTextureUniform;
+		std::string combinedTextureUniform;
+
+		std::string dynamicEnvMapUniform;
+		std::string staticEnvMapUniform;
 
 		std::string fogDensityUniform;
 		std::string fogColorUniform;
@@ -914,6 +972,14 @@ public:
 			default_normal_texture = "default_normal.png";
 			default_specular_intensity = 1.0f;
 			default_specular_power = 32.0f;
+			diffuse_texture_format = GL_RGBA;
+			normal_texture_format = GL_RGB;
+			emissive_texture_format = GL_RGBA;
+			roughness_texture_format = GL_R;
+			metalness_texture_format = GL_R;
+			height_texture_format = GL_R;
+			ambientOcclusion_texture_format = GL_R;
+			RMHAO_texture_format = GL_RGBA;
 			gl_texture_anisotropy = 16;
 			gl_texture_magnification = GL_LINEAR;
 			gl_texture_minification = GL_LINEAR_MIPMAP_LINEAR;
@@ -927,6 +993,14 @@ public:
 		std::string default_normal_texture;
 		float default_specular_intensity;
 		float default_specular_power;
+		int diffuse_texture_format;
+		int normal_texture_format;
+		int emissive_texture_format;
+		int roughness_texture_format;
+		int metalness_texture_format;
+		int height_texture_format;
+		int ambientOcclusion_texture_format;
+		int RMHAO_texture_format;
 		int gl_texture_anisotropy;
 		int gl_texture_magnification;
 		int gl_texture_minification;

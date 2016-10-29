@@ -9,7 +9,7 @@ class RendererScene;
 
 class CameraObject : public BaseGraphicsObject
 {
-	friend class RendererScene;
+	//friend class RendererScene;
 	friend class RendererState;
 	//friend class BaseGraphicsObject;
 public:

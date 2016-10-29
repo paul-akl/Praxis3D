@@ -5,7 +5,6 @@
 
 RendererSystem::RendererSystem()
 {
-	m_renderer = new DeferredRenderer();
 	m_rendererScene = nullptr;
 }
 
@@ -17,23 +16,12 @@ RendererSystem::~RendererSystem()
 ErrorCode RendererSystem::init()
 {
 	ErrorCode returnCode = ErrorCode::Success;
-
+	
 	// Initialize the renderer
-	ErrorCode rendererError = m_renderer->init();
+	returnCode = m_renderer.init();
 
 	// Check if the renderer initialization was successful
-	// If it failed, assign a new null renderer
-	if(rendererError != ErrorCode::Success)
-	{
-		ErrHandlerLoc::get().log(rendererError);
-
-		// Delete the failed renderer and assign the base class as a null renderer
-		// It will not draw anything on screen, but the rest of the engine will still work,
-		// if the error type for this error code wasn't set to fatal (for example when debugging)
-		delete m_renderer;
-		m_renderer = new Renderer();
-	}
-	else
+	if(returnCode == ErrorCode::Success)
 	{
 		ErrHandlerLoc::get().log(ErrorType::Info, ErrorSource::Source_Renderer, "Renderer has been initialized");
 	}

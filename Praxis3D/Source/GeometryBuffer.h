@@ -6,12 +6,19 @@
 class GeometryBuffer : public Framebuffer
 {
 public:
+	enum GBufferFramebufferType : unsigned int
+	{
+		FramebufferDefault,
+		FramebufferGeometry
+	};
+
 	enum GBufferTextureType : unsigned int
 	{
 		GBufferPosition,
 		GBufferDiffuse,
 		GBufferNormal,
 		GBufferEmissive,
+		GBufferMatProperties,
 		GBufferNumTextures,
 		GBufferFinal = GBufferNumTextures,
 		GBufferBlur,
@@ -32,11 +39,75 @@ public:
 	virtual void initGeometryPass();	// Bind geometry buffers for drawing
 	virtual void initLightPass();		// Bind buffers from geometry pass so they can be accessed when rendering lights
 	virtual void initFinalPass();		// Bind the final buffer to 'read from' and the default screen buffer to 'write to'
-
-	void bindForReading(GBufferTextureType p_buffer, int p_activeTexture);
-	void bindForReading(GBufferTextureType p_buffer);
-	void bindForWriting(GBufferTextureType p_buffer);
 	
+	inline void bindBufferForReading(GBufferTextureType p_buffer, int p_activeTexture)
+	{
+		glActiveTexture(GL_TEXTURE0 + p_activeTexture);
+		switch(p_buffer)
+		{
+		case GeometryBuffer::GBufferPosition:
+		case GeometryBuffer::GBufferDiffuse:
+		case GeometryBuffer::GBufferNormal:
+		case GeometryBuffer::GBufferEmissive:
+			glBindTexture(GL_TEXTURE_2D, m_GBTextures[p_buffer]);
+			break;
+		case GeometryBuffer::GBufferFinal:
+			glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
+			break;
+		case GeometryBuffer::GBufferBlur:
+			glBindTexture(GL_TEXTURE_2D, m_blurBuffer);
+			break;
+		}
+	}
+	inline void bindBufferForReading(GBufferTextureType p_buffer)
+	{
+		glActiveTexture(GL_TEXTURE0);
+		switch(p_buffer)
+		{
+		case GeometryBuffer::GBufferPosition:
+		case GeometryBuffer::GBufferDiffuse:
+		case GeometryBuffer::GBufferNormal:
+		case GeometryBuffer::GBufferEmissive:
+			glBindTexture(GL_TEXTURE_2D, m_GBTextures[p_buffer]);
+			break;
+		case GeometryBuffer::GBufferFinal:
+			glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
+			break;
+		case GeometryBuffer::GBufferBlur:
+			glBindTexture(GL_TEXTURE_2D, m_blurBuffer);
+			break;
+		}
+	}
+	inline void bindBufferForWriting(GBufferTextureType p_buffer)
+	{
+		glDrawBuffer(GL_COLOR_ATTACHMENT0 + p_buffer);
+	}
+
+	inline void bindFramebufferForReading(GBufferFramebufferType p_framebufferType)
+	{
+		switch(p_framebufferType)
+		{
+		case GeometryBuffer::FramebufferDefault:
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+			break;
+		case GeometryBuffer::FramebufferGeometry:
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_FBO);
+			break;
+		}
+	}
+	inline void bindFramebufferForWriting(GBufferFramebufferType p_framebufferType)
+	{
+		switch(p_framebufferType)
+		{
+		case GeometryBuffer::FramebufferDefault:
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			break;
+		case GeometryBuffer::FramebufferGeometry:
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO);
+			break;
+		}
+	}
+
 protected:
 
 	GLuint  m_GBTextures[GBufferNumTextures],	// Geometry pass textures

@@ -1,6 +1,11 @@
 
 #include "ErrorHandlerLocator.h"
+#include "ShaderUniforms.h"
 #include "ShaderUniformUpdater.h"
+
+const UniformObjectData ShaderUniformUpdater::m_defaultObjectData;
+const UniformFrameData ShaderUniformUpdater::m_defaultFrameData;
+const UniformData ShaderUniformUpdater::m_defaultUniformData = UniformData(ShaderUniformUpdater::m_defaultObjectData, ShaderUniformUpdater::m_defaultFrameData);
 
 ErrorCode ShaderUniformUpdater::generateUpdateList()
 {
@@ -13,15 +18,17 @@ ErrorCode ShaderUniformUpdater::generateUpdateList()
 	returnError = generatePerFrameList();
 	returnError = generatePerModelList();
 	returnError = generatePerMeshList();
+	returnError = generateUniformBlockList();
 
 	m_numUpdatesPerFrame = m_updatesPerFrame.size();
 	m_numUpdatesPerModel = m_updatesPerModel.size();
 	m_numUpdatesPerMesh = m_updatesPerMesh.size();
 	m_numTextureUpdates = m_textureUpdates.size();
+	m_numUniformBlockUpdates = m_uniformBlockUpdates.size();
 
 	// Check for errors, and cache it if it exists, since we are returning the error to higher layer
 	if(returnError != ErrorCode::Success)
-		ErrHandlerLoc::get().log(returnError, ErrorSource::Source_ShaderLoader, m_shader.getFilename());
+		ErrHandlerLoc::get().log(returnError, ErrorSource::Source_ShaderLoader, m_shader.getCombinedFilename());
 
 	return returnError;
 }
@@ -34,26 +41,30 @@ ErrorCode ShaderUniformUpdater::generateTextureUpdateList()
 	std::vector<BaseUniform*> uniformList;
 
 	// Framebuffer texture uniforms
-	uniformList.push_back(new PositionBufferUniform(m_shaderHandle));
-	uniformList.push_back(new DiffuseBufferUniform(m_shaderHandle));
-	uniformList.push_back(new NormalBufferUniform(m_shaderHandle));
-	uniformList.push_back(new EmissiveBufferUniform(m_shaderHandle));
-	uniformList.push_back(new BlurBufferUniform(m_shaderHandle));
+	uniformList.push_back(new PositionMapUniform(m_shaderHandle));
+	uniformList.push_back(new DiffuseMapUniform(m_shaderHandle));
+	uniformList.push_back(new NormalMapUniform(m_shaderHandle));
+	uniformList.push_back(new EmissiveMapUniform(m_shaderHandle));
+	uniformList.push_back(new MatPropertiesMapUniform(m_shaderHandle));
+	uniformList.push_back(new BlurMapUniform(m_shaderHandle));
+	uniformList.push_back(new FinalMapUniform(m_shaderHandle));
 
+	// Cubemap texture uniforms
+	uniformList.push_back(new DynamicEnvironmentMapUniform(m_shaderHandle));
+	uniformList.push_back(new StaticEnvironmentMapUniform(m_shaderHandle));
+	
 	// Skydome texture uniforms
 	uniformList.push_back(new SunGlowTextureUniform(m_shaderHandle));
 	uniformList.push_back(new SkyMapTextureUniform(m_shaderHandle));
 
-	// Shadow map deph texture uniforms
+	// Shadow map depth texture uniforms
 	uniformList.push_back(new DirShadowMapTextureUniform(m_shaderHandle));
 
 	// Geometry pass textures
 	uniformList.push_back(new DiffuseTextureUniform(m_shaderHandle));
 	uniformList.push_back(new NormalTextureUniform(m_shaderHandle));
-	uniformList.push_back(new SpecularTextureUniform(m_shaderHandle));
 	uniformList.push_back(new EmissiveTextureUniform(m_shaderHandle));
-	uniformList.push_back(new GlossTextureUniform(m_shaderHandle));
-	uniformList.push_back(new HeightTextureUniform(m_shaderHandle));
+	uniformList.push_back(new CombinedTextureUniform(m_shaderHandle));
 	
 	// Go through each uniform and check if it is valid
 	// If it is, add it to the update list, if not, delete it
@@ -102,7 +113,6 @@ ErrorCode ShaderUniformUpdater::generatePerFrameList()
 	// Misc
 	uniformList.push_back(new ElapsedTimeUniform(m_shaderHandle));
 	uniformList.push_back(new GammaUniform(m_shaderHandle));
-	uniformList.push_back(new ParallaxHeightScaleUniform(m_shaderHandle));
 
 	// Go through each uniform and check if it is valid
 	// If it is, add it to the update list, if not, delete it
@@ -134,6 +144,7 @@ ErrorCode ShaderUniformUpdater::generatePerModelList()
 	uniformList.push_back(new AlphaCullingUniform(m_shaderHandle));
 	uniformList.push_back(new AlphaThresholdUniform(m_shaderHandle));
 	uniformList.push_back(new EmissiveThresholdUniform(m_shaderHandle));
+	uniformList.push_back(new HeightScaleUniform(m_shaderHandle));
 	uniformList.push_back(new TextureTilingFactorUniform(m_shaderHandle));
 
 	// Test uniforms, used for debugging, etc
@@ -154,4 +165,25 @@ ErrorCode ShaderUniformUpdater::generatePerModelList()
 ErrorCode ShaderUniformUpdater::generatePerMeshList()
 {
 	return ErrorCode::Success;
+}
+ErrorCode ShaderUniformUpdater::generateUniformBlockList()
+{
+	ErrorCode returnError = ErrorCode::Success;
+
+	// Make a vector of uniform classes and populate it
+	std::vector<BaseUniformBlock*> uniformBlockList;
+
+	// Light buffers
+	uniformBlockList.push_back(new PointLightBufferUniform(m_shaderHandle));
+	uniformBlockList.push_back(new SpotLightBufferUniform(m_shaderHandle));
+
+	// Go through each uniform and check if it is valid
+	// If it is, add it to the update list, if not, delete it
+	for(decltype(uniformBlockList.size()) i = 0, size = uniformBlockList.size(); i < size; i++)
+		if(uniformBlockList[i]->isValid())
+			m_uniformBlockUpdates.push_back(uniformBlockList[i]);
+		else
+			delete uniformBlockList[i];
+
+	return returnError;
 }

@@ -296,6 +296,7 @@ void ChangeController::changeOccurred(ObservedSubject *p_subject, BitMask p_chan
 			notifyList.push_back(Notification(p_subject, p_changedBits));
 		}
 	}
+
 }
 
 void ChangeController::oneTimeChange(ObservedSubject *p_subject, Observer *p_observer, BitMask p_changedBits)

@@ -66,10 +66,10 @@ namespace Math
 	void Mat4f::perspective(const float p_FOV, const int p_screenWidth, const int p_screenHeight, const float p_zNear, const float p_zFar)
 	{
 		float	radFOV = toRadian(p_FOV),
-			height = cosf(0.5f * radFOV) / sinf(0.5f * radFOV),
-			width = height * p_screenHeight / p_screenWidth,
-			zRange = p_zFar - p_zNear;
-
+				height = cosf(0.5f * radFOV) / sinf(0.5f * radFOV),
+				width = height * p_screenHeight / p_screenWidth,
+				zRange = p_zFar - p_zNear;
+				
 		m[0] = width;					 m[4] = 0.0f;			m[8] = 0.0f;								m[12] = 0.0f;
 		m[1] = 0.0f;					 m[5] = height;			m[9] = 0.0f;								m[13] = 0.0f;
 		m[2] = 0.0f;					 m[6] = 0.0f;			m[10] = -(p_zNear + p_zFar) / zRange;		m[14] = -(2.0f * p_zFar * p_zNear) / zRange;
@@ -78,11 +78,11 @@ namespace Math
 	void Mat4f::perspective(const float p_FOV, const float p_aspectRatio, const float p_zNear, const float p_zFar)
 	{
 		float	range = tanf(toRadian(p_FOV / 2.0f)) * p_zNear,
-			left = -range * p_aspectRatio,
-			right = range * p_aspectRatio,
-			bottom = -range,
-			top = range,
-			zRange = p_zFar - p_zNear;
+				left = -range * p_aspectRatio,
+				right = range * p_aspectRatio,
+				bottom = -range,
+				top = range,
+				zRange = p_zFar - p_zNear;
 
 		m[0] = (2.0f * p_zNear) / (right - left);	 m[4] = 0.0f;									m[8] = 0.0f;								m[12] = 0.0f;
 		m[1] = 0.0f;								 m[5] = (2.0f * p_zNear) / (top - bottom);		m[9] = 0.0f;								m[13] = 0.0f;

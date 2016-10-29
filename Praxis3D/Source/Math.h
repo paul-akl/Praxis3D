@@ -3,7 +3,6 @@
 //#define _USE_MATH_DEFINES
 
 #include <cmath>
-//#include <iostream>
 
 #define E			2.71828182845904523536
 #define LOG2E		1.44269504088896340736
@@ -38,6 +37,58 @@ namespace Math
 		{
 			x = p_valueX;	y = p_valueY;
 		}
+
+		const inline Vec2i &operator=(const Vec2i& p_vec)
+		{
+			x = p_vec.x;
+			y = p_vec.y;
+
+			return *this;
+		}
+		const inline Vec2i &operator+=(const Vec2i& p_vec)
+		{
+			x += p_vec.x;
+			y += p_vec.y;
+
+			return *this;
+		}
+		const inline Vec2i &operator-=(const Vec2i& p_vec)
+		{
+			x -= p_vec.x;
+			y -= p_vec.y;
+
+			return *this;
+		}
+		const inline Vec2i &operator*=(const Vec2i& p_vec)
+		{
+			x *= p_vec.x;
+			y *= p_vec.y;
+
+			return *this;
+		}
+		const inline Vec2i &operator*=(const int p_multiplier)
+		{
+			x *= p_multiplier;
+			y *= p_multiplier;
+
+			return *this;
+		}
+		const inline Vec2i &operator/=(const Vec2i& p_vec)
+		{
+			x /= p_vec.x;
+			y /= p_vec.y;
+
+			return *this;
+		}
+		const inline Vec2i &operator/=(const int p_divider)
+		{
+			x /= p_divider;
+			y /= p_divider;
+
+			return *this;
+		}
+		const inline bool operator==(Vec2i& p_vec) const { return (x == p_vec.x && y == p_vec.y); }
+		const inline bool operator!=(Vec2i& p_vec) const { return (x != p_vec.x || y != p_vec.y); }
 	};
 	struct Vec2f
 	{
@@ -57,6 +108,58 @@ namespace Math
 		}
 		Vec2f(const Vec3f p_vec);
 		Vec2f(const Vec4f p_vec);
+
+		const inline Vec2f &operator=(const Vec2f& p_vec)
+		{
+			x = p_vec.x;
+			y = p_vec.y;
+
+			return *this;
+		}
+		const inline Vec2f &operator+=(const Vec2f& p_vec)
+		{
+			x += p_vec.x;
+			y += p_vec.y;
+
+			return *this;
+		}
+		const inline Vec2f &operator-=(const Vec2f& p_vec)
+		{
+			x -= p_vec.x;
+			y -= p_vec.y;
+
+			return *this;
+		}
+		const inline Vec2f &operator*=(const Vec2f& p_vec)
+		{
+			x *= p_vec.x;
+			y *= p_vec.y;
+
+			return *this;
+		}
+		const inline Vec2f &operator*=(const float p_float)
+		{
+			x *= p_float;
+			y *= p_float;
+
+			return *this;
+		}
+		const inline Vec2f &operator/=(const Vec2f& p_vec)
+		{
+			x /= p_vec.x;
+			y /= p_vec.y;
+
+			return *this;
+		}
+		const inline Vec2f &operator/=(const float p_float)
+		{
+			x /= p_float;
+			y /= p_float;
+
+			return *this;
+		}
+		const inline bool operator==(Vec2f& p_vec) const { return (x == p_vec.x && y == p_vec.y); }
+		const inline bool operator!=(Vec2f& p_vec) const { return (x != p_vec.x || y != p_vec.y); }
 	};
 	struct Vec3f
 	{
@@ -136,8 +239,8 @@ namespace Math
 
 			return *this;
 		}
-		inline bool operator==(Vec3f& p_vec) { return (x == p_vec.x && y == p_vec.y && z == p_vec.z); }
-		inline bool operator!=(Vec3f& p_vec) { return (x != p_vec.x || y != p_vec.y || z != p_vec.z); }
+		const inline bool operator==(Vec3f& p_vec) const { return (x == p_vec.x && y == p_vec.y && z == p_vec.z); }
+		const inline bool operator!=(Vec3f& p_vec) const { return (x != p_vec.x || y != p_vec.y || z != p_vec.z); }
 
 		const inline float getMax() const { return (x > y) ? (x > z) ? x : z : (y > z) ? y : z; }
 		const inline float squareLength() const { return (x * x + y * y + z * z); }
@@ -197,16 +300,26 @@ namespace Math
 		}
 	};
 
-	const inline Vec3f operator+(const Vec3f& p_left, const Vec3f& p_right) { return Vec3f(p_left.x + p_right.x, p_left.y + p_right.y, p_left.z + p_right.z); }
-	const inline Vec3f operator-(const Vec3f& p_left, const Vec3f& p_right) { return Vec3f(p_left.x - p_right.x, p_left.y - p_right.y, p_left.z - p_right.z); }
-	const inline Vec3f operator*(const float p_float, const Vec3f& p_vec) { return Vec3f(p_vec.x * p_float, p_vec.y * p_float, p_vec.z * p_float); }
-	const inline Vec3f operator*(const Vec3f& p_vec, const float p_float) { return Vec3f(p_vec.x * p_float, p_vec.y * p_float, p_vec.z * p_float); }
-	const inline float operator*(const Vec3f& p_left, const Vec3f& p_right) { return (p_left.x * p_right.x, p_left.y * p_right.y, p_left.z * p_right.z); }
-	const inline Vec3f operator/(const float p_float, const Vec3f& p_vec) { return (p_vec * (1 / p_float)); }
-	const inline Vec3f operator/(const Vec3f& p_vec, const float p_float) { return p_vec * (1 / p_float); }
-	const inline Vec3f operator/(const Vec3f& p_left, const Vec3f& p_right) { return Vec3f(p_left.x / p_right.x, p_left.y / p_right.y, p_left.z / p_right.z); }
-	const inline Vec3f operator-(const Vec3f& p_vec) { return Vec3f(-p_vec.x, -p_vec.y, -p_vec.z); }
-	const inline float dot(const Vec3f& p_left, const Vec3f& p_right) { return (p_left.x * p_right.x + p_left.y * p_right.y + p_left.z * p_right.z); }
+	const inline Vec2f operator+(const Vec2f& p_left, const Vec2f& p_right)	{ return Vec2f(p_left.x + p_right.x, p_left.y + p_right.y); }
+	const inline Vec2f operator-(const Vec2f& p_left, const Vec2f& p_right)	{ return Vec2f(p_left.x - p_right.x, p_left.y - p_right.y); }
+	const inline Vec2f operator*(const float p_float, const Vec2f& p_vec)	{ return Vec2f(p_vec.x * p_float, p_vec.y * p_float); }
+	const inline Vec2f operator*(const Vec2f& p_vec, const float p_float)	{ return Vec2f(p_vec.x * p_float, p_vec.y * p_float); }
+	const inline float operator*(const Vec2f& p_left, const Vec2f& p_right) { return (p_left.x * p_right.x, p_left.y * p_right.y); }
+	const inline Vec2f operator/(const float p_float, const Vec2f& p_vec)	{ return (p_vec * (1 / p_float)); }
+	const inline Vec2f operator/(const Vec2f& p_vec, const float p_float)	{ return p_vec * (1 / p_float); }
+	const inline Vec2f operator/(const Vec2f& p_left, const Vec2f& p_right) { return Vec2f(p_left.x / p_right.x, p_left.y / p_right.y); }
+	const inline Vec2f operator-(const Vec2f& p_vec)						{ return Vec2f(-p_vec.x, -p_vec.y); }
+
+	const inline Vec3f operator+(const Vec3f& p_left, const Vec3f& p_right)	{ return Vec3f(p_left.x + p_right.x, p_left.y + p_right.y, p_left.z + p_right.z); }
+	const inline Vec3f operator-(const Vec3f& p_left, const Vec3f& p_right)	{ return Vec3f(p_left.x - p_right.x, p_left.y - p_right.y, p_left.z - p_right.z); }
+	const inline Vec3f operator*(const float p_float, const Vec3f& p_vec)	{ return Vec3f(p_vec.x * p_float, p_vec.y * p_float, p_vec.z * p_float); }
+	const inline Vec3f operator*(const Vec3f& p_vec, const float p_float)	{ return Vec3f(p_vec.x * p_float, p_vec.y * p_float, p_vec.z * p_float); }
+	const inline float operator*(const Vec3f& p_left, const Vec3f& p_right)	{ return (p_left.x * p_right.x, p_left.y * p_right.y, p_left.z * p_right.z); }
+	const inline Vec3f operator/(const float p_float, const Vec3f& p_vec)	{ return (p_vec * (1 / p_float)); }
+	const inline Vec3f operator/(const Vec3f& p_vec, const float p_float)	{ return p_vec * (1 / p_float); }
+	const inline Vec3f operator/(const Vec3f& p_left, const Vec3f& p_right)	{ return Vec3f(p_left.x / p_right.x, p_left.y / p_right.y, p_left.z / p_right.z); }
+	const inline Vec3f operator-(const Vec3f& p_vec)						{ return Vec3f(-p_vec.x, -p_vec.y, -p_vec.z); }
+	const inline float dot(const Vec3f& p_left, const Vec3f& p_right)		{ return (p_left.x * p_right.x + p_left.y * p_right.y + p_left.z * p_right.z); }
 	const inline Vec3f operator^(const Vec3f& p_left, const Vec3f& p_right)
 	{
 		return Vec3f(p_left.y * p_right.z - p_left.z * p_right.y,
@@ -458,8 +571,7 @@ namespace Math
 	inline float toRadian(const float p_float) { return (p_float * (float) PI / 180.0f); }
 	inline float toDegree(const float p_float) { return (p_float * 180.0f / (float) PI); }
 	inline float getMax(const float p_left, const float p_right) { return p_left > p_right ? p_left : p_right; }
-	//inline void clampMinMax(float &p_value, float p_clampMin, float p_clampMax) { if(p_value > p_clampMax) p_value = p_clampMax; else if(p_value < p_clampMin) p_value = p_clampMin; }
 
 	template <typename T>
-	inline T clip(T p_in, T p_low, T p_high) { return std::min(std::max(p_in, p_low), p_high); }
+	inline T clamp(T p_in, T p_low, T p_high) { return std::min(std::max(p_in, p_low), p_high); }
 }

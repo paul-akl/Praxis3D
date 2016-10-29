@@ -5,6 +5,7 @@
 #include "CameraGraphicsObject.h"
 #include "ClockLocator.h"
 #include "ErrorCodes.h"
+#include "GeometryBuffer.h"
 #include "GraphicsDataSets.h"
 #include "Math.h"
 #include "ModelLoader.h"
@@ -30,13 +31,17 @@ protected:
 	// Note: caution with modifying. Correlates with enum in Model class, for convenience
 	enum TextureTypes : unsigned int
 	{
-		DiffuseTexture = Model::ModelMat_diffuse,
-		NormalTexture = Model::ModelMat_normal,
-		EmissiveTexture = Model::ModelMat_emissive,
-		SpecularTexture = Model::ModelMat_specular,
-		GlossMapTexture = Model::ModelMat_gloss,
-		HeightMapTexture,
+		DiffuseTexture	= MaterialType_Diffuse,
+		NormalTexture	= MaterialType_Normal,
+		EmissiveTexture = MaterialType_Emissive,
+		CombinedTexture = MaterialType_Combined,
 		NumTextureTypes,
+	};
+
+	enum CubemapTypes : unsigned int
+	{
+		StaticEnvMap = GeometryBuffer::GBufferTextureType::GBufferNumTextures,
+		DynamicEnvMap
 	};
 
 	// Recalculates the projection matrix
@@ -72,6 +77,7 @@ public:
 	const inline float getElapsedTime()					const { return ClockLocator::get().getElapsedSecondsF();				}
 	const inline float getAlphaThreshold()				const { return m_renderer->m_currentObjectData->m_alphaThreshold;		}
 	const inline float getEmissiveThreshold()			const { return m_renderer->m_currentObjectData->m_emissiveThreshold;	}
+	const inline float getHeightScale()					const { return m_renderer->m_currentObjectData->m_heightScale;			}
 	const inline float getTextureTilingFactor()			const { return m_renderer->m_currentObjectData->m_textureTilingFactor;	}
 
 	const virtual Math::Vec3f &getDirLightColor()		const { return m_emptyVec; }
@@ -89,18 +95,21 @@ public:
 	const virtual Math::Vec3f getFogColor()				const { return m_emptyVec; }
 	const virtual float getFogDensity()					const { return 0.0f; }
 
-	const virtual unsigned int getBlurBufferPos()		const { return 0; }
-	const virtual unsigned int getDiffuseBufferPos()	const { return 0; }
-	const virtual unsigned int getEmissiveBufferPos()	const { return 0; }
-	const virtual unsigned int getNormalBufferPos()		const { return 0; }
-	const virtual unsigned int getPositionBufferPos()	const { return 0; }
+	const unsigned int getBlurMapPosition()				const { return GeometryBuffer::GBufferTextureType::GBufferBlur;			 }
+	const unsigned int getDiffuseMapPosition()			const { return GeometryBuffer::GBufferTextureType::GBufferDiffuse;		 }
+	const unsigned int getEmissiveMapPosition()			const { return GeometryBuffer::GBufferTextureType::GBufferEmissive;		 }
+	const unsigned int getMatPropertiesMapPosition()	const { return GeometryBuffer::GBufferTextureType::GBufferMatProperties; }
+	const unsigned int getNormalMapPosition()			const { return GeometryBuffer::GBufferTextureType::GBufferNormal;		 }
+	const unsigned int getPositionMapPosition()			const { return GeometryBuffer::GBufferTextureType::GBufferPosition;		 }
+	const unsigned int getFinalMapPosition()			const { return GeometryBuffer::GBufferTextureType::GBufferFinal;		 }
 
 	const inline unsigned int getDiffuseTexturePos()	const { return Renderer::TextureTypes::DiffuseTexture;		}
 	const inline unsigned int getEmissiveTexturePos()	const { return Renderer::TextureTypes::EmissiveTexture;		}
-	const inline unsigned int getHeightTexturePos()		const { return Renderer::TextureTypes::HeightMapTexture;	}
 	const inline unsigned int getNormalTexturePos()		const { return Renderer::TextureTypes::NormalTexture;		}
-	const inline unsigned int getSpecularTexturePos()	const { return Renderer::TextureTypes::SpecularTexture;		}
-	const inline unsigned int getGlossTexturePos()		const { return Renderer::TextureTypes::GlossMapTexture;		}
+	const inline unsigned int getCombinedTexturePos()	const { return Renderer::TextureTypes::CombinedTexture;		}
+
+	const inline unsigned int getDynamicEnvMapPos()	const { return Renderer::CubemapTypes::DynamicEnvMap;	}
+	const inline unsigned int getStaticEnvMapPos()	const { return Renderer::CubemapTypes::StaticEnvMap;	}
 
 	const virtual Math::Mat4f getTestMat()	const { return m_emptyMatrix;	}
 	const virtual Math::Vec4f getTestVec()	const { return Math::Vec4f();	}

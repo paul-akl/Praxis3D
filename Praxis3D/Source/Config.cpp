@@ -72,6 +72,9 @@ void Config::init()
 	AddVariablePredef(m_framebfrVar, gl_normal_buffer_internal_format);
 	AddVariablePredef(m_framebfrVar, gl_normal_buffer_texture_format);
 	AddVariablePredef(m_framebfrVar, gl_normal_buffer_texture_type);
+	AddVariablePredef(m_framebfrVar, gl_mat_properties_buffer_internal_format);
+	AddVariablePredef(m_framebfrVar, gl_mat_properties_buffer_texture_format);
+	AddVariablePredef(m_framebfrVar, gl_mat_properties_buffer_texture_type);
 	AddVariablePredef(m_framebfrVar, gl_blur_buffer_internal_format);
 	AddVariablePredef(m_framebfrVar, gl_blur_buffer_texture_type);
 	AddVariablePredef(m_framebfrVar, gl_blur_buffer_texture_format);
@@ -110,7 +113,6 @@ void Config::init()
 	AddVariablePredef(m_graphicsVar, multisample_samples);
 	AddVariablePredef(m_graphicsVar, alpha_threshold);
 	AddVariablePredef(m_graphicsVar, emissive_threshold);
-	AddVariablePredef(m_graphicsVar, parallax_height_scale);
 	AddVariablePredef(m_graphicsVar, fog_color_x);
 	AddVariablePredef(m_graphicsVar, fog_color_y);
 	AddVariablePredef(m_graphicsVar, fog_color_z);
@@ -123,6 +125,7 @@ void Config::init()
 	AddVariablePredef(m_graphicsVar, light_color_r);
 	AddVariablePredef(m_graphicsVar, light_color_g);
 	AddVariablePredef(m_graphicsVar, light_color_b);
+	AddVariablePredef(m_graphicsVar, height_scale);
 	AddVariablePredef(m_graphicsVar, texture_tiling_factor);
 	AddVariablePredef(m_graphicsVar, z_far);
 	AddVariablePredef(m_graphicsVar, z_near);
@@ -214,6 +217,10 @@ void Config::init()
 	AddVariablePredef(m_rendererVar, gaussian_blur_horizontal_vert_shader);
 	AddVariablePredef(m_rendererVar, light_pass_vert_shader);
 	AddVariablePredef(m_rendererVar, light_pass_frag_shader);
+	AddVariablePredef(m_rendererVar, final_pass_vert_shader);
+	AddVariablePredef(m_rendererVar, final_pass_frag_shader);
+	AddVariablePredef(m_rendererVar, reflection_pass_vert_shader);
+	AddVariablePredef(m_rendererVar, reflection_pass_frag_shader);
 	AddVariablePredef(m_rendererVar, dir_light_quad_offset_x);
 	AddVariablePredef(m_rendererVar, dir_light_quad_offset_y);
 	AddVariablePredef(m_rendererVar, dir_light_quad_offset_z);
@@ -244,7 +251,8 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, alphaCullingUniform);
 	AddVariablePredef(m_shaderVar, alphaThresholdUniform);
 	AddVariablePredef(m_shaderVar, emissiveThresholdUniform);
-	AddVariablePredef(m_shaderVar, parallaxHeightScale);
+	AddVariablePredef(m_shaderVar, heightScaleUniform);
+	AddVariablePredef(m_shaderVar, combinedTextureUniform);
 	AddVariablePredef(m_shaderVar, textureTilingFactorUniform);
 	AddVariablePredef(m_shaderVar, dirLightColor);
 	AddVariablePredef(m_shaderVar, dirLightDirection);
@@ -265,7 +273,9 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, diffuseMapUniform);
 	AddVariablePredef(m_shaderVar, normalMapUniform);
 	AddVariablePredef(m_shaderVar, emissiveMapUniform);
+	AddVariablePredef(m_shaderVar, matPropertiesMapUniform);
 	AddVariablePredef(m_shaderVar, blurMapUniform);
+	AddVariablePredef(m_shaderVar, finalMapUniform);
 	AddVariablePredef(m_shaderVar, sunGlowTextureUniform);
 	AddVariablePredef(m_shaderVar, skyMapTextureUniform);
 	AddVariablePredef(m_shaderVar, dirShadowMapTextureUniform);
@@ -290,6 +300,14 @@ void Config::init()
 	AddVariablePredef(m_textureVar, default_normal_texture);
 	AddVariablePredef(m_textureVar, default_specular_intensity);
 	AddVariablePredef(m_textureVar, default_specular_power);
+	AddVariablePredef(m_textureVar, diffuse_texture_format);
+	AddVariablePredef(m_textureVar, normal_texture_format);
+	AddVariablePredef(m_textureVar, emissive_texture_format);
+	AddVariablePredef(m_textureVar, roughness_texture_format);
+	AddVariablePredef(m_textureVar, metalness_texture_format);
+	AddVariablePredef(m_textureVar, height_texture_format);
+	AddVariablePredef(m_textureVar, ambientOcclusion_texture_format);
+	AddVariablePredef(m_textureVar, RMHAO_texture_format);
 	AddVariablePredef(m_textureVar, gl_texture_anisotropy);
 	AddVariablePredef(m_textureVar, gl_texture_magnification);
 	AddVariablePredef(m_textureVar, gl_texture_minification);
@@ -355,9 +373,9 @@ ErrorCode Config::loadFromFile(const std::string &p_filename)
 	   m_rendererVar.heightmap_combine_channel >= TextureColorChannelOffset::ColorOffset_NumChannels)
 		m_rendererVar.heightmap_combine_channel = TextureColorChannelOffset::ColorOffset_Alpha;
 
-	if(m_rendererVar.heightmap_combine_texture < Model::ModelMaterialType::ModelMat_diffuse ||
-	   m_rendererVar.heightmap_combine_texture >= Model::ModelMaterialType::NumOfModelMaterials)
-		m_rendererVar.heightmap_combine_texture = Model::ModelMaterialType::ModelMat_normal;
+	if(m_rendererVar.heightmap_combine_texture < MaterialType_Diffuse ||
+	   m_rendererVar.heightmap_combine_texture >= MaterialType_NumOfTypes)
+		m_rendererVar.heightmap_combine_texture = MaterialType_Normal;
 
 	return returnCode;
 }

@@ -28,9 +28,9 @@ public:
 	// Loads cubemap to video memory; should only be called by renderer thread
 	ErrorCode loadToVideoMemory()
 	{
-		ErrorCode returnError;
+		ErrorCode returnError = ErrorCode::Success;
 
-		returnError = m_cubemap.loadToVideoMemory();
+		//returnError = m_cubemap.loadToVideoMemory();
 
 		//if(returnError == ErrorCode::Success)
 		//	m_cubemapHandle = m_cubemap.getHandle();
