@@ -1,6 +1,6 @@
 # 3D Game Engine #
 
-Work in Progress
+(Work in Progress)
 
 ### Summary ###
 
@@ -19,4 +19,4 @@ Fully scalable multithreading (functional and data decomposition)
 
 www.pauldev.org
 
-paulcodedev@gmnail.com
+paulcodedev@gmail.com
