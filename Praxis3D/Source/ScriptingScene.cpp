@@ -189,11 +189,17 @@ FreeCamera *ScriptingScene::loadFreeCamera(const PropertySet & p_properties)
 		case Properties::Angle:
 			freeCamera->setAngles(p_properties[i].getVec2f());
 			break;
+		case Properties::LowerLimit:
+			freeCamera->setLowerLimit(p_properties[i].getFloat());
+			break;
 		case Properties::Speed:
 			freeCamera->setSpeed(p_properties[i].getFloat());
 			break;
 		case Properties::SprintSpeed:
 			freeCamera->setFasterSpeed(p_properties[i].getFloat());
+			break;
+		case Properties::UpperLimit:
+			freeCamera->setUpperLimit(p_properties[i].getFloat());
 			break;
 		}
 	}

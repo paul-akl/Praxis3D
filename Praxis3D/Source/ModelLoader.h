@@ -4,6 +4,7 @@
 #include <bitset>
 #include <GL\glew.h>
 
+#include "CommonDefinitions.h"
 #include "ErrorHandlerLocator.h"
 #include "LoaderBase.h"
 #include "Math.h"
@@ -21,26 +22,6 @@ class Model : public LoaderBase<ModelLoader, Model>::UniqueObject
 public:
 	// Note: caution with modifying. Correlates with enum in Renderer class, for convenience
 	// Note: the order is sensitive
-	enum ModelMaterialType : unsigned int
-	{
-		ModelMat_diffuse = 0,
-		ModelMat_normal,
-		ModelMat_emissive,
-		ModelMat_specular,
-		ModelMat_gloss,
-		ModelMat_height,
-		NumOfModelMaterials
-	};
-	enum BufferType : unsigned int
-	{
-		PositionBuffer = 0,
-		NormalBuffer,
-		TexCoordBuffer,
-		TangentsBuffer,
-		BitangentsBuffer,
-		IndexBuffer,
-		NumBufferTypes
-	};
 
 	struct Mesh
 	{
@@ -84,7 +65,7 @@ public:
 		// Resizes all the vectors and assigns a new number of materials
 		void resize(std::vector<Material>::size_type p_size)
 		{
-			for(unsigned int i = 0; i < NumOfModelMaterials; i++)
+			for(unsigned int i = 0; i < MaterialType_NumOfTypes; i++)
 				m_materials[i].resize(p_size);
 			m_numMaterials = p_size;
 		}
@@ -92,38 +73,32 @@ public:
 		// Frees memory of the vectors by swapping them with empty ones
 		void clear()
 		{
-			for(unsigned int i = 0; i < NumOfModelMaterials; i++)
+			for(unsigned int i = 0; i < MaterialType_NumOfTypes; i++)
 				std::vector<Material>().swap(m_materials[i]);
 			m_numMaterials = 0;
 		}
 
-		std::vector<Material> m_materials[NumOfModelMaterials];
+		std::vector<Material> m_materials[MaterialType_NumOfTypes];
 		std::vector<Material>::size_type m_numMaterials;
 	};
-
 
 	Model(LoaderBase<ModelLoader, Model> *p_loaderBase, std::string p_filename, size_t p_uniqueID, unsigned int p_handle) : UniqueObject(p_loaderBase, p_uniqueID, p_filename), m_handle(p_handle)
 	{
 		m_isBeingLoaded = false;
 
+		m_currentNumMeshes = 0;
 		m_numVertices = 0;
 		m_numMeshes = 0;
-		//m_numMaterials = 0;
 		m_handle = 0;
-		m_currentNumMeshes = 0;
-		
-		for(int i = 0; i < NumBufferTypes; i++)
+
+		for(int i = 0; i < ModelBuffer_NumAllTypes; i++)
 			m_buffers[i] = 0;
 	}
 
 	// Loads data from HDD to RAM and restructures it to be used to fill buffers later
 	ErrorCode loadToMemory();
-	// Loads data from RAM to buffer and uploads them to VRAM
-	ErrorCode loadToVideoMemory();
 	// Deletes data stored in RAM. Does not delete buffers that are loaded on GPU VRAM.
 	ErrorCode unloadMemory();
-	// Deletes buffers from GPU VRAM.
-	ErrorCode unloadVideoMemory();
 
 	// Loads the model data from file (using internal filename)
 	void loadFromFile();
@@ -137,10 +112,39 @@ public:
 	ErrorCode loadTextures(aiTexture **p_assimpTextures, size_t p_numTextures);
 
 	inline MaterialArrays &getMaterialArrays() { return m_materials; }
+	// Returns an array of pointers to buffer data
+	/*const inline void **getData()
+	{
+		void **data = nullptr;
+		//const void *data[ModelBuffer_Index + 1];
+
+		data[ModelBuffer_Position]		= &m_positions[0];
+		data[ModelBuffer_Normal]		= &m_normals[0];
+		data[ModelBuffer_TexCoord]		= &m_texCoords[0];
+		data[ModelBuffer_Tangents]		= &m_tangents[0];
+		data[ModelBuffer_Bitangents]	= &m_bitangents[0];
+		data[ModelBuffer_Index]			= &m_indices[0];
+
+		return (const void**)data;
+	}*/
+	const inline void **getData()
+	{
+		const void **data = new const void*[ModelBuffer_Index + 1];
+
+		data[ModelBuffer_Position]		= &m_positions[0];
+		data[ModelBuffer_Normal]		= &m_normals[0];
+		data[ModelBuffer_TexCoord]		= &m_texCoords[0];
+		data[ModelBuffer_Tangents]		= &m_tangents[0];
+		data[ModelBuffer_Bitangents]	= &m_bitangents[0];
+		data[ModelBuffer_Index]			= &m_indices[0];
+
+		return data;
+	}
 
 	// m_handle is a VAO handle
 	unsigned int m_handle;
-	unsigned int m_buffers[NumBufferTypes];
+	unsigned int m_buffers[ModelBuffer_NumAllTypes];
+	int64_t m_bufferSize[ModelBuffer_NumAllTypes];
 
 	std::vector<Mesh> m_meshPool;
 	
@@ -150,7 +154,7 @@ public:
 	std::vector<Math::Vec2f> m_texCoords;
 	std::vector<Math::Vec3f> m_tangents;
 	std::vector<Math::Vec3f> m_bitangents;
-
+	
 	MaterialArrays m_materials;
 
 	size_t	m_numVertices,
@@ -160,6 +164,8 @@ public:
 	size_t	m_currentNumMeshes;
 
 	tbb::atomic<bool> m_isBeingLoaded;
+
+	const static int m_numElements[ModelBuffer_NumAllTypes];
 };
 
 // Model Loader, CRTP inheritance from Loader Base. Designed to be used for loading models,
@@ -220,102 +226,12 @@ public:
 	// and hiding internal data from outside classes. Private constructor.
 	class ModelHandle
 	{
+		friend class CommandBuffer;
 		friend class ModelLoader;
+		friend class RendererFrontend;
 	public:
 		~ModelHandle() { m_model->decRefCounter(); }
-
-		// Bind VAO for rendering if it is loaded
-		// Load the model buffers to GPU memory instead if it's not loaded
-		void bind()
-		{
-			// Declare the handle to bind at the start here, and bind it at the end of the function,
-			// so there is only one path to bind function and the branch can be predicted easier on CPU
-			decltype(m_model->m_handle) handle = m_model->m_handle;
-			
-			// If the model buffers are loaded, just bind the VAO (by leaving the handle as it is).
-			// Otherwise load buffers to GPU. This way, the model loading is hidden away,
-			// so graphics system doesn't have to deal with it. The thread that calls bind
-			// on a model is guaranteed to be rendering thread, so it is safe to load it.
-			if(!m_model->loadedToVideoMemory())
-			{
-				if(m_model->loadedToMemory())
-				{
-					ErrorCode error = m_model->loadToVideoMemory();
-
-					// If loading to video memory was successful, set mesh number, so that object could get rendered.
-					// Otherwise log an error
-					if(error == ErrorCode::Success)
-					{
-						// Reassign the handle, since it must have changed when loading to video memory
-						handle = m_model->m_handle;
-						m_model->m_currentNumMeshes = m_model->m_numMeshes;
-					}
-					else
-						ErrHandlerLoc::get().log(error, ErrorSource::Source_ModelLoader, m_model->getFilename());
-
-					// Set loaded to video memory flag to true even if loading failed.
-					// This way, the failed loading attempt is not repeated every frame.
-					// (And since loaded to memory flag is already true, it is not the cause,
-					// and it will not "fix" itself)
-					// EDIT: it is now set inside loadToVideoMemory() function
-					//m_model->setLoadedToVideoMemory(true);
-					m_model->m_currentNumMeshes = m_model->m_numMeshes;
-				}
-				else
-				{
-					// Make VAO into zero in case it's not ready to be rendered yet
-					handle = 0;
-				}
-
-			}
-
-			// Bind VAO
-			glBindVertexArray(handle);
-		}
-
-		// Perform a complete load, if not loaded already (from HDD to memory to video memory)
-		// WARNING: should probably only be called from rendering thread, since this code deals with graphics API
-		ErrorCode preload()
-		{
-			ErrorCode returnError = ErrorCode::Success;
-
-			// If it's not loaded to video memory already
-			if(!m_model->loadedToVideoMemory())
-			{
-				// If it's loaded to memory
-				if(m_model->loadedToMemory())
-				{
-					// Load to video memory
-					returnError = m_model->loadToVideoMemory();
-					m_model->setLoadedToVideoMemory(true);
-
-					// If loading to video memory was successful, set mesh number, so that object could get rendered
-					if(returnError == ErrorCode::Success)
-						m_model->m_currentNumMeshes = m_model->m_numMeshes;
-				}
-				// If it's not loaded to memory
-				else
-				{
-					// Load to memory
-					returnError = m_model->loadToMemory();
-
-					// If loading to memory was successful
-					if(returnError == ErrorCode::Success)
-					{
-						m_model->setLoadedToMemory(true);
-						returnError = m_model->loadToVideoMemory();
-						m_model->setLoadedToVideoMemory(true);
-
-						// If loading to video memory was successful, set mesh number, so that object could get rendered
-						if(returnError == ErrorCode::Success)
-							m_model->m_currentNumMeshes = m_model->m_numMeshes;
-					}
-				}
-			}
-
-			return returnError;
-		}
-
+		
 		// Loads data from HDD to RAM and restructures it to be used to fill buffers later
 		ErrorCode loadToMemory(bool p_setLoadedToMemoryFlag = true)
 		{
@@ -334,21 +250,7 @@ public:
 
 			return returnError;
 		}
-
-		// Loads data from RAM to buffer and uploads them to VRAM
-		// WARNING: should probably only be called from rendering thread, since this code deals with graphics API
-		ErrorCode loadToVideoMemory()
-		{
-			ErrorCode returnError = ErrorCode::Success;
-
-			// If it's not loaded to video memory already, and has been loaded to memory, call load
-			if(!m_model->loadedToVideoMemory())
-				if(m_model->loadedToMemory())
-					returnError = m_model->loadToVideoMemory();
-
-			return returnError;
-		}
-
+		
 		// Assignment operator
 		ModelHandle &operator=(const ModelHandle &p_modelHandle)
 		{

@@ -106,7 +106,7 @@ private:
 		CoutConsole() { }
 		~CoutConsole() { }
 
-		void displayMessage(std::string p_message) { printf("%s\n", p_message.c_str()); } //std::cout << p_message << std::endl;
+		void displayMessage(std::string p_message) { printf("%s\n", p_message.c_str()); }
 	};
 	
 	ErrorData m_errorData[ErrorCode::NumberOfErrorCodes];

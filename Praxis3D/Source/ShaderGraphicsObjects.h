@@ -44,14 +44,14 @@ public:
 		ErrorCode error;
 
 		// Load shader, check if it loaded successfully
-		if(!ErrHandlerLoc::get().ifSuccessful(m_shader->loadToVideoMemory(), error))
-		{
+		//if(!ErrHandlerLoc::get().ifSuccessful(m_shader->loadToVideoMemory(), error))
+		//{
 			// Log an error on failure
 			ErrHandlerLoc::get().log(error);
 
 			// Replace the shader with a default one
 			m_shader = Loaders::shader().load();
-		}
+		//}
 
 		// Load all other data by calling parent class; log an error on failure
 		if(!ErrHandlerLoc::get().ifSuccessful(ModelObject::loadToVideoMemory(), error))

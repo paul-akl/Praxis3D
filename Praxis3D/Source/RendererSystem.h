@@ -1,7 +1,7 @@
 #pragma once
 
-#include "DeferredRenderer.h"
 #include "Loaders.h"
+#include "RendererFrontend.h"
 #include "System.h"
 
 class RendererScene;
@@ -28,10 +28,10 @@ public:
 
 	virtual SystemScene *getScene();
 
-	Renderer *getRenderer() { return m_renderer; }
+	RendererFrontend &getRenderer() { return m_renderer; }
 
 protected:
-	Renderer *m_renderer;
+	RendererFrontend m_renderer;
 	RendererScene *m_rendererScene;
 };
 

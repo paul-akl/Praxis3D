@@ -152,7 +152,7 @@ public:
 	}
 
 	// Takes only the constructor arguments and initializes the template object by calling the constructor
-	// internally. This way, it eliminates the need for temporary variables; returns an ErrorCode of pool is full
+	// internally. This way, it eliminates the need for temporary variables; returns an ErrorCode if pool is full
 	template<class... T_Args>
 	inline ErrorCode add(T_Args&&... p_args)
 	{

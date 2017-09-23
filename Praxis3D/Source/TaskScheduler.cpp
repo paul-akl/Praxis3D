@@ -5,10 +5,10 @@
 // TODO DATA DRIVEN
 const float TaskScheduler::m_defaultClockFrequency = 1.0f / 120.0f;      // Set the timer to 120Hz
 
-TaskScheduler::TaskScheduler(TaskManager *p_taskManager) :	m_taskManager(p_taskManager), 
-															m_clockFrequency(m_defaultClockFrequency), 
-															m_executionTimer(nullptr),
-															m_multithreadingEnabled(true) // TODO DATA DRIVEN
+TaskScheduler::TaskScheduler(TaskManager *p_taskManager) : m_taskManager(p_taskManager),
+m_clockFrequency(m_defaultClockFrequency),
+m_executionTimer(nullptr),
+m_multithreadingEnabled(true) // TODO DATA DRIVEN
 {
 	m_multithreadingEnabled = (p_taskManager != nullptr);
 }

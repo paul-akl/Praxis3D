@@ -11,9 +11,12 @@ public:
 	DebugUIScript(SystemScene *p_systemScene, std::string p_name)
 		: BaseScriptObject(p_systemScene, p_name, Properties::DebugUIScript)
 	{
-
 		m_elapsedTime = 0.0f;
 		m_showFPSInterval = 1.0f;
+
+		m_benchmarkElapsed = 0.0f;
+		m_numFramesElapsed = 0;
+		m_benchmarkOn = false;
 	}
 	~DebugUIScript() { }
 
@@ -52,6 +55,29 @@ public:
 
 	virtual void update(const float p_deltaTime)
 	{
+		/*if(m_benchmarkOn)
+		{
+			m_benchmarkElapsed += p_deltaTime;
+			m_numFramesElapsed++;
+			if(m_numFramesElapsed == 10000)
+			{
+				printf("Benchmark Sample Frames: %i\n", m_numFramesElapsed);
+				printf("Benchmark MS: %f\n", m_benchmarkElapsed / m_numFramesElapsed);
+				printf("Benchmark FPS: %f\n", 1.0f / (m_benchmarkElapsed / m_numFramesElapsed));
+
+				//m_benchmarkOn = false;
+				m_numFramesElapsed = 0;
+				m_benchmarkElapsed = 0.0f;
+
+				if(Config::windowVar().fullscreen)
+				{
+					m_benchmarkOn = false;
+				}
+
+				WindowLocator::get().setFullscreen(!Config::windowVar().fullscreen);
+			}
+		}*/
+
 		if(m_closeWindowCommand.isActivated())
 		{
 			// Mark the state of the engine as not running anymore, and it will be shut down after the current frame
@@ -92,8 +118,8 @@ public:
 
 			std::string vsyncString = Config::windowVar().vertical_sync ? "VSYNC: ON" : "VSYNC: OFF";
 
-			WindowLocator::get().setWindowTitle(Config::windowVar().name + " | " + vsyncString + " | FPS: " +
-												Utilities::toString(roundf(ClockLocator::get().getFPS())));
+			//WindowLocator::get().setWindowTitle(Config::windowVar().name + " | " + vsyncString + " | FPS: " +
+			//									Utilities::toString(roundf(ClockLocator::get().getFPS())));
 		}
 	}
 
@@ -149,4 +175,8 @@ protected:
 
 	float	m_elapsedTime,
 			m_showFPSInterval;
+
+	float	m_benchmarkElapsed;
+	int		m_numFramesElapsed;
+	bool	m_benchmarkOn;
 };

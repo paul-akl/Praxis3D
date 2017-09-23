@@ -5,6 +5,7 @@
 // and creates arrays of objects to be rendered. From here, they should be sent to the renderer.
 
 #include "CameraGraphicsObject.h"
+#include "EnvironmentMapObjects.h"
 #include "GraphicsDataSets.h"
 #include "LightingGraphicsObjects.h"
 #include "Loaders.h"
@@ -22,6 +23,7 @@ struct SceneObjects
 	SceneObjects() : m_camera(nullptr) { }
 
 	const CameraObject *m_camera;
+	EnvironmentMapStatic *m_staticSkybox;
 	const DirectionalLightDataSet *m_directionalLight;
 
 	std::vector<RenderableObjectData*> m_modelObjects;
@@ -73,10 +75,10 @@ public:
 	
 private:
 	// Used to hold info on objects that are being loaded in a background thread
-	struct LoadableObjectAndIndex
+	struct LoadableGraphicsObjectAndIndex
 	{
-		LoadableObjectAndIndex() : m_loadableObject(nullptr), m_index(0), m_activateAfterLoading(true) { }
-		LoadableObjectAndIndex(LoadableGraphicsObject *p_loadableObject, size_t p_index)
+		LoadableGraphicsObjectAndIndex() : m_loadableObject(nullptr), m_index(0), m_activateAfterLoading(true) { }
+		LoadableGraphicsObjectAndIndex(LoadableGraphicsObject *p_loadableObject, size_t p_index)
 			: m_loadableObject(p_loadableObject), m_index(p_index), m_activateAfterLoading(true) { }
 
 		// The actual object that's being loaded
@@ -89,8 +91,33 @@ private:
 		size_t m_index;
 	};
 
+	struct LoadableMiscObjectAndIndex
+	{
+		LoadableMiscObjectAndIndex(EnvironmentMapStatic *p_staticEnvMap) :
+			m_miscObject(p_staticEnvMap),
+			m_objectType(MiscLoadObj_StaticEnvMap),
+			m_index(0), 
+			m_activateAfterLoading(true) { }
+
+		union MiscObject
+		{
+			MiscObject(EnvironmentMapStatic *p_staticEnvMap) : m_staticEnvMap(p_staticEnvMap) { }
+
+			EnvironmentMapStatic *m_staticEnvMap;
+		};
+
+		// This should always be true, unless object was set to be removed before loading completed
+		bool m_activateAfterLoading;
+
+		// Unique index of the object in corresponding pool (used for fast access)
+		size_t m_index;
+
+		MiscObject m_miscObject;
+		MiscLoadObjectType m_objectType;
+	};
+
 	// Removes an object from a pool, by iterating checking each pool for matched index and name
-	inline void removeObjectFromPool(LoadableObjectAndIndex *p_objectAndIndex)
+	inline void removeObjectFromPool(LoadableGraphicsObjectAndIndex *p_objectAndIndex)
 	{
 		// Remove object from the pool determined by object's type
 		switch(p_objectAndIndex->m_loadableObject->getObjectType())
@@ -112,7 +139,7 @@ private:
 	}
 	
 	// Checks if an object is allocated in an object pool
-	inline bool checkIfAllocated(const LoadableObjectAndIndex &p_objectAndIndex)
+	inline bool checkIfAllocated(const LoadableGraphicsObjectAndIndex &p_objectAndIndex)
 	{
 		// Remove object from the pool determined by object's type
 		switch(p_objectAndIndex.m_loadableObject->getObjectType())
@@ -127,7 +154,7 @@ private:
 	}
 
 	// Finds a match in the currently being loaded object array; returns null pointer if no match is found
-	inline LoadableObjectAndIndex *getCurrentlyLoadingObject(LoadableGraphicsObject *p_loadableObject)
+	inline LoadableGraphicsObjectAndIndex *getCurrentlyLoadingObject(LoadableGraphicsObject *p_loadableObject)
 	{
 		// Iterate over currently loading objects
 		for(decltype(m_objectsBeingLoaded.size()) i = 0, size = m_objectsBeingLoaded.size(); i < size;)
@@ -144,7 +171,7 @@ private:
 	// Object creators (factories)
 	ModelObject *loadModelObject(const PropertySet &p_properties);
 	CameraObject *loadCameraObject(const PropertySet &p_properties);
-	ShaderModelGraphicsObject *loadShaderModelObject(const PropertySet &p_properties);	// Obsolete (ModelObjects handle custom shaders)
+	EnvironmentMapStatic *loadEnvMapStatic(const PropertySet &p_properties);
 	DirectionalLightObject *loadDirectionalLight(const PropertySet &p_properties);
 	PointLightObject *loadPointLight(const PropertySet &p_properties);
 	SpotLightObject *loadSpotLight(const PropertySet &p_properties);
@@ -154,9 +181,13 @@ private:
 	ObjectPool<ModelObject> m_shaderObjPool;
 	ObjectPool<PointLightObject> m_pointLightPool;
 	ObjectPool<SpotLightObject> m_spotLightPool;
+	ObjectPool<EnvironmentMapStatic> m_envMapPool;
 	
 	// Stores objects that are currently being loaded to memory in background thread
-	std::vector<LoadableObjectAndIndex> m_objectsBeingLoaded;
+	std::vector<LoadableGraphicsObjectAndIndex> m_objectsBeingLoaded;
+	std::vector<LoadableMiscObjectAndIndex> m_miscObjectsBeingLoaded;
+	
+	EnvironmentMapStatic *m_skybox;
 
 	// Only one camera present at a time
 	CameraObject *m_camera;

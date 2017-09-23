@@ -1,4 +1,4 @@
-#version 450 core
+#version 430 core
 
 #define HEIGHT_SCALE_THRESHOLD 0.001
 
@@ -6,10 +6,11 @@
 //precision highp float;
 
 // Geometry buffers
-layout(location = 0) out vec4 positionBuffer;
+layout(location = 0) out vec3 positionBuffer;
 layout(location = 1) out vec4 diffuseBuffer;
-layout(location = 2) out vec4 normalBuffer;
+layout(location = 2) out vec3 normalBuffer;
 layout(location = 3) out vec4 emissiveBuffer;
+layout(location = 4) out vec4 matPropertiesBuffer;
 
 // Variables from vertex shader
 in mat3 TBN;
@@ -369,13 +370,15 @@ void main(void)
 	{
 		emissiveColor = vec4(0.0);
 	}
-		
+	
 	// Write diffuse color to the diffuse buffer
 	diffuseBuffer = diffuse;
+	// Write roughness, metalness to the material properties buffer
+	matPropertiesBuffer = vec4(roughness, metalness, 1.0, 1.0);
 	// Write emissive color into the emissive buffer
 	emissiveBuffer = emissiveColor;
-	// Write fragment's position in world space	to the position buffer, write roughness value in alpha channel
-	positionBuffer = vec4(fragPos, roughness);
-	// Perform normal mapping and write the new normal to the normal buffer, write metalness value in alpha channel
-	normalBuffer = vec4(TBN * normalize(texture(normalTexture, newCoords).rgb * 2.0 - 1.0), metalness);
+	// Write fragment's position in world space	to the position buffer
+	positionBuffer = fragPos;
+	// Perform normal mapping and write the new normal to the normal buffer
+	normalBuffer = TBN * normalize(texture(normalTexture, newCoords).rgb * 2.0 - 1.0);
 }

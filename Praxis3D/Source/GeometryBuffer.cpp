@@ -8,7 +8,6 @@ GeometryBuffer::GeometryBuffer(unsigned int p_bufferWidth, unsigned int p_buffer
 	m_depthBuffer = 0;
 	m_finalBuffer = 0;
 	m_finalPassBuffer = GBufferFinal;
-	//m_finalPassBuffer = GBufferDiffuse;
 
 	m_emissiveAndFinalBuffers[0] = GL_COLOR_ATTACHMENT0 + GBufferEmissive;
 	m_emissiveAndFinalBuffers[1] = GL_COLOR_ATTACHMENT0 + GBufferFinal;
@@ -66,6 +65,10 @@ ErrorCode GeometryBuffer::init()
 		m_internalFormats[GBufferNormal] = Config::FramebfrVariables().gl_normal_buffer_internal_format;
 		m_textureFormats[GBufferNormal] = Config::FramebfrVariables().gl_normal_buffer_texture_format;
 		m_textureTypes[GBufferNormal] = Config::FramebfrVariables().gl_normal_buffer_texture_type;
+
+		m_internalFormats[GBufferMatProperties] = Config::FramebfrVariables().gl_mat_properties_buffer_internal_format;
+		m_textureFormats[GBufferMatProperties] = Config::FramebfrVariables().gl_mat_properties_buffer_texture_format;
+		m_textureTypes[GBufferMatProperties] = Config::FramebfrVariables().gl_mat_properties_buffer_texture_type;
 
 		m_internalFormats[GBufferEmissive] = Config::FramebfrVariables().gl_emissive_buffer_internal_format;
 		m_textureFormats[GBufferEmissive] = Config::FramebfrVariables().gl_emissive_buffer_texture_format;
@@ -209,6 +212,7 @@ void GeometryBuffer::initGeometryPass()
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO);
 	glDrawBuffers(GBufferNumTextures, m_texBuffers);		// Bind geometry pass buffers to write to
+	glClear(GL_COLOR_BUFFER_BIT);
 }
 void GeometryBuffer::initLightPass()
 {
@@ -221,15 +225,31 @@ void GeometryBuffer::initLightPass()
 	glActiveTexture(GL_TEXTURE0 + GBufferNormal);
 	glBindTexture(GL_TEXTURE_2D, m_GBTextures[GBufferNormal]);
 
+	glActiveTexture(GL_TEXTURE0 + GBufferMatProperties);
+	glBindTexture(GL_TEXTURE_2D, m_GBTextures[GBufferMatProperties]);
+
 	glDrawBuffers(2, m_emissiveAndFinalBuffers);
 }
 void GeometryBuffer::initFinalPass()
 {
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);				// Set default framebuffer to paste to
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_FBO);			// Set GBuffer's framebuffer to copy from
-	glReadBuffer(GL_COLOR_ATTACHMENT0 + GBufferFinal);	// Bind final buffer, to copy from
-}
+#ifdef SETTING_USE_BLIT_FRAMEBUFFER
 
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);			// Set default framebuffer to paste to
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_FBO);		// Set GBuffer's framebuffer to copy from
+	glReadBuffer(GL_COLOR_ATTACHMENT0 + GBufferFinal);	// Bind final buffer, to copy from
+
+#else
+
+	// Bind final framebuffer
+	glActiveTexture(GL_TEXTURE0 + GBufferFinal);
+	glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
+
+	// Set the default framebuffer to be drawn to
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+#endif // SETTING_USE_BLIT_FRAMEBUFFER
+}
+/*
 void GeometryBuffer::bindForReading(GBufferTextureType p_buffer, int p_activeTexture)
 {
 	glActiveTexture(GL_TEXTURE0 + p_activeTexture);
@@ -271,4 +291,4 @@ void GeometryBuffer::bindForReading(GBufferTextureType p_buffer)
 void GeometryBuffer::bindForWriting(GBufferTextureType p_buffer)
 {
 	glDrawBuffer(GL_COLOR_ATTACHMENT0 + p_buffer);
-}
+}*/

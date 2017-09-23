@@ -146,8 +146,19 @@ void Window::handleEvents()
 	// Process queued up changes
 	processChanges();
 
-	// Get current relative mouse location
-	SDL_GetRelativeMouseState(&m_mouseInfo.m_movementCurrentFrameX, &m_mouseInfo.m_movementCurrentFrameY);
+	SDL_Event SDLEvent;
+	while(SDL_PollEvent(&SDLEvent))
+	{
+		if(SDLEvent.type == SDL_QUIT)
+		{
+			Config::setEngineVar().running = false;
+			break;
+		}
+		else
+		{
+			handleSDLEvent(SDLEvent);
+		}
+	}
 
 	// If filtering is enabled, interpolate mouse location over current and previous frame; otherwise use current frame data
 	if(Config::inputVar().mouse_filter)
@@ -163,20 +174,6 @@ void Window::handleEvents()
 	{
 		m_mouseInfo.m_movementX = (float)m_mouseInfo.m_movementCurrentFrameX;
 		m_mouseInfo.m_movementY = (float)m_mouseInfo.m_movementCurrentFrameY;
-	}
-
-	SDL_Event SDLEvent;
-	while(SDL_PollEvent(&SDLEvent))
-	{
-		if(SDLEvent.type == SDL_QUIT)
-		{
-			Config::setEngineVar().running = false;
-			break;
-		}
-		else
-		{
-			handleSDLEvent(SDLEvent);
-		}
 	}
 }
 
@@ -262,7 +259,10 @@ void Window::handleSDLEvent(const SDL_Event &p_SDLEvent)
 
 	case SDL_MOUSEMOTION:
 	{
-		// Currently unused, as the mouse position is retrieved every frame, independently of the motion
+		// Get the relative mouse location
+		m_mouseInfo.m_movementCurrentFrameX += p_SDLEvent.motion.xrel;
+		m_mouseInfo.m_movementCurrentFrameY += p_SDLEvent.motion.yrel;
+
 		break;
 	}
 

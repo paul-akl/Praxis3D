@@ -52,7 +52,7 @@ namespace TaskManagerGlobal
 
 			m_callback(m_callbackParam);
 
-			if (InterlockedDecrement(&m_callbacksCount) == 0)
+			if(InterlockedDecrement(&m_callbacksCount) == 0)
 			{
 				SetEvent(m_allCallbacksInvokedEvent);
 			}
@@ -87,11 +87,11 @@ namespace TaskManagerGlobal
 
 		tbb::task *execute()
 		{
-			if (m_taskManager->isPrimaryThread())
+			if(m_taskManager->isPrimaryThread())
 			{
 				// Cannot stall a primary task, so stall some other task
 				m_taskManager->addStallTask();
-				
+
 				// Wait a bit to give some time for some thread to pick up the stall task
 				// TODO change hardcoded value
 				tbb::this_tbb_thread::sleep(tbb::tick_count::interval_t(0.1));
@@ -138,7 +138,7 @@ TaskManager::TaskManager()
 	m_stallPoolParent = nullptr;
 	m_systemTasksRoot = nullptr;
 	m_tbbScheduler = nullptr;
-	
+
 	m_timeToQuit = false;
 	m_deltaTime = 0.0f;
 	m_stallPoolSemaphore = nullptr;
@@ -214,7 +214,7 @@ void TaskManager::setNumberOfThreads(unsigned int p_numOfThreads)
 {
 	unsigned int targetNumberOfThreads = p_numOfThreads;
 
-	if (targetNumberOfThreads > m_numOfMaxThreads || targetNumberOfThreads == 0)
+	if(targetNumberOfThreads > m_numOfMaxThreads || targetNumberOfThreads == 0)
 		targetNumberOfThreads = m_numOfMaxThreads;
 
 	m_numOfTargetThreads = targetNumberOfThreads;
@@ -225,16 +225,16 @@ void TaskManager::waitForSystemTasks(SystemTask **p_tasks, unsigned int p_count)
 	assert(isPrimaryThread());
 	assert(p_count > 0);
 	assert(p_count <= Systems::Types::Max);
-	
+
 	// Execute the tasks we are waiting, now
 	// Save the tasks we aren't waiting, for next time
 
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 
-	for (std::vector<SystemTask*>::iterator iterator = m_primaryThreadSystemTaskList.begin(); iterator != m_primaryThreadSystemTaskList.end(); iterator++)
+	for(std::vector<SystemTask*>::iterator iterator = m_primaryThreadSystemTaskList.begin(); iterator != m_primaryThreadSystemTaskList.end(); iterator++)
 	{
 		// Check if we are waiting for this thread
-		if (std::find(p_tasks, p_tasks + p_count, *iterator))
+		if(std::find(p_tasks, p_tasks + p_count, *iterator))
 		{
 			// If we are, execute it on the primary thread
 			(*iterator)->update(m_deltaTime);
@@ -258,7 +258,7 @@ void TaskManager::nonStandardPerThreadCallback(JobFunct p_callback, void *p_data
 	SpinWait::Lock lock(m_syncedCallbackMutex);
 
 	unsigned int numOfThreads = m_numOfThreads;
-	if (numOfThreads != m_numOfMaxThreads)
+	if(numOfThreads != m_numOfMaxThreads)
 	{
 		m_numOfTargetThreads = m_numOfMaxThreads;
 		updateThreadPoolSize();
@@ -274,7 +274,7 @@ void TaskManager::nonStandardPerThreadCallback(JobFunct p_callback, void *p_data
 	broadcastParent->set_ref_count(m_numOfMaxThreads + 1);
 
 	tbb::task_list taskList;
-	for (unsigned int i = 0; i < m_numOfMaxThreads; i++)
+	for(unsigned int i = 0; i < m_numOfMaxThreads; i++)
 	{
 		// Add a SynchronizeTask to each thread in the TBB pool (workers and master)
 		tbb::task *newTask = new(broadcastParent->allocate_child()) TaskManagerGlobal::SynchronizeTask;
@@ -287,7 +287,7 @@ void TaskManager::nonStandardPerThreadCallback(JobFunct p_callback, void *p_data
 	broadcastParent->spawn_and_wait_for_all(taskList);
 	broadcastParent->destroy(*broadcastParent);
 
-	if (numOfThreads != m_numOfMaxThreads)
+	if(numOfThreads != m_numOfMaxThreads)
 	{
 		m_numOfTargetThreads = numOfThreads;
 		updateThreadPoolSize();
@@ -298,7 +298,7 @@ void TaskManager::issueJobsForSystemTasks(SystemTask **p_tasks, unsigned int p_c
 	//TODO ERROR
 	assert(isPrimaryThread());
 	assert(p_count > 0);
-	
+
 	m_deltaTime = p_deltaTime;
 
 	updateThreadPoolSize();
@@ -311,25 +311,27 @@ void TaskManager::issueJobsForSystemTasks(SystemTask **p_tasks, unsigned int p_c
 	// Schedule tasks based on their performance hint order
 	tbb::task_list taskList;
 	unsigned int affinityCount = (unsigned int)m_affinityIDs.size();
-	
-	for (unsigned int perfHint = 0, currentTask = 0; perfHint < PerformanceHint::Task_MAX; perfHint++)
-	{
-		for (currentTask = 0; currentTask < p_count; currentTask++)
+
+	// TODO: implement performance hint
+
+	//for(unsigned int perfHint = 0, currentTask = 0; perfHint < PerformanceHint::Task_MAX; perfHint++)
+	//{
+		for(unsigned int currentTask = 0; currentTask < p_count; currentTask++)
 		{
-			if (p_tasks[currentTask]->isPrimaryThreadOnly())
+			if(p_tasks[currentTask]->isPrimaryThreadOnly())
 			{
 				// Put this task on the list of tasks to be run on the primary thread
 				// only do this during the first outer loop
 				//if (perfHint == 0)
 				//{
-					m_primaryThreadSystemTaskList.push_back(p_tasks[currentTask]);
+				m_primaryThreadSystemTaskList.push_back(p_tasks[currentTask]);
 				//}
 			}
 			else
 			{
 				// Check if it's time to dispatch this task
-				if (getPerformanceHint(p_tasks[currentTask]) == (PerformanceHint)perfHint)
-				{
+				//if(getPerformanceHint(p_tasks[currentTask]) == (PerformanceHint)perfHint)
+				//{
 					// This task can be run on an arbitrary thread - allocate it 
 					TaskManagerGlobal::GenericCallbackTask<TaskManager::JobFunct> *systemTask
 						= new(m_systemTasksRoot->allocate_additional_child_of(*m_systemTasksRoot))
@@ -342,20 +344,20 @@ void TaskManager::issueJobsForSystemTasks(SystemTask **p_tasks, unsigned int p_c
 					// to a unique thread, regardless of PerformanceHint
 					systemTask->set_affinity(m_affinityIDs[currentTask % affinityCount]);
 					taskList.push_back(*systemTask);
-				}
+				//}
 			}
 		}
 
 		// We only spawn system tasks here. They in their turn will spawn descendant tasks.
 		// Waiting for the whole bunch completion happens in WaitForSystemTasks.
 		m_systemTasksRoot->spawn(taskList);
-	}
+	//}
 }
 void TaskManager::parallelFor(SystemTask *p_systemTask, ParallelForFunc p_jobFunc, void *p_param, unsigned int p_begin, unsigned int p_end, unsigned int p_minGrainSize)
 {
 	TaskManagerGlobal::ParallelFor parallelForBody(p_jobFunc, p_param);
 
-	if (m_numOfThreads != 1)
+	if(m_numOfThreads != 1)
 	{
 		tbb::parallel_for(tbb::blocked_range<unsigned int>(p_begin, p_end, p_minGrainSize), parallelForBody, tbb::auto_partitioner());
 	}
@@ -375,13 +377,13 @@ void TaskManager::updateThreadPoolSize()
 {
 	// Change the number of threads if needed, by creating some tasks which do not complete until signaled
 
-	if (m_numOfTargetThreads != m_numOfThreads)
+	if(m_numOfTargetThreads != m_numOfThreads)
 	{
 		unsigned int numOfThreadsToWait = (m_numOfMaxThreads - m_numOfTargetThreads);
 		unsigned int numOfThreadsToFree = (m_numOfMaxThreads - m_numOfThreads);
 
 		// Free up all the threads
-		if (m_stallPoolParent)
+		if(m_stallPoolParent)
 		{
 			ReleaseSemaphore(m_stallPoolSemaphore, numOfThreadsToFree, NULL);
 
@@ -399,7 +401,7 @@ void TaskManager::updateThreadPoolSize()
 		m_stallPoolParent->set_ref_count(numOfThreadsToWait + 1);
 
 		tbb::task_list taskList;
-		for (unsigned int i = 0; i < numOfThreadsToWait; i++)
+		for(unsigned int i = 0; i < numOfThreadsToWait; i++)
 		{
 			tbb::task *stallTask = new(m_stallPoolParent->allocate_child()) TaskManagerGlobal::StallTask(this, m_stallPoolSemaphore);
 			// TODO ERROR

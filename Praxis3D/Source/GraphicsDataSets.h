@@ -6,7 +6,7 @@
 // All graphics objects contain an instance of this struct, which holds the necessary spacial and other data
 struct GraphicsData
 {
-	GraphicsData() : m_scale(1.0f, 1.0f, 1.0f), m_alphaThreshold(0.0f), m_emissiveThreshold(0.0f), m_textureTilingFactor(1.0f) { }
+	GraphicsData() : m_scale(1.0f, 1.0f, 1.0f), m_alphaThreshold(0.0f), m_emissiveThreshold(0.0f), m_heightScale(0.0f), m_textureTilingFactor(1.0f) { }
 
 	Math::Vec3f m_position,
 				m_rotation,
@@ -18,6 +18,7 @@ struct GraphicsData
 
 	float	m_alphaThreshold,
 			m_emissiveThreshold,
+			m_heightScale,
 			m_textureTilingFactor;
 };
 
@@ -28,7 +29,7 @@ struct RenderableObjectData
 		m_shader(p_shader),
 		m_baseObjectData(p_baseObjectData) { }
 
-	void loadToVideoMemory()
+	/*void loadToVideoMemory()
 	{
 		ErrorCode error;
 
@@ -45,15 +46,15 @@ struct RenderableObjectData
 			for(int matType = 0; matType < Model::NumOfModelMaterials; matType++)
 				if(!ErrHandlerLoc::get().ifSuccessful(m_materials[matType][i].loadToVideoMemory(), error))
 					ErrHandlerLoc::get().log(error);
-	}
+	}*/
 
 	GraphicsData &m_baseObjectData;
 
 	ModelLoader::ModelHandle m_model;
 	ShaderLoader::ShaderProgram *m_shader;
-	std::vector<bool> m_defaultMaterial[Model::NumOfModelMaterials];
-	std::vector<TextureLoader::Texture2DHandle> m_materials[Model::NumOfModelMaterials];
-	std::vector<TextureLoader::Texture2DHandle>::size_type m_numMaterials;
+	std::vector<bool> m_defaultMaterial[MaterialType_NumOfTypes];
+	std::vector<TextureLoader2D::Texture2DHandle> m_materials[MaterialType_NumOfTypes];
+	std::vector<TextureLoader2D::Texture2DHandle>::size_type m_numMaterials;
 
 	// Unused, as renderer checks texture handle not being 0 instead
 	//std::bitset<Model::NumOfModelMaterials> m_materialPresent;

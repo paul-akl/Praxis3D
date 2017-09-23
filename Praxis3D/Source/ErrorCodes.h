@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "EnumFactory.h"
 
 /*   ___________________________________________________________________________________________________
@@ -81,8 +83,12 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_ShaderLoader,) \
     Code(Source_FileLoader,) \
     Code(Source_SceneLoader,) \
+    Code(Source_LightingPass,) \
     Code(Source_GeometryBuffer,) \
+    Code(Source_GeometryPass,) \
     Code(Source_GraphicsObject,) \
+    Code(Source_FinalPass,) \
+    Code(Source_ReflectionPass,) \
     Code(Source_ScriptObject,) \
     Code(Source_PlayerObject,) \
     Code(Source_GameObject,) \
@@ -92,3 +98,20 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_Window,) \
     Code(Source_NumberOfErrorSources,) 
 DECLARE_ENUM(ErrorSource, ERROR_SOURCE)
+
+// Holds an error code and an error message
+struct ErrorMessage
+{
+	ErrorMessage() : m_errorCode(Success), m_errorSource(Source_Unknown) { }
+	ErrorMessage(const ErrorCode p_errorCode) : m_errorCode(p_errorCode) { }
+	ErrorMessage(const ErrorCode p_errorCode, const ErrorSource p_errorsource)
+		: m_errorCode(p_errorCode), m_errorSource(p_errorsource) { }
+	ErrorMessage(const ErrorCode p_errorCode, const ErrorSource p_errorsource, const std::string &p_errorMessage)
+		: m_errorCode(p_errorCode), m_errorSource(p_errorsource), m_errorMessage(p_errorMessage) { }
+
+	const inline bool containsError() const { return m_errorCode != Success; }
+
+	ErrorCode m_errorCode;
+	ErrorSource m_errorSource;
+	std::string m_errorMessage;
+};

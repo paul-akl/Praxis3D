@@ -60,7 +60,7 @@ public:
 		inline bool operator==(std::string p_string) { return m_filename == p_string; }
 
 		inline ErrorCode unloadMemory()		 { return static_cast<TObject*>(this)->unloadMemory();		}
-		inline ErrorCode unloadVideoMemory() { return static_cast<TObject*>(this)->unloadVideoMemory(); }
+		inline ErrorCode unloadVideoMemory() { return ErrorCode::Success; /*return static_cast<TObject*>(this)->unloadVideoMemory();*/ }
 
 	protected:
 		bool m_loadedToMemory;
@@ -143,8 +143,6 @@ protected:
 	// Swap the object with the last element of vector and pop_back
 	inline void removeObject(UniqueObject &p_object)
 	{
-		//static_cast<TDerived*>(this)->removeObject(p_object);
-
 		auto uniqueID = p_object.getUniqueID();
 		if(!(uniqueID < 0) && uniqueID < m_objectPool.size())
 		{

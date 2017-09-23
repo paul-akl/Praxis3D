@@ -10,12 +10,13 @@ class RendererScene;
 
 class ModelObject : public LoadableGraphicsObject
 {
-	friend class RendererScene;
+	//friend class RendererScene;
 public:
 	ModelObject(SystemScene *p_systemScene, const std::string &p_name, ModelLoader::ModelHandle &p_model, Properties::PropertyID p_objectType = Properties::ModelObject)
 		: LoadableGraphicsObject(p_systemScene, p_name, p_objectType, p_model, Loaders::shader().load())
 	{
 		m_customShader = false;
+		m_baseObjectData.m_heightScale = Config::graphicsVar().height_scale;
 		m_baseObjectData.m_alphaThreshold = Config::graphicsVar().alpha_threshold;
 		m_baseObjectData.m_emissiveThreshold = Config::graphicsVar().emissive_threshold;
 	}
@@ -24,6 +25,7 @@ public:
 		: LoadableGraphicsObject(p_systemScene, p_name, p_objectType, p_model, p_shader)
 	{
 		m_customShader = true;
+		m_baseObjectData.m_heightScale = Config::graphicsVar().height_scale;
 		m_baseObjectData.m_alphaThreshold = Config::graphicsVar().alpha_threshold;
 		m_baseObjectData.m_emissiveThreshold = Config::graphicsVar().emissive_threshold;
 	}
@@ -61,7 +63,7 @@ public:
 		decltype(m_rendererData.m_model.getMaterialArrays()) materials = m_rendererData.m_model.getMaterialArrays();
 		
 		// Reserve space in the material arrays before populating them
-		for(int matType = 0; matType < Model::NumOfModelMaterials; matType++)
+		for(int matType = 0; matType < MaterialType_NumOfTypes; matType++)
 		{
 			m_rendererData.m_materials[matType].reserve(materials.m_numMaterials);
 			m_rendererData.m_defaultMaterial[matType].reserve(materials.m_numMaterials);
@@ -78,7 +80,7 @@ public:
 		// Override from model only if the existing entry is empty. If neither texture's
 		// filenames are present, use a default texture filename instead (as a fall-back mechanism)
 		for(decltype(materials.m_numMaterials) i = 0, size = materials.m_numMaterials; i < size; i++)
-			for(int matType = 0; matType < Model::NumOfModelMaterials; matType++)
+			for(int matType = 0; matType < MaterialType_NumOfTypes; matType++)
 				if(m_materialNames.m_materials[matType][i].isEmpty())
 					if(!materials.m_materials[matType][i].isEmpty())
 					{
@@ -94,9 +96,9 @@ public:
 		// Iterate over each material, and try to load it (from filename). If the filename is empty,
 		// texture loader is simply going to give out a default texture.
 		for(decltype(m_materialNames.m_numMaterials) i = 0; i < m_materialNames.m_numMaterials; i++)
-			for(unsigned int matType = 0; matType < Model::NumOfModelMaterials; matType++)
+			for(unsigned int matType = 0; matType < MaterialType_NumOfTypes; matType++)
 			{
-				m_rendererData.m_materials[matType].push_back(Loaders::texture().load2D(m_materialNames.m_materials[matType][i].m_filename, static_cast<Model::ModelMaterialType>(matType), false));
+				m_rendererData.m_materials[matType].push_back(Loaders::texture2D().load(m_materialNames.m_materials[matType][i].m_filename, static_cast<MaterialType>(matType), false));
 				m_rendererData.m_defaultMaterial[matType].push_back(m_materialNames.m_materials[matType][i].m_defaultMaterial);
 			}
 		
@@ -105,7 +107,7 @@ public:
 		// Load each texture to memory (if it has been loaded before, it will simple continue without loading)
 		for(decltype(m_materialNames.m_numMaterials) i = 0; i < m_materialNames.m_numMaterials; i++)
 			// Load each material type to memory. If it returns an error, log it
-			for(int matType = 0; matType < Model::NumOfModelMaterials; matType++)
+			for(int matType = 0; matType < MaterialType_NumOfTypes; matType++)
 				if(!ErrHandlerLoc::get().ifSuccessful(m_rendererData.m_materials[matType][i].loadToMemory(), error))
 					ErrHandlerLoc::get().log(error, ErrorSource::Source_GraphicsObject);
 		
@@ -124,18 +126,18 @@ public:
 	}
 
 	// Loads model and materials from memory to video memory; should only be called by renderer thread
-	virtual ErrorCode loadToVideoMemory()
+	ErrorCode loadToVideoMemory()
 	{
 		// Error code used for checking the success of loading; it is not returned
 		ErrorCode error = ErrorCode::Success;
 
 		// Load the model to video memory; log an error if it occurs
-		if(!ErrHandlerLoc::get().ifSuccessful(m_rendererData.m_model.loadToVideoMemory(), error))
-			ErrHandlerLoc::get().log(error);
+		//if(!ErrHandlerLoc::get().ifSuccessful(m_rendererData.m_model.loadToVideoMemory(), error))
+		//	ErrHandlerLoc::get().log(error);
 
 		// Iterate over all materials and load them to video memory; log an error if loading failed
 		for(decltype(m_rendererData.m_numMaterials) i = 0; i < m_rendererData.m_numMaterials; i++)
-			for(int matType = 0; matType < Model::NumOfModelMaterials; matType++)
+			for(int matType = 0; matType < MaterialType_NumOfTypes; matType++)
 				if(!ErrHandlerLoc::get().ifSuccessful(m_rendererData.m_materials[matType][i].loadToVideoMemory(), error))
 					ErrHandlerLoc::get().log(error);
 
@@ -143,7 +145,7 @@ public:
 	}
 
 	// Exports all the data of the object as a PropertySet
-	virtual PropertySet exportObject()
+	PropertySet exportObject()
 	{
 		// Create the root property set
 		PropertySet propertySet(Properties::ArrayEntry);
@@ -156,8 +158,9 @@ public:
 		propertySet.addProperty(Properties::OffsetPosition, m_baseObjectData.m_offsetPosition);
 		propertySet.addProperty(Properties::OffsetRotation, m_baseObjectData.m_offsetRotation);
 		propertySet.addProperty(Properties::Scale, m_baseObjectData.m_scale);
-		propertySet.addProperty(Properties::Lighting, m_affectedByLighting);
 		propertySet.addProperty(Properties::AlphaThreshold, m_baseObjectData.m_alphaThreshold);
+		propertySet.addProperty(Properties::HeightScale, m_baseObjectData.m_heightScale);
+		propertySet.addProperty(Properties::Lighting, m_affectedByLighting);
 		propertySet.addProperty(Properties::TextureTilingFactor, m_baseObjectData.m_textureTilingFactor);
 
 		// Add model
@@ -166,19 +169,17 @@ public:
 
 		// Add material root property set
 		auto &materials = propertySet.addPropertySet(Properties::Materials);
-		PropertySet *materialTypes[Model::NumOfModelMaterials];
+		PropertySet *materialTypes[MaterialType_NumOfTypes];
 		
 		// Declare individual material property sets
-		materialTypes[Model::ModelMat_diffuse] = new PropertySet(Properties::Diffuse);
-		materialTypes[Model::ModelMat_normal] = new PropertySet(Properties::Normal);
-		materialTypes[Model::ModelMat_emissive] = new PropertySet(Properties::Emissive);
-		materialTypes[Model::ModelMat_specular] = new PropertySet(Properties::Specular);
-		materialTypes[Model::ModelMat_gloss] = new PropertySet(Properties::Gloss);
-		materialTypes[Model::ModelMat_height] = new PropertySet(Properties::Height);
+		materialTypes[MaterialType_Diffuse] = new PropertySet(Properties::Diffuse);
+		materialTypes[MaterialType_Normal] = new PropertySet(Properties::Normal);
+		materialTypes[MaterialType_Emissive] = new PropertySet(Properties::Emissive);
+		materialTypes[MaterialType_Combined] = new PropertySet(Properties::RMHAO);
 
 		// Iterate over each material and add it only if it's not using the default texture
 		for(decltype(m_rendererData.m_numMaterials) i = 0; i < m_rendererData.m_numMaterials; i++)
-			for(int matType = 0; matType < Model::NumOfModelMaterials; matType++)
+			for(int matType = 0; matType < MaterialType_NumOfTypes; matType++)
 				if(!m_rendererData.m_defaultMaterial[matType][i])
 				{
 					auto &materialEntry = materialTypes[matType]->addPropertySet(Properties::ArrayEntry);
@@ -187,7 +188,7 @@ public:
 				}
 
 		// Add individual material property sets and delete temporary values
-		for(int matType = 0; matType < Model::NumOfModelMaterials; matType++)
+		for(int matType = 0; matType < MaterialType_NumOfTypes; matType++)
 		{
 			materials.addPropertySet(*materialTypes[matType]);
 			delete materialTypes[matType];
@@ -200,24 +201,24 @@ public:
 			auto &shaders = propertySet.addPropertySet(Properties::Shaders);
 
 			// Iterate over all shader types and add the ones that are present as properties
-			for(unsigned int i = 0; i < ShaderLoader::ShaderType::ShaderNumOfTypes; i++)
+			for(unsigned int i = 0; i < ShaderType_NumOfTypes; i++)
 				if(m_rendererData.m_shader->shaderPresent(i))
 				{
 					switch(i)
 					{
-					case ShaderLoader::ShaderArrayTypes::ArrayFragment:
+					case ShaderType_Fragment:
 						shaders.addProperty(Properties::FragmentShader, m_rendererData.m_shader->getShaderFilename(i));
 						break;
-					case ShaderLoader::ShaderArrayTypes::ArrayGeometry:
+					case ShaderType_Geometry:
 						shaders.addProperty(Properties::GeometryShader, m_rendererData.m_shader->getShaderFilename(i));
 						break;
-					case ShaderLoader::ShaderArrayTypes::ArrayVertex:
+					case ShaderType_Vertex:
 						shaders.addProperty(Properties::VertexShader, m_rendererData.m_shader->getShaderFilename(i));
 						break;
-					case ShaderLoader::ShaderArrayTypes::ArrayTessControl:
+					case ShaderType_TessControl:
 						shaders.addProperty(Properties::TessControlShader, m_rendererData.m_shader->getShaderFilename(i));
 						break;
-					case ShaderLoader::ShaderArrayTypes::ArrayTessEvaluation:
+					case ShaderType_TessEvaluation:
 						shaders.addProperty(Properties::TessEvaluationShader, m_rendererData.m_shader->getShaderFilename(i));
 						break;
 					}
@@ -228,7 +229,7 @@ public:
 	}
 
 	// Adds a material filename to a specific material type and index
-	inline void addMaterial(Model::ModelMaterialType p_matType, const std::string &p_fileName, const unsigned int p_materialIndex)
+	inline void addMaterial(MaterialType p_matType, const std::string &p_fileName, const unsigned int p_materialIndex)
 	{
 		if(!p_fileName.empty())
 		{
@@ -248,7 +249,14 @@ public:
 	inline void setLighting(const bool p_flag)					{ m_affectedByLighting = p_flag;						}
 	inline void setAlphaThreshold(const float p_threshold)		{ m_baseObjectData.m_alphaThreshold = p_threshold;		}
 	inline void setEmissiveThreshold(const float p_threshold)	{ m_baseObjectData.m_emissiveThreshold = p_threshold;	}
+	inline void setHeightScale(const float p_scale)				{ m_baseObjectData.m_heightScale = p_scale;				}
 	inline void setTextureTilingFactor(const float p_factor)	{ m_baseObjectData.m_textureTilingFactor = p_factor;	}
+	inline void setDefaultMaterial(const unsigned int p_materialType, const std::string &p_filename)
+	{
+		// Check if material type index is within bounds
+		if(p_materialType < MaterialType_NumOfTypes)
+			m_defaultMaterials[p_materialType] = p_filename;
+	}
 
 protected:
 	// Clears data that's not useful after loading (like material names, etc)
@@ -259,7 +267,7 @@ protected:
 
 	Model::MaterialArrays m_materialNames;
 
-	std::string m_defaultMaterials[Model::Model::NumOfModelMaterials];
+	std::string m_defaultMaterials[MaterialType_NumOfTypes];
 	
 	// If the object hasn't got a custom shader, the regular geometry shader in the renderer is used
 	bool m_customShader;

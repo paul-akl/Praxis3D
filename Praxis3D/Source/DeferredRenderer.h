@@ -6,6 +6,9 @@
 #include "ModelGraphicsObjects.h"
 #include "Renderer.h"
 
+#include "RendererBackend.h"
+#include "EnvironmentMapObjects.h"
+
 class DeferredRenderer : public Renderer
 {
 	friend class DeferredRendererState;
@@ -63,31 +66,43 @@ protected:
 		GLuint	m_vao,
 				m_vbo;
 	};
-
+	
 	// Renders meshes and populates the geometry buffers
-	virtual void geometryPass(const SceneObjects &p_sceneObjects, const float p_deltaTime);
+	void geometryPass(const SceneObjects &p_sceneObjects, const float p_deltaTime);
 
 	// Calculates lighting in a screen-space pass
-	virtual void lightingPass(const SceneObjects &p_sceneObjects, const float p_deltaTime);
+	void lightingPass(const SceneObjects &p_sceneObjects, const float p_deltaTime);
 
 	// Renders the objects that are unaffected by lighting
-	virtual void postLightingPass(const SceneObjects &p_sceneObjects, const float p_deltaTime);
+	void postLightingPass(const SceneObjects &p_sceneObjects, const float p_deltaTime);
+
+	//
+	void reflectionPass(const SceneObjects &p_sceneObjects, const float p_deltaTime);
 
 	// Copies the final buffer to the screen by blitting it
-	virtual void finalPass();
+	void finalPass();
 
 	// Updates frame-dependent variables (like view, projection matrices)
-	virtual void update();
+	void update();
 
 	void drawModelObject(const RenderableObjectData *p_renderableObject, const ShaderLoader::ShaderProgram *p_shader);
 	void drawTessellatedObject(const RenderableObjectData *p_renderableObject, const ShaderLoader::ShaderProgram *p_shader);
 
+
+	void drawModelObjectTest(const RenderableObjectData &p_object, const ShaderLoader::ShaderProgram *p_shader);
+	void drawObjectsTest(const RendererBackend::DrawCommands &p_objects);
+
 	// Shaders
 	ShaderLoader::ShaderProgram	*m_shaderGeometry,
-								*m_shaderLightPass;
+								*m_shaderLightPass,
+								*m_shaderReflectionPass,
+								*m_shaderFinalPass;
 
 	// Framebuffers
 	GeometryBuffer *m_gbuffer;
+
+	// Renderer front end, used as an interface to talk to graphics API
+	//RendererFrontend m_frontEnd;
 	
 	// Light buffer handles (on VRAM)
 	unsigned int m_pointLightBufferHandle,
@@ -96,14 +111,18 @@ protected:
 	// Current number of lights in the light buffers
 	size_t	m_numPointLights,
 			m_numSpotLights;
-
+	
 	// Currently bound object handles
-	unsigned int m_boundTextureHandles[Model::NumOfModelMaterials],
+	unsigned int m_boundTextureHandles[MaterialType_NumOfTypes],
 				 m_boundShaderHandle;
 	
 	DirectionalLightDataSet m_directionalLight;
 	DeferredRendererState *m_rendererState;
 	static SingleTriangle m_fullscreenTriangle;
+
+	EnvironmentMapStatic *m_cubemap;
+
+	RendererBackend::DrawCommands m_objects;
 };
 
 class DeferredRendererState : public RendererState
@@ -120,13 +139,7 @@ public:
 	const virtual float getDirLightintensity()			const { return m_deferredRenderer->m_directionalLight.m_intensity;	}
 	const virtual unsigned int getNumPointLights()		const { return (unsigned int)m_deferredRenderer->m_numPointLights;	}
 	const virtual unsigned int getNumSpotLights()		const { return (unsigned int)m_deferredRenderer->m_numSpotLights;	}
-	
-	const virtual unsigned int getBlurBufferPos()		const { return GeometryBuffer::GBufferTextureType::GBufferBlur;		}
-	const virtual unsigned int getDiffuseBufferPos()	const { return GeometryBuffer::GBufferTextureType::GBufferDiffuse;	}
-	const virtual unsigned int getEmissiveBufferPos()	const { return GeometryBuffer::GBufferTextureType::GBufferEmissive; }
-	const virtual unsigned int getNormalBufferPos()		const { return GeometryBuffer::GBufferTextureType::GBufferNormal;	}
-	const virtual unsigned int getPositionBufferPos()	const { return GeometryBuffer::GBufferTextureType::GBufferPosition; }
-	
+		
 protected:
 	DeferredRendererState(DeferredRenderer *p_renderer) : RendererState(p_renderer), m_deferredRenderer(p_renderer) { }
 

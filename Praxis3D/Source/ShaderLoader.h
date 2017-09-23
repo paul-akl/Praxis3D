@@ -7,6 +7,7 @@
 #include <sstream>
 #include <string>
 
+#include "CommonDefinitions.h"
 #include "ErrorCodes.h"
 #include "PropertySet.h"
 #include "SpinWait.h"
@@ -17,30 +18,21 @@ class ShaderLoader
 {
 	friend class ShaderProgram;
 public:
-	enum ShaderType : unsigned int
-	{
-		ShaderNull = 0,
-		ShaderFragment = GL_FRAGMENT_SHADER,
-		ShaderGeometry = GL_GEOMETRY_SHADER,
-		ShaderVertex = GL_VERTEX_SHADER,
-		ShaderTessControl = GL_TESS_CONTROL_SHADER,
-		ShaderTessEvaluation = GL_TESS_EVALUATION_SHADER,
-		ShaderNumOfTypes = 5
-	};
-
-	enum ShaderArrayTypes : unsigned int
-	{
-		ArrayFragment,
-		ArrayGeometry,
-		ArrayVertex,
-		ArrayTessControl,
-		ArrayTessEvaluation,
-		ArrayNumOfTypes = ShaderNumOfTypes
-	};
-public:
 	class Shader
 	{
 		friend class ShaderLoader;
+	private:
+		enum ShaderType : unsigned int
+		{
+			ShaderNull = 0,
+			ShaderFragment,
+			ShaderGeometry,
+			ShaderVertex,
+			ShaderTessControl,
+			ShaderTessEvaluation,
+			ShaderNumOfTypes = 5
+		};
+
 	public:
 		Shader(const std::string &p_filename, const ShaderType p_shaderType)
 		{
@@ -71,7 +63,7 @@ public:
 				}
 				else
 				{
-					ErrHandlerLoc::get().log(ErrorCode::Ifstream_failed, ErrorSource::Source_ShaderLoader, m_filename);
+					ErrHandlerLoc::get().log(ErrorCode::Ifstream_failed, ErrorSource::Source_ShaderLoader, "(Filename - \"" + m_filename + "\"): ");
 					return ErrorCode::Ifstream_failed;
 				}
 			}
@@ -80,6 +72,9 @@ public:
 		}
 		inline ErrorCode loadToVideoMemory()
 		{
+			// Clear error queue
+			glGetError();
+
 			// Create a shader handle
 			m_shaderHandle = glCreateShader(m_shaderType);
 
@@ -87,7 +82,7 @@ public:
 			GLenum glError = glGetError();
 			if(glError != GL_NO_ERROR)
 			{
-				ErrHandlerLoc::get().log(Shader_creation_failed, ErrorSource::Source_ShaderLoader, Utilities::toString(glError) + " | Filename - " + m_filename);
+				ErrHandlerLoc::get().log(Shader_creation_failed, ErrorSource::Source_ShaderLoader, "(Filename - \"" + m_filename + "\"): " + Utilities::toString(glError));
 				return ErrorCode::Shader_creation_failed;
 			}
 			else
@@ -121,7 +116,7 @@ public:
 						errorMessageTemp += shaderCompileErrorMessage[i];
 
 					// Log an error with a shader info log
-					ErrHandlerLoc::get().log(ErrorCode::Shader_compile_failed, ErrorSource::Source_ShaderLoader, errorMessageTemp);
+					ErrHandlerLoc::get().log(ErrorCode::Shader_compile_failed, ErrorSource::Source_ShaderLoader, "(Filename - \"" + m_filename + "\"): " + errorMessageTemp);
 					return ErrorCode::Shader_compile_failed;
 				}
 			}
@@ -147,9 +142,11 @@ public:
 	};
 	class ShaderProgram
 	{
+		friend class CommandBuffer;
 		friend class ShaderLoader;
+		friend class RendererFrontend;
 	public:
-		inline void addShader(Shader *p_shader)
+		/*inline void addShader(Shader *p_shader)
 		{
 			if(p_shader != nullptr)
 			{
@@ -200,53 +197,69 @@ public:
 					break;
 				}
 			}
-		}
+		}*/
 
-		inline void bind() { glUseProgram(m_programHandle); }
+		inline void addShader(ShaderType p_shaderType, const std::string &p_filename)
+		{
+			m_shaderFilename[p_shaderType] = p_filename;
+		}
 
 		// Loads shader source code to memory
 		inline ErrorCode loadToMemory()
 		{
-			ErrorCode individualError = ErrorCode::Success;
 			ErrorCode returnError = ErrorCode::Success;
 
+			// Check if the shader hasn't been already loaded
 			if(!m_loadedToMemory)
 			{
 				m_loadedToMemory = true;
+				m_defaultShader = true;
 
-				// Iterate over all shaders and load them to memory
-				for(unsigned int i = 0; i < ShaderNumOfTypes; i++)
+				for(unsigned int i = 0; i < ShaderType_NumOfTypes; i++)
 				{
-					// If shader is valid
-					if(m_shaders[i] != nullptr)
+					if(!m_shaderFilename[i].empty())
 					{
-						// Load to memory
-						individualError = m_shaders[i]->loadToMemory();
+						// Load shader's source code from a file
+						std::ifstream sourceStream(Config::PathsVariables().shader_path + m_shaderFilename[i], std::ios::in);
 
-						// If it failed, assign a return error
-						if(individualError != ErrorCode::Success)
-							returnError = individualError;
+						// Check if it was loaded successfully
+						if(sourceStream.is_open())
+						{
+							std::string singleLine = "";
+							while(std::getline(sourceStream, singleLine))
+								m_shaderSource[i] += "\n" + singleLine;
+
+							sourceStream.close();
+
+							m_defaultShader = false;
+						}
+						else
+						{
+							ErrHandlerLoc::get().log(ErrorCode::Ifstream_failed, ErrorSource::Source_ShaderLoader, "(Filename - \"" + m_shaderFilename[i] + "\"): ");
+							
+							// TODO Check if error works without exiting from here
+							//return ErrorCode::Ifstream_failed;
+							returnError = ErrorCode::Ifstream_failed;
+						}
 					}
 				}
 			}
 
 			return returnError;
 		}
-		// Compile and attach, shaders, create and link program, populate uniform updaters
-		ErrorCode loadToVideoMemory();
 
 		// Returns true if the program contains any tessellation shaders
 		const inline bool isTessellated() const { return m_tessellated; }
 
 		// Getters
-		const inline std::string &getFilename() const { return m_filename; }
+		const inline std::string &getCombinedFilename() const { return m_combinedFilename; }
 		const inline unsigned int getShaderHandle() const { return m_programHandle; }
-		const inline ShaderUniformUpdater &getUniformUpdater() const { return *m_uniformUpdater; }
+		inline ShaderUniformUpdater &getUniformUpdater() const { return *m_uniformUpdater; }
 
-		const inline bool isDefaultProgram() const { return m_programHandle == m_defaultProgramHandle; }
-
+		const inline bool isDefaultProgram() const { return m_defaultShader; }
+		
 		// Comparator operators
-		const inline bool operator==(const std::string &p_filename) const { return (m_filename == p_filename); }
+		const inline bool operator==(const std::string &p_filename) const { return (m_combinedFilename == p_filename); }
 		const inline bool operator==(const unsigned int p_programHandle) const { return (m_programHandle == p_programHandle); }
 		const inline bool operator==(const ShaderProgram &p_shaderProgram) const { return (m_filenameHash == p_shaderProgram.m_filenameHash); }
 	
@@ -254,8 +267,8 @@ public:
 		const inline bool shaderPresent(const unsigned int p_shaderType)
 		{
 			// Check if the shader type passed is valid (in bounds) and return true if the shader is not null
-			if(p_shaderType >= 0 && p_shaderType < ShaderNumOfTypes)
-				return (m_shaders[p_shaderType] != nullptr);
+			//if(p_shaderType >= 0 && p_shaderType < ShaderType_NumOfTypes)
+			//	return (m_shaders[p_shaderType] != nullptr);
 
 			return false;
 		}
@@ -264,10 +277,10 @@ public:
 		const inline std::string getShaderFilename(const unsigned int p_shaderType)
 		{
 			// Check if the shader type passed is valid (in bounds)
-			if(p_shaderType >= 0 && p_shaderType < ShaderNumOfTypes + 1)
+			//if(p_shaderType >= 0 && p_shaderType < ShaderType_NumOfTypes + 1)
 				// If the shader is valid, return its filename, otherwise return an empty string
-				if(m_shaders[p_shaderType] != nullptr)
-					return m_shaders[p_shaderType]->getFilename();
+				//if(m_shaders[p_shaderType] != nullptr)
+				//	return m_shaders[p_shaderType]->getFilename();
 
 			return std::string();
 		}
@@ -276,43 +289,28 @@ public:
 		// Constructors aren't public, to allow them to be created only by the ShaderLoader class (makes it act as a factory)
 		ShaderProgram(const std::string &p_filename = "", unsigned int p_filenameHashkey = 0)
 		{
-			m_filename = p_filename;
+			m_combinedFilename = p_filename;
 			m_filenameHash = p_filenameHashkey > 0 ? p_filenameHashkey : Utilities::getHashKey(p_filename);
 			m_tessellated = false;
+			m_defaultShader = false;
 			m_loadedToMemory = false;
 			m_loadedToVideoMemory = false;
 			m_programHandle = 0;
 			m_uniformUpdater = nullptr;
-
-			for(unsigned int i = 0; i < ShaderNumOfTypes; i++)
-				m_shaders[i] = nullptr;
-		}
-		inline ErrorCode attachShader(Shader *p_shader)
-		{
-			// Attach shader to the program handle
-			glAttachShader(m_programHandle, p_shader->m_shaderHandle);
-
-			// Check for errors
-			GLenum glError = glGetError();
-			if(glError != GL_NO_ERROR)
-			{
-				// Log an error and pass a filename
-				ErrHandlerLoc::get().log(ErrorCode::Shader_attach_failed, ErrorSource::Source_ShaderLoader,
-										 Utilities::toString(glError) + " | Filename - " + p_shader->m_filename);
-				return ErrorCode::Shader_attach_failed;
-			}
-
-			return ErrorCode::Success;
 		}
 
-		bool	m_loadedToMemory,
+		bool	m_defaultShader, 
+				m_loadedToMemory,
 				m_loadedToVideoMemory,
 				m_tessellated;
 
-		std::string m_filename;
+		std::string m_combinedFilename;
+		std::string m_shaderFilename[ShaderType_NumOfTypes];
+		std::string m_shaderSource[ShaderType_NumOfTypes];
+		ErrorMessage m_errorMessages[ShaderType_NumOfTypes];
+
 		unsigned int m_filenameHash;
 		unsigned int m_programHandle;
-		Shader *m_shaders[ShaderNumOfTypes];
 
 		ShaderUniformUpdater *m_uniformUpdater;
 		
@@ -330,34 +328,14 @@ public:
 	inline ShaderProgram *load() { return &m_defaultProgram; }
 	ShaderProgram *load(const PropertySet &p_properties);
 
-	// Returns a default (empty) shader
-	//BaseShader *load() { return &m_defaultShader; }
-	//BaseShader *load(const std::string &p_vertexShaderFileName, const std::string &p_fragmentShaderFileName);
-	//BaseShader *load(const std::string &p_geometryShaderFileName, const std::string &p_vertexShaderFileName, const std::string &p_fragmentShaderFileName);
-
 private:
 	SpinWait	m_vertFragMutex,
 				m_geomMutex;
 
-	//BaseShader m_defaultShader;
 	ShaderProgram m_defaultProgram;
-
-	//std::vector<BaseShader*> m_vertFragShaders;
-	//std::vector<BaseShader*> m_geomShaders;
-
+	
 	// Mutex used to block calls from other threads while operation is in progress
 	SpinWait m_mutex;
 
-	//std::vector<Shader> m_shaders[ArrayNumOfTypes];
 	std::vector<ShaderProgram> m_shaderPrograms;
-
-	// Assign shader types, so they could be resolved from array type; order dependent
-	/*const static ShaderType m_shaderTypes[ArrayNumOfTypes] =
-	{
-		ShaderFragment,
-		ShaderGeometry,
-		ShaderVertex,
-		ShaderTessControl,
-		ShaderTessEvaluation
-	};*/
 };

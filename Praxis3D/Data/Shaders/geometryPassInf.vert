@@ -1,4 +1,4 @@
-#version 450 core
+#version 430 core
 
 // Mesh buffers
 layout(location = 0) in vec3 vertexPosition;

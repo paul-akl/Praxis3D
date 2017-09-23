@@ -6,6 +6,7 @@ RendererScene::RendererScene(RendererSystem *p_system, SceneLoader *p_sceneLoade
 {
 	m_renderTask = new RenderTask(this, p_system->getRenderer());
 	m_camera = nullptr;
+	m_skybox = nullptr;
 }
 
 RendererScene::~RendererScene()
@@ -73,7 +74,7 @@ ErrorCode RendererScene::preload()
 		if(m_modelObjPool[i].allocated() && !(m_modelObjPool[i].getObject()->loadedToMemory()))
 		{
 			// Add the object to be loaded later
-			m_objectsBeingLoaded.push_back(LoadableObjectAndIndex(m_modelObjPool[i].getObject(), m_modelObjPool[i].getIndex()));
+			m_objectsBeingLoaded.push_back(LoadableGraphicsObjectAndIndex(m_modelObjPool[i].getObject(), m_modelObjPool[i].getIndex()));
 
 			// Increment the number of allocated objects (early bail mechanism)
 			numAllocObjecs++;
@@ -88,7 +89,7 @@ ErrorCode RendererScene::preload()
 		if(m_shaderObjPool[i].allocated() && !(m_shaderObjPool[i].getObject()->loadedToMemory()))
 		{
 			// Add the object to be loaded later
-			m_objectsBeingLoaded.push_back(LoadableObjectAndIndex(m_shaderObjPool[i].getObject(), m_shaderObjPool[i].getIndex()));
+			m_objectsBeingLoaded.push_back(LoadableGraphicsObjectAndIndex(m_shaderObjPool[i].getObject(), m_shaderObjPool[i].getIndex()));
 
 			// Increment the number of allocated objects (early bail mechanism)
 			numAllocObjecs++;
@@ -118,7 +119,7 @@ void RendererScene::loadInBackground()
 		if(m_modelObjPool[i].allocated() && !(m_modelObjPool[i].getObject()->loadedToMemory()))
 		{
 			// Add object to 'being loaded' list and start loading it in a background thread
-			m_objectsBeingLoaded.push_back(LoadableObjectAndIndex(m_modelObjPool[i].getObject(), m_modelObjPool[i].getIndex()));
+			m_objectsBeingLoaded.push_back(LoadableGraphicsObjectAndIndex(m_modelObjPool[i].getObject(), m_modelObjPool[i].getIndex()));
 			TaskManagerLocator::get().startBackgroundThread(std::bind(&ModelObject::loadToMemory, m_modelObjPool[i].getObject()));
 
 			// Increment the number of allocated objects (early bail mechanism)
@@ -134,7 +135,7 @@ void RendererScene::loadInBackground()
 		if(m_shaderObjPool[i].allocated() && !(m_shaderObjPool[i].getObject()->loadedToMemory()))
 		{
 			// Add object to 'being loaded' list and start loading it in a background thread
-			m_objectsBeingLoaded.push_back(LoadableObjectAndIndex(m_shaderObjPool[i].getObject(), m_shaderObjPool[i].getIndex()));
+			m_objectsBeingLoaded.push_back(LoadableGraphicsObjectAndIndex(m_shaderObjPool[i].getObject(), m_shaderObjPool[i].getIndex()));
 			TaskManagerLocator::get().startBackgroundThread(std::bind(&ModelObject::loadToMemory, m_shaderObjPool[i].getObject()));
 
 			// Increment the number of allocated objects (early bail mechanism)
@@ -253,6 +254,45 @@ void RendererScene::update(const float p_deltaTime)
 			i++;
 	}
 
+	//	 _______________________________
+	//	|								|
+	//	|		Misc Loaded Objects		|
+	//	|_______________________________|
+	//
+	// Iterate over currently loading objects
+	/*for (decltype(m_miscObjectsBeingLoaded.size()) i = 0, size = m_miscObjectsBeingLoaded.size(),
+		maxObjects = Config::rendererVar().objects_loaded_per_frame; i < size;)
+	{
+		// If the object has loaded to memory already, add to load queue
+		if (m_miscObjectsBeingLoaded[i].m_loadableObject->loadedToMemory())
+		{
+			// If object should be activated after loading (for example wasn't set to be deleted while loading)
+			if (m_miscObjectsBeingLoaded[i].m_activateAfterLoading)
+			{
+				// Make object active, so it is passed to the renderer for drawing
+				//m_miscObjectsBeingLoaded[i].m_loadableObject->setActive(true);
+
+				// Add the object to objects-to-load list, that will be sent to the renderer to process
+				m_sceneObjects.m_objectsToLoad.push_back(&m_miscObjectsBeingLoaded[i].m_loadableObject->getRenderableObjectData());
+			}
+			else
+			{
+				// Remove the object from pool
+				removeObjectFromPool(&m_miscObjectsBeingLoaded[i]);
+			}
+
+			// Remove the object from the current list
+			m_miscObjectsBeingLoaded.erase(m_miscObjectsBeingLoaded.begin() + i);
+
+			// If the max number of object to be processed per frame has been reached, break from the loop
+			if (--maxObjects == 0)
+				break;
+		}
+		// If current object is still loading, advance the index
+		else
+			i++;
+	}*/
+
 	//	 ___________________________
 	//	|							|
 	//	|		Model Objects		|
@@ -365,6 +405,8 @@ void RendererScene::update(const float p_deltaTime)
 	// Update camera and put it in scene object list
 	m_camera->update(p_deltaTime);
 	m_sceneObjects.m_camera = m_camera;
+
+	m_sceneObjects.m_staticSkybox = m_skybox;
 	m_sceneObjects.m_directionalLight = &m_directionalLight->getLightDataSet();
 }
 
@@ -386,6 +428,9 @@ SystemObject *RendererScene::createObject(const PropertySet &p_properties)
 		break;
 	case Properties::DirectionalLight:
 		newObject = loadDirectionalLight(p_properties);
+		break;
+	case Properties::EnvironmentMapStatic:
+		newObject = loadEnvMapStatic(p_properties);
 		break;
 	case Properties::PointLight:
 		newObject = loadPointLight(p_properties);
@@ -477,7 +522,7 @@ ModelObject *RendererScene::loadModelObject(const PropertySet &p_properties)
 
 		// The newly added object in the pool
 		newObject = m_shaderObjPool.getLastRawObject();
-		newObject->m_rendererData.m_shader->loadToMemory();
+		newObject->getRenderableObjectData().m_shader->loadToMemory();
 	}
 	else
 	{
@@ -499,25 +544,28 @@ ModelObject *RendererScene::loadModelObject(const PropertySet &p_properties)
 			switch(p_properties[i].getPropertyID())
 			{
 			case Properties::OffsetPosition:
-				newObject->m_baseObjectData.m_offsetPosition = p_properties[i].getVec3f();
+				newObject->setOffsetPosition(p_properties[i].getVec3f());
 				break;
 			case Properties::OffsetRotation:
-				newObject->m_baseObjectData.m_offsetRotation = p_properties[i].getVec3f();
+				newObject->setOffsetRotation(p_properties[i].getVec3f());
 				break;
 			case Properties::Position:
-				newObject->m_baseObjectData.m_position = p_properties[i].getVec3f();
+				newObject->setPosition(p_properties[i].getVec3f());
 				break;
 			case Properties::Rotation:
-				newObject->m_baseObjectData.m_rotation = p_properties[i].getVec3f();
+				newObject->setRotation(p_properties[i].getVec3f());
 				break;
 			case Properties::Scale:
-				newObject->m_baseObjectData.m_scale = p_properties[i].getVec3f();
+				newObject->setScale(p_properties[i].getVec3f());
 				break;
 			case Properties::Lighting:
 				newObject->setLighting(p_properties[i].getBool());
 				break;
 			case Properties::AlphaThreshold:
 				newObject->setAlphaThreshold(p_properties[i].getFloat());
+				break;
+			case Properties::HeightScale:
+				newObject->setHeightScale(p_properties[i].getFloat());
 				break;
 			case Properties::TextureTilingFactor:
 				newObject->setTextureTilingFactor(p_properties[i].getFloat());
@@ -526,30 +574,28 @@ ModelObject *RendererScene::loadModelObject(const PropertySet &p_properties)
 		}
 
 		// Adjust the position and rotation by offset
-		newObject->m_baseObjectData.m_position += newObject->m_baseObjectData.m_offsetPosition;
-		newObject->m_baseObjectData.m_rotation += newObject->m_baseObjectData.m_offsetRotation;
+		newObject->setPosition(newObject->getBaseObjectData().m_position + newObject->getBaseObjectData().m_offsetPosition);
+		newObject->setRotation(newObject->getBaseObjectData().m_rotation + newObject->getBaseObjectData().m_offsetRotation);
 
 		// Get material parent property
 		auto &materialProperty = p_properties.getPropertySetByID(Properties::Materials);
 
 		// Get material properties
-		const PropertySet *materials[Model::NumOfModelMaterials];
-		materials[Model::ModelMat_diffuse] = &materialProperty.getPropertySetByID(Properties::Diffuse);
-		materials[Model::ModelMat_normal] = &materialProperty.getPropertySetByID(Properties::Normal);
-		materials[Model::ModelMat_emissive] = &materialProperty.getPropertySetByID(Properties::Emissive);
-		materials[Model::ModelMat_specular] = &materialProperty.getPropertySetByID(Properties::Specular);
-		materials[Model::ModelMat_gloss] = &materialProperty.getPropertySetByID(Properties::Gloss);
-		materials[Model::ModelMat_height] = &materialProperty.getPropertySetByID(Properties::Height);
+		const PropertySet *materials[MaterialType_NumOfTypes];
+		materials[MaterialType_Diffuse] = &materialProperty.getPropertySetByID(Properties::Diffuse);
+		materials[MaterialType_Normal] = &materialProperty.getPropertySetByID(Properties::Normal);
+		materials[MaterialType_Emissive] = &materialProperty.getPropertySetByID(Properties::Emissive);
+		materials[MaterialType_Combined] = &materialProperty.getPropertySetByID(Properties::RMHAO);
 		
 		// Process all materials
 		// For every type of material
-		for(unsigned int matType = 0; matType < Model::NumOfModelMaterials; matType++)
+		for(unsigned int matType = 0; matType < MaterialType_NumOfTypes; matType++)
 			// Check if material property is valid
 			if(*materials[matType])
 				// For every property set in the material property
 				for(decltype(materials[matType]->getNumPropertySets()) i = 0, size = materials[matType]->getNumPropertySets(); i < size; i++)
 					// Add the material to the new object
-					newObject->addMaterial(static_cast<Model::ModelMaterialType>(matType),
+					newObject->addMaterial(static_cast<MaterialType>(matType),
 										   materials[matType]->getPropertySet(i).getPropertyByID(Properties::Filename).getString(),
 										   materials[matType]->getPropertySet(i).getPropertyByID(Properties::Index).getInt());
 	
@@ -559,18 +605,16 @@ ModelObject *RendererScene::loadModelObject(const PropertySet &p_properties)
 		if(defaultMaterials)
 		{
 			// Get individual default materials
-			const PropertySet *defaulMaterials[Model::NumOfModelMaterials];
-			defaulMaterials[Model::ModelMat_diffuse] = &defaultMaterials.getPropertySetByID(Properties::Diffuse);
-			defaulMaterials[Model::ModelMat_normal] = &defaultMaterials.getPropertySetByID(Properties::Normal);
-			defaulMaterials[Model::ModelMat_emissive] = &defaultMaterials.getPropertySetByID(Properties::Emissive);
-			defaulMaterials[Model::ModelMat_specular] = &defaultMaterials.getPropertySetByID(Properties::Specular);
-			defaulMaterials[Model::ModelMat_gloss] = &defaultMaterials.getPropertySetByID(Properties::Gloss);
-			defaulMaterials[Model::ModelMat_height] = &defaultMaterials.getPropertySetByID(Properties::Height);
+			const PropertySet *defaulMaterials[MaterialType_NumOfTypes];
+			defaulMaterials[MaterialType_Diffuse] = &defaultMaterials.getPropertySetByID(Properties::Diffuse);
+			defaulMaterials[MaterialType_Normal] = &defaultMaterials.getPropertySetByID(Properties::Normal);
+			defaulMaterials[MaterialType_Emissive] = &defaultMaterials.getPropertySetByID(Properties::Emissive);
+			defaulMaterials[MaterialType_Combined] = &defaultMaterials.getPropertySetByID(Properties::RMHAO);
 
 			// Process default materials by assigning them to the model object
-			for(unsigned int matType = 0; matType < Model::NumOfModelMaterials; matType++)
+			for(unsigned int matType = 0; matType < MaterialType_NumOfTypes; matType++)
 				if(*defaulMaterials[matType])
-					newObject->m_defaultMaterials[matType] = defaulMaterials[matType]->getPropertyByID(Properties::Filename).getString();
+					newObject->setDefaultMaterial(matType, defaulMaterials[matType]->getPropertyByID(Properties::Filename).getString());
 		}
 
 		return newObject;
@@ -593,101 +637,39 @@ CameraObject *RendererScene::loadCameraObject(const PropertySet & p_properties)
 	
 	return m_camera;
 }
-ShaderModelGraphicsObject *RendererScene::loadShaderModelObject(const PropertySet & p_properties)
+EnvironmentMapStatic *RendererScene::loadEnvMapStatic(const PropertySet &p_properties)
 {
-	// Get model properties
-	auto &models = p_properties.getPropertySetByID(Properties::Models);
-	auto &shaderProperty = p_properties.getPropertySetByID(Properties::Shaders);
+	EnvironmentMapStatic *newObject = nullptr;
 
-	// Try to add a new object to the pool
-	ErrorCode objPoolError = m_shaderObjPool.add(
-		this, p_properties.getPropertyByID(Properties::Name).getString(),
-		Loaders::model().load(models.getPropertyByID(Properties::Filename).getString(), false),
-		Loaders::shader().load(shaderProperty));
-	
-	// If adding a new object was successful, continue to load data
-	if(objPoolError == ErrorCode::Success)
+	auto &materials = p_properties.getPropertySetByID(Properties::Materials);
+
+	std::string filenames[CubemapFace_NumOfFaces];
+
+	if(materials.getNumPropertySets() >= CubemapFace_NumOfFaces)
+		for(unsigned int face = CubemapFace_PositiveX; face < CubemapFace_NumOfFaces; face++)
+			filenames[face] = materials.getPropertySet(face).getPropertyByID(Properties::Filename).getString();
+
+	newObject = new EnvironmentMapStatic(this,
+										 p_properties.getPropertyByID(Properties::Name).getString(),
+										 Loaders::textureCubemap().load(filenames, false));
+
+	// Load property data
+	for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
 	{
-		// The newly added object in the pool
-		auto *newObject = m_shaderObjPool.getLastRawObject();
-
-		// Load property data
-		for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
+		switch(p_properties[i].getPropertyID())
 		{
-			switch(p_properties[i].getPropertyID())
-			{
-			case Properties::Lighting:
-				newObject->m_affectedByLighting = p_properties[i].getBool();
-				break;
-			case Properties::Position:
-				newObject->m_baseObjectData.m_position = p_properties[i].getVec3f();
-				break;
-			case Properties::Rotation:
-				newObject->m_baseObjectData.m_rotation = p_properties[i].getVec3f();
-				break;
-			case Properties::Scale:
-				newObject->m_baseObjectData.m_scale = p_properties[i].getVec3f();
-				break;
-			case Properties::PostProcess:
-				newObject->m_affectedByLighting = p_properties[i].getBool();;
-				break;
-			case Properties::AlphaThreshold:
-				newObject->setAlphaThreshold(p_properties[i].getFloat());
-				break;
-			}
+		case Properties::Position:
+			newObject->setPosition(p_properties[i].getVec3f());
+			break;
 		}
-
-		// Get material parent property
-		auto &materialProperty = p_properties.getPropertySetByID(Properties::Materials);
-
-		// Get material properties
-		const PropertySet *materials[Model::NumOfModelMaterials];
-		materials[Model::ModelMat_diffuse] = &materialProperty.getPropertySetByID(Properties::Diffuse);
-		materials[Model::ModelMat_normal] =	&materialProperty.getPropertySetByID(Properties::Normal);
-		materials[Model::ModelMat_emissive] = &materialProperty.getPropertySetByID(Properties::Emissive);
-		materials[Model::ModelMat_specular] = &materialProperty.getPropertySetByID(Properties::Specular);
-		materials[Model::ModelMat_gloss] = &materialProperty.getPropertySetByID(Properties::Gloss);
-		materials[Model::ModelMat_height] = &materialProperty.getPropertySetByID(Properties::Height);
-
-		// Process all materials
-		// For every type of material
-		for(unsigned int matType = 0; matType < Model::NumOfModelMaterials; matType++)
-			// Check if material property is valid
-			if(*materials[matType])
-				// For every property set in the material property
-				for(decltype(materials[matType]->getNumPropertySets()) i = 0, size = materials[matType]->getNumPropertySets(); i < size; i++)
-					// Add the material to the new object
-					newObject->addMaterial(static_cast<Model::ModelMaterialType>(matType),
-										   materials[matType]->getPropertySet(i).getPropertyByID(Properties::Filename).getString(),
-										   materials[matType]->getPropertySet(i).getPropertyByID(Properties::Index).getInt());
-
-		// Get default material properties
-		// Default materials replace any missing materials from the model file
-		auto &defaultMaterials = materialProperty.getPropertySetByID(Properties::Default);
-		if(defaultMaterials)
-		{
-			// Get individual default materials
-			const PropertySet *defaulMaterials[Model::NumOfModelMaterials];
-			defaulMaterials[Model::ModelMat_diffuse] = &defaultMaterials.getPropertySetByID(Properties::Diffuse);
-			defaulMaterials[Model::ModelMat_normal] = &defaultMaterials.getPropertySetByID(Properties::Normal);
-			defaulMaterials[Model::ModelMat_emissive] = &defaultMaterials.getPropertySetByID(Properties::Emissive);
-			defaulMaterials[Model::ModelMat_specular] = &defaultMaterials.getPropertySetByID(Properties::Specular);
-			defaulMaterials[Model::ModelMat_gloss] = &defaultMaterials.getPropertySetByID(Properties::Gloss);
-
-			// Process default materials by assigning them to the model object
-			for(unsigned int matType = 0; matType < Model::NumOfModelMaterials; matType++)
-				if(*defaulMaterials[matType])
-					newObject->m_defaultMaterials[matType] = defaulMaterials[matType]->getPropertyByID(Properties::Filename).getString();
-		}
-
-		return nullptr;
 	}
-	// If adding a new object failed, log an error and return a nullptr
-	else
-	{
-		ErrHandlerLoc::get().log(objPoolError, ErrorSource::Source_SceneLoader);
-		return nullptr;
-	}
+
+	newObject->loadToMemory();
+	newObject->loadToVideoMemory();
+
+	m_skybox = newObject;
+
+	return newObject;
 }
 DirectionalLightObject *RendererScene::loadDirectionalLight(const PropertySet &p_properties)
 {
@@ -704,18 +686,19 @@ DirectionalLightObject *RendererScene::loadDirectionalLight(const PropertySet &p
 		switch(p_properties[i].getPropertyID())
 		{
 		case Properties::Color:
-			m_directionalLight->m_lightDataSet.m_color = p_properties[i].getVec3f();
+			m_directionalLight->setColor(p_properties[i].getVec3f());
 			break;
+
 		case Properties::Direction:
-			m_directionalLight->m_lightDataSet.m_direction = p_properties[i].getVec3f();
+			// Need to normalize the light direction
+			m_directionalLight->setDirection(Math::normalize(p_properties[i].getVec3f()));
 			break;
+
 		case Properties::Intensity:
-			m_directionalLight->m_lightDataSet.m_intensity = p_properties[i].getFloat();
+			m_directionalLight->setIntensity(p_properties[i].getFloat());
 			break;
 		}
 	}
-
-	m_directionalLight->m_lightDataSet.m_direction.normalize();
 
 	return m_directionalLight;
 }
@@ -740,25 +723,29 @@ PointLightObject *RendererScene::loadPointLight(const PropertySet &p_properties)
 			switch(p_properties[i].getPropertyID())
 			{
 			case Properties::Attenuation:
-				newObject->m_lightDataSet.m_attenuation = p_properties[i].getVec3f();
+				newObject->setAttenuation(p_properties[i].getVec3f());
 				break;
+
 			case Properties::Color:
-				newObject->m_lightDataSet.m_color = p_properties[i].getVec3f();
+				newObject->setColor(p_properties[i].getVec3f());
 				break;
+
 			case Properties::Intensity:
-				newObject->m_lightDataSet.m_intensity = p_properties[i].getFloat();
+				newObject->setIntensity(p_properties[i].getFloat());
 				break;
+
 			case Properties::OffsetPosition:
-				newObject->m_offsetPosition = p_properties[i].getVec3f();
+				newObject->setOffsetPosition(p_properties[i].getVec3f());
 				break;
+
 			case Properties::Position:
-				newObject->m_lightDataSet.m_position = p_properties[i].getVec3f();
+				newObject->setPosition(p_properties[i].getVec3f());
 				break;
 			}
 		}
 
 		// Adjust the position and rotation by offset
-		newObject->m_lightDataSet.m_position += newObject->m_offsetPosition;
+		newObject->setPosition(newObject->getLightDataSet().m_position + newObject->getOffsetPosition());
 	}
 	// If adding a new object failed, log an error and return a nullptr
 	else
@@ -790,37 +777,44 @@ SpotLightObject *RendererScene::loadSpotLight(const PropertySet &p_properties)
 			switch(p_properties[i].getPropertyID())
 			{
 			case Properties::Attenuation:
-				newObject->m_lightDataSet.m_attenuation = p_properties[i].getVec3f();
+				newObject->setAttenuation(p_properties[i].getVec3f());
 				break;
+
 			case Properties::CutoffAngle:
 				// Convert to radians
-				newObject->m_lightDataSet.m_cutoffAngle = cosf(Math::toRadian(p_properties[i].getFloat()));
+				newObject->setCutoffAngle(cosf(Math::toRadian(p_properties[i].getFloat())));
 				break;
+
 			case Properties::Color:
-				newObject->m_lightDataSet.m_color = p_properties[i].getVec3f();
+				newObject->setColor(p_properties[i].getVec3f());
 				break;
+
 			case Properties::Direction:
-				newObject->m_lightDataSet.m_direction = p_properties[i].getVec3f();
+				newObject->setDirection(p_properties[i].getVec3f());
 				break;
+
 			case Properties::Intensity:
-				newObject->m_lightDataSet.m_intensity = p_properties[i].getFloat();
+				newObject->setIntensity(p_properties[i].getFloat());
 				break;
+
 			case Properties::OffsetPosition:
-				newObject->m_offsetPosition = p_properties[i].getVec3f();
+				newObject->setOffsetPosition(p_properties[i].getVec3f());
 				break;
+
 			case Properties::OffsetRotation:
-				newObject->m_offsetRotation = p_properties[i].getVec3f();
+				newObject->setOffsetRotation(p_properties[i].getVec3f());
 				break;
+
 			case Properties::Position:
-				newObject->m_lightDataSet.m_position = p_properties[i].getVec3f();
+				newObject->setPosition(p_properties[i].getVec3f());
 				break;
 			}
 		}
 
 		// Adjust the position and rotation by offset (and normalize the direction)
-		newObject->m_lightDataSet.m_position += newObject->m_offsetPosition;
-		newObject->m_lightDataSet.m_direction.rotate(newObject->m_offsetRotation);
-		newObject->m_lightDataSet.m_direction.normalize();
+
+		newObject->setPosition(newObject->getLightDataSet().m_position + newObject->getOffsetPosition());
+		newObject->setDirection(Math::normalize(newObject->getLightDataSet().m_direction + newObject->getOffsetRotation()));
 	}
 	// If adding a new object failed, log an error and return a nullptr
 	else

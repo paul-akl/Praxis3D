@@ -173,18 +173,18 @@ public:
 				// If save key is active, spawn a message box asking if the scene should be exported
 				if(m_saveKey.isActivated())
 				{
+					// Deactivate key here manually, to not cause re-triggering for multiple frames
+					m_modifierKey.deactivate();
+					m_saveKey.deactivate();
+
 					if(WindowLocator::get().spawnYesNoErrorBox("World Editor", "Export the scene to \"test.pmap\"?"))
 						m_sceneLoader->saveToFile();
-
-					// Deactivate key here manually, to not cause re-triggering for multiple frames
-					m_saveKey.deactivate();
-					m_modifierKey.deactivate();
 				}
 			}
 
 			// If an object is selected, update the its data
-			if(m_selectedObject != nullptr)
-				m_sceneLoader->getChangeController()->sendChange(this, m_selectedObject, Systems::Changes::Spacial::Position);
+			//if(m_selectedObject != nullptr)
+			//	m_sceneLoader->getChangeController()->sendChange(this, m_selectedObject, Systems::Changes::Spacial::Position);
 		}
 	}
 

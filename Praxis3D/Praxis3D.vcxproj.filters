@@ -106,6 +106,15 @@
     <Filter Include="Engine States\Source Files">
       <UniqueIdentifier>{819ed32a-501c-459f-a502-656acde391a4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Renderer\Render Passes">
+      <UniqueIdentifier>{18ca1fc3-f7a9-4f5e-b088-22a01715d92f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Render Passes\Header Files">
+      <UniqueIdentifier>{eda25418-0a69-4c4c-8b9a-7a4f8f6fc615}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Render Passes\Source Files">
+      <UniqueIdentifier>{708c459e-c8f0-4a2c-b313-f0ab523d5163}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -219,9 +228,6 @@
     <ClCompile Include="Source\Scancodes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ServiceBase.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Universal.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -233,6 +239,15 @@
     </ClCompile>
     <ClCompile Include="Source\WorldEditState.cpp">
       <Filter>Engine States\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RendererBackend.cpp">
+      <Filter>Renderer\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RendererGL.cpp">
+      <Filter>Renderer\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RendererFrontend.cpp">
+      <Filter>Renderer\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -430,6 +445,36 @@
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\EnvironmentMapObjects.h">
+      <Filter>Renderer\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RendererBackend.h">
+      <Filter>Renderer\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RendererFrontend.h">
+      <Filter>Renderer\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\CommonDefinitions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UniformData.h">
+      <Filter>Renderer\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPassBase.h">
+      <Filter>Renderer\Render Passes\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GeometryPass.h">
+      <Filter>Renderer\Render Passes\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\LightingPass.h">
+      <Filter>Renderer\Render Passes\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\FinalPass.h">
+      <Filter>Renderer\Render Passes\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ReflectionPass.h">
+      <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

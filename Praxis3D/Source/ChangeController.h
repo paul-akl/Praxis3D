@@ -1,10 +1,13 @@
 
 #include <list>
-//#include <set>
 #include <vector>
 
 #include "ObserverBase.h"
 #include "SpinWait.h"
+
+#include <lmerr.h>
+#include <tchar.h>
+#include <windows.h>
 
 class TaskManager;
 
@@ -55,7 +58,7 @@ private:
 	};
 	struct Notification
 	{
-		Notification(ObservedSubject *p_subject, BitMask p_changedBits) : 
+		Notification(ObservedSubject *p_subject, BitMask p_changedBits) :
 			m_subject(p_subject), m_changedBits(p_changedBits) { }
 
 		ObservedSubject *m_subject;
@@ -105,6 +108,26 @@ private:
 
 	ErrorCode removeSubject(ObservedSubject *p_subject);
 
-	std::vector<Notification> &getNotifyList(unsigned int p_tlsIndex);
+	std::vector<Notification> *getNotifyList(unsigned int p_tlsIndex);
 	std::vector<OneTimeNotification> &getOneTimeNotifyList(unsigned int p_tlsIndex);
+
+	//Returns the last Win32 error, in string format. Returns an empty string if there is no error.
+	std::string GetLastErrorAsString()
+	{
+		//Get the error message, if any.
+		DWORD errorMessageID = ::GetLastError();
+		if(errorMessageID == 0)
+			return std::string(); //No error message has been recorded
+
+		LPSTR messageBuffer = nullptr;
+		size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+									 NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+
+		std::string message(messageBuffer, size);
+
+		//Free the buffer.
+		LocalFree(messageBuffer);
+
+		return message;
+	}
 };

@@ -72,7 +72,11 @@ class FreeCamera : public Camera
 public:
 	FreeCamera(SystemScene *p_systemScene, std::string p_name) : Camera(p_systemScene, p_name, Properties::FreeCamera)
 	{
+		m_enableLowerLimit = false;
+		m_enableUpperLimit = false;
 
+		m_lowerLimit = 0.0f;
+		m_upperLimit = 0.0f;
 	}
 
 	virtual ErrorCode init()
@@ -99,6 +103,12 @@ public:
 		propertySet.addProperty(Properties::Speed, m_speed);
 		propertySet.addProperty(Properties::SprintSpeed, m_fasterSpeed);
 
+		if(m_enableLowerLimit)
+			propertySet.addProperty(Properties::LowerLimit, m_lowerLimit);
+		if(m_enableUpperLimit)
+			propertySet.addProperty(Properties::UpperLimit, m_upperLimit);
+
+
 		// Add root key-binding property set
 		auto &keyBinds = propertySet.addPropertySet(Properties::Keybindings);
 
@@ -122,7 +132,7 @@ public:
 			m_horizontalAngle -= Config::inputVar().mouse_jaw * mouseInfo.m_movementX * (Config::inputVar().mouse_sensitivity * 0.01f);
 			m_verticalAngle -= Config::inputVar().mouse_pitch * mouseInfo.m_movementY * (Config::inputVar().mouse_sensitivity * 0.01f);
 
-			m_verticalAngle = Math::clip(m_verticalAngle, -Config::inputVar().mouse_pitch_clip, Config::inputVar().mouse_pitch_clip);
+			m_verticalAngle = Math::clamp(m_verticalAngle, -Config::inputVar().mouse_pitch_clip, Config::inputVar().mouse_pitch_clip);
 		}
 
 		// Calculate camera's rotation
@@ -145,6 +155,12 @@ public:
 			m_positionVec -= m_horizontalVec * speed * p_deltaTime;
 		if(m_strafeRightKey.isActivated())
 			m_positionVec += m_horizontalVec * speed * p_deltaTime;
+
+		if(m_enableLowerLimit && m_positionVec.y < m_lowerLimit)
+			m_positionVec.y = m_lowerLimit;
+
+		if(m_enableUpperLimit && m_positionVec.y > m_upperLimit)
+			m_positionVec.y = m_upperLimit;
 
 		// Calculate camera's position based on the pressed movement keys
 		m_upVector = Math::cross(m_horizontalVec, m_targetVec);
@@ -217,10 +233,27 @@ public:
 		m_sprintKey.bind(p_string);
 	}
 
+	inline void setLowerLimit(const float p_limit)
+	{
+		m_enableLowerLimit = true;
+		m_lowerLimit = p_limit;
+	}
+	inline void setUpperLimit(const float p_limit)
+	{
+		m_enableUpperLimit = true;
+		m_upperLimit = p_limit;
+	}
+
 private:
 	KeyCommand	m_forwardKey,
 				m_backwardKey,
 				m_strafeLeftKey,
 				m_strafeRightKey,
 				m_sprintKey;
+	
+	float	m_lowerLimit,
+			m_upperLimit;
+
+	bool	m_enableLowerLimit,
+			m_enableUpperLimit;
 };

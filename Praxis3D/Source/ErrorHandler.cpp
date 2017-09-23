@@ -59,8 +59,12 @@ ErrorHandler::ErrorHandler()
 	m_errHashmap[GetString(Source_ShaderLoader)]	= NumberOfErrorCodes + Source_ShaderLoader;
 	m_errHashmap[GetString(Source_FileLoader)]		= NumberOfErrorCodes + Source_FileLoader;
 	m_errHashmap[GetString(Source_SceneLoader)]		= NumberOfErrorCodes + Source_SceneLoader;
+	m_errHashmap[GetString(Source_LightingPass)]	= NumberOfErrorCodes + Source_LightingPass;
 	m_errHashmap[GetString(Source_GeometryBuffer)]	= NumberOfErrorCodes + Source_GeometryBuffer;
+	m_errHashmap[GetString(Source_GeometryPass)]	= NumberOfErrorCodes + Source_GeometryPass;
 	m_errHashmap[GetString(Source_GraphicsObject)]	= NumberOfErrorCodes + Source_GraphicsObject;
+	m_errHashmap[GetString(Source_FinalPass)]		= NumberOfErrorCodes + Source_FinalPass;
+	m_errHashmap[GetString(Source_ReflectionPass)]	= NumberOfErrorCodes + Source_ReflectionPass;
 	m_errHashmap[GetString(Source_ScriptObject)]	= NumberOfErrorCodes + Source_ScriptObject;
 	m_errHashmap[GetString(Source_PlayerObject)]	= NumberOfErrorCodes + Source_PlayerObject;
 	m_errHashmap[GetString(Source_GameObject)]		= NumberOfErrorCodes + Source_GameObject;
@@ -157,7 +161,7 @@ void ErrorHandler::log(ErrorType p_errorType, ErrorSource p_errorSource, std::st
 				p_error.pop_back();
 
 			// TODO make the error question data driven
-			if(!WindowLocator().get().spawnYesNoErrorBox(m_errorTypeStrings[p_errorType], m_errorSources[p_errorSource] + ": " + p_error + ".\n\nWould you like to continue?"))
+			if(!WindowLocator().get().spawnYesNoErrorBox(m_errorTypeStrings[p_errorType] + ": " + m_errorSources[p_errorSource], m_errorSources[p_errorSource] + ": " + p_error + ".\n\nWould you like to continue?"))
 				Config::m_engineVar.running = false;
 
 			break;
@@ -165,7 +169,7 @@ void ErrorHandler::log(ErrorType p_errorType, ErrorSource p_errorSource, std::st
 
 		case ErrorType::FatalError:
 		{
-			WindowLocator().get().spawnErrorBox(m_errorTypeStrings[p_errorType], m_errorSources[p_errorSource] + ": " + p_error + ".");
+			WindowLocator().get().spawnErrorBox(m_errorTypeStrings[p_errorType] + ": " + m_errorSources[p_errorSource], m_errorSources[p_errorSource] + ": " + p_error + ".");
 			Config::m_engineVar.running = false;
 
 			break;

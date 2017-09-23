@@ -59,16 +59,6 @@ namespace Utilities
 			return stringstream_ret.str() + ".0f";
 		else
 			return stringstream_ret.str() + "f";
-
-		/*for(decltype(floatString.size()) i = 0, size = floatString.size(); i < size; i++)
-			if(floatString[i] == '.')
-			{
-				floatString += "f";
-				return floatString;
-			}
-
-		floatString += ".0f";
-		return floatString;*/
 	}
 	
 
@@ -103,4 +93,27 @@ namespace Utilities
 		}
 		return hash;
 	}
+
+
+	// Template std::pair comparator, only compares the first element
+	template <class T1, class T2, class Pred = std::less<T2>>
+	struct sort_pair_first 
+	{
+		bool operator()(const std::pair<T1, T2>&left, const std::pair<T1, T2>&right) 
+		{
+			Pred p;
+			return p(left.first, right.first);
+		}
+	};
+
+	// Template std::pair comparator, only compares the second element
+	template <class T1, class T2, class Pred = std::less<T2>>
+	struct sort_pair_second 
+	{
+		bool operator()(const std::pair<T1, T2>&left, const std::pair<T1, T2>&right) 
+		{
+			Pred p;
+			return p(left.second, right.second);
+		}
+	};
 }

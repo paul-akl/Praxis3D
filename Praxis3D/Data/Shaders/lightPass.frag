@@ -1,10 +1,11 @@
-#version 330
+#version 430 core
 
 #define MAX_NUM_POINT_LIGHTS 20
 #define MAX_NUM_SPOT_LIGHTS 10
+#define PI 3.1415926535
 
 layout(location = 0) out vec4 emissiveBuffer;
-layout(location = 1) out vec4 finalBuffer;
+layout(location = 1) out vec3 finalBuffer;
 
 //in vec2 texCoord;
 
@@ -42,12 +43,15 @@ struct SpotLight
 uniform sampler2D positionMap;
 uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
+uniform sampler2D matPropertiesMap;
 
-uniform ivec2 screenSize;
+uniform samplerCube staticEnvMap;
 
 uniform mat4 modelViewMat;
 uniform mat4 viewMat;
 uniform vec3 cameraPosVec;
+uniform ivec2 screenSize;
+uniform float gamma;
 
 uniform int numPointLights;
 uniform int numSpotLights;
@@ -68,19 +72,6 @@ layout (std140) uniform SpotLights
 vec3 worldPos;
 vec3 normal;
 vec3 fragmentToEye;
-float roughnessSqrt;
-
-// set important material values
-float roughnessVar = 0.1; // 0.1	// 0 : smooth, 1: rough
-//float roughnessVar = 0.8;
-float F0 = 0.02;//0.171968833;//1.0; 			// fresnel reflectance at normal incidence
-vec3 F0vec;
-//float k = 0.01; 				// fraction of diffuse reflection (specular reflection = 1 - k)
-float k = 0.8; //0.5
-float metallic;
-
-float ref_at_norm_incidence = F0;
-vec3 viewer;
 
 float saturate(float p_value)
 {
@@ -92,7 +83,7 @@ float G1V(float p_dotNV, float p_k)
     return 1.0f / (p_dotNV * (1.0f - p_k) + p_k);
 }
 
-float MicroFacetDistr_GGX(vec3 p_normal, vec3 p_halfVec, float p_roughnessSqrt)
+/*float MicroFacetDistr_GGX(vec3 p_normal, vec3 p_halfVec, float p_roughnessSqrt)
 {
 	float NdotH = dot(p_normal, p_halfVec);
 	if(NdotH > 0.0)
@@ -124,83 +115,7 @@ float GeometryAtten_GGX(vec3 p_fragToEye, vec3 p_normal, vec3 p_halfVec, float p
 vec3 Fresnel_Schlick(float p_cosT, vec3 p_F0)
 {
 	return F0 + (vec3(1.0) - F0) * pow(1.0 - p_cosT, 5.0);
-}
-
-vec3 calcLightColor2(vec3 p_lightColor, vec3 p_lightDirection)
-{
-	//float NoV = saturate( dot(normal, V) );
-	float NoV = abs( dot(normal, fragmentToEye) ) + 0.00001;//1e-5;
-
-	// Diffuse_Lambert
-	//Shared.DiffuseMul = DiffuseColor * (1.0 / 3.14);
-
-	// D_GGX, Vis_SmithJointApprox
-	float m = roughnessVar * roughnessVar;
-	float m2 = m * m;
-	float SpecularMul = (0.5 / 3.14) * m2;
-	float VisMad = ( 2 * NoV * ( 1 - m ) + m, NoV * m );
-	
-	// F_Schlick
-	//SpecularMul *= saturate( 50.0 * k );
-	return vec3(1.0);
-}
-
-vec3 calcLightColor3(vec3 p_lightColor, vec3 p_lightDirection)
-{
-	// Compute any aliases and intermediary values
-    // -------------------------------------------
-	
-	vec3 half_vector = normalize(fragmentToEye - p_lightDirection );
-    float NdotL        = clamp( dot( normal, -p_lightDirection ), 0.0, 1.0 );
-    float NdotH        = clamp( dot( normal, half_vector ), 0.0, 1.0 );
-    float NdotV        = clamp( dot( normal, viewer ), 0.0, 1.0 );
-    float VdotH        = clamp( dot( viewer, half_vector ), 0.0, 1.0 );
-    float r_sq         = roughnessVar * roughnessVar;
- 
-    // Evaluate the geometric term
-    // --------------------------------
-    float geo_numerator   = 2.0f * NdotH;
-    float geo_denominator = VdotH;
- 
-    float geo_b = (geo_numerator * NdotV ) / geo_denominator;
-    float geo_c = (geo_numerator * NdotL ) / geo_denominator;
-    float geo   = min( 1.0f, min( geo_b, geo_c ) );
- 
-    // Now evaluate the roughness term
-    // -------------------------------
-    float roughness;
-    
-	float roughness_a = 1.0f / ( 4.0f * r_sq * pow( NdotH, 4 ) );
-	float roughness_b = NdotH * NdotH - 1.0f;
-	float roughness_c = r_sq * NdotH * NdotH;
-	roughness = roughness_a * exp( roughness_b / roughness_c );
- 
-    // Next evaluate the Fresnel value
-    // -------------------------------
-    float fresnel = pow( 1.0f - VdotH, 5.0f );
-    fresnel *= ( 1.0f - F0 );
-    fresnel += F0;
- 
-    // Put all the terms together to compute
-    // the specular term in the equation
-    // -------------------------------------
-    float Rs_numerator   = ( fresnel * geo * roughness );
-    float Rs_denominator  = NdotV * NdotL;
-    float Rs             = Rs_numerator/ Rs_denominator;
-  
-    float specular = (fresnel * geo * roughness) / (NdotV * NdotL);
-    // Put all the parts together to generate
-    // the final colour
-    // --------------------------------------
-	
-	return p_lightColor * NdotL * specular;
-	
-    //float3 final = max(0.0f, NdotL) * (cSpecular * Rs + cDiffuse);
- 
-    // Return the result
-    // -----------------
-    //return float4( final, 1.0f );
-}
+}*/
 
 vec3 computePBRLighting(vec3 lightPos, vec3 lightColor, vec3 position, vec3 N, vec3 V, vec3 albedo, float roughness, vec3 F0) 
 {
@@ -242,179 +157,75 @@ vec3 computePBRLighting(vec3 lightPos, vec3 lightColor, vec3 position, vec3 N, v
 	return (diffuse + specular) * lightColor * dotNL ;
 }
 
-float SpecGGX(vec3 N, vec3 V, vec3 L, float roughness, float F0)
+vec3 LightingFuncGGX_REF(vec3 p_normal, vec3 p_viewDir, vec3 p_lightDir, float p_roughnessSqrt, vec3 p_F0)
+{
+	// Calculate half vector between view and light directions
+    vec3 halfVector = normalize(p_viewDir + p_lightDir);
+	
+	// Calculate required dot products
+    float dotNL = saturate(dot(p_normal, p_lightDir));
+    float dotNV = saturate(dot(p_normal, p_viewDir));
+    float dotNH = saturate(dot(p_normal, halfVector));
+    float dotLH = saturate(dot(p_lightDir, halfVector));
+
+	// Calculate microfacet distributions (based on roughness)
+	// Using GGX normal distribution function
+    float RoughnessPow4 = p_roughnessSqrt * p_roughnessSqrt;
+    float denom = dotNH * dotNH * (RoughnessPow4 - 1.0) + 1.0f;
+    float D = RoughnessPow4 / (PI * denom * denom);
+
+	// Calculate fresnel effect 
+	// Using Schlick's approximation
+    float dotLH5 = pow(1.0f - dotLH, 5);
+	vec3 F = p_F0 + (vec3(1.0f) - p_F0) * (dotLH5);
+
+	// Calculate geometric attenuation (or visibility term - self shadowing of microfacets)
+	// Using Smith with Schlick's approximation
+    float k2 = p_roughnessSqrt / 2.0f;
+    float G = G1V(dotNL, k2) * G1V(dotNV, k2);
+	
+	// Multiple all the terms together
+	return dotNL * D * F * G;
+}
+
+float SpecGGX(vec3 N, vec3 V, vec3 L, float roughness, float F0 )
 {
 	float SqrRoughness = roughness*roughness;
 
-	vec3 H = normalize(V+L);
+	vec3 H = normalize(V + L);
 
 	float NdotL = clamp(dot(N,L),0.0,1.0);
 	float NdotV = clamp(dot(N,V),0.0,1.0);
 	float NdotH = clamp(dot(N,H),0.0,1.0);
 	float LdotH = clamp(dot(L,H),0.0,1.0);
 
-	// Geom term
-	float RoughnessPow4 = SqrRoughness*SqrRoughness;
-	float pi = 3.14159;
-	float denom = NdotH * NdotH *(RoughnessPow4-1.0) + 1.0;
-	float D = RoughnessPow4/(pi * denom * denom);
+	float RoughnessPow4 = SqrRoughness * SqrRoughness;
+	float denom = NdotH * NdotH * (RoughnessPow4 - 1.0) + 1.0;
+	float D = RoughnessPow4 / (PI * denom * denom);
 
-	// Fresnel term 
-	float LdotH5 = 1.0-LdotH;
-    LdotH5 = LdotH5*LdotH5*LdotH5*LdotH5*LdotH5;
-	float F = F0 + (1.0-F0)*(LdotH5);
+	float LdotH5 = 1.0 - LdotH;
+    LdotH5 = LdotH5 * LdotH5 * LdotH5 * LdotH5 * LdotH5;
+	float F = F0 + (1.0 - F0) * (LdotH5);
 
-	// Vis term 
 	float k = SqrRoughness/2.0;
-	float Vis = G1V(NdotL,k)*G1V(NdotV,k);
+	float G = G1V(NdotL, k) * G1V(NdotV, k);
 
-	float specular = NdotL * D * F * Vis;
+	float specular = NdotL * D * F * G;
     
 	return specular;
 }
 
-vec3 LightingFuncGGX_REF(vec3 N, vec3 V, vec3 L, float roughness, vec3 F0)
-{
-    float alpha = roughness;//roughness*roughness;
-
-    vec3 H = normalize(V+L);
-
-    float dotNL = saturate(dot(N,L));
-    float dotNV = saturate(dot(N,V));
-    float dotNH = saturate(dot(N,H));
-    float dotLH = saturate(dot(L,H));
-
-    //float F, D, vis;
-	float D, vis;
-	vec3 F;
-
-    // D
-    float alphaSqr = alpha*alpha;
-    float pi = 3.14159f;
-    float denom = dotNH * dotNH *(alphaSqr-1.0) + 1.0f;
-    D = alphaSqr/(pi * denom * denom);
-
-    // F
-    float dotLH5 = pow(1.0f - dotLH, 5);
-    //F = F0 + (1.0-F0)*(dotLH5);
-	F = F0 + (1.0f - F0) * (dotLH5);
-
-    // V
-    float k2 = alpha / 2.0f;
-    vis = G1V(dotNL, k2) * G1V(dotNV, k2);
-	
-	float metallic2 = (1.0f - metallic);// / 2.0f;
-	
-	vec3 specular;
-	
-	//if(metallic == 1.0f)
-	//{
-		specular = dotNL * D * F * vis;
-	//}
-	//else
-	//{
-		//specular = (dotNL) * (metallic2 + D * F * vis * (1.0 - metallic2));
-	//}
-	
-    //vec3 specular = (dotNL) * (metallic2 + D * F * vis * (1.0 - metallic2));
-	
-	//specular = ((1.0 - dotNL) * (1.0 - metallic2)) + D * F * vis;
-	//specular = ((1.0 - dotNL) * (1.0 - metallic2)) + (metallic2 + D * F * vis * (1.0 - metallic2));
-	
-    return specular;
-}
-
-vec3 calcLight(vec3 p_normal, vec3 p_fragToEye, vec3 p_lightColor, vec3 p_lightDirection, vec3 p_F0, float p_roughnessSqrt)
+vec3 calcLightColor(vec3 p_normal, vec3 p_fragToEye, vec3 p_lightColor, vec3 p_lightDirection, vec3 p_F0, float p_diffuseAmount, float p_roughnessSqrt)
 {	
-	vec3 lightDir = -p_lightDirection;
-
-	float spec = SpecGGX(p_normal, p_fragToEye, lightDir, roughnessVar, F0);
-    float dif = dot(p_normal, lightDir);
-	//float dif = dot(p_normal, -p_lightDirection);
+	// Get specular and diffuse lighting
+	vec3 specularColor = LightingFuncGGX_REF(p_normal, p_fragToEye, p_lightDirection, p_roughnessSqrt, p_F0);
+    vec3 diffuseColor = vec3(clamp(dot(p_normal, p_lightDirection), 0.0, 1.0));
 	
-	// Fresnel
-    float NdotV = clamp(dot(p_normal, p_fragToEye), 0.0, 1.0);
-	NdotV = pow(1.0 - NdotV, 5.0);    
-	float Fresnel = metallic + (1.0 - metallic) * (NdotV);
-
-    // Tint lights
-    vec3 SpecColor = spec * p_lightColor;
-    vec3 DiffColor = dif * p_lightColor * (1.0 - Fresnel);
-    
-    // Add GI
-    //const float	cAmbientMin = 0.04;    
-    //float		ambient = cAmbientMin * (IsInSphere);    
-    //vec3		ColorAmbient = vec3(ambient,ambient,ambient);
-    //vec3		GIReflexion = GetGIReflexion ( normal, roughness );
-    
-    
-    //ColorAmbient = GIReflexion * cAmbientMin;
-        
-    //vec3 lightSum = max(((DiffColor + SpecColor) * (1.0 - cAmbientMin)), vec3(0.0, 0.0, 0.0));
-    //return ( lightSum + ColorAmbient + ( Fresnel * GIReflexion ) ) * IsInSphere;
-	
-    vec3 lightSum = max(((DiffColor + SpecColor)), vec3(0.0, 0.0, 0.0));
-    return lightSum;
-	
-	/*
-
-    float dotNL = saturate(dot(p_normal, -p_lightDirection));
-	
-	//spec = LightingFuncGGX_REF(p_normal, p_fragToEye, -p_lightDirection, p_roughnessSqrt, F0vec);
-	
-    vec3 H = normalize(p_fragToEye + (-p_lightDirection));
-    float dotLH = saturate(dot(-p_lightDirection,H));
-    float dotLH5 = pow(1.0f - dotLH, 5);
-    //F = F0 + (1.0-F0)*(dotLH5);
-	vec3 F = F0vec + (1.0f - F0vec) * (dotLH5);
-	
-	float metallic2 = 1.0 - metallic;
-	
-	float diffuse = (1.0 - dotNL) * (1.0 - metallic);
-		//return p_lightColor * NdotL * (k + specular * (1.0 - k));
-	
-	//return p_lightColor * spec;*/
-
-	/*/ Calculate the specular contribution
-    float3 ks = 0;
-    float3 specular = GGX_Specular(specularCubemap, normal, viewVector, roughness, F0, ks );
-    float3 kd = (1 - ks) * (1 - metallic);
-    // Calculate the diffuse contribution
-    float3 irradiance = texCUBE(diffuseCubemap_Sampler, normal ).rgb;
-    float3 diffuse = materialColour * irradiance;
-
-    return float4( kd * diffuse + /*ks* / specular, 1);  */   
-	
-	//vec3 reflectionVec = reflect(-p_fragToEye, p_normal);
-    /*vec3 radiance = vec3(0);
-	
-	//float NdotV = clamp(dot(p_normal, p_fragToEye), 0.0, 1.0);
-	float NdotL = clamp(dot(p_normal, -p_lightDirection), 0.0, 1.0);
-	
-	//if(NdotL > 0.0)
-	{
-       // vec3 halfVector = normalize(p_lightDirection - p_fragToEye);
-        vec3 halfVector = normalize(p_fragToEye + p_lightDirection);
-		float NdotH = clamp(dot(p_normal, halfVector), 0.0, 1.0);
-		float VdotH = clamp(dot(p_fragToEye, halfVector), 0.0, 1.0);
-		
-		float cosT = clamp(dot(p_lightDirection, p_normal), 0.0, 1.0); // NdotL
-		float sinT = sqrt(1.0 - (cosT * cosT));
-		
-		vec3 fresnel = Fresnel_Schlick(VdotH, p_F0);
-		float geometry = GeometryAtten_GGX(p_fragToEye, p_normal, halfVector, p_roughnessSqrt) * GeometryAtten_GGX(p_lightDirection, p_normal, halfVector, p_roughnessSqrt);
-		//float geometry = GeometryAtten_GGX(p_lightDirection, p_normal, halfVector, p_roughnessSqrt);
-		float denominator = clamp(4.0 * (NdotV * NdotH + 0.05), 0.0, 1.0);
-		
-		//kS += fresnel;
-		
-		radiance = p_lightColor * geometry * fresnel * sinT / denominator;
-	}
-	
-	return radiance;*/
+	// Add specular and diffuse together, and multiply it by the color of the light
+	return (specularColor + diffuseColor * p_diffuseAmount) * p_lightColor;
 }
 
-vec3 calcLightColor(vec3 p_lightColor, vec3 p_lightDirection)
+/*vec3 calcLightColorOld(vec3 p_lightColor, vec3 p_lightDirection)
 {
     // Get angle between normal and light direction
     //float NdotL = max(dot(normal, -p_lightDirection), 0.0);
@@ -429,12 +240,7 @@ vec3 calcLightColor(vec3 p_lightColor, vec3 p_lightDirection)
 		float NdotH = clamp( dot( normal, halfVector ), 0.0, 1.0 );
 		float NdotV = clamp( dot( normal, fragmentToEye ), 0.0, 1.0 );
 		float VdotH = clamp( dot( fragmentToEye, halfVector ), 0.0, 1.0 );
-		
-		/*float NdotL = max(dot(normal, -p_lightDirection), 0.0);
-        float NdotH = max(dot(normal, halfVector), 0.0); 
-        float NdotV = max(dot(normal, fragmentToEye), 0.0);
-		float VdotH = max(dot(fragmentToEye, halfVector), 0.0);*/
-        
+		        
         // Calculate geometric attenuation (self shadowing of microfacets)
         float NH2 = 2.0 * NdotH;
         float g1 = (NH2 * NdotV) / VdotH;
@@ -466,7 +272,7 @@ vec3 calcLightColor(vec3 p_lightColor, vec3 p_lightDirection)
 	{
 		return vec3(0.0, 0.0, 0.0);
 	}
-}
+}*/
 
 vec2 calcTexCoord(void)
 {
@@ -478,65 +284,47 @@ void main(void)
 	// Calculate screen-space texture coordinates, for buffer access
 	vec2 texCoord = calcTexCoord();
 	
-	// Get diffuse color (full-bright) from diffuse buffer and gamma-correct it
-	vec3 diffuseColor = pow(texture(diffuseMap, texCoord).xyz, vec3(2.2));
+	// Get diffuse color (full-bright) from diffuse buffer and convert it to linear space
+	vec3 diffuseColor = pow(texture(diffuseMap, texCoord).xyz, vec3(gamma));
+	// Get pixel's position in world space
+	vec3 worldPos = texture(positionMap, texCoord).xyz;
+	// Get normal (in world space) and normalize it to minimize floating point approximation errors
+	vec3 normal = normalize(texture(normalMap, texCoord).xyz);
+	// Get material properties
+	vec4 matProperties = texture(matPropertiesMap, texCoord).xyzw;
 	
-	// Get pixel's position in world space and gloss value from position buffer
-	vec4 positionAndGloss = texture(positionMap, texCoord);
-	// Get normal in world space and specular value from normal buffer 
-	vec4 normalAndSpecular = normalize(texture(normalMap, texCoord));
+	// Extract roughness and metalness values
+	float roughnessVar = matProperties.x;
+	float metalness = matProperties.y;
 	
-	// Extract world position
-	worldPos = positionAndGloss.xyz;
-	// Extract normal and normalize it to minimize floating point approximation errors
-	normal = normalize(normalAndSpecular.xyz);
+	// Calculate view direction (fragment to eye vector)
+	fragmentToEye = normalize(cameraPosVec - worldPos);
+	
+	float ior = mix(1.5, 40.5, metalness);
+	ior = 40.5;
+	
+	float F0 = abs((1.0 - ior) / (1.0 + ior));
+	F0 = F0 * F0;
+	vec3 F0vec = mix(vec3(F0), diffuseColor, metalness);
+		
+	// Fresnel for the diffuse color
+    float NdotV = clamp(dot(normal, fragmentToEye), 0.0, 1.0);
+	NdotV = pow(1.0 - NdotV, 5.0);
+	float diffuseAmount = 1.0 - (metalness + (1.0 - metalness) * (NdotV));
+	
+	float roughnessSqrt = roughnessVar * roughnessVar;
 	
 	// ior = from 1.2 to 10.0
 	
-	float ior = 40.5;
-	metallic = positionAndGloss.w;
-	
-	F0 = abs((1.0 - ior) / (1.0 + ior));
-	F0 = F0 * F0;
-	F0vec = vec3(F0);
-	F0vec = mix(vec3(F0), diffuseColor, metallic);
-	
-	float reflectance = 0.5;
-	//F0vec = 0.16 * reflectance * reflectance * (1.0 - metallic) + diffuseColor * metallic;
-	
-	//float roughness = 1.0 - smoothness*smoothness;
-    //vec3 F0 = 0.16*reflectance*reflectance * (1.0-metalMask) + baseColor*metalMask;
-    //vec3 albedo = baseColor;
-	
-	//float3 F0 = abs ((1.0 - ior) / (1.0 + ior));
-	//F0 = F0 * F0;
-	//F0 = lerp(F0, materialColour.rgb, metallic);
-	
-	//k = 1.0 - normalAndSpecular.w;
-	//k = 0.2;
-	//roughnessVar = 0.1;// - ((positionAndGloss.w + normalAndSpecular.w) / 2.0);
-	
-	ref_at_norm_incidence = F0;
-	viewer = fragmentToEye;
-	
-	fragmentToEye = normalize(cameraPosVec - worldPos);
-	//fragmentToEye = normalize(worldPos - cameraPosVec);
-	roughnessVar = texture(normalMap, texCoord).w;
-	//roughnessSqrt = roughnessVar;// * roughnessVar;
-
-	//k = 1.0 - positionAndGloss.w;
-	//roughnessVar = (normalAndSpecular.w + positionAndGloss.w) / 2.0;
-	roughnessSqrt = roughnessVar * roughnessVar;
-	
 	// Declare final color of the fragment and add directional light to it
-	vec3 finalLightColor = calcLight(normal, fragmentToEye, directionalLight.m_color, normalize(directionalLight.m_direction), vec3(F0), roughnessSqrt) * directionalLight.m_intensity;// + directionalLight.m_color * 0.005;
-	//vec3 finalLightColor = vec3(0.0);
+	vec3 finalLightColor = calcLightColor(normal, fragmentToEye, directionalLight.m_color, normalize(-directionalLight.m_direction), F0vec, diffuseAmount, roughnessSqrt) * directionalLight.m_intensity;
+	
+	//vec3 finalLightColor = calcLightColor(normal, fragmentToEye, vec3(1.0, 1.0, 1.0), normalize(vec3(8.0, 10.0, 5.0)), F0vec, diffuseAmount, roughnessSqrt) * 1.0;
 	
 	for(int i = 0; i < numPointLights; i++)
 	{		
 		// Get light direction, extract length from it and normalize for usage as direction vector
-		vec3 lightDirection = worldPos - pointLights[i].m_position;
-		//vec3 lightDirection =  pointLights[i].m_position - worldPos;
+		vec3 lightDirection =  pointLights[i].m_position - worldPos;
 		float lightDistance = length(lightDirection);
 		lightDirection = normalize(lightDirection);
 		
@@ -544,12 +332,9 @@ void main(void)
 		float attenuation = pointLights[i].m_attenConstant + 
 							pointLights[i].m_attenLinear * lightDistance + 
 							pointLights[i].m_attenQuad * lightDistance * lightDistance;
-						 
+							
 		// Light color multiplied by intensity and divided by attenuation
-		
-		//finalLightColor += (calcLightColor(pointLights[i].m_color, lightDirection) * pointLights[i].m_intensity) / attenuation;
-		finalLightColor += (calcLight(normal, fragmentToEye, pointLights[i].m_color, lightDirection, vec3(F0), roughnessSqrt) * pointLights[i].m_intensity) / attenuation;
-		//finalLightColor += (computePBRLighting(pointLights[i].m_position, pointLights[i].m_color, worldPos, normal, fragmentToEye, diffuseColor, roughnessVar, F0vec) * pointLights[i].m_intensity) / attenuation;
+		finalLightColor += (calcLightColor(normal, fragmentToEye, pointLights[i].m_color, lightDirection, F0vec, diffuseAmount, roughnessSqrt) * pointLights[i].m_intensity) / attenuation;
 	}
 	
 	for(int i = 0; i < numSpotLights; i++)
@@ -564,8 +349,7 @@ void main(void)
 		if(spotLightFactor > spotLights[i].m_cutoffAngle)
 		{
 			// Get light direction, extract length from it and normalize for usage as direction vector
-			vec3 lightDirection = worldPos - spotLights[i].m_position;
-			//vec3 lightDirection =  spotLights[i].m_position - worldPos;
+			vec3 lightDirection =  spotLights[i].m_position - worldPos;
 			float lightDistance = length(lightDirection);
 			lightDirection = normalize(lightDirection);
 			
@@ -575,19 +359,23 @@ void main(void)
 								spotLights[i].m_attenQuad * lightDistance * lightDistance;
 			
 			// Light color multiplied by intensity
-			//finalLightColor += (calcLight(normal, fragmentToEye, pointLights[i].m_color, lightDirection, vec3(F0), roughnessSqrt) * pointLights[i].m_intensity) / attenuation;
-			vec3 lightColor = (calcLight(normal, fragmentToEye, spotLights[i].m_color, lightDirection, vec3(F0), roughnessSqrt) * spotLights[i].m_intensity);
-			//vec3 lightColor = (calcLightColor(spotLights[i].m_color, lightDirection) * spotLights[i].m_intensity);
+			vec3 lightColor = (calcLightColor(normal, fragmentToEye, spotLights[i].m_color, lightDirection, F0vec, diffuseAmount, roughnessSqrt) * spotLights[i].m_intensity);
 			
 			// Light restriction from cone
 			float coneAttenuation = (1.0 - (1.0 - spotLightFactor) * 1.0 / (1.0 - spotLights[i].m_cutoffAngle));
 			
-			finalLightColor += (lightColor / attenuation) * coneAttenuation; 
+			finalLightColor += (lightColor / attenuation) * coneAttenuation;
 		}
 	}
+	emissiveBuffer = vec4(1.0, 0.0, 0.0, 0.0);
 	
 	// Multiply the diffuse color by the amount of light the current pixel receives and gamma correct it
-	finalBuffer = vec4(pow(diffuseColor * finalLightColor, vec3(1.0 / 2.2)), 1.0);
+	
+	finalBuffer = diffuseColor * finalLightColor;//texture(diffuseMap, texCoord).xyz;
+	//finalBuffer = vec3(0.0, 1.0, 0.0);//diffuseColor * finalLightColor;
+	//finalBuffer = simpleToneMapping(diffuseColor * finalLightColor, 2.2);
+	//finalBuffer = vec3(roughnessVar, roughnessVar, roughnessVar);
+	//finalBuffer = vec4(texture(staticEnvMap, vec3(0.0, 0.0, 0.0)).xyz, 1.0);
 	//finalBuffer = vec4(metallic, metallic, metallic, 1.0);
 	//finalBuffer = vec4(pow(mix(diffuseColor, vec3(0.0, 0.0, 0.0), 1.0 - metallic) * finalLightColor, vec3(1.0 / 2.2)), 1.0);
 	//finalBuffer = vec4(pow(finalLightColor, vec3(1.0 / 2.2)), 1.0);
