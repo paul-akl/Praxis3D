@@ -51,7 +51,7 @@ public:
 	{
 		// NOTE: rotation vector is used as a target vector; scale vector is used as up-vector (to save space)
 		//m_baseObjectData.m_modelMat.initCamera(m_baseObjectData.m_position, m_baseObjectData.m_rotation, m_baseObjectData.m_scale);
-		m_needsUpdate = false;
+		//m_needsUpdate = false;
 	}
 
 	// Interested in Model Matrix, that would act as view matrix (so camera could be attached to any object)

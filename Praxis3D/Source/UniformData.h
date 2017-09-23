@@ -13,16 +13,22 @@ struct UniformFrameData
 	// Framebuffer size (can be different from the window size)
 	Math::Vec2i m_screenSize;
 
+	// Camera's position in the scene
 	Math::Vec3f m_cameraPosition;
 
 	// Matrices that can only change once per frame
 	Math::Mat4f m_projMatrix,
-		m_viewMatrix,
-		m_viewProjMatrix;
+				m_viewMatrix,
+				m_viewProjMatrix;
+
+	// Parameters of direction light, since there can be only one of it
+	Math::Vec3f m_dirLightColor,
+				m_dirLightDirection;
+	float		m_dirLightIntensity;
 
 	// Current number of lights in the light buffers
 	unsigned int m_numPointLights,
-		m_numSpotLights;
+				 m_numSpotLights;
 };
 
 struct UniformObjectData
@@ -37,6 +43,7 @@ struct UniformObjectData
 
 	UniformObjectData(const Math::Mat4f &p_modelMat,
 					  const Math::Mat4f &p_modelViewProjMatrix,
+					  //const unsigned int (&p_materials)[MaterialType_NumOfTypes],
 					  float	p_heightScale = 0.0f,
 					  float p_alphaThreshold = 0.0f,
 					  float p_emissiveThreshold = 0.0f,
@@ -49,15 +56,19 @@ struct UniformObjectData
 
 		m_modelMat = p_modelMat;
 		m_modelViewProjMatrix = p_modelViewProjMatrix;
+
+		//memcpy(m_materials, p_materials, sizeof(m_materials));
 	}
 
 	Math::Mat4f m_modelMat,
-		m_modelViewProjMatrix;
+				m_modelViewProjMatrix;
 
 	float	m_heightScale,
-		m_alphaThreshold,
-		m_emissiveThreshold,
-		m_textureTilingFactor;
+			m_alphaThreshold,
+			m_emissiveThreshold,
+			m_textureTilingFactor;
+
+	//unsigned int m_materials[MaterialType_NumOfTypes];
 };
 
 struct UniformData

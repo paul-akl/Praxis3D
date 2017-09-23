@@ -51,11 +51,11 @@
 				{
 					"Type": "ModelObject",
 					"Name": "Terrain2",
-					"Position": "-100.0f, -0.15f, 0.0f",
+					"Position": "-100.0f, 0.0f, 0.0f",
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "100.0f, 100.0f, 100.0f",
+					"Scale": "5.0f, 5.0f, 5.0f",
 					"AlphaThreshold": "0.0f",
 					"HeightScale": "0.0f",
 					"Lighting": "1",
@@ -99,7 +99,7 @@
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "20.0f, 20.0f, 20.0f",
+					"Scale": "2.0f, 2.0f, 2.0f",
 					"AlphaThreshold": "0.0f",
 					"HeightScale": "0.04f",
 					"Lighting": "1",
@@ -634,14 +634,14 @@
 						[
 							{
 								"Filename": "Ground_SmoothRocks_2k_alb.tga",
-								"Index": "0"
+								"Index": "1"
 							}
 						],
 						"Normal": 
 						[
 							{
 								"Filename": "Ground_SmoothRocks_2k_n.tga",
-								"Index": "0"
+								"Index": "1"
 							}
 						],
 						"Emissive": 

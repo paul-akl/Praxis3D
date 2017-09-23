@@ -11,6 +11,8 @@ public:
 	{
 		ErrorCode returnError;
 
+		m_name = "Reflection Rendering Pass";
+
 		// Create a property-set used to load reflection shader
 		PropertySet reflectionShaderProperties(Properties::Shaders);
 		reflectionShaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().reflection_pass_vert_shader);
@@ -35,8 +37,6 @@ public:
 	{
 
 	}
-
-	std::string getName() { return "Reflection Rendering Pass"; }
 
 private:
 	ShaderLoader::ShaderProgram	*m_shaderReflectionPass;

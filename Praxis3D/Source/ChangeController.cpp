@@ -23,11 +23,15 @@ ChangeController::ChangeController() : m_lastID(0), m_tlsNotifyList(TLS_OUT_OF_I
 	::TlsSetValue(m_tlsNotifyList, list);
 	m_notifyLists.push_back(list);
 
+	std::cout << "TlsSetValue: " << m_tlsNotifyList << ", " << list->size() << std::endl;
+
 	// Reserve space and prepare one-off notify lists for the main (this) thread
 	std::vector<OneTimeNotification> *oneOffList = new std::vector<OneTimeNotification>;
 	oneOffList->reserve((size_t)Config::engineVar().change_ctrl_oneoff_notify_list_reserv);
 	::TlsSetValue(m_tlsOneTimeNotifyList, oneOffList);
 	m_oneTimeNotifyLists.push_back(oneOffList);
+
+	std::cout << "TlsSetValue: " << m_tlsOneTimeNotifyList << ", " << oneOffList->size() << std::endl;
 }
 ChangeController::~ChangeController()
 {
@@ -39,17 +43,17 @@ ChangeController::~ChangeController()
 		if(m_subjectsList[subjectIndex].m_subject)
 		{
 			// Iterate over all subject's observers
-			for(decltype(m_subjectsList[subjectIndex].m_observersList.size()) observerIndex = 0; 
-			observerIndex < m_subjectsList[subjectIndex].m_observersList.size(); observerIndex++)
+			for(decltype(m_subjectsList[subjectIndex].m_observersList.size()) observerIndex = 0;
+				observerIndex < m_subjectsList[subjectIndex].m_observersList.size(); observerIndex++)
 			{
 				// Unregister the subject
 				unregisterSubject(m_subjectsList[subjectIndex].m_subject, m_subjectsList[subjectIndex].m_observersList[observerIndex].m_observer);
 			}
 		}
 	}
-	
+
 	// Free thread local storage
-	if (m_tlsNotifyList != TLS_OUT_OF_INDEXES)
+	if(m_tlsNotifyList != TLS_OUT_OF_INDEXES)
 		::TlsFree(m_tlsNotifyList);
 
 	if(m_tlsOneTimeNotifyList != TLS_OUT_OF_INDEXES)
@@ -230,6 +234,8 @@ ErrorCode ChangeController::distributeChanges(BitMask p_systemsToNotify, BitMask
 				}
 			}
 
+			//std::cout << currentList->size() << "; ";
+
 			// Clear out the list before moving to the next one
 			currentList->clear();
 		}
@@ -240,17 +246,17 @@ ErrorCode ChangeController::distributeChanges(BitMask p_systemsToNotify, BitMask
 		// If there are no messages to process, exit the loop
 		if(numberOfChanges == 0)
 			break;
-		
+
 		// If there are more changes to distribute than grain size, do it in parallel
-		if((unsigned int) (numberOfChanges > Config::engineVar().change_ctrl_grain_size && m_taskManager != nullptr))
+		if((unsigned int)(numberOfChanges > Config::engineVar().change_ctrl_grain_size && m_taskManager != nullptr))
 		{
 			// Process the notifications in a parallel loop
-			m_taskManager->parallelFor(nullptr, distributionCallback, this, 0, (unsigned int) numberOfChanges, Config::engineVar().change_ctrl_grain_size);
+			m_taskManager->parallelFor(nullptr, distributionCallback, this, 0, (unsigned int)numberOfChanges, Config::engineVar().change_ctrl_grain_size);
 		}
 		else
 		{
 			// Not enough notifications to distribute them in parallel, so process them in serial
-			distributeRange(0, (unsigned int) numberOfChanges);
+			distributeRange(0, (unsigned int)numberOfChanges);
 		}
 
 		if(m_changesToDistribute == Systems::Changes::All)
@@ -290,13 +296,28 @@ void ChangeController::changeOccurred(ObservedSubject *p_subject, BitMask p_chan
 		else
 		{
 			// Get thread local notification list
-			auto &notifyList = getNotifyList(m_tlsNotifyList);
+			auto *notifyList = getNotifyList(m_tlsNotifyList);
 
-			// Don't check for duplicates, for performance reasons
-			notifyList.push_back(Notification(p_subject, p_changedBits));
+			//std::cout << "test ( ";
+
+			//std::cout << m_tlsNotifyList << " ";
+
+			if(notifyList != nullptr)
+			{
+				// Don't check for duplicates, for performance reasons
+				notifyList->push_back(Notification(p_subject, p_changedBits));
+
+				//std::cout << "size: " << notifyList->size() << " ";
+			}
+			else
+			{
+				std::cout << std::endl << GetLastErrorAsString() << std::endl;
+				std::cout << "nullptr ";
+			}
 		}
 	}
 
+	//std::cout << ") test" << std::endl;
 }
 
 void ChangeController::oneTimeChange(ObservedSubject *p_subject, Observer *p_observer, BitMask p_changedBits)
@@ -373,6 +394,8 @@ void ChangeController::initThreadLocalData(void* p_controller)
 		notifyList->reserve((unsigned int)Config::engineVar().change_ctrl_notify_list_reserv);
 		::TlsSetValue(controller->m_tlsNotifyList, notifyList);
 
+		//std::cout << "TlsSetValue: " << controller->m_tlsNotifyList << ", " << notifyList->size() << std::endl;
+
 		// Lock muted while adding the new array to the list
 		SpinWait::Lock lock(controller->m_spinWaitUpdate);
 		controller->m_notifyLists.push_back(notifyList);
@@ -387,6 +410,8 @@ void ChangeController::initThreadLocalData(void* p_controller)
 		// Reserve space in new array and set it as a tread local storage for current (this) thread
 		oneTimeNotifyList->reserve((unsigned int)Config::engineVar().change_ctrl_oneoff_notify_list_reserv);
 		::TlsSetValue(controller->m_tlsOneTimeNotifyList, oneTimeNotifyList);
+
+		//sstd::cout << "TlsSetValue: " << controller->m_tlsOneTimeNotifyList << ", " << oneTimeNotifyList->size() << std::endl;
 
 		// Lock muted while adding the new array to the list
 		SpinWait::Lock lock(controller->m_spinWaitUpdate);
@@ -431,7 +456,7 @@ void ChangeController::distributionCallback(void *p_controller, unsigned int p_b
 void ChangeController::distributeRange(unsigned int p_begin, unsigned int p_end)
 {
 	// Loop through all the notification in the given range
-	for (size_t i = p_begin; i < p_end; i++)
+	for(size_t i = p_begin; i < p_end; i++)
 	{
 		// Get the notification and the subject
 		MappedNotification &notification = m_cumulativeNotifyList[i];
@@ -440,21 +465,21 @@ void ChangeController::distributeRange(unsigned int p_begin, unsigned int p_end)
 		// Distribute any desired changes
 		BitMask activeChanges = notification.m_changedBits & m_changesToDistribute;
 
-		if (activeChanges)
+		if(activeChanges)
 		{
 			// Clear the bit for the changes we are distributing
 			notification.m_changedBits &= ~activeChanges;
 
 			// Loop through all the observers and let them process the notification
 			std::vector<ObserverRequest> &observerList = subject.m_observersList;
-			for (size_t j = 0; j != observerList.size(); j++)
+			for(size_t j = 0; j != observerList.size(); j++)
 			{
 				// Determine if this observer is interested in this notification
 				BitMask changesToSend = observerList[j].m_interestBits & activeChanges;
-				if (changesToSend)
+				if(changesToSend)
 				{
 					// If this observer is part of the systems to be notified then we can pass it this notification
-					if (observerList[j].m_observerIdBits & m_systemsToNotify)
+					if(observerList[j].m_observerIdBits & m_systemsToNotify)
 					{
 						// Have the observer process this change (notification)
 						observerList[j].m_observer->changeOccurred(subject.m_subject, changesToSend);
@@ -478,7 +503,7 @@ ErrorCode ChangeController::removeSubject(ObservedSubject *p_subject)
 		_ASSERT(ID != unsigned int(-1));
 		_ASSERT(m_subjectsList[ID].m_subject == p_subject);
 
-		if (m_subjectsList.size() <= ID || m_subjectsList[ID].m_subject != p_subject)
+		if(m_subjectsList.size() <= ID || m_subjectsList[ID].m_subject != p_subject)
 		{
 			return ErrorCode::Failure;
 			// TODO ERROR FAILURE
@@ -491,7 +516,7 @@ ErrorCode ChangeController::removeSubject(ObservedSubject *p_subject)
 	}
 
 	std::vector<ObserverRequest>::iterator listIterator = observerList.begin();
-	for (; listIterator != observerList.end(); listIterator++)
+	for(; listIterator != observerList.end(); listIterator++)
 	{
 		p_subject->detach(listIterator->m_observer);
 	}
@@ -499,9 +524,18 @@ ErrorCode ChangeController::removeSubject(ObservedSubject *p_subject)
 	return returnError;
 }
 
-inline std::vector<ChangeController::Notification> &ChangeController::getNotifyList(unsigned int p_tlsIndex)
+inline std::vector<ChangeController::Notification> *ChangeController::getNotifyList(unsigned int p_tlsIndex)
 {
-	return *static_cast<std::vector<ChangeController::Notification>*>(::TlsGetValue(p_tlsIndex));
+	LPVOID test = ::TlsGetValue(p_tlsIndex);
+
+	unsigned int test2 = (unsigned int)test;
+
+	//std::cout << test2 << " ";
+
+	if(test2 > 0)
+		return static_cast<std::vector<ChangeController::Notification>*>(::TlsGetValue(p_tlsIndex));
+	else
+		return nullptr;
 }
 inline std::vector<ChangeController::OneTimeNotification> &ChangeController::getOneTimeNotifyList(unsigned int p_tlsIndex)
 {

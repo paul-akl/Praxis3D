@@ -1,4 +1,4 @@
-#version 450 core
+#version 430 core
 
 #define MAX_NUM_POINT_LIGHTS 20
 #define MAX_NUM_SPOT_LIGHTS 10

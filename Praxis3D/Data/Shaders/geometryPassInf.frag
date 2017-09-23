@@ -1,4 +1,4 @@
-#version 450 core
+#version 430 core
 
 #define HEIGHT_SCALE_THRESHOLD 0.001
 

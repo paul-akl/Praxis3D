@@ -74,7 +74,7 @@ ErrorCode RendererScene::preload()
 		if(m_modelObjPool[i].allocated() && !(m_modelObjPool[i].getObject()->loadedToMemory()))
 		{
 			// Add the object to be loaded later
-			m_objectsBeingLoaded.push_back(LoadableObjectAndIndex(m_modelObjPool[i].getObject(), m_modelObjPool[i].getIndex()));
+			m_objectsBeingLoaded.push_back(LoadableGraphicsObjectAndIndex(m_modelObjPool[i].getObject(), m_modelObjPool[i].getIndex()));
 
 			// Increment the number of allocated objects (early bail mechanism)
 			numAllocObjecs++;
@@ -89,7 +89,7 @@ ErrorCode RendererScene::preload()
 		if(m_shaderObjPool[i].allocated() && !(m_shaderObjPool[i].getObject()->loadedToMemory()))
 		{
 			// Add the object to be loaded later
-			m_objectsBeingLoaded.push_back(LoadableObjectAndIndex(m_shaderObjPool[i].getObject(), m_shaderObjPool[i].getIndex()));
+			m_objectsBeingLoaded.push_back(LoadableGraphicsObjectAndIndex(m_shaderObjPool[i].getObject(), m_shaderObjPool[i].getIndex()));
 
 			// Increment the number of allocated objects (early bail mechanism)
 			numAllocObjecs++;
@@ -119,7 +119,7 @@ void RendererScene::loadInBackground()
 		if(m_modelObjPool[i].allocated() && !(m_modelObjPool[i].getObject()->loadedToMemory()))
 		{
 			// Add object to 'being loaded' list and start loading it in a background thread
-			m_objectsBeingLoaded.push_back(LoadableObjectAndIndex(m_modelObjPool[i].getObject(), m_modelObjPool[i].getIndex()));
+			m_objectsBeingLoaded.push_back(LoadableGraphicsObjectAndIndex(m_modelObjPool[i].getObject(), m_modelObjPool[i].getIndex()));
 			TaskManagerLocator::get().startBackgroundThread(std::bind(&ModelObject::loadToMemory, m_modelObjPool[i].getObject()));
 
 			// Increment the number of allocated objects (early bail mechanism)
@@ -135,7 +135,7 @@ void RendererScene::loadInBackground()
 		if(m_shaderObjPool[i].allocated() && !(m_shaderObjPool[i].getObject()->loadedToMemory()))
 		{
 			// Add object to 'being loaded' list and start loading it in a background thread
-			m_objectsBeingLoaded.push_back(LoadableObjectAndIndex(m_shaderObjPool[i].getObject(), m_shaderObjPool[i].getIndex()));
+			m_objectsBeingLoaded.push_back(LoadableGraphicsObjectAndIndex(m_shaderObjPool[i].getObject(), m_shaderObjPool[i].getIndex()));
 			TaskManagerLocator::get().startBackgroundThread(std::bind(&ModelObject::loadToMemory, m_shaderObjPool[i].getObject()));
 
 			// Increment the number of allocated objects (early bail mechanism)
@@ -253,6 +253,45 @@ void RendererScene::update(const float p_deltaTime)
 		else
 			i++;
 	}
+
+	//	 _______________________________
+	//	|								|
+	//	|		Misc Loaded Objects		|
+	//	|_______________________________|
+	//
+	// Iterate over currently loading objects
+	/*for (decltype(m_miscObjectsBeingLoaded.size()) i = 0, size = m_miscObjectsBeingLoaded.size(),
+		maxObjects = Config::rendererVar().objects_loaded_per_frame; i < size;)
+	{
+		// If the object has loaded to memory already, add to load queue
+		if (m_miscObjectsBeingLoaded[i].m_loadableObject->loadedToMemory())
+		{
+			// If object should be activated after loading (for example wasn't set to be deleted while loading)
+			if (m_miscObjectsBeingLoaded[i].m_activateAfterLoading)
+			{
+				// Make object active, so it is passed to the renderer for drawing
+				//m_miscObjectsBeingLoaded[i].m_loadableObject->setActive(true);
+
+				// Add the object to objects-to-load list, that will be sent to the renderer to process
+				m_sceneObjects.m_objectsToLoad.push_back(&m_miscObjectsBeingLoaded[i].m_loadableObject->getRenderableObjectData());
+			}
+			else
+			{
+				// Remove the object from pool
+				removeObjectFromPool(&m_miscObjectsBeingLoaded[i]);
+			}
+
+			// Remove the object from the current list
+			m_miscObjectsBeingLoaded.erase(m_miscObjectsBeingLoaded.begin() + i);
+
+			// If the max number of object to be processed per frame has been reached, break from the loop
+			if (--maxObjects == 0)
+				break;
+		}
+		// If current object is still loading, advance the index
+		else
+			i++;
+	}*/
 
 	//	 ___________________________
 	//	|							|

@@ -11,6 +11,8 @@ public:
 	{
 		ErrorCode returnError;
 
+		m_name = "Geometry Rendering Pass";
+
 		// Create a property-set used to load geometry shader
 		PropertySet geomShaderProperties(Properties::Shaders);
 		geomShaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().geometry_pass_vert_shader);
@@ -33,13 +35,18 @@ public:
 
 	void update(const SceneObjects &p_sceneObjects, const float p_deltaTime)
 	{
+		// Bind the geometry framebuffer to be used
 		m_renderer.m_backend.getGeometryBuffer()->bindFramebufferForWriting(GeometryBuffer::FramebufferGeometry);
 
+		// Bind all the geometry buffer textures to be drawned to
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferPosition);
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferDiffuse);
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferNormal);
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferEmissive);
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferMatProperties);
+
+		// Initialize the geometry framebuffer for the geometry pass
+		m_renderer.m_backend.getGeometryBuffer()->initGeometryPass();
 
 		// Get known shader details
 		auto geomShaderHandle = m_shaderGeometry->getShaderHandle();
@@ -57,15 +64,21 @@ public:
 		// Iterate over all objects to be rendered with a custom shader
 		for(decltype(p_sceneObjects.m_customShaderObjects.size()) objIndex = 0, numObjects = p_sceneObjects.m_customShaderObjects.size(); objIndex < numObjects; objIndex++)
 		{
-			//	queueForDrawing(*p_sceneObjects.m_customShaderObjects[objIndex], 
-			//					p_sceneObjects.m_customShaderObjects[objIndex]->m_shader->getShaderHandle(),
-			//					p_sceneObjects.m_customShaderObjects[objIndex]->m_shader->getUniformUpdater(),
-			//					viewProjMatrix);
+			m_renderer.queueForDrawing(*p_sceneObjects.m_customShaderObjects[objIndex],
+				p_sceneObjects.m_customShaderObjects[objIndex]->m_shader->getShaderHandle(),
+				p_sceneObjects.m_customShaderObjects[objIndex]->m_shader->getUniformUpdater(),
+				m_renderer.m_viewProjMatrix);
+
+				//queueForDrawing(*p_sceneObjects.m_customShaderObjects[objIndex], 
+				//				p_sceneObjects.m_customShaderObjects[objIndex]->m_shader->getShaderHandle(),
+				//				p_sceneObjects.m_customShaderObjects[objIndex]->m_shader->getUniformUpdater(),
+				//				viewProjMatrix);
 		}
+
+		// Pass all the draw commands to be executed
+		m_renderer.passDrawCommandsToBackend();
 	}
-
-	std::string getName() { return "Geometry Rendering Pass"; }
-
+	
 private:
 	ShaderLoader::ShaderProgram	*m_shaderGeometry;
 };

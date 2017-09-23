@@ -2,6 +2,19 @@
 
 #include <GL\glew.h>
 
+enum BindCommandType : unsigned int
+{
+	BindCommandType_Texture,
+	BindCommandType_Framebuffer
+};
+enum CommandType : unsigned int
+{
+	CommandType_Draw,
+	CommandType_ScreenSpaceDraw,
+	CommandType_Bind,
+	CommandType_Load
+};
+
 enum BufferType : unsigned int
 {
 	BufferType_Uniform		= GL_UNIFORM_BUFFER,
@@ -31,6 +44,10 @@ enum LoadObjectType : unsigned int
 	LoadObject_Texture2D,
 	LoadObject_TextureCube,
 	LoadObject_Model
+};
+enum MiscLoadObjectType : unsigned int
+{
+	MiscLoadObj_StaticEnvMap
 };
 enum MaterialType : unsigned int
 {

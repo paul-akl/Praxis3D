@@ -116,6 +116,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
+		// TODO
 		// Quick hack, for convenience when testing, should not be used, because it's slow
 		Math::Mat4f modelViewMat = p_uniformData.m_frameData.m_viewMatrix * p_uniformData.m_objectData.m_modelMat;
 		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &modelViewMat.m[0]);
@@ -128,7 +129,11 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &p_uniformData.m_objectData.m_modelViewProjMatrix.m[0]);
+		// TODO
+		// Quick hack, for convenience when testing, should not be used, because it's slow
+		Math::Mat4f MVP = p_uniformData.m_frameData.m_projMatrix * p_uniformData.m_frameData.m_viewMatrix * p_uniformData.m_objectData.m_modelMat;
+		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &MVP.m[0]);
+		//glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &p_uniformData.m_objectData.m_modelViewProjMatrix.m[0]);
 	}
 };
 
@@ -279,8 +284,8 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		//auto &cameraPosVec = p_uniformData.getDirLightColor();
-		//glUniform3f(m_uniformHandle, cameraPosVec.x, cameraPosVec.y, cameraPosVec.z);
+		auto &dirLightColor = p_uniformData.m_frameData.m_dirLightColor;
+		glUniform3f(m_uniformHandle, dirLightColor.x, dirLightColor.y, dirLightColor.z);
 	}
 };
 class DirLightDirectionUniform : public BaseUniform
@@ -290,10 +295,8 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		//auto cameraPosVec = p_uniformData.getDirLightDirection();
-		// Normalize the direction here one per frame instead of once per fragment in the shader
-		//cameraPosVec.normalize();
-		//glUniform3f(m_uniformHandle, cameraPosVec.x, cameraPosVec.y, cameraPosVec.z);
+		auto lightDirection = p_uniformData.m_frameData.m_dirLightDirection;
+		glUniform3f(m_uniformHandle, lightDirection.x, lightDirection.y, lightDirection.z);
 	}
 };
 class DirLightIntensityUniform : public BaseUniform
@@ -303,7 +306,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		//glUniform1f(m_uniformHandle, p_uniformData.getDirLightintensity());
+		glUniform1f(m_uniformHandle, p_uniformData.m_frameData.m_dirLightIntensity);
 	}
 };
 class NumPointLightsUniform : public BaseUniform
@@ -503,7 +506,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GBufferFinal);
+		//glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GBufferDiffuse);
 	}
 };
 
@@ -545,6 +548,7 @@ public:
 	void update(const UniformData &p_uniformData)
 	{
 		//glUniform1i(m_uniformHandle, p_uniformData.getDiffuseTexturePos());
+		glUniform1i(m_uniformHandle, MaterialType_Diffuse);
 	}
 };
 class NormalTextureUniform : public BaseUniform
@@ -555,6 +559,7 @@ public:
 	void update(const UniformData &p_uniformData)
 	{
 		//glUniform1i(m_uniformHandle, p_uniformData.getNormalTexturePos());
+		glUniform1i(m_uniformHandle, MaterialType_Normal);
 	}
 };
 class EmissiveTextureUniform : public BaseUniform
@@ -564,7 +569,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		//glUniform1i(m_uniformHandle, p_uniformData.getEmissiveTexturePos());
+		glUniform1i(m_uniformHandle, MaterialType_Emissive);
 	}
 };
 class CombinedTextureUniform : public BaseUniform
@@ -575,6 +580,7 @@ public:
 	void update(const UniformData &p_uniformData)
 	{
 		//glUniform1i(m_uniformHandle, p_uniformData.getCombinedTexturePos());
+		glUniform1i(m_uniformHandle, MaterialType_Combined);
 	}
 };
 

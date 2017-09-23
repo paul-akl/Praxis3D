@@ -7,122 +7,105 @@
 
 ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 {
-	if(!p_filename.empty())
+	// Load properties from file
+	PropertyLoader loadedProperties(Config::filepathVar().map_path + p_filename);
+	ErrorCode loaderError = loadedProperties.loadFromFile();
+
+	// Check if loading was successful, return an error, if not
+	if(loaderError != ErrorCode::Success)
+		return loaderError;
+
+	std::vector<std::pair<const std::string&, SystemObject*>> createdObjects;
+
+	// Get systems property set
+	auto &systemProperties = loadedProperties.getPropertySet().getPropertySetByID(Properties::Systems);
+
+	// Iterate over each system property set
+	for(decltype(systemProperties.getNumPropertySets()) propIndex = 0, propSize = systemProperties.getNumPropertySets(); propIndex < propSize; propIndex++)
 	{
-		m_filename = p_filename;
-
-		// Load properties from file
-		PropertyLoader loadedProperties(Config::filepathVar().map_path + m_filename);
-		ErrorCode loaderError = loadedProperties.loadFromFile();
-
-		// Check if loading was successful, return an error, if not
-		if(loaderError != ErrorCode::Success)
-			return loaderError;
-
-		// Get systems property set
-		auto &systemProperties = loadedProperties.getPropertySet().getPropertySetByID(Properties::Systems);
-
-		// Iterate over each system property set
-		for(decltype(systemProperties.getNumPropertySets()) propIndex = 0, propSize = systemProperties.getNumPropertySets(); propIndex < propSize; propIndex++)
+		// Iterate over all systems scenes
+		for(int sysIndex = 0; sysIndex < Systems::NumberOfSystems; sysIndex++)
 		{
-			// Iterate over all systems scenes
-			for(int sysIndex = 0; sysIndex < Systems::NumberOfSystems; sysIndex++)
+			// If system scene name and property set name match
+			if(Systems::SystemNames[m_systemScenes[sysIndex]->getSystemType()]
+			   == GetString(systemProperties.getPropertySetUnsafe(propIndex).getPropertyID()))
 			{
-				// If system scene name and property set name match
-				if(Systems::SystemNames[m_systemScenes[sysIndex]->getSystemType()]
-				   == GetString(systemProperties.getPropertySetUnsafe(propIndex).getPropertyID()))
+				// Pass the 'scene' property set to the matched system scene
+				m_systemScenes[sysIndex]->setup(systemProperties.getPropertySetUnsafe(propIndex).getPropertySetByID(Properties::Scene));
+
+				// Get 'objects' property set
+				auto &objectProperties = systemProperties.getPropertySetUnsafe(propIndex).getPropertySetByID(Properties::Objects);
+
+				// Iterate over all object property sets
+				for(decltype(objectProperties.getNumPropertySets()) objIndex = 0, objSize = objectProperties.getNumPropertySets(); objIndex < objSize; objIndex++)
 				{
-					// Pass the 'scene' property set to the matched system scene
-					m_systemScenes[sysIndex]->setup(systemProperties.getPropertySetUnsafe(propIndex).getPropertySetByID(Properties::Scene));
+					// Create a new system object (by pasting the object property set)
+					auto *newObject = m_systemScenes[sysIndex]->createObject(objectProperties.getPropertySetUnsafe(objIndex));
 
-					// Get 'objects' property set
-					auto &objectProperties = systemProperties.getPropertySetUnsafe(propIndex).getPropertySetByID(Properties::Objects);
-
-					// Iterate over all object property sets
-					for(decltype(objectProperties.getNumPropertySets()) objIndex = 0, objSize = objectProperties.getNumPropertySets(); objIndex < objSize; objIndex++)
-					{
-						// Create a new system object (by pasting the object property set)
-						auto *newObject = m_systemScenes[sysIndex]->createObject(objectProperties.getPropertySetUnsafe(objIndex));
-
-						// Save the newly created object for later linking
-						m_createdObjects[sysIndex].push_back(std::pair<const std::string&, SystemObject*>(newObject->getName(), newObject));
-					}
+					// Save the newly created object for later linking
+					createdObjects.push_back(std::pair<const std::string&, SystemObject*>(newObject->getName(), newObject));
 				}
 			}
 		}
+	}
 
-		// Get the object link property sets
-		auto &objLinkProperties = loadedProperties.getPropertySet().getPropertySetByID(Properties::ObjectLinks);
+	// Get the object link property sets
+	auto &objLinkProperties = loadedProperties.getPropertySet().getPropertySetByID(Properties::ObjectLinks);
 
-		// Iterate over all object link property sets
-		for(decltype(objLinkProperties.getNumPropertySets()) linkIndex = 0, linkSize = objLinkProperties.getNumPropertySets(); linkIndex < linkSize; linkIndex++)
+	// Iterate over all object link property sets
+	for(decltype(objLinkProperties.getNumPropertySets()) linkIndex = 0, linkSize = objLinkProperties.getNumPropertySets(); linkIndex < linkSize; linkIndex++)
+	{
+		// Get subject name
+		const auto &subjectName = objLinkProperties.getPropertySetUnsafe(linkIndex).getPropertyByID(Properties::Subject).getString();
+		if(subjectName.empty()) // Make sure subject's name is not empty
+			continue;
+
+		// Get observer name
+		const auto &observerName = objLinkProperties.getPropertySetUnsafe(linkIndex).getPropertyByID(Properties::Observer).getString();
+		if(observerName.empty()) // Make sure observer's name is not empty
+			continue;
+
+		// Iterate over created objects and match subject's name
+		for(decltype(createdObjects.size()) subjIndex = 0, subjSize = createdObjects.size(); subjIndex < subjSize; subjIndex++)
 		{
-			// Get subject name
-			const auto &subjectName = objLinkProperties.getPropertySetUnsafe(linkIndex).getPropertyByID(Properties::Subject).getString();
-			if(subjectName.empty()) // Make sure subject's name is not empty
-				continue;
-
-			// Get observer name
-			const auto &observerName = objLinkProperties.getPropertySetUnsafe(linkIndex).getPropertyByID(Properties::Observer).getString();
-			if(observerName.empty()) // Make sure observer's name is not empty
-				continue;
-
-			// Iterate over created objects and match subject's name
-			for(int subjSysIndex = 0; subjSysIndex < Systems::NumberOfSystems; subjSysIndex++)
+			// Compare subject name
+			if(createdObjects[subjIndex].first == subjectName)
 			{
-				for(decltype(m_createdObjects[subjSysIndex].size()) subjIndex = 0, subjSize = m_createdObjects[subjSysIndex].size(); subjIndex < subjSize; subjIndex++)
+				// Iterate over created objects and match observer's name
+				for(decltype(createdObjects.size()) observIndex = 0, observSize = createdObjects.size(); observIndex < observSize; observIndex++)
 				{
-					// Compare subject name
-					if(m_createdObjects[subjSysIndex][subjIndex].first == subjectName)
+					// Compare observer name
+					if(createdObjects[observIndex].first == observerName)
 					{
-						// Iterate over created objects and match observer's name
-						for(int observSysIndex = 0; observSysIndex < Systems::NumberOfSystems; observSysIndex++)
-						{
-							for(decltype(m_createdObjects[observSysIndex].size()) observIndex = 0, observSize = m_createdObjects[observSysIndex].size(); observIndex < observSize; observIndex++)
-							{
-								// Compare observer name
-								if(m_createdObjects[observSysIndex][observIndex].first == observerName)
-								{
-									// Create object link between subject and observer in the change controller
-									m_changeController->createObjectLink(m_createdObjects[subjSysIndex][subjIndex].second, m_createdObjects[observSysIndex][observIndex].second);
-
-									// Exit the inner loop
-									break;
-								}
-							}
-						}
-
-						// Exit the outer loop
+						// Create object link between subject and observer in the change controller
+						m_changeController->createObjectLink(createdObjects[subjIndex].second, createdObjects[observIndex].second);
+						
+						// Exit the inner loop
 						break;
 					}
 				}
+
+				// Exit the outer loop
+				break;
 			}
 		}
-
-		// Get flag telling if the objects should be loaded in parallel
-		m_loadInBackground = loadedProperties.getPropertySet().getPropertyByID(Properties::LoadInBackground).getBool();
-
-		// If the objects should be loaded in background threads
-		if(m_loadInBackground)
-		{
-			// Start loading in background threads in all scenes
-			for(int i = 0; i < Systems::NumberOfSystems; i++)
-				m_systemScenes[i]->loadInBackground();
-		}
-		else
-		{
-			// Preload all scenes sequentially
-			for(int i = 0; i < Systems::NumberOfSystems; i++)
-				m_systemScenes[i]->preload();
-		}
-
-		ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_PropertyLoader, "Map file has been loaded: " + m_filename);
-
-		return ErrorCode::Success;
 	}
 
-	// TODO ERROR empty filename
-	return ErrorCode::Failure;
+
+	if(loadedProperties.getPropertySet().getPropertyByID(Properties::LoadInBackground).getBool())
+	{
+		// Start loading in background threads in all scenes
+		for(int i = 0; i < Systems::NumberOfSystems; i++)
+			m_systemScenes[i]->loadInBackground();
+	}
+	else
+	{
+		// Preload all scenes sequentially
+		for(int i = 0; i < Systems::NumberOfSystems; i++)
+			m_systemScenes[i]->preload();
+	}
+
+	return ErrorCode::Success;
 }
 
 ErrorCode SceneLoader::saveToFile(const std::string p_filename)

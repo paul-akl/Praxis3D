@@ -1,4 +1,4 @@
-#version 450 core
+#version 430 core
 
 layout(location = 1) out vec4 finalBuffer;
 

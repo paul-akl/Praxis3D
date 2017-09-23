@@ -47,6 +47,14 @@ ErrorCode RendererBackend::init(const UniformFrameData &p_frameData)
 	return returnCode;
 }
 
+void RendererBackend::processUpdate(const BufferUpdateCommands &p_updateCommands, const UniformFrameData &p_frameData)
+{
+	for(decltype(p_updateCommands.size()) i = 0, size = p_updateCommands.size(); i < size; i++)
+	{
+		processCommand(p_updateCommands[i], p_frameData);
+	}
+}
+
 void RendererBackend::processLoading(LoadCommands &p_loadCommands, const UniformFrameData &p_frameData)
 {
 	for(decltype(p_loadCommands.size()) i = 0, size = p_loadCommands.size(); i < size; i++)
@@ -55,12 +63,13 @@ void RendererBackend::processLoading(LoadCommands &p_loadCommands, const Uniform
 	}
 }
 
-void RendererBackend::renderFrame(const DrawCommands &p_drawCommands, const UniformFrameData &p_frameData)
+void RendererBackend::processDrawing(const DrawCommands &p_drawCommands, const UniformFrameData &p_frameData)
 {
-	/*for(decltype(p_drawCommands.size()) i = 0, size = p_drawCommands.size(); i < size; i++)
+	for(decltype(p_drawCommands.size()) i = 0, size = p_drawCommands.size(); i < size; i++)
 	{
 		// Get uniform data
-		UniformData uniformData(p_drawCommands[i].second.m_uniformObjectData, p_frameData);
+		const UniformObjectData &uniformObjectData = p_drawCommands[i].second.m_uniformObjectData;
+		//UniformData uniformData(p_drawCommands[i].second.m_uniformObjectData, p_frameData);
 
 		// Get various handles
 		const auto shaderHandle = p_drawCommands[i].second.m_shaderHandle;
@@ -70,13 +79,26 @@ void RendererBackend::renderFrame(const DrawCommands &p_drawCommands, const Unif
 		bindShader(shaderHandle);
 
 		// Update shader uniforms
-		textureUniformUpdate(shaderHandle, uniformUpdater, uniformData);
-		frameUniformUpdate(shaderHandle, uniformUpdater, uniformData);
-		modelUniformUpdate(shaderHandle, uniformUpdater, uniformData);
-		meshUniformUpdate(shaderHandle, uniformUpdater, uniformData);
+		textureUniformUpdate(shaderHandle, uniformUpdater, uniformObjectData, p_frameData);
+		frameUniformUpdate(shaderHandle, uniformUpdater, uniformObjectData, p_frameData);
+		modelUniformUpdate(shaderHandle, uniformUpdater, uniformObjectData, p_frameData);
+		meshUniformUpdate(shaderHandle, uniformUpdater, uniformObjectData, p_frameData);
 
 		// Bind VAO
 		bindVAO(p_drawCommands[i].second.m_modelHandle);
+
+		// Bind textures
+		glActiveTexture(GL_TEXTURE0 + MaterialType_Diffuse);
+		glBindTexture(GL_TEXTURE_2D, p_drawCommands[i].second.m_matDiffuse);
+
+		glActiveTexture(GL_TEXTURE0 + MaterialType_Normal);
+		glBindTexture(GL_TEXTURE_2D, p_drawCommands[i].second.m_matNormal);
+
+		glActiveTexture(GL_TEXTURE0 + MaterialType_Combined);
+		glBindTexture(GL_TEXTURE_2D, p_drawCommands[i].second.m_matCombined);
+
+		glActiveTexture(GL_TEXTURE0 + MaterialType_Emissive);
+		glBindTexture(GL_TEXTURE_2D, p_drawCommands[i].second.m_matEmissive);
 
 		// Draw the geometry
 		glDrawElementsBaseVertex(GL_TRIANGLES,
@@ -84,5 +106,34 @@ void RendererBackend::renderFrame(const DrawCommands &p_drawCommands, const Unif
 								 GL_UNSIGNED_INT,
 								 (void*)(sizeof(unsigned int) * p_drawCommands[i].second.m_baseIndex),
 								 p_drawCommands[i].second.m_baseVertex);
-	}*/
+	}
 }
+
+void RendererBackend::processDrawing(const ScreenSpaceDrawCommands &p_screenSpaceDrawCommands, const UniformFrameData & p_frameData)
+{
+	for(decltype(p_screenSpaceDrawCommands.size()) i = 0, size = p_screenSpaceDrawCommands.size(); i < size; i++)
+	{
+		// Get uniform data
+		const UniformObjectData &uniformObjectData = p_screenSpaceDrawCommands[i].second.m_uniformObjectData;
+
+		// Get various handles
+		const auto shaderHandle = p_screenSpaceDrawCommands[i].second.m_shaderHandle;
+		const auto &uniformUpdater = p_screenSpaceDrawCommands[i].second.m_uniformUpdater;
+
+		// Bind the shader
+		bindShader(shaderHandle);
+
+		// Update shader uniforms
+		textureUniformUpdate(shaderHandle, uniformUpdater, uniformObjectData, p_frameData);
+		frameUniformUpdate(shaderHandle, uniformUpdater, uniformObjectData, p_frameData);
+		modelUniformUpdate(shaderHandle, uniformUpdater, uniformObjectData, p_frameData);
+		meshUniformUpdate(shaderHandle, uniformUpdater, uniformObjectData, p_frameData);
+
+		// Bind VAO
+		m_fullscreenTriangle.bind();
+
+		// Draw the full-screen triangle
+		m_fullscreenTriangle.render();
+	}
+}
+

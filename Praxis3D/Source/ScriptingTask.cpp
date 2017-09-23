@@ -15,5 +15,5 @@ ScriptingTask::~ScriptingTask()
 
 void ScriptingTask::update(const float p_deltaTime)
 {
-	//m_scriptingScene->update(p_deltaTime);
+	m_scriptingScene->update(p_deltaTime);
 }

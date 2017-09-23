@@ -142,6 +142,7 @@ public:
 	};
 	class ShaderProgram
 	{
+		friend class CommandBuffer;
 		friend class ShaderLoader;
 		friend class RendererFrontend;
 	public:
@@ -208,29 +209,42 @@ public:
 		{
 			ErrorCode returnError = ErrorCode::Success;
 
-			for(unsigned int i = 0; i < ShaderType_NumOfTypes; i++)
+			// Check if the shader hasn't been already loaded
+			if(!m_loadedToMemory)
 			{
-				if(!m_shaderFilename[i].empty())
+				m_loadedToMemory = true;
+				m_defaultShader = true;
+
+				for(unsigned int i = 0; i < ShaderType_NumOfTypes; i++)
 				{
-					// Load shader's source code from a file
-					std::ifstream sourceStream(Config::PathsVariables().shader_path + m_shaderFilename[i], std::ios::in);
-
-					// Check if it was loaded successfully
-					if(sourceStream.is_open())
+					if(!m_shaderFilename[i].empty())
 					{
-						std::string singleLine = "";
-						while(std::getline(sourceStream, singleLine))
-							m_shaderSource[i] += "\n" + singleLine;
+						// Load shader's source code from a file
+						std::ifstream sourceStream(Config::PathsVariables().shader_path + m_shaderFilename[i], std::ios::in);
 
-						sourceStream.close();
-					}
-					else
-					{
-						ErrHandlerLoc::get().log(ErrorCode::Ifstream_failed, ErrorSource::Source_ShaderLoader, "(Filename - \"" + m_shaderFilename[i] + "\"): ");
-						return ErrorCode::Ifstream_failed;
+						// Check if it was loaded successfully
+						if(sourceStream.is_open())
+						{
+							std::string singleLine = "";
+							while(std::getline(sourceStream, singleLine))
+								m_shaderSource[i] += "\n" + singleLine;
+
+							sourceStream.close();
+
+							m_defaultShader = false;
+						}
+						else
+						{
+							ErrHandlerLoc::get().log(ErrorCode::Ifstream_failed, ErrorSource::Source_ShaderLoader, "(Filename - \"" + m_shaderFilename[i] + "\"): ");
+							
+							// TODO Check if error works without exiting from here
+							//return ErrorCode::Ifstream_failed;
+							returnError = ErrorCode::Ifstream_failed;
+						}
 					}
 				}
 			}
+
 			return returnError;
 		}
 
@@ -242,8 +256,8 @@ public:
 		const inline unsigned int getShaderHandle() const { return m_programHandle; }
 		inline ShaderUniformUpdater &getUniformUpdater() const { return *m_uniformUpdater; }
 
-		const inline bool isDefaultProgram() const { return m_programHandle == m_defaultProgramHandle; }
-
+		const inline bool isDefaultProgram() const { return m_defaultShader; }
+		
 		// Comparator operators
 		const inline bool operator==(const std::string &p_filename) const { return (m_combinedFilename == p_filename); }
 		const inline bool operator==(const unsigned int p_programHandle) const { return (m_programHandle == p_programHandle); }
@@ -278,13 +292,15 @@ public:
 			m_combinedFilename = p_filename;
 			m_filenameHash = p_filenameHashkey > 0 ? p_filenameHashkey : Utilities::getHashKey(p_filename);
 			m_tessellated = false;
+			m_defaultShader = false;
 			m_loadedToMemory = false;
 			m_loadedToVideoMemory = false;
 			m_programHandle = 0;
 			m_uniformUpdater = nullptr;
 		}
 
-		bool	m_loadedToMemory,
+		bool	m_defaultShader, 
+				m_loadedToMemory,
 				m_loadedToVideoMemory,
 				m_tessellated;
 
@@ -316,7 +332,6 @@ private:
 	SpinWait	m_vertFragMutex,
 				m_geomMutex;
 
-	//BaseShader m_defaultShader;
 	ShaderProgram m_defaultProgram;
 	
 	// Mutex used to block calls from other threads while operation is in progress

@@ -1,4 +1,4 @@
-#version 450 core
+#version 430 core
 
 #define MAX_NUM_POINT_LIGHTS 20
 #define MAX_NUM_SPOT_LIGHTS 10
@@ -319,6 +319,8 @@ void main(void)
 	// Declare final color of the fragment and add directional light to it
 	vec3 finalLightColor = calcLightColor(normal, fragmentToEye, directionalLight.m_color, normalize(-directionalLight.m_direction), F0vec, diffuseAmount, roughnessSqrt) * directionalLight.m_intensity;
 	
+	//vec3 finalLightColor = calcLightColor(normal, fragmentToEye, vec3(1.0, 1.0, 1.0), normalize(vec3(8.0, 10.0, 5.0)), F0vec, diffuseAmount, roughnessSqrt) * 1.0;
+	
 	for(int i = 0; i < numPointLights; i++)
 	{		
 		// Get light direction, extract length from it and normalize for usage as direction vector
@@ -330,7 +332,7 @@ void main(void)
 		float attenuation = pointLights[i].m_attenConstant + 
 							pointLights[i].m_attenLinear * lightDistance + 
 							pointLights[i].m_attenQuad * lightDistance * lightDistance;
-						 
+							
 		// Light color multiplied by intensity and divided by attenuation
 		finalLightColor += (calcLightColor(normal, fragmentToEye, pointLights[i].m_color, lightDirection, F0vec, diffuseAmount, roughnessSqrt) * pointLights[i].m_intensity) / attenuation;
 	}
@@ -365,9 +367,12 @@ void main(void)
 			finalLightColor += (lightColor / attenuation) * coneAttenuation;
 		}
 	}
+	emissiveBuffer = vec4(1.0, 0.0, 0.0, 0.0);
 	
 	// Multiply the diffuse color by the amount of light the current pixel receives and gamma correct it
-	finalBuffer = vec4(0.0, 1.0, 0.0);//diffuseColor * finalLightColor;
+	
+	finalBuffer = diffuseColor * finalLightColor;//texture(diffuseMap, texCoord).xyz;
+	//finalBuffer = vec3(0.0, 1.0, 0.0);//diffuseColor * finalLightColor;
 	//finalBuffer = simpleToneMapping(diffuseColor * finalLightColor, 2.2);
 	//finalBuffer = vec3(roughnessVar, roughnessVar, roughnessVar);
 	//finalBuffer = vec4(texture(staticEnvMap, vec3(0.0, 0.0, 0.0)).xyz, 1.0);

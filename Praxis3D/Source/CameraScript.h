@@ -173,7 +173,7 @@ public:
 		
 		// Notify listeners
 		postChanges(Systems::Changes::Spacial::Position | 
-					//Systems::Changes::Spacial::Rotation | 
+					Systems::Changes::Spacial::Rotation | 
 					Systems::Changes::Spacial::ModelMatrix);
 	}
 	

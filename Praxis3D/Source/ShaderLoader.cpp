@@ -113,6 +113,9 @@ ShaderLoader::ShaderProgram *ShaderLoader::load(const PropertySet &p_properties)
 			if(!shaderFilename[shaderType].empty())
 				newProgram->addShader(static_cast<ShaderType>(shaderType), shaderFilename[shaderType]);
 
+		// Create a uniform updater for the new shader
+		newProgram->m_uniformUpdater = new ShaderUniformUpdater(*newProgram);
+
 		return newProgram;
 	}
 

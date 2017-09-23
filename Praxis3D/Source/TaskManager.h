@@ -6,6 +6,7 @@
 #include <tbb/task_scheduler_init.h>
 #include <tbb/tbb_thread.h>
 #include <vector>
+#include "Window.h"
 
 #include "System.h"
 #include "SpinWait.h"
@@ -37,8 +38,8 @@ public:
 		SIMD_INT
 	};
 
-	typedef void (*JobFunct)(void*);
-	typedef void (*ParallelForFunc)(void *p_param, unsigned int p_begin, unsigned int p_end);
+	typedef void(*JobFunct)(void*);
+	typedef void(*ParallelForFunc)(void *p_param, unsigned int p_begin, unsigned int p_end);
 
 	TaskManager();
 	~TaskManager();
@@ -66,19 +67,19 @@ public:
 
 	// TBB paralle_for wrapper for job tasks
 	void parallelFor(SystemTask *p_systemTask, ParallelForFunc p_jobFunc, void *p_param, unsigned int p_begin, unsigned int p_end, unsigned int p_minGrainSize = 1);
-	
+
 	// Passed function is executed in a parallel thread; returns before the passed function has been completed
 	template<typename Function>
 	inline void startBackgroundThread(const Function& p_func)
 	{
 		// If multi-threading is enabled 
-		#ifdef SETTING_MULTITHREADING_ENABLED
+#ifdef SETTING_MULTITHREADING_ENABLED
 		m_backgroundTaskGroup.run(p_func);
 
-		#else
+#else
 		p_func();
 
-		#endif
+#endif
 	}
 
 	// Wrapper for a TBB parallel_for function; executed the given set of functions in parallel
@@ -87,14 +88,14 @@ public:
 	inline void parallelFor(Index p_first, Index p_last, Index p_step, const Function& p_func)
 	{
 		// If multi-threading is enabled 
-		#ifdef SETTING_MULTITHREADING_ENABLED
+#ifdef SETTING_MULTITHREADING_ENABLED
 		tbb::parallel_for(p_first, p_last, p_step, p_func);
 
-		#else
+#else
 		for(Index i = p_first; i < p_last; i += p_step)
 			p_func(i);
 
-		#endif
+#endif
 	}
 
 	unsigned int getNumberOfThreads() { return m_numOfThreads; }
@@ -174,141 +175,141 @@ class TaskSet;
 class TaskManager
 {
 public:
-	TaskManager();
-	~TaskManager();
+TaskManager();
+~TaskManager();
 
-	void init();
-	void shutdown();
+void init();
+void shutdown();
 
-	bool createTaskSet(TaskSetFunc p_func, void *p_arg, unsigned int p_taskCount, TaskSetHandle *p_depends,
-		unsigned int p_dependsCount, OPTIONAL char* p_name, OUT TaskSetHandle *p_outHandle);
+bool createTaskSet(TaskSetFunc p_func, void *p_arg, unsigned int p_taskCount, TaskSetHandle *p_depends,
+unsigned int p_dependsCount, OPTIONAL char* p_name, OUT TaskSetHandle *p_outHandle);
 
-	void releaseHandle(TaskSetHandle p_taskSet);
-	void releaseHandles(TaskSetHandle *p_taskSetList, unsigned int p_taskSetCount);
+void releaseHandle(TaskSetHandle p_taskSet);
+void releaseHandles(TaskSetHandle *p_taskSetList, unsigned int p_taskSetCount);
 
-	void waitForSet(TaskSetHandle p_taskSet);
-	void waitForAll();
+void waitForSet(TaskSetHandle p_taskSet);
+void waitForAll();
 
-	bool isSetComplete(TaskSetHandle p_set);
+bool isSetComplete(TaskSetHandle p_set);
 
 private:
-	friend class GenericTask;
+friend class GenericTask;
 
-	TaskSetHandle allocateTaskSet();
+TaskSetHandle allocateTaskSet();
 
-	void completeTaskSet(TaskSetHandle p_set);
+void completeTaskSet(TaskSetHandle p_set);
 
-	TaskSet			*m_taskSets[MAX_TASKSETS];
-	TbbContextId	*m_tbbContextId;
-	void			*m_tbbInit;
-	unsigned int	m_nextFreeSet;
+TaskSet			*m_taskSets[MAX_TASKSETS];
+TbbContextId	*m_tbbContextId;
+void			*m_tbbInit;
+unsigned int	m_nextFreeSet;
 };
 
 class TbbContextId : public tbb::task_scheduler_observer
 {
-	void on_scheduler_entry(bool)
-	{
-		INT context = g_contextIdCount.fetch_and_increment();
-		g_contextId.local() = context;
-	}
+void on_scheduler_entry(bool)
+{
+INT context = g_contextIdCount.fetch_and_increment();
+g_contextId.local() = context;
+}
 
 public:
-	TbbContextId()
-	{
-		g_contextIdCount = 0;
-		observe(true);
-	}
+TbbContextId()
+{
+g_contextIdCount = 0;
+observe(true);
+}
 };
 
 class SpinLock
 {
 public:
-	SpinLock() : m_lock(0)	{ }
-	~SpinLock()				{ }
+SpinLock() : m_lock(0)	{ }
+~SpinLock()				{ }
 
-	void lock()
-	{
-		while (_InterlockedCompareExchange((long*)&m_lock, 1, 0) == 1)
-		{
+void lock()
+{
+while (_InterlockedCompareExchange((long*)&m_lock, 1, 0) == 1)
+{
 
-		}
-	}
+}
+}
 
-	void unlock()
-	{
-		m_lock = 0;
-	}
+void unlock()
+{
+m_lock = 0;
+}
 
 private:
-	volatile unsigned int m_lock;
+volatile unsigned int m_lock;
 };
 
 class GenericTask : public tbb::task
 {
 public:
-	GenericTask();
-	GenericTask(TaskSetFunc p_func, void* p_arg, unsigned int p_id, unsigned int p_size, char* p_setName, TaskSetHandle p_taskSet) :
-		m_func(p_func), m_arg(p_arg), m_id(p_id), m_size(p_size), m_setName(p_setName), m_taskSet(p_taskSet)
-	{
+GenericTask();
+GenericTask(TaskSetFunc p_func, void* p_arg, unsigned int p_id, unsigned int p_size, char* p_setName, TaskSetHandle p_taskSet) :
+m_func(p_func), m_arg(p_arg), m_id(p_id), m_size(p_size), m_setName(p_setName), m_taskSet(p_taskSet)
+{
 
-	}
+}
 
-	task* execute();
-	//{
-	//	m_func(m_arg, g_contextId.local(), m_id, m_size);
-	//	g_taskManager.completeTaskSet(m_taskSet);
-	//}
+task* execute();
+//{
+//	m_func(m_arg, g_contextId.local(), m_id, m_size);
+//	g_taskManager.completeTaskSet(m_taskSet);
+//}
 
 private:
-	TaskSetFunc		m_func;
-	void*			m_arg;
-	unsigned int	m_id;
-	unsigned int	m_size;
-	char*			m_setName;
-	TaskSetHandle		m_taskSet;
+TaskSetFunc		m_func;
+void*			m_arg;
+unsigned int	m_id;
+unsigned int	m_size;
+char*			m_setName;
+TaskSetHandle		m_taskSet;
 };
 
 class TaskSet : public tbb::task
 {
 public:
-	TaskSet() :
-		m_func(NULL),
-		m_arg(0),
-		m_size(0),
-		m_taskSet(TASKSETHANDLE_INVALID),
-		m_hasBeenWaitedOn(false)
-	{
-		m_setName[0] = 0;
-		memset(m_successors, 0, sizeof(m_successors));
-	}
+TaskSet() :
+m_func(NULL),
+m_arg(0),
+m_size(0),
+m_taskSet(TASKSETHANDLE_INVALID),
+m_hasBeenWaitedOn(false)
+{
+m_setName[0] = 0;
+memset(m_successors, 0, sizeof(m_successors));
+}
 
-	~TaskSet() { }
+~TaskSet() { }
 
-	task* execute()
-	{
-		set_ref_count(m_size + 1);
+task* execute()
+{
+set_ref_count(m_size + 1);
 
-		for (unsigned int i = 0; i < m_size; i++)
-		{
-			spawn(*new(allocate_child()) GenericTask(m_func, m_arg, i, m_size, m_setName, m_taskSet));
-		}
+for (unsigned int i = 0; i < m_size; i++)
+{
+spawn(*new(allocate_child()) GenericTask(m_func, m_arg, i, m_size, m_setName, m_taskSet));
+}
 
-		return NULL;
-	}
+return NULL;
+}
 
-	TaskSet			*m_successors[MAX_SUCCESSORS];
-	TaskSetHandle	m_taskSet;
-	bool			m_hasBeenWaitedOn;
+TaskSet			*m_successors[MAX_SUCCESSORS];
+TaskSetHandle	m_taskSet;
+bool			m_hasBeenWaitedOn;
 
-	TaskSetFunc	m_func;
-	void		*m_arg;
+TaskSetFunc	m_func;
+void		*m_arg;
 
-	volatile unsigned int	m_startCount;
-	volatile unsigned int	m_completionCount;
-	volatile unsigned int	m_refCount;
+volatile unsigned int	m_startCount;
+volatile unsigned int	m_completionCount;
+volatile unsigned int	m_refCount;
 
-	unsigned int	m_size;
-	SpinLock		m_successorsLock;
+unsigned int	m_size;
+SpinLock		m_successorsLock;
 
-	char	m_setName[MAX_TASKSETNAMELENGTH];
+char	m_setName[MAX_TASKSETNAMELENGTH];
 };*/

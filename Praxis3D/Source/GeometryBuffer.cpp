@@ -212,6 +212,7 @@ void GeometryBuffer::initGeometryPass()
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO);
 	glDrawBuffers(GBufferNumTextures, m_texBuffers);		// Bind geometry pass buffers to write to
+	glClear(GL_COLOR_BUFFER_BIT);
 }
 void GeometryBuffer::initLightPass()
 {

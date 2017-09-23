@@ -31,8 +31,8 @@ public:
 	void sendChange(SystemObject *p_subject, SystemObject *p_observer, BitMask p_changedBits)
 	{
 		// Check if any changes have been done
-		if(p_changedBits)
-			m_objectChangeController->oneTimeChange(p_subject, p_observer, p_changedBits);
+		//if(p_changedBits)
+		//	m_objectChangeController->oneTimeChange(p_subject, p_observer, p_changedBits);
 	}
 
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changes);

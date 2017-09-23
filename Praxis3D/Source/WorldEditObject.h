@@ -183,8 +183,8 @@ public:
 			}
 
 			// If an object is selected, update the its data
-			if(m_selectedObject != nullptr)
-				m_sceneLoader->getChangeController()->sendChange(this, m_selectedObject, Systems::Changes::Spacial::Position);
+			//if(m_selectedObject != nullptr)
+			//	m_sceneLoader->getChangeController()->sendChange(this, m_selectedObject, Systems::Changes::Spacial::Position);
 		}
 	}
 

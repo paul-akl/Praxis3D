@@ -25,6 +25,8 @@ public:
 		GBufferTotalNumTextures
 	};
 
+	typedef unsigned int GBufferTexture;
+
 	GeometryBuffer(unsigned int p_bufferWidth, unsigned int p_bufferHeight);
 	~GeometryBuffer();
 	
@@ -51,6 +53,9 @@ public:
 		case GeometryBuffer::GBufferEmissive:
 			glBindTexture(GL_TEXTURE_2D, m_GBTextures[p_buffer]);
 			break;
+		case GeometryBuffer::GBufferMatProperties:
+			glBindTexture(GL_TEXTURE_2D, m_GBTextures[p_buffer]);
+			break;
 		case GeometryBuffer::GBufferFinal:
 			glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
 			break;
@@ -70,6 +75,9 @@ public:
 		case GeometryBuffer::GBufferEmissive:
 			glBindTexture(GL_TEXTURE_2D, m_GBTextures[p_buffer]);
 			break;
+		case GeometryBuffer::GBufferMatProperties:
+			glBindTexture(GL_TEXTURE_2D, m_GBTextures[p_buffer]);
+			break;
 		case GeometryBuffer::GBufferFinal:
 			glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
 			break;
@@ -82,7 +90,11 @@ public:
 	{
 		glDrawBuffer(GL_COLOR_ATTACHMENT0 + p_buffer);
 	}
-
+	inline void bindBuffersForWriting(const std::vector<GLenum> &p_buffers)
+	{
+		glDrawBuffers(p_buffers.size(), p_buffers.data() );
+	}
+	
 	inline void bindFramebufferForReading(GBufferFramebufferType p_framebufferType)
 	{
 		switch(p_framebufferType)
@@ -106,6 +118,11 @@ public:
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO);
 			break;
 		}
+	}
+
+	inline GLenum getBufferLocation(GBufferTextureType p_buffer)
+	{
+		return GL_COLOR_ATTACHMENT0 + p_buffer;
 	}
 
 protected:

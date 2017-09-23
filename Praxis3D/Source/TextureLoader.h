@@ -211,6 +211,7 @@ protected:
 public:
 	class Texture2DHandle
 	{
+		friend class CommandBuffer;
 		friend class TextureLoader2D;
 		friend class RendererFrontend;
 	public:
@@ -381,8 +382,10 @@ class TextureCubemap : public LoaderBase<TextureLoaderCubemap, TextureCubemap>::
 protected:
 	TextureCubemap(LoaderBase<TextureLoaderCubemap, TextureCubemap> *p_loaderBase, std::string p_combinedName, const std::string(&p_filenames)[CubemapFace_NumOfFaces], size_t p_uniqueID, unsigned int p_handle) : UniqueObject(p_loaderBase, p_uniqueID, p_combinedName), m_handle(p_handle)
 	{
+		m_mipmapLevel = 0;
 		m_textureWidth = 0;
 		m_textureHeight = 0;
+		m_textureFormat = TextureFormat_RGBA;
 
 		for(unsigned int face = CubemapFace_PositiveX; face < CubemapFace_NumOfFaces; face++)
 		{
@@ -396,8 +399,10 @@ protected:
 	}
 	TextureCubemap(LoaderBase<TextureLoaderCubemap, TextureCubemap> *p_loaderBase, std::string p_combinedName, size_t p_uniqueID, unsigned int p_handle) : UniqueObject(p_loaderBase, p_uniqueID, p_combinedName), m_handle(p_handle)
 	{
+		m_mipmapLevel = 0;
 		m_textureWidth = 0;
 		m_textureHeight = 0;
+		m_textureFormat = TextureFormat_RGBA;
 
 		for(unsigned int face = CubemapFace_PositiveX; face < CubemapFace_NumOfFaces; face++)
 		{
@@ -433,6 +438,23 @@ protected:
 
 				if(m_bitmap[face])
 				{
+					// Calculate the number of bytes per pixel
+					unsigned int bytesPerPixel = FreeImage_GetLine(m_bitmap[face]) / FreeImage_GetWidth(m_bitmap[face]);
+					// Calculate the number of samples per pixel
+					unsigned int samplesPerPixel = bytesPerPixel / sizeof(BYTE);
+
+					// Only supporting 24bits or 32bits per pixel
+					if (samplesPerPixel == 3)
+					{
+						m_textureFormat = TextureFormat_RGB;
+						m_bitmap[face] = FreeImage_ConvertTo24Bits(m_bitmap[face]);
+					}
+					else
+					{
+						m_textureFormat = TextureFormat_RGBA;
+						m_bitmap[face] = FreeImage_ConvertTo32Bits(m_bitmap[face]);
+					}
+
 					// Get texture width, height and size
 					m_textureWidth = FreeImage_GetWidth(m_bitmap[face]);
 					m_textureHeight = FreeImage_GetHeight(m_bitmap[face]);
@@ -447,8 +469,7 @@ protected:
 					// FreeImage loads in BGR format, therefore swap of bytes is needed (Or usage of GL_BGR)
 					for(unsigned int i = 0; i < m_size; i++)
 					{
-						blue = m_pixelData[face][i * 4 + 0];
-
+						blue = m_pixelData[face][i * 4 + 0];							// Store blue
 						m_pixelData[face][i * 4 + 0] = m_pixelData[face][i * 4 + 2];	// Red
 						m_pixelData[face][i * 4 + 2] = blue;							// Blue
 					}
@@ -543,12 +564,17 @@ protected:
 
 		return returnError;
 	}*/
-	
+
+	// Returns a void pointer to the pixel data array
+	const inline void **getData() { return (const void**)m_pixelData; }
+
 protected:
+	int m_mipmapLevel;
 	unsigned int m_size;
 	unsigned int m_handle;
 	unsigned int m_textureWidth;
 	unsigned int m_textureHeight;
+	TextureFormat m_textureFormat;
 	unsigned char *m_pixelData[CubemapFace_NumOfFaces];
 
 	FIBITMAP* m_bitmap[CubemapFace_NumOfFaces];
@@ -563,6 +589,8 @@ protected:
 public:
 	class TextureCubemapHandle
 	{
+		friend class CommandBuffer;
+		friend class RendererFrontend;
 		friend class TextureLoaderCubemap;
 	public:
 		~TextureCubemapHandle() { m_textureData->decRefCounter(); }
@@ -682,6 +710,8 @@ public:
 		}
 
 		// Getters
+		inline unsigned int getTextureHeight() const { return m_textureData->m_textureHeight; }
+		inline unsigned int getTextureWidth() const { return m_textureData->m_textureWidth; }
 		inline unsigned int getHandle() const { return m_textureData->m_handle; }
 		inline std::string getCombinedFilename() const { return m_textureData->m_filename; }
 		inline std::string getFaceFilename(unsigned int p_face) const
@@ -692,10 +722,18 @@ public:
 
 			return std::string();
 		}
+		inline int getMipmapLevel() const { return m_textureData->m_mipmapLevel; }
+		inline TextureFormat getTextureFormat() const { return m_textureData->m_textureFormat; }
+
 
 	private:
 		// Increment the reference counter when creating a handle
 		TextureCubemapHandle(TextureCubemap *p_textureData) : m_textureData(p_textureData) { m_textureData->incRefCounter(); }
+
+		inline unsigned int &getHandleRef() { return m_textureData->m_handle; }
+
+		// Returns a void pointer to the pixel data array
+		const inline void **getData() { return m_textureData->getData(); }
 
 		TextureCubemap *m_textureData;
 	};

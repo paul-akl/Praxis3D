@@ -226,6 +226,7 @@ public:
 	// and hiding internal data from outside classes. Private constructor.
 	class ModelHandle
 	{
+		friend class CommandBuffer;
 		friend class ModelLoader;
 		friend class RendererFrontend;
 	public:

@@ -95,7 +95,7 @@ public:
 
 		m_sunPosition = (-m_sunDirection * m_offsetPosition) + m_originPosition;
 
-		postChanges(Systems::Changes::Spacial::Position | Systems::Changes::Spacial::Rotation);
+		//postChanges(Systems::Changes::Spacial::Position | Systems::Changes::Spacial::Rotation);
 	}
 
 	virtual BitMask getDesiredSystemChanges() { return Systems::Changes::Spacial::All; }
