@@ -80,12 +80,8 @@ class SystemObject : public ObservedSubject, public Observer
 	friend SystemBase;
 	friend SystemScene;
 public:
-	SystemObject() : m_initialized(false), m_systemScene(nullptr), m_objectType(Properties::Null) { }
-	SystemObject(SystemScene *p_systemScene, const std::string &p_name, Properties::PropertyID p_objectType)
-		: m_initialized(false), m_systemScene(p_systemScene), m_objectType(p_objectType)
-	{
-		setName(p_name);
-	}
+	SystemObject();
+	SystemObject(SystemScene *p_systemScene, const std::string &p_name, Properties::PropertyID p_objectType);
 
 	virtual ErrorCode init() = 0;
 
@@ -101,6 +97,7 @@ public:
 	virtual PropertySet exportObject() { return PropertySet(Properties::Null); }
 
 	// Getters
+	inline size_t getObjectID() const					{ return m_ID;			}
 	inline void *getParent() const						{ return m_parent;		}
 	inline bool isInitialized() const					{ return m_initialized; }
 	const inline std::string &getName() const			{ return m_name;		}
@@ -128,15 +125,20 @@ public:
 	// null (empty) objects on initialization failure, instead of raw nullptr pointers
 	virtual operator bool() const { return false; }
 
+	// Comparator operator; uses object ID to determine if the object is the same
+	bool operator==(const SystemObject& p_systemObject) const { return m_ID == p_systemObject.m_ID ? true : false; }
+
 protected:
 	Properties::PropertyID m_objectType;
 
-protected:
 	void *m_parent;
 	bool m_initialized;
 
 	std::string m_name;
 	SystemScene *m_systemScene;
+
+private:
+	size_t m_ID;
 };
 
 class SystemTask

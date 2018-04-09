@@ -44,6 +44,8 @@ void RendererFrontend::renderFrame(const SceneObjects &p_sceneObjects, const flo
 	// Clear draw commands at the beggining of each frame
 	m_drawCommands.clear();
 
+	//if(p_sceneObjects.m_staticSkybox.)
+
 	// Load all the objects in the load-to-gpu queue. This needs to be done before any rendering, as objects in this
 	// array might have been also added to objects-to-render arrays, so they need to be loaded first
 	for (decltype(p_sceneObjects.m_objectsToLoad.size()) i = 0, size = p_sceneObjects.m_objectsToLoad.size(); i < size; i++)
@@ -68,8 +70,8 @@ void RendererFrontend::renderFrame(const SceneObjects &p_sceneObjects, const flo
 	m_frameData.m_dirLightDirection.normalize();
 
 	// Set number of lights so they can be send to the shader
-	m_frameData.m_numPointLights = p_sceneObjects.m_pointLights.size();
-	m_frameData.m_numSpotLights = p_sceneObjects.m_spotLights.size();
+	m_frameData.m_numPointLights = (decltype(m_frameData.m_numPointLights))p_sceneObjects.m_pointLights.size();
+	m_frameData.m_numSpotLights = (decltype(m_frameData.m_numSpotLights))p_sceneObjects.m_spotLights.size();
 	
 	// Prepare the geometry buffer for a new frame and a geometry pass
 	m_backend.getGeometryBuffer()->initFrame();

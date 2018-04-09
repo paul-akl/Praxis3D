@@ -52,7 +52,8 @@ protected:
 		// Calculare model-view-projection matrix
 		const Math::Mat4f modelViewProjMatrix = p_viewProjMatrix * p_object.m_baseObjectData.m_modelMat;
 
-		unsigned int materials[MaterialType_NumOfTypes];
+		// Unused for now
+		//unsigned int materials[MaterialType_NumOfTypes];
 
 		for(decltype(p_object.m_materials[0].size()) i = 0; i < MaterialType_NumOfTypes; i++)
 		{
@@ -215,9 +216,6 @@ protected:
 		// Clear update commands, since they have already been passed to backend
 		m_bufferUpdateCommands.clear();
 	}
-	//inline void pass
-
-	//inline void 
 
 	// Recalculates the projection matrix
 	inline void updateProjectionMatrix()

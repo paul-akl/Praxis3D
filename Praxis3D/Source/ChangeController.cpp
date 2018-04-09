@@ -526,16 +526,16 @@ ErrorCode ChangeController::removeSubject(ObservedSubject *p_subject)
 
 inline std::vector<ChangeController::Notification> *ChangeController::getNotifyList(unsigned int p_tlsIndex)
 {
-	LPVOID test = ::TlsGetValue(p_tlsIndex);
+//	LPVOID test = ::TlsGetValue(p_tlsIndex);
 
-	unsigned int test2 = (unsigned int)test;
+//	unsigned int test2 = (unsigned int)test;
 
 	//std::cout << test2 << " ";
 
-	if(test2 > 0)
+//	if(test2 > 0)
 		return static_cast<std::vector<ChangeController::Notification>*>(::TlsGetValue(p_tlsIndex));
-	else
-		return nullptr;
+//	else
+//		return nullptr;
 }
 inline std::vector<ChangeController::OneTimeNotification> &ChangeController::getOneTimeNotifyList(unsigned int p_tlsIndex)
 {

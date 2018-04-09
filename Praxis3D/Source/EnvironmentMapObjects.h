@@ -1,15 +1,22 @@
 #pragma once
 
-#include "Loaders.h"
-#include "System.h"
-#include "TextureLoader.h"
+#include <functional>
 
-class EnvironmentMapStatic : public SystemObject
+#include "BaseGraphicsObjects.h"
+#include "Loaders.h"
+#include "Renderer.h"
+
+class EnvironmentMapObject : public BaseGraphicsObject
 {
 public:
-	EnvironmentMapStatic(SystemScene *p_systemScene, const std::string &p_name, TextureLoaderCubemap::TextureCubemapHandle &p_cubemap, Properties::PropertyID p_objectType = Properties::EnvironmentMapStatic)
-		: SystemObject(p_systemScene, p_name, p_objectType), m_cubemap(p_cubemap) { }
-	virtual ~EnvironmentMapStatic() 
+//	EnvironmentMapObject(SystemScene *p_systemScene, TextureLoaderCubemap::TextureCubemapHandle &p_cubemap)
+//		: BaseGraphicsObject(p_systemScene, "Null", Properties::EnvironmentMapObject), m_cubemap(p_cubemap) { }
+	EnvironmentMapObject(SystemScene *p_systemScene, const std::string &p_name, TextureLoaderCubemap::TextureCubemapHandle &p_cubemap, Properties::PropertyID p_objectType = Properties::EnvironmentMapObject)
+		: BaseGraphicsObject(p_systemScene, p_name, p_objectType), m_cubemap(p_cubemap) 
+	{ 
+		m_cubemapHandle = 0;
+	}
+	virtual ~EnvironmentMapObject() 
 	{
 		m_cubemapHandle = 0;
 	}
@@ -29,12 +36,7 @@ public:
 	ErrorCode loadToVideoMemory()
 	{
 		ErrorCode returnError = ErrorCode::Success;
-
-		//returnError = m_cubemap.loadToVideoMemory();
-
-		//if(returnError == ErrorCode::Success)
-		//	m_cubemapHandle = m_cubemap.getHandle();
-
+		
 		return returnError;
 	}
 
@@ -45,8 +47,8 @@ public:
 		PropertySet propertySet(Properties::ArrayEntry);
 
 		// Add variables
-		propertySet.addProperty(Properties::Type, Properties::EnvironmentMapStatic);
-		propertySet.addProperty(Properties::Position, m_position);
+		propertySet.addProperty(Properties::Type, Properties::EnvironmentMapObject);
+		propertySet.addProperty(Properties::Position, m_baseObjectData.m_position);
 
 		// Iterate over each cubemap face and add its material filename
 		for(unsigned int face = CubemapFace_PositiveX; face < CubemapFace_NumOfFaces; face++)
@@ -65,7 +67,7 @@ public:
 
 	// Setters
 	inline void setCubemap(const TextureLoaderCubemap::TextureCubemapHandle &p_cubemap) { m_cubemap = p_cubemap; }
-	inline void setPosition(const Math::Vec3f &p_position) { m_position = p_position; }
+	inline void setPosition(const Math::Vec3f &p_position) { m_baseObjectData.m_position = p_position; }
 
 	// Getters
 	const inline unsigned int getCubemapHandle() const { return m_cubemap.getHandle(); }
@@ -74,48 +76,9 @@ public:
 
 	virtual BitMask getDesiredSystemChanges() { return Systems::Changes::Spacial::All; }
 	virtual BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
-
-	// Processes any spacial changes
-	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
-	{
-		if(p_changeType & Systems::Changes::Spacial::Position)
-		{
-		}
-
-		if(p_changeType & Systems::Changes::Spacial::Rotation)
-		{
-		}
-
-		if(p_changeType & Systems::Changes::Spacial::Scale)
-		{
-		}
-	}
-
-	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
-	{
-		switch(p_changedBits)
-		{
-		case Systems::Changes::Spacial::Position:
-			return m_position;
-			break;
-		}
-
-		return ObservedSubject::getVec3(p_observer, p_changedBits);
-	}
-
-	const virtual bool getBool(const Observer *p_observer, BitMask p_changedBits) const
-	{
-		//switch(p_changedBits)
-		//{
-		//}
-
-		return ObservedSubject::getBool(p_observer, p_changedBits);
-	}
-
+	
 protected:
 	unsigned int m_cubemapHandle;
-
-	Math::Vec3f m_position;
 
 	TextureLoaderCubemap::TextureCubemapHandle m_cubemap;
 };

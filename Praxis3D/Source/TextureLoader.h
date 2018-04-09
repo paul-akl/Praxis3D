@@ -748,6 +748,9 @@ public:
 								const std::string &p_filenamePosZ, const std::string &p_filenameNegZ, 
 								bool p_startBackgroundLoading = true);
 
+	// Returns a default (empty) cubemap handle that is safe to be used
+	TextureCubemapHandle load() { return TextureCubemapHandle(m_defaultCubemap); }
+
 	TextureCubemapHandle load(const std::string (&p_filenames)[CubemapFace_NumOfFaces], bool p_startBackgroundLoading = true);
 
 	TextureCubemapHandle load(const std::string &p_filename, unsigned int p_textureHandle);

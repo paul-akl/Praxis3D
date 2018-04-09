@@ -45,9 +45,12 @@ enum LoadObjectType : unsigned int
 	LoadObject_TextureCube,
 	LoadObject_Model
 };
-enum MiscLoadObjectType : unsigned int
+enum LoadableObjectType : unsigned int
 {
-	MiscLoadObj_StaticEnvMap
+	LoadableObj_Null,
+	LoadableObj_ModelObj,
+	LoadableObj_ShaderObj,
+	LoadableObj_StaticEnvMap
 };
 enum MaterialType : unsigned int
 {

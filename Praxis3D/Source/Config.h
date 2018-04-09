@@ -120,7 +120,7 @@ namespace Properties
 	Code(DirectionalLight,) \
 	Code(Emissive,) \
 	Code(EnvironmentMapDynamic,) \
-	Code(EnvironmentMapStatic,) \
+	Code(EnvironmentMapObject,) \
 	Code(FragmentShader,) \
 	Code(GeometryShader,) \
 	Code(Graphics,) \
@@ -152,6 +152,7 @@ namespace Properties
 	Code(ShaderModelObject,) \
 	Code(SpotLight,) \
 	Code(SpotLightPoolSize,) \
+	Code(Static,) \
 	Code(TessControlShader,) \
 	Code(TessEvaluationShader,) \
 	Code(TextureTilingFactor,) \
@@ -243,7 +244,7 @@ namespace Properties
 		GetString(DirectionalLight),
 		GetString(Emissive),
 		GetString(EnvironmentMapDynamic),
-		GetString(EnvironmentMapStatic),
+		GetString(EnvironmentMapObject),
 		GetString(FragmentShader),
 		GetString(GeometryShader),
 		GetString(Graphics),
@@ -275,6 +276,7 @@ namespace Properties
 		GetString(ShaderModelObject),
 		GetString(SpotLight),
 		GetString(SpotLightPoolSize),
+		GetString(Static),
 		GetString(TessControlShader),
 		GetString(TessEvaluationShader),
 		GetString(TextureTilingFactor),

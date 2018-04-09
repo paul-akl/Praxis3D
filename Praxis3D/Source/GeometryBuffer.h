@@ -92,7 +92,7 @@ public:
 	}
 	inline void bindBuffersForWriting(const std::vector<GLenum> &p_buffers)
 	{
-		glDrawBuffers(p_buffers.size(), p_buffers.data() );
+		glDrawBuffers((GLsizei)p_buffers.size(), p_buffers.data() );
 	}
 	
 	inline void bindFramebufferForReading(GBufferFramebufferType p_framebufferType)

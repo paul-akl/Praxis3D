@@ -24,6 +24,9 @@ ErrorCode RendererScene::init()
 	// Create a default directional light, in case it is not created upon loading a scene
 	m_directionalLight = new DirectionalLightObject(this, "Default Directional Light", DirectionalLightDataSet());
 	
+	// Create a default static environment map, so it can be used while a real one hasn't been loaded yet
+	m_sceneObjects.m_staticSkybox = new EnvironmentMapObject(this, "default", Loaders::textureCubemap().load());
+
 	return returnError;
 }
 
@@ -71,10 +74,11 @@ ErrorCode RendererScene::preload()
 		size = m_modelObjPool.getPoolSize(); i < size && numAllocObjecs < totalNumAllocObjs; i++)
 	{
 		// If current object is allocated and is not loaded to memory already
-		if(m_modelObjPool[i].allocated() && !(m_modelObjPool[i].getObject()->loadedToMemory()))
+		if(m_modelObjPool[i].allocated() && !(m_modelObjPool[i].getObject()->isLoadedToMemory()))
 		{
 			// Add the object to be loaded later
-			m_objectsBeingLoaded.push_back(LoadableGraphicsObjectAndIndex(m_modelObjPool[i].getObject(), m_modelObjPool[i].getIndex()));
+			//m_objectsBeingLoaded.push_back(LoadableGraphicsObjectAndIndex(m_modelObjPool[i].getObject(), m_modelObjPool[i].getIndex()));
+			m_objectsBeingLoaded.emplace_back(m_modelObjPool[i].getObject(), m_modelObjPool[i].getIndex());
 
 			// Increment the number of allocated objects (early bail mechanism)
 			numAllocObjecs++;
@@ -86,21 +90,38 @@ ErrorCode RendererScene::preload()
 		size = m_shaderObjPool.getPoolSize(); i < size && numAllocObjecs < totalNumAllocObjs; i++)
 	{
 		// If current object is allocated and is not loaded to memory already
-		if(m_shaderObjPool[i].allocated() && !(m_shaderObjPool[i].getObject()->loadedToMemory()))
+		if(m_shaderObjPool[i].allocated() && !(m_shaderObjPool[i].getObject()->isLoadedToMemory()))
 		{
 			// Add the object to be loaded later
-			m_objectsBeingLoaded.push_back(LoadableGraphicsObjectAndIndex(m_shaderObjPool[i].getObject(), m_shaderObjPool[i].getIndex()));
+			//m_objectsBeingLoaded.push_back(LoadableGraphicsObjectAndIndex(m_shaderObjPool[i].getObject(), m_shaderObjPool[i].getIndex()));
+			m_objectsBeingLoaded.emplace_back(m_shaderObjPool[i].getObject(), m_shaderObjPool[i].getIndex());
 
 			// Increment the number of allocated objects (early bail mechanism)
 			numAllocObjecs++;
 		}
 	}
 	
+	// Start loading Environment Map Objects 
+	for (decltype(m_envMapPool.getPoolSize()) i = 0, numAllocObjecs = 0, totalNumAllocObjs = m_envMapPool.getNumAllocated(),
+		size = m_envMapPool.getPoolSize(); i < size && numAllocObjecs < totalNumAllocObjs; i++)
+	{
+		// If current object is allocated and is not loaded to memory already
+		if (m_envMapPool[i].allocated() && !(m_envMapPool[i].getObject()->isLoadedToMemory()))
+		{
+			// Add the object to be loaded later
+			//m_objectsBeingLoaded.push_back(LoadableGraphicsObjectAndIndex(m_envMapPool[i].getObject(), m_shaderObjPool[i].getIndex()));
+			m_objectsBeingLoaded.emplace_back(m_envMapPool[i].getObject(), m_shaderObjPool[i].getIndex());
+
+			// Increment the number of allocated objects (early bail mechanism)
+			numAllocObjecs++;
+		}
+	}
+
 	// Load every object to memory. It still works in parallel, however,
 	// it returns only when all objects have finished loading (simulating sequential call)
 	TaskManagerLocator::get().parallelFor(size_t(0), m_objectsBeingLoaded.size(), size_t(1), [=](size_t i)
 	{
-		m_objectsBeingLoaded[i].m_loadableObject->loadToMemory();
+		m_objectsBeingLoaded[i].LoadToMemory();
 	});
 
 	return ErrorCode::Success;
@@ -116,10 +137,10 @@ void RendererScene::loadInBackground()
 		size = m_modelObjPool.getPoolSize(); i < size && numAllocObjecs < totalNumAllocObjs; i++)
 	{
 		// If current object is allocated and is not loaded to memory already
-		if(m_modelObjPool[i].allocated() && !(m_modelObjPool[i].getObject()->loadedToMemory()))
+		if(m_modelObjPool[i].allocated() && !(m_modelObjPool[i].getObject()->isLoadedToMemory()))
 		{
 			// Add object to 'being loaded' list and start loading it in a background thread
-			m_objectsBeingLoaded.push_back(LoadableGraphicsObjectAndIndex(m_modelObjPool[i].getObject(), m_modelObjPool[i].getIndex()));
+			m_objectsBeingLoaded.push_back(LoadableGraphicsObject(m_modelObjPool[i].getObject(), m_modelObjPool[i].getIndex()));
 			TaskManagerLocator::get().startBackgroundThread(std::bind(&ModelObject::loadToMemory, m_modelObjPool[i].getObject()));
 
 			// Increment the number of allocated objects (early bail mechanism)
@@ -132,10 +153,10 @@ void RendererScene::loadInBackground()
 		size = m_shaderObjPool.getPoolSize(); i < size && numAllocObjecs < totalNumAllocObjs; i++)
 	{
 		// If current object is allocated and is not loaded to memory already
-		if(m_shaderObjPool[i].allocated() && !(m_shaderObjPool[i].getObject()->loadedToMemory()))
+		if(m_shaderObjPool[i].allocated() && !(m_shaderObjPool[i].getObject()->isLoadedToMemory()))
 		{
 			// Add object to 'being loaded' list and start loading it in a background thread
-			m_objectsBeingLoaded.push_back(LoadableGraphicsObjectAndIndex(m_shaderObjPool[i].getObject(), m_shaderObjPool[i].getIndex()));
+			m_objectsBeingLoaded.push_back(LoadableGraphicsObject(m_shaderObjPool[i].getObject(), m_shaderObjPool[i].getIndex()));
 			TaskManagerLocator::get().startBackgroundThread(std::bind(&ModelObject::loadToMemory, m_shaderObjPool[i].getObject()));
 
 			// Increment the number of allocated objects (early bail mechanism)
@@ -225,16 +246,29 @@ void RendererScene::update(const float p_deltaTime)
 		maxObjects = Config::rendererVar().objects_loaded_per_frame; i < size;)
 	{
 		// If the object has loaded to memory already, add to load queue
-		if(m_objectsBeingLoaded[i].m_loadableObject->loadedToMemory())
+		if(m_objectsBeingLoaded[i].isLoadedToMemory())
 		{
 			// If object should be activated after loading (for example wasn't set to be deleted while loading)
-			if(m_objectsBeingLoaded[i].m_activateAfterLoading)
+			if(m_objectsBeingLoaded[i].isActivatedAfterLoading())
 			{
 				// Make object active, so it is passed to the renderer for drawing
-				m_objectsBeingLoaded[i].m_loadableObject->setActive(true);
+				m_objectsBeingLoaded[i].setObjectActive(true);
 
-				// Add the object to objects-to-load list, that will be sent to the renderer to process
-				m_sceneObjects.m_objectsToLoad.push_back(&m_objectsBeingLoaded[i].m_loadableObject->getRenderableObjectData());
+				switch (m_objectsBeingLoaded[i].getObjectType())
+				{
+				case LoadableObj_ModelObj:
+
+					// Add the object to objects-to-load list, that will be sent to the renderer to process
+					m_sceneObjects.m_objectsToLoad.push_back(&m_objectsBeingLoaded[i].m_objectData.m_modelObject->getRenderableObjectData());
+					
+					break;
+
+				case LoadableObj_StaticEnvMap:
+
+					m_sceneObjects.m_staticSkyboxToLoad = m_objectsBeingLoaded[i].m_objectData.m_envMapStatic;
+					
+					break;
+				}
 			}
 			else
 			{
@@ -254,45 +288,6 @@ void RendererScene::update(const float p_deltaTime)
 			i++;
 	}
 
-	//	 _______________________________
-	//	|								|
-	//	|		Misc Loaded Objects		|
-	//	|_______________________________|
-	//
-	// Iterate over currently loading objects
-	/*for (decltype(m_miscObjectsBeingLoaded.size()) i = 0, size = m_miscObjectsBeingLoaded.size(),
-		maxObjects = Config::rendererVar().objects_loaded_per_frame; i < size;)
-	{
-		// If the object has loaded to memory already, add to load queue
-		if (m_miscObjectsBeingLoaded[i].m_loadableObject->loadedToMemory())
-		{
-			// If object should be activated after loading (for example wasn't set to be deleted while loading)
-			if (m_miscObjectsBeingLoaded[i].m_activateAfterLoading)
-			{
-				// Make object active, so it is passed to the renderer for drawing
-				//m_miscObjectsBeingLoaded[i].m_loadableObject->setActive(true);
-
-				// Add the object to objects-to-load list, that will be sent to the renderer to process
-				m_sceneObjects.m_objectsToLoad.push_back(&m_miscObjectsBeingLoaded[i].m_loadableObject->getRenderableObjectData());
-			}
-			else
-			{
-				// Remove the object from pool
-				removeObjectFromPool(&m_miscObjectsBeingLoaded[i]);
-			}
-
-			// Remove the object from the current list
-			m_miscObjectsBeingLoaded.erase(m_miscObjectsBeingLoaded.begin() + i);
-
-			// If the max number of object to be processed per frame has been reached, break from the loop
-			if (--maxObjects == 0)
-				break;
-		}
-		// If current object is still loading, advance the index
-		else
-			i++;
-	}*/
-
 	//	 ___________________________
 	//	|							|
 	//	|		Model Objects		|
@@ -309,7 +304,7 @@ void RendererScene::update(const float p_deltaTime)
 			numAllocObjecs++;
 
 			// Check if object is active, if so, update it and assign it to 'to-be-rendered' array
-			if(object->active())
+			if(object->isObjectActive())
 			{
 				// Update object
 				object->update(p_deltaTime);
@@ -342,7 +337,7 @@ void RendererScene::update(const float p_deltaTime)
 			numAllocObjecs++;
 
 			// Check if object is active, if so, update it and assign it to 'to-be-rendered' array
-			if(object->active())
+			if(object->isObjectActive())
 			{
 				// Update object
 				object->update(p_deltaTime);
@@ -429,8 +424,8 @@ SystemObject *RendererScene::createObject(const PropertySet &p_properties)
 	case Properties::DirectionalLight:
 		newObject = loadDirectionalLight(p_properties);
 		break;
-	case Properties::EnvironmentMapStatic:
-		newObject = loadEnvMapStatic(p_properties);
+	case Properties::EnvironmentMapObject:
+		newObject = loadEnvironmentMap(p_properties);
 		break;
 	case Properties::PointLight:
 		newObject = loadPointLight(p_properties);
@@ -459,7 +454,7 @@ ErrorCode RendererScene::destroyObject(SystemObject *p_systemObject)
 			for(decltype(m_modelObjPool.getPoolSize()) i = 0, size = m_modelObjPool.getPoolSize(); i < size; i++)
 			{
 				// If object is allocated and the pointer addresses match
-				if(m_modelObjPool[i].allocated() && m_modelObjPool[i].getObject() == p_systemObject)
+				if(m_modelObjPool[i].allocated() && *(m_modelObjPool[i].getObject()) == *p_systemObject)
 				{
 					auto *loadableObject = getCurrentlyLoadingObject(m_modelObjPool[i].getObject());
 
@@ -637,9 +632,11 @@ CameraObject *RendererScene::loadCameraObject(const PropertySet & p_properties)
 	
 	return m_camera;
 }
-EnvironmentMapStatic *RendererScene::loadEnvMapStatic(const PropertySet &p_properties)
+EnvironmentMapObject *RendererScene::loadEnvironmentMap(const PropertySet &p_properties)
 {
-	EnvironmentMapStatic *newObject = nullptr;
+	EnvironmentMapObject *newObject = nullptr;
+	ErrorCode objPoolError = ErrorCode::Failure;
+	bool staticEnvMap = false;
 
 	auto &materials = p_properties.getPropertySetByID(Properties::Materials);
 
@@ -649,9 +646,30 @@ EnvironmentMapStatic *RendererScene::loadEnvMapStatic(const PropertySet &p_prope
 		for(unsigned int face = CubemapFace_PositiveX; face < CubemapFace_NumOfFaces; face++)
 			filenames[face] = materials.getPropertySet(face).getPropertyByID(Properties::Filename).getString();
 
-	newObject = new EnvironmentMapStatic(this,
-										 p_properties.getPropertyByID(Properties::Name).getString(),
-										 Loaders::textureCubemap().load(filenames, false));
+	// Check if the environment map should be a static one
+	staticEnvMap = p_properties.getPropertyByID(Properties::Static).getBool();
+
+	if(staticEnvMap)
+	{
+		newObject = new EnvironmentMapObject(this,
+			p_properties.getPropertyByID(Properties::Name).getString(),
+			Loaders::textureCubemap().load(filenames, false));
+
+		m_skybox = newObject;
+	}
+	else
+	{
+		objPoolError = m_envMapPool.add(this,
+			p_properties.getPropertyByID(Properties::Name).getString(),
+			Loaders::textureCubemap().load(filenames, false));
+
+		// If adding a new object failed, log an error and return a nullptr
+		if (objPoolError == ErrorCode::Success)
+		{
+			ErrHandlerLoc::get().log(objPoolError, ErrorSource::Source_SceneLoader);
+			return nullptr;
+		}
+	}
 
 	// Load property data
 	for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
@@ -663,11 +681,6 @@ EnvironmentMapStatic *RendererScene::loadEnvMapStatic(const PropertySet &p_prope
 			break;
 		}
 	}
-
-	newObject->loadToMemory();
-	newObject->loadToVideoMemory();
-
-	m_skybox = newObject;
 
 	return newObject;
 }

@@ -109,7 +109,7 @@ void RendererBackend::processDrawing(const DrawCommands &p_drawCommands, const U
 	}
 }
 
-void RendererBackend::processDrawing(const ScreenSpaceDrawCommands &p_screenSpaceDrawCommands, const UniformFrameData & p_frameData)
+void RendererBackend::processDrawing(const ScreenSpaceDrawCommands &p_screenSpaceDrawCommands, const UniformFrameData &p_frameData)
 {
 	for(decltype(p_screenSpaceDrawCommands.size()) i = 0, size = p_screenSpaceDrawCommands.size(); i < size; i++)
 	{

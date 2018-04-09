@@ -120,7 +120,7 @@ protected:
 	DeferredRendererState *m_rendererState;
 	static SingleTriangle m_fullscreenTriangle;
 
-	EnvironmentMapStatic *m_cubemap;
+	EnvironmentMapObject *m_cubemap;
 
 	RendererBackend::DrawCommands m_objects;
 };

@@ -6,6 +6,7 @@
 
 #include "ClockLocator.h"
 #include "Engine.h"
+#include "ObjectDirectory.h"
 #include "TaskManagerLocator.h"
 #include "WindowLocator.h"
 
@@ -172,7 +173,12 @@ ErrorCode Engine::init()
 	loaderError = Loaders::textureCubemap().init();
 	if(loaderError != ErrorCode::Success)
 		ErrHandlerLoc::get().log(loaderError, ErrorSource::Source_Engine);
-	
+
+	// Initialize the object directory
+	loaderError = ObjectDirectory::init();
+	if(loaderError != ErrorCode::Success)
+		ErrHandlerLoc::get().log(loaderError, ErrorSource::Source_Engine);
+
 	//  ___________________________________
 	// |								   |
 	// |	ENGINE STATE INITIALIZATION	   |

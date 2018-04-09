@@ -27,28 +27,12 @@ struct RenderableObjectData
 	RenderableObjectData(ModelLoader::ModelHandle p_model, ShaderLoader::ShaderProgram *p_shader, GraphicsData &p_baseObjectData) :
 		m_model(p_model),
 		m_shader(p_shader),
+		m_loadedToMemory(false),
 		m_baseObjectData(p_baseObjectData) { }
-
-	/*void loadToVideoMemory()
-	{
-		ErrorCode error;
-
-		// Load model to video memory
-		if(!ErrHandlerLoc::get().ifSuccessful(m_model.loadToVideoMemory(), error))
-			ErrHandlerLoc::get().log(error);
-
-		// Load shader to video memory
-		if(!ErrHandlerLoc::get().ifSuccessful(m_shader->loadToVideoMemory(), error))
-			ErrHandlerLoc::get().log(error);
-
-		// Iterate over all materials and load them to video memory; log an error if loading failed
-		for(decltype(m_numMaterials) i = 0; i < m_numMaterials; i++)
-			for(int matType = 0; matType < Model::NumOfModelMaterials; matType++)
-				if(!ErrHandlerLoc::get().ifSuccessful(m_materials[matType][i].loadToVideoMemory(), error))
-					ErrHandlerLoc::get().log(error);
-	}*/
-
+	
 	GraphicsData &m_baseObjectData;
+
+	bool m_loadedToMemory;
 
 	ModelLoader::ModelHandle m_model;
 	ShaderLoader::ShaderProgram *m_shader;

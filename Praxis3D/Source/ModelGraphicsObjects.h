@@ -8,12 +8,12 @@
 
 class RendererScene;
 
-class ModelObject : public LoadableGraphicsObject
+class ModelObject : public BaseGraphicsObject
 {
 	//friend class RendererScene;
 public:
 	ModelObject(SystemScene *p_systemScene, const std::string &p_name, ModelLoader::ModelHandle &p_model, Properties::PropertyID p_objectType = Properties::ModelObject)
-		: LoadableGraphicsObject(p_systemScene, p_name, p_objectType, p_model, Loaders::shader().load())
+		: BaseGraphicsObject(p_systemScene, p_name, p_objectType), m_objectData(p_model, Loaders::shader().load(), m_baseObjectData)
 	{
 		m_customShader = false;
 		m_baseObjectData.m_heightScale = Config::graphicsVar().height_scale;
@@ -22,7 +22,7 @@ public:
 	}
 	ModelObject(SystemScene *p_systemScene, const std::string &p_name, ModelLoader::ModelHandle &p_model, 
 				ShaderLoader::ShaderProgram *p_shader, Properties::PropertyID p_objectType = Properties::ModelObject)
-		: LoadableGraphicsObject(p_systemScene, p_name, p_objectType, p_model, p_shader)
+		: BaseGraphicsObject(p_systemScene, p_name, p_objectType), m_objectData(p_model, p_shader, m_baseObjectData)
 	{
 		m_customShader = true;
 		m_baseObjectData.m_heightScale = Config::graphicsVar().height_scale;
@@ -57,20 +57,20 @@ public:
 	void loadToMemory()
 	{
 		// Load model to RAM
-		m_rendererData.m_model.loadToMemory();
+		m_objectData.m_model.loadToMemory();
 
 		// Get material arrays from the model (texture filenames only)
-		decltype(m_rendererData.m_model.getMaterialArrays()) materials = m_rendererData.m_model.getMaterialArrays();
+		decltype(m_objectData.m_model.getMaterialArrays()) materials = m_objectData.m_model.getMaterialArrays();
 		
 		// Reserve space in the material arrays before populating them
 		for(int matType = 0; matType < MaterialType_NumOfTypes; matType++)
 		{
-			m_rendererData.m_materials[matType].reserve(materials.m_numMaterials);
-			m_rendererData.m_defaultMaterial[matType].reserve(materials.m_numMaterials);
+			m_objectData.m_materials[matType].reserve(materials.m_numMaterials);
+			m_objectData.m_defaultMaterial[matType].reserve(materials.m_numMaterials);
 		}
 		
 		// Save number of materials (from model file) for later
-		m_rendererData.m_numMaterials = materials.m_numMaterials;
+		m_objectData.m_numMaterials = materials.m_numMaterials;
 
 		// Resize the material array to the number of materials loaded from model
 		// Material count from model is the correct one (since there can't be more textures than meshes)
@@ -98,8 +98,8 @@ public:
 		for(decltype(m_materialNames.m_numMaterials) i = 0; i < m_materialNames.m_numMaterials; i++)
 			for(unsigned int matType = 0; matType < MaterialType_NumOfTypes; matType++)
 			{
-				m_rendererData.m_materials[matType].push_back(Loaders::texture2D().load(m_materialNames.m_materials[matType][i].m_filename, static_cast<MaterialType>(matType), false));
-				m_rendererData.m_defaultMaterial[matType].push_back(m_materialNames.m_materials[matType][i].m_defaultMaterial);
+				m_objectData.m_materials[matType].push_back(Loaders::texture2D().load(m_materialNames.m_materials[matType][i].m_filename, static_cast<MaterialType>(matType), false));
+				m_objectData.m_defaultMaterial[matType].push_back(m_materialNames.m_materials[matType][i].m_defaultMaterial);
 			}
 		
 		ErrorCode error = ErrorCode::Success;
@@ -108,13 +108,13 @@ public:
 		for(decltype(m_materialNames.m_numMaterials) i = 0; i < m_materialNames.m_numMaterials; i++)
 			// Load each material type to memory. If it returns an error, log it
 			for(int matType = 0; matType < MaterialType_NumOfTypes; matType++)
-				if(!ErrHandlerLoc::get().ifSuccessful(m_rendererData.m_materials[matType][i].loadToMemory(), error))
+				if(!ErrHandlerLoc::get().ifSuccessful(m_objectData.m_materials[matType][i].loadToMemory(), error))
 					ErrHandlerLoc::get().log(error, ErrorSource::Source_GraphicsObject);
 		
 		// Put the height value into the alpha channel of the normal map
 		/*for(decltype(m_materialNames.m_numMaterials) i = 0; i < m_materialNames.m_numMaterials; i++)
-			m_rendererData.m_materials[Config::rendererVar().heightmap_combine_texture][i].setColorChannel(
-				m_rendererData.m_materials[Model::ModelMat_height][i],
+			m_objectData.m_materials[Config::rendererVar().heightmap_combine_texture][i].setColorChannel(
+				m_objectData.m_materials[Model::ModelMat_height][i],
 				static_cast<TextureColorChannelOffset>(Config::rendererVar().heightmap_combine_channel));*/
 
 
@@ -122,7 +122,7 @@ public:
 		m_materialNames.clear();
 
 		// Set an atomic flag, to indicate that the loaded has been completed
-		m_loadedToMemory = true;
+		setLoadedToMemory(true);
 	}
 
 	// Loads model and materials from memory to video memory; should only be called by renderer thread
@@ -132,13 +132,13 @@ public:
 		ErrorCode error = ErrorCode::Success;
 
 		// Load the model to video memory; log an error if it occurs
-		//if(!ErrHandlerLoc::get().ifSuccessful(m_rendererData.m_model.loadToVideoMemory(), error))
+		//if(!ErrHandlerLoc::get().ifSuccessful(m_objectData.m_model.loadToVideoMemory(), error))
 		//	ErrHandlerLoc::get().log(error);
 
 		// Iterate over all materials and load them to video memory; log an error if loading failed
-		for(decltype(m_rendererData.m_numMaterials) i = 0; i < m_rendererData.m_numMaterials; i++)
+		for(decltype(m_objectData.m_numMaterials) i = 0; i < m_objectData.m_numMaterials; i++)
 			for(int matType = 0; matType < MaterialType_NumOfTypes; matType++)
-				if(!ErrHandlerLoc::get().ifSuccessful(m_rendererData.m_materials[matType][i].loadToVideoMemory(), error))
+				if(!ErrHandlerLoc::get().ifSuccessful(m_objectData.m_materials[matType][i].loadToVideoMemory(), error))
 					ErrHandlerLoc::get().log(error);
 
 		return ErrorCode::Success;
@@ -165,7 +165,7 @@ public:
 
 		// Add model
 		auto &models = propertySet.addPropertySet(Properties::Models);
-		models.addProperty(Properties::Filename, m_rendererData.m_model.getFilename());
+		models.addProperty(Properties::Filename, m_objectData.m_model.getFilename());
 
 		// Add material root property set
 		auto &materials = propertySet.addPropertySet(Properties::Materials);
@@ -178,12 +178,12 @@ public:
 		materialTypes[MaterialType_Combined] = new PropertySet(Properties::RMHAO);
 
 		// Iterate over each material and add it only if it's not using the default texture
-		for(decltype(m_rendererData.m_numMaterials) i = 0; i < m_rendererData.m_numMaterials; i++)
+		for(decltype(m_objectData.m_numMaterials) i = 0; i < m_objectData.m_numMaterials; i++)
 			for(int matType = 0; matType < MaterialType_NumOfTypes; matType++)
-				if(!m_rendererData.m_defaultMaterial[matType][i])
+				if(!m_objectData.m_defaultMaterial[matType][i])
 				{
 					auto &materialEntry = materialTypes[matType]->addPropertySet(Properties::ArrayEntry);
-					materialEntry.addProperty(Properties::Filename, m_rendererData.m_materials[matType][i].getFilename());
+					materialEntry.addProperty(Properties::Filename, m_objectData.m_materials[matType][i].getFilename());
 					materialEntry.addProperty(Properties::Index, (int)i);
 				}
 
@@ -202,24 +202,24 @@ public:
 
 			// Iterate over all shader types and add the ones that are present as properties
 			for(unsigned int i = 0; i < ShaderType_NumOfTypes; i++)
-				if(m_rendererData.m_shader->shaderPresent(i))
+				if(m_objectData.m_shader->shaderPresent(i))
 				{
 					switch(i)
 					{
 					case ShaderType_Fragment:
-						shaders.addProperty(Properties::FragmentShader, m_rendererData.m_shader->getShaderFilename(i));
+						shaders.addProperty(Properties::FragmentShader, m_objectData.m_shader->getShaderFilename(i));
 						break;
 					case ShaderType_Geometry:
-						shaders.addProperty(Properties::GeometryShader, m_rendererData.m_shader->getShaderFilename(i));
+						shaders.addProperty(Properties::GeometryShader, m_objectData.m_shader->getShaderFilename(i));
 						break;
 					case ShaderType_Vertex:
-						shaders.addProperty(Properties::VertexShader, m_rendererData.m_shader->getShaderFilename(i));
+						shaders.addProperty(Properties::VertexShader, m_objectData.m_shader->getShaderFilename(i));
 						break;
 					case ShaderType_TessControl:
-						shaders.addProperty(Properties::TessControlShader, m_rendererData.m_shader->getShaderFilename(i));
+						shaders.addProperty(Properties::TessControlShader, m_objectData.m_shader->getShaderFilename(i));
 						break;
 					case ShaderType_TessEvaluation:
-						shaders.addProperty(Properties::TessEvaluationShader, m_rendererData.m_shader->getShaderFilename(i));
+						shaders.addProperty(Properties::TessEvaluationShader, m_objectData.m_shader->getShaderFilename(i));
 						break;
 					}
 				}
@@ -240,10 +240,11 @@ public:
 			m_materialNames.m_materials[p_matType][p_materialIndex].m_defaultMaterial = false;
 		}
 	}
-
+	
 	// Getters
 	const inline bool hasCustomShader() const { return m_customShader; }
 	const inline bool isAffectedByLighting() const { return m_affectedByLighting; }
+	inline RenderableObjectData &getRenderableObjectData() { return m_objectData; }
 
 	// Setters
 	inline void setLighting(const bool p_flag)					{ m_affectedByLighting = p_flag;						}
@@ -271,5 +272,7 @@ protected:
 	
 	// If the object hasn't got a custom shader, the regular geometry shader in the renderer is used
 	bool m_customShader;
+
+	RenderableObjectData m_objectData;
 };
 

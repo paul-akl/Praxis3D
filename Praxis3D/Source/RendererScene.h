@@ -23,7 +23,7 @@ struct SceneObjects
 	SceneObjects() : m_camera(nullptr) { }
 
 	const CameraObject *m_camera;
-	EnvironmentMapStatic *m_staticSkybox;
+	EnvironmentMapObject *m_staticSkybox;
 	const DirectionalLightDataSet *m_directionalLight;
 
 	std::vector<RenderableObjectData*> m_modelObjects;
@@ -32,6 +32,8 @@ struct SceneObjects
 	std::vector<RenderableObjectData*> m_postLightingObjects;
 
 	std::vector<RenderableObjectData*> m_objectsToLoad;
+
+	EnvironmentMapObject *m_staticSkyboxToLoad;
 
 	std::vector<PointLightDataSet> m_pointLights;
 	std::vector<SpotLightDataSet> m_spotLights;
@@ -74,63 +76,21 @@ public:
 	const inline SceneObjects &getSceneObjects() const { return m_sceneObjects; }
 	
 private:
-	// Used to hold info on objects that are being loaded in a background thread
-	struct LoadableGraphicsObjectAndIndex
-	{
-		LoadableGraphicsObjectAndIndex() : m_loadableObject(nullptr), m_index(0), m_activateAfterLoading(true) { }
-		LoadableGraphicsObjectAndIndex(LoadableGraphicsObject *p_loadableObject, size_t p_index)
-			: m_loadableObject(p_loadableObject), m_index(p_index), m_activateAfterLoading(true) { }
-
-		// The actual object that's being loaded
-		LoadableGraphicsObject *m_loadableObject;
-		
-		// This should always be true, unless object was set to be removed before loading completed
-		bool m_activateAfterLoading;
-
-		// Unique index of the object in corresponding pool (used for fast access)
-		size_t m_index;
-	};
-
-	struct LoadableMiscObjectAndIndex
-	{
-		LoadableMiscObjectAndIndex(EnvironmentMapStatic *p_staticEnvMap) :
-			m_miscObject(p_staticEnvMap),
-			m_objectType(MiscLoadObj_StaticEnvMap),
-			m_index(0), 
-			m_activateAfterLoading(true) { }
-
-		union MiscObject
-		{
-			MiscObject(EnvironmentMapStatic *p_staticEnvMap) : m_staticEnvMap(p_staticEnvMap) { }
-
-			EnvironmentMapStatic *m_staticEnvMap;
-		};
-
-		// This should always be true, unless object was set to be removed before loading completed
-		bool m_activateAfterLoading;
-
-		// Unique index of the object in corresponding pool (used for fast access)
-		size_t m_index;
-
-		MiscObject m_miscObject;
-		MiscLoadObjectType m_objectType;
-	};
-
 	// Removes an object from a pool, by iterating checking each pool for matched index and name
-	inline void removeObjectFromPool(LoadableGraphicsObjectAndIndex *p_objectAndIndex)
+	inline void removeObjectFromPool(LoadableGraphicsObject *p_object)
 	{
 		// Remove object from the pool determined by object's type
-		switch(p_objectAndIndex->m_loadableObject->getObjectType())
+		switch(p_object->getObjectType())
 		{
 		case Properties::ModelObject:
 
 			// Get a pool object by it's index
-			auto *object = m_modelObjPool.getObject(p_objectAndIndex->m_index);
+			auto *object = m_modelObjPool.getObject(p_object->getIndex());
 
 			// If object is valid, is allocated, and it's name matches, remove it from the pool and return from the function
-			if(object != nullptr && object->allocated() && object->getObject()->getName() == p_objectAndIndex->m_loadableObject->getName())
+			if(object != nullptr && object->allocated() && object->getObject()->getName() == p_object->getName())
 			{
-				m_modelObjPool.remove(p_objectAndIndex->m_index);
+				m_modelObjPool.remove(p_object->getIndex());
 				return;
 			}
 
@@ -139,28 +99,28 @@ private:
 	}
 	
 	// Checks if an object is allocated in an object pool
-	inline bool checkIfAllocated(const LoadableGraphicsObjectAndIndex &p_objectAndIndex)
+	inline bool checkIfAllocated(const LoadableGraphicsObject &p_object)
 	{
 		// Remove object from the pool determined by object's type
-		switch(p_objectAndIndex.m_loadableObject->getObjectType())
+		switch(p_object.getObjectType())
 		{
 		case Properties::ModelObject:
 			
 			// Get a pool object by it's index and check if it's allocated
-			return m_modelObjPool.getObject(p_objectAndIndex.m_index)->allocated();
+			return m_modelObjPool.getObject(p_object.getIndex())->allocated();
 			
 			break;
 		}
 	}
 
 	// Finds a match in the currently being loaded object array; returns null pointer if no match is found
-	inline LoadableGraphicsObjectAndIndex *getCurrentlyLoadingObject(LoadableGraphicsObject *p_loadableObject)
+	inline LoadableGraphicsObject *getCurrentlyLoadingObject(SystemObject *p_loadableObject)
 	{
 		// Iterate over currently loading objects
 		for(decltype(m_objectsBeingLoaded.size()) i = 0, size = m_objectsBeingLoaded.size(); i < size;)
 		{
 			// Compare pointers, if match is found, return the object
-			if(m_objectsBeingLoaded[i].m_loadableObject == p_loadableObject)
+			if(m_objectsBeingLoaded[i] == p_loadableObject)
 				return &m_objectsBeingLoaded[i];
 		}
 
@@ -171,7 +131,7 @@ private:
 	// Object creators (factories)
 	ModelObject *loadModelObject(const PropertySet &p_properties);
 	CameraObject *loadCameraObject(const PropertySet &p_properties);
-	EnvironmentMapStatic *loadEnvMapStatic(const PropertySet &p_properties);
+	EnvironmentMapObject *loadEnvironmentMap(const PropertySet &p_properties);
 	DirectionalLightObject *loadDirectionalLight(const PropertySet &p_properties);
 	PointLightObject *loadPointLight(const PropertySet &p_properties);
 	SpotLightObject *loadSpotLight(const PropertySet &p_properties);
@@ -181,13 +141,12 @@ private:
 	ObjectPool<ModelObject> m_shaderObjPool;
 	ObjectPool<PointLightObject> m_pointLightPool;
 	ObjectPool<SpotLightObject> m_spotLightPool;
-	ObjectPool<EnvironmentMapStatic> m_envMapPool;
+	ObjectPool<EnvironmentMapObject> m_envMapPool;
 	
 	// Stores objects that are currently being loaded to memory in background thread
-	std::vector<LoadableGraphicsObjectAndIndex> m_objectsBeingLoaded;
-	std::vector<LoadableMiscObjectAndIndex> m_miscObjectsBeingLoaded;
+	std::vector<LoadableGraphicsObject> m_objectsBeingLoaded;
 	
-	EnvironmentMapStatic *m_skybox;
+	EnvironmentMapObject *m_skybox;
 
 	// Only one camera present at a time
 	CameraObject *m_camera;
