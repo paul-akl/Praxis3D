@@ -5,7 +5,12 @@
 class LightingPass : public RenderPass
 {
 public:
-	LightingPass(RendererFrontend &p_renderer) : RenderPass(p_renderer) { }
+	LightingPass(RendererFrontend &p_renderer) : 
+		RenderPass(p_renderer), 
+		m_pointLightBuffer(BufferType_Uniform, BufferUsageHint_DynamicDraw),
+		m_spotLightBuffer(BufferType_Uniform, BufferUsageHint_DynamicDraw) { }
+
+	~LightingPass() { }
 
 	ErrorCode init()
 	{
@@ -90,6 +95,6 @@ private:
 	std::vector<GeometryBuffer::GBufferTexture> m_emissiveAndFinalBuffers;
 
 	// Light buffers
-	RendererFrontend::LightUniformBuffer m_pointLightBuffer, 
-										 m_spotLightBuffer;
+	RendererFrontend::ShaderBuffer	m_pointLightBuffer, 
+									m_spotLightBuffer;
 };

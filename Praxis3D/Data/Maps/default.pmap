@@ -434,7 +434,7 @@
 					"Name": "DirectionalLight 1",
 					"Color": "1.0, 1.0, 1.0",
 					"Direction": "0.0, 0.25, 1.0",
-					"Intensity": "10.1"
+					"Intensity": "1.1"
 				},
 				{
 					"Type": "PointLight",

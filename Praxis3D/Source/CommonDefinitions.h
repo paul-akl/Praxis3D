@@ -17,9 +17,10 @@ enum CommandType : unsigned int
 
 enum BufferType : unsigned int
 {
-	BufferType_Uniform		= GL_UNIFORM_BUFFER,
-	BufferType_Array		= GL_ARRAY_BUFFER,
-	BufferType_ElementArray = GL_ELEMENT_ARRAY_BUFFER
+	BufferType_Uniform			= GL_UNIFORM_BUFFER,
+	BufferType_Array			= GL_ARRAY_BUFFER,
+	BufferType_ElementArray		= GL_ELEMENT_ARRAY_BUFFER,
+	BufferType_ShaderStorage	= GL_SHADER_STORAGE_BUFFER
 };
 enum BufferUpdateType : unsigned int
 {
@@ -28,14 +29,19 @@ enum BufferUpdateType : unsigned int
 };
 enum BufferUsageHint : unsigned int
 {
-	BufferUsageHint_Stream  = GL_STREAM_DRAW,
-	BufferUsageHint_Static  = GL_STATIC_DRAW,
-	BufferUsageHint_Dynamic = GL_DYNAMIC_DRAW
+	BufferUsageHint_StreamDraw		= GL_STREAM_DRAW,
+	BufferUsageHint_StaticDraw		= GL_STATIC_DRAW,
+	BufferUsageHint_DynamicDraw		= GL_DYNAMIC_DRAW,
+	BufferUsageHint_DynamicCopy		= GL_DYNAMIC_COPY
 };
 enum LightBufferBinding : unsigned int
 {
 	LightBufferBinding_PointLight = 0,
 	LightBufferBinding_SpotLight
+};
+enum SSBOBinding : unsigned int
+{
+	SSBOBinding_HDR = 0
 };
 enum LoadObjectType : unsigned int
 {
@@ -62,6 +68,7 @@ enum MaterialType : unsigned int
 	MaterialType_Roughness = MaterialType_NumOfTypes,
 	MaterialType_Metalness,
 	MaterialType_Height,
+	MaterialType_Blur,
 	MaterialType_AmbientOcclusion,
 	MaterialType_NumOfTypes_Extended
 };

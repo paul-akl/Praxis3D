@@ -109,10 +109,14 @@ ErrorCode GeometryBuffer::init()
 		glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
 		glTexImage2D(GL_TEXTURE_2D, 0, Config::FramebfrVariables().gl_final_buffer_internal_format, m_bufferWidth, m_bufferHeight, 0, 
 					 Config::FramebfrVariables().gl_final_buffer_texture_format, Config::FramebfrVariables().gl_final_buffer_texture_type, NULL);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Config::FramebfrVariables().gl_final_buffer_min_filter);
+		// If eye adaption (HDR) is enabled, buffer should use a different min_filter (to support mipmapping)
+		if(Config::graphicsVar().eye_adaption)
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Config::FramebfrVariables().gl_final_buffer_min_filter);
+		else
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Config::FramebfrVariables().gl_final_buffer_min_filter_HDR);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, Config::FramebfrVariables().gl_final_buffer_mag_filter);
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GBufferFinal, GL_TEXTURE_2D, m_finalBuffer, 0);
-
+		
 		// Check for errors and return an error in case of one
 		m_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		if(m_status != GL_FRAMEBUFFER_COMPLETE)
@@ -120,6 +124,8 @@ ErrorCode GeometryBuffer::init()
 
 		// Restore the default FBO, so it doesn't get changed from the outside of the class
 		//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+		glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 	}
 	return returnCode;
 }
@@ -175,7 +181,7 @@ void GeometryBuffer::setBufferSize(GLuint p_buffer, unsigned int p_bufferWidth, 
 		case GBufferFinal:
 			// Resize depth buffer
 			glBindTexture(GL_TEXTURE_2D, m_depthBuffer);
-			glTexImage2D(GL_TEXTURE_2D, 0, Config::FramebfrVariables().gl_depth_buffer_internal_format, p_bufferWidth, p_bufferHeight, 0, 
+			glTexImage2D(GL_TEXTURE_2D, 10, Config::FramebfrVariables().gl_depth_buffer_internal_format, p_bufferWidth, p_bufferHeight, 0, 
 						 Config::FramebfrVariables().gl_depth_buffer_texture_format, Config::FramebfrVariables().gl_depth_buffer_texture_type, NULL);
 			
 			// Resize the final buffer
@@ -243,7 +249,7 @@ void GeometryBuffer::initFinalPass()
 	// Bind final framebuffer
 	glActiveTexture(GL_TEXTURE0 + GBufferFinal);
 	glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
-
+	
 	// Set the default framebuffer to be drawn to
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 

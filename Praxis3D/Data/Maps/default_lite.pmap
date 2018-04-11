@@ -707,7 +707,7 @@
 					"Name": "PointLight 1",
 					"Attenuation": "0.0f, 0.0f, 1.0f",
 					"Color": "1.0f, 1.0f, 1.0f",
-					"Intensity": "100.0f",
+					"Intensity": "10.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"Position": "-19.2421f, 10.0f, 5.45328f"
 				},
@@ -716,7 +716,7 @@
 					"Name": "PointLight 2",
 					"Attenuation": "0.0f, 0.0f, 1.0f",
 					"Color": "1.0f, 1.0f, 1.0f",
-					"Intensity": "100.0f",
+					"Intensity": "10.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"Position": "9.12898f, 7.98369f, 9.59357f"
 				},
@@ -725,7 +725,7 @@
 					"Name": "PointLight 3",
 					"Attenuation": "0.0f, 0.0f, 1.0f",
 					"Color": "1.0f, 1.0f, 1.0f",
-					"Intensity": "100.0f",
+					"Intensity": "10.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"Position": "-6.94746f, 8.59811f, 7.54629f"
 				},

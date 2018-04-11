@@ -7,6 +7,8 @@ class GeometryPass : public RenderPass
 public:
 	GeometryPass(RendererFrontend &p_renderer) : RenderPass(p_renderer) { }
 
+	~GeometryPass() { }
+
 	ErrorCode init()
 	{
 		ErrorCode returnError;

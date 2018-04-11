@@ -6,6 +6,7 @@ struct UniformFrameData
 {
 	UniformFrameData()
 	{
+		m_dirLightIntensity = 0.0f;
 		m_numPointLights = 0;
 		m_numSpotLights = 0;
 	}
@@ -25,6 +26,9 @@ struct UniformFrameData
 	Math::Vec3f m_dirLightColor,
 				m_dirLightDirection;
 	float		m_dirLightIntensity;
+
+	// Delta time of the last frame
+	float		m_deltaTime;
 
 	// Current number of lights in the light buffers
 	unsigned int m_numPointLights,

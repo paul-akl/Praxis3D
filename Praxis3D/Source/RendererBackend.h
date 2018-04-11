@@ -739,6 +739,7 @@ protected:
 					//p_command.m_objectData.m_shaderData.m_uniformUpdater.generateUpdateList();
 					p_command.m_objectData.m_shaderData.m_uniformUpdater.updateTextureUniforms();
 					p_command.m_objectData.m_shaderData.m_uniformUpdater.updateBlockBindingPoints();
+					p_command.m_objectData.m_shaderData.m_uniformUpdater.updateSSBBindingPoints();
 				}
 				// If shader loading failed
 				else

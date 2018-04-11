@@ -145,60 +145,8 @@ public:
 		friend class CommandBuffer;
 		friend class ShaderLoader;
 		friend class RendererFrontend;
-	public:
-		/*inline void addShader(Shader *p_shader)
-		{
-			if(p_shader != nullptr)
-			{
-				switch(p_shader->m_shaderType)
-				{
-				case ShaderLoader::ShaderFragment:
-					m_shaders[ArrayFragment] = p_shader;
-					break;
-				case ShaderLoader::ShaderGeometry:
-					m_shaders[ArrayGeometry] = p_shader;
-					break;
-				case ShaderLoader::ShaderVertex:
-					m_shaders[ArrayVertex] = p_shader;
-					break;
-				case ShaderLoader::ShaderTessControl:
-					m_shaders[ArrayTessControl] = p_shader;
-					m_tessellated = true;
-					break;
-				case ShaderLoader::ShaderTessEvaluation:
-					m_shaders[ArrayTessEvaluation] = p_shader;
-					m_tessellated = true;
-					break;
-				}
-			}
-		}
-		inline void addShader(ShaderLoader::ShaderArrayTypes p_shaderType, const std::string &p_filename)
-		{
-			if(!p_filename.empty())
-			{
-				switch(p_shaderType)
-				{
-				case ShaderLoader::ArrayFragment:
-					m_shaders[ArrayFragment] = new Shader(p_filename, ShaderFragment);
-					break;
-				case ShaderLoader::ArrayGeometry:
-					m_shaders[ArrayGeometry] = new Shader(p_filename, ShaderGeometry);
-					break;
-				case ShaderLoader::ArrayVertex:
-					m_shaders[ArrayVertex] = new Shader(p_filename, ShaderVertex);
-					break;
-				case ShaderLoader::ArrayTessControl:
-					m_shaders[ArrayTessControl] = new Shader(p_filename, ShaderTessControl);
-					m_tessellated = true;
-					break;
-				case ShaderLoader::ArrayTessEvaluation:
-					m_shaders[ArrayTessEvaluation] = new Shader(p_filename, ShaderTessEvaluation);
-					m_tessellated = true;
-					break;
-				}
-			}
-		}*/
 
+	public:
 		inline void addShader(ShaderType p_shaderType, const std::string &p_filename)
 		{
 			m_shaderFilename[p_shaderType] = p_filename;

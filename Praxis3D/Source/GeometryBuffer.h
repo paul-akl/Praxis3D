@@ -42,6 +42,7 @@ public:
 	virtual void initLightPass();		// Bind buffers from geometry pass so they can be accessed when rendering lights
 	virtual void initFinalPass();		// Bind the final buffer to 'read from' and the default screen buffer to 'write to'
 	
+	// Buffer binding functions
 	inline void bindBufferForReading(GBufferTextureType p_buffer, int p_activeTexture)
 	{
 		glActiveTexture(GL_TEXTURE0 + p_activeTexture);
@@ -95,6 +96,7 @@ public:
 		glDrawBuffers((GLsizei)p_buffers.size(), p_buffers.data() );
 	}
 	
+	// Framebuffer binding functions
 	inline void bindFramebufferForReading(GBufferFramebufferType p_framebufferType)
 	{
 		switch(p_framebufferType)
@@ -120,6 +122,19 @@ public:
 		}
 	}
 
+	// Generates mipmaps for the texture inside the gbuffer
+	inline void generateMipmap(GBufferTextureType p_buffer)
+	{
+		glActiveTexture(GL_TEXTURE0);
+
+		// Bind the supplied texture
+		glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
+
+		// Generate mipmaps
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+
+	// Getters
 	inline GLenum getBufferLocation(GBufferTextureType p_buffer)
 	{
 		return GL_COLOR_ATTACHMENT0 + p_buffer;

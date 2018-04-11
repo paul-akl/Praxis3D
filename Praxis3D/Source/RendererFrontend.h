@@ -8,15 +8,16 @@ class RenderPass;
 
 class RendererFrontend
 {
+	friend class BlurPass;
 	friend class GeometryPass;
 	friend class LightingPass;
 	friend class FinalPass;
 	friend class ReflectionPass;
 public:
-	// A handle for buffer that holds data of lights
-	struct LightUniformBuffer
+	// A handle for a uniform or shader storage buffer
+	struct ShaderBuffer
 	{
-		LightUniformBuffer() : m_bufferType(BufferType_Uniform), m_bufferUsage(BufferUsageHint_Dynamic)
+		ShaderBuffer(BufferType p_bufferType, BufferUsageHint p_usageHint) : m_bufferType(p_bufferType), m_bufferUsage(p_usageHint)
 		{
 			m_data = 0;
 			m_size = 0;
@@ -36,7 +37,7 @@ public:
 	};
 
 	RendererFrontend() { }
-	~RendererFrontend() { }
+	~RendererFrontend();
 
 	ErrorCode init();
 
@@ -164,7 +165,7 @@ protected:
 			for(int matType = 0; matType < MaterialType_NumOfTypes; matType++)
 				queueForLoading(p_objectData.m_materials[matType][i]);
 	}
-	inline void queueForLoading(LightUniformBuffer &p_lightBuffer)
+	inline void queueForLoading(ShaderBuffer &p_lightBuffer)
 	{
 		m_loadCommands.emplace_back(p_lightBuffer.m_handle,
 			p_lightBuffer.m_bufferType,
@@ -174,7 +175,7 @@ protected:
 			p_lightBuffer.m_data);
 	}
 
-	inline void queueForUpdate(LightUniformBuffer &p_lightBuffer)
+	inline void queueForUpdate(ShaderBuffer &p_lightBuffer)
 	{
 		m_bufferUpdateCommands.emplace_back(p_lightBuffer.m_handle,
 			p_lightBuffer.m_offset,

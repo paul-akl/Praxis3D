@@ -8,6 +8,7 @@ class RenderPass
 {
 public:
 	RenderPass(RendererFrontend &p_renderer) : m_renderer(p_renderer) { }
+	virtual ~RenderPass() { }
 
 	virtual ErrorCode init() = 0;
 

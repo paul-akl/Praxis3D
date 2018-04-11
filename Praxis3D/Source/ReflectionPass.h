@@ -7,6 +7,8 @@ class ReflectionPass : public RenderPass
 public:
 	ReflectionPass(RendererFrontend &p_renderer) : RenderPass(p_renderer) { }
 
+	~ReflectionPass() { }
+
 	ErrorCode init()
 	{
 		ErrorCode returnError;

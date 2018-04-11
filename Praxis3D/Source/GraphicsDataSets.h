@@ -46,9 +46,9 @@ struct RenderableObjectData
 
 //	 ===========================================================================================================
 //	|												WARNING:													|
-//	|				The layout of light data sets below are order-sensitive. Do not edit.						|
+//	|					The layout of data sets below are order-sensitive. Do not edit.							|
 //	|																											|
-//	| Their member variables are arranged by the order of buffer offsets used in light pass shader.				|
+//	|		Their member variables are arranged by the order of buffer offsets used in shaders.					|
 //	| Editing their location would break the synchronization, since these structs are put into buffers as is.	|
 //	 ===========================================================================================================
 
@@ -97,4 +97,14 @@ struct SpotLightDataSet
 	Math::Vec3f m_attenuation;
 	float m_intensity;
 	float m_cutoffAngle;
+};
+
+struct HDRDataSet
+{
+	HDRDataSet()
+	{
+		m_screenBrightness = 0.5f;
+	}
+
+	float m_screenBrightness;
 };

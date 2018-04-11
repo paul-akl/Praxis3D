@@ -19,12 +19,14 @@ ErrorCode ShaderUniformUpdater::generateUpdateList()
 	returnError = generatePerModelList();
 	returnError = generatePerMeshList();
 	returnError = generateUniformBlockList();
+	returnError = generateSSBBlockList();
 
 	m_numUpdatesPerFrame = m_updatesPerFrame.size();
 	m_numUpdatesPerModel = m_updatesPerModel.size();
 	m_numUpdatesPerMesh = m_updatesPerMesh.size();
 	m_numTextureUpdates = m_textureUpdates.size();
 	m_numUniformBlockUpdates = m_uniformBlockUpdates.size();
+	m_numSSBBBlockUpdates = m_SSBBlockUpdates.size();
 
 	// Check for errors, and cache it if it exists, since we are returning the error to higher layer
 	if(returnError != ErrorCode::Success)
@@ -48,6 +50,7 @@ ErrorCode ShaderUniformUpdater::generateTextureUpdateList()
 	uniformList.push_back(new MatPropertiesMapUniform(m_shaderHandle));
 	uniformList.push_back(new BlurMapUniform(m_shaderHandle));
 	uniformList.push_back(new FinalMapUniform(m_shaderHandle));
+	uniformList.push_back(new BlurTextureUniform(m_shaderHandle));
 
 	// Cubemap texture uniforms
 	uniformList.push_back(new DynamicEnvironmentMapUniform(m_shaderHandle));
@@ -65,7 +68,7 @@ ErrorCode ShaderUniformUpdater::generateTextureUpdateList()
 	uniformList.push_back(new NormalTextureUniform(m_shaderHandle));
 	uniformList.push_back(new EmissiveTextureUniform(m_shaderHandle));
 	uniformList.push_back(new CombinedTextureUniform(m_shaderHandle));
-	
+		
 	// Go through each uniform and check if it is valid
 	// If it is, add it to the update list, if not, delete it
 	for(decltype(uniformList.size()) i = 0, size = uniformList.size(); i < size; i++)
@@ -111,8 +114,11 @@ ErrorCode ShaderUniformUpdater::generatePerFrameList()
 	uniformList.push_back(new ScreenSizeUniform(m_shaderHandle));
 
 	// Misc
+	uniformList.push_back(new DeltaTimeMSUniform(m_shaderHandle));
+	uniformList.push_back(new DeltaTimeSUniform(m_shaderHandle));
 	uniformList.push_back(new ElapsedTimeUniform(m_shaderHandle));
 	uniformList.push_back(new GammaUniform(m_shaderHandle));
+	uniformList.push_back(new EyeAdaptionRateUniform(m_shaderHandle));
 
 	// Go through each uniform and check if it is valid
 	// If it is, add it to the update list, if not, delete it
@@ -184,6 +190,26 @@ ErrorCode ShaderUniformUpdater::generateUniformBlockList()
 			m_uniformBlockUpdates.push_back(uniformBlockList[i]);
 		else
 			delete uniformBlockList[i];
+
+	return returnError;
+}
+ErrorCode ShaderUniformUpdater::generateSSBBlockList()
+{
+	ErrorCode returnError = ErrorCode::Success;
+
+	// Make a vector of SSBO classes and populate it
+	std::vector<BaseShaderStorageBlock*> SSBBlockList;
+
+	// HDR SSBO
+	SSBBlockList.push_back(new HDRShaderStorageBuffer(m_shaderHandle));
+
+	// Go through each uniform and check if it is valid
+	// If it is, add it to the update list, if not, delete it
+	for(decltype(SSBBlockList.size()) i = 0, size = SSBBlockList.size(); i < size; i++)
+		if(SSBBlockList[i]->isValid())
+			m_SSBBlockUpdates.push_back(SSBBlockList[i]);
+		else
+			delete SSBBlockList[i];
 
 	return returnError;
 }

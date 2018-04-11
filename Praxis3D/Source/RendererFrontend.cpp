@@ -1,35 +1,56 @@
 
+#include "BlurPass.h"
 #include "GeometryPass.h"
 #include "LightingPass.h"
 #include "FinalPass.h"
 #include "ReflectionPass.h"
 #include "RendererFrontend.h"
 
+RendererFrontend::~RendererFrontend()
+{
+	// Delete rendering passes
+	//for(decltype(m_renderingPasses.size()) i = 0, size = m_renderingPasses.size(); i < size; i++)
+	//{
+		//delete m_renderingPasses[i];
+	//}
+}
+
 ErrorCode RendererFrontend::init()
 {
 	ErrorCode returnCode = ErrorCode::Success;
+
+	// If eye adaption is disabled, eye adaption rate should be set to 0
+	if(!Config::graphicsVar().eye_adaption)
+	{
+		Config::m_graphicsVar.eye_adaption_rate = 0.0f;
+	}
 
 	// Get the current screen size
 	m_frameData.m_screenSize.x = Config::graphicsVar().current_resolution_x;
 	m_frameData.m_screenSize.y = Config::graphicsVar().current_resolution_y;
 
 	// Initialize renderer backend and check if it was successful
-	if (!ErrHandlerLoc::get().ifSuccessful(m_backend.init(m_frameData), returnCode))
+	if(!ErrHandlerLoc::get().ifSuccessful(m_backend.init(m_frameData), returnCode))
 		return returnCode;
 
 	// Add geometry rendering pass, if it was initialized successfuly
 	GeometryPass *geometryPass = new GeometryPass(*this);
-	if (geometryPass->init() == ErrorCode::Success)
+	if(geometryPass->init() == ErrorCode::Success)
 		m_renderingPasses.push_back(geometryPass);
 
 	// Add lighting rendering pass, if it was initialized successfuly
 	LightingPass *lightingPass = new LightingPass(*this);
-	if (lightingPass->init() == ErrorCode::Success)
+	if(lightingPass->init() == ErrorCode::Success)
 		m_renderingPasses.push_back(lightingPass);
+
+	// Add blur rendering pass, if it was initialized successfully
+	//BlurPass *blurPass = new BlurPass(*this);
+	//if(blurPass->init() == ErrorCode::Success)
+	//	m_renderingPasses.push_back(blurPass);
 
 	// Add final rendering pass, if it was initialized successfuly
 	FinalPass *finalPass = new FinalPass(*this);
-	if (finalPass->init() == ErrorCode::Success)
+	if(finalPass->init() == ErrorCode::Success)
 		m_renderingPasses.push_back(finalPass);
 
 	updateProjectionMatrix();

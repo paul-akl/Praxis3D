@@ -103,6 +103,7 @@ void Config::init()
 
 	// Graphics variables
 	AddVariablePredef(m_graphicsVar, double_buffering);
+	AddVariablePredef(m_graphicsVar, eye_adaption);
 	AddVariablePredef(m_graphicsVar, multisampling);
 	AddVariablePredef(m_graphicsVar, alpha_size);
 	AddVariablePredef(m_graphicsVar, dir_shadow_res_x);
@@ -113,6 +114,7 @@ void Config::init()
 	AddVariablePredef(m_graphicsVar, multisample_samples);
 	AddVariablePredef(m_graphicsVar, alpha_threshold);
 	AddVariablePredef(m_graphicsVar, emissive_threshold);
+	AddVariablePredef(m_graphicsVar, eye_adaption_rate);
 	AddVariablePredef(m_graphicsVar, fog_color_x);
 	AddVariablePredef(m_graphicsVar, fog_color_y);
 	AddVariablePredef(m_graphicsVar, fog_color_z);
@@ -214,7 +216,9 @@ void Config::init()
 	AddVariablePredef(m_rendererVar, gaussian_blur_vertical_frag_shader);
 	AddVariablePredef(m_rendererVar, gaussian_blur_vertical_vert_shader);
 	AddVariablePredef(m_rendererVar, gaussian_blur_horizontal_frag_shader);
-	AddVariablePredef(m_rendererVar, gaussian_blur_horizontal_vert_shader);
+	AddVariablePredef(m_rendererVar, gaussian_blur_horizontal_vert_shader); 
+	AddVariablePredef(m_rendererVar, blur_pass_vert_shader);
+	AddVariablePredef(m_rendererVar, blur_pass_frag_shader);
 	AddVariablePredef(m_rendererVar, light_pass_vert_shader);
 	AddVariablePredef(m_rendererVar, light_pass_frag_shader);
 	AddVariablePredef(m_rendererVar, final_pass_vert_shader);
@@ -246,6 +250,8 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, modelViewMatUniform);
 	AddVariablePredef(m_shaderVar, modelViewProjectionMatUniform);
 	AddVariablePredef(m_shaderVar, screenSizeUniform);
+	AddVariablePredef(m_shaderVar, deltaTimeMSUniform);
+	AddVariablePredef(m_shaderVar, deltaTimeSUniform);
 	AddVariablePredef(m_shaderVar, elapsedTimeUniform);
 	AddVariablePredef(m_shaderVar, gammaUniform);
 	AddVariablePredef(m_shaderVar, alphaCullingUniform);
@@ -289,6 +295,8 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, fogColorUniform);
 	AddVariablePredef(m_shaderVar, billboardScaleUniform);
 	AddVariablePredef(m_shaderVar, depthTypeUniform);
+	AddVariablePredef(m_shaderVar, eyeAdaptionRate);
+	AddVariablePredef(m_shaderVar, HDRSSBuffer);
 	AddVariablePredef(m_shaderVar, testMatUniform);
 	AddVariablePredef(m_shaderVar, testVecUniform);
 	AddVariablePredef(m_shaderVar, testFloatUniform);

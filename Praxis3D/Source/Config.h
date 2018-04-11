@@ -381,6 +381,7 @@ class Config
 	friend class DebugUIScript;
 	friend class DeferredRenderer;
 	friend class ErrorHandler;
+	friend class RendererFrontend;
 	friend class Window;
 public:
 	struct ConfigFileVariables
@@ -467,6 +468,7 @@ public:
 			gl_blur_buffer_wrap_s_method = GL_CLAMP_TO_EDGE;
 			gl_blur_buffer_wrap_t_method = GL_CLAMP_TO_EDGE;
 
+			gl_final_buffer_min_filter_HDR = GL_NEAREST_MIPMAP_NEAREST;
 			gl_final_buffer_min_filter = GL_NEAREST;
 			gl_final_buffer_mag_filter = GL_NEAREST;
 			gl_final_buffer_s_method = GL_CLAMP_TO_EDGE;
@@ -515,6 +517,7 @@ public:
 		int gl_blur_buffer_wrap_s_method;
 		int gl_blur_buffer_wrap_t_method;
 
+		float gl_final_buffer_min_filter_HDR;
 		float gl_final_buffer_min_filter;
 		float gl_final_buffer_mag_filter;
 		int gl_final_buffer_s_method;
@@ -536,6 +539,7 @@ public:
 		GraphicsVariables()
 		{
 			double_buffering = true;
+			eye_adaption = true;
 			multisampling = true;
 			alpha_size = 8;
 			current_resolution_x = 0;
@@ -550,6 +554,7 @@ public:
 			rendering_res_y = 900;
 			alpha_threshold = 0.0f;
 			emissive_threshold = 0.3f;
+			eye_adaption_rate = 1.0f;
 			fog_color_x = 0.55f;
 			fog_color_y = 0.55f;
 			fog_color_z = 0.55f;
@@ -569,6 +574,7 @@ public:
 		}
 
 		bool double_buffering;
+		bool eye_adaption;
 		bool multisampling;
 		int alpha_size;
 		int current_resolution_x;
@@ -583,6 +589,7 @@ public:
 		int rendering_res_y;
 		float alpha_threshold;
 		float emissive_threshold;
+		float eye_adaption_rate;
 		float fog_color_x;
 		float fog_color_y;
 		float fog_color_z;
@@ -762,6 +769,8 @@ public:
 			gaussian_blur_vertical_vert_shader = "gaussianBlurVertical.vert";
 			gaussian_blur_horizontal_frag_shader = "gaussianBlurHorizontal.frag";
 			gaussian_blur_horizontal_vert_shader = "gaussianBlurHorizontal.vert";
+			blur_pass_vert_shader = "blurPass.vert";
+			blur_pass_frag_shader = "blurPass.frag";
 			light_pass_vert_shader = "lightPass.vert";
 			light_pass_frag_shader = "lightPass.frag";
 			final_pass_vert_shader = "finalPass.vert";
@@ -806,6 +815,8 @@ public:
 		std::string gaussian_blur_vertical_vert_shader;
 		std::string gaussian_blur_horizontal_frag_shader;
 		std::string gaussian_blur_horizontal_vert_shader;
+		std::string blur_pass_vert_shader;
+		std::string blur_pass_frag_shader;
 		std::string light_pass_vert_shader;
 		std::string light_pass_frag_shader;
 		std::string final_pass_vert_shader;
@@ -840,6 +851,8 @@ public:
 			modelViewMatUniform = "modelViewMat";
 			modelViewProjectionMatUniform = "MVP";
 			screenSizeUniform = "screenSize";
+			deltaTimeMSUniform = "deltaTimeMS";
+			deltaTimeSUniform = "deltaTimeS";
 			elapsedTimeUniform = "elapsedTime";
 			gammaUniform = "gamma";
 			alphaCullingUniform = "alphaCulling";
@@ -882,6 +895,7 @@ public:
 			normalTextureUniform = "normalTexture";
 			specularTextureUniform = "specularTexture";
 			emissiveTextureUniform = "emissiveTexture";
+			blurTextureUniform = "blurTexture";
 			glossTextureUniform = "glossTexture";
 			heightTextureUniform = "heightTexture";
 			combinedTextureUniform = "combinedTexture";
@@ -893,6 +907,9 @@ public:
 			fogColorUniform = "fogColor";
 			billboardScaleUniform = "billboardScale";
 			depthTypeUniform = "depthType";
+
+			eyeAdaptionRate = "eyeAdaptionRate";
+			HDRSSBuffer = "HDRBuffer";
 
 			testMatUniform = "testMat";
 			testVecUniform = "testVec";
@@ -906,6 +923,8 @@ public:
 		std::string modelViewMatUniform;
 		std::string modelViewProjectionMatUniform;
 		std::string screenSizeUniform;
+		std::string deltaTimeMSUniform;
+		std::string deltaTimeSUniform;
 		std::string elapsedTimeUniform;
 		std::string gammaUniform;
 		std::string alphaCullingUniform;
@@ -948,6 +967,7 @@ public:
 		std::string normalTextureUniform;
 		std::string specularTextureUniform;
 		std::string emissiveTextureUniform;
+		std::string blurTextureUniform;
 		std::string glossTextureUniform;
 		std::string heightTextureUniform;
 		std::string combinedTextureUniform;
@@ -959,6 +979,9 @@ public:
 		std::string fogColorUniform;
 		std::string billboardScaleUniform;
 		std::string depthTypeUniform;
+
+		std::string eyeAdaptionRate;
+		std::string HDRSSBuffer;
 
 		std::string testMatUniform;
 		std::string testVecUniform;

@@ -30,7 +30,7 @@ DeferredRenderer::~DeferredRenderer()
 ErrorCode DeferredRenderer::init()
 {
 	ErrorCode returnCode = ErrorCode::Success;
-
+	
 	// Get the current screen size
 	m_screenSize.x = Config::graphicsVar().current_resolution_x;
 	m_screenSize.y = Config::graphicsVar().current_resolution_y;

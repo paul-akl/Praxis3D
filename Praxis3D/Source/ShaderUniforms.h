@@ -67,6 +67,42 @@ protected:
 	const std::string m_name;
 	unsigned int m_uniformHandle;
 	const unsigned int m_shaderHandle;
+}; 
+class BaseShaderStorageBlock
+{
+public:
+	BaseShaderStorageBlock(const std::string &p_name, const unsigned int p_shaderHandle)
+		: m_name(p_name), m_shaderHandle(p_shaderHandle)
+	{
+		// Get the SSBO location (returns -1 in case it is not present in the shader)
+		m_SSBOHandle = glGetProgramResourceIndex(m_shaderHandle, GL_SHADER_STORAGE_BLOCK, p_name.c_str());
+	}
+
+	// Returns true if the uniform is present in the shader
+	const inline bool isValid() const { return (m_SSBOHandle != -1); }
+	/*const inline int getBlockSize() const
+	{
+		int blockSize = 0;
+
+		// Get the uniform block size
+		glGetActiveUniformBlockiv(m_shaderHandle, m_SSBOHandle, GL_UNIFORM_BLOCK_DATA_SIZE, &blockSize);
+
+		return blockSize;
+	}*/
+
+	// Updates the uniform block binding index
+	virtual void update(const UniformData &p_uniformData) = 0;
+
+protected:
+	const inline void updateBlockBinding(const unsigned int p_bindingPoint) const
+	{
+		// Bind the uniform buffer at the specified binding point
+		glUniformBlockBinding(m_shaderHandle, m_SSBOHandle, p_bindingPoint);
+	}
+
+	const std::string m_name;
+	unsigned int m_SSBOHandle;
+	const unsigned int m_shaderHandle;
 };
 
 class ModelMatUniform : public BaseUniform
@@ -147,6 +183,26 @@ public:
 		glUniform2i(m_uniformHandle, 
 					p_uniformData.m_frameData.m_screenSize.x, 
 					p_uniformData.m_frameData.m_screenSize.y);
+	}
+};
+class DeltaTimeMSUniform : public BaseUniform
+{
+public:
+	DeltaTimeMSUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().deltaTimeMSUniform, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniform1f(m_uniformHandle, ClockLocator::get().getDeltaMSF());
+	}
+};
+class DeltaTimeSUniform : public BaseUniform
+{
+public:
+	DeltaTimeSUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().deltaTimeSUniform, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniform1f(m_uniformHandle, ClockLocator::get().getDeltaSecondsF());
 	}
 };
 class ElapsedTimeUniform : public BaseUniform
@@ -260,7 +316,7 @@ private:
 class TextureTilingFactorUniform : public BaseUniform
 {
 public:
-	TextureTilingFactorUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().textureTilingFactorUniform, p_shaderHandle), m_currentTexTillingFactor(0.0) { }
+	TextureTilingFactorUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().textureTilingFactorUniform, p_shaderHandle), m_currentTexTillingFactor(0.0f) { }
 
 	void update(const UniformData &p_uniformData)
 	{
@@ -275,6 +331,25 @@ public:
 
 private:
 	float m_currentTexTillingFactor;
+}; 
+class EyeAdaptionRateUniform : public BaseUniform
+{
+public:
+	EyeAdaptionRateUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().eyeAdaptionRate, p_shaderHandle), eyeAdaptionRate(0.0f) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		// Check if the same value is not already assigned (a small optimization)
+		if(eyeAdaptionRate != Config::graphicsVar().eye_adaption_rate)
+		{
+			eyeAdaptionRate = Config::graphicsVar().eye_adaption_rate;
+
+			glUniform1f(m_uniformHandle, eyeAdaptionRate);
+		}
+	}
+
+private:
+	float eyeAdaptionRate;
 };
 
 class DirLightColorUniform : public BaseUniform
@@ -572,6 +647,16 @@ public:
 		glUniform1i(m_uniformHandle, MaterialType_Emissive);
 	}
 };
+class BlurTextureUniform : public BaseUniform
+{
+public:
+	BlurTextureUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().blurTextureUniform, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniform1i(m_uniformHandle, MaterialType_Blur);
+	}
+};
 class CombinedTextureUniform : public BaseUniform
 {
 public:
@@ -730,5 +815,15 @@ public:
 	void update(const UniformData &p_uniformData)
 	{
 		updateBlockBinding(LightBufferBinding_SpotLight);
+	}
+};
+class HDRShaderStorageBuffer : public BaseShaderStorageBlock
+{
+public:
+	HDRShaderStorageBuffer(unsigned int p_shaderHandle) : BaseShaderStorageBlock(Config::shaderVar().spotLightBuffer, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		updateBlockBinding(SSBOBinding_HDR);
 	}
 };

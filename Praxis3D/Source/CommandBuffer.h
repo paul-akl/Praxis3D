@@ -153,7 +153,7 @@ public:
 				queueForLoading(p_objectData.m_materials[matType][i]);
 	}
 
-	inline void queueForUpdate(RendererFrontend::LightUniformBuffer &p_lightBuffer)
+	inline void queueForUpdate(RendererFrontend::ShaderBuffer &p_lightBuffer)
 	{
 		// Calculate the sort key
 		RendererBackend::DrawCommands::value_type::first_type sortKey = 0;

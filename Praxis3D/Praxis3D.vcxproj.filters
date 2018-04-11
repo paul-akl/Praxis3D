@@ -249,6 +249,15 @@
     <ClCompile Include="Source\RendererFrontend.cpp">
       <Filter>Renderer\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\BaseGraphicsObjects.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ObjectDirectorycpp.cpp">
+      <Filter>Service Locators\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\System.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ErrorCodes.h">
@@ -476,56 +485,33 @@
     <ClInclude Include="Source\ReflectionPass.h">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\CommandBuffer.h">
+      <Filter>Renderer\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ObjectDirectory.h">
+      <Filter>Service Locators\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlurPass.h">
+      <Filter>Renderer\Render Passes\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Data\Shaders\geomBillboard.pfrag">
-      <Filter>Shaders\Shader Files</Filter>
-    </None>
-    <None Include="Data\Shaders\geomBillboard.pgeom">
-      <Filter>Shaders\Shader Files</Filter>
-    </None>
-    <None Include="Data\Shaders\geomBillboard.pvert">
-      <Filter>Shaders\Shader Files</Filter>
-    </None>
-    <None Include="Data\Shaders\geometryPass.pfrag">
-      <Filter>Shaders\Shader Files</Filter>
-    </None>
-    <None Include="Data\Shaders\geometryPass.pvert">
-      <Filter>Shaders\Shader Files</Filter>
-    </None>
-    <None Include="Data\Shaders\lightPass.pfrag">
-      <Filter>Shaders\Shader Files</Filter>
-    </None>
-    <None Include="Data\Shaders\lightPass.pvert">
-      <Filter>Shaders\Shader Files</Filter>
-    </None>
-    <None Include="Data\Shaders\test.pfrag">
-      <Filter>Shaders\Shader Files</Filter>
-    </None>
-    <None Include="Data\Shaders\test.pvert">
-      <Filter>Shaders\Shader Files</Filter>
-    </None>
-    <None Include="Data\Shaders\test2.pfrag">
-      <Filter>Shaders\Shader Files</Filter>
-    </None>
-    <None Include="Data\Shaders\test2.pvert">
-      <Filter>Shaders\Shader Files</Filter>
-    </None>
-    <None Include="Data\Shaders\test3.pfrag">
-      <Filter>Shaders\Shader Files</Filter>
-    </None>
-    <None Include="Data\Shaders\test3.pvert">
-      <Filter>Shaders\Shader Files</Filter>
-    </None>
     <None Include="Data\config.ini" />
     <None Include="Data\error-strings-eng.data" />
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Praxis3D.rc">
+    <ResourceCompile Include="Praxis3D1.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <Image Include="icon1.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
     <Image Include="..\praxis icon.ico">
       <Filter>Resource Files</Filter>
     </Image>

@@ -3,10 +3,16 @@ VC/
 
 VC x64/
 
-x64/
+\.vs/
 
-Release/
+Builds/x32/
 
-Debug/
+Builds/x64/Debug/
 
-Praxis3D/Data/Models/
+Builds/x64/Debug 64bit/lnk\{4EFA342B-62AB-4145-8CAE-43C91978D51E}\.tmp
+
+Builds/x64/Release 64bit/Praxis3D\.iobj
+
+Builds/x64/Release 64bit/Praxis3D\.ipdb
+
+*.dae
