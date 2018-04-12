@@ -364,6 +364,15 @@ public:
 	~RendererBackend();
 
 	ErrorCode init(const UniformFrameData &p_frameData);
+
+	void setScreenSize(const UniformFrameData &p_frameData)
+	{
+		// Set gbuffer textures size
+		m_gbuffer->setBufferSize((unsigned int)p_frameData.m_screenSize.x, (unsigned int)p_frameData.m_screenSize.y);
+
+		// Set the viewport
+		glViewport(0, 0, p_frameData.m_screenSize.x, p_frameData.m_screenSize.y);
+	}
 	
 	void processUpdate(const BufferUpdateCommands &p_updateCommands, const UniformFrameData &p_frameData);
 	void processLoading(LoadCommands &p_loadCommands, const UniformFrameData &p_frameData);

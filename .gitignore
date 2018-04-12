@@ -16,3 +16,5 @@ Builds/x64/Release 64bit/Praxis3D\.iobj
 Builds/x64/Release 64bit/Praxis3D\.ipdb
 
 *.dae
+
+Praxis3D/x64/

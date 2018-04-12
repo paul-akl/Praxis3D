@@ -62,6 +62,20 @@ ErrorCode RendererFrontend::init()
 
 void RendererFrontend::renderFrame(const SceneObjects &p_sceneObjects, const float p_deltaTime)
 {
+	if(m_frameData.m_screenSize.x != Config::graphicsVar().current_resolution_x ||
+		m_frameData.m_screenSize.y != Config::graphicsVar().current_resolution_y)
+	{
+		// Set the new resolution
+		m_frameData.m_screenSize.x = Config::graphicsVar().current_resolution_x;
+		m_frameData.m_screenSize.y = Config::graphicsVar().current_resolution_y;
+
+		// Update the projection matrix because it is dependant on the screen size
+		updateProjectionMatrix();
+
+		// Set screen size in the backend
+		m_backend.setScreenSize(m_frameData);
+	}
+
 	// Clear draw commands at the beggining of each frame
 	m_drawCommands.clear();
 

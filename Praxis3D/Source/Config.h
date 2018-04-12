@@ -554,7 +554,7 @@ public:
 			rendering_res_y = 900;
 			alpha_threshold = 0.0f;
 			emissive_threshold = 0.3f;
-			eye_adaption_rate = 1.0f;
+			eye_adaption_rate = 0.5f;
 			fog_color_x = 0.55f;
 			fog_color_y = 0.55f;
 			fog_color_z = 0.55f;
@@ -640,7 +640,7 @@ public:
 			up_key = 95;
 			vsync_key = 68;
 			mouse_filter = false;
-			mouse_warp_mode = true;
+			mouse_warp_mode = false;
 			mouse_jaw = 0.022f;
 			mouse_pitch = 0.022f;
 			mouse_pitch_clip = 1.2f;

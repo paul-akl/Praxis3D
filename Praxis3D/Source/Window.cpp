@@ -127,7 +127,7 @@ ErrorCode Window::createWindow()
 
 		// If mouse cursor is clipped, we need to hide it
 		setMouseRelativeMode(Config::windowVar().mouse_captured);
-
+		
 		// Set if the mouse should warm to screen center in relative capture mode
 		if(Config::inputVar().mouse_warp_mode)
 			SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
@@ -262,7 +262,7 @@ void Window::handleSDLEvent(const SDL_Event &p_SDLEvent)
 		// Get the relative mouse location
 		m_mouseInfo.m_movementCurrentFrameX += p_SDLEvent.motion.xrel;
 		m_mouseInfo.m_movementCurrentFrameY += p_SDLEvent.motion.yrel;
-
+		
 		break;
 	}
 
@@ -376,7 +376,7 @@ void Window::processChanges()
 					Config::m_windowVar.fullscreen = m_changeQueue[i].getBool();
 
 					// If it is switching to border-less fullscreen, set the fullscreen resolution
-					if(Config::windowVar().fullscreen && !Config::windowVar().fullscreen_borderless)
+					if (Config::windowVar().fullscreen && !Config::windowVar().fullscreen_borderless)
 					{
 						setWindowSize(Config::windowVar().window_size_fullscreen_x, Config::windowVar().window_size_fullscreen_y);
 
