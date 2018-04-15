@@ -295,7 +295,7 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, fogColorUniform);
 	AddVariablePredef(m_shaderVar, billboardScaleUniform);
 	AddVariablePredef(m_shaderVar, depthTypeUniform);
-	AddVariablePredef(m_shaderVar, eyeAdaptionRate);
+	AddVariablePredef(m_shaderVar, eyeAdaptionRateUniform);
 	AddVariablePredef(m_shaderVar, HDRSSBuffer);
 	AddVariablePredef(m_shaderVar, testMatUniform);
 	AddVariablePredef(m_shaderVar, testVecUniform);

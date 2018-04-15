@@ -5,8 +5,10 @@ in vec2 blurTexCoords[14];
 
 out vec4 outputColor;
 
-uniform sampler2D blurTexture;
+uniform sampler2D blurMap;
 uniform ivec2 screenSize;
+
+uniform float weight[5] = float[] (0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
  
 vec2 calcTexCoord(void)
 {
@@ -20,6 +22,51 @@ void main(void)
 	
     vec3 fragColor = vec3(0.0);
 	
+	float blurOffset = 1.0;
+	
+	vec2 tex_offset = 1.0 / screenSize; // gets size of single texel
+    fragColor = texture(blurMap, texCoord).rgb * weight[0]; // current fragment's contribution
+	
+	for(int i = 1; i < 5; ++i)
+	{
+		fragColor += texture(blurMap, texCoord + vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
+		fragColor += texture(blurMap, texCoord - vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
+	}
+		
+	/*
+    blurTexCoords[ 0] = texCoord + vec2(-0.028 * blurOffset, 0.0);
+    blurTexCoords[ 1] = texCoord + vec2(-0.024 * blurOffset, 0.0);
+    blurTexCoords[ 2] = texCoord + vec2(-0.020 * blurOffset, 0.0);
+    blurTexCoords[ 3] = texCoord + vec2(-0.016 * blurOffset, 0.0);
+    blurTexCoords[ 4] = texCoord + vec2(-0.012 * blurOffset, 0.0);
+    blurTexCoords[ 5] = texCoord + vec2(-0.008 * blurOffset, 0.0);
+    blurTexCoords[ 6] = texCoord + vec2(-0.004 * blurOffset, 0.0);
+    blurTexCoords[ 7] = texCoord + vec2( 0.004 * blurOffset, 0.0);
+    blurTexCoords[ 8] = texCoord + vec2( 0.008 * blurOffset, 0.0);
+    blurTexCoords[ 9] = texCoord + vec2( 0.012 * blurOffset, 0.0);
+    blurTexCoords[10] = texCoord + vec2( 0.016 * blurOffset, 0.0);
+    blurTexCoords[11] = texCoord + vec2( 0.020 * blurOffset, 0.0);
+    blurTexCoords[12] = texCoord + vec2( 0.024 * blurOffset, 0.0);
+    blurTexCoords[13] = texCoord + vec2( 0.028 * blurOffset, 0.0);
+	*/
+	/*
+    fragColor += texture(blurMap, texCoord + vec2(-0.028 * blurOffset, 0.0)).xyz * 0.0044299121055113265;
+    fragColor += texture(blurMap, texCoord + vec2(-0.024 * blurOffset, 0.0)).xyz * 0.00895781211794;
+    fragColor += texture(blurMap, texCoord + vec2(-0.020 * blurOffset, 0.0)).xyz * 0.0215963866053;
+    fragColor += texture(blurMap, texCoord + vec2(-0.016 * blurOffset, 0.0)).xyz * 0.0443683338718;
+    fragColor += texture(blurMap, texCoord + vec2(-0.012 * blurOffset, 0.0)).xyz * 0.0776744219933;
+    fragColor += texture(blurMap, texCoord + vec2(-0.008 * blurOffset, 0.0)).xyz * 0.115876621105;
+    fragColor += texture(blurMap, texCoord + vec2(-0.004 * blurOffset, 0.0)).xyz * 0.147308056121;
+    fragColor += texture(blurMap, texCoord         			  ).xyz * 0.259576912161;
+    fragColor += texture(blurMap, texCoord + vec2(0.004 * blurOffset, 0.0)).xyz * 0.147308056121;
+    fragColor += texture(blurMap, texCoord + vec2(0.008 * blurOffset, 0.0)).xyz * 0.115876621105;
+    fragColor += texture(blurMap, texCoord + vec2(0.012 * blurOffset, 0.0)).xyz * 0.0776744219933;
+    fragColor += texture(blurMap, texCoord + vec2(0.016 * blurOffset, 0.0)).xyz * 0.0443683338718;
+    fragColor += texture(blurMap, texCoord + vec2(0.020 * blurOffset, 0.0)).xyz * 0.0215963866053;
+    fragColor += texture(blurMap, texCoord + vec2(0.024 * blurOffset, 0.0)).xyz * 0.00895781211794;
+    fragColor += texture(blurMap, texCoord + vec2(0.028 * blurOffset, 0.0)).xyz * 0.0044299121055113265;
+	*/
+	/*
     fragColor += texture(blurMap, blurTexCoords[ 0]).xyz * 0.0044299121055113265;
     fragColor += texture(blurMap, blurTexCoords[ 1]).xyz * 0.00895781211794;
     fragColor += texture(blurMap, blurTexCoords[ 2]).xyz * 0.0215963866053;
@@ -35,6 +82,8 @@ void main(void)
     fragColor += texture(blurMap, blurTexCoords[11]).xyz * 0.0215963866053;
     fragColor += texture(blurMap, blurTexCoords[12]).xyz * 0.00895781211794;
     fragColor += texture(blurMap, blurTexCoords[13]).xyz * 0.0044299121055113265;
-	
+	*/
 	outputColor = vec4(fragColor, 1.0);
+	//outputColor = vec4(0.0, 1.0, 1.0, 1.0);
+	//outputColor = vec4(texture(blurMap, texCoord).xyz, 1.0);
 }

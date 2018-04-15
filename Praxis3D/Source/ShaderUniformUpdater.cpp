@@ -119,6 +119,7 @@ ErrorCode ShaderUniformUpdater::generatePerFrameList()
 	uniformList.push_back(new ElapsedTimeUniform(m_shaderHandle));
 	uniformList.push_back(new GammaUniform(m_shaderHandle));
 	uniformList.push_back(new EyeAdaptionRateUniform(m_shaderHandle));
+	uniformList.push_back(new LODParallaxMappingUniform(m_shaderHandle));
 
 	// Go through each uniform and check if it is valid
 	// If it is, add it to the update list, if not, delete it

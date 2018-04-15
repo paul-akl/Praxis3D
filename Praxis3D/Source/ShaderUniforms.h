@@ -335,22 +335,42 @@ private:
 class EyeAdaptionRateUniform : public BaseUniform
 {
 public:
-	EyeAdaptionRateUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().eyeAdaptionRate, p_shaderHandle), eyeAdaptionRate(0.0f) { }
+	EyeAdaptionRateUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().eyeAdaptionRateUniform, p_shaderHandle), eyeAdaptionRateUniform(-1.0f) { }
 
 	void update(const UniformData &p_uniformData)
 	{
 		// Check if the same value is not already assigned (a small optimization)
-		if(eyeAdaptionRate != Config::graphicsVar().eye_adaption_rate)
+		if(eyeAdaptionRateUniform != Config::graphicsVar().eye_adaption_rate)
 		{
-			eyeAdaptionRate = Config::graphicsVar().eye_adaption_rate;
+			eyeAdaptionRateUniform = Config::graphicsVar().eye_adaption_rate;
 
-			glUniform1f(m_uniformHandle, eyeAdaptionRate);
+			glUniform1f(m_uniformHandle, eyeAdaptionRateUniform);
 		}
 	}
 
 private:
-	float eyeAdaptionRate;
+	float eyeAdaptionRateUniform;
 };
+class LODParallaxMappingUniform : public BaseUniform
+{
+public:
+	LODParallaxMappingUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().LODParallaxUniform, p_shaderHandle), parallaxLOD(-1.0f) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		// Check if the same value is not already assigned (a small optimization)
+		if(parallaxLOD != Config::graphicsVar().LOD_prallax_mapping)
+		{
+			parallaxLOD = Config::graphicsVar().LOD_prallax_mapping;
+
+			glUniform1f(m_uniformHandle, parallaxLOD);
+		}
+	}
+
+private:
+	float parallaxLOD;
+};
+
 
 class DirLightColorUniform : public BaseUniform
 {
@@ -581,7 +601,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		//glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GBufferDiffuse);
+		glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GBufferFinal);
 	}
 };
 
@@ -654,7 +674,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform1i(m_uniformHandle, MaterialType_Blur);
+		glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GBufferBlur);
 	}
 };
 class CombinedTextureUniform : public BaseUniform
@@ -686,7 +706,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		//glUniform1i(m_uniformHandle, p_uniformData.getStaticEnvMapPos());
+		glUniform1i(m_uniformHandle, p_uniformData.getStaticEnvMapPos());
 	}
 };
 
@@ -820,7 +840,7 @@ public:
 class HDRShaderStorageBuffer : public BaseShaderStorageBlock
 {
 public:
-	HDRShaderStorageBuffer(unsigned int p_shaderHandle) : BaseShaderStorageBlock(Config::shaderVar().spotLightBuffer, p_shaderHandle) { }
+	HDRShaderStorageBuffer(unsigned int p_shaderHandle) : BaseShaderStorageBlock(Config::shaderVar().HDRSSBuffer, p_shaderHandle) { }
 
 	void update(const UniformData &p_uniformData)
 	{

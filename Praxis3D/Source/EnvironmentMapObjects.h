@@ -9,8 +9,6 @@
 class EnvironmentMapObject : public BaseGraphicsObject
 {
 public:
-//	EnvironmentMapObject(SystemScene *p_systemScene, TextureLoaderCubemap::TextureCubemapHandle &p_cubemap)
-//		: BaseGraphicsObject(p_systemScene, "Null", Properties::EnvironmentMapObject), m_cubemap(p_cubemap) { }
 	EnvironmentMapObject(SystemScene *p_systemScene, const std::string &p_name, TextureLoaderCubemap::TextureCubemapHandle &p_cubemap, Properties::PropertyID p_objectType = Properties::EnvironmentMapObject)
 		: BaseGraphicsObject(p_systemScene, p_name, p_objectType), m_cubemap(p_cubemap) 
 	{ 

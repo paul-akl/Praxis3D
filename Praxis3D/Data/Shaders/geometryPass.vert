@@ -15,6 +15,7 @@ out vec3 normal;
 out vec3 tangentFragPos;
 out vec3 tangentCameraPos;
 out float parallaxScale;
+out float parallaxLOD;
 
 uniform mat4 MVP;
 uniform mat4 modelMat;
@@ -24,12 +25,16 @@ uniform mat4 projMat;
 uniform vec3 cameraPosVec;
 uniform float textureTilingFactor;
 uniform float heightScale;
+uniform float parallaxMappingLOD;
 
 void main(void)
 {		
 	// Multiply position and normal by model matrix (to convert them into world space)
     fragPos = vec3(modelMat * vec4(vertexPosition, 1.0));
 	normal = normalize(mat3(modelMat) * vertexNormal);
+	
+	// Square the parallax LOD distance, so there's no need to do that in the fragment shader
+	parallaxLOD = parallaxMappingLOD * parallaxMappingLOD;
 	
 	// Copy the height scale value
 	parallaxScale = heightScale;

@@ -187,6 +187,9 @@ PropertySet RendererScene::exportObject()
 	// Add directional light property set
 	objects.addPropertySet(m_directionalLight->exportObject());
 
+	// Add static environment map property set
+	objects.addPropertySet(m_skybox->exportObject());
+
 	// Add model object property sets
 	for(decltype(m_modelObjPool.getPoolSize()) i = 0, numAllocObjecs = 0, totalNumAllocObjs = m_modelObjPool.getNumAllocated(),
 		size = m_modelObjPool.getPoolSize(); i < size && numAllocObjecs < totalNumAllocObjs; i++)

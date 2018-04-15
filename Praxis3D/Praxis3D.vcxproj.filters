@@ -497,6 +497,9 @@
     <ClInclude Include="Source\BlurPass.h">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\DebugRotateScript.h">
+      <Filter>Scripting\Objects\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\config.ini" />

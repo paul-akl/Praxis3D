@@ -44,9 +44,9 @@ ErrorCode RendererFrontend::init()
 		m_renderingPasses.push_back(lightingPass);
 
 	// Add blur rendering pass, if it was initialized successfully
-	//BlurPass *blurPass = new BlurPass(*this);
-	//if(blurPass->init() == ErrorCode::Success)
-	//	m_renderingPasses.push_back(blurPass);
+	BlurPass *blurPass = new BlurPass(*this);
+	if(blurPass->init() == ErrorCode::Success)
+		m_renderingPasses.push_back(blurPass);
 
 	// Add final rendering pass, if it was initialized successfuly
 	FinalPass *finalPass = new FinalPass(*this);
@@ -114,7 +114,7 @@ void RendererFrontend::renderFrame(const SceneObjects &p_sceneObjects, const flo
 
 	glEnable(GL_DEPTH_TEST);		// Enable depth testing, as this is much like a regular forward render pass
 	glClear(GL_DEPTH_BUFFER_BIT);	// Make sure to clear the depth buffer for the new frame
-	glDisable(GL_CULL_FACE);
+	//glDisable(GL_CULL_FACE);
 
 	//m_renderingPasses[0]->update(p_sceneObjects, p_deltaTime);
 

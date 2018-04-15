@@ -21,37 +21,12 @@
 					"Name": "DirectionalLight 1",
 					"Color": "1.0f, 1.0f, 1.0f",
 					"Direction": "0.006461f, -0.707092f, -0.707092f",
-					"Intensity": "0.1f"
-				},
-				{
-					"Type": "EnvironmentMapStatic",
-					"Position": "0.0f, 0.0f, 0.0f",
-					"Materials": 
-					[
-						{
-							"Filename": "posx.jpg"
-						},
-						{
-							"Filename": "negx.jpg"
-						},
-						{
-							"Filename": "posy.jpg"
-						},
-						{
-							"Filename": "negy.jpg"
-						},
-						{
-							"Filename": "posz.jpg"
-						},
-						{
-							"Filename": "negz.jpg"
-						}
-					]
+					"Intensity": "0.5f"
 				},
 				{
 					"Type": "ModelObject",
 					"Name": "Terrain2",
-					"Position": "-100.0f, 0.0f, 0.0f",
+					"Position": "-570.0f, 0.0f, 0.0f",
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
@@ -95,11 +70,11 @@
 				{
 					"Type": "ModelObject",
 					"Name": "Plane 1",
-					"Position": "-30.0f, 1.0f, 0.0f",
+					"Position": "30.0f, 0.0f, 0.0f",
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "2.0f, 2.0f, 2.0f",
+					"Scale": "1.0f, 1.0f, 1.0f",
 					"AlphaThreshold": "0.0f",
 					"HeightScale": "0.04f",
 					"Lighting": "1",
@@ -131,6 +106,142 @@
 						[
 							{
 								"Filename": "Ground_SmoothRocks_RMHAO.tga",
+								"Index": "0"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Barrel 1",
+					"Position": "-75.0f, 0.0f, 0.0f",
+					"Rotation": "270.0f, 0.0f, 0.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "2.0f, 2.0f, 2.0f",
+					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "RadioactiveBarrel_01.fbx"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						[
+							{
+								"Filename": "SciFi_Barrels_Mat_SciFi_Barrels_02_BaseColor.png",
+								"Index": "0"
+							}
+						],
+						"Normal": 
+						[
+							{
+								"Filename": "SciFi_Barrels_Mat_SciFi_Barrels_02_Normal.png",
+								"Index": "0"
+							}
+						],
+						"Emissive": 
+						[
+							{
+								"Filename": "SciFi_Barrels_Mat_SciFi_Barrels_02_Emissive.png",
+								"Index": "0"
+							}
+						],
+						"RMHAO": 
+						[
+							{
+								"Filename": "SciFi_Barrels_Mat_SciFi_Barrels_02_RMHAO.png",
+								"Index": "0"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Tree 1",
+					"Position": "-75.0f, -2.0f, 30.0f",
+					"Rotation": "270.0f, 0.0f, 0.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "10.0f, 10.0f, 10.0f",
+					"AlphaThreshold": "0.0001f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "CocosNucifera_025_100_3698_LOD0.3ds"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						[
+							{
+								"Filename": "CocosNucifera_BaseColor.png",
+								"Index": "0"
+							}
+						],
+						"Normal": 
+						[
+							{
+								"Filename": "CocosNucifera_Normal_OpenGL.png",
+								"Index": "0"
+							}
+						],
+						"Emissive": 
+						{
+						},
+						"RMHAO": 
+						[
+							{
+								"Filename": "CocosNucifera_RMHAO.png",
+								"Index": "0"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Table 1",
+					"Position": "-75.0f, 0.0f, 20.0f",
+					"Rotation": "270.0f, 0.0f, 0.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "0.05f, 0.05f, 0.05f",
+					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "Table.FBX"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						[
+							{
+								"Filename": "Table_BaseColor.tga",
+								"Index": "0"
+							}
+						],
+						"Normal": 
+						[
+							{
+								"Filename": "Table_Normal.tga",
+								"Index": "0"
+							}
+						],
+						"Emissive": 
+						{
+						},
+						"RMHAO": 
+						[
+							{
+								"Filename": "Table_RMHAO.tga",
 								"Index": "0"
 							}
 						]
@@ -423,11 +534,11 @@
 				{
 					"Type": "ModelObject",
 					"Name": "light 1",
-					"Position": "-19.2421f, 10.0f, 5.45328f",
+					"Position": "12.971f, 5.0f, -68.7851f",
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "1.0f, 1.0f, 1.0f",
+					"Scale": "0.5f, 0.5f, 0.5f",
 					"AlphaThreshold": "0.0f",
 					"HeightScale": "0.0f",
 					"Lighting": "1",
@@ -439,14 +550,22 @@
 					"Materials": 
 					{
 						"Diffuse": 
-						{
-						},
+						[
+							{
+								"Filename": "white.png",
+								"Index": "0"
+							}
+						],
 						"Normal": 
 						{
 						},
 						"Emissive": 
-						{
-						},
+						[
+							{
+								"Filename": "white.png",
+								"Index": "0"
+							}
+						],
 						"RMHAO": 
 						{
 						}
@@ -552,7 +671,7 @@
 					"Type": "ModelObject",
 					"Name": "light 5",
 					"Position": "-40.0f, 3.0f, 1.96449f",
-					"Rotation": "0.0f, 0.0f, 0.0f",
+					"Rotation": "-0.145991f, 0.0f, 0.989286f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
 					"Scale": "1.0f, 1.0f, 1.0f",
@@ -584,7 +703,7 @@
 					"Type": "ModelObject",
 					"Name": "light 6",
 					"Position": "-20.0f, 3.0f, -20.0f",
-					"Rotation": "0.0f, 0.0f, 0.0f",
+					"Rotation": "0.145991f, 0.0f, -0.989286f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
 					"Scale": "1.0f, 1.0f, 1.0f",
@@ -664,8 +783,8 @@
 				{
 					"Type": "ModelObject",
 					"Name": "Skybox 1",
-					"Position": "-117.386f, 11.1996f, -70.2678f",
-					"Rotation": "0.0f, 0.0f, 0.0f",
+					"Position": "-90.6898f, 7.4709f, 11.0952f",
+					"Rotation": "0.0f, -0.14598f, 26.727f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
 					"Scale": "20000.0f, 20000.0f, 20000.0f",
@@ -698,8 +817,6 @@
 					},
 					"Shaders": 
 					{
-						"FragmentShader": "skybox.frag",
-						"VertexShader": "skybox.vert"
 					}
 				},
 				{
@@ -707,16 +824,16 @@
 					"Name": "PointLight 1",
 					"Attenuation": "0.0f, 0.0f, 1.0f",
 					"Color": "1.0f, 1.0f, 1.0f",
-					"Intensity": "10.0f",
+					"Intensity": "100.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
-					"Position": "-19.2421f, 10.0f, 5.45328f"
+					"Position": "12.971f, 5.0f, -68.7851f"
 				},
 				{
 					"Type": "PointLight",
 					"Name": "PointLight 2",
 					"Attenuation": "0.0f, 0.0f, 1.0f",
 					"Color": "1.0f, 1.0f, 1.0f",
-					"Intensity": "10.0f",
+					"Intensity": "100.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"Position": "9.12898f, 7.98369f, 9.59357f"
 				},
@@ -725,9 +842,27 @@
 					"Name": "PointLight 3",
 					"Attenuation": "0.0f, 0.0f, 1.0f",
 					"Color": "1.0f, 1.0f, 1.0f",
-					"Intensity": "10.0f",
+					"Intensity": "100.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"Position": "-6.94746f, 8.59811f, 7.54629f"
+				},
+				{
+					"Type": "PointLight",
+					"Name": "PointLight 45",
+					"Attenuation": "0.0f, 0.0f, 1.0f",
+					"Color": "1.0f, 1.0f, 1.0f",
+					"Intensity": "100.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"Position": "-100.0f, 10.0f, 20.0f"
+				},
+				{
+					"Type": "PointLight",
+					"Name": "Barrel 1 Point Light",
+					"Attenuation": "0.0f, 0.0f, 1.0f",
+					"Color": "0.0f, 1.0f, 0.0f",
+					"Intensity": "0.1f",
+					"OffsetPosition": "0.0f, 1.8f, 0.0f",
+					"Position": "-75.0f, 1.8f, 0.0f"
 				},
 				{
 					"Type": "SpotLight",
@@ -736,7 +871,7 @@
 					"CutoffAngle": "60.0f",
 					"Color": "1.0f, 1.0f, 1.0f",
 					"Direction": "-1.0f, 0.0f, 0.0f",
-					"Intensity": "200.0f",
+					"Intensity": "20000.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
 					"Position": "60.0f, 3.0f, 60.0f"
@@ -747,8 +882,20 @@
 					"Attenuation": "0.0f, 0.0f, 1.0f",
 					"CutoffAngle": "60.0f",
 					"Color": "0.0f, 1.0f, 0.0f",
-					"Direction": "0.577353f, 0.577173f, 0.577525f",
-					"Intensity": "200.0f",
+					"Direction": "-0.145991f, 0.0f, 0.989286f",
+					"Intensity": "500.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Position": "-40.0f, 3.0f, 1.96449f"
+				},
+				{
+					"Type": "SpotLight",
+					"Name": "SpotLight 3",
+					"Attenuation": "0.0f, 0.0f, 1.0f",
+					"CutoffAngle": "60.0f",
+					"Color": "1.0f, 0.0f, 0.0f",
+					"Direction": "0.145991f, 0.0f, -0.989286f",
+					"Intensity": "500.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
 					"Position": "-40.0f, 3.0f, 1.96449f"
@@ -777,9 +924,9 @@
 				{
 					"Type": "FreeCamera",
 					"Name": "Free Camera 1",
-					"Position": "-117.387f, 11.2024f, -70.272f",
-					"Angle": "25.5279f, -0.56376f",
-					"Speed": "1.0f",
+					"Position": "-90.6949f, 7.47164f, 11.0953f",
+					"Angle": "26.727f, -0.14598f",
+					"Speed": "2.0f",
 					"SprintSpeed": "50.0f",
 					"LowerLimit": "0.0f",
 					"UpperLimit": "500.0f",
@@ -806,10 +953,24 @@
 				{
 					"Type": "DebugMoveScript",
 					"Name": "Debug Move Script 1",
-					"Position": "0.0f, 10.0f, 0.0f",
-					"Radius": "20.0f",
+					"Position": "0.0f, 5.0f, 0.0f",
+					"Radius": "70.0f",
 					"Rotation": "0.0f, 1.0f, 0.0f",
 					"Speed": "20.0f"
+				},
+				{
+					"Type": "DebugRotateScript",
+					"Name": "Debug Rotate Script 1",
+					"Axis": "0.0f, 1.0f, 0.0f",
+					"Rotation": "-0.141616f, 0.0f, 0.989922f",
+					"Speed": "100.0f"
+				},
+				{
+					"Type": "DebugRotateScript",
+					"Name": "Debug Rotate Script 2",
+					"Axis": "0.0f, 1.0f, 0.0f",
+					"Rotation": "0.141616f, 0.0f, -0.989922f",
+					"Speed": "100.0f"
 				},
 				{
 					"Type": "WorldEditScript",
@@ -864,6 +1025,14 @@
 		{
 			"Subject": "Debug Move Script 1",
 			"Observer": "light 1"
+		},
+		{
+			"Subject": "Debug Rotate Script 1",
+			"Observer": "SpotLight 2"
+		},
+		{
+			"Subject": "Debug Rotate Script 2",
+			"Observer": "SpotLight 3"
 		},
 		{
 			"Subject": "PointLight 2",

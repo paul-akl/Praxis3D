@@ -89,11 +89,12 @@ public:
 	}
 	inline void bindBufferForWriting(GBufferTextureType p_buffer)
 	{
+		//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO);
 		glDrawBuffer(GL_COLOR_ATTACHMENT0 + p_buffer);
 	}
 	inline void bindBuffersForWriting(const std::vector<GLenum> &p_buffers)
 	{
-		glDrawBuffers((GLsizei)p_buffers.size(), p_buffers.data() );
+		glDrawBuffers((GLsizei)p_buffers.size(), p_buffers.data());
 	}
 	
 	// Framebuffer binding functions

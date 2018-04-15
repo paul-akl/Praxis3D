@@ -100,6 +100,9 @@ SystemObject *ScriptingScene::createObject(const PropertySet &p_properties)
 	case Properties::DebugMoveScript:
 		newObject = loadDebugMove(p_properties);
 		break;
+	case Properties::DebugRotateScript:
+		newObject = loadDebugRotate(p_properties);
+		break;
 	case Properties::SolarTimeScript:
 		newObject = loadSolarTime(p_properties);
 		break;
@@ -299,6 +302,32 @@ DebugMoveScript *ScriptingScene::loadDebugMove(const PropertySet &p_properties)
 	m_scriptObjects.push_back(debugMove);
 
 	return debugMove;
+}
+
+DebugRotateScript *ScriptingScene::loadDebugRotate(const PropertySet &p_properties)
+{
+	DebugRotateScript *debugRotate = new DebugRotateScript(this, p_properties.getPropertyByID(Properties::Name).getString());
+
+	// Load property data
+	for (decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
+	{
+		switch (p_properties[i].getPropertyID())
+		{
+		case Properties::Axis:
+			debugRotate->setRotationAxis(p_properties[i].getVec3f());
+			break;
+		case Properties::Rotation:
+			debugRotate->setRotation(p_properties[i].getVec3f());
+			break;
+		case Properties::Speed:
+			debugRotate->setMovementSpeed(p_properties[i].getFloat());
+			break;
+		}
+	}
+
+	m_scriptObjects.push_back(debugRotate);
+
+	return debugRotate;
 }
 
 SolarTimeScript *ScriptingScene::loadSolarTime(const PropertySet & p_properties)

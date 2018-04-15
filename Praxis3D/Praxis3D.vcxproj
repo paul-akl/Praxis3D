@@ -346,6 +346,7 @@
     <ClInclude Include="Source\Config.h" />
     <ClInclude Include="Source\ConfigLoader.h" />
     <ClInclude Include="Source\DebugMoveScript.h" />
+    <ClInclude Include="Source\DebugRotateScript.h" />
     <ClInclude Include="Source\DebugUIScript.h" />
     <ClInclude Include="Source\DeferredRenderer.h" />
     <ClInclude Include="Source\Engine.h" />

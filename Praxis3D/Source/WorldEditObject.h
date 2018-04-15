@@ -177,12 +177,12 @@ public:
 					m_modifierKey.deactivate();
 					m_saveKey.deactivate();
 
-					if(WindowLocator::get().spawnYesNoErrorBox("World Editor", "Export the scene to \"test.pmap\"?"))
-						m_sceneLoader->saveToFile();
+					if(WindowLocator::get().spawnYesNoErrorBox("World Editor", "Export the scene to \"" + Config::gameplayVar().default_map + "\"?"))
+						m_sceneLoader->saveToFile(Config::gameplayVar().default_map);
 				}
 			}
 
-			// If an object is selected, update the its data
+			// If an object is selected, update its data
 			//if(m_selectedObject != nullptr)
 			//	m_sceneLoader->getChangeController()->sendChange(this, m_selectedObject, Systems::Changes::Spacial::Position);
 		}

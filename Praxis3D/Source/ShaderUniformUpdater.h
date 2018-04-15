@@ -84,7 +84,7 @@ private:
 	const inline void updateSSBBindingPoints(const UniformData &p_uniformData = m_defaultUniformData) const
 	{
 		for(decltype(m_numSSBBBlockUpdates) i = 0; i < m_numSSBBBlockUpdates; i++)
-			m_uniformBlockUpdates[i]->update(p_uniformData);
+			m_SSBBlockUpdates[i]->update(p_uniformData);
 	}
 
 	ErrorCode generateTextureUpdateList();

@@ -6,8 +6,6 @@ layout(std430, binding = 0) buffer HDRBuffer
 {
 	float screenBrightness;
 };
- 
-out float avgBrightness;
 
 uniform float eyeAdaptionRate;
 uniform float deltaTimeS;
@@ -21,9 +19,15 @@ float calcMaxMipmapLevel(vec2 p_textureSize)
 }
 
 // Averages RGB color into a single brightness value
-float averageColors(vec3 p_color)
+float calcAverageBrightness(vec3 p_color)
 {
 	return (p_color.x + p_color.y + p_color.z) / 3.0;
+}
+
+// Calculates a brightness value from a color
+float calcBrightness(vec3 p_color)
+{
+	return dot(p_color, vec3(0.2126, 0.7152, 0.0722));
 }
 
 void main(void) 
@@ -33,16 +37,14 @@ void main(void)
 	// Get maximum mipmap level (1x1) of a framebuffer
 	float exposureMipmapLevel = calcMaxMipmapLevel(screenSize);
 	// Get the current (previous frame) average brightness
-	float avgBrightnessPrevFrame = averageColors(textureLod(finalColorMap, vec2(0.0), exposureMipmapLevel).xyz);
+	float avgBrightnessPrevFrame = calcAverageBrightness(textureLod(finalColorMap, vec2(0.0), exposureMipmapLevel).xyz);
 	// Perform a linear interpolation between current and previous brightness based on delta time
 	screenBrightness = mix(screenBrightness, avgBrightnessPrevFrame, deltaTimeS * eyeAdaptionRate);
-	// Send average brightness to the fragment shader
-	avgBrightness = screenBrightness;
 	
 	#else
 	
 	// Set the average brightness to 0.5 so it does not affect the scene
-	avgBrightness = 0.5;
+	screenBrightness = 0.5;
 	
 	#endif
 	

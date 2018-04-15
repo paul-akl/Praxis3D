@@ -182,9 +182,11 @@ namespace Properties
 	Code(Subject,) \
 	/* Scripting */ \
 	Code(Angle,) \
+	Code(Axis,) \
 	Code(BaseUIScript,) \
 	Code(DayOfYear,) \
 	Code(DebugMoveScript,) \
+	Code(DebugRotateScript,) \
 	Code(DebugUIScript,) \
 	Code(FreeCamera,) \
 	Code(Latitude,) \
@@ -303,9 +305,11 @@ namespace Properties
 		GetString(Observer),
 		GetString(Subject),
 		GetString(Angle),
+		GetString(Axis),
 		GetString(BaseUIScript),
 		GetString(DayOfYear),
 		GetString(DebugMoveScript),
+		GetString(DebugRotateScript),
 		GetString(DebugUIScript),
 		GetString(FreeCamera),
 		GetString(Latitude),
@@ -553,7 +557,7 @@ public:
 			rendering_res_x = 1600;
 			rendering_res_y = 900;
 			alpha_threshold = 0.0f;
-			emissive_threshold = 0.3f;
+			emissive_threshold = 0.01f;
 			eye_adaption_rate = 0.5f;
 			fog_color_x = 0.55f;
 			fog_color_y = 0.55f;
@@ -567,6 +571,7 @@ public:
 			light_color_r = 1.0f;
 			light_color_g = 1.0f;
 			light_color_b = 1.0f;
+			LOD_prallax_mapping = 100.0f;
 			height_scale = 0.0f;
 			texture_tiling_factor = 1.0f;
 			z_far = 8000.0f;
@@ -602,6 +607,7 @@ public:
 		float light_color_r;
 		float light_color_g;
 		float light_color_b;
+		float LOD_prallax_mapping;
 		float height_scale;
 		float texture_tiling_factor;
 		float z_far;
@@ -860,6 +866,7 @@ public:
 			emissiveThresholdUniform = "emissiveThreshold";
 			heightScaleUniform = "heightScale";
 			textureTilingFactorUniform = "textureTilingFactor";
+			LODParallaxUniform = "parallaxMappingLOD";
 
 			dirLightColor = "directionalLight.m_color";
 			dirLightDirection = "directionalLight.m_direction";
@@ -908,7 +915,7 @@ public:
 			billboardScaleUniform = "billboardScale";
 			depthTypeUniform = "depthType";
 
-			eyeAdaptionRate = "eyeAdaptionRate";
+			eyeAdaptionRateUniform = "eyeAdaptionRate";
 			HDRSSBuffer = "HDRBuffer";
 
 			testMatUniform = "testMat";
@@ -932,6 +939,7 @@ public:
 		std::string emissiveThresholdUniform;
 		std::string heightScaleUniform;
 		std::string textureTilingFactorUniform;
+		std::string LODParallaxUniform;
 
 		std::string dirLightColor;
 		std::string dirLightDirection;
@@ -980,7 +988,7 @@ public:
 		std::string billboardScaleUniform;
 		std::string depthTypeUniform;
 
-		std::string eyeAdaptionRate;
+		std::string eyeAdaptionRateUniform;
 		std::string HDRSSBuffer;
 
 		std::string testMatUniform;

@@ -1,5 +1,8 @@
 #version 430 core
 
+#define MIN_LOD_PARALLAX 0.0
+#define MAX_LOD_PARALLAX 10.0
+#define LOD_PARALLAX_THRESHOLD 0.0
 #define HEIGHT_SCALE_THRESHOLD 0.001
 #define ROUGHNESS_MIN 0.001
 
@@ -13,13 +16,6 @@ layout(location = 2) out vec3 normalBuffer;
 layout(location = 3) out vec4 emissiveBuffer;
 layout(location = 4) out vec4 matPropertiesBuffer;
 
-
-uniform mat4 MVP;
-uniform mat4 modelMat;
-uniform mat4 viewMat;
-uniform mat4 modelViewMat;
-uniform mat4 projMat;
-
 // Variables from vertex shader
 in mat3 TBN;
 in vec2 texCoord;
@@ -28,6 +24,13 @@ in vec3 normal;
 in vec3 tangentFragPos;
 in vec3 tangentCameraPos;
 in float parallaxScale;
+in float parallaxLOD;
+
+uniform mat4 MVP;
+uniform mat4 modelMat;
+uniform mat4 viewMat;
+uniform mat4 modelViewMat;
+uniform mat4 projMat;
 
 /* Current combined texture channels:
 	Red: Roughness
@@ -150,7 +153,7 @@ vec2 reliefParallaxMapping(vec2 p_texCoords, vec3 p_viewDir)
 	  // new depth from heightmap
 	  heightFromTexture = getHeight(currentTextureCoords);
 
-	  // shift along or agains vector V
+	  // shift along or against vector V
 	  if(heightFromTexture > currentLayerHeight) // below the surface
 	  {
 		 currentTextureCoords -= deltaTexCoord;
@@ -259,23 +262,6 @@ vec2 parallaxMappingNew(vec2 T, vec3 V)
 	// Calculate the final texture coordinate at the intersection point.
 	vec2 vFinalCoords = T + vCurrOffset;
 
-	// Use the final texture coordinates to get the normal vector, then 
-	// expand it from [0,1] to [-1,1] range.
-	//vec4 vFinalNormal = NormalHeightMap.Sample( LinearSampler, vFinalCoords ); //.a;
-		
-	// Sample the colormap at the final intersection point.
-	//vec4 vFinalColor = ColorMap.Sample( LinearSampler, vFinalCoords );
-
-	// Expand the final normal vector from [0,1] to [-1,1] range.
-	//vFinalNormal = vFinalNormal * 2.0f - 1.0f;
-
-	// Shade the fragment based on light direction and normal.
-	//vec3 vAmbient = vFinalColor.rgb * 0.1f;
-	//vec3 vDiffuse = vFinalColor.rgb * max( 0.0f, dot( L, vFinalNormal.xyz ) ) * 0.5f;
-	//vFinalColor.rgb = vAmbient + vDiffuse;
-
-	//OUT.color = vFinalColor;
-
 	return vFinalCoords;
 }
 
@@ -334,31 +320,32 @@ vec2 simpleParallaxMapping(vec2 p_texCoords, vec3 p_viewDir)
 
 void main(void)
 { 	
-	vec3 viewDir = tangentCameraPos - tangentFragPos;
-	float distanceToFrag = length(viewDir);
-	viewDir = normalize(viewDir);
-	
+	float height = getHeight(texCoord);
 	vec2 newCoords = texCoord;
 	
-	//if(distanceToFrag > 29.0)
-	//	return p_texCoords;
-	
-    // number of depth layers
-	
-	//if(distanceToFrag > 5.0)
-	//	numLayers = min(((20.0 - distanceToFrag) / 20.0), 1.0) * numLayers;
-	newCoords = parallaxOcclusionMapping(texCoord, viewDir, 1.0);
-	if(distanceToFrag < 9.90)
+	// This is to save performance by not performing the
+	// parallax mapping for objects that it was not intended for
+	if((1.0 - height) * parallaxScale > HEIGHT_SCALE_THRESHOLD)
 	{
+		vec3 viewDir = tangentCameraPos - tangentFragPos;
+		float distanceToFrag = length(viewDir);
+		viewDir = normalize(viewDir);
 		float LOD = min(((10.0 - distanceToFrag) / 10.0), 1.0);
-		float LOD2 = clamp((distanceToFrag - 8.0) / 2.0, 0.0, 1.0);
+		
+		LOD = clamp(1.0 - ((distanceToFrag * distanceToFrag) / parallaxLOD), MIN_LOD_PARALLAX, MAX_LOD_PARALLAX);
+		
+		if(LOD > LOD_PARALLAX_THRESHOLD)
+			newCoords = parallaxOcclusionMapping(texCoord, viewDir, LOD);
+	}
+	
+	//if(distanceToFrag < 9.90)
+	//{
+		//float LOD = min(((10.0 - distanceToFrag) / 10.0), 1.0);
+		//float LOD2 = clamp((distanceToFrag - 8.0) / 2.0, 0.0, 1.0);
 	
 		//if(parallaxScale > HEIGHT_SCALE_THRESHOLD)
 		//	newCoords = mix(parallaxOcclusionMapping(texCoord, viewDir, LOD), texCoord, 1.0 - LOD);
-	}
-	//if(distanceToFrag < 30.0)
-	//	newCoords = parallaxMappingNew2(texCoord, viewDir);
-	//vec2 newCoords = texCoord;
+	//}
 	
 	// discards a fragment when sampling outside default texture region (fixes border artifacts)
     //if(newCoords.x > 1.0 || newCoords.y > 1.0 || newCoords.x < 0.0 || newCoords.y < 0.0)
@@ -381,7 +368,7 @@ void main(void)
 	if(emissiveColor.a > emissiveThreshold)
 	{
 		// Use emissive alpha channel as an intensity multiplier
-		emissiveColor *= emissiveColor.a;
+		emissiveColor *= emissiveColor.a * 10.0;
 	}
 	else
 	{

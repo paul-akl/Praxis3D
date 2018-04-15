@@ -68,7 +68,6 @@ enum MaterialType : unsigned int
 	MaterialType_Roughness = MaterialType_NumOfTypes,
 	MaterialType_Metalness,
 	MaterialType_Height,
-	MaterialType_Blur,
 	MaterialType_AmbientOcclusion,
 	MaterialType_NumOfTypes_Extended
 };

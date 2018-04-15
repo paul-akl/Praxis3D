@@ -4,6 +4,7 @@
 #include "CameraScript.h"
 #include "DebugUIScript.h"
 #include "DebugMoveScript.h"
+#include "DebugRotateScript.h"
 #include "NullSystemObjects.h"
 #include "ScriptingTask.h"
 #include "SolarTimeScript.h"
@@ -53,6 +54,7 @@ private:
 	FreeCamera *loadFreeCamera(const PropertySet &p_properties);
 	DebugUIScript *loadDebugUI(const PropertySet &p_properties);
 	DebugMoveScript *loadDebugMove(const PropertySet &p_properties);
+	DebugRotateScript *loadDebugRotate(const PropertySet &p_properties);
 	SolarTimeScript *loadSolarTime(const PropertySet &p_properties);
 	WorldEditScript *loadWorldEdit(const PropertySet &p_properties);
 

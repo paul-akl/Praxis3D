@@ -224,13 +224,15 @@ public:
 		// Returns a filename of a shader of specific type
 		const inline std::string getShaderFilename(const unsigned int p_shaderType)
 		{
-			// Check if the shader type passed is valid (in bounds)
-			//if(p_shaderType >= 0 && p_shaderType < ShaderType_NumOfTypes + 1)
-				// If the shader is valid, return its filename, otherwise return an empty string
-				//if(m_shaders[p_shaderType] != nullptr)
-				//	return m_shaders[p_shaderType]->getFilename();
+			return m_shaderFilename[p_shaderType];
 
-			return std::string();
+			/*/ Check if the shader type passed is valid (in bounds)
+			if(p_shaderType >= 0 && p_shaderType < ShaderType_NumOfTypes + 1)
+				// If the shader is valid, return its filename, otherwise return an empty string
+				if(!m_shaderFilename[p_shaderType].empty())
+					return m_shaderFilename[p_shaderType];
+
+			return std::string();*/
 		}
 
 	private:
