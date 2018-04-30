@@ -557,8 +557,10 @@ public:
 			rendering_res_x = 1600;
 			rendering_res_y = 900;
 			alpha_threshold = 0.0f;
+			emissive_multiplier = 10.0f;
 			emissive_threshold = 0.01f;
-			eye_adaption_rate = 0.5f;
+			eye_adaption_rate = 0.25f;
+			eye_adaption_intended_brightness = 0.2f;
 			fog_color_x = 0.55f;
 			fog_color_y = 0.55f;
 			fog_color_z = 0.55f;
@@ -593,8 +595,10 @@ public:
 		int rendering_res_x;
 		int rendering_res_y;
 		float alpha_threshold;
+		float emissive_multiplier;
 		float emissive_threshold;
 		float eye_adaption_rate;
+		float eye_adaption_intended_brightness;
 		float fog_color_x;
 		float fog_color_y;
 		float fog_color_z;
@@ -775,12 +779,16 @@ public:
 			gaussian_blur_vertical_vert_shader = "gaussianBlurVertical.vert";
 			gaussian_blur_horizontal_frag_shader = "gaussianBlurHorizontal.frag";
 			gaussian_blur_horizontal_vert_shader = "gaussianBlurHorizontal.vert";
+			hdr_mapping_pass_frag_shader = "hdrMappingPass.frag";
+			hdr_mapping_pass_vert_shader = "hdrMappingPass.vert";
 			blur_pass_vert_shader = "blurPass.vert";
 			blur_pass_frag_shader = "blurPass.frag";
 			light_pass_vert_shader = "lightPass.vert";
 			light_pass_frag_shader = "lightPass.frag";
 			final_pass_vert_shader = "finalPass.vert";
 			final_pass_frag_shader = "finalPass.frag";
+			postProcess_pass_vert_shader = "postProcessPass.vert";
+			postProcess_pass_frag_shader = "postProcessPass.frag";
 			reflection_pass_vert_shader = "reflectionPass.vert";
 			reflection_pass_frag_shader = "reflectionPass.frag";
 			dir_light_quad_offset_x = 0.0f;
@@ -821,12 +829,16 @@ public:
 		std::string gaussian_blur_vertical_vert_shader;
 		std::string gaussian_blur_horizontal_frag_shader;
 		std::string gaussian_blur_horizontal_vert_shader;
+		std::string hdr_mapping_pass_frag_shader;
+		std::string hdr_mapping_pass_vert_shader;
 		std::string blur_pass_vert_shader;
 		std::string blur_pass_frag_shader;
 		std::string light_pass_vert_shader;
 		std::string light_pass_frag_shader;
 		std::string final_pass_vert_shader;
 		std::string final_pass_frag_shader;
+		std::string postProcess_pass_vert_shader;
+		std::string postProcess_pass_frag_shader;
 		std::string reflection_pass_vert_shader;
 		std::string reflection_pass_frag_shader;
 		float dir_light_quad_offset_x;
@@ -863,6 +875,7 @@ public:
 			gammaUniform = "gamma";
 			alphaCullingUniform = "alphaCulling";
 			alphaThresholdUniform = "alphaThreshold";
+			emissiveMultiplierUniform = "emissiveMultiplier";
 			emissiveThresholdUniform = "emissiveThreshold";
 			heightScaleUniform = "heightScale";
 			textureTilingFactorUniform = "textureTilingFactor";
@@ -892,8 +905,10 @@ public:
 			normalMapUniform = "normalMap";
 			emissiveMapUniform = "emissiveMap";
 			matPropertiesMapUniform = "matPropertiesMap";
-			blurMapUniform = "blurMap";
+			intermediateMapUniform = "intermediateMap";
 			finalMapUniform = "finalColorMap";
+			inputColorMapUniform = "inputColorMap";
+			outputColorMapUniform = "outputColorMap";
 
 			sunGlowTextureUniform = "sunGlowMap";
 			skyMapTextureUniform = "skyMap";
@@ -902,7 +917,6 @@ public:
 			normalTextureUniform = "normalTexture";
 			specularTextureUniform = "specularTexture";
 			emissiveTextureUniform = "emissiveTexture";
-			blurTextureUniform = "blurTexture";
 			glossTextureUniform = "glossTexture";
 			heightTextureUniform = "heightTexture";
 			combinedTextureUniform = "combinedTexture";
@@ -916,6 +930,7 @@ public:
 			depthTypeUniform = "depthType";
 
 			eyeAdaptionRateUniform = "eyeAdaptionRate";
+			eyeAdaptionIntBrightnessUniform = "eyeAdaptionIntBrightness";
 			HDRSSBuffer = "HDRBuffer";
 
 			testMatUniform = "testMat";
@@ -936,6 +951,7 @@ public:
 		std::string gammaUniform;
 		std::string alphaCullingUniform;
 		std::string alphaThresholdUniform;
+		std::string emissiveMultiplierUniform;
 		std::string emissiveThresholdUniform;
 		std::string heightScaleUniform;
 		std::string textureTilingFactorUniform;
@@ -965,8 +981,10 @@ public:
 		std::string normalMapUniform;
 		std::string emissiveMapUniform;
 		std::string matPropertiesMapUniform;
-		std::string blurMapUniform;
+		std::string intermediateMapUniform;
 		std::string finalMapUniform;
+		std::string inputColorMapUniform;
+		std::string outputColorMapUniform;
 
 		std::string sunGlowTextureUniform;
 		std::string skyMapTextureUniform;
@@ -975,7 +993,6 @@ public:
 		std::string normalTextureUniform;
 		std::string specularTextureUniform;
 		std::string emissiveTextureUniform;
-		std::string blurTextureUniform;
 		std::string glossTextureUniform;
 		std::string heightTextureUniform;
 		std::string combinedTextureUniform;
@@ -989,6 +1006,7 @@ public:
 		std::string depthTypeUniform;
 
 		std::string eyeAdaptionRateUniform;
+		std::string eyeAdaptionIntBrightnessUniform;
 		std::string HDRSSBuffer;
 
 		std::string testMatUniform;

@@ -4,7 +4,7 @@
 GeometryBuffer::GeometryBuffer(unsigned int p_bufferWidth, unsigned int p_bufferHeight) : Framebuffer(p_bufferWidth, p_bufferHeight)
 {
 
-	m_blurBuffer = 0;
+	m_intermediateBuffer = 0;
 	m_depthBuffer = 0;
 	m_finalBuffer = 0;
 	m_finalPassBuffer = GBufferFinal;
@@ -30,8 +30,8 @@ GeometryBuffer::~GeometryBuffer()
 	if(m_depthBuffer != 0)
 		glDeleteTextures(1, &m_depthBuffer);
 
-	if(m_blurBuffer != 0)
-		glDeleteTextures(1, &m_blurBuffer);
+	if(m_intermediateBuffer != 0)
+		glDeleteTextures(1, &m_intermediateBuffer);
 
 	if(m_finalBuffer != 0)
 		glDeleteTextures(1, &m_finalBuffer);
@@ -50,7 +50,7 @@ ErrorCode GeometryBuffer::init()
 		// Create geometry pass buffers
 		glGenTextures(GBufferNumTextures, m_GBTextures);
 		glGenTextures(1, &m_depthBuffer);
-		glGenTextures(1, &m_blurBuffer);
+		glGenTextures(1, &m_intermediateBuffer);
 		glGenTextures(1, &m_finalBuffer);
 
 		// Set up texture formats
@@ -95,15 +95,15 @@ ErrorCode GeometryBuffer::init()
 					 Config::FramebfrVariables().gl_depth_buffer_texture_format, Config::FramebfrVariables().gl_depth_buffer_texture_type, NULL);
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depthBuffer, 0);
 
-		// Create the blur buffer, that acts as an intermediate buffer between vertical and horizontal blur passes
-		glBindTexture(GL_TEXTURE_2D, m_blurBuffer);
+		// Create the intermediate buffer, that acts as an intermediate buffer between vertical and horizontal blur passes
+		glBindTexture(GL_TEXTURE_2D, m_intermediateBuffer);
 		glTexImage2D(GL_TEXTURE_2D, 0, Config::FramebfrVariables().gl_blur_buffer_internal_format, m_bufferWidth, m_bufferHeight, 0, 
 					 Config::FramebfrVariables().gl_blur_buffer_texture_format, Config::FramebfrVariables().gl_blur_buffer_texture_type, NULL);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Config::FramebfrVariables().gl_blur_buffer_min_filter);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, Config::FramebfrVariables().gl_blur_buffer_mag_filter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, Config::FramebfrVariables().gl_blur_buffer_wrap_s_method);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, Config::FramebfrVariables().gl_blur_buffer_wrap_t_method);
-		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GBufferBlur, GL_TEXTURE_2D, m_blurBuffer, 0);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Config::FramebfrVariables().gl_buffers_min_filter);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, Config::FramebfrVariables().gl_buffers_mag_filter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, Config::FramebfrVariables().gl_buffers_wrap_s_method);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, Config::FramebfrVariables().gl_buffers_wrap_t_method);
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GBufferIntermediate, GL_TEXTURE_2D, m_intermediateBuffer, 0);
 
 		// Create the final buffer, that gets renderred to the screen
 		glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
@@ -115,6 +115,8 @@ ErrorCode GeometryBuffer::init()
 		else
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Config::FramebfrVariables().gl_final_buffer_min_filter);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, Config::FramebfrVariables().gl_final_buffer_mag_filter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, Config::FramebfrVariables().gl_buffers_wrap_s_method);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, Config::FramebfrVariables().gl_buffers_wrap_t_method);
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GBufferFinal, GL_TEXTURE_2D, m_finalBuffer, 0);
 		
 		// Check for errors and return an error in case of one
@@ -125,7 +127,7 @@ ErrorCode GeometryBuffer::init()
 		// Restore the default FBO, so it doesn't get changed from the outside of the class
 		//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
-		glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+		//glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 	}
 	return returnCode;
 }
@@ -145,14 +147,8 @@ void GeometryBuffer::setBufferSize(unsigned int p_bufferWidth, unsigned int p_bu
 			glTexImage2D(GL_TEXTURE_2D, 0, m_internalFormats[i], m_bufferWidth, m_bufferHeight, 0, m_textureFormats[i], m_textureTypes[i], NULL);
 		}
 
-		// Create depth buffer
-		glBindTexture(GL_TEXTURE_2D, m_depthBuffer);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_bufferWidth, m_bufferHeight, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
-		glTexImage2D(GL_TEXTURE_2D, 0, Config::FramebfrVariables().gl_depth_buffer_internal_format, m_bufferWidth, m_bufferHeight, 0,
-			Config::FramebfrVariables().gl_depth_buffer_texture_format, Config::FramebfrVariables().gl_depth_buffer_texture_type, NULL);
-
-		// Create the blur buffer, that acts as an intermediate buffer between vertical and horizontal blur passes
-		glBindTexture(GL_TEXTURE_2D, m_blurBuffer);
+		// Create the intermediate buffer, that acts as an intermediate buffer between vertical and horizontal blur passes
+		glBindTexture(GL_TEXTURE_2D, m_intermediateBuffer);
 		glTexImage2D(GL_TEXTURE_2D, 0, Config::FramebfrVariables().gl_blur_buffer_internal_format, m_bufferWidth, m_bufferHeight, 0,
 			Config::FramebfrVariables().gl_blur_buffer_texture_format, Config::FramebfrVariables().gl_blur_buffer_texture_type, NULL);
 
@@ -160,6 +156,13 @@ void GeometryBuffer::setBufferSize(unsigned int p_bufferWidth, unsigned int p_bu
 		glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
 		glTexImage2D(GL_TEXTURE_2D, 0, Config::FramebfrVariables().gl_final_buffer_internal_format, m_bufferWidth, m_bufferHeight, 0,
 			Config::FramebfrVariables().gl_final_buffer_texture_format, Config::FramebfrVariables().gl_final_buffer_texture_type, NULL);
+		
+		// Create depth buffer
+		glBindTexture(GL_TEXTURE_2D, m_depthBuffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_bufferWidth, m_bufferHeight, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, Config::FramebfrVariables().gl_depth_buffer_internal_format, m_bufferWidth, m_bufferHeight, 0,
+			Config::FramebfrVariables().gl_depth_buffer_texture_format, Config::FramebfrVariables().gl_depth_buffer_texture_type, NULL);
+
 	}
 }
 void GeometryBuffer::setBufferSize(GLuint p_buffer, unsigned int p_bufferWidth, unsigned int p_bufferHeight)
@@ -194,9 +197,9 @@ void GeometryBuffer::setBufferSize(GLuint p_buffer, unsigned int p_bufferWidth, 
 			m_bufferHeight = p_bufferHeight;
 
 			break;
-		case GBufferBlur:
+		case GBufferIntermediate:
 			// Resize the blur buffer
-			glBindTexture(GL_TEXTURE_2D, m_blurBuffer);
+			glBindTexture(GL_TEXTURE_2D, m_intermediateBuffer);
 			glTexImage2D(GL_TEXTURE_2D, 0, Config::FramebfrVariables().gl_blur_buffer_internal_format, p_bufferWidth, p_bufferHeight, 0, 
 						 Config::FramebfrVariables().gl_blur_buffer_texture_format, Config::FramebfrVariables().gl_blur_buffer_texture_type, NULL);
 			
@@ -210,14 +213,14 @@ void GeometryBuffer::setBufferSize(GLuint p_buffer, unsigned int p_bufferWidth, 
 void GeometryBuffer::initFrame()
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO);
-	glDrawBuffer(GL_COLOR_ATTACHMENT0 + GBufferBlur);	// Bind blur buffer
-	glClear(GL_COLOR_BUFFER_BIT);						// and clear it
-	glDrawBuffer(GL_COLOR_ATTACHMENT0 + GBufferFinal);	// Bind final buffer
-	glClear(GL_COLOR_BUFFER_BIT);						// and clear it
+	glDrawBuffer(GL_COLOR_ATTACHMENT0 + GBufferIntermediate);	// Bind intermediate buffer
+	glClear(GL_COLOR_BUFFER_BIT);								// and clear it
+	glDrawBuffer(GL_COLOR_ATTACHMENT0 + GBufferFinal);			// Bind final buffer
+	glClear(GL_COLOR_BUFFER_BIT);								// and clear it
 }
 void GeometryBuffer::initGeometryPass()
 {
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO);
+	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO);
 	glDrawBuffers(GBufferNumTextures, m_texBuffers);		// Bind geometry pass buffers to write to
 	glClear(GL_COLOR_BUFFER_BIT);
 }
@@ -271,8 +274,8 @@ void GeometryBuffer::bindForReading(GBufferTextureType p_buffer, int p_activeTex
 	case GeometryBuffer::GBufferFinal:
 		glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
 		break;
-	case GeometryBuffer::GBufferBlur:
-		glBindTexture(GL_TEXTURE_2D, m_blurBuffer);
+	case GeometryBuffer::GBufferIntermediate:
+		glBindTexture(GL_TEXTURE_2D, m_intermediateBuffer);
 		break;
 	}
 }
@@ -290,8 +293,8 @@ void GeometryBuffer::bindForReading(GBufferTextureType p_buffer)
 	case GeometryBuffer::GBufferFinal:
 		glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
 		break;
-	case GeometryBuffer::GBufferBlur:
-		glBindTexture(GL_TEXTURE_2D, m_blurBuffer);
+	case GeometryBuffer::GBufferIntermediate:
+		glBindTexture(GL_TEXTURE_2D, m_intermediateBuffer);
 		break;
 	}
 }

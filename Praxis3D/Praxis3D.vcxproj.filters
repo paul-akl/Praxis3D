@@ -500,6 +500,15 @@
     <ClInclude Include="Source\DebugRotateScript.h">
       <Filter>Scripting\Objects\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\SkyPass.h">
+      <Filter>Renderer\Render Passes\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HdrMappingPass.h">
+      <Filter>Renderer\Render Passes\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PostProcessPass.h">
+      <Filter>Renderer\Render Passes\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\config.ini" />

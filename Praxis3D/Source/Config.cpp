@@ -113,8 +113,10 @@ void Config::init()
 	AddVariablePredef(m_graphicsVar, multisample_buffers);
 	AddVariablePredef(m_graphicsVar, multisample_samples);
 	AddVariablePredef(m_graphicsVar, alpha_threshold);
+	AddVariablePredef(m_graphicsVar, emissive_multiplier);
 	AddVariablePredef(m_graphicsVar, emissive_threshold);
 	AddVariablePredef(m_graphicsVar, eye_adaption_rate);
+	AddVariablePredef(m_graphicsVar, eye_adaption_intended_brightness);
 	AddVariablePredef(m_graphicsVar, fog_color_x);
 	AddVariablePredef(m_graphicsVar, fog_color_y);
 	AddVariablePredef(m_graphicsVar, fog_color_z);
@@ -223,6 +225,8 @@ void Config::init()
 	AddVariablePredef(m_rendererVar, light_pass_frag_shader);
 	AddVariablePredef(m_rendererVar, final_pass_vert_shader);
 	AddVariablePredef(m_rendererVar, final_pass_frag_shader);
+	AddVariablePredef(m_rendererVar, final_pass_vert_shader);
+	AddVariablePredef(m_rendererVar, final_pass_frag_shader);
 	AddVariablePredef(m_rendererVar, reflection_pass_vert_shader);
 	AddVariablePredef(m_rendererVar, reflection_pass_frag_shader);
 	AddVariablePredef(m_rendererVar, dir_light_quad_offset_x);
@@ -256,6 +260,7 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, gammaUniform);
 	AddVariablePredef(m_shaderVar, alphaCullingUniform);
 	AddVariablePredef(m_shaderVar, alphaThresholdUniform);
+	AddVariablePredef(m_shaderVar, emissiveMultiplierUniform);
 	AddVariablePredef(m_shaderVar, emissiveThresholdUniform);
 	AddVariablePredef(m_shaderVar, heightScaleUniform);
 	AddVariablePredef(m_shaderVar, combinedTextureUniform);
@@ -280,8 +285,10 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, normalMapUniform);
 	AddVariablePredef(m_shaderVar, emissiveMapUniform);
 	AddVariablePredef(m_shaderVar, matPropertiesMapUniform);
-	AddVariablePredef(m_shaderVar, blurMapUniform);
+	AddVariablePredef(m_shaderVar, intermediateMapUniform);
 	AddVariablePredef(m_shaderVar, finalMapUniform);
+	AddVariablePredef(m_shaderVar, inputColorMapUniform);
+	AddVariablePredef(m_shaderVar, outputColorMapUniform);
 	AddVariablePredef(m_shaderVar, sunGlowTextureUniform);
 	AddVariablePredef(m_shaderVar, skyMapTextureUniform);
 	AddVariablePredef(m_shaderVar, dirShadowMapTextureUniform);
@@ -296,6 +303,7 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, billboardScaleUniform);
 	AddVariablePredef(m_shaderVar, depthTypeUniform);
 	AddVariablePredef(m_shaderVar, eyeAdaptionRateUniform);
+	AddVariablePredef(m_shaderVar, eyeAdaptionIntBrightnessUniform);
 	AddVariablePredef(m_shaderVar, HDRSSBuffer);
 	AddVariablePredef(m_shaderVar, testMatUniform);
 	AddVariablePredef(m_shaderVar, testVecUniform);

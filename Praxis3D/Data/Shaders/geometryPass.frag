@@ -3,8 +3,8 @@
 #define MIN_LOD_PARALLAX 0.0
 #define MAX_LOD_PARALLAX 10.0
 #define LOD_PARALLAX_THRESHOLD 0.0
-#define HEIGHT_SCALE_THRESHOLD 0.001
-#define ROUGHNESS_MIN 0.001
+#define PARALLAX_SCALE_THRESHOLD 0.001
+#define MIN_ROUGHNESS 0.001
 
 // Some drivers require the following
 //precision highp float;
@@ -44,6 +44,7 @@ uniform sampler2D normalTexture;
 uniform sampler2D emissiveTexture;
 
 uniform float alphaThreshold;
+uniform float emissiveMultiplier;
 uniform float emissiveThreshold;
 
 /*
@@ -89,7 +90,7 @@ float getHeight(const vec2 p_texCoords, const vec2 p_dPdx, const vec2 p_dPdy)
 
 float getRoughness(const vec2 p_texCoords)
 {
-	return max(texture(combinedTexture, p_texCoords).r, ROUGHNESS_MIN);
+	return max(texture(combinedTexture, p_texCoords).r, MIN_ROUGHNESS);
 }
 float getMetalness(const vec2 p_texCoords)
 {
@@ -325,14 +326,13 @@ void main(void)
 	
 	// This is to save performance by not performing the
 	// parallax mapping for objects that it was not intended for
-	if((1.0 - height) * parallaxScale > HEIGHT_SCALE_THRESHOLD)
+	if((1.0 - height) * parallaxScale > PARALLAX_SCALE_THRESHOLD)
 	{
 		vec3 viewDir = tangentCameraPos - tangentFragPos;
 		float distanceToFrag = length(viewDir);
 		viewDir = normalize(viewDir);
-		float LOD = min(((10.0 - distanceToFrag) / 10.0), 1.0);
 		
-		LOD = clamp(1.0 - ((distanceToFrag * distanceToFrag) / parallaxLOD), MIN_LOD_PARALLAX, MAX_LOD_PARALLAX);
+		float LOD = clamp(1.0 - ((distanceToFrag * distanceToFrag) / parallaxLOD), MIN_LOD_PARALLAX, MAX_LOD_PARALLAX);
 		
 		if(LOD > LOD_PARALLAX_THRESHOLD)
 			newCoords = parallaxOcclusionMapping(texCoord, viewDir, LOD);
@@ -343,7 +343,7 @@ void main(void)
 		//float LOD = min(((10.0 - distanceToFrag) / 10.0), 1.0);
 		//float LOD2 = clamp((distanceToFrag - 8.0) / 2.0, 0.0, 1.0);
 	
-		//if(parallaxScale > HEIGHT_SCALE_THRESHOLD)
+		//if(parallaxScale > PARALLAX_SCALE_THRESHOLD)
 		//	newCoords = mix(parallaxOcclusionMapping(texCoord, viewDir, LOD), texCoord, 1.0 - LOD);
 	//}
 	
@@ -362,13 +362,14 @@ void main(void)
 	// Get roughness and metalness values, and emissive color
 	float roughness = getRoughness(newCoords);
 	float metalness = getMetalness(newCoords);
+	//vec4 emissiveColor = pow(texture(emissiveTexture, newCoords), vec4(gamma, gamma, gamma, 1.0));
 	vec4 emissiveColor = texture(emissiveTexture, newCoords).rgba;
 	
 	// Apply emissive color only if it's above the threshold
 	if(emissiveColor.a > emissiveThreshold)
 	{
 		// Use emissive alpha channel as an intensity multiplier
-		emissiveColor *= emissiveColor.a * 10.0;
+		emissiveColor *= emissiveColor.a * emissiveMultiplier;
 	}
 	else
 	{

@@ -4,6 +4,39 @@
 #include "Config.h"
 #include "RendererFrontend.h"
 
+// Used to share data between rendering passes
+struct RenderPassData
+{
+	RenderPassData()
+	{
+		m_colorInputMap = GeometryBuffer::GBufferDiffuse;
+		m_colorOutputMap = GeometryBuffer::GBufferFinal;
+		m_emissiveInputMap = GeometryBuffer::GBufferEmissive;
+	}
+
+	inline void swapColorInputOutputMaps()
+	{
+		auto inputColorMap = getColorInputMap();
+		setColorInputMap(getColorOutputMap());
+		setColorOutputMap(inputColorMap);
+	}
+
+	// Setters
+	inline void setColorInputMap(GeometryBuffer::GBufferTextureType p_inputColorMap)		{ m_colorInputMap = p_inputColorMap;		}
+	inline void setColorOutputMap(GeometryBuffer::GBufferTextureType p_outputColorMap)		{ m_colorOutputMap = p_outputColorMap;		}
+	inline void setEmissiveInputMap(GeometryBuffer::GBufferTextureType p_emissiveInputMap)	{ m_emissiveInputMap = p_emissiveInputMap;	}
+
+	// Getters
+	const inline GeometryBuffer::GBufferTextureType getColorInputMap() const	{ return m_colorInputMap;		}
+	const inline GeometryBuffer::GBufferTextureType getColorOutputMap() const	{ return m_colorOutputMap;		}
+	const inline GeometryBuffer::GBufferTextureType getEmissiveInputMap() const { return m_emissiveInputMap;	}
+
+	// Remember which color maps to write to and read from, in different rendering passes.
+	GeometryBuffer::GBufferTextureType	m_colorInputMap,
+										m_colorOutputMap,
+										m_emissiveInputMap;
+};
+
 class RenderPass
 {
 public:
@@ -12,7 +45,7 @@ public:
 
 	virtual ErrorCode init() = 0;
 
-	virtual void update(const SceneObjects &p_sceneObjects, const float p_deltaTime) = 0;
+	virtual void update(RenderPassData &p_renderPassData, const SceneObjects &p_sceneObjects, const float p_deltaTime) = 0;
 
 	inline CommandBuffer::Commands &getCommands() { return m_commandBuffer.getCommands(); }
 

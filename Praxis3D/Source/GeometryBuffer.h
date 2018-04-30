@@ -21,8 +21,10 @@ public:
 		GBufferMatProperties,
 		GBufferNumTextures,
 		GBufferFinal = GBufferNumTextures,
-		GBufferBlur,
-		GBufferTotalNumTextures
+		GBufferIntermediate,
+		GBufferTotalNumTextures,
+		GBufferInputTexture = GBufferTotalNumTextures,
+		GbufferOutputTexture
 	};
 
 	typedef unsigned int GBufferTexture;
@@ -60,8 +62,8 @@ public:
 		case GeometryBuffer::GBufferFinal:
 			glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
 			break;
-		case GeometryBuffer::GBufferBlur:
-			glBindTexture(GL_TEXTURE_2D, m_blurBuffer);
+		case GeometryBuffer::GBufferIntermediate:
+			glBindTexture(GL_TEXTURE_2D, m_intermediateBuffer);
 			break;
 		}
 	}
@@ -82,8 +84,8 @@ public:
 		case GeometryBuffer::GBufferFinal:
 			glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
 			break;
-		case GeometryBuffer::GBufferBlur:
-			glBindTexture(GL_TEXTURE_2D, m_blurBuffer);
+		case GeometryBuffer::GBufferIntermediate:
+			glBindTexture(GL_TEXTURE_2D, m_intermediateBuffer);
 			break;
 		}
 	}
@@ -144,7 +146,7 @@ public:
 protected:
 
 	GLuint  m_GBTextures[GBufferNumTextures],	// Geometry pass textures
-			m_blurBuffer,						// Intermediate buffer between vertical and horizontal blur passes
+			m_intermediateBuffer,				// Intermediate buffer between vertical and horizontal blur passes
 			m_finalBuffer,						// Final buffer that gets copied to the screen
 			m_depthBuffer,
 			m_internalFormats[GBufferNumTextures];

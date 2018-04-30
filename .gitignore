@@ -18,3 +18,5 @@ Builds/x64/Release 64bit/Praxis3D\.ipdb
 *.dae
 
 Praxis3D/x64/
+
+Praxis3D/Data/Maps/default_lite backup\.pmap

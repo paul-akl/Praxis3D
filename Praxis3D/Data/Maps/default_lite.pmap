@@ -21,7 +21,32 @@
 					"Name": "DirectionalLight 1",
 					"Color": "1.0f, 1.0f, 1.0f",
 					"Direction": "0.006461f, -0.707092f, -0.707092f",
-					"Intensity": "0.5f"
+					"Intensity": "0.1f"
+				},
+				{
+					"Type": "EnvironmentMapStatic",
+					"Position": "0.0f, 0.0f, 0.0f",
+					"Materials": 
+					[
+						{
+							"Filename": "posx.jpg"
+						},
+						{
+							"Filename": "negx.jpg"
+						},
+						{
+							"Filename": "posy.jpg"
+						},
+						{
+							"Filename": "negy.jpg"
+						},
+						{
+							"Filename": "posz.jpg"
+						},
+						{
+							"Filename": "negz.jpg"
+						}
+					]
 				},
 				{
 					"Type": "ModelObject",
@@ -871,7 +896,7 @@
 					"CutoffAngle": "60.0f",
 					"Color": "1.0f, 1.0f, 1.0f",
 					"Direction": "-1.0f, 0.0f, 0.0f",
-					"Intensity": "20000.0f",
+					"Intensity": "500.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
 					"Position": "60.0f, 3.0f, 60.0f"
@@ -883,7 +908,7 @@
 					"CutoffAngle": "60.0f",
 					"Color": "0.0f, 1.0f, 0.0f",
 					"Direction": "-0.145991f, 0.0f, 0.989286f",
-					"Intensity": "500.0f",
+					"Intensity": "300.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
 					"Position": "-40.0f, 3.0f, 1.96449f"
@@ -895,7 +920,7 @@
 					"CutoffAngle": "60.0f",
 					"Color": "1.0f, 0.0f, 0.0f",
 					"Direction": "0.145991f, 0.0f, -0.989286f",
-					"Intensity": "500.0f",
+					"Intensity": "300.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
 					"Position": "-40.0f, 3.0f, 1.96449f"
@@ -907,7 +932,7 @@
 					"CutoffAngle": "60.0f",
 					"Color": "1.0f, 1.0f, 1.0f",
 					"Direction": "0.707107f, 0.0f, 0.707107f",
-					"Intensity": "200.0f",
+					"Intensity": "500.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
 					"Position": "-20.0f, 3.0f, -20.0f"

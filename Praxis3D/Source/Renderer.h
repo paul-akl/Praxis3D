@@ -95,7 +95,7 @@ public:
 	const virtual Math::Vec3f getFogColor()				const { return m_emptyVec; }
 	const virtual float getFogDensity()					const { return 0.0f; }
 
-	const unsigned int getBlurMapPosition()				const { return GeometryBuffer::GBufferTextureType::GBufferBlur;			 }
+	const unsigned int getBlurMapPosition()				const { return GeometryBuffer::GBufferTextureType::GBufferIntermediate;			 }
 	const unsigned int getDiffuseMapPosition()			const { return GeometryBuffer::GBufferTextureType::GBufferDiffuse;		 }
 	const unsigned int getEmissiveMapPosition()			const { return GeometryBuffer::GBufferTextureType::GBufferEmissive;		 }
 	const unsigned int getMatPropertiesMapPosition()	const { return GeometryBuffer::GBufferTextureType::GBufferMatProperties; }

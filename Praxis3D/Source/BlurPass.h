@@ -53,18 +53,18 @@ public:
 		return returnError;
 	}
 
-	void update(const SceneObjects &p_sceneObjects, const float p_deltaTime)
+	void update(RenderPassData &p_renderPassData, const SceneObjects &p_sceneObjects, const float p_deltaTime)
 	{
 		glDisable(GL_DEPTH_TEST);
-
+		
 		// Set the default framebuffer to be drawn to
 		//m_renderer.m_backend.getGeometryBuffer()->bindFramebufferForWriting(GeometryBuffer::FramebufferDefault);
-
+		
 		// Bind emissive texture for reading so it can be accessed in the shaders
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferEmissive, GeometryBuffer::GBufferEmissive);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getEmissiveInputMap(), GeometryBuffer::GBufferInputTexture);
 
 		// Bind blur texture for writing to, so it can be used as an intermediate buffer between blur passes
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferBlur);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
 
 		// Perform verical blur. Queue and render a full screen quad using a vertical blur shader
 		m_renderer.queueForDrawing(m_blurVerticalShader->getShaderHandle(), m_blurVerticalShader->getUniformUpdater(), p_sceneObjects.m_camera->getBaseObjectData().m_modelMat);
@@ -72,7 +72,7 @@ public:
 
 
 		// Bind intermediate blur texture for reading so it can be accessed in the shaders
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferBlur, GeometryBuffer::GBufferBlur);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorOutputMap(), GeometryBuffer::GBufferInputTexture);
 
 		// Bind emissive texture for writing to, so the second pass populates it with the final blur result
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferEmissive);

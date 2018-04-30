@@ -35,8 +35,12 @@ public:
 		return returnError;
 	}
 
-	void update(const SceneObjects &p_sceneObjects, const float p_deltaTime)
+	void update(RenderPassData &p_renderPassData, const SceneObjects &p_sceneObjects, const float p_deltaTime)
 	{
+		// Set input and output color maps for this frame
+		p_renderPassData.setColorInputMap(GeometryBuffer::GBufferIntermediate);
+		p_renderPassData.setColorOutputMap(GeometryBuffer::GBufferFinal);
+
 		// Bind the geometry framebuffer to be used
 		m_renderer.m_backend.getGeometryBuffer()->bindFramebufferForWriting(GeometryBuffer::FramebufferGeometry);
 

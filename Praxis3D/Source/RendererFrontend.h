@@ -5,14 +5,18 @@
 #include "RendererScene.h"
 
 class RenderPass;
+struct RenderPassData;
 
 class RendererFrontend
 {
 	friend class BlurPass;
 	friend class GeometryPass;
+	friend class HdrMappingPass;
 	friend class LightingPass;
+	friend class PostProcessPass;
 	friend class FinalPass;
 	friend class ReflectionPass;
+	friend class SkyPass;
 public:
 	// A handle for a uniform or shader storage buffer
 	struct ShaderBuffer
@@ -43,7 +47,7 @@ public:
 
 	// Renders a complete frame
 	void renderFrame(const SceneObjects &p_sceneObjects, const float p_deltaTime);
-
+	
 protected:
 	inline void queueForDrawing(const RenderableObjectData &p_object, const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const Math::Mat4f &p_viewProjMatrix)
 	{
@@ -231,6 +235,7 @@ protected:
 	// Renderer backend, serves as an interface layer to GPU
 	RendererBackend m_backend;
 	
+	// Holds information about the current frame, that is used in the shaders
 	UniformFrameData m_frameData;
 	
 	// Renderer commands
@@ -239,7 +244,12 @@ protected:
 	RendererBackend::BufferUpdateCommands m_bufferUpdateCommands;
 	RendererBackend::ScreenSpaceDrawCommands m_screenSpaceDrawCommands;
 
+	// An array of all active rendering passes
 	std::vector<RenderPass*> m_renderingPasses;
 
+	// Holds info used between rendering passses
+	RenderPassData *m_renderPassData;
+
+	// View - projection matrix
 	Math::Mat4f m_viewProjMatrix;
 };

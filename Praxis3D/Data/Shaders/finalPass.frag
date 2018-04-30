@@ -8,8 +8,9 @@ out vec4 outputColor;
 
 uniform ivec2 screenSize;
 uniform float gamma;
+
 uniform sampler2D emissiveMap;
-uniform sampler2D finalColorMap;
+uniform sampler2D inputColorMap;
 
 vec3 gammaCorrection(vec3 p_color, float p_gamma)
 {
@@ -51,29 +52,29 @@ void main(void)
 	vec2 texCoord = calcTexCoord();
 	
 	// Perform gamma correction on the color from the final framebuffer
-	vec3 color = texture(finalColorMap, texCoord).xyz;
+	vec3 fragmentColor = texture(inputColorMap, texCoord).xyz;
 	
 	// Add emissive color (which is generated in a blur pass)
-	color += texture(emissiveMap, texCoord).xyz;
+	fragmentColor += texture(emissiveMap, texCoord).xyz;
 		
 	#ifdef ENABLE_TONE_MAPPING
 	// Perform simple tonemapping on the final color
-	color = simpleToneMapping(color);
+	fragmentColor = simpleToneMapping(fragmentColor);
 	#endif
 	
 	#ifdef ENABLE_REINHARD_TONE_MAPPING
 	// Perform reinhard tonemapping on the final color
-	color = reinhardToneMapping(color);
+	fragmentColor = reinhardToneMapping(fragmentColor);
 	#endif
 	
 	#ifdef ENABLE_FILMIC_TONE_MAPPING
 	// Perform filmic tonemapping on the final color
-	color = filmicToneMapping(color);
+	fragmentColor = filmicToneMapping(fragmentColor);
 	#endif
 	
 	// Perform gamma correction as the last step of the fragment color
-	color = gammaCorrection(color, gamma);
+	fragmentColor = gammaCorrection(fragmentColor, gamma);
 	
 	// Write the color to the framebuffer
-	outputColor = vec4(color, 1.0);
+	outputColor = vec4(fragmentColor, 1.0);
 }

@@ -275,6 +275,25 @@ public:
 private:
 	float m_currentAlphaThreshold;
 };
+class EmissiveMultiplierUniform : public BaseUniform
+{
+public:
+	EmissiveMultiplierUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().emissiveMultiplierUniform, p_shaderHandle), m_currentEmissiveMultiplier(-1.0) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		// Check if the same value is not already assigned (a small optimization)
+		if(m_currentEmissiveMultiplier != Config::graphicsVar().emissive_multiplier)
+		{
+			m_currentEmissiveMultiplier = Config::graphicsVar().emissive_multiplier;
+
+			glUniform1f(m_uniformHandle, m_currentEmissiveMultiplier);
+		}
+	}
+
+private:
+	float m_currentEmissiveMultiplier;
+};
 class EmissiveThresholdUniform : public BaseUniform
 {
 public:
@@ -351,6 +370,25 @@ public:
 private:
 	float eyeAdaptionRateUniform;
 };
+class EyeAdaptionIntendedBrightnessUniform : public BaseUniform
+{
+public:
+	EyeAdaptionIntendedBrightnessUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().eyeAdaptionIntBrightnessUniform, p_shaderHandle), eyeAdaptionIntendedBrightnessUniform(-1.0f) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		// Check if the same value is not already assigned (a small optimization)
+		if(eyeAdaptionIntendedBrightnessUniform != Config::graphicsVar().eye_adaption_intended_brightness)
+		{
+			eyeAdaptionIntendedBrightnessUniform = Config::graphicsVar().eye_adaption_intended_brightness;
+
+			glUniform1f(m_uniformHandle, eyeAdaptionIntendedBrightnessUniform);
+		}
+	}
+
+private:
+	float eyeAdaptionIntendedBrightnessUniform;
+};
 class LODParallaxMappingUniform : public BaseUniform
 {
 public:
@@ -370,7 +408,6 @@ public:
 private:
 	float parallaxLOD;
 };
-
 
 class DirLightColorUniform : public BaseUniform
 {
@@ -584,14 +621,14 @@ public:
 		glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GBufferMatProperties);
 	}
 };
-class BlurMapUniform : public BaseUniform
+class IntermediateMapUniform : public BaseUniform
 {
 public:
-	BlurMapUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().blurMapUniform, p_shaderHandle) { }
+	IntermediateMapUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().intermediateMapUniform, p_shaderHandle) { }
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GBufferBlur);
+		glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GBufferIntermediate);
 	}
 };
 class FinalMapUniform : public BaseUniform
@@ -602,6 +639,26 @@ public:
 	void update(const UniformData &p_uniformData)
 	{
 		glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GBufferFinal);
+	}
+};
+class InputMapUniform : public BaseUniform
+{
+public:
+	InputMapUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().inputColorMapUniform, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GBufferInputTexture);
+	}
+};
+class OutputMapUniform : public BaseUniform
+{
+public:
+	OutputMapUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().outputColorMapUniform, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GbufferOutputTexture);
 	}
 };
 
@@ -667,16 +724,6 @@ public:
 		glUniform1i(m_uniformHandle, MaterialType_Emissive);
 	}
 };
-class BlurTextureUniform : public BaseUniform
-{
-public:
-	BlurTextureUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().blurTextureUniform, p_shaderHandle) { }
-
-	void update(const UniformData &p_uniformData)
-	{
-		glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GBufferBlur);
-	}
-};
 class CombinedTextureUniform : public BaseUniform
 {
 public:
@@ -706,7 +753,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform1i(m_uniformHandle, p_uniformData.getStaticEnvMapPos());
+//		glUniform1i(m_uniformHandle, p_uniformData.m_objectData.);
 	}
 };
 

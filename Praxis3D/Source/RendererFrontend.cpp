@@ -3,6 +3,8 @@
 #include "GeometryPass.h"
 #include "LightingPass.h"
 #include "FinalPass.h"
+#include "HdrMappingPass.h"
+#include "PostProcessPass.h"
 #include "ReflectionPass.h"
 #include "RendererFrontend.h"
 
@@ -33,6 +35,9 @@ ErrorCode RendererFrontend::init()
 	if(!ErrHandlerLoc::get().ifSuccessful(m_backend.init(m_frameData), returnCode))
 		return returnCode;
 
+	// Create the render pass data struct
+	m_renderPassData = new RenderPassData();
+
 	// Add geometry rendering pass, if it was initialized successfuly
 	GeometryPass *geometryPass = new GeometryPass(*this);
 	if(geometryPass->init() == ErrorCode::Success)
@@ -43,10 +48,20 @@ ErrorCode RendererFrontend::init()
 	if(lightingPass->init() == ErrorCode::Success)
 		m_renderingPasses.push_back(lightingPass);
 
+	// Add HDR mapping rendering pass, if it was initialized successfully
+	HdrMappingPass *hdrPass = new HdrMappingPass(*this);
+	if(hdrPass->init() == ErrorCode::Success)
+		m_renderingPasses.push_back(hdrPass);
+
 	// Add blur rendering pass, if it was initialized successfully
 	BlurPass *blurPass = new BlurPass(*this);
 	if(blurPass->init() == ErrorCode::Success)
 		m_renderingPasses.push_back(blurPass);
+
+	// Add post process rendering pass, if it was initialized successfully
+	PostProcessPass *postProcessPass = new PostProcessPass(*this);
+	if(postProcessPass->init() == ErrorCode::Success)
+		m_renderingPasses.push_back(postProcessPass);
 
 	// Add final rendering pass, if it was initialized successfuly
 	FinalPass *finalPass = new FinalPass(*this);
@@ -110,7 +125,7 @@ void RendererFrontend::renderFrame(const SceneObjects &p_sceneObjects, const flo
 	
 	// Prepare the geometry buffer for a new frame and a geometry pass
 	m_backend.getGeometryBuffer()->initFrame();
-	m_backend.getGeometryBuffer()->initGeometryPass();
+	//m_backend.getGeometryBuffer()->initGeometryPass();
 
 	glEnable(GL_DEPTH_TEST);		// Enable depth testing, as this is much like a regular forward render pass
 	glClear(GL_DEPTH_BUFFER_BIT);	// Make sure to clear the depth buffer for the new frame
@@ -120,7 +135,7 @@ void RendererFrontend::renderFrame(const SceneObjects &p_sceneObjects, const flo
 
 	for(decltype(m_renderingPasses.size()) i = 0, size = m_renderingPasses.size(); i < size; i++)
 	{
-		m_renderingPasses[i]->update(p_sceneObjects, p_deltaTime);
+		m_renderingPasses[i]->update(*m_renderPassData, p_sceneObjects, p_deltaTime);
 	}
 }
 

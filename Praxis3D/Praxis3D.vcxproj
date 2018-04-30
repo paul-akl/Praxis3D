@@ -362,6 +362,7 @@
     <ClInclude Include="Source\GeometryBuffer.h" />
     <ClInclude Include="Source\GeometryPass.h" />
     <ClInclude Include="Source\GraphicsDataSets.h" />
+    <ClInclude Include="Source\HdrMappingPass.h" />
     <ClInclude Include="Source\Input.h" />
     <ClInclude Include="Source\KeyCommand.h" />
     <ClInclude Include="Source\LightingGraphicsObjects.h" />
@@ -376,6 +377,7 @@
     <ClInclude Include="Source\ObjectPool.h" />
     <ClInclude Include="Source\ObserverBase.h" />
     <ClInclude Include="Source\PlayState.h" />
+    <ClInclude Include="Source\PostProcessPass.h" />
     <ClInclude Include="Source\PropertyLoader.h" />
     <ClInclude Include="Source\PropertySet.h" />
     <ClInclude Include="Source\ReflectionPass.h" />
@@ -397,6 +399,7 @@
     <ClInclude Include="Source\ShaderLoader.h" />
     <ClInclude Include="Source\ShaderUniforms.h" />
     <ClInclude Include="Source\ShaderUniformUpdater.h" />
+    <ClInclude Include="Source\SkyPass.h" />
     <ClInclude Include="Source\SolarTimeScript.h" />
     <ClInclude Include="Source\SpinWait.h" />
     <ClInclude Include="Source\System.h" />

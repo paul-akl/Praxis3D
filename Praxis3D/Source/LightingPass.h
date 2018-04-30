@@ -27,9 +27,9 @@ public:
 		m_spotLightBuffer.m_size = sizeof(SpotLightDataSet) * Config::graphicsVar().max_num_spot_lights;
 		
 		// Set buffer values
-		m_emissiveAndFinalBuffers.resize(2);
-		m_emissiveAndFinalBuffers[0] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(GeometryBuffer::GBufferEmissive);
-		m_emissiveAndFinalBuffers[1] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(GeometryBuffer::GBufferFinal);
+		m_emissiveAndOutputBuffers.resize(2);
+		m_emissiveAndOutputBuffers[0] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(GeometryBuffer::GBufferEmissive);
+		m_emissiveAndOutputBuffers[1] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(GeometryBuffer::GBufferFinal);
 
 		// Create a property-set used to load lighting shader
 		PropertySet lightShaderProperties(Properties::Shaders);
@@ -55,8 +55,12 @@ public:
 		return returnError;
 	}
 
-	void update(const SceneObjects &p_sceneObjects, const float p_deltaTime)
+	void update(RenderPassData &p_renderPassData, const SceneObjects &p_sceneObjects, const float p_deltaTime)
 	{
+		glDisable(GL_DEPTH_TEST);
+		//glEnable(GL_DEPTH_TEST);
+		//glDepthFunc(GL_NOTEQUAL);
+
 		// Setup point light buffer values
 		m_pointLightBuffer.m_size = sizeof(PointLightDataSet) * p_sceneObjects.m_pointLights.size();
 		m_pointLightBuffer.m_data = (void*)p_sceneObjects.m_pointLights.data();
@@ -72,8 +76,8 @@ public:
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferEmissive, GeometryBuffer::GBufferEmissive);
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferMatProperties, GeometryBuffer::GBufferMatProperties);
 
-		// Bind textures for writing
-		m_renderer.m_backend.getGeometryBuffer()->bindBuffersForWriting(m_emissiveAndFinalBuffers);
+		// Bind texture for writing
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
 
 		// Queue light buffer updates (so that new values that were just setup are sent to the GPU)
 		m_renderer.queueForUpdate(m_pointLightBuffer);
@@ -87,13 +91,15 @@ public:
 
 		// Pass the draw command so it is executed
 		m_renderer.passScreenSpaceDrawCommandsToBackend();
+
+		p_renderPassData.swapColorInputOutputMaps();
 	}
 
 private:
 	ShaderLoader::ShaderProgram	*m_shaderLightPass;
 
 	// Buffer handles used for binding
-	std::vector<GeometryBuffer::GBufferTexture> m_emissiveAndFinalBuffers;
+	std::vector<GeometryBuffer::GBufferTexture> m_emissiveAndOutputBuffers;
 
 	// Light buffers
 	RendererFrontend::ShaderBuffer	m_pointLightBuffer, 
