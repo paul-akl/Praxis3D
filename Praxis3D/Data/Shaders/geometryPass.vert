@@ -22,6 +22,7 @@ uniform mat4 modelMat;
 uniform mat4 viewMat;
 uniform mat4 modelViewMat;
 uniform mat4 projMat;
+uniform mat4 viewProjMat;
 uniform vec3 cameraPosVec;
 uniform float textureTilingFactor;
 uniform float heightScale;

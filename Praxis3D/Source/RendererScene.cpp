@@ -354,6 +354,10 @@ void RendererScene::update(const float p_deltaTime)
 		}
 	}
 
+	// TODO make isActive a part of system object
+	if(m_directionalLight->active())
+		m_directionalLight->update(p_deltaTime);
+
 	//	 ___________________________
 	//	|							|
 	//	|		Point Lights		|
@@ -715,6 +719,8 @@ DirectionalLightObject *RendererScene::loadDirectionalLight(const PropertySet &p
 			break;
 		}
 	}
+
+	m_directionalLight->init();
 
 	return m_directionalLight;
 }

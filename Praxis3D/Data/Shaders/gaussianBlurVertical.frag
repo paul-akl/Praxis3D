@@ -26,13 +26,15 @@ void main(void)
 	
 	float blurOffset = 1.0;
 	
-	vec2 tex_offset = 1.0 / screenSize; // gets size of single texel
+	// Calculate the size of a single pixel
+	vec2 texCoordOffset = 1.0 / screenSize;
+	
     fragColor = texture(inputColorMap, texCoord).rgb * weight[0]; // current fragment's contribution
 	
 	for(int i = 1; i < 5; ++i)
 	{
-		fragColor += texture(inputColorMap, texCoord + vec2(0.0, tex_offset.y * i)).rgb * weight[i];
-		fragColor += texture(inputColorMap, texCoord - vec2(0.0, tex_offset.y * i)).rgb * weight[i];
+		fragColor += texture(inputColorMap, texCoord + vec2(0.0, texCoordOffset.y * i)).rgb * weight[i];
+		fragColor += texture(inputColorMap, texCoord - vec2(0.0, texCoordOffset.y * i)).rgb * weight[i];
 	}
 		
 	/*

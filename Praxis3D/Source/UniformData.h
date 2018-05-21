@@ -17,10 +17,15 @@ struct UniformFrameData
 	// Camera's position in the scene
 	Math::Vec3f m_cameraPosition;
 
+	// Camera's target vector in the scene
+	Math::Vec3f m_cameraTarget;
+
 	// Matrices that can only change once per frame
 	Math::Mat4f m_projMatrix,
 				m_viewMatrix,
-				m_viewProjMatrix;
+				m_viewProjMatrix,
+				m_atmScatProjMatrix,
+				m_transposeViewMatrix;
 
 	// Parameters of direction light, since there can be only one of it
 	Math::Vec3f m_dirLightColor,

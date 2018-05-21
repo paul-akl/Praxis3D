@@ -10,6 +10,9 @@ uniform ivec2 screenSize;
 
 uniform float weight[5] = float[] (0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
  
+//uniform float offset[3] = float[]( 0.0, 1.3846153846, 3.2307692308 );
+//uniform float weight[3] = float[]( 0.2270270270, 0.3162162162, 0.0702702703 );
+
 vec2 calcTexCoord(void)
 {
     return gl_FragCoord.xy / screenSize;
@@ -24,15 +27,25 @@ void main(void)
 	
 	float blurOffset = 1.0;
 	
-	vec2 tex_offset = 1.0 / screenSize; // gets size of single texel
+	// Calculate the size of a single pixel
+	vec2 texCoordOffset = 1.0 / screenSize;
+	
     fragColor = texture(inputColorMap, texCoord).rgb * weight[0]; // current fragment's contribution
 	
 	for(int i = 1; i < 5; ++i)
 	{
-		fragColor += texture(inputColorMap, texCoord + vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
-		fragColor += texture(inputColorMap, texCoord - vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
+		fragColor += texture(inputColorMap, texCoord + vec2(texCoordOffset.x * i, 0.0)).rgb * weight[i];
+		fragColor += texture(inputColorMap, texCoord - vec2(texCoordOffset.x * i, 0.0)).rgb * weight[i];
 	}
-		
+	
+	//FragmentColor = texture2D( image, vec2(gl_FragCoord)/1024.0 ) * weight[0];
+   /* for(int i=1; i<3; i++) 
+	{
+        fragColor +=
+            texture2D( inputColorMap, (texCoord + vec2(0.0, offset[i])) / 900.0) * weight[i];
+        fragColor +=
+            texture2D( inputColorMap, (texCoord - vec2(0.0, offset[i])) / 900.0) * weight[i];
+    }*/
 	/*
     blurTexCoords[ 0] = texCoord + vec2(-0.028 * blurOffset, 0.0);
     blurTexCoords[ 1] = texCoord + vec2(-0.024 * blurOffset, 0.0);

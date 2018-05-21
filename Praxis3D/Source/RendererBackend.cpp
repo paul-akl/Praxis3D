@@ -36,7 +36,7 @@ ErrorCode RendererBackend::init(const UniformFrameData &p_frameData)
 		else
 			glDisable(GL_DEPTH_TEST);
 
-		glDepthFunc(GL_LESS);
+		//glDepthFunc(GL_LESS);
 
 		// Set face culling mode
 		glCullFace(Config::rendererVar().face_culling_mode);

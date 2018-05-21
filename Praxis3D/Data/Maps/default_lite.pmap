@@ -21,7 +21,7 @@
 					"Name": "DirectionalLight 1",
 					"Color": "1.0f, 1.0f, 1.0f",
 					"Direction": "0.006461f, -0.707092f, -0.707092f",
-					"Intensity": "0.1f"
+					"Intensity": "10.0f"
 				},
 				{
 					"Type": "EnvironmentMapStatic",
@@ -763,7 +763,7 @@
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "25000.0f, 25000.0f, 25000.0f",
+					"Scale": "2500.0f, 2500.0f, 2500.0f",
 					"AlphaThreshold": "0.0f",
 					"HeightScale": "0.0f",
 					"Lighting": "1",
@@ -849,7 +849,7 @@
 					"Name": "PointLight 1",
 					"Attenuation": "0.0f, 0.0f, 1.0f",
 					"Color": "1.0f, 1.0f, 1.0f",
-					"Intensity": "100.0f",
+					"Intensity": "10.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"Position": "12.971f, 5.0f, -68.7851f"
 				},
@@ -858,7 +858,7 @@
 					"Name": "PointLight 2",
 					"Attenuation": "0.0f, 0.0f, 1.0f",
 					"Color": "1.0f, 1.0f, 1.0f",
-					"Intensity": "100.0f",
+					"Intensity": "10.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"Position": "9.12898f, 7.98369f, 9.59357f"
 				},
@@ -867,7 +867,7 @@
 					"Name": "PointLight 3",
 					"Attenuation": "0.0f, 0.0f, 1.0f",
 					"Color": "1.0f, 1.0f, 1.0f",
-					"Intensity": "100.0f",
+					"Intensity": "10.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"Position": "-6.94746f, 8.59811f, 7.54629f"
 				},
@@ -876,7 +876,7 @@
 					"Name": "PointLight 45",
 					"Attenuation": "0.0f, 0.0f, 1.0f",
 					"Color": "1.0f, 1.0f, 1.0f",
-					"Intensity": "100.0f",
+					"Intensity": "10.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"Position": "-100.0f, 10.0f, 20.0f"
 				},
@@ -896,7 +896,7 @@
 					"CutoffAngle": "60.0f",
 					"Color": "1.0f, 1.0f, 1.0f",
 					"Direction": "-1.0f, 0.0f, 0.0f",
-					"Intensity": "500.0f",
+					"Intensity": "300.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
 					"Position": "60.0f, 3.0f, 60.0f"
@@ -932,7 +932,7 @@
 					"CutoffAngle": "60.0f",
 					"Color": "1.0f, 1.0f, 1.0f",
 					"Direction": "0.707107f, 0.0f, 0.707107f",
-					"Intensity": "500.0f",
+					"Intensity": "300.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
 					"Position": "-20.0f, 3.0f, -20.0f"
@@ -952,9 +952,9 @@
 					"Position": "-90.6949f, 7.47164f, 11.0953f",
 					"Angle": "26.727f, -0.14598f",
 					"Speed": "2.0f",
-					"SprintSpeed": "50.0f",
+					"SprintSpeed": "500.0f",
 					"LowerLimit": "0.0f",
-					"UpperLimit": "500.0f",
+					"UpperLimit": "500000.0f",
 					"Keybindings": 
 					{
 						"ForwardKey": "26",
@@ -1018,12 +1018,16 @@
 				{
 					"Type": "SolarTimeScript",
 					"Name": "Solar Time Script 1",
-					"Hours": "12",
+					"Hours": "18",
+					"Minutes": "0",
 					"Seconds": "0.0f",
-					"Latitude": "54.0f",
-					"Longitude": "54.0f",
-					"DayOfYear": "1",
-					"TimeMultiplier": "10.0f",
+					"Year": "2018",
+					"Month": "5",
+					"Day": "14",
+					"TimeZone": "3",
+					"Latitude": "54.7f",
+					"Longitude": "25.3f",
+					"TimeMultiplier": "300.0f",
 					"OffsetPosition": "25.0f"
 				}
 			]

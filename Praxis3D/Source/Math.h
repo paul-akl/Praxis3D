@@ -15,6 +15,9 @@
 #define SQRTPI		1.12837916709551257390
 #define SQRT2		1.41421356237309504880
 #define SQRT1_2		0.707106781186547524401
+#define RAD			(PI / 180.0)
+#define DEG			(180.0 / PI)
+#define TWOPI		(PI * 2)
 
 namespace Math
 {
@@ -419,10 +422,10 @@ namespace Math
 		}
 		Mat4f(float p_float[16])
 		{
-			m[0] = p_float[0]; m[4] = p_float[4]; m[8] = p_float[8];	 m[12] = p_float[12];
-			m[1] = p_float[1]; m[5] = p_float[5]; m[9] = p_float[9];	 m[13] = p_float[13];
-			m[2] = p_float[2]; m[6] = p_float[6]; m[10] = p_float[10]; m[14] = p_float[14];
-			m[3] = p_float[3]; m[7] = p_float[7]; m[11] = p_float[11]; m[15] = p_float[15];
+			m[0] = p_float[0]; m[4] = p_float[4]; m[8] = p_float[8];	m[12] = p_float[12];
+			m[1] = p_float[1]; m[5] = p_float[5]; m[9] = p_float[9];	m[13] = p_float[13];
+			m[2] = p_float[2]; m[6] = p_float[6]; m[10] = p_float[10];	m[14] = p_float[14];
+			m[3] = p_float[3]; m[7] = p_float[7]; m[11] = p_float[11];	m[15] = p_float[15];
 		}
 		Mat4f(float p_m01, float p_m02, float p_m03, float p_m04,
 			  float p_m05, float p_m06, float p_m07, float p_m08,
@@ -491,6 +494,7 @@ namespace Math
 		}
 
 		void rotate(const Vec3f& p_vec3f);
+		void perspectiveRadian(const float p_FOV, const int p_screenWidth, const int p_screenHeight);
 		void perspective(const float p_FOV, const int p_screenWidth, const int p_screenHeight, const float p_zNear, const float p_zFar);
 		void perspective(const float p_FOV, const float p_aspectRatio, const float p_zNear, const float p_zFar);
 		inline void initCamera(const Vec3f& p_position, const Vec3f& p_target, const Vec3f& p_up)
@@ -535,6 +539,13 @@ namespace Math
 		}
 	};
 
+	const inline Mat4f transpose(const Mat4f& p_mat)
+	{
+		return Mat4f(	p_mat.m[0], p_mat.m[4], p_mat.m[8], p_mat.m[12],
+						p_mat.m[1], p_mat.m[5], p_mat.m[9], p_mat.m[13],
+						p_mat.m[2], p_mat.m[6], p_mat.m[10],p_mat.m[14],
+						p_mat.m[3], p_mat.m[7], p_mat.m[11],p_mat.m[15]);
+	}
 	const inline Mat4f operator*(const Mat4f& p_left, const Mat4f p_right)
 	{
 		// Multiplication can be done more stylish with a nested loop, but this should be slightly faster
@@ -568,9 +579,12 @@ namespace Math
 				p_vec3.y * 180.0f / (float)PI,
 				p_vec3.z * 180.0f / (float)PI);
 	}
-	inline float toRadian(const float p_float) { return (p_float * (float) PI / 180.0f); }
+	inline float toRadian(const float p_angle) { return (p_angle * (float) PI / 180.0f); }
+	inline double toRadian(const double p_angle) { return (p_angle * PI / 180.0); }
 	inline float toDegree(const float p_float) { return (p_float * 180.0f / (float) PI); }
 	inline float getMax(const float p_left, const float p_right) { return p_left > p_right ? p_left : p_right; }
+	inline float wrapRadianAngle(float p_angleInRadians) { return p_angleInRadians - (float)TWOPI * floor(p_angleInRadians / (float)TWOPI); }
+	inline double wrapRadianAngle(double p_angleInRadians) { return p_angleInRadians - TWOPI * floor(p_angleInRadians / TWOPI); }
 
 	template <typename T>
 	inline T clamp(T p_in, T p_low, T p_high) { return std::min(std::max(p_in, p_low), p_high); }

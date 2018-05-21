@@ -33,8 +33,8 @@ float calcBrightnessLinear(vec3 p_color)
 	return (p_color.x + p_color.y + p_color.z) / 3.0;
 }
 
-// Calculates a brightness value from a color
-float calcBrightness(vec3 p_color)
+// Calculates a brightness value (luma) from a color
+float calcLuma(vec3 p_color)
 {
 	return dot(p_color, vec3(0.2126, 0.7152, 0.0722));
 }
@@ -46,7 +46,7 @@ void main(void)
 	// Get maximum mipmap level (1x1) of a framebuffer
 	float exposureMipmapLevel = calcMaxMipmapLevel(screenSize);
 	// Get the current (previous frame) average brightness
-	float avgBrightnessPrevFrame = calcBrightness(textureLod(finalColorMap, vec2(0.0), exposureMipmapLevel).xyz);
+	float avgBrightnessPrevFrame = calcLuma(textureLod(finalColorMap, vec2(0.0), exposureMipmapLevel).xyz);
 	// Perform a linear interpolation between current and previous brightness based on delta time
 	screenBrightness = mix(screenBrightness, avgBrightnessPrevFrame, deltaTimeS / eyeAdaptionRate);
 	

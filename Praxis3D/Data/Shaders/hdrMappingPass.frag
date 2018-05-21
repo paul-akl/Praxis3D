@@ -1,8 +1,8 @@
 #version 430 core
 
 //#define AVG_INTENDED_BRIGHTNESS 0.2
-#define MIN_INTENDED_BRIGHTNESS 0.01
-#define MAX_INTENDED_BRIGHTNESS 10.0
+#define MIN_INTENDED_BRIGHTNESS 0.05
+#define MAX_INTENDED_BRIGHTNESS 5.0
 
 #define MAX_NUM_POINT_LIGHTS 20
 #define MAX_NUM_SPOT_LIGHTS 10
@@ -34,8 +34,8 @@ float getBrightestColor(vec3 p_color)
 	return max(p_color.x, max(p_color.y, p_color.z));
 }
 
-// Calculates a brightness value from a color
-float calcBrightness(vec3 p_color)
+// Calculates a brightness value (luma) from a color
+float calcLuma(vec3 p_color)
 {
 	return dot(p_color, vec3(0.2126, 0.7152, 0.0722));
 }
@@ -68,11 +68,18 @@ void main(void)
 	
 	// Adjust the fragment brightness based on average
 	fragmentColor = brightnessMapping(fragmentColor, avgBrightness);
+	emissiveColor = brightnessMapping(emissiveColor, avgBrightness);
 	
-	// If a fragment brightness exceeds a value of 1.0 after an HDR Mapping, 
-	// add it to the emissive buffer, as a bloom effect
-	if(calcBrightness(fragmentColor) > 1.0)
-		emissiveColor += fragmentColor;
+	// Calculate luminance of the fragment after HDR mapping
+	float luminance = max(0.0, calcLuma(fragmentColor) - 1.0);
+	
+	// Get bright fragments
+	vec3 fragmentBrightness = min(luminance * fragmentColor, fragmentColor);
+	
+	// Add bright fragments to the emissive buffer for bloom effect
+	emissiveColor += fragmentBrightness;
+	//fragmentColor = max(fragmentColor * (1.0 - luminance), vec3(0.0));
+	//fragmentColor = max(fragmentColor - fragmentBrightness, vec3(0.0));
 	
 	emissiveBuffer = vec4(emissiveColor, 1.0);
 	colorBuffer = vec4(fragmentColor, 1.0);

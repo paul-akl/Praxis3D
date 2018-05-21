@@ -9,6 +9,7 @@ struct RenderPassData;
 
 class RendererFrontend
 {
+	friend class AtmScatteringPass;
 	friend class BlurPass;
 	friend class GeometryPass;
 	friend class HdrMappingPass;
@@ -25,12 +26,14 @@ public:
 		{
 			m_data = 0;
 			m_size = 0;
+			m_updateSize = 0;
 			m_offset = 0;
 			m_handle = 0;
 			m_bindingIndex = 0;
 		}
 
 		int64_t m_size;
+		int64_t m_updateSize;
 		unsigned int m_offset;
 		unsigned int m_handle;
 		unsigned int m_bindingIndex;
@@ -169,24 +172,26 @@ protected:
 			for(int matType = 0; matType < MaterialType_NumOfTypes; matType++)
 				queueForLoading(p_objectData.m_materials[matType][i]);
 	}
-	inline void queueForLoading(ShaderBuffer &p_lightBuffer)
+	inline void queueForLoading(ShaderBuffer &p_shaderBuffer)
 	{
-		m_loadCommands.emplace_back(p_lightBuffer.m_handle,
-			p_lightBuffer.m_bufferType,
-			p_lightBuffer.m_bufferUsage,
-			p_lightBuffer.m_bindingIndex,
-			p_lightBuffer.m_size,
-			p_lightBuffer.m_data);
+		m_loadCommands.emplace_back(p_shaderBuffer.m_handle,
+			p_shaderBuffer.m_bufferType,
+			p_shaderBuffer.m_bufferUsage,
+			p_shaderBuffer.m_bindingIndex,
+			p_shaderBuffer.m_size,
+			p_shaderBuffer.m_data);
 	}
 
-	inline void queueForUpdate(ShaderBuffer &p_lightBuffer)
+	inline void queueForUpdate(ShaderBuffer &p_shaderBuffer)
 	{
-		m_bufferUpdateCommands.emplace_back(p_lightBuffer.m_handle,
-			p_lightBuffer.m_offset,
-			p_lightBuffer.m_size,
-			p_lightBuffer.m_data,
-			BufferUpdateType::BufferUpdate_SubData,
-			BufferType::BufferType_Uniform);
+		m_bufferUpdateCommands.emplace_back(p_shaderBuffer.m_handle,
+			p_shaderBuffer.m_offset,
+			p_shaderBuffer.m_updateSize,
+			p_shaderBuffer.m_data,
+			p_shaderBuffer.m_updateSize == p_shaderBuffer.m_size ?	// If update size is the same as buffer size
+			BufferUpdateType::BufferUpdate_Data :					// Update the whole buffer
+			BufferUpdateType::BufferUpdate_SubData,					// Otherwise update only part of the data
+			p_shaderBuffer.m_bufferType);
 	}
 
 	inline void passLoadCommandsToBackend()
@@ -225,11 +230,15 @@ protected:
 	// Recalculates the projection matrix
 	inline void updateProjectionMatrix()
 	{
-		m_frameData.m_projMatrix.perspective(Config::graphicsVar().fov, 
-											 m_frameData.m_screenSize.x, 
-											 m_frameData.m_screenSize.y, 
-											 Config::graphicsVar().z_near, 
-											 Config::graphicsVar().z_far);
+		m_frameData.m_projMatrix.perspective(	Config::graphicsVar().fov, 
+												m_frameData.m_screenSize.x, 
+												m_frameData.m_screenSize.y, 
+												Config::graphicsVar().z_near, 
+												Config::graphicsVar().z_far);
+
+		m_frameData.m_atmScatProjMatrix.perspectiveRadian(	Config::graphicsVar().fov,
+															m_frameData.m_screenSize.x,
+															m_frameData.m_screenSize.y);
 	}
 
 	// Renderer backend, serves as an interface layer to GPU

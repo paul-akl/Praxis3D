@@ -108,3 +108,168 @@ struct HDRDataSet
 
 	float m_screenBrightness;
 };
+
+// An atmosphere density layer
+struct DensityProfLayer
+{
+	DensityProfLayer() : DensityProfLayer(0.0f, 0.0f, 0.0f, 0.0f, 0.0f) { }
+	DensityProfLayer(float p_width, float p_expTerm, float p_expScale, float p_linearTerm, float p_constantTerm) :
+		m_width(p_width), m_expTerm(p_expTerm), m_expScale(p_expScale), m_linearTerm(p_linearTerm), m_constantTerm(p_constantTerm) { }
+
+	float m_width;
+	float m_expTerm;
+	float m_expScale;
+	float m_linearTerm;
+	float m_constantTerm;
+
+	Math::Vec3f m_padding1;
+};
+
+// An atmosphere density profile made of several layers on top of each other
+struct DensityProfile
+{
+	DensityProfile() { }
+
+	DensityProfile(DensityProfLayer p_layers[2])
+	{
+		m_layers[0] = p_layers[0];
+		m_layers[1] = p_layers[1];
+	}
+	DensityProfile(DensityProfLayer p_layer1, DensityProfLayer p_layer2)
+	{
+		m_layers[0] = p_layer1;
+		m_layers[1] = p_layer2;
+	}
+
+	DensityProfLayer m_layers[2];
+};
+
+// A planet's atmosphere parameters
+struct AtmosphereParameters
+{
+	AtmosphereParameters() :
+		m_solarIrradiance(0.0f),
+		m_sunAngularRadius(0.0f),
+		m_bottomRadius(0.0f),
+		m_topRadius(0.0f),
+		m_rayleighScattering(0.0f),
+		m_mieScattering(0.0f),
+		m_mieExtinction(0.0f),
+		m_miePhaseFunctionG(0.0f),
+		m_absorptionExtinction(0.0f),
+		m_groundAlbedo(0.0f),
+		m_muSMin(0.0f)
+	{
+
+	}
+
+	AtmosphereParameters(
+		Math::Vec3f p_solarIrradiance, 
+		float p_sunAngularRadius, 
+		DensityProfile p_rayleighDensity, 
+		DensityProfile p_mieDensity, 
+		DensityProfile p_absorptionDensity, 
+		Math::Vec3f p_rayleighScattering, 
+		float p_bottomRadius, 
+		Math::Vec3f p_mieScattering, 
+		float p_topRadius, 
+		Math::Vec3f p_mieExtinction, 
+		float p_miePhaseFunctionG, 
+		Math::Vec3f p_absorptionExtinction, 
+		float p_muSMin, 
+		Math::Vec3f p_groundAlbedo) :
+		m_solarIrradiance(p_solarIrradiance),
+		m_sunAngularRadius(p_sunAngularRadius),
+		m_rayleighDensity(p_rayleighDensity),
+		m_mieDensity(p_mieDensity),
+		m_absorptionDensity(p_absorptionDensity),
+		m_rayleighScattering(p_rayleighScattering),
+		m_bottomRadius(p_bottomRadius),
+		m_mieScattering(p_mieScattering),
+		m_topRadius(p_topRadius),
+		m_mieExtinction(p_mieExtinction),
+		m_miePhaseFunctionG(p_miePhaseFunctionG),
+		m_absorptionExtinction(p_absorptionExtinction),
+		m_muSMin(p_muSMin),
+		m_groundAlbedo(p_groundAlbedo)
+	{
+
+	}
+	
+	// The solar irradiance at the top of the atmosphere.
+	Math::Vec3f m_solarIrradiance;
+	
+	// The sun's angular radius
+	float m_sunAngularRadius;
+
+	// The density profile of air molecules
+	DensityProfile m_rayleighDensity;
+
+	// The density profile of aerosols
+	DensityProfile m_mieDensity;
+
+	// The density profile of air molecules that absorb light (e.g. ozone)
+	DensityProfile m_absorptionDensity;
+
+	// The scattering coefficient of air molecules at the altitude where their density is maximum
+	Math::Vec3f m_rayleighScattering;
+	
+	// The distance between the planet center and the bottom of the atmosphere.
+	float m_bottomRadius;
+
+	// The scattering coefficient of aerosols at the altitude where their density is maximum
+	Math::Vec3f m_mieScattering;
+
+	// The distance between the planet center and the top of the atmosphere.
+	float m_topRadius;
+
+	// The extinction coefficient of aerosols at the altitude where their density is maximum
+	Math::Vec3f m_mieExtinction;
+	
+	// The asymetry parameter for the Cornette-Shanks phase function for the aerosols.
+	float m_miePhaseFunctionG;
+
+	// The extinction coefficient of molecules that absorb light (e.g. ozone)
+	Math::Vec3f m_absorptionExtinction;
+	
+	// The cosine of the maximum Sun zenith angle for which atmospheric scattering must be precomputed
+	float m_muSMin;
+
+	// The average albedo of the ground.
+	Math::Vec3f m_groundAlbedo;
+};
+
+// Parameters for atmospheric scattering shader
+struct AtmScatteringParameters
+{
+	AtmScatteringParameters() :
+		m_whitePoint(1.0f, 1.0f, 1.0f),
+		m_earthCenter(0.0f, -6360000.0f / 1000.0f, 0.0f),
+		m_sunSize(tan(0.01935f / 2.0f), cos(0.01935f / 2.0f)) { }
+
+	AtmScatteringParameters(AtmosphereParameters p_atmosphereParam) : 
+		m_atmosphereParam(p_atmosphereParam),
+		m_whitePoint(1.0f, 1.0f, 1.0f),
+		m_earthCenter(0.0f, -6360000.0f / 1000.0f, 0.0f),
+		m_sunSize(tan(0.01935f / 2.0f), cos(0.01935f / 2.0f)) { }
+	
+	AtmScatteringParameters(
+		AtmosphereParameters p_atmosphereParam,
+		Math::Vec3f p_whitePoint,
+		Math::Vec3f p_earthCenter,
+		Math::Vec2f p_sunSize) : 
+		m_atmosphereParam(p_atmosphereParam),
+		m_whitePoint(p_whitePoint),
+		m_earthCenter(p_earthCenter),
+		m_sunSize(p_sunSize) { }
+
+	Math::Vec3f m_whitePoint;
+	float m_padding1;
+	Math::Vec3f m_earthCenter;
+	float m_padding2;
+	Math::Vec2f m_sunSize;
+	float m_padding3;
+	float m_padding4;
+
+	AtmosphereParameters m_atmosphereParam;
+};

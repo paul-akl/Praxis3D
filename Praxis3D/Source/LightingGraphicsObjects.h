@@ -8,7 +8,10 @@ class DirectionalLightObject : public SystemObject
 	//friend class RendererScene;
 public:
 	DirectionalLightObject(SystemScene *p_systemScene, const std::string &p_name, DirectionalLightDataSet p_lightDataSet)
-		: SystemObject(p_systemScene, p_name, Properties::DirectionalLight), m_lightDataSet(p_lightDataSet), m_active(true) { }
+		: SystemObject(p_systemScene, p_name, Properties::DirectionalLight), m_lightDataSet(p_lightDataSet), m_active(true) 
+	{ 
+
+	}
 
 	ErrorCode init()
 	{
@@ -81,7 +84,7 @@ public:
 
 private:
 	DirectionalLightDataSet m_lightDataSet;
-
+	
 	bool m_active;
 };
 

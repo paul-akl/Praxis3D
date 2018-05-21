@@ -37,6 +37,9 @@ public:
 
 	void update(RenderPassData &p_renderPassData, const SceneObjects &p_sceneObjects, const float p_deltaTime)
 	{
+		glDepthMask(GL_TRUE);
+		glDepthFunc(GL_LEQUAL);
+
 		// Set input and output color maps for this frame
 		p_renderPassData.setColorInputMap(GeometryBuffer::GBufferIntermediate);
 		p_renderPassData.setColorOutputMap(GeometryBuffer::GBufferFinal);

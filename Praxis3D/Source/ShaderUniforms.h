@@ -105,6 +105,18 @@ protected:
 	const unsigned int m_shaderHandle;
 };
 
+class AtmScatProjMatUniform : public BaseUniform
+{
+public:
+	AtmScatProjMatUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().atmScatProjMatUniform, p_shaderHandle)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniformMatrix4fv(m_uniformHandle, 1, GL_TRUE, &p_uniformData.m_frameData.m_atmScatProjMatrix.m[0]);
+	}
+};
 class ModelMatUniform : public BaseUniform
 {
 public:
@@ -170,6 +182,18 @@ public:
 		Math::Mat4f MVP = p_uniformData.m_frameData.m_projMatrix * p_uniformData.m_frameData.m_viewMatrix * p_uniformData.m_objectData.m_modelMat;
 		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &MVP.m[0]);
 		//glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &p_uniformData.m_objectData.m_modelViewProjMatrix.m[0]);
+	}
+};
+class TransposeViewMatUniform : public BaseUniform
+{
+public:
+	TransposeViewMatUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().transposeViewMatUniform, p_shaderHandle)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &p_uniformData.m_frameData.m_transposeViewMatrix.m[0]);
 	}
 };
 
@@ -526,15 +550,17 @@ public:
 					p_uniformData.m_frameData.m_cameraPosition.z);
 	}
 };
-/* Unused */ class CameraTargetVecUniform : public BaseUniform
+class CameraTargetVecUniform : public BaseUniform
 {
 public:
 	CameraTargetVecUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().cameraTargetVecUniform, p_shaderHandle) { }
 
 	void update(const UniformData &p_uniformData)
 	{
-		//auto &cameraPosVec = p_uniformData.getCameraTarget();
-		//glUniform3f(m_uniformHandle, cameraPosVec.x, cameraPosVec.y, cameraPosVec.z);
+		glUniform3f(m_uniformHandle,
+			p_uniformData.m_frameData.m_cameraTarget.x,
+			p_uniformData.m_frameData.m_cameraTarget.y,
+			p_uniformData.m_frameData.m_cameraTarget.z);
 	}
 };
 /* Unused */ class CameraUpVecUniform : public BaseUniform // Unused
@@ -736,6 +762,55 @@ public:
 	}
 };
 
+class AtmIrradianceTextureUniform : public BaseUniform
+{
+public:
+	AtmIrradianceTextureUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().atmIrradianceTextureUniform, p_shaderHandle)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniform1i(m_uniformHandle, AtmScatteringTextureType::AtmScatteringTextureType_Irradiance);
+	}
+};
+class AtmScatteringTextureUniform : public BaseUniform
+{
+public:
+	AtmScatteringTextureUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().atmScatteringTextureUniform, p_shaderHandle)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniform1i(m_uniformHandle, AtmScatteringTextureType::AtmScatteringTextureType_Scattering);
+	}
+};
+class AtmSingleMieTextureUniform : public BaseUniform
+{
+public:
+	AtmSingleMieTextureUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().atmSingleMieScatTextureUniform, p_shaderHandle)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniform1i(m_uniformHandle, AtmScatteringTextureType::AtmScatteringTextureType_SingleMie);
+	}
+};
+class AtmTransmittanceTextureUniform : public BaseUniform
+{
+public:
+	AtmTransmittanceTextureUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().atmTransmittanceTextureUniform, p_shaderHandle)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniform1i(m_uniformHandle, AtmScatteringTextureType::AtmScatteringTextureType_Transmittance);
+	}
+};
+
 class DynamicEnvironmentMapUniform : public BaseUniform
 {
 public:
@@ -871,7 +946,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		updateBlockBinding(LightBufferBinding_PointLight);
+		updateBlockBinding(UniformBufferBinding_PointLights);
 	}
 };
 class SpotLightBufferUniform : public BaseUniformBlock
@@ -881,9 +956,20 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		updateBlockBinding(LightBufferBinding_SpotLight);
+		updateBlockBinding(UniformBufferBinding_SpotLights);
 	}
 };
+class AtmScatParametersUniform : public BaseUniformBlock
+{
+public:
+	AtmScatParametersUniform(unsigned int p_shaderHandle) : BaseUniformBlock(Config::shaderVar().atmScatParamBuffer, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		updateBlockBinding(UniformBufferBinding_AtmScatParam);
+	}
+};
+
 class HDRShaderStorageBuffer : public BaseShaderStorageBlock
 {
 public:

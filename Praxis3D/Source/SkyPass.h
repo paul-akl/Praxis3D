@@ -16,12 +16,12 @@ public:
 		ErrorCode returnError = ErrorCode::Success;
 		ErrorCode shaderError;
 
-		m_name = "Blur Rendering Pass";
+		m_name = "Sky Rendering Pass";
 
 		// Create a property-set used to load blur vertical shaders
 		PropertySet skyPassShaderShaderProperties(Properties::Shaders);
-		skyPassShaderShaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().gaussian_blur_vertical_vert_shader);
-		skyPassShaderShaderProperties.addProperty(Properties::FragmentShader, Config::rendererVar().gaussian_blur_vertical_frag_shader);
+		skyPassShaderShaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().atm_scattering_sky_vert_shader);
+		skyPassShaderShaderProperties.addProperty(Properties::FragmentShader, Config::rendererVar().atm_scattering_sky_frag_shader);
 
 		// Create shaders
 		m_skyPassShader = Loaders::shader().load(skyPassShaderShaderProperties);
@@ -30,7 +30,7 @@ public:
 		//		|	  LOAD SKY PASS SHADER		|
 		//		|_______________________________|
 		shaderError = m_skyPassShader->loadToMemory();		// Load shader to memory
-		if(shaderError == ErrorCode::Success)					// Check if shader was loaded successfully
+		if(shaderError == ErrorCode::Success)				// Check if shader was loaded successfully
 			m_renderer.queueForLoading(*m_skyPassShader);	// Queue the shader to be loaded to GPU
 		else
 			returnError = shaderError;
@@ -39,21 +39,23 @@ public:
 		return returnError;
 	}
 
-	void update(const SceneObjects &p_sceneObjects, const float p_deltaTime)
+	void update(RenderPassData &p_renderPassData, const SceneObjects &p_sceneObjects, const float p_deltaTime)
 	{
-		glDisable(GL_DEPTH_TEST);
+		//glDisable(GL_DEPTH_TEST);
+		glEnable(GL_DEPTH_TEST);
+		//glDepthFunc(GL_LEQUAL);
+		//glDepthMask(GL_FALSE);
 
-		// Set the default framebuffer to be drawn to
-		//m_renderer.m_backend.getGeometryBuffer()->bindFramebufferForWriting(GeometryBuffer::FramebufferDefault);
+		// Bind input color texture for reading so it can be accessed in the shaders
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GeometryBuffer::GBufferInputTexture);
 
-		// Bind final texture for reading so it can be accessed in the shaders
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferFinal, GeometryBuffer::GBufferFinal);
+		// Bind output color texture for writing to, so it can be used as an intermediate buffer between blur passes
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
 
-		// Bind intermediate texture for writing to, so HDR mapping is outputed to it
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferIntermediate);
-
-		// Perform HDR mapping. Queue and render a full screen quad using an HDR pass shader
+		// Perform various visual effects in the post process shader
 		m_renderer.queueForDrawing(m_skyPassShader->getShaderHandle(), m_skyPassShader->getUniformUpdater(), p_sceneObjects.m_camera->getBaseObjectData().m_modelMat);
+		
+		// Pass the draw command so it is executed
 		m_renderer.passScreenSpaceDrawCommandsToBackend();
 	}
 

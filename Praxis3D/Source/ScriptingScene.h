@@ -9,6 +9,7 @@
 #include "ScriptingTask.h"
 #include "SolarTimeScript.h"
 #include "System.h"
+#include "SunScript.h"
 #include "WorldEditObject.h"
 
 class ScriptingSystem;
@@ -56,6 +57,7 @@ private:
 	DebugMoveScript *loadDebugMove(const PropertySet &p_properties);
 	DebugRotateScript *loadDebugRotate(const PropertySet &p_properties);
 	SolarTimeScript *loadSolarTime(const PropertySet &p_properties);
+	SunScript *loadSun(const PropertySet &p_properties);
 	WorldEditScript *loadWorldEdit(const PropertySet &p_properties);
 
 	ScriptingTask *m_scriptingTask;

@@ -69,6 +69,12 @@ ErrorCode ShaderUniformUpdater::generateTextureUpdateList()
 	uniformList.push_back(new NormalTextureUniform(m_shaderHandle));
 	uniformList.push_back(new EmissiveTextureUniform(m_shaderHandle));
 	uniformList.push_back(new CombinedTextureUniform(m_shaderHandle));
+
+	// Atmoshperic scattering textures
+	uniformList.push_back(new AtmIrradianceTextureUniform(m_shaderHandle));
+	uniformList.push_back(new AtmScatteringTextureUniform(m_shaderHandle));
+	uniformList.push_back(new AtmSingleMieTextureUniform(m_shaderHandle));
+	uniformList.push_back(new AtmTransmittanceTextureUniform(m_shaderHandle));
 		
 	// Go through each uniform and check if it is valid
 	// If it is, add it to the update list, if not, delete it
@@ -88,9 +94,11 @@ ErrorCode ShaderUniformUpdater::generatePerFrameList()
 	std::vector<BaseUniform*> uniformList;
 
 	// View, Projection matrices
+	uniformList.push_back(new AtmScatProjMatUniform(m_shaderHandle));
 	uniformList.push_back(new ViewMatUniform(m_shaderHandle));
 	uniformList.push_back(new ProjectionMatUniform(m_shaderHandle));
 	uniformList.push_back(new ViewProjectionMatUniform(m_shaderHandle));
+	uniformList.push_back(new TransposeViewMatUniform(m_shaderHandle));
 	uniformList.push_back(new DirShadowMapMVPUniform(m_shaderHandle));
 	uniformList.push_back(new DirShadowMapBiasMVPUniform(m_shaderHandle));
 
@@ -187,6 +195,9 @@ ErrorCode ShaderUniformUpdater::generateUniformBlockList()
 	uniformBlockList.push_back(new PointLightBufferUniform(m_shaderHandle));
 	uniformBlockList.push_back(new SpotLightBufferUniform(m_shaderHandle));
 
+	// Atmospheric scattering buffer
+	uniformBlockList.push_back(new AtmScatParametersUniform(m_shaderHandle));
+	
 	// Go through each uniform and check if it is valid
 	// If it is, add it to the update list, if not, delete it
 	for(decltype(uniformBlockList.size()) i = 0, size = uniformBlockList.size(); i < size; i++)

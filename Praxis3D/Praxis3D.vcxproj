@@ -283,6 +283,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Source\AtmScatteringModel.cpp" />
+    <ClCompile Include="Source\AtmScatteringPass.cpp" />
     <ClCompile Include="Source\BaseGraphicsObjects.cpp" />
     <ClCompile Include="Source\ChangeController.cpp" />
     <ClCompile Include="Source\ClockLocator.cpp" />
@@ -333,6 +335,12 @@
   <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="resource1.h" />
+    <ClInclude Include="Source\AtmScatteringConstants.h" />
+    <ClInclude Include="Source\AtmScatteringModel.h" />
+    <ClInclude Include="Source\AtmScatteringPass.h" />
+    <ClInclude Include="Source\AtmScatteringShaderDefinitions.h" />
+    <ClInclude Include="Source\AtmScatteringShaderFunctions.h" />
+    <ClInclude Include="Source\AtmScatteringShaderPass.h" />
     <ClInclude Include="Source\BaseGraphicsObjects.h" />
     <ClInclude Include="Source\BaseScriptObject.h" />
     <ClInclude Include="Source\BlurPass.h" />
@@ -402,6 +410,7 @@
     <ClInclude Include="Source\SkyPass.h" />
     <ClInclude Include="Source\SolarTimeScript.h" />
     <ClInclude Include="Source\SpinWait.h" />
+    <ClInclude Include="Source\SunScript.h" />
     <ClInclude Include="Source\System.h" />
     <ClInclude Include="Source\TaskManager.h" />
     <ClInclude Include="Source\TaskManagerLocator.h" />

@@ -63,6 +63,17 @@ namespace Math
 
 		*this = (*this * rotY * rotX * rotZ);
 	}
+	void Mat4f::perspectiveRadian(const float p_FOV, const int p_screenWidth, const int p_screenHeight)
+	{
+		float aspectRatio = static_cast<float>(p_screenWidth) / static_cast<float>(p_screenHeight);
+		float kFovY = 80.0f / 180.0f * (float)PI;
+		float kTanFovY = tan(kFovY / 2.0f);
+
+		 m[0] = kTanFovY * aspectRatio;	 m[4] = 0.0f;		m[8] = 0.0f;	m[12] = 0.0f;
+		 m[1] = 0.0f;					 m[5] = kTanFovY;	m[9] = 0.0f;	m[13] = 0.0f;
+		 m[2] = 0.0f;					 m[6] = 0.0f;		m[10] = 0.0f;	m[14] = 1.0f;
+		 m[3] = 0.0f;					 m[7] = 0.0f;		m[11] = -1.0f;	m[15] = 1.0f;
+	}
 	void Mat4f::perspective(const float p_FOV, const int p_screenWidth, const int p_screenHeight, const float p_zNear, const float p_zFar)
 	{
 		float	radFOV = toRadian(p_FOV),

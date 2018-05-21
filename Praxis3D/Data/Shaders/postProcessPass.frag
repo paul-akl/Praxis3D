@@ -3,7 +3,6 @@
 out vec4 outputColor;
 
 uniform ivec2 screenSize;
-
 uniform sampler2D inputColorMap;
 
 vec2 calcTexCoord(void)

@@ -258,6 +258,12 @@
     <ClCompile Include="Source\System.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\AtmScatteringModel.cpp">
+      <Filter>Renderer\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AtmScatteringPass.cpp">
+      <Filter>Renderer\Render Passes\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ErrorCodes.h">
@@ -508,6 +514,27 @@
     </ClInclude>
     <ClInclude Include="Source\PostProcessPass.h">
       <Filter>Renderer\Render Passes\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AtmScatteringModel.h">
+      <Filter>Renderer\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AtmScatteringConstants.h">
+      <Filter>Renderer\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AtmScatteringShaderFunctions.h">
+      <Filter>Shaders\Shader Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AtmScatteringShaderDefinitions.h">
+      <Filter>Shaders\Shader Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AtmScatteringPass.h">
+      <Filter>Renderer\Render Passes\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AtmScatteringShaderPass.h">
+      <Filter>Shaders\Shader Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\SunScript.h">
+      <Filter>Scripting\Objects\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

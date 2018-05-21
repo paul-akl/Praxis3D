@@ -166,6 +166,25 @@ public:
 		m_upVector = Math::cross(m_horizontalVec, m_targetVec);
 		m_modelMatrix.initCamera(m_positionVec, m_targetVec + m_positionVec, m_upVector);
 
+		/*
+		float cos_z = cos(m_verticalAngle);
+		float sin_z = sin(m_verticalAngle);
+		float cos_a = cos(m_horizontalAngle);
+		float sin_a = sin(m_horizontalAngle);
+		float ux[3] = { -sin_a, cos_a, 0.0 };
+		float uy[3] = { -cos_z * cos_a, -cos_z * sin_a, sin_z };
+		float uz[3] = { sin_z * cos_a, sin_z * sin_a, cos_z };
+		float l = 9000.0 / 1000.0;
+
+		// Transform matrix from camera frame to world space (i.e. the inverse of a
+		// GL_MODELVIEW matrix).
+		m_modelMatrix = {
+			ux[0], uy[0], uz[0], uz[0] * l,
+			ux[1], uy[1], uz[1], uz[1] * l,
+			ux[2], uy[2], uz[2], uz[2] * l,
+			0.0, 0.0, 0.0, 1.0
+		};*/
+
 		// Set the target vector variable, so it can be retrieved later by listeners
 		m_targetVec = Math::Vec3f(0.0f);
 		m_targetVec.y = m_verticalAngle;

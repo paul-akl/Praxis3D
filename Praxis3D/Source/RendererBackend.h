@@ -130,20 +130,23 @@ public:
 	struct BufferUpdateCommand
 	{
 		BufferUpdateCommand(const unsigned int p_bufferHandle,
-					  const int64_t p_offset,
-					  const int64_t p_size,
-					  const void *p_data = NULL,
-					  const BufferUpdateType p_updateType = BufferUpdate_Data,
-					  const BufferType p_bufferType = BufferType_Uniform) :
+			const int64_t p_offset,
+			const int64_t p_size,
+			const void *p_data = NULL,
+			const BufferUpdateType p_updateType = BufferUpdate_Data,
+			const BufferType p_bufferType = BufferType_Uniform,
+			const BufferUsageHint p_bufferUsageHint = BufferUsageHint_DynamicDraw) :
 			m_bufferHandle(p_bufferHandle),
 			m_offset(p_offset),
 			m_size(p_size),
 			m_data(p_data),
 			m_updateType(p_updateType),
-			m_bufferType(p_bufferType) { }
-
+			m_bufferType(p_bufferType),
+			m_bufferUsageHint(p_bufferUsageHint) { }
+		
 		const BufferUpdateType m_updateType;
 		const BufferType m_bufferType;
+		const BufferUsageHint m_bufferUsageHint;
 
 		const unsigned int m_bufferHandle;
 		const void *m_data;
@@ -448,7 +451,7 @@ protected:
 	inline void textureUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
 	{
 		// Check if the texture uniforms haven't been updated already
-		if(m_rendererState.m_lastTexUpdate != p_shaderHandle)
+		//if(m_rendererState.m_lastTexUpdate != p_shaderHandle)
 		{
 			// Declare uniform data
 			UniformData uniformData(p_objectData, p_frameData);
@@ -458,7 +461,7 @@ protected:
 			m_rendererState.m_lastTexUpdate = p_shaderHandle;
 		}
 	}
-	inline void frameUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater,const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
+	inline void frameUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
 	{
 		// Check if the frame uniforms haven't been updated already
 		//if(m_rendererState.m_lastFrameUpdate != p_shaderHandle)
@@ -486,10 +489,10 @@ protected:
 			m_rendererState.m_lastModelUpdate = p_shaderHandle;
 		}
 	}
-	inline void meshUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater,const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
+	inline void meshUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
 	{
 		// Check if the mesh uniforms haven't been updated already
-		if(m_rendererState.m_lastMeshUpdate != p_shaderHandle)
+		//if(m_rendererState.m_lastMeshUpdate != p_shaderHandle)
 		{
 			// Declare uniform data
 			UniformData uniformData(p_objectData, p_frameData);
@@ -554,7 +557,7 @@ protected:
 			glBufferData(p_command.m_bufferType,
 						 p_command.m_size,
 						 p_command.m_data,
-						 GL_DYNAMIC_DRAW);
+						 p_command.m_bufferUsageHint);
 			break;
 
 		case BufferUpdate_SubData:
@@ -562,7 +565,6 @@ protected:
 							p_command.m_offset,
 							p_command.m_size,
 							p_command.m_data);
-
 			break;
 		}
 	}

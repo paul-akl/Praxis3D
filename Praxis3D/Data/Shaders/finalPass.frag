@@ -31,14 +31,31 @@ vec3 reinhardToneMapping(vec3 p_color)
 // Filmic tone mapping using an algorithm created by John Hable for Uncharted 2
 vec3 filmicToneMapping(vec3 p_color)
 {
+	// http://www.gdcvault.com/play/1012459/Uncharted_2__HDR_Lighting
+	// http://filmicgames.com/archives/75 - the coefficients are from here
+	float A = 0.15; // Shoulder Strength
+	float B = 0.50; // Linear Strength
+	float C = 0.10; // Linear Angle
+	float D = 0.20; // Toe Strength
+	float E = 0.02; // Toe Numerator
+	float F = 0.30; // Toe Denominator
+	
+	return ((p_color * (A * p_color + C * B) + D * E) / (p_color * (A * p_color + B) + D * F)) - E / F; // E/F = Toe Angle
+}
+
+vec3 Uncharted2ToneMapping(vec3 color)
+{
 	float A = 0.15;
 	float B = 0.50;
 	float C = 0.10;
 	float D = 0.20;
 	float E = 0.02;
 	float F = 0.30;
-
-	return ((p_color*(A*p_color+C*B)+D*E)/(p_color*(A*p_color+B)+D*F))-E/F;
+	float W = 11.2;
+	color = ((color * (A * color + C * B) + D * E) / (color * (A * color + B) + D * F)) - E / F;
+	float white = ((W * (A * W + C * B) + D * E) / (W * (A * W + B) + D * F)) - E / F;
+	color /= white;
+	return color;
 }
 
 vec2 calcTexCoord(void)
@@ -69,7 +86,7 @@ void main(void)
 	
 	#ifdef ENABLE_FILMIC_TONE_MAPPING
 	// Perform filmic tonemapping on the final color
-	fragmentColor = filmicToneMapping(fragmentColor);
+	fragmentColor = Uncharted2ToneMapping(fragmentColor);
 	#endif
 	
 	// Perform gamma correction as the last step of the fragment color

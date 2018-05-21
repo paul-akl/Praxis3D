@@ -42,6 +42,8 @@ ShaderLoader::ShaderProgram *ShaderLoader::load(const PropertySet &p_properties)
 		std::string shaderFilename[ShaderType_NumOfTypes];
 		std::string programName;
 
+		int numberOfShaders = 0;
+
 		// Iterate over all passed properties
 		for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
 		{
@@ -53,70 +55,80 @@ ShaderLoader::ShaderProgram *ShaderLoader::load(const PropertySet &p_properties)
 
 			case Properties::FragmentShader:
 				shaderFilename[ShaderType_Fragment] = p_properties[i].getString();
+				numberOfShaders++;
 				break;
 
 			case Properties::VertexShader:
 				shaderFilename[ShaderType_Vertex] = p_properties[i].getString();
+				numberOfShaders++;
 				break;
 
 			case Properties::GeometryShader:
 				shaderFilename[ShaderType_Geometry] = p_properties[i].getString();
+				numberOfShaders++;
 				break;
 
 			case Properties::TessControlShader:
 				shaderFilename[ShaderType_TessControl] = p_properties[i].getString();
+				numberOfShaders++;
 				break;
 
 			case Properties::TessEvaluationShader:
 				shaderFilename[ShaderType_TessEvaluation] = p_properties[i].getString();
+				numberOfShaders++;
 				break;
 			}
 		}
 
-		// If program name was not specified, combine all shader names into one program name
-		if(programName.empty())
+		if(numberOfShaders > 0)
 		{
-			// For every shader filename, if it's not empty, add it to the program name
-			for(unsigned int shaderType = 0; shaderType < ShaderType_NumOfTypes; shaderType++)
-				if(!shaderFilename[shaderType].empty())
-					programName += shaderFilename[shaderType] + ", ";
 
-			// Remove the last 2 characters from the filename (comma and space)
-			if(!programName.empty())
+			// If program name was not specified, combine all shader names into one program name
+			if(programName.empty())
 			{
-				programName.pop_back();
-				programName.pop_back();
+				// For every shader filename, if it's not empty, add it to the program name
+				for(unsigned int shaderType = 0; shaderType < ShaderType_NumOfTypes; shaderType++)
+					if(!shaderFilename[shaderType].empty())
+						programName += shaderFilename[shaderType] + ", ";
+
+				// Remove the last 2 characters from the filename (comma and space)
+				if(!programName.empty())
+				{
+					programName.pop_back();
+					programName.pop_back();
+				}
 			}
+
+			// Generate hash key from program's name
+			unsigned int programHashkey = Utilities::getHashKey(programName);
+
+			// Make sure calls from other threads are locked, while current call is in progress
+			// This is needed to as the object that is being requested might be currently loading /
+			// being added to the pool. Mutex prevents duplicates being loaded, and same data being changed.
+			SpinWait::Lock lock(m_mutex);
+
+			// Iterate over all shader programs and match hash key and name; if match is found, return it
+			for(decltype(m_shaderPrograms.size()) i = 0, size = m_shaderPrograms.size(); i < size; i++)
+				if(m_shaderPrograms[i].m_filenameHash == programHashkey)
+					if(m_shaderPrograms[i].m_combinedFilename == programName)
+						return &m_shaderPrograms[i];
+
+			// Add the new program to the array
+			m_shaderPrograms.push_back(ShaderProgram(programName, programHashkey));
+			ShaderProgram *newProgram = &m_shaderPrograms[m_shaderPrograms.size() - 1];
+
+			// Iterate over shader types
+			for(unsigned int shaderType = 0; shaderType < ShaderType_NumOfTypes; shaderType++)
+				// If shader filename is valid
+				if(!shaderFilename[shaderType].empty())
+					newProgram->addShader(static_cast<ShaderType>(shaderType), shaderFilename[shaderType]);
+
+
+			// Create a uniform updater for the new shader
+			newProgram->m_uniformUpdater = new ShaderUniformUpdater(*newProgram);
+
+			return newProgram;
 		}
-
-		// Generate hash key from program's name
-		unsigned int programHashkey = Utilities::getHashKey(programName);
-
-		// Make sure calls from other threads are locked, while current call is in progress
-		// This is needed to as the object that is being requested might be currently loading /
-		// being added to the pool. Mutex prevents duplicates being loaded, and same data being changed.
-		SpinWait::Lock lock(m_mutex);
-
-		// Iterate over all shader programs and match hash key and name; if match is found, return it
-		for(decltype(m_shaderPrograms.size()) i = 0, size = m_shaderPrograms.size(); i < size; i++)
-			if(m_shaderPrograms[i].m_filenameHash == programHashkey)
-				if(m_shaderPrograms[i].m_combinedFilename == programName)
-					return &m_shaderPrograms[i];
-
-		// Add the new program to the array
-		m_shaderPrograms.push_back(ShaderProgram(programName, programHashkey));
-		ShaderProgram *newProgram = &m_shaderPrograms[m_shaderPrograms.size() - 1];
-
-		// Iterate over shader types
-		for(unsigned int shaderType = 0; shaderType < ShaderType_NumOfTypes; shaderType++)
-			// If shader filename is valid
-			if(!shaderFilename[shaderType].empty())
-				newProgram->addShader(static_cast<ShaderType>(shaderType), shaderFilename[shaderType]);
-
-		// Create a uniform updater for the new shader
-		newProgram->m_uniformUpdater = new ShaderUniformUpdater(*newProgram);
-
-		return newProgram;
 	}
 
 	return &m_defaultProgram;

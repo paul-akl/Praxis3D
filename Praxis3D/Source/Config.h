@@ -183,7 +183,9 @@ namespace Properties
 	/* Scripting */ \
 	Code(Angle,) \
 	Code(Axis,) \
+	Code(Azimuth,) \
 	Code(BaseUIScript,) \
+	Code(Day,) \
 	Code(DayOfYear,) \
 	Code(DebugMoveScript,) \
 	Code(DebugRotateScript,) \
@@ -197,15 +199,20 @@ namespace Properties
 	Code(KeyCode,) \
 	Code(KeyName,) \
 	Code(Minutes,) \
+	Code(Month,) \
 	Code(Radius,) \
 	Code(Scripting,) \
 	Code(Seconds,) \
 	Code(SolarTimeScript,) \
 	Code(Speed,) \
 	Code(SprintSpeed,) \
+	Code(SunScript,) \
 	Code(TimeMultiplier,) \
+	Code(TimeZone,) \
+	Code(Year,) \
 	Code(UpperLimit,) \
 	Code(WorldEditScript,) \
+	Code(Zenith,) \
 	/* Window */ \
 	Code(Fullscreen,) \
 	Code(MouseCapture,) \
@@ -306,7 +313,9 @@ namespace Properties
 		GetString(Subject),
 		GetString(Angle),
 		GetString(Axis),
+		GetString(Azimuth),
 		GetString(BaseUIScript),
+		GetString(Day),
 		GetString(DayOfYear),
 		GetString(DebugMoveScript),
 		GetString(DebugRotateScript),
@@ -320,15 +329,20 @@ namespace Properties
 		GetString(KeyCode),
 		GetString(KeyName),
 		GetString(Minutes),
+		GetString(Month),
 		GetString(Radius),
 		GetString(Scripting),
 		GetString(Seconds),
 		GetString(SolarTimeScript),
 		GetString(Speed),
 		GetString(SprintSpeed),
+		GetString(SunScript),
 		GetString(TimeMultiplier),
+		GetString(TimeZone),
+		GetString(Year),
 		GetString(UpperLimit),
 		GetString(WorldEditScript),
+		GetString(Zenith),
 		GetString(Fullscreen),
 		GetString(MouseCapture),
 		GetString(VerticalSync),
@@ -560,7 +574,7 @@ public:
 			emissive_multiplier = 10.0f;
 			emissive_threshold = 0.01f;
 			eye_adaption_rate = 0.25f;
-			eye_adaption_intended_brightness = 0.2f;
+			eye_adaption_intended_brightness = 0.5f;
 			fog_color_x = 0.55f;
 			fog_color_y = 0.55f;
 			fog_color_z = 0.55f;
@@ -759,6 +773,10 @@ public:
 	{
 		RendererVariables()
 		{
+			atm_scattering_ground_vert_shader = "atmosphericScatteringPass_ground.vert";
+			atm_scattering_ground_frag_shader = "atmosphericScatteringPass_ground.frag";
+			atm_scattering_sky_vert_shader = "atmosphericScatteringPass_sky.vert";
+			atm_scattering_sky_frag_shader = "atmosphericScatteringPass_sky.frag";
 			dir_light_vert_shader = "dirLightPass.vert";
 			dir_light_frag_shader = "dirLightPass.frag";
 			point_light_vert_shader = "pointLightPass.vert";
@@ -808,7 +826,11 @@ public:
 			depth_test = true;
 			face_culling = true;
 		}
-
+		
+		std::string atm_scattering_ground_vert_shader;
+		std::string atm_scattering_ground_frag_shader;
+		std::string atm_scattering_sky_vert_shader;
+		std::string atm_scattering_sky_frag_shader;
 		std::string dir_light_vert_shader;
 		std::string dir_light_frag_shader;
 		std::string point_light_vert_shader;
@@ -862,12 +884,14 @@ public:
 	{
 		ShaderVariables()
 		{
+			atmScatProjMatUniform = "atmScatProjMat";
 			modelMatUniform = "modelMat";
 			viewMatUniform = "viewMat";
 			projectionMatUniform = "projMat";
 			viewProjectionMatUniform = "viewProjMat";
 			modelViewMatUniform = "modelViewMat";
 			modelViewProjectionMatUniform = "MVP";
+			transposeViewMatUniform = "transposeViewMat";
 			screenSizeUniform = "screenSize";
 			deltaTimeMSUniform = "deltaTimeMS";
 			deltaTimeSUniform = "deltaTimeS";
@@ -921,6 +945,11 @@ public:
 			heightTextureUniform = "heightTexture";
 			combinedTextureUniform = "combinedTexture";
 
+			atmIrradianceTextureUniform = "atmIrradianceTexture";
+			atmScatteringTextureUniform = "atmScatteringTexture";
+			atmSingleMieScatTextureUniform = "atmSingleMieTexture";
+			atmTransmittanceTextureUniform = "atmTransmitTexture";
+
 			dynamicEnvMapUniform = "dynamicEnvMap";
 			staticEnvMapUniform = "staticEnvMap";
 
@@ -932,18 +961,21 @@ public:
 			eyeAdaptionRateUniform = "eyeAdaptionRate";
 			eyeAdaptionIntBrightnessUniform = "eyeAdaptionIntBrightness";
 			HDRSSBuffer = "HDRBuffer";
+			atmScatParamBuffer = "AtmScatParametersBuffer";
 
 			testMatUniform = "testMat";
 			testVecUniform = "testVec";
 			testFloatUniform = "testFloat";
 		}
 
+		std::string atmScatProjMatUniform;
 		std::string modelMatUniform;
 		std::string viewMatUniform;
 		std::string projectionMatUniform;
 		std::string viewProjectionMatUniform;
 		std::string modelViewMatUniform;
 		std::string modelViewProjectionMatUniform;
+		std::string transposeViewMatUniform;
 		std::string screenSizeUniform;
 		std::string deltaTimeMSUniform;
 		std::string deltaTimeSUniform;
@@ -997,6 +1029,11 @@ public:
 		std::string heightTextureUniform;
 		std::string combinedTextureUniform;
 
+		std::string atmIrradianceTextureUniform;
+		std::string atmScatteringTextureUniform;
+		std::string atmSingleMieScatTextureUniform;
+		std::string atmTransmittanceTextureUniform;
+
 		std::string dynamicEnvMapUniform;
 		std::string staticEnvMapUniform;
 
@@ -1008,6 +1045,7 @@ public:
 		std::string eyeAdaptionRateUniform;
 		std::string eyeAdaptionIntBrightnessUniform;
 		std::string HDRSSBuffer;
+		std::string atmScatParamBuffer;
 
 		std::string testMatUniform;
 		std::string testVecUniform;

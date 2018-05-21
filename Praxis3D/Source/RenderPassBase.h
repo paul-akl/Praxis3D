@@ -12,6 +12,8 @@ struct RenderPassData
 		m_colorInputMap = GeometryBuffer::GBufferDiffuse;
 		m_colorOutputMap = GeometryBuffer::GBufferFinal;
 		m_emissiveInputMap = GeometryBuffer::GBufferEmissive;
+
+		m_atmScatDoSkyPass = true;
 	}
 
 	inline void swapColorInputOutputMaps()
@@ -35,6 +37,8 @@ struct RenderPassData
 	GeometryBuffer::GBufferTextureType	m_colorInputMap,
 										m_colorOutputMap,
 										m_emissiveInputMap;
+
+	bool m_atmScatDoSkyPass;
 };
 
 class RenderPass

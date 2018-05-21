@@ -106,6 +106,9 @@ SystemObject *ScriptingScene::createObject(const PropertySet &p_properties)
 	case Properties::SolarTimeScript:
 		newObject = loadSolarTime(p_properties);
 		break;
+	case Properties::SunScript:
+		newObject = loadSun(p_properties);
+		break;
 	case Properties::WorldEditScript:
 		newObject = loadWorldEdit(p_properties);
 		break;
@@ -348,14 +351,23 @@ SolarTimeScript *ScriptingScene::loadSolarTime(const PropertySet & p_properties)
 		case Properties::Seconds:
 			solarTimeScript->setSeconds(p_properties[i].getFloat());
 			break;
+		case Properties::Year:
+			solarTimeScript->setYear(p_properties[i].getInt());
+			break;
+		case Properties::Month:
+			solarTimeScript->setMonth(p_properties[i].getInt());
+			break;
+		case Properties::Day:
+			solarTimeScript->setDay(p_properties[i].getInt());
+			break;
+		case Properties::TimeZone:
+			solarTimeScript->setTimeZone(p_properties[i].getInt());
+			break;
 		case Properties::Latitude:
 			solarTimeScript->setLatitude(p_properties[i].getFloat());
 			break;
 		case Properties::Longitude:
 			solarTimeScript->setLongitude(p_properties[i].getFloat());
-			break;
-		case Properties::DayOfYear:
-			solarTimeScript->setDayOfYear(p_properties[i].getInt());
 			break;
 		case Properties::TimeMultiplier:
 			solarTimeScript->setTimeMultiplier(p_properties[i].getFloat());
@@ -369,6 +381,29 @@ SolarTimeScript *ScriptingScene::loadSolarTime(const PropertySet & p_properties)
 	m_scriptObjects.push_back(solarTimeScript);
 
 	return solarTimeScript;
+}
+
+SunScript *ScriptingScene::loadSun(const PropertySet & p_properties)
+{
+	SunScript *sunScript = new SunScript(this, p_properties.getPropertyByID(Properties::Name).getString());
+
+	// Load property data
+	for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
+	{
+		switch(p_properties[i].getPropertyID())
+		{
+		case Properties::Azimuth:
+			sunScript->setAzimuthAngle(p_properties[i].getFloat());
+			break;
+		case Properties::Zenith:
+			sunScript->setZenithAngle(p_properties[i].getFloat());
+			break;
+		}
+	}
+
+	m_scriptObjects.push_back(sunScript);
+
+	return sunScript;
 }
 
 WorldEditScript *ScriptingScene::loadWorldEdit(const PropertySet & p_properties)

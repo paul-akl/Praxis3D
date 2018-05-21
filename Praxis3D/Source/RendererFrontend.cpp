@@ -1,4 +1,5 @@
 
+#include "AtmScatteringPass.h"
 #include "BlurPass.h"
 #include "GeometryPass.h"
 #include "LightingPass.h"
@@ -7,6 +8,7 @@
 #include "PostProcessPass.h"
 #include "ReflectionPass.h"
 #include "RendererFrontend.h"
+#include "SkyPass.h"
 
 RendererFrontend::~RendererFrontend()
 {
@@ -38,15 +40,27 @@ ErrorCode RendererFrontend::init()
 	// Create the render pass data struct
 	m_renderPassData = new RenderPassData();
 
+	m_renderingPasses.reserve(7);
+
 	// Add geometry rendering pass, if it was initialized successfuly
 	GeometryPass *geometryPass = new GeometryPass(*this);
 	if(geometryPass->init() == ErrorCode::Success)
 		m_renderingPasses.push_back(geometryPass);
+	
+	// Add SKY atmospheric scattering pass, if it was initialized successfuly
+	AtmScatteringPass *atmScatteringPass = new AtmScatteringPass(*this);
+	ErrorCode atmScatPassError = atmScatteringPass->init();
+	if(atmScatPassError == ErrorCode::Success)
+		m_renderingPasses.push_back(atmScatteringPass);
 
 	// Add lighting rendering pass, if it was initialized successfuly
 	LightingPass *lightingPass = new LightingPass(*this);
 	if(lightingPass->init() == ErrorCode::Success)
 		m_renderingPasses.push_back(lightingPass);
+
+	// Add GROUND atmospheric scattering pass, if it was initialized successfuly
+	if(atmScatPassError == ErrorCode::Success)
+		m_renderingPasses.push_back(atmScatteringPass);
 
 	// Add HDR mapping rendering pass, if it was initialized successfully
 	HdrMappingPass *hdrPass = new HdrMappingPass(*this);
@@ -68,9 +82,14 @@ ErrorCode RendererFrontend::init()
 	if(finalPass->init() == ErrorCode::Success)
 		m_renderingPasses.push_back(finalPass);
 
+	//if(atmScatteringPass->init() == ErrorCode::Success)
+	//	m_renderingPasses.push_back(atmScatteringPass);
+
 	updateProjectionMatrix();
 
 	passLoadCommandsToBackend();
+
+	glViewport(0, 0, m_frameData.m_screenSize.x, m_frameData.m_screenSize.y);
 
 	return returnCode;
 }
@@ -110,9 +129,40 @@ void RendererFrontend::renderFrame(const SceneObjects &p_sceneObjects, const flo
 	m_frameData.m_viewMatrix = p_sceneObjects.m_camera->getBaseObjectData().m_modelMat;
 	m_frameData.m_viewProjMatrix = m_frameData.m_projMatrix * p_sceneObjects.m_camera->getBaseObjectData().m_modelMat;
 	
+	// Convert the view matrix to row major for the atmospheric scattering shaders
+	m_frameData.m_transposeViewMatrix = Math::transpose(m_frameData.m_viewMatrix);
+
+	/*auto tempMatrix = m_frameData.m_viewMatrix;
+	
+	m_frameData.m_viewMatrix.m[0] = tempMatrix.m[0];
+	m_frameData.m_viewMatrix.m[1] = tempMatrix.m[4];
+	m_frameData.m_viewMatrix.m[2] = tempMatrix.m[8];
+	m_frameData.m_viewMatrix.m[3] = tempMatrix.m[12];
+	m_frameData.m_viewMatrix.m[4] = tempMatrix.m[1];
+	m_frameData.m_viewMatrix.m[5] = tempMatrix.m[5];
+	m_frameData.m_viewMatrix.m[6] = tempMatrix.m[9];
+	m_frameData.m_viewMatrix.m[7] = tempMatrix.m[13];
+	m_frameData.m_viewMatrix.m[8] = tempMatrix.m[2];
+	m_frameData.m_viewMatrix.m[9] = tempMatrix.m[6];
+	m_frameData.m_viewMatrix.m[10] = tempMatrix.m[10];
+	m_frameData.m_viewMatrix.m[11] = tempMatrix.m[14];
+	m_frameData.m_viewMatrix.m[12] = tempMatrix.m[3];
+	m_frameData.m_viewMatrix.m[13] = tempMatrix.m[7];
+	m_frameData.m_viewMatrix.m[14] = tempMatrix.m[11];
+	m_frameData.m_viewMatrix.m[15] = tempMatrix.m[15];*/
+
+	/*std::cout << "VIEW MATRIX:" << std::endl;
+	std::cout << m_frameData.m_viewMatrix.m[0] << " : " << m_frameData.m_viewMatrix.m[1] << " : " << m_frameData.m_viewMatrix.m[2] << " : " << m_frameData.m_viewMatrix.m[3] << std::endl;
+	std::cout << m_frameData.m_viewMatrix.m[4] << " : " << m_frameData.m_viewMatrix.m[5] << " : " << m_frameData.m_viewMatrix.m[6] << " : " << m_frameData.m_viewMatrix.m[7] << std::endl;
+	std::cout << m_frameData.m_viewMatrix.m[8] << " : " << m_frameData.m_viewMatrix.m[9] << " : " << m_frameData.m_viewMatrix.m[10] << " : " << m_frameData.m_viewMatrix.m[11] << std::endl;
+	std::cout << m_frameData.m_viewMatrix.m[12] << " : " << m_frameData.m_viewMatrix.m[13] << " : " << m_frameData.m_viewMatrix.m[14] << " : " << m_frameData.m_viewMatrix.m[15] << std::endl;
+	*/
 	// Set the camera position
 	m_frameData.m_cameraPosition = p_sceneObjects.m_camera->getVec3(nullptr, Systems::Changes::Spacial::Position);
 	
+	// Set the camera target vector
+	m_frameData.m_cameraTarget = p_sceneObjects.m_camera->getVec3(nullptr, Systems::Changes::Spacial::Rotation);
+
 	// Assign directional light values and also normalize its direction, so it's not neccessary to do it in a shader
 	m_frameData.m_dirLightColor = p_sceneObjects.m_directionalLight->m_color;
 	m_frameData.m_dirLightIntensity = p_sceneObjects.m_directionalLight->m_intensity;
@@ -125,10 +175,13 @@ void RendererFrontend::renderFrame(const SceneObjects &p_sceneObjects, const flo
 	
 	// Prepare the geometry buffer for a new frame and a geometry pass
 	m_backend.getGeometryBuffer()->initFrame();
-	//m_backend.getGeometryBuffer()->initGeometryPass();
-
+	
+	glDepthMask(GL_TRUE);
 	glEnable(GL_DEPTH_TEST);		// Enable depth testing, as this is much like a regular forward render pass
 	glClear(GL_DEPTH_BUFFER_BIT);	// Make sure to clear the depth buffer for the new frame
+
+	// Set depth test function
+	glDepthFunc(Config::rendererVar().depth_test_func);
 	//glDisable(GL_CULL_FACE);
 
 	//m_renderingPasses[0]->update(p_sceneObjects, p_deltaTime);

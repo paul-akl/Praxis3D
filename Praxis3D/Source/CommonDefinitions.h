@@ -15,6 +15,12 @@ enum CommandType : unsigned int
 	CommandType_Load
 };
 
+/*
+enum AtmScatteringBufferBinding : unsigned int
+{
+	AtmScatteringBufferBinding_AtmScatParam = LightBufferBinding_Total,
+	AtmScatteringBufferBinding_Total
+};*/
 enum BufferType : unsigned int
 {
 	BufferType_Uniform			= GL_UNIFORM_BUFFER,
@@ -33,16 +39,13 @@ enum BufferUsageHint : unsigned int
 	BufferUsageHint_StaticDraw		= GL_STATIC_DRAW,
 	BufferUsageHint_DynamicDraw		= GL_DYNAMIC_DRAW,
 	BufferUsageHint_DynamicCopy		= GL_DYNAMIC_COPY
-};
+};/*
 enum LightBufferBinding : unsigned int
 {
 	LightBufferBinding_PointLight = 0,
-	LightBufferBinding_SpotLight
-};
-enum SSBOBinding : unsigned int
-{
-	SSBOBinding_HDR = 0
-};
+	LightBufferBinding_SpotLight,
+	LightBufferBinding_Total
+};*/
 enum LoadObjectType : unsigned int
 {
 	LoadObject_Buffer,
@@ -85,6 +88,13 @@ enum ModelBufferType : unsigned int
 	ModelBuffer_Index = ModelBuffer_NumTypesWithoutIndex,
 	ModelBuffer_NumAllTypes
 };
+enum AtmScatteringTextureType : unsigned int
+{
+	AtmScatteringTextureType_Irradiance = MaterialType_NumOfTypes_Extended,
+	AtmScatteringTextureType_Scattering,
+	AtmScatteringTextureType_SingleMie,
+	AtmScatteringTextureType_Transmittance
+};
 enum ShaderType : unsigned int
 {
 	// WARNING: do not change the order - enum entries are order-sensitive
@@ -96,6 +106,10 @@ enum ShaderType : unsigned int
 	ShaderType_TessEvaluation,
 	ShaderType_NumOfTypes
 };
+enum SSBOBinding : unsigned int
+{
+	SSBOBinding_HDR = 0
+};
 enum TextureFormat : int
 {
 	TextureFormat_Red	= GL_RED,
@@ -104,4 +118,10 @@ enum TextureFormat : int
 	TextureFormat_Alpha = GL_ALPHA,
 	TextureFormat_RGB	= GL_RGB,
 	TextureFormat_RGBA	= GL_RGBA
+};
+enum UniformBufferBinding : unsigned int
+{
+	UniformBufferBinding_PointLights,
+	UniformBufferBinding_SpotLights,
+	UniformBufferBinding_AtmScatParam
 };

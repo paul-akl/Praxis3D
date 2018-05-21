@@ -19,8 +19,8 @@ public:
 		m_name = "Lighting Rendering Pass";
 
 		// Set lightbuffer values
-		m_pointLightBuffer.m_bindingIndex = LightBufferBinding_PointLight;
-		m_spotLightBuffer.m_bindingIndex = LightBufferBinding_SpotLight;
+		m_pointLightBuffer.m_bindingIndex = UniformBufferBinding_PointLights;
+		m_spotLightBuffer.m_bindingIndex = UniformBufferBinding_SpotLights;
 
 		// Set the light buffer sizes
 		m_pointLightBuffer.m_size = sizeof(PointLightDataSet) * Config::graphicsVar().max_num_point_lights;
@@ -57,16 +57,17 @@ public:
 
 	void update(RenderPassData &p_renderPassData, const SceneObjects &p_sceneObjects, const float p_deltaTime)
 	{
-		glDisable(GL_DEPTH_TEST);
-		//glEnable(GL_DEPTH_TEST);
-		//glDepthFunc(GL_NOTEQUAL);
+		//glDisable(GL_DEPTH_TEST);
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_GREATER);
+		glDepthMask(GL_FALSE);
 
 		// Setup point light buffer values
-		m_pointLightBuffer.m_size = sizeof(PointLightDataSet) * p_sceneObjects.m_pointLights.size();
+		m_pointLightBuffer.m_updateSize = sizeof(PointLightDataSet) * p_sceneObjects.m_pointLights.size();
 		m_pointLightBuffer.m_data = (void*)p_sceneObjects.m_pointLights.data();
 
 		// Setup spot light buffer values
-		m_spotLightBuffer.m_size = sizeof(SpotLightDataSet) * p_sceneObjects.m_spotLights.size();
+		m_spotLightBuffer.m_updateSize = sizeof(SpotLightDataSet) * p_sceneObjects.m_spotLights.size();
 		m_spotLightBuffer.m_data = (void*)p_sceneObjects.m_spotLights.data();
 
 		// Bind textures for reading
