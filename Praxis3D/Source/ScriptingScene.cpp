@@ -156,11 +156,11 @@ FreeCamera *ScriptingScene::loadFreeCamera(const PropertySet & p_properties)
 	const auto &keybindings = p_properties.getPropertySetByID(Properties::Keybindings);
 
 	// Declare keys
-	Scancode forwardKey;
-	Scancode backwardKey;
-	Scancode leftStrafeKey;
-	Scancode rightStrafeKey;
-	Scancode sprintKey;
+	Scancode forwardKey = Key_Invalid;
+	Scancode backwardKey = Key_Invalid;
+	Scancode leftStrafeKey = Key_Invalid;
+	Scancode rightStrafeKey = Key_Invalid;
+	Scancode sprintKey = Key_Invalid;
 
 	// Check if key-bindings in the property are present
 	if(keybindings.getPropertyID() != Properties::Null)

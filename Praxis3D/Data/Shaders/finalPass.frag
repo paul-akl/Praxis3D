@@ -72,7 +72,7 @@ void main(void)
 	vec3 fragmentColor = texture(inputColorMap, texCoord).xyz;
 	
 	// Add emissive color (which is generated in a blur pass)
-	fragmentColor += texture(emissiveMap, texCoord).xyz;
+	//fragmentColor += texture(emissiveMap, texCoord).xyz;
 		
 	#ifdef ENABLE_TONE_MAPPING
 	// Perform simple tonemapping on the final color

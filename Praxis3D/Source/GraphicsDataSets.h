@@ -273,3 +273,53 @@ struct AtmScatteringParameters
 
 	AtmosphereParameters m_atmosphereParam;
 };
+
+// Parameters for lens flare effect
+struct LensFlareParameters
+{
+	LensFlareParameters()
+	{
+		m_ghostCount = 0;
+		m_ghostSpacing = 0.0f;
+		m_ghostThreshold = 0.0f;
+		m_haloAspectRatio = 0.0f;
+		m_haloRadius = 0.0f;
+		m_haloThickness = 0.0f;
+		m_haloThreshold = 0.0f;
+		m_chromaticAberration = 0.0f;
+		m_lensFlaireDownsample = 0.0f;
+	}
+
+	LensFlareParameters(
+		int p_ghostCount,
+		float p_ghostSpacing,
+		float p_ghostThreshold,
+		float p_haloAspectRatio,
+		float p_haloRadius,
+		float p_haloThickness,
+		float p_haloThreshold,
+		float p_chromaticAberration,
+		float p_lensFlaireDownsample,
+		float p_starburstOffset): 
+		m_ghostCount(p_ghostCount),
+		m_ghostSpacing(p_ghostSpacing),
+		m_ghostThreshold(p_ghostThreshold),
+		m_haloAspectRatio(p_haloAspectRatio),
+		m_haloRadius(p_haloRadius),
+		m_haloThickness(p_haloThickness),
+		m_haloThreshold(p_haloThreshold),
+		m_chromaticAberration(p_chromaticAberration),
+		m_lensFlaireDownsample(p_lensFlaireDownsample){ }
+
+	int m_ghostCount;
+	float m_ghostSpacing;
+	float m_ghostThreshold;
+
+	float m_haloAspectRatio;
+	float m_haloRadius;
+	float m_haloThickness;
+	float m_haloThreshold;
+	
+	float m_chromaticAberration;
+	float m_lensFlaireDownsample;
+};

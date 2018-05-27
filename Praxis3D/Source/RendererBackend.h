@@ -452,20 +452,20 @@ protected:
 	{
 		// Check if the texture uniforms haven't been updated already
 		//if(m_rendererState.m_lastTexUpdate != p_shaderHandle)
-		{
+		//{
 			// Declare uniform data
 			UniformData uniformData(p_objectData, p_frameData);
 
 			// Update texture uniforms
 			p_uniformUpdater.updateTextureUniforms(uniformData);
 			m_rendererState.m_lastTexUpdate = p_shaderHandle;
-		}
+		//}
 	}
 	inline void frameUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
 	{
 		// Check if the frame uniforms haven't been updated already
 		//if(m_rendererState.m_lastFrameUpdate != p_shaderHandle)
-		{
+		//{
 			bindShader(p_shaderHandle);
 
 			// Declare uniform data
@@ -474,33 +474,33 @@ protected:
 			// Update frame uniforms
 			p_uniformUpdater.updateFrame(uniformData);
 			m_rendererState.m_lastFrameUpdate = p_shaderHandle;
-		}
+		//}
 	}
 	inline void modelUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
 	{
 		// Check if the model uniforms haven't been updated already
 		//if(m_rendererState.m_lastModelUpdate != p_shaderHandle)
-		{
+		//{
 			// Declare uniform data
 			UniformData uniformData(p_objectData, p_frameData);
 			
 			// Update model uniforms
 			p_uniformUpdater.updateModel(uniformData);
 			m_rendererState.m_lastModelUpdate = p_shaderHandle;
-		}
+		//}
 	}
 	inline void meshUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
 	{
 		// Check if the mesh uniforms haven't been updated already
 		//if(m_rendererState.m_lastMeshUpdate != p_shaderHandle)
-		{
+		//{
 			// Declare uniform data
 			UniformData uniformData(p_objectData, p_frameData);
 
 			// Update mesh uniforms
 			p_uniformUpdater.updateMesh(uniformData);
 			m_rendererState.m_lastMeshUpdate = p_shaderHandle;
-		}
+		//}
 	}
 	
 	inline void processCommand(const DrawCommand &p_command, const UniformFrameData &p_frameData)
@@ -650,7 +650,7 @@ protected:
 						shaderHandles[i] = glCreateShader(shaderTypes[i]);
 
 						// Check for errors
-						GLenum glError = glGetError();
+						glError = glGetError();
 						if(glError != GL_NO_ERROR)
 						{
 							// Log an error with a shader info log
@@ -674,7 +674,7 @@ protected:
 							glGetShaderiv(shaderHandles[i], GL_COMPILE_STATUS, &shaderCompileResult);
 
 							// Check for errors
-							GLenum glError = glGetError();
+							glError = glGetError();
 							// If compilation failed
 							if(shaderCompileResult == 0)
 							{
@@ -688,8 +688,8 @@ protected:
 
 								// Convert vector of chars to a string
 								std::string errorMessageTemp;
-								for(int i = 0; shaderCompileErrorMessage[i]; i++)
-									errorMessageTemp += shaderCompileErrorMessage[i];
+								for(int j = 0; shaderCompileErrorMessage[j]; j++)
+									errorMessageTemp += shaderCompileErrorMessage[j];
 
 								// Log an error with a shader info log
 								p_command.m_objectData.m_shaderData.m_errorMessages[i].m_errorCode = ErrorCode::Shader_compile_failed;
@@ -710,7 +710,7 @@ protected:
 								glAttachShader(p_command.m_handle, shaderHandles[i]);
 
 								// Check for errors
-								GLenum glError = glGetError();
+								glError = glGetError();
 								if(glError != GL_NO_ERROR)
 								{
 									// Reset the shader handle

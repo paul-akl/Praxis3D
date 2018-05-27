@@ -41,6 +41,7 @@ public:
 			m_refCounter--;
 			if(m_refCounter == 0)
 			{
+				// TODO: queue texture unload uppon reference counter reaching zero
 				//m_loaderBase->queueUnload(*this);
 			}
 		}

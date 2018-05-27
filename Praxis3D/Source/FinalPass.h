@@ -57,6 +57,12 @@ public:
 
 		glDisable(GL_DEPTH_TEST);
 		
+		if(Config::graphicsVar().eye_adaption)
+		{
+			// Generate mipmaps for the final buffer, for use in tone mapping
+			m_renderer.m_backend.getGeometryBuffer()->generateMipmap(GeometryBuffer::GBufferFinal);
+		}
+
 		// Bind final texture for reading so it can be accessed in the shaders
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferEmissive, GeometryBuffer::GBufferEmissive);
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GeometryBuffer::GBufferInputTexture);

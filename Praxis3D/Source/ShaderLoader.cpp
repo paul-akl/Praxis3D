@@ -25,6 +25,8 @@ ErrorCode ShaderLoader::init()
 {
 	// Initialize default shader program
 	m_defaultProgram.loadToMemory();
+	m_defaultProgram.m_uniformUpdater = new ShaderUniformUpdater(m_defaultProgram);
+	m_defaultProgram.m_loadedToVideoMemory = true;
 
 	// Reserve space in the program pool, to speed up push_backs
 	m_shaderPrograms.reserve(Config::rendererVar().shader_pool_size);
@@ -109,13 +111,13 @@ ShaderLoader::ShaderProgram *ShaderLoader::load(const PropertySet &p_properties)
 
 			// Iterate over all shader programs and match hash key and name; if match is found, return it
 			for(decltype(m_shaderPrograms.size()) i = 0, size = m_shaderPrograms.size(); i < size; i++)
-				if(m_shaderPrograms[i].m_filenameHash == programHashkey)
-					if(m_shaderPrograms[i].m_combinedFilename == programName)
-						return &m_shaderPrograms[i];
+				if(m_shaderPrograms[i]->m_filenameHash == programHashkey)
+					if(m_shaderPrograms[i]->m_combinedFilename == programName)
+						return m_shaderPrograms[i];
 
 			// Add the new program to the array
-			m_shaderPrograms.push_back(ShaderProgram(programName, programHashkey));
-			ShaderProgram *newProgram = &m_shaderPrograms[m_shaderPrograms.size() - 1];
+			ShaderProgram *newProgram = new ShaderProgram(programName, programHashkey);
+			m_shaderPrograms.push_back(newProgram);
 
 			// Iterate over shader types
 			for(unsigned int shaderType = 0; shaderType < ShaderType_NumOfTypes; shaderType++)

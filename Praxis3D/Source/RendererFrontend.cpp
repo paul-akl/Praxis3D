@@ -1,7 +1,10 @@
 
 #include "AtmScatteringPass.h"
+#include "BloomCompositePass.h"
 #include "BlurPass.h"
 #include "GeometryPass.h"
+#include "LenseFlareCompositePass.h"
+#include "LenseFlarePass.h"
 #include "LightingPass.h"
 #include "FinalPass.h"
 #include "HdrMappingPass.h"
@@ -9,6 +12,70 @@
 #include "ReflectionPass.h"
 #include "RendererFrontend.h"
 #include "SkyPass.h"
+
+RendererFrontend::RendererFrontend()
+{
+	// Set up the order of the rendering passes
+	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Geometry);
+	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_AtmScattering);
+	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Lighting);
+	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_AtmScattering);
+	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_HdrMapping);
+	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Blur);
+	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_BloomComposite);
+	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_LenseFlare);
+	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Blur);
+	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_LenseFlareComposite);
+	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Final);
+
+	// Make sure the entries of the rendering passes are set to nullptr
+	for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
+		m_initializedRenderingPasses[i] = nullptr;
+
+	// Create rendering passes
+	for(decltype(m_renderingPassesTypes.size()) i = 0, size = m_renderingPassesTypes.size(); i < size; i++)
+	{
+		switch(m_renderingPassesTypes[i])
+		{
+		case RenderPassType_Geometry:
+			if(m_initializedRenderingPasses[RenderPassType_Geometry] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_Geometry] = new GeometryPass(*this);
+			break;
+		case RenderPassType_Lighting:
+			if(m_initializedRenderingPasses[RenderPassType_Lighting] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_Lighting] = new LightingPass(*this);
+			break;
+		case RenderPassType_AtmScattering:
+			if(m_initializedRenderingPasses[RenderPassType_AtmScattering] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_AtmScattering] = new AtmScatteringPass(*this);
+			break;
+		case RenderPassType_HdrMapping:
+			if(m_initializedRenderingPasses[RenderPassType_HdrMapping] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_HdrMapping] = new HdrMappingPass(*this);
+			break;
+		case RenderPassType_Blur:
+			if(m_initializedRenderingPasses[RenderPassType_Blur] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_Blur] = new BlurPass(*this);
+			break;
+		case RenderPassType_BloomComposite:
+			if(m_initializedRenderingPasses[RenderPassType_BloomComposite] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_BloomComposite] = new BloomCompositePass(*this);
+			break;
+		case RenderPassType_LenseFlare:
+			if(m_initializedRenderingPasses[RenderPassType_LenseFlare] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_LenseFlare] = new LenseFlarePass(*this);
+			break;
+		case RenderPassType_LenseFlareComposite:
+			if(m_initializedRenderingPasses[RenderPassType_LenseFlareComposite] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_LenseFlareComposite] = new LenseFlareCompositePass(*this);
+			break;
+		case RenderPassType_Final:
+			if(m_initializedRenderingPasses[RenderPassType_Final] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_Final] = new FinalPass(*this);
+			break;
+		}
+	}
+}
 
 RendererFrontend::~RendererFrontend()
 {
@@ -37,53 +104,35 @@ ErrorCode RendererFrontend::init()
 	if(!ErrHandlerLoc::get().ifSuccessful(m_backend.init(m_frameData), returnCode))
 		return returnCode;
 
+	// Initialize rendering passes
+	for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
+	{
+		// Check if has been created
+		if(m_initializedRenderingPasses[i] != nullptr)
+		{
+			// Initialize the rendering pass and check if it was successfull
+			if(m_initializedRenderingPasses[i]->init() != ErrorCode::Success)
+			{
+				// Log an error and delete the rendering pass
+				ErrHandlerLoc::get().log(ErrorType::Error, ErrorSource::Source_Renderer, m_initializedRenderingPasses[i]->getName() + " failed to load.");
+				delete m_initializedRenderingPasses[i];
+				m_initializedRenderingPasses[i] = nullptr;
+			}
+		}
+	}
+
 	// Create the render pass data struct
 	m_renderPassData = new RenderPassData();
 
-	m_renderingPasses.reserve(7);
+	// Reserve the required space for rendering passes array
+	m_renderingPasses.reserve(m_renderingPassesTypes.size());
 
-	// Add geometry rendering pass, if it was initialized successfuly
-	GeometryPass *geometryPass = new GeometryPass(*this);
-	if(geometryPass->init() == ErrorCode::Success)
-		m_renderingPasses.push_back(geometryPass);
-	
-	// Add SKY atmospheric scattering pass, if it was initialized successfuly
-	AtmScatteringPass *atmScatteringPass = new AtmScatteringPass(*this);
-	ErrorCode atmScatPassError = atmScatteringPass->init();
-	if(atmScatPassError == ErrorCode::Success)
-		m_renderingPasses.push_back(atmScatteringPass);
-
-	// Add lighting rendering pass, if it was initialized successfuly
-	LightingPass *lightingPass = new LightingPass(*this);
-	if(lightingPass->init() == ErrorCode::Success)
-		m_renderingPasses.push_back(lightingPass);
-
-	// Add GROUND atmospheric scattering pass, if it was initialized successfuly
-	if(atmScatPassError == ErrorCode::Success)
-		m_renderingPasses.push_back(atmScatteringPass);
-
-	// Add HDR mapping rendering pass, if it was initialized successfully
-	HdrMappingPass *hdrPass = new HdrMappingPass(*this);
-	if(hdrPass->init() == ErrorCode::Success)
-		m_renderingPasses.push_back(hdrPass);
-
-	// Add blur rendering pass, if it was initialized successfully
-	BlurPass *blurPass = new BlurPass(*this);
-	if(blurPass->init() == ErrorCode::Success)
-		m_renderingPasses.push_back(blurPass);
-
-	// Add post process rendering pass, if it was initialized successfully
-	PostProcessPass *postProcessPass = new PostProcessPass(*this);
-	if(postProcessPass->init() == ErrorCode::Success)
-		m_renderingPasses.push_back(postProcessPass);
-
-	// Add final rendering pass, if it was initialized successfuly
-	FinalPass *finalPass = new FinalPass(*this);
-	if(finalPass->init() == ErrorCode::Success)
-		m_renderingPasses.push_back(finalPass);
-
-	//if(atmScatteringPass->init() == ErrorCode::Success)
-	//	m_renderingPasses.push_back(atmScatteringPass);
+	// Add required rendering passes to the main array
+	for(decltype(m_renderingPassesTypes.size()) i = 0, size = m_renderingPassesTypes.size(); i < size; i++)
+	{
+		if(m_initializedRenderingPasses[m_renderingPassesTypes[i]] != nullptr)
+			m_renderingPasses.push_back(m_initializedRenderingPasses[m_renderingPassesTypes[i]]);
+	}
 
 	updateProjectionMatrix();
 
@@ -112,9 +161,7 @@ void RendererFrontend::renderFrame(const SceneObjects &p_sceneObjects, const flo
 
 	// Clear draw commands at the beggining of each frame
 	m_drawCommands.clear();
-
-	//if(p_sceneObjects.m_staticSkybox.)
-
+	
 	// Load all the objects in the load-to-gpu queue. This needs to be done before any rendering, as objects in this
 	// array might have been also added to objects-to-render arrays, so they need to be loaded first
 	for (decltype(p_sceneObjects.m_objectsToLoad.size()) i = 0, size = p_sceneObjects.m_objectsToLoad.size(); i < size; i++)

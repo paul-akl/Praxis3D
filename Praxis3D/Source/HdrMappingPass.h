@@ -63,16 +63,14 @@ public:
 		if(Config::graphicsVar().eye_adaption)
 		{
 			// Generate mipmaps for the final buffer, for use in tone mapping
-			m_renderer.m_backend.getGeometryBuffer()->generateMipmap(GeometryBuffer::GBufferFinal);
+			//m_renderer.m_backend.getGeometryBuffer()->generateMipmap(GeometryBuffer::GBufferFinal);
 		}
 
 		p_renderPassData.setEmissiveInputMap(GeometryBuffer::GBufferDiffuse);
 
 		m_emissiveAndOutputBuffers[0] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(p_renderPassData.getEmissiveInputMap());
 		m_emissiveAndOutputBuffers[1] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(p_renderPassData.getColorOutputMap());
-
-		m_renderer.m_backend.getGeometryBuffer()->generateMipmap(GeometryBuffer::GBufferFinal);
-
+		
 		// Set the default framebuffer to be drawn to
 		//m_renderer.m_backend.getGeometryBuffer()->bindFramebufferForWriting(GeometryBuffer::FramebufferDefault);
 		
@@ -92,6 +90,12 @@ public:
 		m_renderer.queueForDrawing(m_hdrMappingShader->getShaderHandle(), m_hdrMappingShader->getUniformUpdater(), p_sceneObjects.m_camera->getBaseObjectData().m_modelMat);
 		m_renderer.passScreenSpaceDrawCommandsToBackend();
 		
+		p_renderPassData.setBlurInputMap(p_renderPassData.getEmissiveInputMap());
+		p_renderPassData.setBlurOutputMap(GeometryBuffer::GBufferEmissive);
+		p_renderPassData.setIntermediateMap(p_renderPassData.getColorInputMap());
+		p_renderPassData.m_blurDoBlending = false;
+		p_renderPassData.m_numOfBlurPasses = Config::graphicsVar().bloom_blur_passes;
+
 		p_renderPassData.swapColorInputOutputMaps();
 	}
 

@@ -13,7 +13,16 @@ struct RenderPassData
 		m_colorOutputMap = GeometryBuffer::GBufferFinal;
 		m_emissiveInputMap = GeometryBuffer::GBufferEmissive;
 
+		m_blurInputMap = GeometryBuffer::GBufferEmissive;
+		m_blurOutputMap = GeometryBuffer::GBufferEmissive;
+		m_blurBlendingMap = GeometryBuffer::GBufferFinal;
+
+		m_intermediateMap = GeometryBuffer::GBufferIntermediate;
+
+		m_numOfBlurPasses = 1;
+
 		m_atmScatDoSkyPass = true;
+		m_blurDoBlending = false;
 	}
 
 	inline void swapColorInputOutputMaps()
@@ -27,18 +36,32 @@ struct RenderPassData
 	inline void setColorInputMap(GeometryBuffer::GBufferTextureType p_inputColorMap)		{ m_colorInputMap = p_inputColorMap;		}
 	inline void setColorOutputMap(GeometryBuffer::GBufferTextureType p_outputColorMap)		{ m_colorOutputMap = p_outputColorMap;		}
 	inline void setEmissiveInputMap(GeometryBuffer::GBufferTextureType p_emissiveInputMap)	{ m_emissiveInputMap = p_emissiveInputMap;	}
+	inline void setBlurInputMap(GeometryBuffer::GBufferTextureType p_blurInputMap)			{ m_blurInputMap = p_blurInputMap;			}
+	inline void setBlurOutputMap(GeometryBuffer::GBufferTextureType p_blurOutputMap)		{ m_blurOutputMap = p_blurOutputMap;		}
+	inline void setBlurBlendingMap(GeometryBuffer::GBufferTextureType p_blurBlendingMap)	{ m_blurBlendingMap = p_blurBlendingMap;	}
+	inline void setIntermediateMap(GeometryBuffer::GBufferTextureType p_intermediateMap)	{ m_intermediateMap = p_intermediateMap;	}
 
 	// Getters
 	const inline GeometryBuffer::GBufferTextureType getColorInputMap() const	{ return m_colorInputMap;		}
 	const inline GeometryBuffer::GBufferTextureType getColorOutputMap() const	{ return m_colorOutputMap;		}
 	const inline GeometryBuffer::GBufferTextureType getEmissiveInputMap() const { return m_emissiveInputMap;	}
+	const inline GeometryBuffer::GBufferTextureType getBlurInputMap() const		{ return m_blurInputMap;		}
+	const inline GeometryBuffer::GBufferTextureType getBlurOutputMap() const	{ return m_blurOutputMap;		}
+	const inline GeometryBuffer::GBufferTextureType getBlurBlendingMap() const	{ return m_blurBlendingMap;		}
+	const inline GeometryBuffer::GBufferTextureType getIntermediateMap() const	{ return m_intermediateMap;		}
 
 	// Remember which color maps to write to and read from, in different rendering passes.
 	GeometryBuffer::GBufferTextureType	m_colorInputMap,
 										m_colorOutputMap,
-										m_emissiveInputMap;
+										m_emissiveInputMap,
+										m_blurInputMap,
+										m_blurOutputMap,
+										m_blurBlendingMap,
+										m_intermediateMap;
 
+	unsigned int m_numOfBlurPasses;
 	bool m_atmScatDoSkyPass;
+	bool m_blurDoBlending;
 };
 
 class RenderPass

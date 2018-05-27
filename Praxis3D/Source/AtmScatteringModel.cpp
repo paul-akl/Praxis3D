@@ -1087,8 +1087,8 @@ void AtmScatteringModel::Init(unsigned int num_scattering_orders)
 	}
 	else
 	{
-		constexpr double kLambdaMin = 360.0;
-		constexpr double kLambdaMax = 830.0;
+		//constexpr double kLambdaMin = 360.0;
+		//constexpr double kLambdaMax = 830.0;
 		int num_iterations = (num_precomputed_wavelengths_ + 2) / 3;
 		double dlambda = (kLambdaMax - kLambdaMin) / (3 * num_iterations);
 		for(int i = 0; i < num_iterations; ++i)

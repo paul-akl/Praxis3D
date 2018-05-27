@@ -811,6 +811,43 @@ public:
 	}
 };
 
+class LensFlareDirtTextureUniform : public BaseUniform
+{
+public:
+	LensFlareDirtTextureUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().lensFlareDirtTextureUniform, p_shaderHandle)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniform1i(m_uniformHandle, LensFlareTextureType::LensFlareTextureType_LenseDirt);
+	}
+};
+class LensFlareGhostGradientTextureUniform : public BaseUniform
+{
+public:
+	LensFlareGhostGradientTextureUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().lensFlareGhostGradientTextureUniform, p_shaderHandle)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniform1i(m_uniformHandle, LensFlareTextureType::LensFlareTextureType_GhostGradient);
+	}
+};
+class LensFlareStarburstTextureUniform : public BaseUniform
+{
+public:
+	LensFlareStarburstTextureUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().lensFlareStarburstTextureUniform, p_shaderHandle)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniform1i(m_uniformHandle, LensFlareTextureType::LensFlareTextureType_Starburst);
+	}
+};
+
 class DynamicEnvironmentMapUniform : public BaseUniform
 {
 public:
@@ -967,6 +1004,16 @@ public:
 	void update(const UniformData &p_uniformData)
 	{
 		updateBlockBinding(UniformBufferBinding_AtmScatParam);
+	}
+};
+class LensFlareParametersUniform : public BaseUniformBlock
+{
+public:
+	LensFlareParametersUniform(unsigned int p_shaderHandle) : BaseUniformBlock(Config::shaderVar().lensFlareParametersBuffer, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		updateBlockBinding(UniformBufferBinding_LensFlareParam);
 	}
 };
 

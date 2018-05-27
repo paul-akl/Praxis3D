@@ -287,5 +287,5 @@ private:
 	// Mutex used to block calls from other threads while operation is in progress
 	SpinWait m_mutex;
 
-	std::vector<ShaderProgram> m_shaderPrograms;
+	std::vector<ShaderProgram*> m_shaderPrograms;
 };

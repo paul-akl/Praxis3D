@@ -47,7 +47,7 @@ public:
 		//if(!ErrHandlerLoc::get().ifSuccessful(m_shader->loadToVideoMemory(), error))
 		//{
 			// Log an error on failure
-			ErrHandlerLoc::get().log(error);
+			//ErrHandlerLoc::get().log(error);
 
 			// Replace the shader with a default one
 			m_shader = Loaders::shader().load();

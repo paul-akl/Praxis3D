@@ -43,13 +43,15 @@ void main(void)
 {
 	#ifdef ENABLE_HDR
 	
-	// Get maximum mipmap level (1x1) of a framebuffer
-	float exposureMipmapLevel = calcMaxMipmapLevel(screenSize);
-	// Get the current (previous frame) average brightness
-	float avgBrightnessPrevFrame = calcLuma(textureLod(finalColorMap, vec2(0.0), exposureMipmapLevel).xyz);
-	// Perform a linear interpolation between current and previous brightness based on delta time
-	screenBrightness = mix(screenBrightness, avgBrightnessPrevFrame, deltaTimeS / eyeAdaptionRate);
-	
+	if(gl_VertexID == 0)
+	{
+		// Get maximum mipmap level (1x1) of a framebuffer
+		float exposureMipmapLevel = calcMaxMipmapLevel(screenSize);
+		// Get the current (previous frame) average brightness
+		float avgBrightnessPrevFrame = calcLuma(textureLod(finalColorMap, vec2(0.5), exposureMipmapLevel - 3).xyz);
+		// Perform a linear interpolation between current and previous brightness based on delta time
+		screenBrightness = mix(screenBrightness, avgBrightnessPrevFrame, deltaTimeS / eyeAdaptionRate);
+	}
 	#else
 	
 	// Set the average brightness to 0.5 so it does not affect the scene

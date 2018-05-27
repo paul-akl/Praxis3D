@@ -4,16 +4,6 @@
 #define MIN_INTENDED_BRIGHTNESS 0.05
 #define MAX_INTENDED_BRIGHTNESS 5.0
 
-#define MAX_NUM_POINT_LIGHTS 20
-#define MAX_NUM_SPOT_LIGHTS 10
-#define PI 3.1415926535
-
-/*
-layout(std430, binding = 0) buffer HDRBuffer
-{
-	float screenBrightness;
-};*/
-
 layout(location = 0) out vec4 emissiveBuffer;
 layout(location = 1) out vec4 colorBuffer;
 

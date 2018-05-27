@@ -128,13 +128,7 @@ public:
 			m_firstAvailable = newObject->getNext();
 
 			// Allocate the template object
-			//new (newObject->m_object) T_Object(p_object);
-			//newObject->m_object = new T_Object(p_object);
-
 			new (static_cast<void*>(newObject->m_object)) T_Object(std::move(p_object));
-
-			//*newObject->m_object = std::move(p_object);
-
 			newObject->m_allocated = true;
 
 			// Make this object the last one added

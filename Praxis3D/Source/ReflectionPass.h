@@ -11,7 +11,7 @@ public:
 
 	ErrorCode init()
 	{
-		ErrorCode returnError;
+		ErrorCode returnError = ErrorCode::Success;
 
 		m_name = "Reflection Rendering Pass";
 

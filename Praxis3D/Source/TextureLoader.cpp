@@ -179,6 +179,44 @@ TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string &p_file
 	return Texture2DHandle(returnTexture);
 }
 
+TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string & p_filename)
+{	
+	Texture2D *returnTexture;
+
+	// Make sure calls from other threads are locked, while current call is in progress
+	// This is needed to as the object that is being requested might be currently loading /
+	// being added to the pool. Mutex prevents duplicates being loaded, and same data being changed.
+	SpinWait::Lock lock(m_mutex);
+
+	// If the filename is empty, return a default texture instead
+	if(p_filename == "")
+	{
+		returnTexture = m_default2DTexture;
+	}
+	else
+	{
+		// Go through the texture pool and check if the texture hasn't been already loaded (to avoid duplicates)
+		for(decltype(m_objectPool.size()) size = m_objectPool.size(), i = 0; i < size; i++)
+		{
+			if(*m_objectPool[i] == p_filename)
+				return Texture2DHandle(m_objectPool[i]);
+		}
+
+		// Texture wasn't loaded before, so create a new one
+		// Assign default handle (as a placeholder to be used before the texture is loaded from HDD)
+		returnTexture = new Texture2D(this, p_filename, m_objectPool.size(), m_default2DTexture->m_handle);
+
+		// Set the loaded flag to true, because we have already provided the texture handle
+		returnTexture->setLoadedToVideoMemory(true);
+
+		// Add the new texture to the list
+		m_objectPool.push_back(returnTexture);
+	}
+
+	// Return the new texture
+	return Texture2DHandle(returnTexture);
+}
+
 TextureLoaderCubemap::TextureLoaderCubemap()
 {
 	std::string defaultFilenames[CubemapFace_NumOfFaces];

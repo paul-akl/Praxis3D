@@ -560,10 +560,13 @@ public:
 			eye_adaption = true;
 			multisampling = true;
 			alpha_size = 8;
+			bloom_blur_passes = 5;
 			current_resolution_x = 0;
 			current_resolution_y = 0;
 			dir_shadow_res_x = 2048;
 			dir_shadow_res_y = 2048;
+			lens_flare_blur_passes = 5;
+			lens_flare_ghost_count = 4;
 			max_num_point_lights = 50;
 			max_num_spot_lights = 50;
 			multisample_buffers = 1;
@@ -581,6 +584,14 @@ public:
 			fog_density = 0.003f;
 			fov = 60.0f;
 			gamma = 2.2f;
+			lens_flare_aspect_ratio = 1.0f;
+			lens_flare_chrom_abberration = 0.003f;
+			lens_flare_downsample = 0.0f;
+			lens_flare_ghost_spacing = 0.1f;
+			lens_flare_ghost_threshold = 4.0f;
+			lens_flare_halo_radius = 0.55f;
+			lens_flare_halo_thickness = 0.2f;
+			lens_flare_halo_threshold = 4.0f;
 			light_atten_constant = 0.0f;
 			light_atten_linear = 0.0f;
 			light_atten_quadratic = 1.0f;
@@ -598,10 +609,13 @@ public:
 		bool eye_adaption;
 		bool multisampling;
 		int alpha_size;
+		int bloom_blur_passes;
 		int current_resolution_x;
 		int current_resolution_y;
 		int dir_shadow_res_x;
 		int dir_shadow_res_y;
+		int lens_flare_blur_passes;
+		int lens_flare_ghost_count;
 		int max_num_point_lights;
 		int max_num_spot_lights;
 		int multisample_buffers;
@@ -619,6 +633,14 @@ public:
 		float fog_density;
 		float fov;
 		float gamma;
+		float lens_flare_aspect_ratio;
+		float lens_flare_chrom_abberration;
+		float lens_flare_downsample;
+		float lens_flare_ghost_spacing;
+		float lens_flare_ghost_threshold;
+		float lens_flare_halo_radius;
+		float lens_flare_halo_thickness;
+		float lens_flare_halo_threshold;
 		float light_atten_constant;
 		float light_atten_linear;
 		float light_atten_quadratic;
@@ -799,8 +821,14 @@ public:
 			gaussian_blur_horizontal_vert_shader = "gaussianBlurHorizontal.vert";
 			hdr_mapping_pass_frag_shader = "hdrMappingPass.frag";
 			hdr_mapping_pass_vert_shader = "hdrMappingPass.vert";
+			bloom_composite_pass_vert_shader = "bloomCompositePass.vert";
+			bloom_composite_pass_frag_shader = "bloomCompositePass.frag";
 			blur_pass_vert_shader = "blurPass.vert";
 			blur_pass_frag_shader = "blurPass.frag";
+			lense_flare_comp_pass_vert_shader = "lenseFlareCompositePass.vert";
+			lense_flare_comp_pass_frag_shader = "lenseFlareCompositePass.frag";
+			lense_flare_pass_vert_shader = "lenseFlarePass.vert";
+			lense_flare_pass_frag_shader = "lenseFlarePass.frag";
 			light_pass_vert_shader = "lightPass.vert";
 			light_pass_frag_shader = "lightPass.frag";
 			final_pass_vert_shader = "finalPass.vert";
@@ -809,6 +837,9 @@ public:
 			postProcess_pass_frag_shader = "postProcessPass.frag";
 			reflection_pass_vert_shader = "reflectionPass.vert";
 			reflection_pass_frag_shader = "reflectionPass.frag";
+			lens_flare_dirt_texture = "p3d_lensFlareDirt.png";
+			lens_flare_ghost_gradient_texture = "p3d_lensFlareGhostColorGradient.png";
+			lens_flare_starburst_texture = "p3d_lensFlareStarburst.png";
 			dir_light_quad_offset_x = 0.0f;
 			dir_light_quad_offset_y = 0.0f;
 			dir_light_quad_offset_z = 0.0f;
@@ -853,8 +884,14 @@ public:
 		std::string gaussian_blur_horizontal_vert_shader;
 		std::string hdr_mapping_pass_frag_shader;
 		std::string hdr_mapping_pass_vert_shader;
+		std::string bloom_composite_pass_vert_shader;
+		std::string bloom_composite_pass_frag_shader;
 		std::string blur_pass_vert_shader;
 		std::string blur_pass_frag_shader;
+		std::string lense_flare_comp_pass_vert_shader;
+		std::string lense_flare_comp_pass_frag_shader;
+		std::string lense_flare_pass_vert_shader;
+		std::string lense_flare_pass_frag_shader;
 		std::string light_pass_vert_shader;
 		std::string light_pass_frag_shader;
 		std::string final_pass_vert_shader;
@@ -863,6 +900,9 @@ public:
 		std::string postProcess_pass_frag_shader;
 		std::string reflection_pass_vert_shader;
 		std::string reflection_pass_frag_shader;
+		std::string lens_flare_dirt_texture;
+		std::string lens_flare_ghost_gradient_texture;
+		std::string lens_flare_starburst_texture;
 		float dir_light_quad_offset_x;
 		float dir_light_quad_offset_y;
 		float dir_light_quad_offset_z;
@@ -950,6 +990,10 @@ public:
 			atmSingleMieScatTextureUniform = "atmSingleMieTexture";
 			atmTransmittanceTextureUniform = "atmTransmitTexture";
 
+			lensFlareDirtTextureUniform = "lensDirtTexture";
+			lensFlareGhostGradientTextureUniform = "ghostGradientTexture";
+			lensFlareStarburstTextureUniform = "lenseStarburstTexture";
+			
 			dynamicEnvMapUniform = "dynamicEnvMap";
 			staticEnvMapUniform = "staticEnvMap";
 
@@ -962,6 +1006,7 @@ public:
 			eyeAdaptionIntBrightnessUniform = "eyeAdaptionIntBrightness";
 			HDRSSBuffer = "HDRBuffer";
 			atmScatParamBuffer = "AtmScatParametersBuffer";
+			lensFlareParametersBuffer = "LensFlareParametersBuffer";
 
 			testMatUniform = "testMat";
 			testVecUniform = "testVec";
@@ -1033,6 +1078,10 @@ public:
 		std::string atmScatteringTextureUniform;
 		std::string atmSingleMieScatTextureUniform;
 		std::string atmTransmittanceTextureUniform;
+		
+		std::string lensFlareDirtTextureUniform;
+		std::string lensFlareGhostGradientTextureUniform;
+		std::string lensFlareStarburstTextureUniform;
 
 		std::string dynamicEnvMapUniform;
 		std::string staticEnvMapUniform;
@@ -1046,6 +1095,7 @@ public:
 		std::string eyeAdaptionIntBrightnessUniform;
 		std::string HDRSSBuffer;
 		std::string atmScatParamBuffer;
+		std::string lensFlareParametersBuffer;
 
 		std::string testMatUniform;
 		std::string testVecUniform;

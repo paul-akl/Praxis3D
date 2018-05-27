@@ -5,7 +5,9 @@
 #define DISABLE_CHROMATIC_ABERRATION   0  // Takes 3x fewer samples.
 
 layout(location = 0) out vec4 diffuseBuffer;
-layout(location = 1) out vec4 colorBuffer;
+//layout(location = 1) out vec4 colorBuffer;
+
+flat in float aspectRatio;
 
 uniform ivec2 screenSize;
 //uniform sampler2D emissiveMap;
@@ -120,21 +122,14 @@ void main(void)
 	vec2 texCoord = calcTexCoord();
 	vec2 texCoordFlipped = vec2(1.0) - texCoord;
 	
-	// Get the current fragment color
-	vec3 fragmentColor = texture(inputColorMap, texCoord).xyz;
-	
-	// Add emissive color (which is generated in a blur pass)
-	//fragmentColor += texture(emissiveMap, texCoord).xyz;
-	
 	vec3 lensFlareColor = vec3(0.0);
 	lensFlareColor += sampleGhosts(texCoordFlipped, lensFlareParam.m_ghostThreshold);
 	lensFlareColor += sampleHalo(
 		texCoordFlipped, 
 		lensFlareParam.m_haloRadius, 
-		lensFlareParam.m_haloAspectRatio, 
+		aspectRatio, 
 		lensFlareParam.m_haloThreshold);
 	
 	// Write the colors to the framebuffers
 	diffuseBuffer = vec4(lensFlareColor, 1.0);
-	colorBuffer = vec4(fragmentColor + lensFlareColor, 1.0);
 }

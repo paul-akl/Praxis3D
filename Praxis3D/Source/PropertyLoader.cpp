@@ -281,7 +281,7 @@ void PropertyLoader::loadProperty(PropertySet &p_propertySet, const Properties::
 		//|	 String value	|
 		//|_________________|
 		// If current character is alphabetic (unless it's the last character and is 'f')
-		if(isalpha(p_string[i]) && (i < size && p_string[i] != 'f'))
+		if(isalpha(p_string.c_str()[i]) && (i < size && p_string[i] != 'f'))
 		{
 			// Convert string to property ID
 			Properties::PropertyID propertyID = Properties::toPropertyID(p_string);

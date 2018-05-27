@@ -536,6 +536,15 @@
     <ClInclude Include="Source\SunScript.h">
       <Filter>Scripting\Objects\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\BloomCompositePass.h">
+      <Filter>Renderer\Render Passes\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\LenseFlarePass.h">
+      <Filter>Renderer\Render Passes\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\LenseFlareCompositePass.h">
+      <Filter>Renderer\Render Passes\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\config.ini" />

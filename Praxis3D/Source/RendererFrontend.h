@@ -10,9 +10,12 @@ struct RenderPassData;
 class RendererFrontend
 {
 	friend class AtmScatteringPass;
+	friend class BloomCompositePass;
 	friend class BlurPass;
 	friend class GeometryPass;
 	friend class HdrMappingPass;
+	friend class LenseFlareCompositePass;
+	friend class LenseFlarePass;
 	friend class LightingPass;
 	friend class PostProcessPass;
 	friend class FinalPass;
@@ -43,7 +46,7 @@ public:
 		const BufferUsageHint m_bufferUsage;
 	};
 
-	RendererFrontend() { }
+	RendererFrontend();
 	~RendererFrontend();
 
 	ErrorCode init();
@@ -123,11 +126,16 @@ protected:
 
 	inline void queueForLoading(ShaderLoader::ShaderProgram &p_shader)
 	{
-		m_loadCommands.emplace_back(p_shader.m_shaderFilename,
-									p_shader.m_programHandle,
-									p_shader.getUniformUpdater(),
-									p_shader.m_shaderSource, 
-									p_shader.m_errorMessages);
+		if(!p_shader.m_loadedToVideoMemory)
+		{
+			m_loadCommands.emplace_back(p_shader.m_shaderFilename,
+										p_shader.m_programHandle,
+										p_shader.getUniformUpdater(),
+										p_shader.m_shaderSource,
+										p_shader.m_errorMessages);
+
+			p_shader.m_loadedToVideoMemory = true;
+		}
 	}
 	inline void queueForLoading(ModelLoader::ModelHandle &p_model)
 	{
@@ -253,12 +261,16 @@ protected:
 	RendererBackend::BufferUpdateCommands m_bufferUpdateCommands;
 	RendererBackend::ScreenSpaceDrawCommands m_screenSpaceDrawCommands;
 
-	// An array of all active rendering passes
-	std::vector<RenderPass*> m_renderingPasses;
-
 	// Holds info used between rendering passses
 	RenderPassData *m_renderPassData;
 
 	// View - projection matrix
 	Math::Mat4f m_viewProjMatrix;
+	
+	// An array of all active rendering passes
+	std::vector<RenderPass*> m_renderingPasses;
+
+	std::vector<RenderPassType> m_renderingPassesTypes;
+	RenderPass *m_initializedRenderingPasses[RenderPassType::RenderPassType_NumOfTypes];
+	bool m_renderPassBeingUsed[RenderPassType::RenderPassType_NumOfTypes];
 };

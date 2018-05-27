@@ -3,33 +3,33 @@
 #include "GraphicsDataSets.h"
 #include "RenderPassBase.h"
 
-class PostProcessPass : public RenderPass
+class LenseFlarePass : public RenderPass
 {
 public:
-	PostProcessPass(RendererFrontend &p_renderer) :
+	LenseFlarePass(RendererFrontend &p_renderer) :
 		RenderPass(p_renderer), 
 		m_lensFlareParamBuffer(BufferType_Uniform, BufferUsageHint_DynamicDraw),
 		m_lensFlareGhostGradient(Loaders::texture2D().load(Config::rendererVar().lens_flare_ghost_gradient_texture))
 	{
-		m_lensFlareParam.m_lensFlaireDownsample = 0.0f;
-		m_lensFlareParam.m_chromaticAberration = 0.01f;
-		m_lensFlareParam.m_ghostCount = 4;
-		m_lensFlareParam.m_ghostSpacing = 0.1f;
-		m_lensFlareParam.m_ghostThreshold = 2.0f;
-		m_lensFlareParam.m_haloRadius = 0.6f;
-		m_lensFlareParam.m_haloThickness = 0.1f;
-		m_lensFlareParam.m_haloThreshold = 2.0f;
-		m_lensFlareParam.m_haloAspectRatio = 1.0f;
+		m_lensFlareParam.m_lensFlaireDownsample = Config::graphicsVar().lens_flare_downsample;
+		m_lensFlareParam.m_chromaticAberration = Config::graphicsVar().lens_flare_chrom_abberration;
+		m_lensFlareParam.m_ghostCount = Config::graphicsVar().lens_flare_ghost_count;
+		m_lensFlareParam.m_ghostSpacing  = Config::graphicsVar().lens_flare_ghost_spacing;
+		m_lensFlareParam.m_ghostThreshold = Config::graphicsVar().lens_flare_ghost_threshold;
+		m_lensFlareParam.m_haloRadius = Config::graphicsVar().lens_flare_halo_radius;
+		m_lensFlareParam.m_haloThickness = Config::graphicsVar().lens_flare_halo_thickness;
+		m_lensFlareParam.m_haloThreshold = Config::graphicsVar().lens_flare_halo_threshold;
+		m_lensFlareParam.m_haloAspectRatio = 1600.0f / 900.0f;// Config::graphicsVar().lens_flare_aspect_ratio;
 	}
 
-	~PostProcessPass() { }
+	~LenseFlarePass() { }
 
 	ErrorCode init()
 	{
 		ErrorCode returnError = ErrorCode::Success;
 		ErrorCode shaderError;
 
-		m_name = "Post Process Rendering Pass";
+		m_name = "Lense Flare Rendering Pass";
 		
 		// Set buffer values
 		m_diffuseAndOutputBuffers.resize(2);
@@ -37,19 +37,19 @@ public:
 		m_diffuseAndOutputBuffers[1] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(GeometryBuffer::GBufferFinal);
 
 		// Create a property-set used to load blur vertical shaders
-		PropertySet postProcessShaderProperties(Properties::Shaders);
-		postProcessShaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().postProcess_pass_vert_shader);
-		postProcessShaderProperties.addProperty(Properties::FragmentShader, Config::rendererVar().postProcess_pass_frag_shader);
+		PropertySet shaderProperties(Properties::Shaders);
+		shaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().lense_flare_pass_vert_shader);
+		shaderProperties.addProperty(Properties::FragmentShader, Config::rendererVar().lense_flare_pass_frag_shader);
 
 		// Create shaders
-		m_postProcessShader = Loaders::shader().load(postProcessShaderProperties);
+		m_lenseFlareShader = Loaders::shader().load(shaderProperties);
 
 		//		 _______________________________
-		//		|	LOAD POST PROCESS SHADER	|
+		//		|	 LOAD LENSE FLARE SHADER	|
 		//		|_______________________________|
-		shaderError = m_postProcessShader->loadToMemory();		// Load shader to memory
+		shaderError = m_lenseFlareShader->loadToMemory();		// Load shader to memory
 		if(shaderError == ErrorCode::Success)					// Check if shader was loaded successfully
-			m_renderer.queueForLoading(*m_postProcessShader);	// Queue the shader to be loaded to GPU
+			m_renderer.queueForLoading(*m_lenseFlareShader);	// Queue the shader to be loaded to GPU
 		else
 			returnError = shaderError;
 		
@@ -69,8 +69,6 @@ public:
 		// Queue lens flare textures for loading to GPU
 		m_renderer.queueForLoading(m_lensFlareGhostGradient);
 
-		//Loaders::texture2D().load(m_materialNames.m_materials[matType][i].m_filename, static_cast<MaterialType>(matType), false)
-
 		return returnError;
 	}
 
@@ -86,24 +84,29 @@ public:
 		//m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferEmissive, GeometryBuffer::GBufferEmissive);
 		
 		// Bind textures for writing
-		m_renderer.m_backend.getGeometryBuffer()->bindBuffersForWriting(m_diffuseAndOutputBuffers);
+		//m_renderer.m_backend.getGeometryBuffer()->bindBuffersForWriting(m_diffuseAndOutputBuffers);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferDiffuse);
 
 		// Bind lens flare textures
 		glActiveTexture(GL_TEXTURE0 + LensFlareTextureType::LensFlareTextureType_GhostGradient);
 		glBindTexture(GL_TEXTURE_2D, m_lensFlareGhostGradient.getHandle());
 
 		// Perform various visual effects in the post process shader
-		m_renderer.queueForDrawing(m_postProcessShader->getShaderHandle(), m_postProcessShader->getUniformUpdater(), p_sceneObjects.m_camera->getBaseObjectData().m_modelMat);
+		m_renderer.queueForDrawing(m_lenseFlareShader->getShaderHandle(), m_lenseFlareShader->getUniformUpdater(), p_sceneObjects.m_camera->getBaseObjectData().m_modelMat);
 		m_renderer.passScreenSpaceDrawCommandsToBackend();
 
-		p_renderPassData.swapColorInputOutputMaps();
+		p_renderPassData.setBlurInputMap(GeometryBuffer::GBufferDiffuse);
+		p_renderPassData.setBlurOutputMap(GeometryBuffer::GBufferDiffuse);
+		p_renderPassData.setIntermediateMap(p_renderPassData.getColorOutputMap());
+		p_renderPassData.m_blurDoBlending = false;
+		p_renderPassData.m_numOfBlurPasses = Config::graphicsVar().lens_flare_blur_passes;
 	}
 
 private:
 	// Buffer handles used for binding
 	std::vector<GeometryBuffer::GBufferTexture> m_diffuseAndOutputBuffers;
 
-	ShaderLoader::ShaderProgram	*m_postProcessShader;
+	ShaderLoader::ShaderProgram	*m_lenseFlareShader;
 
 	RendererFrontend::ShaderBuffer m_lensFlareParamBuffer;
 

@@ -147,6 +147,7 @@
     <IncludePath>$(SolutionDir)\VC x64\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\VC x64\lib;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)\Builds\$(Platform)\$(Configuration)\</OutDir>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir)\VC\include;$(IncludePath)</IncludePath>
@@ -343,6 +344,7 @@
     <ClInclude Include="Source\AtmScatteringShaderPass.h" />
     <ClInclude Include="Source\BaseGraphicsObjects.h" />
     <ClInclude Include="Source\BaseScriptObject.h" />
+    <ClInclude Include="Source\BloomCompositePass.h" />
     <ClInclude Include="Source\BlurPass.h" />
     <ClInclude Include="Source\CameraGraphicsObject.h" />
     <ClInclude Include="Source\CameraScript.h" />
@@ -373,6 +375,8 @@
     <ClInclude Include="Source\HdrMappingPass.h" />
     <ClInclude Include="Source\Input.h" />
     <ClInclude Include="Source\KeyCommand.h" />
+    <ClInclude Include="Source\LenseFlareCompositePass.h" />
+    <ClInclude Include="Source\LenseFlarePass.h" />
     <ClInclude Include="Source\LightingGraphicsObjects.h" />
     <ClInclude Include="Source\LightingPass.h" />
     <ClInclude Include="Source\LoaderBase.h" />

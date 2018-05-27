@@ -298,6 +298,7 @@ public:
 			return returnError;
 		}
 
+		// NOT USED
 		// Loads data from RAM to buffer and uploads them to VRAM
 		// WARNING: should probably only be called from rendering thread, since this code deals with graphics API
 		ErrorCode loadToVideoMemory()
@@ -372,6 +373,7 @@ public:
 
 	Texture2DHandle load(const std::string &p_filename, MaterialType p_materialType, bool p_startBackgroundLoading = true);
 	Texture2DHandle load(const std::string &p_filename, unsigned int p_textureHandle);
+	Texture2DHandle load(const std::string &p_filename);
 };
 
 class TextureCubemap : public LoaderBase<TextureLoaderCubemap, TextureCubemap>::UniqueObject

@@ -28,7 +28,7 @@ public:
 	const virtual float getElapsedSecondsF() const { return 0.0f; }
 
 	// Returns the number of elapsed frames since the first update call
-	const virtual unsigned int getElapsedNumFrames() = 0;
+	const virtual size_t getElapsedNumFrames() = 0;
 
 	// Returns current number Frames per Second
 	const virtual float getFPS() = 0;
@@ -45,8 +45,8 @@ private:
 	LARGE_INTEGER m_timeCurrent;
 	LARGE_INTEGER m_timeLast;
 
-	unsigned int m_currentNumFrames;
-	unsigned int m_lastNumFrames;
+	size_t	m_currentNumFrames;
+	size_t	m_lastNumFrames;
 
 	float	m_currentFPS,
 			m_tickSum,
@@ -56,8 +56,8 @@ private:
 			m_frequency,
 			m_elapsedSeconds;
 
-	int	m_tickSamples,
-		m_currentTickIndex;
+	size_t	m_tickSamples,
+			m_currentTickIndex;
 
 public:
 	Clock()
@@ -102,7 +102,7 @@ public:
 
 			m_tickList = new float[m_tickSamples]();
 
-			for(int i = 0; i < m_tickSamples; i++)
+			for(unsigned int i = 0; i < m_tickSamples; i++)
 				m_tickList[i] = 0.0f;
 
 			return ErrorCode::Success;
@@ -140,7 +140,7 @@ public:
 
 		// Add all the ticks
 		m_tickSum = 0.0f;
-		for(int i = 0; i < m_tickSamples; i++)
+		for(decltype(m_tickSamples) i = 0; i < m_tickSamples; i++)
 			m_tickSum += m_tickList[i];
 
 		// Average out the ticks and calculate FPS
@@ -167,7 +167,7 @@ public:
 
 	// Number of elapsed frames since the first update call
 	// update() needs to be called once per frame to work accurately
-	const unsigned int getElapsedNumFrames() { return m_currentNumFrames; }
+	const size_t getElapsedNumFrames() { return m_currentNumFrames; }
 
 	// Returns current number Frames per Second
 	const float getFPS() { return m_currentFPS; }
@@ -202,7 +202,7 @@ public:
 	const double getCurrentTime() { return 0.0; }
 	const float getCurrentTimeF() { return 0.0f; }
 
-	const unsigned int getElapsedNumFrames() { return 0; }
+	const size_t getElapsedNumFrames() { return 0; }
 
 	const float getFPS() { return 0; }
 };

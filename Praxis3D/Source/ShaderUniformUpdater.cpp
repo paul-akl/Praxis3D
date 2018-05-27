@@ -76,6 +76,11 @@ ErrorCode ShaderUniformUpdater::generateTextureUpdateList()
 	uniformList.push_back(new AtmSingleMieTextureUniform(m_shaderHandle));
 	uniformList.push_back(new AtmTransmittanceTextureUniform(m_shaderHandle));
 		
+	// Lens flare effect textures
+	uniformList.push_back(new LensFlareDirtTextureUniform(m_shaderHandle));
+	uniformList.push_back(new LensFlareGhostGradientTextureUniform(m_shaderHandle));
+	uniformList.push_back(new LensFlareStarburstTextureUniform(m_shaderHandle));
+	
 	// Go through each uniform and check if it is valid
 	// If it is, add it to the update list, if not, delete it
 	for(decltype(uniformList.size()) i = 0, size = uniformList.size(); i < size; i++)
@@ -198,6 +203,9 @@ ErrorCode ShaderUniformUpdater::generateUniformBlockList()
 	// Atmospheric scattering buffer
 	uniformBlockList.push_back(new AtmScatParametersUniform(m_shaderHandle));
 	
+	// Lens flare effect parameters buffer
+	uniformBlockList.push_back(new LensFlareParametersUniform(m_shaderHandle));
+
 	// Go through each uniform and check if it is valid
 	// If it is, add it to the update list, if not, delete it
 	for(decltype(uniformBlockList.size()) i = 0, size = uniformBlockList.size(); i < size; i++)

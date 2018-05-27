@@ -61,48 +61,58 @@ public:
 		//m_renderer.m_backend.getGeometryBuffer()->bindFramebufferForWriting(GeometryBuffer::FramebufferDefault);
 		
 		// Bind emissive texture for reading so it can be accessed in the shaders
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getEmissiveInputMap(), GeometryBuffer::GBufferInputTexture);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getBlurInputMap(), GeometryBuffer::GBufferInputTexture);
 
 		// Bind blur texture for writing to, so it can be used as an intermediate buffer between blur passes
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getIntermediateMap());
 
 		// Perform verical blur. Queue and render a full screen quad using a vertical blur shader
 		m_renderer.queueForDrawing(m_blurVerticalShader->getShaderHandle(), m_blurVerticalShader->getUniformUpdater(), p_sceneObjects.m_camera->getBaseObjectData().m_modelMat);
 		m_renderer.passScreenSpaceDrawCommandsToBackend();
 
-		for(int i = 0; i < 5; i++)
+		for(decltype(p_renderPassData.m_numOfBlurPasses) i = 0; i < p_renderPassData.m_numOfBlurPasses; i++)
 		{
 			// Bind intermediate blur texture for reading so it can be accessed in the shaders
-			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorOutputMap(), GeometryBuffer::GBufferInputTexture);
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getIntermediateMap(), GeometryBuffer::GBufferInputTexture);
 
 			// Bind emissive texture for writing to, so the second pass populates it with the final blur result
-			m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getEmissiveInputMap());
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getBlurInputMap());
 
 			// Perform horizontal blur. Queue and render a full screen quad using a horizontal blur shader
 			m_renderer.queueForDrawing(m_blurHorizontalShader->getShaderHandle(), m_blurHorizontalShader->getUniformUpdater(), p_sceneObjects.m_camera->getBaseObjectData().m_modelMat);
 			m_renderer.passScreenSpaceDrawCommandsToBackend();
 
 			// Bind emissive texture for reading so it can be accessed in the shaders
-			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getEmissiveInputMap(), GeometryBuffer::GBufferInputTexture);
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getBlurInputMap(), GeometryBuffer::GBufferInputTexture);
 
 			// Bind blur texture for writing to, so it can be used as an intermediate buffer between blur passes
-			m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getIntermediateMap());
 
 			// Perform verical blur. Queue and render a full screen quad using a vertical blur shader
 			m_renderer.queueForDrawing(m_blurVerticalShader->getShaderHandle(), m_blurVerticalShader->getUniformUpdater(), p_sceneObjects.m_camera->getBaseObjectData().m_modelMat);
 			m_renderer.passScreenSpaceDrawCommandsToBackend();
 		}
 
+		// If blending should be enabled
+		if(p_renderPassData.m_blurDoBlending)
+		{
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_ONE, GL_ONE);
+		}
 
 		// Bind intermediate blur texture for reading so it can be accessed in the shaders
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorOutputMap(), GeometryBuffer::GBufferInputTexture);
-
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getIntermediateMap(), GeometryBuffer::GBufferInputTexture);
+		
 		// Bind emissive texture for writing to, so the second pass populates it with the final blur result
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferEmissive);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getBlurOutputMap());
 
 		// Perform horizontal blur. Queue and render a full screen quad using a horizontal blur shader
 		m_renderer.queueForDrawing(m_blurHorizontalShader->getShaderHandle(), m_blurHorizontalShader->getUniformUpdater(), p_sceneObjects.m_camera->getBaseObjectData().m_modelMat);
 		m_renderer.passScreenSpaceDrawCommandsToBackend();
+
+		// If blending should be enabled
+		if(p_renderPassData.m_blurDoBlending)
+			glDisable(GL_BLEND);
 	}
 
 private:

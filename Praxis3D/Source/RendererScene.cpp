@@ -102,7 +102,7 @@ ErrorCode RendererScene::preload()
 	}
 	
 	// Start loading Environment Map Objects 
-	for (decltype(m_envMapPool.getPoolSize()) i = 0, numAllocObjecs = 0, totalNumAllocObjs = m_envMapPool.getNumAllocated(),
+	for(decltype(m_envMapPool.getPoolSize()) i = 0, numAllocObjecs = 0, totalNumAllocObjs = m_envMapPool.getNumAllocated(),
 		size = m_envMapPool.getPoolSize(); i < size && numAllocObjecs < totalNumAllocObjs; i++)
 	{
 		// If current object is allocated and is not loaded to memory already
@@ -515,7 +515,7 @@ ModelObject *RendererScene::loadModelObject(const PropertySet &p_properties)
 
 	// If shaders are present
 	if(shaderProperty)
-	{	
+	{
 		// Try to add a new object to the pool
 		objPoolError = m_shaderObjPool.add(
 			this, p_properties.getPropertyByID(Properties::Name).getString(),

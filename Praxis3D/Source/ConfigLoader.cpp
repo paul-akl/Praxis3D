@@ -228,7 +228,7 @@ ConfigFile::BaseValue *ConfigFile::getValueNode(std::string p_value)
 	int decimalPoints = 0, commas = 0;
 	for(std::vector<std::string>::size_type i = 0; i < p_value.size(); i++)
 	{
-		if(isalpha(p_value[i]) && (i < p_value.size() || p_value[i] != 'f'))	// If value is string
+		if(isalpha(p_value.c_str()[i]) && (i < p_value.size() || p_value[i] != 'f'))	// If value is string
 			return new StringValue(p_value);
 
 		if(p_value[i] == '.')

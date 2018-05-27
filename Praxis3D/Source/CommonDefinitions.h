@@ -14,13 +14,20 @@ enum CommandType : unsigned int
 	CommandType_Bind,
 	CommandType_Load
 };
-
-/*
-enum AtmScatteringBufferBinding : unsigned int
+enum RenderPassType : unsigned int
 {
-	AtmScatteringBufferBinding_AtmScatParam = LightBufferBinding_Total,
-	AtmScatteringBufferBinding_Total
-};*/
+	RenderPassType_Geometry,
+	RenderPassType_Lighting,
+	RenderPassType_AtmScattering,
+	RenderPassType_HdrMapping,
+	RenderPassType_Blur,
+	RenderPassType_BloomComposite,
+	RenderPassType_LenseFlare,
+	RenderPassType_LenseFlareComposite,
+	RenderPassType_Final,
+	RenderPassType_NumOfTypes
+};
+
 enum BufferType : unsigned int
 {
 	BufferType_Uniform			= GL_UNIFORM_BUFFER,
@@ -93,7 +100,14 @@ enum AtmScatteringTextureType : unsigned int
 	AtmScatteringTextureType_Irradiance = MaterialType_NumOfTypes_Extended,
 	AtmScatteringTextureType_Scattering,
 	AtmScatteringTextureType_SingleMie,
-	AtmScatteringTextureType_Transmittance
+	AtmScatteringTextureType_Transmittance,
+	AtmScatteringTextureType_NumOfTypes
+};
+enum LensFlareTextureType : unsigned int
+{
+	LensFlareTextureType_GhostGradient = MaterialType_NumOfTypes_Extended,
+	LensFlareTextureType_LenseDirt,
+	LensFlareTextureType_Starburst
 };
 enum ShaderType : unsigned int
 {
@@ -123,5 +137,6 @@ enum UniformBufferBinding : unsigned int
 {
 	UniformBufferBinding_PointLights,
 	UniformBufferBinding_SpotLights,
-	UniformBufferBinding_AtmScatParam
+	UniformBufferBinding_AtmScatParam,
+	UniformBufferBinding_LensFlareParam
 };
