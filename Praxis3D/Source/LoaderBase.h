@@ -86,7 +86,8 @@ public:
 
 		// Clear the object pool
 		for(decltype(m_objectPool.size()) i = 0, size = m_objectPool.size(); i < size; i++)
-			delete m_objectPool[i];
+			if(m_objectPool[i] != nullptr)
+				delete m_objectPool[i];
 
 		m_objectPool.clear();
 	}

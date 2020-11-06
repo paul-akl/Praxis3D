@@ -663,7 +663,7 @@ public:
 	{
 		if(m_optimizedForSearch)
 		{
-			// Find the property by comparing the property ID const PropertySet &returnPropertySet
+			// Find the property by comparing the property ID
 			auto returnPropertySet = std::lower_bound(m_propertySets.begin(), m_propertySets.end(), p_propertyID);
 
 			// If the property ID matches (property is found), return it; otherwise return a null property

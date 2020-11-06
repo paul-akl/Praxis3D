@@ -30,6 +30,14 @@ public:
 		{
 			// Queue the shaders to be loaded to GPU
 			m_renderer.queueForLoading(*m_shaderGeometry);
+
+			// Log a successful initialization
+			ErrHandlerLoc::get().log(ErrorCode::Initialize_success, ErrorSource::Source_GeometryPass);
+		}
+		else
+		{
+			// Log a failed initialization
+			ErrHandlerLoc::get().log(ErrorCode::Initialize_failure, ErrorSource::Source_GeometryPass);
 		}
 
 		return returnError;
@@ -77,11 +85,6 @@ public:
 				p_sceneObjects.m_customShaderObjects[objIndex]->m_shader->getShaderHandle(),
 				p_sceneObjects.m_customShaderObjects[objIndex]->m_shader->getUniformUpdater(),
 				m_renderer.m_viewProjMatrix);
-
-				//queueForDrawing(*p_sceneObjects.m_customShaderObjects[objIndex], 
-				//				p_sceneObjects.m_customShaderObjects[objIndex]->m_shader->getShaderHandle(),
-				//				p_sceneObjects.m_customShaderObjects[objIndex]->m_shader->getUniformUpdater(),
-				//				viewProjMatrix);
 		}
 
 		// Pass all the draw commands to be executed

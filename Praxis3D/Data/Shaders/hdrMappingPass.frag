@@ -34,6 +34,7 @@ float calcLuma(vec3 p_color)
 // by making overall brightness match the average intended brightness (eyeAdaptionIntBrightness)
 vec3 brightnessMapping(vec3 p_color, float p_exposure)
 {
+	//return clamp(p_color * (eyeAdaptionIntBrightness / p_exposure), vec3(0.0), vec3(10.0));
 	return p_color * clamp(eyeAdaptionIntBrightness / p_exposure, MIN_INTENDED_BRIGHTNESS, MAX_INTENDED_BRIGHTNESS);
 }
 

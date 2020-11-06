@@ -112,6 +112,12 @@ public:
 		// Queue atmosphere parameters buffer to be created
 		m_renderer.queueForLoading(m_atmParamBuffer);
 
+		// Check for errors and log either a successful or a failed initialization
+		if(returnError == ErrorCode::Success)
+			ErrHandlerLoc::get().log(ErrorCode::Initialize_success, ErrorSource::Source_AtmScatteringPass);
+		else
+			ErrHandlerLoc::get().log(ErrorCode::Initialize_failure, ErrorSource::Source_AtmScatteringPass);
+
 		return returnError;
 	}
 

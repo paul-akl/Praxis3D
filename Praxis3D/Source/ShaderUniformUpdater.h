@@ -30,6 +30,7 @@ public:
 		m_updatesPerMesh.clear();
 		m_textureUpdates.clear();
 		m_uniformBlockUpdates.clear();
+		m_SSBBlockUpdates.clear();
 	}
 
 	inline size_t getNumUpdatesPerFrame() const	{ return m_numUpdatesPerFrame;		}

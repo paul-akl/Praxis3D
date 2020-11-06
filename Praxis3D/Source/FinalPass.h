@@ -34,6 +34,12 @@ public:
 			m_renderer.queueForLoading(*m_shaderFinalPass);
 		}
 		
+		// Check for errors and log either a successful or a failed initialization
+		if(returnError == ErrorCode::Success)
+			ErrHandlerLoc::get().log(ErrorCode::Initialize_success, ErrorSource::Source_FinalPass);
+		else
+			ErrHandlerLoc::get().log(ErrorCode::Initialize_failure, ErrorSource::Source_FinalPass);
+
 		return returnError;
 	}
 
@@ -60,7 +66,7 @@ public:
 		if(Config::graphicsVar().eye_adaption)
 		{
 			// Generate mipmaps for the final buffer, for use in tone mapping
-			m_renderer.m_backend.getGeometryBuffer()->generateMipmap(GeometryBuffer::GBufferFinal);
+			//m_renderer.m_backend.getGeometryBuffer()->generateMipmap(GeometryBuffer::GBufferFinal);
 		}
 
 		// Bind final texture for reading so it can be accessed in the shaders

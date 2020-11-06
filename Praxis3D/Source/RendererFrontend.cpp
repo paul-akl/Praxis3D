@@ -80,10 +80,14 @@ RendererFrontend::RendererFrontend()
 RendererFrontend::~RendererFrontend()
 {
 	// Delete rendering passes
-	//for(decltype(m_renderingPasses.size()) i = 0, size = m_renderingPasses.size(); i < size; i++)
-	//{
-		//delete m_renderingPasses[i];
-	//}
+	for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
+	{
+		// Check if has been created
+		if(m_initializedRenderingPasses[i] != nullptr)
+			delete m_initializedRenderingPasses[i];
+	}
+
+	delete m_renderPassData;
 }
 
 ErrorCode RendererFrontend::init()

@@ -36,6 +36,8 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
     Code(Undefined,) \
     Code(Success,) \
     Code(Failure,) \
+    Code(Initialize_success,) \
+    Code(Initialize_failure,) \
 	/* General engine errors */\
     Code(Destroy_obj_not_found,) \
     Code(Glew_failed,) \
@@ -73,28 +75,37 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
 #define ERROR_SOURCE(Code) \
     Code(Source_Unknown,) \
     Code(Source_General,) \
-    Code(Source_Engine,) \
-    Code(Source_Renderer,) \
-    Code(Source_Scripting,) \
+    Code(Source_AtmScatteringPass,) \
+    Code(Source_BloomCompositePass,) \
+    Code(Source_BloomPass,) \
+    Code(Source_BlurPass,) \
     Code(Source_Config,) \
     Code(Source_ConfigLoader,) \
-    Code(Source_TextureLoader,) \
-    Code(Source_ModelLoader,) \
-    Code(Source_ShaderLoader,) \
+    Code(Source_Engine,) \
     Code(Source_FileLoader,) \
-    Code(Source_SceneLoader,) \
-    Code(Source_LightingPass,) \
+    Code(Source_FinalPass,) \
+    Code(Source_GameObject,) \
     Code(Source_GeometryBuffer,) \
     Code(Source_GeometryPass,) \
     Code(Source_GraphicsObject,) \
-    Code(Source_FinalPass,) \
-    Code(Source_ReflectionPass,) \
-    Code(Source_ScriptObject,) \
-    Code(Source_PlayerObject,) \
-    Code(Source_GameObject,) \
-    Code(Source_SkyObject,) \
+    Code(Source_HdrMappingPass,) \
+    Code(Source_LensFlareCompositePass,) \
+    Code(Source_LensFlarePass,) \
     Code(Source_LightObject,) \
+    Code(Source_LightingPass,) \
+    Code(Source_ModelLoader,) \
+    Code(Source_PlayerObject,) \
+    Code(Source_PostProcessPass,) \
     Code(Source_PropertyLoader,) \
+    Code(Source_ReflectionPass,) \
+    Code(Source_Renderer,) \
+    Code(Source_SceneLoader,) \
+    Code(Source_Scripting,) \
+    Code(Source_ScriptObject,) \
+    Code(Source_ShaderLoader,) \
+    Code(Source_SkyObject,) \
+    Code(Source_SkyPass,) \
+    Code(Source_TextureLoader,) \
     Code(Source_Window,) \
     Code(Source_NumberOfErrorSources,) 
 DECLARE_ENUM(ErrorSource, ERROR_SOURCE)

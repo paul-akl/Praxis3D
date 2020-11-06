@@ -7,7 +7,6 @@
 			"Scene": 
 			{
 				"ModelPoolSize": "30",
-				"ShaderPoolSize": "10",
 				"PointLightPoolSize": "20",
 				"SpotLightPoolSize": "20"
 			},
@@ -22,7 +21,7 @@
 					"Name": "DirectionalLight 1",
 					"Color": "1.0f, 1.0f, 1.0f",
 					"Direction": "0.006461f, -0.707092f, -0.707092f",
-					"Intensity": "10.0f"
+					"Intensity": "0.5f"
 				},
 				{
 					"Type": "EnvironmentMapStatic",
@@ -48,127 +47,6 @@
 							"Filename": "negz.jpg"
 						}
 					]
-				},
-				{
-					"Type": "ModelObject",
-					"Name": "Terrain 1",
-					"Position": "0.0f, 50.0f, 0.0f",
-					"Rotation": "270.0f, 0.0f, 0.0f",
-					"OffsetPosition": "0.0f, 0.0f, 0.0f",
-					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "25.0f, 25.0f, 6.0f",
-					"AlphaThreshold": "0.0f",
-					"HeightScale": "0.0f",
-					"Lighting": "1",
-					"TextureTilingFactor": "1.0f",
-					"Models": 
-					{
-						"Filename": "terrain1_UV.3ds"
-					},
-					"Materials": 
-					{
-						"Diffuse": 
-						[
-							{
-								"Filename": "ground_FreshTilledDirt_2k_alb.tga",
-								"Index": "0"
-							}
-						],
-						"Normal": 
-						[
-							{
-								"Filename": "ground_FreshTilledDirt_2k_nY+.tga",
-								"Index": "0"
-							}
-						],
-						"Emissive": 
-						{
-						},
-						"RMHAO": 
-						[
-							{
-								"Filename": "Ground_SmoothRocks_RMHAO.tga",
-								"Index": "0"
-							}
-						]
-					}
-				},
-				{
-					"Type": "ModelObject",
-					"Name": "Tank 1",
-					"Position": "-100.0f, 5.0f, 0.0f",
-					"Rotation": "0.0f, 0.0f, 0.0f",
-					"OffsetPosition": "0.0f, 0.0f, 0.0f",
-					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "10.0, 10.0f, 10.0f",
-					"AlphaThreshold": "0.0f",
-					"HeightScale": "0.0f",
-					"Lighting": "1",
-					"TextureTilingFactor": "1.0f",
-					"Models": 
-					{
-						"Filename": "model.dae"
-					},
-					"Materials": 
-					{
-						"Diffuse": 
-						[
-							{
-								"Filename": "hull_albedo.jpg",
-								"Index": "0"
-							},
-							{
-								"Filename": "turret_albedo.jpg",
-								"Index": "1"
-							},
-							{
-								"Filename": "wheels_albedo.jpg",
-								"Index": "2"
-							},
-							{
-								"Filename": "track_albedo.jpg",
-								"Index": "3"
-							}
-						],
-						"Normal": 
-						[
-							{
-								"Filename": "hull_normal.jpg",
-								"Index": "0"
-							},
-							{
-								"Filename": "turret_normal.jpg",
-								"Index": "1"
-							},
-							{
-								"Filename": "wheels_normal.jpg",
-								"Index": "2"
-							},
-							{
-								"Filename": "track_normal.jpg",
-								"Index": "3"
-							}
-						],
-						"RMHAO": 
-						[
-							{
-								"Filename": "hull_RMHAO.jpg",
-								"Index": "0"
-							},
-							{
-								"Filename": "turret_RMHAO.jpg",
-								"Index": "1"
-							},
-							{
-								"Filename": "wheels_RMHAO.jpg",
-								"Index": "2"
-							},
-							{
-								"Filename": "track_RMHAO.jpg",
-								"Index": "3"
-							}
-						]
-					}
 				},
 				{
 					"Type": "ModelObject",
@@ -681,7 +559,7 @@
 				{
 					"Type": "ModelObject",
 					"Name": "light 1",
-					"Position": "12.971f, 5.0f, -68.7851f",
+					"Position": "-19.2421f, 10.0f, 5.45328f",
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
@@ -818,7 +696,7 @@
 					"Type": "ModelObject",
 					"Name": "light 5",
 					"Position": "-40.0f, 3.0f, 1.96449f",
-					"Rotation": "-0.145991f, 0.0f, 0.989286f",
+					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
 					"Scale": "1.0f, 1.0f, 1.0f",
@@ -850,7 +728,7 @@
 					"Type": "ModelObject",
 					"Name": "light 6",
 					"Position": "-20.0f, 3.0f, -20.0f",
-					"Rotation": "0.145991f, 0.0f, -0.989286f",
+					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
 					"Scale": "1.0f, 1.0f, 1.0f",
@@ -885,7 +763,7 @@
 					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
-					"Scale": "2500.0f, 2500.0f, 2500.0f",
+					"Scale": "25000.0f, 25000.0f, 25000.0f",
 					"AlphaThreshold": "0.0f",
 					"HeightScale": "0.0f",
 					"Lighting": "1",
@@ -930,8 +808,8 @@
 				{
 					"Type": "ModelObject",
 					"Name": "Skybox 1",
-					"Position": "-90.6898f, 7.4709f, 11.0952f",
-					"Rotation": "0.0f, -0.14598f, 26.727f",
+					"Position": "-117.386f, 11.1996f, -70.2678f",
+					"Rotation": "0.0f, 0.0f, 0.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
 					"Scale": "20000.0f, 20000.0f, 20000.0f",
@@ -964,6 +842,8 @@
 					},
 					"Shaders": 
 					{
+						"FragmentShader": "skybox.frag",
+						"VertexShader": "skybox.vert"
 					}
 				},
 				{
@@ -973,7 +853,7 @@
 					"Color": "1.0f, 1.0f, 1.0f",
 					"Intensity": "10.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
-					"Position": "12.971f, 5.0f, -68.7851f"
+					"Position": "-19.2421f, 10.0f, 5.45328f"
 				},
 				{
 					"Type": "PointLight",
@@ -998,7 +878,7 @@
 					"Name": "PointLight 45",
 					"Attenuation": "0.0f, 0.0f, 1.0f",
 					"Color": "1.0f, 1.0f, 1.0f",
-					"Intensity": "10.0f",
+					"Intensity": "100.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"Position": "-100.0f, 10.0f, 20.0f"
 				},
@@ -1009,7 +889,7 @@
 					"Color": "0.0f, 1.0f, 0.0f",
 					"Intensity": "0.1f",
 					"OffsetPosition": "0.0f, 1.8f, 0.0f",
-					"Position": "-75.0f, 1.8f, 0.0f"
+					"Position": "-75.0f, 0.0f, 0.0f"
 				},
 				{
 					"Type": "SpotLight",
@@ -1018,7 +898,7 @@
 					"CutoffAngle": "60.0f",
 					"Color": "1.0f, 1.0f, 1.0f",
 					"Direction": "-1.0f, 0.0f, 0.0f",
-					"Intensity": "300.0f",
+					"Intensity": "200.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
 					"Position": "60.0f, 3.0f, 60.0f"
@@ -1029,8 +909,8 @@
 					"Attenuation": "0.0f, 0.0f, 1.0f",
 					"CutoffAngle": "60.0f",
 					"Color": "0.0f, 1.0f, 0.0f",
-					"Direction": "-0.145991f, 0.0f, 0.989286f",
-					"Intensity": "300.0f",
+					"Direction": "0.577353f, 0.577173f, 0.577525f",
+					"Intensity": "200.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
 					"Position": "-40.0f, 3.0f, 1.96449f"
@@ -1041,8 +921,8 @@
 					"Attenuation": "0.0f, 0.0f, 1.0f",
 					"CutoffAngle": "60.0f",
 					"Color": "1.0f, 0.0f, 0.0f",
-					"Direction": "0.145991f, 0.0f, -0.989286f",
-					"Intensity": "300.0f",
+					"Direction": "0.577353f, 0.577173f, 0.577525f",
+					"Intensity": "200.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
 					"Position": "-40.0f, 3.0f, 1.96449f"
@@ -1054,7 +934,7 @@
 					"CutoffAngle": "60.0f",
 					"Color": "1.0f, 1.0f, 1.0f",
 					"Direction": "0.707107f, 0.0f, 0.707107f",
-					"Intensity": "300.0f",
+					"Intensity": "200.0f",
 					"OffsetPosition": "0.0f, 0.0f, 0.0f",
 					"OffsetRotation": "0.0f, 0.0f, 0.0f",
 					"Position": "-20.0f, 3.0f, -20.0f"
@@ -1071,12 +951,12 @@
 				{
 					"Type": "FreeCamera",
 					"Name": "Free Camera 1",
-					"Position": "-90.6949f, 7.47164f, 11.0953f",
-					"Angle": "26.727f, -0.14598f",
+					"Position": "-100.0f, 10.0f, 0.0f",
+					"Angle": "25.5279f, -20.56376f",
 					"Speed": "2.0f",
-					"SprintSpeed": "500.0f",
+					"SprintSpeed": "50.0f",
 					"LowerLimit": "0.0f",
-					"UpperLimit": "500000.0f",
+					"UpperLimit": "500.0f",
 					"Keybindings": 
 					{
 						"ForwardKey": "26",
@@ -1109,14 +989,14 @@
 					"Type": "DebugRotateScript",
 					"Name": "Debug Rotate Script 1",
 					"Axis": "0.0f, 1.0f, 0.0f",
-					"Rotation": "-0.141616f, 0.0f, 0.989922f",
+					"Rotation": "1.0f, 0.0f, 0.0f",
 					"Speed": "100.0f"
 				},
 				{
 					"Type": "DebugRotateScript",
 					"Name": "Debug Rotate Script 2",
 					"Axis": "0.0f, 1.0f, 0.0f",
-					"Rotation": "0.141616f, 0.0f, -0.989922f",
+					"Rotation": "-1.0f, 0.0f, 0.0f",
 					"Speed": "100.0f"
 				},
 				{
@@ -1140,16 +1020,12 @@
 				{
 					"Type": "SolarTimeScript",
 					"Name": "Solar Time Script 1",
-					"Hours": "17",
-					"Minutes": "0",
+					"Hours": "12",
 					"Seconds": "0.0f",
-					"Year": "2018",
-					"Month": "5",
-					"Day": "14",
-					"TimeZone": "3",
-					"Latitude": "54.7f",
-					"Longitude": "25.3f",
-					"TimeMultiplier": "150.0f",
+					"Latitude": "54.0f",
+					"Longitude": "54.0f",
+					"DayOfYear": "1",
+					"TimeMultiplier": "10.0f",
 					"OffsetPosition": "25.0f"
 				}
 			]
@@ -1184,6 +1060,10 @@
 		{
 			"Subject": "Debug Rotate Script 2",
 			"Observer": "SpotLight 3"
+		},
+		{
+			"Subject": "Barrel 1",
+			"Observer": "Barrel 1 Point Light"
 		},
 		{
 			"Subject": "PointLight 2",

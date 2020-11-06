@@ -51,6 +51,12 @@ public:
 		// Queue light buffers to be created
 		m_renderer.queueForLoading(m_pointLightBuffer);
 		m_renderer.queueForLoading(m_spotLightBuffer);
+		
+		// Check for errors and log either a successful or a failed initialization
+		if(returnError == ErrorCode::Success)
+			ErrHandlerLoc::get().log(ErrorCode::Initialize_success, ErrorSource::Source_LightingPass);
+		else
+			ErrHandlerLoc::get().log(ErrorCode::Initialize_failure, ErrorSource::Source_LightingPass);
 
 		return returnError;
 	}

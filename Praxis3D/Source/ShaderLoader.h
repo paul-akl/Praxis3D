@@ -248,6 +248,7 @@ public:
 			m_programHandle = 0;
 			m_uniformUpdater = nullptr;
 		}
+		~ShaderProgram();
 
 		bool	m_defaultShader, 
 				m_loadedToMemory,

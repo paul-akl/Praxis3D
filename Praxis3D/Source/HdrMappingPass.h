@@ -52,6 +52,12 @@ public:
 
 		// Queue HDR buffer to be created
 		m_renderer.queueForLoading(m_HDRSSBuffer);
+		
+		// Check for errors and log either a successful or a failed initialization
+		if(returnError == ErrorCode::Success)
+			ErrHandlerLoc::get().log(ErrorCode::Initialize_success, ErrorSource::Source_HdrMappingPass);
+		else
+			ErrHandlerLoc::get().log(ErrorCode::Initialize_failure, ErrorSource::Source_HdrMappingPass);
 
 		return returnError;
 	}
@@ -63,7 +69,7 @@ public:
 		if(Config::graphicsVar().eye_adaption)
 		{
 			// Generate mipmaps for the final buffer, for use in tone mapping
-			//m_renderer.m_backend.getGeometryBuffer()->generateMipmap(GeometryBuffer::GBufferFinal);
+			m_renderer.m_backend.getGeometryBuffer()->generateMipmap(GeometryBuffer::GBufferFinal);
 		}
 
 		p_renderPassData.setEmissiveInputMap(GeometryBuffer::GBufferDiffuse);

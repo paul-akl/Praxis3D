@@ -18,7 +18,11 @@ ShaderLoader::ShaderLoader()
 }
 ShaderLoader::~ShaderLoader()
 {
+	// Delete shaders
+	for(decltype(m_shaderPrograms.size()) i = 0, size = m_shaderPrograms.size(); i < size; i++)
+		delete m_shaderPrograms[i];
 
+	m_shaderPrograms.clear();
 }
 
 ErrorCode ShaderLoader::init()
@@ -134,4 +138,9 @@ ShaderLoader::ShaderProgram *ShaderLoader::load(const PropertySet &p_properties)
 	}
 
 	return &m_defaultProgram;
+}
+
+ShaderLoader::ShaderProgram::~ShaderProgram()
+{
+	delete m_uniformUpdater;
 }

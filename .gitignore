@@ -1,22 +1,18 @@
 
-VC/
-
-VC x64/
-
 \.vs/
 
-Builds/x32/
-
-Builds/x64/Debug/
-
-Builds/x64/Debug 64bit/lnk\{4EFA342B-62AB-4145-8CAE-43C91978D51E}\.tmp
-
-Builds/x64/Release 64bit/Praxis3D\.iobj
-
-Builds/x64/Release 64bit/Praxis3D\.ipdb
-
 *.dae
-
-Praxis3D/x64/
-
-Praxis3D/Data/Maps/default_lite backup\.pmap
+*.jpeg
+*.jpg
+*.tga
+*.png
+*.bmp
+*.mtl
+*.pk3
+*.farr
+*.fbx
+*.3ds
+*.nff
+*.tif
+VC x64/
+VC/

@@ -70,6 +70,12 @@ public:
 		m_renderer.queueForLoading(m_lensFlareGhostGradient);
 
 		//Loaders::texture2D().load(m_materialNames.m_materials[matType][i].m_filename, static_cast<MaterialType>(matType), false)
+		
+		// Check for errors and log either a successful or a failed initialization
+		if(returnError == ErrorCode::Success)
+			ErrHandlerLoc::get().log(ErrorCode::Initialize_success, ErrorSource::Source_PostProcessPass);
+		else
+			ErrHandlerLoc::get().log(ErrorCode::Initialize_failure, ErrorSource::Source_PostProcessPass);
 
 		return returnError;
 	}

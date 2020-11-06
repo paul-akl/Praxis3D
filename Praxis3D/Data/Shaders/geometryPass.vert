@@ -42,7 +42,7 @@ void main(void)
 	
 	// Multiply texture coordinates by the tiling factor. The higher the factor, the denser the tiling
 	texCoord = textureCoord * textureTilingFactor;
-		
+	
 	// Compute TBN matrix
     vec3 T = normalize(mat3(modelMat) * vertexTangent);
     vec3 B = normalize(mat3(modelMat) * vertexBitangent);
@@ -52,6 +52,6 @@ void main(void)
 	
 	tangentCameraPos = TBN2 * cameraPosVec;
 	tangentFragPos = TBN2 * fragPos;
-		
+	
 	gl_Position = MVP * vec4(vertexPosition, 1.0);
 }

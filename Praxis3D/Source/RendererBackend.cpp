@@ -9,6 +9,7 @@ RendererBackend::RendererBackend()
 
 RendererBackend::~RendererBackend()
 {
+	delete m_gbuffer;
 }
 
 ErrorCode RendererBackend::init(const UniformFrameData &p_frameData)

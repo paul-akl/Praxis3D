@@ -34,7 +34,12 @@ public:
 			m_renderer.queueForLoading(*m_skyPassShader);	// Queue the shader to be loaded to GPU
 		else
 			returnError = shaderError;
-
+		
+		// Check for errors and log either a successful or a failed initialization
+		if(returnError == ErrorCode::Success)
+			ErrHandlerLoc::get().log(ErrorCode::Initialize_success, ErrorSource::Source_SkyPass);
+		else
+			ErrHandlerLoc::get().log(ErrorCode::Initialize_failure, ErrorSource::Source_SkyPass);
 
 		return returnError;
 	}

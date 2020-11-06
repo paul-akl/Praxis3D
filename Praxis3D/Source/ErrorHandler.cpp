@@ -25,6 +25,8 @@ ErrorHandler::ErrorHandler()
 	AssignErrorType(Undefined, Warning);
 	AssignErrorType(Success, Info);
 	AssignErrorType(Failure, Warning);
+	AssignErrorType(Initialize_success, Info);
+	AssignErrorType(Initialize_failure, Info);
 	AssignErrorType(Destroy_obj_not_found, Warning);
 	AssignErrorType(Glew_failed, FatalError);
 	AssignErrorType(Ifstream_failed, Warning);
@@ -72,6 +74,42 @@ ErrorHandler::ErrorHandler()
 	m_errHashmap[GetString(Source_LightObject)]		= NumberOfErrorCodes + Source_LightObject;
 	m_errHashmap[GetString(Source_PropertyLoader)]	= NumberOfErrorCodes + Source_PropertyLoader;
 	m_errHashmap[GetString(Source_Window)]			= NumberOfErrorCodes + Source_Window;
+
+	
+    m_errHashmap[GetString(Source_Unknown)]						= NumberOfErrorCodes + Source_Unknown;
+    m_errHashmap[GetString(Source_General)]						= NumberOfErrorCodes + Source_General;
+    m_errHashmap[GetString(Source_AtmScatteringPass)]			= NumberOfErrorCodes + Source_AtmScatteringPass;
+    m_errHashmap[GetString(Source_BloomCompositePass)]			= NumberOfErrorCodes + Source_BloomCompositePass;
+    m_errHashmap[GetString(Source_BloomPass)]					= NumberOfErrorCodes + Source_BloomPass;
+	m_errHashmap[GetString(Source_BlurPass)]					= NumberOfErrorCodes + Source_BlurPass;
+    m_errHashmap[GetString(Source_Config)]						= NumberOfErrorCodes + Source_Config;
+    m_errHashmap[GetString(Source_ConfigLoader)]				= NumberOfErrorCodes + Source_ConfigLoader;
+    m_errHashmap[GetString(Source_Engine)]						= NumberOfErrorCodes + Source_Engine;
+    m_errHashmap[GetString(Source_FileLoader)]					= NumberOfErrorCodes + Source_FileLoader;
+    m_errHashmap[GetString(Source_FinalPass)]					= NumberOfErrorCodes + Source_FinalPass;
+    m_errHashmap[GetString(Source_GameObject)]					= NumberOfErrorCodes + Source_GameObject;
+    m_errHashmap[GetString(Source_GeometryBuffer)]				= NumberOfErrorCodes + Source_GeometryBuffer;
+    m_errHashmap[GetString(Source_GeometryPass)]				= NumberOfErrorCodes + Source_GeometryPass;
+    m_errHashmap[GetString(Source_GraphicsObject)]				= NumberOfErrorCodes + Source_GraphicsObject;
+    m_errHashmap[GetString(Source_HdrMappingPass)]				= NumberOfErrorCodes + Source_HdrMappingPass;
+    m_errHashmap[GetString(Source_LensFlareCompositePass)]		= NumberOfErrorCodes + Source_LensFlareCompositePass;
+    m_errHashmap[GetString(Source_LensFlarePass)]				= NumberOfErrorCodes + Source_LensFlarePass;
+    m_errHashmap[GetString(Source_LightObject)]					= NumberOfErrorCodes + Source_LightObject;
+    m_errHashmap[GetString(Source_LightingPass)]				= NumberOfErrorCodes + Source_LightingPass;
+    m_errHashmap[GetString(Source_ModelLoader)]					= NumberOfErrorCodes + Source_ModelLoader;
+    m_errHashmap[GetString(Source_PlayerObject)]				= NumberOfErrorCodes + Source_PlayerObject;
+    m_errHashmap[GetString(Source_PostProcessPass)]				= NumberOfErrorCodes + Source_PostProcessPass;
+    m_errHashmap[GetString(Source_PropertyLoader)]				= NumberOfErrorCodes + Source_PropertyLoader;
+    m_errHashmap[GetString(Source_ReflectionPass)]				= NumberOfErrorCodes + Source_ReflectionPass;
+    m_errHashmap[GetString(Source_Renderer)]					= NumberOfErrorCodes + Source_Renderer;
+    m_errHashmap[GetString(Source_SceneLoader)]					= NumberOfErrorCodes + Source_SceneLoader;
+    m_errHashmap[GetString(Source_Scripting)]					= NumberOfErrorCodes + Source_Scripting;
+    m_errHashmap[GetString(Source_ScriptObject)]				= NumberOfErrorCodes + Source_ScriptObject;
+    m_errHashmap[GetString(Source_ShaderLoader)]				= NumberOfErrorCodes + Source_ShaderLoader;
+    m_errHashmap[GetString(Source_SkyObject)]					= NumberOfErrorCodes + Source_SkyObject;
+    m_errHashmap[GetString(Source_SkyPass)]						= NumberOfErrorCodes + Source_SkyPass;
+    m_errHashmap[GetString(Source_TextureLoader)]				= NumberOfErrorCodes + Source_TextureLoader;
+    m_errHashmap[GetString(Source_Window)]						= NumberOfErrorCodes + Source_Window;
 
 	// Add error types to the hash map, and offset them by number of error codes and error sources, because they share the same hash map
 	m_errHashmap[GetString(Info)]		= NumberOfErrorCodes + Source_NumberOfErrorSources + Info;

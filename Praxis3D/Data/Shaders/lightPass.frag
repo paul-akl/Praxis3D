@@ -230,7 +230,10 @@ void main(void)
 		vec3 dirLightColor = mix(g_sunSetColor, g_sunNoonColor, dirLightFactorSqrt);
 		float dirLightIntensity = directionalLight.m_intensity * mix(g_sunSetIntensityMod, g_sunNoonIntensityMod, dirLightFactorSqrt);
 	
-		// Declare final color of the fragment and add directional light to it
+		// Add ambient lighting
+		finalLightColor += diffuseColor * dirLightIntensity * 0.003;
+	
+		// Add directional lighting
 		finalLightColor += calcLightColor(
 			diffuseColor, 
 			normal, 

@@ -41,8 +41,9 @@ float calcLuma(vec3 p_color)
 
 void main(void) 
 {
-	#ifdef ENABLE_HDR
+	//#ifdef ENABLE_HDR
 	
+	// Only do once per draw call
 	if(gl_VertexID == 0)
 	{
 		// Get maximum mipmap level (1x1) of a framebuffer
@@ -50,14 +51,16 @@ void main(void)
 		// Get the current (previous frame) average brightness
 		float avgBrightnessPrevFrame = calcLuma(textureLod(finalColorMap, vec2(0.5), exposureMipmapLevel - 3).xyz);
 		// Perform a linear interpolation between current and previous brightness based on delta time
-		screenBrightness = mix(screenBrightness, avgBrightnessPrevFrame, deltaTimeS / eyeAdaptionRate);
+		//screenBrightness = mix(screenBrightness, avgBrightnessPrevFrame, deltaTimeS / eyeAdaptionRate);
+		//screenBrightness = mix(screenBrightness, avgBrightnessPrevFrame, smoothstep(0.0, 0.1, deltaTimeS));
+		screenBrightness = avgBrightnessPrevFrame;
 	}
-	#else
+	//#else
 	
 	// Set the average brightness to 0.5 so it does not affect the scene
-	screenBrightness = 0.5;
+	//screenBrightness = 0.5;
 	
-	#endif
+	//#endif
 	
 	// Send the average brightness value to the fragment shader
 	avgBrightness = screenBrightness;

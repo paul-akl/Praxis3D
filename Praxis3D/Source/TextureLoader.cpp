@@ -17,7 +17,6 @@ TextureLoader2D::TextureLoader2D()
 
 TextureLoader2D::~TextureLoader2D()
 {
-
 }
 
 ErrorCode TextureLoader2D::init()
