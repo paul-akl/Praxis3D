@@ -192,6 +192,10 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -203,7 +207,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;TBB_SUPPRESS_DEPRECATED_MESSAGES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -368,6 +372,7 @@
     <ClInclude Include="Source\ErrorCodes.h" />
     <ClInclude Include="Source\ErrorHandler.h" />
     <ClInclude Include="Source\ErrorHandlerLocator.h" />
+    <ClInclude Include="Source\Filesystem.h" />
     <ClInclude Include="Source\FinalPass.h" />
     <ClInclude Include="Source\Framebuffer.h" />
     <ClInclude Include="Source\GeometryBuffer.h" />

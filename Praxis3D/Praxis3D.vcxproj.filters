@@ -545,6 +545,9 @@
     <ClInclude Include="Source\LenseFlareCompositePass.h">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Filesystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\config.ini" />

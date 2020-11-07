@@ -21,7 +21,7 @@ ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 	auto &systemProperties = loadedProperties.getPropertySet().getPropertySetByID(Properties::Systems);
 
 	// Iterate over each system property set
-	for(decltype(systemProperties.getNumPropertySets()) propIndex = 0, const propSize = systemProperties.getNumPropertySets(); propIndex < propSize; propIndex++)
+	for(decltype(systemProperties.getNumPropertySets()) propIndex = 0, propSize = systemProperties.getNumPropertySets(); propIndex < propSize; propIndex++)
 	{
 		// Iterate over all systems scenes
 		for(int sysIndex = 0; sysIndex < Systems::NumberOfSystems; sysIndex++)
@@ -37,7 +37,7 @@ ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 				auto &objectProperties = systemProperties.getPropertySetUnsafe(propIndex).getPropertySetByID(Properties::Objects);
 
 				// Iterate over all object property sets
-				for(decltype(objectProperties.getNumPropertySets()) objIndex = 0, const objSize = objectProperties.getNumPropertySets(); objIndex < objSize; objIndex++)
+				for(decltype(objectProperties.getNumPropertySets()) objIndex = 0, objSize = objectProperties.getNumPropertySets(); objIndex < objSize; objIndex++)
 				{
 					// Create a new system object (by pasting the object property set)
 					auto *newObject = m_systemScenes[sysIndex]->createObject(objectProperties.getPropertySetUnsafe(objIndex));
@@ -53,7 +53,7 @@ ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 	auto &objLinkProperties = loadedProperties.getPropertySet().getPropertySetByID(Properties::ObjectLinks);
 
 	// Iterate over all object link property sets
-	for(decltype(objLinkProperties.getNumPropertySets()) linkIndex = 0, const linkSize = objLinkProperties.getNumPropertySets(); linkIndex < linkSize; linkIndex++)
+	for(decltype(objLinkProperties.getNumPropertySets()) linkIndex = 0, linkSize = objLinkProperties.getNumPropertySets(); linkIndex < linkSize; linkIndex++)
 	{
 		// Get subject name
 		const auto &subjectName = objLinkProperties.getPropertySetUnsafe(linkIndex).getPropertyByID(Properties::Subject).getString();
@@ -66,13 +66,13 @@ ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 			continue;
 
 		// Iterate over created objects and match subject's name
-		for(decltype(createdObjects.size()) subjIndex = 0, const subjSize = createdObjects.size(); subjIndex < subjSize; subjIndex++)
+		for(decltype(createdObjects.size()) subjIndex = 0, subjSize = createdObjects.size(); subjIndex < subjSize; subjIndex++)
 		{
 			// Compare subject name
 			if(createdObjects[subjIndex].first == subjectName)
 			{
 				// Iterate over created objects and match observer's name
-				for(decltype(createdObjects.size()) observIndex = 0, const observSize = createdObjects.size(); observIndex < observSize; observIndex++)
+				for(decltype(createdObjects.size()) observIndex = 0, observSize = createdObjects.size(); observIndex < observSize; observIndex++)
 				{
 					// Compare observer name
 					if(createdObjects[observIndex].first == observerName)

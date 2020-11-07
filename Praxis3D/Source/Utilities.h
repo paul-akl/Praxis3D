@@ -60,28 +60,133 @@ namespace Utilities
 		else
 			return stringstream_ret.str() + "f";
 	}
+
+	// Replaces a word with a different word in a given string
+	static std::string replace(const std::string &p_fullText, const std::string &p_wordToReplace, const std::string &p_wordReplaceWith)
+	{
+		std::string returnString = p_fullText;
+		
+		// Search for the given character set and do a replace
+		while(returnString.find(p_wordToReplace) != std::string::npos)
+		{
+			returnString.replace(returnString.find(p_wordToReplace), p_wordToReplace.size(), p_wordReplaceWith.c_str());
+			break;
+		}
+
+		return returnString;
+	}	
 	
-
-	// Static functions to convert a few simple types to Scancodes.
-	// Safe - checks if value in bounds. No conversion from string should be provided
-
-	static Scancode toScancode(const int p_value)
+	// Replaces all matched words with a different word in a given string; given word cannot contain the word to be replaced
+	static std::string replaceAll(const std::string &p_fullText, const std::string &p_wordToReplace, const std::string &p_wordReplaceWith)
 	{
-		// If the passed value is within enum range, static cast it to a scancode, if not, return invalid scancode
-		if(p_value > Scancode::Key_Invalid && p_value < Scancode::NumberOfScancodes)
-			return static_cast<Scancode>(p_value);
-		else
-			return Scancode::Key_Invalid;
-	}
-	static Scancode toScancode(const float p_value)
-	{
-		// If the passed value is within enum range, static cast it to a scancode, if not, return invalid scancode
-		if(p_value > Scancode::Key_Invalid && p_value < Scancode::NumberOfScancodes)
-			return static_cast<Scancode>((int)p_value);
-		else
-			return Scancode::Key_Invalid;
+		std::string returnString = p_fullText;
+
+		// Check if the replacement word does not contain the character set to be replaced, so it does not go into an infinite loop
+		while(p_wordReplaceWith.find(p_wordToReplace) != std::string::npos)
+		{
+			return returnString;
+		}
+
+		// Search for the given character set and do a replace
+		while(returnString.find(p_wordToReplace) != std::string::npos)
+		{
+			returnString.replace(returnString.find(p_wordToReplace), p_wordToReplace.size(), p_wordReplaceWith.c_str());
+		}
+
+		return returnString;
 	}
 
+	// Strip and return the filename from a full file path in Windows environment
+	static std::string stripFilename(const std::string &p_fullPath)
+	{
+		std::string returnFilename;
+
+		// Make sure full path string is not empty
+		if(!p_fullPath.empty())
+		{
+			// Separate the directory from the scene name
+			for(decltype(p_fullPath.size()) i = p_fullPath.size() - 1; i > 0; i--)
+			{
+				// Find the start (or end of directory) of the filename string
+				if(p_fullPath[i] == '\\' || p_fullPath[i] == '/')
+				{
+					// Cut the filename only and return it
+					returnFilename = p_fullPath.substr(i + 1, p_fullPath.size());
+					break;
+				}
+			}
+		}
+
+		return returnFilename;
+	}
+
+	// Strip and return the directory path from a full file path in Windows environment
+	static std::string stripFilePath(const std::string &p_fullPath)
+	{
+		std::string returnFilename;
+
+		// Make sure full path string is not empty
+		if(!p_fullPath.empty())
+		{
+			// Separate the directory from the scene name
+			for(decltype(p_fullPath.size()) i = p_fullPath.size() - 1; i > 0; i--)
+			{
+				// Find the start (or end of directory) of the filename string
+				if(p_fullPath[i] == '\\' || p_fullPath[i] == '/')
+				{
+					// Cut the path only and return it
+					returnFilename = p_fullPath.substr(0, i + 1);
+					break;
+				}
+			}
+		}
+
+		return returnFilename;
+	}
+
+	// Removes the extension of a filename (removes everything after the last "." (dot) in the string, if it is present)
+	static std::string removeExtension(const std::string &p_filename)
+	{
+		std::string returnFilename;
+		
+		// Make sure full path string is not empty
+		if(!p_filename.empty())
+		{
+			// Go over each character from end to start
+			for(decltype(p_filename.size()) i = p_filename.size() - 1; i > 0; i--)
+			{
+				// If it is a dot, meaning the last dot character in the string
+				if(p_filename[i] == '.')
+				{
+					// Remove everything after the dot (including the dot itself); break the "for" loop
+					returnFilename = p_filename.substr(0, i);
+					break;
+				}
+			}
+		}
+
+		return returnFilename;
+	}
+
+	// Converts all slashes present in the string to backslashes ( '/' -> '\' )
+	static std::string slashToBackslash(const std::string& p_textWithSlashes)
+	{
+		std::string returnText;
+			
+		// Make sure full path string is not empty
+		if(!p_textWithSlashes.empty())
+		{
+			returnText = p_textWithSlashes;
+
+			// Separate the directory from the scene name
+			for(decltype(returnText.size()) i = 0, size = returnText.size(); i < size; i++)
+			{
+				if(returnText[i] == '/')
+					returnText[i] = '\\';
+			}
+		}
+		return returnText;
+	}
 
 	// A very simplistic but fast hash key function, converts string into an unsigned int
 	static unsigned int getHashKey(const std::string &p_string)
@@ -93,7 +198,6 @@ namespace Utilities
 		}
 		return hash;
 	}
-
 
 	// Template std::pair comparator, only compares the first element
 	template <class T1, class T2, class Pred = std::less<T2>>
@@ -116,4 +220,24 @@ namespace Utilities
 			return p(left.second, right.second);
 		}
 	};
+
+	// Static functions to convert a few simple types to Scancodes.
+	// Safe - checks if value in bounds. No conversion from string should be provided
+
+	static Scancode toScancode(const int p_value)
+	{
+		// If the passed value is within enum range, static cast it to a scancode, if not, return invalid scancode
+		if(p_value > Scancode::Key_Invalid && p_value < Scancode::NumberOfScancodes)
+			return static_cast<Scancode>(p_value);
+		else
+			return Scancode::Key_Invalid;
+	}
+	static Scancode toScancode(const float p_value)
+	{
+		// If the passed value is within enum range, static cast it to a scancode, if not, return invalid scancode
+		if(p_value > Scancode::Key_Invalid && p_value < Scancode::NumberOfScancodes)
+			return static_cast<Scancode>((int)p_value);
+		else
+			return Scancode::Key_Invalid;
+	}
 }

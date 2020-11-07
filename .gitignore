@@ -16,3 +16,8 @@
 *.tif
 VC x64/
 VC/
+*.tlog
+*.idb
+Praxis3D/x64/Debug 64bit/Praxis3D.vcxproj.FileListAbsolute.txt
+*.res
+*.recipe
