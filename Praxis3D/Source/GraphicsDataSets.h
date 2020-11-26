@@ -22,26 +22,41 @@ struct GraphicsData
 			m_textureTilingFactor;
 };
 
+// Contains all required data to render an object (ModelObject)
 struct RenderableObjectData
 {
 	RenderableObjectData(ModelLoader::ModelHandle p_model, ShaderLoader::ShaderProgram *p_shader, GraphicsData &p_baseObjectData) :
+		m_loadedToMemory(false),
+		m_renderable(false),
+		m_baseObjectData(p_baseObjectData),
 		m_model(p_model),
 		m_shader(p_shader),
-		m_loadedToMemory(false),
-		m_baseObjectData(p_baseObjectData) { }
+		m_numMaterials(0) { }
 	
-	GraphicsData &m_baseObjectData;
-
+	// Is the object loaded to RAM
 	bool m_loadedToMemory;
 
-	ModelLoader::ModelHandle m_model;
-	ShaderLoader::ShaderProgram *m_shader;
-	std::vector<bool> m_defaultMaterial[MaterialType_NumOfTypes];
-	std::vector<TextureLoader2D::Texture2DHandle> m_materials[MaterialType_NumOfTypes];
-	std::vector<TextureLoader2D::Texture2DHandle>::size_type m_numMaterials;
+	// Should the object be rendered
+	bool m_renderable;
+	
+	// Additional data
+	GraphicsData &m_baseObjectData;
 
-	// Unused, as renderer checks texture handle not being 0 instead
-	//std::bitset<Model::NumOfModelMaterials> m_materialPresent;
+	// Model handle
+	ModelLoader::ModelHandle m_model;
+
+	// Shader handle
+	ShaderLoader::ShaderProgram *m_shader;
+
+	// Is the material the default one (for example, if no materials were provided)
+	std::vector<bool> m_defaultMaterial[MaterialType_NumOfTypes];
+
+	// Each material type has a vector of materials
+	// (An array of material types of vectors of materials)
+	std::vector<TextureLoader2D::Texture2DHandle> m_materials[MaterialType_NumOfTypes];
+
+	// Number of materials in each vector of the material type array (m_materials)
+	std::vector<TextureLoader2D::Texture2DHandle>::size_type m_numMaterials;
 };
 
 //	 ===========================================================================================================

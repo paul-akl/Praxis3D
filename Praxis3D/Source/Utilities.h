@@ -99,7 +99,7 @@ namespace Utilities
 	// Strip and return the filename from a full file path in Windows environment
 	static std::string stripFilename(const std::string &p_fullPath)
 	{
-		std::string returnFilename;
+		std::string returnFilename = p_fullPath;
 
 		// Make sure full path string is not empty
 		if(!p_fullPath.empty())
@@ -123,7 +123,7 @@ namespace Utilities
 	// Strip and return the directory path from a full file path in Windows environment
 	static std::string stripFilePath(const std::string &p_fullPath)
 	{
-		std::string returnFilename;
+		std::string returnFilename = p_fullPath;
 
 		// Make sure full path string is not empty
 		if(!p_fullPath.empty())
@@ -147,7 +147,7 @@ namespace Utilities
 	// Removes the extension of a filename (removes everything after the last "." (dot) in the string, if it is present)
 	static std::string removeExtension(const std::string &p_filename)
 	{
-		std::string returnFilename;
+		std::string returnFilename = p_filename;
 		
 		// Make sure full path string is not empty
 		if(!p_filename.empty())

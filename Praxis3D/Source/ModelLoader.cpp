@@ -52,7 +52,7 @@ ErrorCode Model::loadToMemory()
 
 		Assimp::Importer assimpImporter;
 
-		// Load data from file to assimp scene structure
+		// Load data from file to Assimp scene structure
 		const aiScene* assimpScene = assimpImporter.ReadFile(Config::filepathVar().model_path + m_filename, assimpFlags);
 
 		// If loading wasn't successful, log an error
@@ -160,46 +160,46 @@ ErrorCode Model::loadFromScene(const aiScene &p_assimpScene)
 	m_bufferSize[ModelBuffer_Index]			= sizeof(m_indices[0])		* m_numVertices;
 
 	// Deal with each mesh
-	returnError = loadMeshes(p_assimpScene.mMeshes, p_assimpScene.mNumMeshes);
+	returnError = loadMeshes(p_assimpScene);
 	
 	// Load material file names
 	if(returnError == ErrorCode::Success)
-		returnError = loadMaterials(p_assimpScene.mMaterials, p_assimpScene.mNumMaterials);
+		returnError = loadMaterials(p_assimpScene);
 
 	return returnError;
 }
-ErrorCode Model::loadMeshes(aiMesh **p_assimpMeshes, size_t p_numMeshes)
+ErrorCode Model::loadMeshes(const aiScene &p_assimpScene)
 {
 	ErrorCode returnError = ErrorCode::Success;
 
-	for(size_t meshIndex = 0, verticeIndex = 0, indicesIndex = 0; meshIndex < p_numMeshes; meshIndex++)
+	for(size_t meshIndex = 0, verticeIndex = 0, indicesIndex = 0; meshIndex < p_assimpScene.mNumMeshes; meshIndex++)
 	{
 		// Make sure that the texture coordinates array exist (by checking if the first member of the array does)
-		bool textureCoordsExist = p_assimpMeshes[meshIndex]->mTextureCoords[0] ? true : false;
+		bool textureCoordsExist = p_assimpScene.mMeshes[meshIndex]->mTextureCoords[0] ? true : false;
 
 		// Check if arrays exist (to not cause an error if they are absent)
 		//bool normalsExist = p_assimpMeshes[meshIndex]->mNormals != nullptr;
-		const bool tangentsExist = p_assimpMeshes[meshIndex]->mTangents != nullptr;
-		const bool bitangentsExist = p_assimpMeshes[meshIndex]->mBitangents != nullptr;
+		const bool tangentsExist = p_assimpScene.mMeshes[meshIndex]->mTangents != nullptr;
+		const bool bitangentsExist = p_assimpScene.mMeshes[meshIndex]->mBitangents != nullptr;
 		for(decltype(m_positions.size()) i = 0, size = m_positions.size(); i < size; i++)
 		{
 
 		}
 		// Put the mesh data from assimp to memory
-		for(decltype(p_assimpMeshes[meshIndex]->mNumVertices) i = 0, tangentIndex = 2, size = p_assimpMeshes[meshIndex]->mNumVertices; i < size; i++, verticeIndex++)
+		for(decltype(p_assimpScene.mMeshes[meshIndex]->mNumVertices) i = 0, tangentIndex = 2, size = p_assimpScene.mMeshes[meshIndex]->mNumVertices; i < size; i++, verticeIndex++)
 		{
-			m_positions[verticeIndex].x = p_assimpMeshes[meshIndex]->mVertices[i].x;
-			m_positions[verticeIndex].y = p_assimpMeshes[meshIndex]->mVertices[i].y;
-			m_positions[verticeIndex].z = p_assimpMeshes[meshIndex]->mVertices[i].z;
+			m_positions[verticeIndex].x = p_assimpScene.mMeshes[meshIndex]->mVertices[i].x;
+			m_positions[verticeIndex].y = p_assimpScene.mMeshes[meshIndex]->mVertices[i].y;
+			m_positions[verticeIndex].z = p_assimpScene.mMeshes[meshIndex]->mVertices[i].z;
 
-			m_normals[verticeIndex].x = p_assimpMeshes[meshIndex]->mNormals[i].x;
-			m_normals[verticeIndex].y = p_assimpMeshes[meshIndex]->mNormals[i].y;
-			m_normals[verticeIndex].z = p_assimpMeshes[meshIndex]->mNormals[i].z;
+			m_normals[verticeIndex].x = p_assimpScene.mMeshes[meshIndex]->mNormals[i].x;
+			m_normals[verticeIndex].y = p_assimpScene.mMeshes[meshIndex]->mNormals[i].y;
+			m_normals[verticeIndex].z = p_assimpScene.mMeshes[meshIndex]->mNormals[i].z;
 
 			if(textureCoordsExist)
 			{
-				m_texCoords[verticeIndex].x = p_assimpMeshes[meshIndex]->mTextureCoords[0][i].x;
-				m_texCoords[verticeIndex].y = p_assimpMeshes[meshIndex]->mTextureCoords[0][i].y;
+				m_texCoords[verticeIndex].x = p_assimpScene.mMeshes[meshIndex]->mTextureCoords[0][i].x;
+				m_texCoords[verticeIndex].y = p_assimpScene.mMeshes[meshIndex]->mTextureCoords[0][i].y;
 			}
 			
 			if(!tangentsExist || !bitangentsExist)
@@ -248,25 +248,25 @@ ErrorCode Model::loadMeshes(aiMesh **p_assimpMeshes, size_t p_numMeshes)
 			}
 			else
 			{
-				m_tangents[verticeIndex].x = p_assimpMeshes[meshIndex]->mTangents[i].x;
-				m_tangents[verticeIndex].y = p_assimpMeshes[meshIndex]->mTangents[i].y;
-				m_tangents[verticeIndex].z = p_assimpMeshes[meshIndex]->mTangents[i].z;
+				m_tangents[verticeIndex].x = p_assimpScene.mMeshes[meshIndex]->mTangents[i].x;
+				m_tangents[verticeIndex].y = p_assimpScene.mMeshes[meshIndex]->mTangents[i].y;
+				m_tangents[verticeIndex].z = p_assimpScene.mMeshes[meshIndex]->mTangents[i].z;
 
-				m_bitangents[verticeIndex].x = p_assimpMeshes[meshIndex]->mBitangents[i].x;
-				m_bitangents[verticeIndex].y = p_assimpMeshes[meshIndex]->mBitangents[i].y;
-				m_bitangents[verticeIndex].z = p_assimpMeshes[meshIndex]->mBitangents[i].z;
+				m_bitangents[verticeIndex].x = p_assimpScene.mMeshes[meshIndex]->mBitangents[i].x;
+				m_bitangents[verticeIndex].y = p_assimpScene.mMeshes[meshIndex]->mBitangents[i].y;
+				m_bitangents[verticeIndex].z = p_assimpScene.mMeshes[meshIndex]->mBitangents[i].z;
 			}
 		}
 
 		// Put the m_indices data from assimp to memory
-		for(unsigned int i = 0, size = p_assimpMeshes[meshIndex]->mNumFaces; i < size; i++)
+		for(unsigned int i = 0, size = p_assimpScene.mMeshes[meshIndex]->mNumFaces; i < size; i++)
 		{
-			if(p_assimpMeshes[meshIndex]->mFaces[i].mNumIndices == 3)
+			if(p_assimpScene.mMeshes[meshIndex]->mFaces[i].mNumIndices == 3)
 			{
-				m_indices[indicesIndex] = p_assimpMeshes[meshIndex]->mFaces[i].mIndices[0];
-				m_indices[indicesIndex + 1] = p_assimpMeshes[meshIndex]->mFaces[i].mIndices[1];
+				m_indices[indicesIndex] = p_assimpScene.mMeshes[meshIndex]->mFaces[i].mIndices[0];
+				m_indices[indicesIndex + 1] = p_assimpScene.mMeshes[meshIndex]->mFaces[i].mIndices[1];
 				m_indices[indicesIndex + 2] = 
-					p_assimpMeshes[meshIndex]->mFaces[i].mIndices[2];
+					p_assimpScene.mMeshes[meshIndex]->mFaces[i].mIndices[2];
 
 				indicesIndex += 3;
 			}
@@ -275,23 +275,31 @@ ErrorCode Model::loadMeshes(aiMesh **p_assimpMeshes, size_t p_numMeshes)
 
 	return returnError;
 }
-ErrorCode Model::loadMaterials(aiMaterial **p_assimpMaterials, size_t p_numMaterials)
+ErrorCode Model::loadMaterials(const aiScene &p_assimpScene)
 {
 	ErrorCode returnError = ErrorCode::Success;
 	aiString materialPath;
 
-	// Make space in materials arrays
-	m_materials.resize(p_numMaterials);
+	// Assign number of materials. If there are more meshes than the materials, 
+	// set the number of materials the same as the number of meshes, to avoid
+	// going out of bounds of materials vector, when rendering (as each mesh must have a texture)
+	size_t numMaterials = p_assimpScene.mNumMaterials;
+	if(p_assimpScene.mNumMeshes > numMaterials)
+		numMaterials = p_assimpScene.mNumMeshes;
 
-	for(unsigned int index = 0, i = 0; i < m_materials.m_numMaterials; i++)
+	// Make space in materials arrays
+	m_materials.resize(numMaterials);
+
+	// Iterate over all Assimp textures; the m_materials vector might be larger than the Assimp mMaterials array, but never smaller
+	for(decltype(p_assimpScene.mNumMaterials) size = p_assimpScene.mNumMaterials, index = 0, i = 0; i < size; i++)
 	{
-		if(p_assimpMaterials[i]->GetTexture(aiTextureType_DIFFUSE, index, &materialPath) == aiReturn_SUCCESS)
+		if(p_assimpScene.mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, index, &materialPath) == aiReturn_SUCCESS)
 			m_materials.m_materials[MaterialType_Diffuse][i].m_filename = materialPath.data;
 
-		if(p_assimpMaterials[i]->GetTexture(aiTextureType_NORMALS, index, &materialPath) == aiReturn_SUCCESS)
+		if(p_assimpScene.mMaterials[i]->GetTexture(aiTextureType_NORMALS, index, &materialPath) == aiReturn_SUCCESS)
 			m_materials.m_materials[MaterialType_Normal][i].m_filename = materialPath.data;
 
-		if(p_assimpMaterials[i]->GetTexture(aiTextureType_EMISSIVE, index, &materialPath) == aiReturn_SUCCESS)
+		if(p_assimpScene.mMaterials[i]->GetTexture(aiTextureType_EMISSIVE, index, &materialPath) == aiReturn_SUCCESS)
 			m_materials.m_materials[MaterialType_Emissive][i].m_filename = materialPath.data;
 
 		// Unused with the new shading model (PBS). Might be used in the future to combine textures into one (RMHAO)

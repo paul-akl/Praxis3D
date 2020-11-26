@@ -436,6 +436,11 @@ protected:
 			m_rendererState.m_boundVAO = p_VAO;
 		}
 	}
+	inline void resetVAO() 
+	{
+		// Set the currently bound VAO back to 0, so the VAO will need to be bound again
+		m_rendererState.m_boundVAO = 0; 
+	}
 	inline void bindUniformBuffer(const unsigned int p_bufferHandle)
 	{
 		// Check if the uniform buffer is not already bound

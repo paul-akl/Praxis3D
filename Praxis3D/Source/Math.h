@@ -18,6 +18,7 @@
 #define RAD			(PI / 180.0)
 #define DEG			(180.0 / PI)
 #define TWOPI		(PI * 2)
+#define RAD2DEG		(360/(PI*2))
 
 namespace Math
 {
@@ -341,6 +342,33 @@ namespace Math
 					 p_left.x * p_right.y - p_left.y * p_right.x);
 	}
 
+	inline float clamp(float p_value, float p_cutoff)
+	{
+		const float cutoffTimesTwo = p_cutoff * 2.0f;
+		p_value = fmod(p_value + p_cutoff, cutoffTimesTwo);
+		if(p_value < 0)
+			p_value += cutoffTimesTwo;
+		return p_value - p_cutoff;
+	}
+	inline Vec2f clamp(Vec2f p_value, float p_cutoff)
+	{
+		return Vec2f(clamp(p_value.x, p_cutoff),
+					 clamp(p_value.y, p_cutoff));
+	}	
+	inline Vec3f clamp(Vec3f p_value, float p_cutoff)
+	{
+		return Vec3f(clamp(p_value.x, p_cutoff),
+					 clamp(p_value.y, p_cutoff),
+					 clamp(p_value.z, p_cutoff));
+	}
+	inline Vec4f clamp(Vec4f p_value, float p_cutoff)
+	{
+		return Vec4f(clamp(p_value.x, p_cutoff),
+					 clamp(p_value.y, p_cutoff),
+					 clamp(p_value.z, p_cutoff),
+					 clamp(p_value.w, p_cutoff));
+	}
+
 	struct Quaternion
 	{
 		float x, y, z, w;
@@ -364,11 +392,41 @@ namespace Math
 
 			x /= length;	y /= length;	z /= length;	w /= length;
 		}
-		inline void conj()
+		inline void conjugate()
 		{
 			x = -x;	y = -y;	z = -z;
 		}
-		inline Quaternion conjugate() { return Quaternion(-x, -y, -z, w); }
+		inline Quaternion getConjugated() { return Quaternion(-x, -y, -z, w); }
+
+		// Convert a 4D quaternion vector to a 3D Euler angle vector
+		inline Vec3f getEuler() const
+		{
+			float sqw = w * w;
+			float sqx = x * x;
+			float sqy = y * y;
+			float sqz = z * z;
+			float unit = sqx + sqy + sqz + sqw; // if normalized is one, otherwise is correction factor
+			float test = x * w - y * z;
+			Vec3f v;
+
+			if (test>0.4995f*unit) { // singularity at north pole
+				v.y = 2.0f * atan2(y, x);
+				v.x = (float)PI / 2;
+				v.z = 0;
+				return clamp(v * (float)RAD2DEG, 180.0f);
+			}
+			if (test<-0.4995f*unit) { // singularity at south pole
+				v.y = -2.0f * atan2 (y, x);
+				v.x = -(float)PI / 2;
+				v.z = 0;
+				return clamp(v * (float)RAD2DEG, 180.0f);
+			}
+			Vec4f q(w, z, x, y);
+			v.y = atan2(2.0f * q.x * q.w + 2.0f * q.y * q.z, 1 - 2.0f * (q.z * q.z + q.w * q.w));	// Yaw
+			v.x = asin(2.0f * (q.x * q.z - q.w * q.y));												// Pitch
+			v.z = atan2 (2.0f * q.x * q.y + 2.0f * q.z * q.w, 1 - 2.0f * (q.y * q.y + q.z * q.z));	// Roll
+			return clamp(v * (float)RAD2DEG, 180.0f);
+		}
 
 		const inline Quaternion operator*(const Quaternion& p_quat)
 		{
@@ -472,12 +530,7 @@ namespace Math
 			m[13] = p_vec3.y;
 			m[14] = p_vec3.z;
 		}
-		inline void Mat4f::translate(const Vec3f& p_vec3)
-		{
-			Mat4f translateMat;
-			translateMat.transform(p_vec3);
-			*this *= translateMat;
-		}
+		void Mat4f::translate(const Vec3f &p_vec3);
 		inline void Mat4f::scale(const float p_scale)
 		{
 			m[0] *= p_scale; m[4] *= p_scale; m[8] *= p_scale;
@@ -517,25 +570,30 @@ namespace Math
 			m[3] = -(p_right + p_left) / (p_right - p_left);	m[7] = -(p_up + p_down) / (p_up - p_down);	m[11] = -(p_zFar + p_zNear) / (p_zFar - p_zNear);	m[15] = 1.0f;
 		}
 
+		const inline Mat4f operator*(const Mat4f p_mat4f) const
+		{
+			// Multiplication can be done more stylish with a nested loop, but this should be slightly faster
+			return Mat4f(m[0] * p_mat4f.m[0] + m[4] * p_mat4f.m[1] + m[8] * p_mat4f.m[2] + m[12] * p_mat4f.m[3],
+							m[1] * p_mat4f.m[0] + m[5] * p_mat4f.m[1] + m[9] * p_mat4f.m[2] + m[13] * p_mat4f.m[3],
+							m[2] * p_mat4f.m[0] + m[6] * p_mat4f.m[1] + m[10] * p_mat4f.m[2] + m[14] * p_mat4f.m[3],
+							m[3] * p_mat4f.m[0] + m[7] * p_mat4f.m[1] + m[11] * p_mat4f.m[2] + m[15] * p_mat4f.m[3],
+							m[0] * p_mat4f.m[4] + m[4] * p_mat4f.m[5] + m[8] * p_mat4f.m[6] + m[12] * p_mat4f.m[7],
+							m[1] * p_mat4f.m[4] + m[5] * p_mat4f.m[5] + m[9] * p_mat4f.m[6] + m[13] * p_mat4f.m[7],
+							m[2] * p_mat4f.m[4] + m[6] * p_mat4f.m[5] + m[10] * p_mat4f.m[6] + m[14] * p_mat4f.m[7],
+							m[3] * p_mat4f.m[4] + m[7] * p_mat4f.m[5] + m[11] * p_mat4f.m[6] + m[15] * p_mat4f.m[7],
+							m[0] * p_mat4f.m[8] + m[4] * p_mat4f.m[9] + m[8] * p_mat4f.m[10] + m[12] * p_mat4f.m[11],
+							m[1] * p_mat4f.m[8] + m[5] * p_mat4f.m[9] + m[9] * p_mat4f.m[10] + m[13] * p_mat4f.m[11],
+							m[2] * p_mat4f.m[8] + m[6] * p_mat4f.m[9] + m[10] * p_mat4f.m[10] + m[14] * p_mat4f.m[11],
+							m[3] * p_mat4f.m[8] + m[7] * p_mat4f.m[9] + m[11] * p_mat4f.m[10] + m[15] * p_mat4f.m[11],
+							m[0] * p_mat4f.m[12] + m[4] * p_mat4f.m[13] + m[8] * p_mat4f.m[14] + m[12] * p_mat4f.m[15],
+							m[1] * p_mat4f.m[12] + m[5] * p_mat4f.m[13] + m[9] * p_mat4f.m[14] + m[13] * p_mat4f.m[15],
+							m[2] * p_mat4f.m[12] + m[6] * p_mat4f.m[13] + m[10] * p_mat4f.m[14] + m[14] * p_mat4f.m[15],
+							m[3] * p_mat4f.m[12] + m[7] * p_mat4f.m[13] + m[11] * p_mat4f.m[14] + m[15] * p_mat4f.m[15]);
+		}
+
 		inline Mat4f operator*=(const Mat4f& p_mat4f)
 		{
-			m[0] = m[0] * p_mat4f.m[0] + m[4] * p_mat4f.m[1] + m[8] * p_mat4f.m[2] + m[12] * p_mat4f.m[3];
-			m[1] = m[1] * p_mat4f.m[0] + m[5] * p_mat4f.m[1] + m[9] * p_mat4f.m[2] + m[13] * p_mat4f.m[3];
-			m[2] = m[2] * p_mat4f.m[0] + m[6] * p_mat4f.m[1] + m[10] * p_mat4f.m[2] + m[14] * p_mat4f.m[3];
-			m[3] = m[3] * p_mat4f.m[0] + m[7] * p_mat4f.m[1] + m[11] * p_mat4f.m[2] + m[15] * p_mat4f.m[3];
-			m[4] = m[0] * p_mat4f.m[4] + m[4] * p_mat4f.m[5] + m[8] * p_mat4f.m[6] + m[12] * p_mat4f.m[7];
-			m[5] = m[1] * p_mat4f.m[4] + m[5] * p_mat4f.m[5] + m[9] * p_mat4f.m[6] + m[13] * p_mat4f.m[7];
-			m[6] = m[2] * p_mat4f.m[4] + m[6] * p_mat4f.m[5] + m[10] * p_mat4f.m[6] + m[14] * p_mat4f.m[7];
-			m[7] = m[3] * p_mat4f.m[4] + m[7] * p_mat4f.m[5] + m[11] * p_mat4f.m[6] + m[15] * p_mat4f.m[7];
-			m[8] = m[0] * p_mat4f.m[8] + m[4] * p_mat4f.m[9] + m[8] * p_mat4f.m[10] + m[12] * p_mat4f.m[11];
-			m[9] = m[1] * p_mat4f.m[8] + m[5] * p_mat4f.m[9] + m[9] * p_mat4f.m[10] + m[13] * p_mat4f.m[11];
-			m[10] = m[2] * p_mat4f.m[8] + m[6] * p_mat4f.m[9] + m[10] * p_mat4f.m[10] + m[14] * p_mat4f.m[11];
-			m[11] = m[3] * p_mat4f.m[8] + m[7] * p_mat4f.m[9] + m[11] * p_mat4f.m[10] + m[15] * p_mat4f.m[11];
-			m[12] = m[0] * p_mat4f.m[12] + m[4] * p_mat4f.m[13] + m[8] * p_mat4f.m[14] + m[12] * p_mat4f.m[15];
-			m[13] = m[1] * p_mat4f.m[12] + m[5] * p_mat4f.m[13] + m[9] * p_mat4f.m[14] + m[13] * p_mat4f.m[15];
-			m[14] = m[2] * p_mat4f.m[12] + m[6] * p_mat4f.m[13] + m[10] * p_mat4f.m[14] + m[14] * p_mat4f.m[15];
-			m[15] = m[3] * p_mat4f.m[12] + m[7] * p_mat4f.m[13] + m[11] * p_mat4f.m[14] + m[15] * p_mat4f.m[15];
-			return *this;
+			return (*this = *this * p_mat4f);
 		}
 	};
 
@@ -546,26 +604,7 @@ namespace Math
 						p_mat.m[2], p_mat.m[6], p_mat.m[10],p_mat.m[14],
 						p_mat.m[3], p_mat.m[7], p_mat.m[11],p_mat.m[15]);
 	}
-	const inline Mat4f operator*(const Mat4f& p_left, const Mat4f p_right)
-	{
-		// Multiplication can be done more stylish with a nested loop, but this should be slightly faster
-		return Mat4f(p_left.m[0] * p_right.m[0] + p_left.m[4] * p_right.m[1] + p_left.m[8] * p_right.m[2] + p_left.m[12] * p_right.m[3],
-					 p_left.m[1] * p_right.m[0] + p_left.m[5] * p_right.m[1] + p_left.m[9] * p_right.m[2] + p_left.m[13] * p_right.m[3],
-					 p_left.m[2] * p_right.m[0] + p_left.m[6] * p_right.m[1] + p_left.m[10] * p_right.m[2] + p_left.m[14] * p_right.m[3],
-					 p_left.m[3] * p_right.m[0] + p_left.m[7] * p_right.m[1] + p_left.m[11] * p_right.m[2] + p_left.m[15] * p_right.m[3],
-					 p_left.m[0] * p_right.m[4] + p_left.m[4] * p_right.m[5] + p_left.m[8] * p_right.m[6] + p_left.m[12] * p_right.m[7],
-					 p_left.m[1] * p_right.m[4] + p_left.m[5] * p_right.m[5] + p_left.m[9] * p_right.m[6] + p_left.m[13] * p_right.m[7],
-					 p_left.m[2] * p_right.m[4] + p_left.m[6] * p_right.m[5] + p_left.m[10] * p_right.m[6] + p_left.m[14] * p_right.m[7],
-					 p_left.m[3] * p_right.m[4] + p_left.m[7] * p_right.m[5] + p_left.m[11] * p_right.m[6] + p_left.m[15] * p_right.m[7],
-					 p_left.m[0] * p_right.m[8] + p_left.m[4] * p_right.m[9] + p_left.m[8] * p_right.m[10] + p_left.m[12] * p_right.m[11],
-					 p_left.m[1] * p_right.m[8] + p_left.m[5] * p_right.m[9] + p_left.m[9] * p_right.m[10] + p_left.m[13] * p_right.m[11],
-					 p_left.m[2] * p_right.m[8] + p_left.m[6] * p_right.m[9] + p_left.m[10] * p_right.m[10] + p_left.m[14] * p_right.m[11],
-					 p_left.m[3] * p_right.m[8] + p_left.m[7] * p_right.m[9] + p_left.m[11] * p_right.m[10] + p_left.m[15] * p_right.m[11],
-					 p_left.m[0] * p_right.m[12] + p_left.m[4] * p_right.m[13] + p_left.m[8] * p_right.m[14] + p_left.m[12] * p_right.m[15],
-					 p_left.m[1] * p_right.m[12] + p_left.m[5] * p_right.m[13] + p_left.m[9] * p_right.m[14] + p_left.m[13] * p_right.m[15],
-					 p_left.m[2] * p_right.m[12] + p_left.m[6] * p_right.m[13] + p_left.m[10] * p_right.m[14] + p_left.m[14] * p_right.m[15],
-					 p_left.m[3] * p_right.m[12] + p_left.m[7] * p_right.m[13] + p_left.m[11] * p_right.m[14] + p_left.m[15] * p_right.m[15]);
-	}
+
 
 	inline Vec3f toRadian(const Vec3f p_vec3)
 	{
@@ -575,9 +614,9 @@ namespace Math
 	}
 	inline Vec3f toDegree(const Vec3f p_vec3) 
 	{ 
-		return (p_vec3.x * 180.0f / (float)PI,
-				p_vec3.y * 180.0f / (float)PI,
-				p_vec3.z * 180.0f / (float)PI);
+		return Vec3f(	p_vec3.x * 180.0f / (float)PI,
+						p_vec3.y * 180.0f / (float)PI,
+						p_vec3.z * 180.0f / (float)PI);
 	}
 	inline float toRadian(const float p_angle) { return (p_angle * (float) PI / 180.0f); }
 	inline double toRadian(const double p_angle) { return (p_angle * PI / 180.0); }

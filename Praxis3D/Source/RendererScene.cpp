@@ -261,14 +261,28 @@ void RendererScene::update(const float p_deltaTime)
 				{
 				case LoadableObj_ModelObj:
 
-					// Add the object to objects-to-load list, that will be sent to the renderer to process
-					m_sceneObjects.m_objectsToLoad.push_back(&m_objectsBeingLoaded[i].m_objectData.m_modelObject->getRenderableObjectData());
-					
+					// Check if the object hasn't been loaded to video memory already
+					if(!m_objectsBeingLoaded[i].isLoadedToVideoMemory())
+					{
+						// Add the object to objects-to-load list, that will be sent to the renderer to process
+						m_sceneObjects.m_objectsToLoad.push_back(&m_objectsBeingLoaded[i].m_objectData.m_modelObject->getRenderableObjectData());
+
+						// Set the object to have been loaded to video memory, as it was put to an array of objects to load
+						m_objectsBeingLoaded[i].setLoadedToVideoMemory(true);
+					}
 					break;
 
 				case LoadableObj_StaticEnvMap:
-
-					m_sceneObjects.m_staticSkyboxToLoad = m_objectsBeingLoaded[i].m_objectData.m_envMapStatic;
+					
+					// Check if the object hasn't been loaded to video memory already
+					if(!m_objectsBeingLoaded[i].isLoadedToVideoMemory())
+					{
+						// Set the object as the static skybox, to be loaded by the renderer
+						m_sceneObjects.m_staticSkyboxToLoad = m_objectsBeingLoaded[i].m_objectData.m_envMapStatic;
+						
+						// Set the object to have been loaded to video memory, as it was put to an array of objects to load
+						m_objectsBeingLoaded[i].setLoadedToVideoMemory(true);
+					}
 					
 					break;
 				}

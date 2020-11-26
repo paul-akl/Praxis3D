@@ -94,6 +94,11 @@ ErrorCode RendererFrontend::init()
 {
 	ErrorCode returnCode = ErrorCode::Success;
 
+	// Load all default textures from the texture loader, before a scene has started to load
+	auto texturesToLoad = Loaders::texture2D().getDefaultTextures();
+	for(decltype(texturesToLoad.size()) size = texturesToLoad.size(), i = 0; i < size; i++)
+		queueForLoading(texturesToLoad[i]);
+
 	// If eye adaption is disabled, eye adaption rate should be set to 0
 	if(!Config::graphicsVar().eye_adaption)
 	{
@@ -137,7 +142,7 @@ ErrorCode RendererFrontend::init()
 		if(m_initializedRenderingPasses[m_renderingPassesTypes[i]] != nullptr)
 			m_renderingPasses.push_back(m_initializedRenderingPasses[m_renderingPassesTypes[i]]);
 	}
-
+	
 	updateProjectionMatrix();
 
 	passLoadCommandsToBackend();
@@ -156,17 +161,17 @@ void RendererFrontend::renderFrame(const SceneObjects &p_sceneObjects, const flo
 		m_frameData.m_screenSize.x = Config::graphicsVar().current_resolution_x;
 		m_frameData.m_screenSize.y = Config::graphicsVar().current_resolution_y;
 
-		// Update the projection matrix because it is dependant on the screen size
+		// Update the projection matrix because it is dependent on the screen size
 		updateProjectionMatrix();
 
 		// Set screen size in the backend
 		m_backend.setScreenSize(m_frameData);
 	}
 
-	// Clear draw commands at the beggining of each frame
+	// Clear draw commands at the beginning of each frame
 	m_drawCommands.clear();
 	
-	// Load all the objects in the load-to-gpu queue. This needs to be done before any rendering, as objects in this
+	// Load all the objects in the load-to-GPU queue. This needs to be done before any rendering, as objects in this
 	// array might have been also added to objects-to-render arrays, so they need to be loaded first
 	for (decltype(p_sceneObjects.m_objectsToLoad.size()) i = 0, size = p_sceneObjects.m_objectsToLoad.size(); i < size; i++)
 	{

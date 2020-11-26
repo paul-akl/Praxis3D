@@ -178,7 +178,17 @@ protected:
 		// Load all materials
 		for(decltype(p_objectData.m_numMaterials) i = 0; i < p_objectData.m_numMaterials; i++)
 			for(int matType = 0; matType < MaterialType_NumOfTypes; matType++)
-				queueForLoading(p_objectData.m_materials[matType][i]);
+			{
+				// Check if the material hasn't been loaded already
+				if(!p_objectData.m_materials[matType][i].isLoadedToVideoMemory())
+				{
+					// Send the material to be loaded
+					queueForLoading(p_objectData.m_materials[matType][i]);
+
+					// Set the material as already loaded, since it has been queued for loading already
+					p_objectData.m_materials[matType][i].setLoadedToVideoMemory(true);
+				}
+			}
 	}
 	inline void queueForLoading(ShaderBuffer &p_shaderBuffer)
 	{

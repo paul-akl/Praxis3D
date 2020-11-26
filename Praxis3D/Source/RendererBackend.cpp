@@ -66,6 +66,8 @@ void RendererBackend::processLoading(LoadCommands &p_loadCommands, const Uniform
 
 void RendererBackend::processDrawing(const DrawCommands &p_drawCommands, const UniformFrameData &p_frameData)
 {
+	resetVAO();
+
 	for(decltype(p_drawCommands.size()) i = 0, size = p_drawCommands.size(); i < size; i++)
 	{
 		// Get uniform data
@@ -100,7 +102,7 @@ void RendererBackend::processDrawing(const DrawCommands &p_drawCommands, const U
 
 		glActiveTexture(GL_TEXTURE0 + MaterialType_Emissive);
 		glBindTexture(GL_TEXTURE_2D, p_drawCommands[i].second.m_matEmissive);
-
+		
 		// Draw the geometry
 		glDrawElementsBaseVertex(GL_TRIANGLES,
 								 p_drawCommands[i].second.m_numIndices,

@@ -105,9 +105,9 @@ public:
 	// Processes data from AI scene
 	ErrorCode loadFromScene(const aiScene &p_assimpScene);
 	// Fills mesh buffers
-	ErrorCode loadMeshes(aiMesh **p_assimpMeshes, size_t p_arraySize);
+	ErrorCode loadMeshes(const aiScene &p_assimpScene);
 	// Gets material filenames from model file
-	ErrorCode loadMaterials(aiMaterial **p_assimpMaterials, size_t p_numMaterials);
+	ErrorCode loadMaterials(const aiScene &p_assimpScene);
 	// Load textures embedded in the model file. Note: currently unused / no implementation
 	ErrorCode loadTextures(aiTexture **p_assimpTextures, size_t p_numTextures);
 
@@ -131,12 +131,12 @@ public:
 	{
 		const void **data = new const void*[ModelBuffer_Index + 1];
 
-		data[ModelBuffer_Position]		= &m_positions[0];
-		data[ModelBuffer_Normal]		= &m_normals[0];
-		data[ModelBuffer_TexCoord]		= &m_texCoords[0];
-		data[ModelBuffer_Tangents]		= &m_tangents[0];
-		data[ModelBuffer_Bitangents]	= &m_bitangents[0];
-		data[ModelBuffer_Index]			= &m_indices[0];
+		data[ModelBuffer_Position]		= m_positions.data();
+		data[ModelBuffer_Normal]		= m_normals.data();
+		data[ModelBuffer_TexCoord]		= m_texCoords.data();
+		data[ModelBuffer_Tangents]		= m_tangents.data();
+		data[ModelBuffer_Bitangents]	= m_bitangents.data();
+		data[ModelBuffer_Index]			= m_indices.data();
 
 		return data;
 	}
@@ -238,7 +238,7 @@ public:
 			ErrorCode returnError = ErrorCode::Success;
 
 			// If it's not loaded to memory already, call load
-			if(!m_model->loadedToMemory())
+			if(!m_model->isLoadedToMemory())
 			{
 				returnError = m_model->loadToMemory();
 

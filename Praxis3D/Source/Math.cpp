@@ -24,7 +24,7 @@ namespace Math
 								p_axis.z * sinHalfAngle,
 								cosf(toRadian(p_angle / 2)));
 
-		Quaternion conjugateQuat = rotationQuat.conjugate();
+		Quaternion conjugateQuat = rotationQuat.getConjugated();
 		//ConjugateQ.normalize();
 		Quaternion ret = rotationQuat * (*this) * conjugateQuat;
 
@@ -41,9 +41,15 @@ namespace Math
 		if(p_angleVec.y != 0.0f)
 			rotate(p_angleVec.y, Math::Vec3f(0.0f, 1.0f, 0.0f));
 	}
+	void Mat4f::translate(const Vec3f &p_vec3)
+	{
+		Mat4f translateMat;
+		translateMat.transform(p_vec3);
+		*this = *this * translateMat;
+	}
 	void Mat4f::rotate(const Vec3f& p_vec3f)
 	{
-		Mat4f rotX, rotY, rotZ;
+		/*Mat4f rotX, rotY, rotZ;
 
 		const float x = toRadian(p_vec3f.x);
 		const float y = toRadian(p_vec3f.y);
@@ -61,7 +67,45 @@ namespace Math
 		rotZ.m[1] = sinf(z); rotZ.m[5] = cosf(z);	rotZ.m[9] = 0.0f;
 		rotZ.m[2] = 0.0f;	 rotZ.m[6] = 0.0f;		rotZ.m[10] = 1.0f;
 
-		*this = (*this * rotY * rotX * rotZ);
+		*this = (*this * rotY * rotX * rotZ);*/
+
+		const float t1 = toRadian(p_vec3f.x);
+		const float t2 = toRadian(p_vec3f.y);
+		const float t3 = toRadian(p_vec3f.z);
+
+		float c1 = cos(-t1);
+        float c2 = cos(-t2);
+        float c3 = cos(-t3);
+        float s1 = sin(-t1);
+        float s2 = sin(-t2);
+        float s3 = sin(-t3);
+
+		//		 0		 1		 2		 3
+		//	0	m[0]	m[4]	m[8]	m[12]
+		//	1	m[1]	m[5]	m[9]	m[13]
+		//	2	m[2]	m[6]	m[10]	m[14]
+		//	3	m[3]	m[7]	m[11]	m[15]
+
+        //mat<4, 4, T, defaultp> Result;
+		Mat4f rotMat;
+        rotMat.m[0] = c2 * c3;
+        rotMat.m[4] =-c1 * s3 + s1 * s2 * c3;
+        rotMat.m[8] = s1 * s3 + c1 * s2 * c3;
+        rotMat.m[12] = static_cast<float>(0);
+        rotMat.m[1] = c2 * s3;
+        rotMat.m[5] = c1 * c3 + s1 * s2 * s3;
+        rotMat.m[9] =-s1 * c3 + c1 * s2 * s3;
+        rotMat.m[13] = static_cast<float>(0);
+        rotMat.m[2] =-s2;
+        rotMat.m[6] = s1 * c2;
+        rotMat.m[10] = c1 * c2;
+        rotMat.m[14] = static_cast<float>(0);
+        rotMat.m[3] = static_cast<float>(0);
+        rotMat.m[7] = static_cast<float>(0);
+        rotMat.m[11] = static_cast<float>(0);
+        rotMat.m[15] = static_cast<float>(1);
+
+		*this = *this * rotMat;
 	}
 	void Mat4f::perspectiveRadian(const float p_FOV, const int p_screenWidth, const int p_screenHeight)
 	{

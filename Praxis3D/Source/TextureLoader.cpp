@@ -2,10 +2,12 @@
 #include <functional>
 
 #include "ErrorHandlerLocator.h"
+#include "Filesystem.h"
 #include "ModelLoader.h"
 #include "TaskManagerLocator.h"
 #include "TextureLoader.h"
 #include "Utilities.h"
+
 
 TextureLoader2D::TextureLoader2D()
 {
@@ -74,9 +76,13 @@ TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string &p_file
 	// being added to the pool. Mutex prevents duplicates being loaded, and same data being changed.
 	SpinWait::Lock lock(m_mutex);
 
-	// If the filename is empty, return a default texture instead
-	if(p_filename == "")
+	// If the filename is empty, or the file itself doesn't exist, return a default texture instead
+	if(p_filename.empty() || !Filesystem::exists(Config::PathsVariables().texture_path + p_filename))
 	{
+		// If the filename wasn't empty, log an error
+		if(!p_filename.empty())
+			ErrHandlerLoc::get().log(ErrorCode::Texture_not_found, ErrorSource::Source_TextureLoader, p_filename);
+
 		switch(p_materialType)
 		{
 		case MaterialType_Normal:
@@ -151,9 +157,13 @@ TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string &p_file
 	// being added to the pool. Mutex prevents duplicates being loaded, and same data being changed.
 	SpinWait::Lock lock(m_mutex);
 
-	// If the filename is empty, return a default texture instead
-	if(p_filename == "")
+	// If the filename is empty, or the file itself doesn't exist, return a default texture instead
+	if(p_filename.empty() || !Filesystem::exists(Config::PathsVariables().texture_path + p_filename))
 	{
+		// If the filename wasn't empty, log an error
+		if(!p_filename.empty())
+			ErrHandlerLoc::get().log(ErrorCode::Texture_not_found, ErrorSource::Source_TextureLoader, p_filename);
+
 		returnTexture = m_default2DTexture;
 	}
 	else
@@ -187,9 +197,13 @@ TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string & p_fil
 	// being added to the pool. Mutex prevents duplicates being loaded, and same data being changed.
 	SpinWait::Lock lock(m_mutex);
 
-	// If the filename is empty, return a default texture instead
-	if(p_filename == "")
+	// If the filename is empty, or the file itself doesn't exist, return a default texture instead
+	if(p_filename.empty() || !Filesystem::exists(Config::PathsVariables().texture_path + p_filename))
 	{
+		// If the filename wasn't empty, log an error
+		if(!p_filename.empty())
+			ErrHandlerLoc::get().log(ErrorCode::Texture_not_found, ErrorSource::Source_TextureLoader, p_filename);
+
 		returnTexture = m_default2DTexture;
 	}
 	else

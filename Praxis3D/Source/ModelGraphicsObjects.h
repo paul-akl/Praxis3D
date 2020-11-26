@@ -45,7 +45,10 @@ public:
 			// Update model matrix
 			m_baseObjectData.m_modelMat.identity();
 			m_baseObjectData.m_modelMat.translate(m_baseObjectData.m_position);
-			m_baseObjectData.m_modelMat.rotate(m_baseObjectData.m_rotation);
+			//m_baseObjectData.m_modelMat.rotate(m_baseObjectData.m_rotation);
+			m_baseObjectData.m_modelMat.rotate(Math::Vec3f(0.0f, m_baseObjectData.m_rotation.y, 0.0f));
+			m_baseObjectData.m_modelMat.rotate(Math::Vec3f(m_baseObjectData.m_rotation.x, 0.0f, 0.0f));
+			m_baseObjectData.m_modelMat.rotate(Math::Vec3f(0.0f, 0.0f, -m_baseObjectData.m_rotation.z));
 			m_baseObjectData.m_modelMat.scale(m_baseObjectData.m_scale);
 
 			// Mark as updated
@@ -57,7 +60,7 @@ public:
 	void loadToMemory()
 	{
 		// Load model to RAM
-		m_objectData.m_model.loadToMemory();
+		auto loadToMemoryError = m_objectData.m_model.loadToMemory();
 
 		// Get material arrays from the model (texture filenames only)
 		decltype(m_objectData.m_model.getMaterialArrays()) materials = m_objectData.m_model.getMaterialArrays();

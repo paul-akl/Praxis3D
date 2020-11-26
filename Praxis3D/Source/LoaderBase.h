@@ -41,7 +41,7 @@ public:
 			m_refCounter--;
 			if(m_refCounter == 0)
 			{
-				// TODO: queue texture unload uppon reference counter reaching zero
+				// TODO: queue texture unload upon reference counter reaching zero
 				//m_loaderBase->queueUnload(*this);
 			}
 		}
@@ -52,10 +52,10 @@ public:
 		inline void setUniqueID(unsigned int p_uniqueID)	{ m_uniqueID = p_uniqueID;			}
 
 		// Getters
-		inline const bool loadedToMemory()		{ return m_loadedToMemory;		}
-		inline const bool loadedToVideoMemory() { return m_loadedToVideoMemory; }
-		inline const unsigned int getUniqueID() { return m_uniqueID;			}
-		inline std::string getFilename()		{ return m_filename;			}
+		inline const bool isLoadedToMemory()		{ return m_loadedToMemory;		}
+		inline const bool isLoadedToVideoMemory()	{ return m_loadedToVideoMemory; }
+		inline const unsigned int getUniqueID()		{ return m_uniqueID;			}
+		inline std::string getFilename()			{ return m_filename;			}
 
 		// Equality operator; compares filenames
 		inline bool operator==(std::string p_string) { return m_filename == p_string; }

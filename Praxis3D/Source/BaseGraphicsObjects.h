@@ -16,7 +16,7 @@ class BaseGraphicsObject : public SystemObject
 {
 public:
 	BaseGraphicsObject(SystemScene *p_systemScene, const std::string &p_name, Properties::PropertyID p_objectType)
-		: SystemObject(p_systemScene, p_name, p_objectType), m_needsUpdate(true), m_affectedByLighting(true), m_loadedToMemory(false), m_isActive(false) { }
+		: SystemObject(p_systemScene, p_name, p_objectType), m_needsUpdate(true), m_affectedByLighting(true), m_loadedToVideoMemory(false), m_loadedToMemory(false), m_isActive(false) { }
 	virtual ~BaseGraphicsObject() { }
 		
 	BitMask getSystemType() { return Systems::Graphics; }
@@ -59,8 +59,11 @@ public:
 		}
 	}
 
-	// Has the object already been loaded to memory (RAM)?
+	// Has the object been already loaded to memory (RAM)?
 	const inline bool isLoadedToMemory() const { return m_loadedToMemory; }
+
+	// Has the object been already loaded to video memory (GPU VRAM)
+	const inline bool isLoadedToVideoMemory() const { return m_loadedToVideoMemory; }
 
 	// Is the object active (i.e. should be drawned, updated, etc...)
 	const inline bool isObjectActive() const { return m_isActive; }
@@ -109,6 +112,7 @@ public:
 	inline void setEmissiveThreshold(const float p_value)		{ m_baseObjectData.m_emissiveThreshold = p_value;	}
 	inline void setHeightScale(const float p_value)				{ m_baseObjectData.m_heightScale = p_value;			}
 	inline void setLoadedToMemory(const bool p_loadedToMemory)	{ m_loadedToMemory = p_loadedToMemory;				}
+	inline void setLoadedToVideoMemory(const bool p_loaded)		{ m_loadedToVideoMemory = p_loaded;					}
 	inline void setObjectActive(const bool p_objectIsActive)	{ m_isActive = p_objectIsActive;					}
 	inline void setTextureTilingFactor(const float p_value)		{ m_baseObjectData.m_textureTilingFactor = p_value; }
 
@@ -119,10 +123,13 @@ protected:
 	// Does the object need to be updated after any of its data has been changed
 	bool m_needsUpdate;
 
-	// Is the object active (i.e. should be drawned, updated, etc...)
+	// Is the object active (i.e. should be drawn, updated, etc...)
 	bool m_isActive;
 
-	// Atomic, so it can be changed from different threads (loading to memory is multithreaded)
+	// Is the object loaded to GPU
+	bool m_loadedToVideoMemory;
+
+	// Atomic, so it can be changed from different threads (loading to memory is multi-threaded)
 	std::atomic<bool> m_loadedToMemory;
 
 	// Spacial and misc data of an object
@@ -142,8 +149,11 @@ public:
 	// Load object data to memory (RAM)
 	void LoadToMemory();
 
-	// Has the object already been loaded to memory (RAM)?
+	// Has the object been already loaded to memory (RAM)?
 	const inline bool isLoadedToMemory() const { return m_baseGraphicsObject->isLoadedToMemory(); }
+
+	// Has the object been already loaded to video memory (GPU VRAM)?
+	const inline bool isLoadedToVideoMemory() const { return m_baseGraphicsObject->isLoadedToVideoMemory(); }
 
 	// Should the object be activated after loading
 	const inline bool isActivatedAfterLoading() const { return m_activateAfterLoading; }
@@ -159,6 +169,7 @@ public:
 
 	// Seters
 	inline void setActivateAfterLoading(const bool p_activateAfterLoading)	{ m_activateAfterLoading = p_activateAfterLoading;			}
+	inline void setLoadedToVideoMemory(const bool p_loaded)					{ m_baseGraphicsObject->setLoadedToVideoMemory(p_loaded);	}
 	inline void setObjectActive(const bool p_objectIsActive)				{ m_baseGraphicsObject->setObjectActive(p_objectIsActive);	}
 
 	// Comparator operators; uses object ID to determine if the object is the same
