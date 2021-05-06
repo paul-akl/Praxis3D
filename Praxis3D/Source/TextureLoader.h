@@ -68,7 +68,7 @@ protected:
 		SpinWait::Lock lock(m_mutex);
 
 		// Texture might have already been loaded when called from a different thread. Check if it was
-		if(!isLoadedToMemory())
+		if(!isLoaded())
 		{
 			// Read the format of the texture
 			FREE_IMAGE_FORMAT imageFormat = FreeImage_GetFileType((Config::PathsVariables().texture_path + m_filename).c_str(), 0);
@@ -215,114 +215,22 @@ public:
 	public:
 		~Texture2DHandle() { m_textureData->decRefCounter(); }
 
-		// Bind texture for rendering if it is loaded
-		// Load the texture to GPU memory instead if it's not loaded
-		void bind(unsigned int p_activeTextureID = GL_TEXTURE0)
-		{
-			// Declare the handle to bind at the start here, and bind it at the end of the function,
-			// so there is only one path to bind function and the branch can be predicted easier on CPU
-			/*decltype(m_textureData->m_handle) handle = m_textureData->m_handle;
-
-			// If the texture is already loaded (to GPU), just bind it (the handle is already assigned).
-			// Otherwise load it to GPU. This way, the texture loading is hidden away,
-			// so graphics system doesn't have to deal with it. The thread that calls bind
-			// on a texture is guaranteed to be rendering thread, so it is save to load it.
-			if(!m_textureData->loadedToVideoMemory())
-			{
-				if(m_textureData->loadedToMemory())
-				{
-					// Reassign the handle, since it has been changed while loading to video memory
-					handle = m_textureData->m_handle;
-
-					// If loading to memory failed, log an error
-					//ErrorCode error = m_textureData->loadToVideoMemory();
-					//if(error != ErrorCode::Success)
-					//	ErrHandlerLoc::get().log(error, ErrorSource::Source_TextureLoader, m_textureData->getFilename());
-
-					// Set loaded to video memory flag to true even if loading failed.
-					// This way, the failed loading attempt is not repeated every frame.
-					// (And since loaded to memory flag is already true, it is not the cause,
-					// and it will not "fix" itself)
-					m_textureData->setLoadedToVideoMemory(true);
-				}
-				else
-				{
-					// Set handle to zero if the texture is not yet ready to be used
-					handle = 0;
-				}
-			}
-
-			// Set the active texture position and bind the handle
-			glActiveTexture(GL_TEXTURE0 + p_activeTextureID);
-			glBindTexture(GL_TEXTURE_2D, handle);*/
-		}
-
-		// Upload the texture to GPU memory
-		ErrorCode preload()
-		{
-			ErrorCode returnError = ErrorCode::Success;
-
-			if(!m_textureData->isLoadedToVideoMemory())
-			{
-				if(m_textureData->isLoadedToMemory())
-				{
-				//	returnError = m_textureData->loadToVideoMemory();
-					m_textureData->setLoadedToVideoMemory(true);
-				}
-				else
-				{
-					returnError = m_textureData->loadToMemory();
-					if(returnError == ErrorCode::Success)
-					{
-						m_textureData->setLoadedToMemory(true);
-						//returnError = m_textureData->loadToVideoMemory();
-						m_textureData->setLoadedToVideoMemory(true);
-					}
-				}
-			}
-
-			return returnError;
-		}
-
 		// Loads data from HDD to RAM and restructures it to be used to fill buffers later
 		ErrorCode loadToMemory()
 		{
 			ErrorCode returnError = ErrorCode::Success;
 
 			// If it's not loaded to memory already, call load
-			if(!m_textureData->isLoadedToMemory())
+			if(!m_textureData->isLoaded())
 				returnError = m_textureData->loadToMemory();
 
 			return returnError;
 		}
-
-		// NOT USED
-		// Loads data from RAM to buffer and uploads them to VRAM
-		// WARNING: should probably only be called from rendering thread, since this code deals with graphics API
-		ErrorCode loadToVideoMemory()
-		{
-			ErrorCode returnError = ErrorCode::Success;
-
-			// If it's not loaded to video memory already, and has been loaded to memory, call load
-			//if(!m_textureData->loadedToVideoMemory())
-				//if(m_textureData->loadedToMemory())
-				//	returnError = m_textureData->loadToVideoMemory();
-
-			return returnError;
-		}
 		
-		void setWrapMode(TextureWrapMode p_wrapMode)
-		{
-			bind();
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, p_wrapMode);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, p_wrapMode);
-		}
-
 		void setColorChannel(const Texture2DHandle &p_textureHandle, TextureColorChannelOffset p_destChannel, TextureColorChannelOffset p_sourceChannel = ColorOffset_Red)
 		{
-			// If both textures are not loaded to video memory already and have pixel data
-			if(m_textureData->m_loadedToVideoMemory == false && m_textureData->m_pixelData &&
-			   p_textureHandle.m_textureData->m_loadedToVideoMemory == false && p_textureHandle.m_textureData->m_pixelData)
+			// If both textures have pixel data loaded
+			if(m_textureData->m_pixelData && p_textureHandle.m_textureData->m_pixelData)
 			{
 				// Set the color channel of the internal texture
 				m_textureData->setColorChannel(p_textureHandle.m_textureData->m_pixelData,
@@ -340,34 +248,36 @@ public:
 		{
 			m_textureData->decRefCounter();
 			m_textureData = p_textureHandle.m_textureData;
+			m_handle = p_textureHandle.m_handle;
 			m_textureData->incRefCounter();
 			return *this;
 		}
 		
 		// Has the texture been already loaded to video memory (GPU VRAM)
-		const inline bool isLoadedToVideoMemory() const { return m_textureData->isLoadedToVideoMemory(); }
+		//const inline bool isLoadedToVideoMemory() const { return m_textureData->isLoadedToVideoMemory(); }
 
 		// Getters
 		inline unsigned int getTextureHeight() const { return m_textureData->m_textureHeight; }
 		inline unsigned int getTextureWidth() const { return m_textureData->m_textureWidth; }
-		inline unsigned int getHandle() const { return m_textureData->m_handle; }
+		inline unsigned int getHandle() const { return m_handle; }
 		inline int getMipmapLevel() const { return m_textureData->m_mipmapLevel; }
 		inline std::string getFilename() const { return m_textureData->m_filename; }
 		inline TextureFormat getTextureFormat() const { return m_textureData->m_textureFormat; }
 
 		// Setters
-		inline void setLoadedToMemory(bool p_loaded)		{ m_textureData->setLoadedToMemory(p_loaded);		}
-		inline void setLoadedToVideoMemory(bool p_loaded)	{ m_textureData->setLoadedToVideoMemory(p_loaded);	}
+		inline void setLoadedToMemory(bool p_loaded)		{ m_textureData->setLoaded(p_loaded);		}
+		//inline void setLoadedToVideoMemory(bool p_loaded)	{ m_textureData->setLoadedToVideoMemory(p_loaded);	}
 
 	private:
 		// Increment the reference counter when creating a handle
-		Texture2DHandle(Texture2D *p_textureData) : m_textureData(p_textureData) { m_textureData->incRefCounter(); }
+		Texture2DHandle(Texture2D *p_textureData) : m_textureData(p_textureData), m_handle(m_textureData->m_handle) { m_textureData->incRefCounter(); }
 
 		inline unsigned int &getHandleRef() { return m_textureData->m_handle; }
 
 		// Returns a void pointer to the pixel data
 		const inline void *getData() { return m_textureData->getData(); }
 
+		unsigned int m_handle;
 		Texture2D *m_textureData;
 	};
 		
@@ -380,6 +290,40 @@ public:
 	Texture2DHandle load(const std::string &p_filename, unsigned int p_textureHandle);
 	Texture2DHandle load(const std::string &p_filename);
 	
+	Texture2DHandle getDefaultTexture(MaterialType p_materialType = MaterialType::MaterialType_Diffuse)
+	{
+		Texture2D *returnTexture = m_default2DTexture;
+
+		switch(p_materialType)
+		{
+		case MaterialType_Diffuse:
+			break;
+		case MaterialType_Normal:
+			returnTexture = m_defaultNormal;
+			break;
+		case MaterialType_Emissive:
+			returnTexture = m_defaultEmissive;
+			break;
+		case MaterialType_Combined:
+			break;
+		case MaterialType_Roughness:
+			break;
+		case MaterialType_Metalness:
+			break;
+		case MaterialType_Height:
+			returnTexture = m_defaultHeight;
+			break;
+		case MaterialType_AmbientOcclusion:
+			break;
+		case MaterialType_NumOfTypes_Extended:
+			break;
+		default:
+			break;
+		}
+
+		return Texture2DHandle(returnTexture);
+	}
+
 protected:
 	// Default textures used in place of missing ones when loading textures
 	Texture2D *m_default2DTexture;

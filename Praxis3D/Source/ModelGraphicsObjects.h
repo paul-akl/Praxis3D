@@ -128,25 +128,6 @@ public:
 		setLoadedToMemory(true);
 	}
 
-	// Loads model and materials from memory to video memory; should only be called by renderer thread
-	ErrorCode loadToVideoMemory()
-	{
-		// Error code used for checking the success of loading; it is not returned
-		ErrorCode error = ErrorCode::Success;
-
-		// Load the model to video memory; log an error if it occurs
-		//if(!ErrHandlerLoc::get().ifSuccessful(m_objectData.m_model.loadToVideoMemory(), error))
-		//	ErrHandlerLoc::get().log(error);
-
-		// Iterate over all materials and load them to video memory; log an error if loading failed
-		for(decltype(m_objectData.m_numMaterials) i = 0; i < m_objectData.m_numMaterials; i++)
-			for(int matType = 0; matType < MaterialType_NumOfTypes; matType++)
-				if(!ErrHandlerLoc::get().ifSuccessful(m_objectData.m_materials[matType][i].loadToVideoMemory(), error))
-					ErrHandlerLoc::get().log(error);
-
-		return ErrorCode::Success;
-	}
-
 	// Exports all the data of the object as a PropertySet
 	PropertySet exportObject()
 	{

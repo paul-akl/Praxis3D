@@ -19,11 +19,11 @@ ErrorCode Model::loadToMemory()
 	// If the model is not currently already being loaded in another thread
 	if(!m_isBeingLoaded)
 	{
-		// Lock calls from other treads
-		SpinWait::Lock lock(m_mutex);
-
 		// Make sure another thread doesn't start another instance of loading
 		m_isBeingLoaded = true;
+
+		// Lock calls from other treads
+		SpinWait::Lock lock(m_mutex);
 
 		// To not cause crashes from outside code, since meshes will be modified when loading
 		//m_currentNumMeshes = 0;

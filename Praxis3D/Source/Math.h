@@ -24,6 +24,7 @@ namespace Math
 {
 	struct Vec3f;
 	struct Vec4f;
+	struct Quaternion;
 
 	struct Vec2i
 	{
@@ -302,6 +303,7 @@ namespace Math
 		{
 			x = vector_arg.x;	y = vector_arg.y;	z = p_floatZ;	w = p_floatW;
 		}
+		Vec4f(const Quaternion p_quaterion);
 	};
 
 	const inline Vec2f operator+(const Vec2f& p_left, const Vec2f& p_right)	{ return Vec2f(p_left.x + p_right.x, p_left.y + p_right.y); }
@@ -506,16 +508,18 @@ namespace Math
 		inline Vec3f getRotationY() const { return Vec3f(m[1], m[5], m[9]); }
 		inline Vec3f getRotationZ() const { return Vec3f(m[2], m[6], m[10]); }
 		inline Vec3f getPosition()  const { return Vec3f(m[3], m[7], m[11]); }
+		inline Vec3f getScale()		const { return Vec3f(m[12], m[13], m[14]); }
 
-		inline void setRotationX(Vec3f &p_rotX) { m[0] = p_rotX.x; m[4] = p_rotX.y; m[8] = p_rotX.z; }
-		inline void setRotationY(Vec3f &p_rotY) { m[1] = p_rotY.x; m[5] = p_rotY.y; m[9] = p_rotY.z; }
-		inline void setRotationZ(Vec3f &p_rotZ) { m[2] = p_rotZ.x; m[6] = p_rotZ.y; m[10] = p_rotZ.z; }
-		inline void setPosition(Vec3f &p_pos) { m[3] = p_pos.x;  m[7] = p_pos.y;  m[11] = p_pos.z; }
+		inline void setRotationX(const Vec3f &p_rotX)	{ m[0] = p_rotX.x; m[4] = p_rotX.y; m[8] = p_rotX.z;	}
+		inline void setRotationY(const Vec3f &p_rotY)	{ m[1] = p_rotY.x; m[5] = p_rotY.y; m[9] = p_rotY.z;	}
+		inline void setRotationZ(const Vec3f &p_rotZ)	{ m[2] = p_rotZ.x; m[6] = p_rotZ.y; m[10] = p_rotZ.z;	}
+		inline void setPosition(const Vec3f &p_pos)		{ m[3] = p_pos.x;  m[7] = p_pos.y;  m[11] = p_pos.z;	}
+		inline void setScale(const Vec3f &p_scl)		{ m[12] = p_scl.x;  m[13] = p_scl.y;  m[14] = p_scl.z;	}
 
-		inline void setRotationX(const Vec4f &p_rotX) { m[0] = p_rotX.x; m[4] = p_rotX.y; m[8] = p_rotX.z; m[12] = p_rotX.w; }
-		inline void setRotationY(const Vec4f &p_rotY) { m[1] = p_rotY.x; m[5] = p_rotY.y; m[9] = p_rotY.z; m[13] = p_rotY.w; }
-		inline void setRotationZ(const Vec4f &p_rotZ) { m[2] = p_rotZ.x; m[6] = p_rotZ.y; m[10] = p_rotZ.z; m[14] = p_rotZ.w; }
-		inline void setPosition(const Vec4f &p_pos) { m[3] = p_pos.x;  m[7] = p_pos.y;  m[11] = p_pos.z;  m[15] = p_pos.w; }
+		inline void setRotationX(const Vec4f &p_rotX)	{ m[0] = p_rotX.x; m[4] = p_rotX.y; m[8] = p_rotX.z; m[12] = p_rotX.w;	}
+		inline void setRotationY(const Vec4f &p_rotY)	{ m[1] = p_rotY.x; m[5] = p_rotY.y; m[9] = p_rotY.z; m[13] = p_rotY.w;	}
+		inline void setRotationZ(const Vec4f &p_rotZ)	{ m[2] = p_rotZ.x; m[6] = p_rotZ.y; m[10] = p_rotZ.z; m[14] = p_rotZ.w; }
+		inline void setPosition(const Vec4f &p_pos)		{ m[3] = p_pos.x;  m[7] = p_pos.y;  m[11] = p_pos.z;  m[15] = p_pos.w;	}
 
 		inline void Mat4f::identity()
 		{
@@ -543,7 +547,7 @@ namespace Math
 			m[0] *= p_scale.x; m[4] *= p_scale.y; m[8] *= p_scale.z;
 			m[1] *= p_scale.x; m[5] *= p_scale.y; m[9] *= p_scale.z;
 			m[2] *= p_scale.x; m[6] *= p_scale.y; m[10] *= p_scale.z;
-			m[3] *= p_scale.x; m[7] *= p_scale.y;
+			m[3] *= p_scale.x; m[7] *= p_scale.y; 
 		}
 
 		void rotate(const Vec3f& p_vec3f);
@@ -604,7 +608,25 @@ namespace Math
 						p_mat.m[2], p_mat.m[6], p_mat.m[10],p_mat.m[14],
 						p_mat.m[3], p_mat.m[7], p_mat.m[11],p_mat.m[15]);
 	}
+	const inline Mat4f createTransformMat(const Vec3f &p_position, const Vec3f &p_rotationEuler, const Vec3f &p_scale)
+	{
+		// Declare a transform matrix
+		Mat4f transformMat;
+		transformMat.identity();
 
+		// Set the position
+		transformMat.translate(p_position);
+
+		// Set the rotation
+		transformMat.rotate(Math::Vec3f(0.0f, p_rotationEuler.y, 0.0f));
+		transformMat.rotate(Math::Vec3f(p_rotationEuler.x, 0.0f, 0.0f));
+		transformMat.rotate(Math::Vec3f(0.0f, 0.0f, -p_rotationEuler.z));
+
+		// Set the scale
+		transformMat.scale(p_scale);
+
+		return transformMat;
+	}
 
 	inline Vec3f toRadian(const Vec3f p_vec3)
 	{

@@ -9,7 +9,7 @@
 #include "EnumFactory.h"
 #include "Utilities.h"
 
-typedef unsigned int BitMask;
+typedef unsigned __int64 BitMask;
 
 //#define ever ;;
 
@@ -24,46 +24,86 @@ namespace Systems
 	Code(Null, = -1) \
 	Code(Graphics,) \
 	Code(Scripting,) \
+	Code(World,) \
 	Code(NumberOfSystems,) 
 	DECLARE_ENUM(TypeID, TYPEID)
 
 	const static std::string SystemNames[NumberOfSystems] =
 	{
 		GetString(Graphics),
-		GetString(Scripting)
+		GetString(Scripting),
+		GetString(World)
 	};
 	
 	namespace Types
 	{
-		static const BitMask All = static_cast<BitMask>(-1);
-		static const BitMask Max = 32;
+		static constexpr BitMask All = static_cast<BitMask>(-1);
+		static constexpr BitMask Max = 32;
 	}
 
 	namespace Changes
 	{
+		namespace Common
+		{
+			/*static constexpr BitMask Shared0	= (BitMask)1 << 0;
+			static constexpr BitMask Shared1	= (BitMask)1 << 1;
+			static constexpr BitMask Shared2	= (BitMask)1 << 3;
+			static constexpr BitMask Shared3	= (BitMask)1 << 4;
+			static constexpr BitMask Shared4	= (BitMask)1 << 5;
+			static constexpr BitMask Shared5	= (BitMask)1 << 6;
+			static constexpr BitMask Shared6	= (BitMask)1 << 7;
+			static constexpr BitMask Shared7	= (BitMask)1 << 8;
+			static constexpr BitMask Shared8	= (BitMask)1 << 9;
+			static constexpr BitMask Shared9	= (BitMask)1 << 10;*/
+		}
 		namespace Generic
 		{
-			static const BitMask CreateObject	= (1 << 0);
-			static const BitMask DeleteObject	= (1 << 1);
-			static const BitMask ExtendObject	= (1 << 2);
-			static const BitMask UnextendObject = (1 << 3);
-			static const BitMask Name			= (1 << 4);
-			static const BitMask All			= CreateObject | DeleteObject | ExtendObject;
+			static constexpr BitMask CreateObject		= (BitMask)1 << 0;
+			static constexpr BitMask DeleteObject		= (BitMask)1 << 1;
+			static constexpr BitMask ExtendObject		= (BitMask)1 << 2;
+			static constexpr BitMask UnextendObject		= (BitMask)1 << 3;
+			static constexpr BitMask Name				= (BitMask)1 << 4;
+			static constexpr BitMask All				= CreateObject | DeleteObject | ExtendObject | Name;
 		}
-		namespace Spacial
+		namespace Spatial
 		{
-			static const BitMask Position		= (1 << 5);
-			static const BitMask Rotation		= (1 << 6);
-			static const BitMask Scale			= (1 << 7);
-			static const BitMask ModelMatrix	= (1 << 8);
-			static const BitMask All			= Position | Rotation | Scale | ModelMatrix;
+			static constexpr BitMask LocalModifier			= (BitMask)1 << 5;
+			static constexpr BitMask WorldModifier			= (BitMask)1 << 6;
+			static constexpr BitMask Position				= (BitMask)1 << 7;
+			static constexpr BitMask Rotation				= (BitMask)1 << 8;
+			static constexpr BitMask Scale					= (BitMask)1 << 9;
+			static constexpr BitMask Transform				= (BitMask)1 << 10;
+
+			static constexpr BitMask LocalPosition			= LocalModifier | Position;
+			static constexpr BitMask LocalRotation			= LocalModifier | Rotation;
+			static constexpr BitMask LocalScale				= LocalModifier | Scale;
+			static constexpr BitMask LocalTransform			= LocalModifier | Transform;
+			static constexpr BitMask WorldPosition			= WorldModifier | Position;
+			static constexpr BitMask WorldRotation			= WorldModifier | Rotation;
+			static constexpr BitMask WorldScale				= WorldModifier | Scale;
+			static constexpr BitMask WorldTransform			= WorldModifier | Transform;
+
+			static constexpr BitMask AllLocalNoTransform	= LocalPosition | LocalRotation | LocalScale;
+			static constexpr BitMask AllWorldNoTransform	= WorldPosition | WorldRotation | WorldScale;
+			static constexpr BitMask AllLocal				= AllLocalNoTransform | LocalTransform;
+			static constexpr BitMask AllWorld				= AllWorldNoTransform | WorldTransform;
+			static constexpr BitMask All					= AllLocal | AllWorld;
 		}
 		namespace Graphics
 		{
-			static const BitMask Target		= (1 << 9);
-			static const BitMask UpVector	= (1 << 10);
-			static const BitMask Lighting	= (1 << 11);
-			static const BitMask All		= Target | UpVector | Lighting;
+			static constexpr BitMask Lighting				= (BitMask)1 << 11;
+
+			static constexpr BitMask Target					= (BitMask)1 << 12;
+			static constexpr BitMask UpVector				= (BitMask)1 << 13;
+			static constexpr BitMask AllCamera				= Target | UpVector;
+
+			static constexpr BitMask Color					= (BitMask)1 << 14;
+			static constexpr BitMask CutoffAngle			= (BitMask)1 << 15;
+			static constexpr BitMask Direction				= (BitMask)1 << 16;
+			static constexpr BitMask Intensity				= (BitMask)1 << 17;
+			static constexpr BitMask AllLightig				= Color | CutoffAngle | Direction | Intensity;
+
+			static constexpr BitMask All					= AllCamera | AllLightig;
 		}
 		namespace Physics
 		{
@@ -78,10 +118,10 @@ namespace Systems
 
 		}
 
-		static const BitMask Link = (1 << 29);
+		static constexpr BitMask Link = (BitMask)1 << 29;
 
-		static const BitMask None = 0;
-		static const BitMask All = static_cast<BitMask>(-1);
+		static constexpr BitMask None = 0;
+		static constexpr BitMask All = static_cast<BitMask>(-1);
 	}
 }
 
@@ -104,9 +144,14 @@ namespace Properties
 	/* Geometry */ \
 	Code(OffsetPosition,) \
 	Code(OffsetRotation,) \
-	Code(Position,) \
-	Code(Rotation,) \
-	Code(Scale,) \
+	Code(LocalPosition,) \
+	Code(LocalRotation,) \
+	Code(LocalRotationQuaternion,) \
+	Code(LocalScale,) \
+	Code(WorldPosition,) \
+	Code(WorldRotation,) \
+	Code(WorldRotationQuaternion,) \
+	Code(WorldScale,) \
 	/* Graphics */ \
 	Code(AlphaThreshold, ) \
 	Code(AmbientOcclusion, ) \
@@ -130,6 +175,7 @@ namespace Properties
 	Code(Lighting,) \
 	Code(Materials,) \
 	Code(Metalness,) \
+	Code(Meshes,) \
 	Code(Models,) \
 	Code(ModelObject,) \
 	Code(ModelPoolSize,) \
@@ -144,6 +190,7 @@ namespace Properties
 	Code(PositiveY,) \
 	Code(PositiveZ,) \
 	Code(PostProcess,) \
+	Code(Rendering,) \
 	Code(RMHAO,) \
 	Code(Roughness,) \
 	Code(Shaders,) \
@@ -156,6 +203,7 @@ namespace Properties
 	Code(TessControlShader,) \
 	Code(TessEvaluationShader,) \
 	Code(TextureTilingFactor,) \
+	Code(TextureScale,) \
 	Code(VertexShader,) \
 	/* Key binds */ \
 	Code(BackwardKey,) \
@@ -218,6 +266,11 @@ namespace Properties
 	Code(MouseCapture,) \
 	Code(VerticalSync,) \
 	Code(WindowTitle,) \
+	/* World */ \
+	Code(Children,) \
+	Code(GameObject,) \
+	Code(ID,) \
+	Code(Parent,) \
 	/* End of property IDs */ \
 	Code(NumberOfPropertyIDs,) 
 	DECLARE_ENUM(PropertyID, PROPERTYID)
@@ -238,9 +291,14 @@ namespace Properties
 		GetString(Type),
 		GetString(OffsetPosition),
 		GetString(OffsetRotation),
-		GetString(Position),
-		GetString(Rotation),
-		GetString(Scale),
+		GetString(LocalPosition),
+		GetString(LocalRotation),
+		GetString(LocalRotationQuaternion),
+		GetString(LocalScale),
+		GetString(WorldPosition),
+		GetString(WorldRotation),
+		GetString(WorldRotationQuaternion),
+		GetString(WorldScale),
 		GetString(AlphaThreshold),
 		GetString(AmbientOcclusion),
 		GetString(Attenuation),
@@ -263,6 +321,7 @@ namespace Properties
 		GetString(Lighting),
 		GetString(Materials),
 		GetString(Metalness),
+		GetString(Meshes),
 		GetString(Models),
 		GetString(ModelObject),
 		GetString(ModelPoolSize),
@@ -277,6 +336,7 @@ namespace Properties
 		GetString(PositiveY),
 		GetString(PositiveZ),
 		GetString(PostProcess),
+		GetString(Rendering),
 		GetString(RMHAO),
 		GetString(Roughness),
 		GetString(Shaders),
@@ -289,6 +349,7 @@ namespace Properties
 		GetString(TessControlShader),
 		GetString(TessEvaluationShader),
 		GetString(TextureTilingFactor),
+		GetString(TextureScale),
 		GetString(VertexShader),
 		GetString(BackwardKey),
 		GetString(CenterKey),
@@ -346,9 +407,12 @@ namespace Properties
 		GetString(Fullscreen),
 		GetString(MouseCapture),
 		GetString(VerticalSync),
-		GetString(WindowTitle)
+		GetString(WindowTitle),
+		GetString(Children),
+		GetString(GameObject),
+		GetString(ID),
+		GetString(Parent)
 	};
-
 
 	// A few overloaded static functions to convert other values to PropertyID enum
 	// Note: converting from string here is very slow, and would be better implemented
@@ -425,6 +489,7 @@ public:
 			delta_time_divider = 1000;
 			gl_context_major_version = 3;
 			gl_context_minor_version = 3;
+			object_directory_init_pool_size = 1000;
 			smoothing_tick_samples = 100;
 			running = true;
 		}
@@ -437,6 +502,7 @@ public:
 		int delta_time_divider;
 		int gl_context_major_version;
 		int gl_context_minor_version;
+		int object_directory_init_pool_size;
 		int smoothing_tick_samples;
 		bool running;
 	};

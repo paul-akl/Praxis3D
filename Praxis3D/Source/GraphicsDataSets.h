@@ -3,6 +3,64 @@
 #include "Math.h"
 #include "Loaders.h"
 
+// Contains data of a single material
+struct MaterialData
+{
+
+	MaterialData(TextureLoader2D::Texture2DHandle &m_texture = Loaders::texture2D().getDefaultTexture()) : 
+		m_texture(m_texture), 
+		m_textureScale(1.0f, 1.0f), 
+		m_parallaxScale(1.0f), 
+		m_alphaCutoff(1.0f) { }
+
+	// Handle to a texture
+	TextureLoader2D::Texture2DHandle m_texture;
+	// Texture coordinates scale (for example, used for tilling)
+	Math::Vec2f m_textureScale;
+	// Texture parallax effect scale (height multiplier)
+	float m_parallaxScale;
+	// Transparency threshold after which the fragment is discarded
+	float m_alphaCutoff;
+};
+
+// Contains data of a single mesh and its materials
+struct MeshData
+{
+	MeshData(Model::Mesh &p_mesh, MaterialData p_materials[MaterialType_NumOfTypes]) : m_mesh(p_mesh), m_materials{ *p_materials } { }
+
+	// Handle to a mesh
+	Model::Mesh &m_mesh;
+
+	// An array of materials of each type
+	MaterialData m_materials[MaterialType_NumOfTypes];
+};
+
+// Contains data of a single model and its meshes
+struct ModelData
+{
+	ModelData(ModelLoader::ModelHandle &p_model) : m_model(p_model) { }
+
+	// Handle to a model
+	ModelLoader::ModelHandle m_model;
+	// An array of meshes
+	std::vector<MeshData>  m_meshes;
+};
+
+// Contains data multiple of multiple models, comprising a model component
+struct ModelComponentData
+{
+	std::vector<ModelData> m_modelData;
+};
+
+// Contains data of a single shader program
+struct ShaderData
+{
+	ShaderData(ShaderLoader::ShaderProgram &p_shader) : m_shader(p_shader) { }
+
+	// Handle to a shader program
+	ShaderLoader::ShaderProgram &m_shader;
+};
+
 // All graphics objects contain an instance of this struct, which holds the necessary spacial and other data
 struct GraphicsData
 {

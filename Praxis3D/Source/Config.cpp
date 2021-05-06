@@ -41,7 +41,7 @@ Config::TextureVariables	Config::m_textureVar;
 Config::WindowVariables		Config::m_windowVar;
 
 std::vector<Config::Variable> Config::m_variables;
-std::unordered_map<std::string, size_t> Config::m_hashTable;
+std::unordered_map<std::string, std::size_t> Config::m_hashTable;
 
 void Config::init()
 {
@@ -57,6 +57,7 @@ void Config::init()
 	AddVariablePredef(m_engineVar, delta_time_divider);
 	AddVariablePredef(m_engineVar, gl_context_major_version);
 	AddVariablePredef(m_engineVar, gl_context_minor_version);
+	AddVariablePredef(m_engineVar, object_directory_init_pool_size);
 	AddVariablePredef(m_engineVar, smoothing_tick_samples);
 
 	// Frame-buffer variables

@@ -51,14 +51,14 @@ public:
 
 		m_positionVec = m_targetVec * m_radius + m_originPosVec;
 
-		postChanges(Systems::Changes::Spacial::Position);
+		postChanges(Systems::Changes::Spatial::Position);
 	}
 
 	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		switch(p_changedBits)
 		{
-		case Systems::Changes::Spacial::Position:
+		case Systems::Changes::Spatial::Position:
 			return m_positionVec;
 			break;
 		}

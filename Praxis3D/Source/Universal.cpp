@@ -176,7 +176,7 @@ UniversalObject *UniversalScene::getObject(std::string p_name)
 	return returnObject;
 }
 
-void UniversalScene::createObjectLink(SystemObject *p_subject, SystemObject *p_observer)
+void UniversalScene::createObjectLink(ObservedSubject *p_subject, SystemObject *p_observer)
 {
 	// Get the correlating potential and desired changes
 	BitMask changes = p_subject->getPotentialSystemChanges() & p_observer->getDesiredSystemChanges();
@@ -186,29 +186,14 @@ void UniversalScene::createObjectLink(SystemObject *p_subject, SystemObject *p_o
 	{
 		m_objectChangeController->registerSubject(p_subject, changes, p_observer);
 		
-		ObjectLinkData linkData = { p_subject, p_observer, p_subject->getName(), p_observer->getName() };
-		m_objectLinks.push_back(linkData);
-
 		// Inform the subject about established link
 		p_subject->postChanges(Systems::Changes::Link);
 	}
 }
-void UniversalScene::createObjectLink(UniversalObject *p_subject, SystemObject *p_observer)
+
+void UniversalScene::removeObjectLink(ObservedSubject *p_subject, SystemObject *p_observer)
 {
-	// Get the correlating potential and desired changes
-	BitMask changes = p_subject->getPotentialSystemChanges() & p_observer->getDesiredSystemChanges();
-
-	// If any changes happened
-	if(changes)
-	{
-		m_objectChangeController->registerSubject(p_subject, changes, p_observer);
-
-		ObjectLinkData linkData = { p_subject, p_observer, p_subject->getName(), p_observer->getName() };
-		m_objectLinks.push_back(linkData);
-
-		// Inform the subject about established link
-		p_subject->postChanges(Systems::Changes::Link);
-	}
+	m_objectChangeController->unregisterSubject(p_subject, p_observer);
 }
 
 void UniversalScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changes)
@@ -325,7 +310,7 @@ void UniversalObject::unextend(SystemScene *p_systemScene)
 	SystemObjectMap::iterator systemObjectIterator = m_objectExtensions.find(systemSceneType);
 	_ASSERT(systemObjectIterator != m_objectExtensions.end());
 	// "The object to delete doesn't exist in the scene."
-	// TODO ERROR return from the function if the scene doesnt exist
+	// TODO ERROR return from the function if the scene doesn't exist
 	if(systemObjectIterator == m_objectExtensions.end())
 	{
 		return;

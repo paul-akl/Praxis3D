@@ -25,6 +25,7 @@
 #include <list>
 
 #include "Config.h"
+#include "Containers.h"
 #include "Math.h"
 #include "SpinWait.h"
 
@@ -33,7 +34,7 @@ class ObservedSubject;
 class Observer
 {
 public:
-	virtual ~Observer() { }
+	virtual ~Observer() = 0;
 
 	// This method gets called when data that we are interested changed in observed subject
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) = 0;
@@ -55,17 +56,18 @@ public:
 	virtual void postChanges(BitMask p_changedBits);
 	virtual void preDestruct();
 
-	const static unsigned int g_invalidID = (unsigned int)(-1);
+	const static unsigned int g_invalidID = static_cast<unsigned int>(-1);
 
 	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const	{ return m_nullVec3; }
 	const virtual Math::Vec4f &getVec4(const Observer *p_observer, BitMask p_changedBits) const { return m_nullVec4; }
 	const virtual Math::Mat4f &getMat4(const Observer *p_observer, BitMask p_changedBits) const	{ return m_nullMat4; }
 
-	const virtual bool			getBool(const Observer *p_observer, BitMask p_changedBits) const	{ return m_nullBool;	}
-	const virtual int			getInt(const Observer *p_observer, BitMask p_changedBits) const		{ return m_nullInt;		}
-	const virtual float			getFloat(const Observer *p_observer, BitMask p_changedBits) const	{ return m_nullFloat;	}
-	const virtual double		&getDouble(const Observer *p_observer, BitMask p_changedBits) const	{ return m_nullDouble;	}
-	const virtual std::string	&getString(const Observer *p_observer, BitMask p_changedBits) const	{ return m_nullString;	}
+	const virtual bool			getBool(const Observer *p_observer, BitMask p_changedBits) const			{ return m_nullBool;		}
+	const virtual int			getInt(const Observer *p_observer, BitMask p_changedBits) const				{ return m_nullInt;			}
+	const virtual float			getFloat(const Observer *p_observer, BitMask p_changedBits) const			{ return m_nullFloat;		}
+	const virtual double		&getDouble(const Observer *p_observer, BitMask p_changedBits) const			{ return m_nullDouble;		}
+	const virtual std::string	&getString(const Observer *p_observer, BitMask p_changedBits) const			{ return m_nullString;		}
+	const virtual SpatialData	&getSpatialData(const Observer *p_observer, BitMask p_changedBits) const	{ return m_nullSpacialData;	}
 
 	// Stores observer information required for postChanges messages
 	struct ObserverData
@@ -104,4 +106,5 @@ private:
 	const static float		 m_nullFloat;
 	const static double		 m_nullDouble;
 	const static std::string m_nullString;
+	const static SpatialData m_nullSpacialData;
 };

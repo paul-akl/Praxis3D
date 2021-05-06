@@ -214,10 +214,10 @@ void RendererFrontend::renderFrame(const SceneObjects &p_sceneObjects, const flo
 	std::cout << m_frameData.m_viewMatrix.m[12] << " : " << m_frameData.m_viewMatrix.m[13] << " : " << m_frameData.m_viewMatrix.m[14] << " : " << m_frameData.m_viewMatrix.m[15] << std::endl;
 	*/
 	// Set the camera position
-	m_frameData.m_cameraPosition = p_sceneObjects.m_camera->getVec3(nullptr, Systems::Changes::Spacial::Position);
+	m_frameData.m_cameraPosition = p_sceneObjects.m_camera->getVec3(nullptr, Systems::Changes::Spatial::Position);
 	
 	// Set the camera target vector
-	m_frameData.m_cameraTarget = p_sceneObjects.m_camera->getVec3(nullptr, Systems::Changes::Spacial::Rotation);
+	m_frameData.m_cameraTarget = p_sceneObjects.m_camera->getVec3(nullptr, Systems::Changes::Spatial::Rotation);
 
 	// Assign directional light values and also normalize its direction, so it's not neccessary to do it in a shader
 	m_frameData.m_dirLightColor = p_sceneObjects.m_directionalLight->m_color;

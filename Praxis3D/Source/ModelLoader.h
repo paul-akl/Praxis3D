@@ -112,21 +112,8 @@ public:
 	ErrorCode loadTextures(aiTexture **p_assimpTextures, size_t p_numTextures);
 
 	inline MaterialArrays &getMaterialArrays() { return m_materials; }
+
 	// Returns an array of pointers to buffer data
-	/*const inline void **getData()
-	{
-		void **data = nullptr;
-		//const void *data[ModelBuffer_Index + 1];
-
-		data[ModelBuffer_Position]		= &m_positions[0];
-		data[ModelBuffer_Normal]		= &m_normals[0];
-		data[ModelBuffer_TexCoord]		= &m_texCoords[0];
-		data[ModelBuffer_Tangents]		= &m_tangents[0];
-		data[ModelBuffer_Bitangents]	= &m_bitangents[0];
-		data[ModelBuffer_Index]			= &m_indices[0];
-
-		return (const void**)data;
-	}*/
 	const inline void **getData()
 	{
 		const void **data = new const void*[ModelBuffer_Index + 1];
@@ -182,7 +169,7 @@ public:
 
 	// Wrapper class for a model, to provide data needed for rendering, without exposing the
 	// private variables. Two ways of iterating over data: using subscription operator, or checking
-	// nextMeshPresent with calling operator++ in between and using getters to retrieve data.
+	// nextMeshPresent with calling operator++ in-between and using getters to retrieve data.
 	class MeshIterator
 	{
 		friend class ModelHandle;
@@ -237,15 +224,15 @@ public:
 		{
 			ErrorCode returnError = ErrorCode::Success;
 
-			// If it's not loaded to memory already, call load
-			if(!m_model->isLoadedToMemory())
+			// If it's not loaded to memory already and is not currently being loaded, call load
+			if(!m_model->isLoaded() && !m_model->isBeingLoaded())
 			{
 				returnError = m_model->loadToMemory();
 
 				// If the setLoadedToMemory flag is true and loading was successful, set the flag
 				if(p_setLoadedToMemoryFlag)
 					if(returnError == ErrorCode::Success)
-						m_model->setLoadedToMemory(true);
+						m_model->setLoaded(true);
 			}
 
 			return returnError;
@@ -265,7 +252,7 @@ public:
 		
 		// Getters
 		inline Model::MaterialArrays &getMaterialArrays() const		{ return m_model->getMaterialArrays();	}
-		inline const std::vector<Model::Mesh> getMeshArray() const	{ return m_model->m_meshPool;			}
+		inline const std::vector<Model::Mesh> &getMeshArray() const	{ return m_model->m_meshPool;			}
 		inline size_t getNumMeshes() const							{ return m_model->m_numMeshes;			}
 		inline MeshIterator getMeshIterator() const					{ return MeshIterator(*m_model);		}
 		inline const size_t getMeshSize() const						{ return m_model->m_numMeshes;			}

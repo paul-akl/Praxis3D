@@ -533,6 +533,9 @@ public:
 	// Bool operator; returns true if the property is valid and false if the property is null
 	inline explicit operator bool() const { return m_propertyID != Properties::Null; }
 
+	// Returns true if the native variable type of the property is string (meaning the string that was retrieved from the property is
+	const inline bool isVariableTypeString() const { return (m_variableType == VariableType::Type_string); }
+
 	// Converts the property to text (used for saving properties to text files)
 	const inline std::string toString() { return "\"" + std::string(GetString(m_propertyID)) + "\": \"" + getString() + "\""; }
 private:
@@ -721,6 +724,27 @@ public:
 	// Equal and less than operators accepting property set class
 	const inline bool operator==(const PropertySet &p_propertySet) const { return (m_propertyID == p_propertySet.m_propertyID); }
 	const inline bool operator<(const PropertySet &p_propertySet) const { return (m_propertyID < p_propertySet.m_propertyID); }
+
+	// Adds two PropertySets together (including their pripertySets and individual properties)
+	inline PropertySet operator+(const PropertySet &p_propertySet) const 
+	{
+		// Create a new propertySet that is a copy of the currentProperty set
+		PropertySet combinedSet(*this);
+
+		// Add all propertySets from the given propertySet
+		for(decltype(p_propertySet.m_numPropertySets) i = 0, size = p_propertySet.m_numPropertySets; i < size; i++)
+			combinedSet.addPropertySet(p_propertySet.getPropertySet(i));
+		
+		// Add all properties from the given propertySet
+		for(decltype(p_propertySet.m_numProperties) i = 0, size = p_propertySet.m_numProperties; i < size; i++)
+			combinedSet.addProperty(p_propertySet[i]);
+
+		// Optimize the new propertySet
+		combinedSet.optimizeForSearch();
+
+		// Returned the combined set
+		return combinedSet;
+	}
 
 	// Setters
 	const inline void setPropertyID(Properties::PropertyID p_propertyID) { m_propertyID = p_propertyID; }

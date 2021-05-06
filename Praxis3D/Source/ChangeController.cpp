@@ -127,7 +127,7 @@ ErrorCode ChangeController::registerSubject(ObservedSubject *p_subject, BitMask 
 }
 ErrorCode ChangeController::unregisterSubject(ObservedSubject *p_subject, Observer *p_observer)
 {
-	// Current return error is "failed" untill the unregistering has been completed
+	// Current return error is "failed" until the unregistering has been completed
 	ErrorCode returnError = ErrorCode::Failure;
 
 	if(p_subject && p_observer)
@@ -135,7 +135,7 @@ ErrorCode ChangeController::unregisterSubject(ObservedSubject *p_subject, Observ
 		// Stop the updates and lock, during the subject registration
 		SpinWait::Lock lock(m_spinWaitUpdate);
 
-		unsigned int ID = p_subject->getID(this);
+		const unsigned int ID = p_subject->getID(this);
 
 		if(m_subjectsList.size() <= ID || m_subjectsList[ID].m_subject != p_subject)
 		{

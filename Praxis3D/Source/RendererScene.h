@@ -7,6 +7,7 @@
 #include "CameraGraphicsObject.h"
 #include "EnvironmentMapObjects.h"
 #include "GraphicsDataSets.h"
+#include "LightComponent.h"
 #include "LightingGraphicsObjects.h"
 #include "Loaders.h"
 #include "ObjectPool.h"
@@ -128,7 +129,11 @@ private:
 		return nullptr;
 	}
 
-	// Object creators (factories)
+	// Object component creators (factories)
+	ModelComponentData *loadModelComponent(const PropertySet &p_properties);
+	ShaderData *loadShaderComponent(const PropertySet &p_properties);
+	LightComponent *loadLightComponent(const PropertySet &p_properties);
+
 	ModelObject *loadModelObject(const PropertySet &p_properties);
 	CameraObject *loadCameraObject(const PropertySet &p_properties);
 	EnvironmentMapObject *loadEnvironmentMap(const PropertySet &p_properties);

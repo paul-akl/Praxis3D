@@ -68,6 +68,10 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
 	Code(SDL_video_init_failed,) \
 	Code(SDL_vsync_failed,) \
 	Code(Window_creation_failed,) \
+	/* World scene errors */ \
+	Code(Invalid_object_id,) \
+	Code(Duplicate_object_id,) \
+	/* Error management */ \
 	Code(NumberOfErrorCodes,) \
 	Code(CachedError,)
 DECLARE_ENUM(ErrorCode, ERROR_CODES)
@@ -107,6 +111,7 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_SkyPass,) \
     Code(Source_TextureLoader,) \
     Code(Source_Window,) \
+    Code(Source_World,) \
     Code(Source_NumberOfErrorSources,) 
 DECLARE_ENUM(ErrorSource, ERROR_SOURCE)
 

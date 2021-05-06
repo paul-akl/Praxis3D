@@ -511,12 +511,251 @@ void RendererScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeT
 
 BitMask RendererScene::getDesiredSystemChanges()
 {
-	return Systems::Changes::Spacial::All;
+	return Systems::Changes::Spatial::All;
 }
 BitMask RendererScene::getPotentialSystemChanges()
 {
-	return Systems::Changes::Spacial::All;
+	return Systems::Changes::Spatial::All;
 }
+
+
+
+ModelComponentData *RendererScene::loadModelComponent(const PropertySet &p_properties)
+{
+	ModelComponentData *newComponent = nullptr;
+		
+	// Check if models node is present
+	if(p_properties)
+	{
+		// Create the model component
+		newComponent = new ModelComponentData();
+
+		// Loop over each model entry in the node
+		for(decltype(p_properties.getNumProperties()) iModel = 0, numModels = p_properties.getNumProperties(); iModel < numModels; iModel++)
+		{
+			// Get model filename
+			auto modelName = p_properties.getPropertySet(iModel).getPropertyByID(Properties::Filename).getString();
+
+			// Add a new model data entry, and get a reference to it
+			newComponent->m_modelData.push_back(ModelData(Loaders::model().load(modelName, false)));
+			auto &newModelData = newComponent->m_modelData.back();
+
+			// Load the model to memory, to be able to access all of its meshes
+			newModelData.m_model.loadToMemory();
+
+			// Get the meshes array
+			auto meshesInModelArray = newModelData.m_model.getMeshArray();
+
+			// Get the meshes array
+			auto meshesProperty = p_properties.getPropertySet(iModel).getPropertySetByID(Properties::Meshes);
+
+			// Check if the meshes array node is present;
+			// If it is present, only add the meshes included in the meshes node
+			// If it is not present, add all the meshes included in the model
+			if(meshesProperty)
+			{
+				// Loop over each mesh entry in the model node
+				for(decltype(meshesProperty.getNumProperties()) iMesh = 0, numMeshes = meshesProperty.getNumProperties(); iMesh < numMeshes; iMesh++)
+				{
+					// Try to get the mesh index property node and check if it is present
+					auto meshIndexProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::Index);
+					if(meshIndexProperty)
+					{
+						// Get the mesh index, check if it is valid and within the range of mesh array that was loaded from the model
+						const int meshDataIndex = meshIndexProperty.getInt();
+						if(meshDataIndex > 0 && meshDataIndex < meshesInModelArray.size())
+						{
+							// Get material properties
+							auto materialsProperty = meshesProperty.getPropertySet(iMesh).getPropertySetByID(Properties::Materials);
+
+							// Define material data and material properties
+							MaterialData materials[MaterialType::MaterialType_NumOfTypes];
+							PropertySet materialProperties[MaterialType::MaterialType_NumOfTypes] = 
+							{
+								materialsProperty.getPropertySetByID(Properties::Diffuse),
+								materialsProperty.getPropertySetByID(Properties::Normal),
+								materialsProperty.getPropertySetByID(Properties::Emissive),
+								materialsProperty.getPropertySetByID(Properties::RMHAO)
+							};
+							
+							// Go over each material type
+							for(unsigned int iMatType = 0; iMatType < MaterialType::MaterialType_NumOfTypes; iMatType++)
+							{
+								// Check if an entry for the current material type was present within the properties
+								if(materialProperties[iMatType])
+								{
+									// Load the material data
+									materials[iMatType] = loadMaterialData(materialProperties[iMatType], newModelData.m_model.getMaterialArrays(), static_cast<MaterialType>(iMatType), meshDataIndex);
+								}
+							}
+
+							/*if(materialsProperty)
+							{
+								auto diffuseMatProperty = materialsProperty.getPropertySetByID(Properties::Diffuse);
+								materials[MaterialType_Diffuse] = loadMaterialData(diffuseMatProperty, newModelData.m_model.getMaterialArrays(), MaterialType_Diffuse, meshDataIndex);
+
+								//newModelData.m_model.getMaterialArrays()
+								//materials[MaterialType_Diffuse] = &materialProperty.getPropertySetByID(Properties::Diffuse);
+								//materials[MaterialType_Normal] = &materialProperty.getPropertySetByID(Properties::Normal);
+								//materials[MaterialType_Emissive] = &materialProperty.getPropertySetByID(Properties::Emissive);
+								//materials[MaterialType_Combined] = &materialProperty.getPropertySetByID(Properties::RMHAO);
+							}*/
+							
+							newModelData.m_meshes.push_back(MeshData(meshesInModelArray[iMesh], materials));
+						}
+					}
+				}
+			}
+			else
+			{
+				// Get the material arrays that were loaded from the model file
+				auto &materialArrayFromModel = newModelData.m_model.getMaterialArrays();
+
+				// Iterate over every mesh in the model
+				for(decltype(meshesInModelArray.size()) iMesh = 0, numMeshes = meshesInModelArray.size(); iMesh < numMeshes; iMesh++)
+				{			
+					// Define material data and material properties
+					MaterialData materials[MaterialType::MaterialType_NumOfTypes];
+
+					// Go over each mesh in the model
+					if(iMesh > materialArrayFromModel.m_numMaterials)
+					{
+						// Go over each material type
+						for(unsigned int iMatType = 0; iMatType < MaterialType::MaterialType_NumOfTypes; iMatType++)
+						{
+							// Get the texture filename and load it to memory
+							auto textureFromModel = Loaders::texture2D().load(materialArrayFromModel.m_materials[iMatType][iMesh].m_filename, static_cast<MaterialType>(iMatType), false);
+							auto materialLoadError = textureFromModel.loadToMemory();
+														
+							// Check if the texture was loaded successfully
+							if(materialLoadError == ErrorCode::Success)
+							{
+								materials[MaterialType::MaterialType_Diffuse].m_texture = textureFromModel;
+							}
+							else
+							{
+								ErrHandlerLoc::get().log(materialLoadError, ErrorSource::Source_Renderer);
+							}
+						}
+						
+						// Add the data for this mesh. Include materials loaded from the model itself, if they were present, otherwise, include default textures instead
+						newModelData.m_meshes.push_back(MeshData(meshesInModelArray[iMesh], materials));
+					}
+				}
+			}
+		}
+	}
+
+	return newComponent;
+}
+ShaderData *RendererScene::loadShaderComponent(const PropertySet &p_properties)
+{
+	ShaderData *newComponent = nullptr;
+
+	// Check if shaders node is valid
+	if(p_properties)
+	{
+		// Get nodes for different shader types
+		auto fragmentShaderNode = p_properties.getPropertyByID(Properties::FragmentShader);
+		auto vertexShaderNode = p_properties.getPropertyByID(Properties::VertexShader);
+
+		// Check if any of the shader nodes are present
+		if(fragmentShaderNode || vertexShaderNode)
+		{
+			// Load shader program
+			auto shaderProgram = Loaders::shader().load(p_properties);
+
+			// If shader is not default (i.e. at least one of the shader types was loaded)
+			if(!shaderProgram->isDefaultProgram())
+			{
+				// Load the shader to memory and assign it to the new shader component
+				shaderProgram->loadToMemory();
+				newComponent = new ShaderData(*shaderProgram);
+			}
+		}
+	}
+
+	return newComponent;
+}
+LightComponent *RendererScene::loadLightComponent(const PropertySet &p_properties)
+{
+	LightComponent *newComponent = nullptr;
+
+	// Check if the property node is valid
+	if(p_properties)
+	{
+		Math::Vec3f color;
+		float	intensity = 0.0f,
+				cutoffAngle = 0.0f;
+		Properties::PropertyID type = Properties::PropertyID::Null;
+
+		// Load property data
+		for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
+		{
+			switch(p_properties[i].getPropertyID())
+			{
+			case Properties::Color:
+				color = p_properties[i].getVec3f();
+				break;
+
+			case Properties::CutoffAngle:
+				// Convert to radians
+				cutoffAngle = cosf(Math::toRadian(p_properties[i].getFloat()));
+				break;
+
+			case Properties::Intensity:
+				intensity = p_properties[i].getFloat();
+				break;
+
+			case Properties::Type:
+				type = p_properties[i].getID();
+				break;
+			}
+		}
+
+		// Create light component based on light type
+		switch(type)
+		{
+		case Properties::DirectionalLight:
+			{
+				// Create and setup the directional light data set
+				DirectionalLightDataSet dirLightDataSet;
+				dirLightDataSet.m_color = color;
+				dirLightDataSet.m_intensity = intensity;
+
+				// Create the component of the directional light type
+				newComponent = new LightComponent(dirLightDataSet);
+			}
+			break;
+		case Properties::PointLight:
+			{
+				// Create and setup the point light data set
+				PointLightDataSet pointLightDataSet;
+				pointLightDataSet.m_color = color;
+				pointLightDataSet.m_intensity = intensity;
+
+				// Create the component of the point light type
+				newComponent = new LightComponent(pointLightDataSet);
+			}
+			break;
+		case Properties::SpotLight:
+			{
+				// Create and setup the spot light data set
+				SpotLightDataSet spotLightDataSet;
+				spotLightDataSet.m_color = color;
+				spotLightDataSet.m_cutoffAngle = cutoffAngle;
+				spotLightDataSet.m_intensity = intensity;
+
+				// Create the component of the spot light type
+				newComponent = new LightComponent(spotLightDataSet);
+			}
+			break;
+		}
+	}
+
+	return newComponent;
+}
+
 
 ModelObject *RendererScene::loadModelObject(const PropertySet &p_properties)
 {
@@ -774,9 +1013,9 @@ PointLightObject *RendererScene::loadPointLight(const PropertySet &p_properties)
 				newObject->setOffsetPosition(p_properties[i].getVec3f());
 				break;
 
-			case Properties::Position:
+			/*case Properties::Position:
 				newObject->setPosition(p_properties[i].getVec3f());
-				break;
+				break;*/
 			}
 		}
 
@@ -841,9 +1080,9 @@ SpotLightObject *RendererScene::loadSpotLight(const PropertySet &p_properties)
 				newObject->setOffsetRotation(p_properties[i].getVec3f());
 				break;
 
-			case Properties::Position:
+			/*case Properties::Position:
 				newObject->setPosition(p_properties[i].getVec3f());
-				break;
+				break;*/
 			}
 		}
 

@@ -4,15 +4,26 @@ namespace Math
 {
 	Vec2f::Vec2f(const Vec3f p_vec)
 	{
-		x = p_vec.x;	y = p_vec.y;
+		x = p_vec.x;
+		y = p_vec.y;
 	}
 	Vec2f::Vec2f(const Vec4f p_vec)
 	{
-		x = p_vec.x;	y = p_vec.y;
+		x = p_vec.x;
+		y = p_vec.y;
 	}
 	Vec3f::Vec3f(const Vec4f p_vec)
 	{
-		x = p_vec.x;	y = p_vec.y;	z = p_vec.z;
+		x = p_vec.x;
+		y = p_vec.y;
+		z = p_vec.z;
+	}
+	Vec4f::Vec4f(const Quaternion p_quaterion)
+	{
+		x = p_quaterion.x;	
+		y = p_quaterion.y;	
+		z = p_quaterion.z;	
+		w = p_quaterion.w;
 	}
 
 	void Vec3f::rotate(float p_angle, const Vec3f& p_axis)
@@ -24,9 +35,9 @@ namespace Math
 								p_axis.z * sinHalfAngle,
 								cosf(toRadian(p_angle / 2)));
 
-		Quaternion conjugateQuat = rotationQuat.getConjugated();
+		const Quaternion conjugateQuat = rotationQuat.getConjugated();
 		//ConjugateQ.normalize();
-		Quaternion ret = rotationQuat * (*this) * conjugateQuat;
+		const Quaternion ret = rotationQuat * (*this) * conjugateQuat;
 
 		x = ret.x;
 		y = ret.y;
@@ -120,10 +131,10 @@ namespace Math
 	}
 	void Mat4f::perspective(const float p_FOV, const int p_screenWidth, const int p_screenHeight, const float p_zNear, const float p_zFar)
 	{
-		float	radFOV = toRadian(p_FOV),
-				height = cosf(0.5f * radFOV) / sinf(0.5f * radFOV),
-				width = height * p_screenHeight / p_screenWidth,
-				zRange = p_zFar - p_zNear;
+		const float	radFOV = toRadian(p_FOV),
+					height = cosf(0.5f * radFOV) / sinf(0.5f * radFOV),
+					width = height * p_screenHeight / p_screenWidth,
+					zRange = p_zFar - p_zNear;
 				
 		m[0] = width;					 m[4] = 0.0f;			m[8] = 0.0f;								m[12] = 0.0f;
 		m[1] = 0.0f;					 m[5] = height;			m[9] = 0.0f;								m[13] = 0.0f;
@@ -132,12 +143,12 @@ namespace Math
 	}
 	void Mat4f::perspective(const float p_FOV, const float p_aspectRatio, const float p_zNear, const float p_zFar)
 	{
-		float	range = tanf(toRadian(p_FOV / 2.0f)) * p_zNear,
-				left = -range * p_aspectRatio,
-				right = range * p_aspectRatio,
-				bottom = -range,
-				top = range,
-				zRange = p_zFar - p_zNear;
+		const float	range = tanf(toRadian(p_FOV / 2.0f)) * p_zNear,
+					left = -range * p_aspectRatio,
+					right = range * p_aspectRatio,
+					bottom = -range,
+					top = range,
+					zRange = p_zFar - p_zNear;
 
 		m[0] = (2.0f * p_zNear) / (right - left);	 m[4] = 0.0f;									m[8] = 0.0f;								m[12] = 0.0f;
 		m[1] = 0.0f;								 m[5] = (2.0f * p_zNear) / (top - bottom);		m[9] = 0.0f;								m[13] = 0.0f;

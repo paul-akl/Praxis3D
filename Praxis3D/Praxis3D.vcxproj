@@ -291,6 +291,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Source\AtmScatteringModel.cpp" />
     <ClCompile Include="Source\AtmScatteringPass.cpp" />
+    <ClCompile Include="Source\BaseGraphicsComponent.cpp" />
     <ClCompile Include="Source\BaseGraphicsObjects.cpp" />
     <ClCompile Include="Source\ChangeController.cpp" />
     <ClCompile Include="Source\ClockLocator.cpp" />
@@ -304,11 +305,12 @@
     <ClCompile Include="Source\GeometryBuffer.cpp" />
     <ClCompile Include="Source\Input.cpp" />
     <ClCompile Include="Source\KeyCommand.cpp" />
+    <ClCompile Include="Source\LightComponent.cpp" />
     <ClCompile Include="Source\Loaders.cpp" />
     <ClCompile Include="Source\Math.cpp" />
     <ClCompile Include="Source\ModelLoader.cpp" />
     <ClCompile Include="Source\NullSystemObjects.cpp" />
-    <ClCompile Include="Source\ObjectDirectorycpp.cpp" />
+    <ClCompile Include="Source\ObjectDirectory.cpp" />
     <ClCompile Include="Source\ObserverBase.cpp" />
     <ClCompile Include="Source\PlayState.cpp" />
     <ClCompile Include="Source\PropertyLoader.cpp" />
@@ -337,6 +339,8 @@
     <ClCompile Include="Source\Window.cpp" />
     <ClCompile Include="Source\WindowLocator.cpp" />
     <ClCompile Include="Source\WorldEditState.cpp" />
+    <ClCompile Include="Source\WorldScene.cpp" />
+    <ClCompile Include="Source\WorldTask.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -347,10 +351,12 @@
     <ClInclude Include="Source\AtmScatteringShaderDefinitions.h" />
     <ClInclude Include="Source\AtmScatteringShaderFunctions.h" />
     <ClInclude Include="Source\AtmScatteringShaderPass.h" />
+    <ClInclude Include="Source\BaseGraphicsComponent.h" />
     <ClInclude Include="Source\BaseGraphicsObjects.h" />
     <ClInclude Include="Source\BaseScriptObject.h" />
     <ClInclude Include="Source\BloomCompositePass.h" />
     <ClInclude Include="Source\BlurPass.h" />
+    <ClInclude Include="Source\CameraComponent.h" />
     <ClInclude Include="Source\CameraGraphicsObject.h" />
     <ClInclude Include="Source\CameraScript.h" />
     <ClInclude Include="Source\ChangeController.h" />
@@ -360,6 +366,7 @@
     <ClInclude Include="Source\CommonDefinitions.h" />
     <ClInclude Include="Source\Config.h" />
     <ClInclude Include="Source\ConfigLoader.h" />
+    <ClInclude Include="Source\Containers.h" />
     <ClInclude Include="Source\DebugMoveScript.h" />
     <ClInclude Include="Source\DebugRotateScript.h" />
     <ClInclude Include="Source\DebugUIScript.h" />
@@ -375,19 +382,23 @@
     <ClInclude Include="Source\Filesystem.h" />
     <ClInclude Include="Source\FinalPass.h" />
     <ClInclude Include="Source\Framebuffer.h" />
+    <ClInclude Include="Source\GameObject.h" />
     <ClInclude Include="Source\GeometryBuffer.h" />
     <ClInclude Include="Source\GeometryPass.h" />
     <ClInclude Include="Source\GraphicsDataSets.h" />
+    <ClInclude Include="Source\GraphicsObject.h" />
     <ClInclude Include="Source\HdrMappingPass.h" />
     <ClInclude Include="Source\Input.h" />
     <ClInclude Include="Source\KeyCommand.h" />
     <ClInclude Include="Source\LenseFlareCompositePass.h" />
     <ClInclude Include="Source\LenseFlarePass.h" />
+    <ClInclude Include="Source\LightComponent.h" />
     <ClInclude Include="Source\LightingGraphicsObjects.h" />
     <ClInclude Include="Source\LightingPass.h" />
     <ClInclude Include="Source\LoaderBase.h" />
     <ClInclude Include="Source\Loaders.h" />
     <ClInclude Include="Source\Math.h" />
+    <ClInclude Include="Source\ModelComponent.h" />
     <ClInclude Include="Source\ModelLoader.h" />
     <ClInclude Include="Source\ModelGraphicsObjects.h" />
     <ClInclude Include="Source\NullSystemObjects.h" />
@@ -413,6 +424,7 @@
     <ClInclude Include="Source\ScriptingSystem.h" />
     <ClInclude Include="Source\ScriptingTask.h" />
     <ClInclude Include="Source\ServiceBase.h" />
+    <ClInclude Include="Source\ShaderComponent.h" />
     <ClInclude Include="Source\ShaderGraphicsObjects.h" />
     <ClInclude Include="Source\ShaderLoader.h" />
     <ClInclude Include="Source\ShaderUniforms.h" />
@@ -427,17 +439,22 @@
     <ClInclude Include="Source\TaskScheduler.h" />
     <ClInclude Include="Source\TextureLoader.h" />
     <ClInclude Include="Source\UniformData.h" />
+    <ClInclude Include="Source\ObjectRegister.h" />
     <ClInclude Include="Source\Universal.h" />
     <ClInclude Include="Source\Utilities.h" />
     <ClInclude Include="Source\Window.h" />
     <ClInclude Include="Source\WindowLocator.h" />
     <ClInclude Include="Source\WorldEditObject.h" />
     <ClInclude Include="Source\WorldEditState.h" />
+    <ClInclude Include="Source\WorldScene.h" />
+    <ClInclude Include="Source\WorldTask.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
     <None Include="Data\config.ini" />
-    <None Include="Data\error-strings-eng.data" />
+    <Text Include="Data\error-strings-eng.data">
+      <FileType>Document</FileType>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Praxis3D1.rc" />

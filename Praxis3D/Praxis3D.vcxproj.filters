@@ -115,6 +115,18 @@
     <Filter Include="Renderer\Render Passes\Source Files">
       <UniqueIdentifier>{708c459e-c8f0-4a2c-b313-f0ab523d5163}</UniqueIdentifier>
     </Filter>
+    <Filter Include="World">
+      <UniqueIdentifier>{47bff9fb-661a-461d-9b39-a2364304b669}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\Header Files">
+      <UniqueIdentifier>{2a3e7aee-9afd-4007-8de7-83252feb3b9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\Source Files">
+      <UniqueIdentifier>{ef9fc0a2-c5b9-4436-9390-d0e8b46beeb7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\Objects">
+      <UniqueIdentifier>{073f3e46-6b78-459f-b76e-6a8931bf6a7d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -252,9 +264,6 @@
     <ClCompile Include="Source\BaseGraphicsObjects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ObjectDirectorycpp.cpp">
-      <Filter>Service Locators\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\System.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -263,6 +272,21 @@
     </ClCompile>
     <ClCompile Include="Source\AtmScatteringPass.cpp">
       <Filter>Renderer\Render Passes\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\WorldTask.cpp">
+      <Filter>World\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\WorldScene.cpp">
+      <Filter>World\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ObjectDirectory.cpp">
+      <Filter>Service Locators\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BaseGraphicsComponent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\LightComponent.cpp">
+      <Filter>Renderer\Objects\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -548,10 +572,42 @@
     <ClInclude Include="Source\Filesystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\WorldScene.h">
+      <Filter>World\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GameObject.h">
+      <Filter>World\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\WorldTask.h">
+      <Filter>World\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Containers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GraphicsObject.h">
+      <Filter>Renderer\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ObjectRegister.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BaseGraphicsComponent.h">
+      <Filter>Renderer\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ModelComponent.h">
+      <Filter>Renderer\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShaderComponent.h">
+      <Filter>Renderer\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\CameraComponent.h">
+      <Filter>Renderer\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\LightComponent.h">
+      <Filter>Renderer\Objects\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\config.ini" />
-    <None Include="Data\error-strings-eng.data" />
     <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <ItemGroup>
@@ -566,5 +622,8 @@
     <Image Include="..\praxis icon.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Data\error-strings-eng.data" />
   </ItemGroup>
 </Project>

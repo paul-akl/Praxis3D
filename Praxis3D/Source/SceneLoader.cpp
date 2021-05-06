@@ -135,14 +135,14 @@ ErrorCode SceneLoader::saveToFile(const std::string p_filename)
 		auto &objLinksPropertySet = propertySet.addPropertySet(Properties::ObjectLinks);
 
 		// Get object links from the change controller
-		auto &objLinkList = m_changeController->getObjectLinksList();
+		/*auto &objLinkList = m_changeController->getObjectLinksList();
 
 		for(UniversalScene::ObjectLinkList::const_iterator it = objLinkList.begin(); it != objLinkList.end(); it++)
 		{
 			auto &objectLinkEntry = objLinksPropertySet.addPropertySet(Properties::ArrayEntry);
 			objectLinkEntry.addProperty(Properties::Subject, it->m_observerName);
 			objectLinkEntry.addProperty(Properties::Observer, it->m_subjectName);
-		}
+		}*/
 
 		// Save properties to a file
 		PropertyLoader savedProperties(Config::filepathVar().map_path + filename);

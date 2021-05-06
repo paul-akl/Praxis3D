@@ -21,10 +21,10 @@ public:
 	{
 		switch(p_changedBits)
 		{
-		case Systems::Changes::Spacial::Position:
+		case Systems::Changes::Spatial::Position:
 			return m_positionVec;
 			break;
-		case Systems::Changes::Spacial::Rotation:
+		case Systems::Changes::Spatial::Rotation:
 			return m_targetVec;
 			break;
 		}
@@ -36,7 +36,7 @@ public:
 	{
 		switch(p_changedBits)
 		{
-		case Systems::Changes::Spacial::ModelMatrix:
+		case Systems::Changes::Spatial::ModelMatrix:
 			return m_modelMatrix;
 			break;
 		}
@@ -191,9 +191,9 @@ public:
 		m_targetVec.z = m_horizontalAngle;
 		
 		// Notify listeners
-		postChanges(Systems::Changes::Spacial::Position | 
-					Systems::Changes::Spacial::Rotation | 
-					Systems::Changes::Spacial::ModelMatrix);
+		postChanges(Systems::Changes::Spatial::Position | 
+					Systems::Changes::Spatial::Rotation | 
+					Systems::Changes::Spatial::ModelMatrix);
 	}
 	
 	// Setters for the movement keys:

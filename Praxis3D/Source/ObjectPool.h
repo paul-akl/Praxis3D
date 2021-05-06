@@ -137,7 +137,7 @@ public:
 			// Increment the total number of allocated objects
 			m_numAllocatedObjects++;
 
-			//memcpy(newObject->m_object, &p_object, sizeof(T_Object));
+			memcpy(newObject->m_object, &p_object, sizeof(T_Object));
 		}
 		else
 			returnError = ErrorCode::ObjectPool_full;
@@ -184,7 +184,7 @@ public:
 			// If the object is allocated
 			if(m_objectPool[p_index].m_allocated == true)
 			{
-				// Set is as a new first available and deallocate it
+				// Set it as a new first available and deallocate it
 				m_objectPool[p_index].setNext(m_firstAvailable);
 				m_firstAvailable = &m_objectPool[p_index];
 				m_objectPool[p_index].m_allocated = false;

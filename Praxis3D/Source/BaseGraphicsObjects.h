@@ -21,35 +21,35 @@ public:
 		
 	BitMask getSystemType() { return Systems::Graphics; }
 
-	virtual BitMask getDesiredSystemChanges()	{ return Systems::Changes::Spacial::All;	}
+	virtual BitMask getDesiredSystemChanges()	{ return Systems::Changes::Spatial::All;	}
 	virtual BitMask getPotentialSystemChanges() { return Systems::Changes::None;			}
 
 	// Processes any spacial changes
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
-		if(p_changeType & Systems::Changes::Spacial::Position)
+		if(p_changeType & Systems::Changes::Spatial::WorldPosition)
 		{
 			m_baseObjectData.m_position = 
-				p_subject->getVec3(this, Systems::Changes::Spacial::Position) + m_baseObjectData.m_offsetPosition;
+				p_subject->getVec3(this, Systems::Changes::Spatial::WorldPosition) + m_baseObjectData.m_offsetPosition;
 			m_needsUpdate = true;
 		}
 
-		if(p_changeType & Systems::Changes::Spacial::Rotation)
+		if(p_changeType & Systems::Changes::Spatial::WorldRotation)
 		{
 			m_baseObjectData.m_rotation = 
-				p_subject->getVec3(this, Systems::Changes::Spacial::Rotation) + m_baseObjectData.m_offsetRotation;
+				p_subject->getVec3(this, Systems::Changes::Spatial::WorldRotation) + m_baseObjectData.m_offsetRotation;
 			m_needsUpdate = true;
 		}
 
-		if(p_changeType & Systems::Changes::Spacial::Scale)
+		if(p_changeType & Systems::Changes::Spatial::WorldScale)
 		{
-			m_baseObjectData.m_scale = p_subject->getVec3(this, Systems::Changes::Spacial::Scale);
+			m_baseObjectData.m_scale = p_subject->getVec3(this, Systems::Changes::Spatial::WorldScale);
 			m_needsUpdate = true;
 		}
 
-		if(p_changeType & Systems::Changes::Spacial::ModelMatrix)
+		if(p_changeType & Systems::Changes::Spatial::WorldModelMatrix)
 		{
-			m_baseObjectData.m_modelMat = p_subject->getMat4(this, Systems::Changes::Spacial::ModelMatrix);
+			m_baseObjectData.m_modelMat = p_subject->getMat4(this, Systems::Changes::Spatial::WorldModelMatrix);
 			m_needsUpdate = true;
 		}
 
@@ -73,13 +73,13 @@ public:
 	{
 		switch(p_changedBits)
 		{
-		case Systems::Changes::Spacial::Position:
+		case Systems::Changes::Spatial::Position:
 			return m_baseObjectData.m_position;
 			break;
-		case Systems::Changes::Spacial::Rotation:
+		case Systems::Changes::Spatial::Rotation:
 			return m_baseObjectData.m_rotation;
 			break;
-		case Systems::Changes::Spacial::Scale:
+		case Systems::Changes::Spatial::Scale:
 			return m_baseObjectData.m_scale;
 			break;
 		}
@@ -132,7 +132,7 @@ protected:
 	// Atomic, so it can be changed from different threads (loading to memory is multi-threaded)
 	std::atomic<bool> m_loadedToMemory;
 
-	// Spacial and misc data of an object
+	// Spatial and misc data of an object
 	GraphicsData m_baseObjectData;
 };
 
@@ -158,7 +158,7 @@ public:
 	// Should the object be activated after loading
 	const inline bool isActivatedAfterLoading() const { return m_activateAfterLoading; }
 
-	// Is the object active (i.e. should be drawned, updated, etc...)
+	// Is the object active (i.e. should be drawn, updated, etc...)
 	const inline bool isObjectActive() const { return m_baseGraphicsObject->isObjectActive(); }
 
 	// Getters
@@ -167,14 +167,14 @@ public:
 	const inline std::string &getName() const				{ return m_name;		}
 	const inline LoadableObjectType getObjectType() const	{ return m_objectType;	}
 
-	// Seters
+	// Setters
 	inline void setActivateAfterLoading(const bool p_activateAfterLoading)	{ m_activateAfterLoading = p_activateAfterLoading;			}
 	inline void setLoadedToVideoMemory(const bool p_loaded)					{ m_baseGraphicsObject->setLoadedToVideoMemory(p_loaded);	}
 	inline void setObjectActive(const bool p_objectIsActive)				{ m_baseGraphicsObject->setObjectActive(p_objectIsActive);	}
 
 	// Comparator operators; uses object ID to determine if the object is the same
-	bool operator==(const SystemObject &p_systemObject) const { return m_objectID == p_systemObject.getObjectID() ? true : false; }
-	bool operator==(const SystemObject *p_systemObject) const { return m_objectID == p_systemObject->getObjectID() ? true : false; }
+	bool operator==(const SystemObject &p_systemObject) const { return m_objectID == p_systemObject.getObjectID() ? true : false;	}
+	bool operator==(const SystemObject *p_systemObject) const { return m_objectID == p_systemObject->getObjectID() ? true : false;	}
 private:
 	union ObjectData
 	{
