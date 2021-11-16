@@ -43,7 +43,7 @@ public:
 	{
 		// Create the root property set
 		PropertySet propertySet(Properties::ArrayEntry);
-
+		/*
 		// Add variables
 		propertySet.addProperty(Properties::Type, Properties::EnvironmentMapObject);
 		propertySet.addProperty(Properties::Position, m_baseObjectData.m_position);
@@ -54,7 +54,7 @@ public:
 			auto &materialEntry = propertySet.addPropertySet(Properties::ArrayEntry);
 			materialEntry.addProperty(Properties::Filename, m_cubemap.getFaceFilename(face));
 		}
-
+		*/
 		return propertySet;
 	}
 
@@ -72,7 +72,7 @@ public:
 
 	BitMask getSystemType() { return Systems::Graphics; }
 
-	virtual BitMask getDesiredSystemChanges() { return Systems::Changes::Spacial::All; }
+	virtual BitMask getDesiredSystemChanges() { return Systems::Changes::Spatial::All; }
 	virtual BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
 	
 protected:

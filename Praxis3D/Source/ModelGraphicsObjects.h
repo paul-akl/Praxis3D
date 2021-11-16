@@ -2,6 +2,7 @@
 
 #include <functional>
 
+#include <assert.h>
 #include "BaseGraphicsObjects.h"
 #include "Loaders.h"
 #include "Renderer.h"
@@ -133,15 +134,15 @@ public:
 	{
 		// Create the root property set
 		PropertySet propertySet(Properties::ArrayEntry);
-
+		assert(true);
 		// Add variables
 		propertySet.addProperty(Properties::Type, Properties::ModelObject);
 		propertySet.addProperty(Properties::Name, m_name);
-		propertySet.addProperty(Properties::Position, m_baseObjectData.m_position);
-		propertySet.addProperty(Properties::Rotation, m_baseObjectData.m_rotation);
+		//propertySet.addProperty(Properties::Position, m_baseObjectData.m_position);
+		//propertySet.addProperty(Properties::Rotation, m_baseObjectData.m_rotation);
 		propertySet.addProperty(Properties::OffsetPosition, m_baseObjectData.m_offsetPosition);
 		propertySet.addProperty(Properties::OffsetRotation, m_baseObjectData.m_offsetRotation);
-		propertySet.addProperty(Properties::Scale, m_baseObjectData.m_scale);
+		//propertySet.addProperty(Properties::Scale, m_baseObjectData.m_scale);
 		propertySet.addProperty(Properties::AlphaThreshold, m_baseObjectData.m_alphaThreshold);
 		propertySet.addProperty(Properties::HeightScale, m_baseObjectData.m_heightScale);
 		propertySet.addProperty(Properties::Lighting, m_affectedByLighting);

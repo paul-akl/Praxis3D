@@ -25,3 +25,6 @@ VC/
 *.db-shm
 *.db-wal
 *.opendb
+*.obj
+*.log
+*.pdb

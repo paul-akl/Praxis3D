@@ -54,8 +54,8 @@ public:
 		//}
 
 		// Load all other data by calling parent class; log an error on failure
-		if(!ErrHandlerLoc::get().ifSuccessful(ModelObject::loadToVideoMemory(), error))
-			ErrHandlerLoc::get().log(error);
+		//if(!ErrHandlerLoc::get().ifSuccessful(ModelObject::loadToVideoMemory(), error))
+		//	ErrHandlerLoc::get().log(error);
 
 		return ErrorCode::Success;
 	}

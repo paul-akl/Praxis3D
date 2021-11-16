@@ -44,16 +44,16 @@ public:
 	{
 		BitMask newChanges = Systems::Changes::None;
 
-		if(p_changeType & Systems::Changes::Spatial::Local)
+		if(p_changeType & Systems::Changes::Spatial::AllLocal)
 		{
-			m_localSpace = p_subject->getSpatialData(this, Systems::Changes::Spatial::Local);
-			newChanges = newChanges | Systems::Changes::Spatial::Local;
+			m_localSpace = p_subject->getSpatialData(this, Systems::Changes::Spatial::AllLocalNoTransform);
+			newChanges = newChanges | Systems::Changes::Spatial::AllLocalNoTransform;
 		}
 
-		if(p_changeType & Systems::Changes::Spatial::World)
+		if(p_changeType & Systems::Changes::Spatial::AllWorld)
 		{
-			m_worldSpace = p_subject->getSpatialData(this, Systems::Changes::Spatial::World);
-			newChanges = newChanges | Systems::Changes::Spatial::World;
+			m_worldSpace = p_subject->getSpatialData(this, Systems::Changes::Spatial::AllWorldNoTransform);
+			newChanges = newChanges | Systems::Changes::Spatial::AllWorldNoTransform;
 		}
 		
 		if(newChanges != Systems::Changes::None)

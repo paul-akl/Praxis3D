@@ -117,8 +117,7 @@ protected:
 					m_pixelData[i * numChan + 2] = blue;						 // Set blue
 				}
 
-				setLoadedToMemory(true);
-				setLoadedToVideoMemory(false);
+				setLoaded(true);
 			}
 			else
 			{
@@ -254,7 +253,7 @@ public:
 		}
 		
 		// Has the texture been already loaded to video memory (GPU VRAM)
-		//const inline bool isLoadedToVideoMemory() const { return m_textureData->isLoadedToVideoMemory(); }
+		const inline bool isLoadedToVideoMemory() const { return m_textureData->isLoadedToVideoMemory(); }
 
 		// Getters
 		inline unsigned int getTextureHeight() const { return m_textureData->m_textureHeight; }
@@ -266,7 +265,7 @@ public:
 
 		// Setters
 		inline void setLoadedToMemory(bool p_loaded)		{ m_textureData->setLoaded(p_loaded);		}
-		//inline void setLoadedToVideoMemory(bool p_loaded)	{ m_textureData->setLoadedToVideoMemory(p_loaded);	}
+		inline void setLoadedToVideoMemory(bool p_loaded)	{ m_textureData->setLoadedToVideoMemory(p_loaded);	}
 
 	private:
 		// Increment the reference counter when creating a handle
@@ -403,7 +402,7 @@ protected:
 		SpinWait::Lock lock(m_mutex);
 
 		// Texture might have already been loaded when called from a different thread. Check if it was
-		if(!isLoadedToMemory())
+		if(!isLoaded())
 		{
 			for(unsigned int face = CubemapFace_PositiveX; face < CubemapFace_NumOfFaces; face++)
 			{
@@ -461,8 +460,7 @@ protected:
 
 			if(returnError == ErrorCode::Success)
 			{
-				setLoadedToMemory(true);
-				setLoadedToVideoMemory(false);
+				setLoaded(true);
 			}
 		}
 
@@ -648,19 +646,19 @@ public:
 			ErrorCode returnError = ErrorCode::Success;
 
 			// If it's not loaded to memory already, call load
-			if(!m_textureData->isLoadedToMemory())
+			if(!m_textureData->isLoaded())
 			{
 				// Load texture to memory (RAM)
 				returnError = m_textureData->loadToMemory();
 
 				// Only set the loaded to video memory flag to false if the texture has been loaded successfully,
 				// otherwise, flag it as loaded to GPU VRAM already, so to not attempt to load to VRAM
-				if(returnError == ErrorCode::Success)
+				/*if(returnError == ErrorCode::Success)
 					m_textureData->setLoadedToVideoMemory(false);
 				else
-					m_textureData->setLoadedToVideoMemory(true);
+					m_textureData->setLoadedToVideoMemory(true);*/
 			}
-
+			
 			return returnError;
 		}
 

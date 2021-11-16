@@ -14,7 +14,7 @@ public:
 	~BaseGraphicsComponent() { }
 
 	virtual void load(PropertySet &p_properties) { }
-	virtual PropertySet export() { return PropertySet(); }
+	virtual PropertySet exportObject() { return PropertySet(); }
 
 	virtual void update(GraphicsObject &p_parentObject);
 	

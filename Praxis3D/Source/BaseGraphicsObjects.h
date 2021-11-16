@@ -47,9 +47,9 @@ public:
 			m_needsUpdate = true;
 		}
 
-		if(p_changeType & Systems::Changes::Spatial::WorldModelMatrix)
+		if(p_changeType & Systems::Changes::Spatial::WorldTransform)
 		{
-			m_baseObjectData.m_modelMat = p_subject->getMat4(this, Systems::Changes::Spatial::WorldModelMatrix);
+			m_baseObjectData.m_modelMat = p_subject->getMat4(this, Systems::Changes::Spatial::WorldTransform);
 			m_needsUpdate = true;
 		}
 

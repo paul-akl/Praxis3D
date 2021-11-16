@@ -23,13 +23,13 @@ public:
 		{
 			m_loadingToMemoryError = ErrorCode::Failure;
 			m_loadedToMemory = false;
+			m_loadedToVideoMemory = false;
 			m_beingLoaded = false;
 			m_refCounter = 0;
 		}
 		virtual ~UniqueObject()
 		{
-			unloadVideoMemory();
-			unloadMemory();
+			unload();
 		}
 
 		// Increments reference counter
@@ -48,10 +48,12 @@ public:
 
 		// Setters
 		inline void setLoaded(bool p_loaded)				{ m_loadedToMemory = p_loaded;		}
+		inline void setLoadedToVideoMemory(bool p_loaded)	{ m_loadedToVideoMemory = p_loaded; }
 		inline void setUniqueID(unsigned int p_uniqueID)	{ m_uniqueID = p_uniqueID;			}
 
 		// Getters
 		inline const bool isLoaded()				{ return m_loadedToMemory;		}
+		inline const bool isLoadedToVideoMemory()	{ return m_loadedToVideoMemory; }
 		inline const unsigned int getUniqueID()		{ return m_uniqueID;			}
 		inline std::string getFilename()			{ return m_filename;			}
 
@@ -61,9 +63,11 @@ public:
 		inline ErrorCode unload()		 { return static_cast<TObject*>(this)->unloadMemory();		}
 
 	protected:
-		inline const bool isBeingLoaded() { return m_isBeingLoaded; }
+		inline const bool isBeingLoaded() { return m_beingLoaded; }
 
-		std::atomic_bool m_loadedToMemory;
+		std::atomic_bool	m_beingLoaded,
+							m_loadedToMemory,
+							m_loadedToVideoMemory;
 
 		ErrorCode m_loadingToMemoryError;
 		std::string m_filename;

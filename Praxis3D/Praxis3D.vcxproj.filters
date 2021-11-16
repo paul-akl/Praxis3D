@@ -605,6 +605,9 @@
     <ClInclude Include="Source\LightComponent.h">
       <Filter>Renderer\Objects\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\GameLogicObject.h">
+      <Filter>Scripting\Objects\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\config.ini" />

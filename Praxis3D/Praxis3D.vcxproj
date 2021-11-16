@@ -382,6 +382,7 @@
     <ClInclude Include="Source\Filesystem.h" />
     <ClInclude Include="Source\FinalPass.h" />
     <ClInclude Include="Source\Framebuffer.h" />
+    <ClInclude Include="Source\GameLogicObject.h" />
     <ClInclude Include="Source\GameObject.h" />
     <ClInclude Include="Source\GeometryBuffer.h" />
     <ClInclude Include="Source\GeometryPass.h" />

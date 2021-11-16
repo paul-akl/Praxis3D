@@ -132,7 +132,7 @@ public:
 		setLoaded(true);
 	}
 
-	PropertySet export() final override
+	PropertySet exportObject() final override
 	{ 
 		return PropertySet(); 
 	}

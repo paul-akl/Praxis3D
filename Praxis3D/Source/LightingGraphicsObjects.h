@@ -1,5 +1,6 @@
 #pragma once
 
+#include <assert.h>
 #include "GraphicsDataSets.h"
 #include "System.h"
 
@@ -45,16 +46,16 @@ public:
 
 	BitMask getSystemType() { return Systems::Graphics; }
 
-	BitMask getDesiredSystemChanges()	{ return Systems::Changes::Spacial::Rotation; }
-	BitMask getPotentialSystemChanges() { return Systems::Changes::Spacial::Rotation; }
+	BitMask getDesiredSystemChanges()	{ return Systems::Changes::Spatial::LocalRotation; }
+	BitMask getPotentialSystemChanges() { return Systems::Changes::Spatial::LocalRotation; }
 
 	// Processes any spacial changes
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
-		if(p_changeType & Systems::Changes::Spacial::Rotation)
+		if(p_changeType & Systems::Changes::Spatial::LocalRotation)
 		{
 			m_lightDataSet.m_direction =
-				p_subject->getVec3(this, Systems::Changes::Spacial::Rotation);
+				p_subject->getVec3(this, Systems::Changes::Spatial::LocalRotation);
 
 			postChanges(p_changeType);
 		}
@@ -64,7 +65,7 @@ public:
 	{
 		switch(p_changedBits)
 		{
-		case Systems::Changes::Spacial::Rotation:
+		case Systems::Changes::Spatial::LocalRotation:
 			return m_lightDataSet.m_direction;
 			break;
 		}
@@ -122,23 +123,23 @@ public:
 		propertySet.addProperty(Properties::Color, m_lightDataSet.m_color);
 		propertySet.addProperty(Properties::Intensity, m_lightDataSet.m_intensity);
 		propertySet.addProperty(Properties::OffsetPosition, m_offsetPosition);
-		propertySet.addProperty(Properties::Position, m_lightDataSet.m_position);
+		propertySet.addProperty(Properties::LocalPosition, m_lightDataSet.m_position);
 
 		return propertySet;
 	}
 
 	BitMask getSystemType() { return Systems::Graphics; }
 
-	BitMask getDesiredSystemChanges() { return Systems::Changes::Spacial::Position; }
-	BitMask getPotentialSystemChanges() { return Systems::Changes::Spacial::Position; }
+	BitMask getDesiredSystemChanges() { return Systems::Changes::Spatial::Position; }
+	BitMask getPotentialSystemChanges() { return Systems::Changes::Spatial::Position; }
 
 	// Processes any spacial changes
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
-		if(p_changeType & Systems::Changes::Spacial::Position)
+		if(p_changeType & Systems::Changes::Spatial::LocalPosition)
 		{
 			m_lightDataSet.m_position =
-				p_subject->getVec3(this, Systems::Changes::Spacial::Position) + m_offsetPosition;
+				p_subject->getVec3(this, Systems::Changes::Spatial::LocalPosition) + m_offsetPosition;
 
 			postChanges(p_changeType);
 		}
@@ -148,7 +149,7 @@ public:
 	{
 		switch(p_changedBits)
 		{
-		case Systems::Changes::Spacial::Position:
+		case Systems::Changes::Spatial::LocalPosition:
 			return m_lightDataSet.m_position;
 			break;
 		}
@@ -215,34 +216,34 @@ public:
 		propertySet.addProperty(Properties::Intensity, m_lightDataSet.m_intensity);
 		propertySet.addProperty(Properties::OffsetPosition, m_offsetPosition);
 		propertySet.addProperty(Properties::OffsetRotation, m_offsetRotation);
-		propertySet.addProperty(Properties::Position, m_lightDataSet.m_position);
+		propertySet.addProperty(Properties::LocalPosition, m_lightDataSet.m_position);
 
 		return propertySet;
 	}
 
 	BitMask getSystemType() { return Systems::Graphics; }
 
-	BitMask getDesiredSystemChanges() { return Systems::Changes::Spacial::All; }
-	BitMask getPotentialSystemChanges() { return Systems::Changes::Spacial::All; }
+	BitMask getDesiredSystemChanges() { return Systems::Changes::Spatial::All; }
+	BitMask getPotentialSystemChanges() { return Systems::Changes::Spatial::All; }
 
 	// Processes any spacial changes
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
 		BitMask relevantChanges = 0;
-		if(p_changeType & Systems::Changes::Spacial::Position)
+		if(p_changeType & Systems::Changes::Spatial::LocalPosition)
 		{
 			m_lightDataSet.m_position =
-				p_subject->getVec3(this, Systems::Changes::Spacial::Position) + m_offsetPosition;
+				p_subject->getVec3(this, Systems::Changes::Spatial::LocalPosition) + m_offsetPosition;
 
-			relevantChanges |= Systems::Changes::Spacial::Position;
+			relevantChanges |= Systems::Changes::Spatial::LocalPosition;
 		}
 
-		if(p_changeType & Systems::Changes::Spacial::Rotation)
+		if(p_changeType & Systems::Changes::Spatial::LocalRotation)
 		{
 			m_lightDataSet.m_direction =
-				p_subject->getVec3(this, Systems::Changes::Spacial::Rotation) + m_offsetRotation;
+				p_subject->getVec3(this, Systems::Changes::Spatial::LocalRotation) + m_offsetRotation;
 
-			relevantChanges |= Systems::Changes::Spacial::Rotation;
+			relevantChanges |= Systems::Changes::Spatial::LocalRotation;
 		}
 
 		if(relevantChanges)
@@ -251,7 +252,7 @@ public:
 
 	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
-		switch(p_changedBits)
+		/*switch(p_changedBits)
 		{
 		case Systems::Changes::Spacial::Position:
 			return m_lightDataSet.m_position;
@@ -259,8 +260,8 @@ public:
 		case Systems::Changes::Spacial::Rotation:
 			return m_lightDataSet.m_direction;
 			break;
-		}
-
+		}*/
+		assert(true);
 		return ObservedSubject::getVec3(p_observer, p_changedBits);
 	}
 
