@@ -175,24 +175,24 @@ public:
 	inline void setWorldScale(const Math::Vec3f &p_scale)								{ setUpdateNeeded(true); m_worldSpace.m_spatialData.m_scale = p_scale;												}
 	
 	// Component functions
-	void addComponent(DirectionalLightDataSet &p_lightDataSet)
+	/*void addComponent(DirectionalLightDataSet &p_lightDataSet)
 	{
 		// Make sure that this component isn't assigned already
 		removeComponent(GraphicsComponentType::GraphicsComponentType_Light);
-		m_lightComponent = new LightComponent(p_lightDataSet);
+		//m_lightComponent = new LightComponent(p_lightDataSet);
 	}
 	void addComponent(PointLightDataSet &p_lightDataSet)
 	{
 		// Make sure that this component isn't assigned already
 		removeComponent(GraphicsComponentType::GraphicsComponentType_Light);
-		m_lightComponent = new LightComponent(p_lightDataSet);
+		//m_lightComponent = new LightComponent(p_lightDataSet);
 	}
 	void addComponent(SpotLightDataSet &p_lightDataSet)
 	{
 		// Make sure that this component isn't assigned already
 		removeComponent(GraphicsComponentType::GraphicsComponentType_Light);
-		m_lightComponent = new LightComponent(p_lightDataSet);
-	}	
+		//m_lightComponent = new LightComponent(p_lightDataSet);
+	}*/	
 	void addComponent(LightComponent *p_component)
 	{
 		// Make sure that this component isn't assigned already

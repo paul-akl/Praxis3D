@@ -50,8 +50,8 @@ public:
 		}
 	}
 
-	BitMask getDesiredSystemChanges() { return Systems::Changes::Spatial::AllWorld | Systems::Changes::Graphics::All; }
-	BitMask getPotentialSystemChanges() { return Systems::Changes::Spatial::WorldTransform; }
+	BitMask getDesiredSystemChanges()	{ return Systems::Changes::Spatial::AllWorld | Systems::Changes::Graphics::All; }
+	BitMask getPotentialSystemChanges() { return Systems::Changes::Spatial::WorldTransform;								}
 
 	~LightComponent() 
 	{
@@ -67,54 +67,61 @@ public:
 		}
 	}
 
-	void updateSpatialData(const SpatialData &p_data)
-	{
-		// Update each type of light individually, as their spatial data is made up of different attributes
-		switch(m_lightComponentType)
-		{
-		case LightComponent::LightComponentType_directional:
-			m_lightComponent.m_directional.m_direction = p_data.m_rotationEuler;
-			break;
-		case LightComponent::LightComponentType_point:
-			m_lightComponent.m_point.m_position = p_data.m_position;
-			break;
-		case LightComponent::LightComponentType_spot:
-			m_lightComponent.m_spot.m_position = p_data.m_position;
-			m_lightComponent.m_spot.m_direction = p_data.m_rotationEuler;
-			break;
-		}
-	}
-	void updatePosition(const Math::Vec3f &p_position)
-	{
-		// Update each type of light individually, as their spatial data is made up of different attributes
-		switch(m_lightComponentType)
-		{
-		case LightComponent::LightComponentType_point:
-			m_lightComponent.m_point.m_position = p_position;
-			break;
-		case LightComponent::LightComponentType_spot:
-			m_lightComponent.m_spot.m_position = p_position;
-			break;
-		}
-	}
-	void updateRotation(const Math::Vec3f &p_rotation)
-	{
-		// Update each type of light individually, as their spatial data is made up of different attributes
-		switch(m_lightComponentType)
-		{
-		case LightComponent::LightComponentType_directional:
-			m_lightComponent.m_directional.m_direction = p_rotation;
-			break;
-		case LightComponent::LightComponentType_spot:
-			m_lightComponent.m_spot.m_direction = p_rotation;
-			break;
-		}
-	}
-
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
 		// Track what data has been modified
 		BitMask newChanges = Systems::Changes::None;
+		BitMask processedChange = 0;
+
+		// Deal with each change until there are no changes left
+		while(p_changeType)
+		{
+			switch(p_changeType)
+			{
+			case Systems::Changes::Spatial::AllWorld:
+				processedChange = Systems::Changes::Spatial::AllWorld; 
+				updateSpatialData(p_subject->getSpatialData(this, processedChange));
+				newChanges |= processedChange;
+				break;
+			case Systems::Changes::Spatial::AllWorldNoTransform:
+				processedChange = Systems::Changes::Spatial::AllWorldNoTransform;
+				updateSpatialData(p_subject->getSpatialData(this, processedChange));
+				newChanges |= processedChange;
+				break;
+			case Systems::Changes::Spatial::LocalPosition:
+				processedChange = Systems::Changes::Spatial::LocalPosition;
+				newChanges |= processedChange;
+				break;
+			case (Systems::Changes::Spatial::LocalRotation | Systems::Changes::Graphics::Direction):
+				processedChange = (Systems::Changes::Spatial::LocalRotation | Systems::Changes::Graphics::Direction);
+				newChanges |= processedChange;
+				break;
+			case Systems::Changes::Spatial::WorldPosition:
+				processedChange = Systems::Changes::Spatial::WorldPosition;
+				newChanges |= processedChange;
+				break;
+			case Systems::Changes::Spatial::WorldRotation:
+				processedChange = Systems::Changes::Spatial::WorldRotation;
+				newChanges |= processedChange;
+				break;
+			case Systems::Changes::Graphics::Color:
+				processedChange = Systems::Changes::Graphics::Color;
+				newChanges |= processedChange;
+				break;
+			case Systems::Changes::Graphics::CutoffAngle:
+				processedChange = Systems::Changes::Graphics::CutoffAngle;
+				newChanges |= processedChange;
+				break;
+			case Systems::Changes::Graphics::Intensity:
+				processedChange = Systems::Changes::Graphics::Intensity;
+				newChanges |= processedChange;
+				break;
+			}
+
+			// Remove the processed change mask from the bit mask value, and reset the processed change value
+			p_changeType &= ~processedChange;
+			processedChange = 0;
+		}
 
 		// Get all of the world spatial data, include the transform matrix; add up the bit-mask of changed data;
 		if(p_changeType & Systems::Changes::Spatial::AllWorld)
@@ -172,6 +179,92 @@ private:
 		PointLightDataSet m_point;
 		SpotLightDataSet m_spot;
 	} m_lightComponent;
+
+
+	void updateColor(const Math::Vec3f &p_color)
+	{
+		// Update each type of light individually
+		switch(m_lightComponentType)
+		{
+		case LightComponent::LightComponentType_directional:
+			m_lightComponent.m_directional.m_color = p_color;
+			break;
+		case LightComponent::LightComponentType_point:
+			m_lightComponent.m_point.m_color = p_color;
+			break;
+		case LightComponent::LightComponentType_spot:
+			m_lightComponent.m_spot.m_color = p_color;
+			break;
+		}
+	}
+	void updateCutoffAngle(const float p_cutoffAngle)
+	{
+		switch(m_lightComponentType)
+		{
+		case LightComponent::LightComponentType_spot:
+			m_lightComponent.m_spot.m_cutoffAngle = p_cutoffAngle;
+			break;
+		}
+	}
+	void updateIntensity(const float p_intensity)
+	{
+		// Update each type of light individually
+		switch(m_lightComponentType)
+		{
+		case LightComponent::LightComponentType_directional:
+			m_lightComponent.m_directional.m_intensity = p_intensity;
+			break;
+		case LightComponent::LightComponentType_point:
+			m_lightComponent.m_point.m_intensity = p_intensity;
+			break;
+		case LightComponent::LightComponentType_spot:
+			m_lightComponent.m_spot.m_intensity = p_intensity;
+			break;
+		}
+	}
+	void updateSpatialData(const SpatialData &p_data)
+	{
+		// Update each type of light individually, as their spatial data is made up of different attributes
+		switch(m_lightComponentType)
+		{
+		case LightComponent::LightComponentType_directional:
+			m_lightComponent.m_directional.m_direction = p_data.m_rotationEuler;
+			break;
+		case LightComponent::LightComponentType_point:
+			m_lightComponent.m_point.m_position = p_data.m_position;
+			break;
+		case LightComponent::LightComponentType_spot:
+			m_lightComponent.m_spot.m_position = p_data.m_position;
+			m_lightComponent.m_spot.m_direction = p_data.m_rotationEuler;
+			break;
+		}
+	}
+	void updatePosition(const Math::Vec3f &p_position)
+	{
+		// Update each type of light individually, as their spatial data is made up of different attributes
+		switch(m_lightComponentType)
+		{
+		case LightComponent::LightComponentType_point:
+			m_lightComponent.m_point.m_position = p_position;
+			break;
+		case LightComponent::LightComponentType_spot:
+			m_lightComponent.m_spot.m_position = p_position;
+			break;
+		}
+	}
+	void updateRotation(const Math::Vec3f &p_rotation)
+	{
+		// Update each type of light individually, as their spatial data is made up of different attributes
+		switch(m_lightComponentType)
+		{
+		case LightComponent::LightComponentType_directional:
+			m_lightComponent.m_directional.m_direction = p_rotation;
+			break;
+		case LightComponent::LightComponentType_spot:
+			m_lightComponent.m_spot.m_direction = p_rotation;
+			break;
+		}
+	}
 
 	LightComponentType m_lightComponentType;
 };

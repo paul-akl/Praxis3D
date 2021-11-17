@@ -62,12 +62,13 @@ public:
 	const virtual Math::Vec4f &getVec4(const Observer *p_observer, BitMask p_changedBits) const { return m_nullVec4; }
 	const virtual Math::Mat4f &getMat4(const Observer *p_observer, BitMask p_changedBits) const	{ return m_nullMat4; }
 
-	const virtual bool			getBool(const Observer *p_observer, BitMask p_changedBits) const			{ return m_nullBool;		}
-	const virtual int			getInt(const Observer *p_observer, BitMask p_changedBits) const				{ return m_nullInt;			}
-	const virtual float			getFloat(const Observer *p_observer, BitMask p_changedBits) const			{ return m_nullFloat;		}
-	const virtual double		&getDouble(const Observer *p_observer, BitMask p_changedBits) const			{ return m_nullDouble;		}
-	const virtual std::string	&getString(const Observer *p_observer, BitMask p_changedBits) const			{ return m_nullString;		}
-	const virtual SpatialData	&getSpatialData(const Observer *p_observer, BitMask p_changedBits) const	{ return m_nullSpacialData;	}
+	const virtual bool					getBool(const Observer *p_observer, BitMask p_changedBits) const					{ return m_nullBool;					}
+	const virtual int					getInt(const Observer *p_observer, BitMask p_changedBits) const						{ return m_nullInt;						}
+	const virtual float					getFloat(const Observer *p_observer, BitMask p_changedBits) const					{ return m_nullFloat;					}
+	const virtual double				&getDouble(const Observer *p_observer, BitMask p_changedBits) const					{ return m_nullDouble;					}
+	const virtual std::string			&getString(const Observer *p_observer, BitMask p_changedBits) const					{ return m_nullString;					}
+	const virtual SpatialData			&getSpatialData(const Observer *p_observer, BitMask p_changedBits) const			{ return m_nullSpacialData;				}
+	const virtual SpatialTransformData	&getSpatialTransformData(const Observer *p_observer, BitMask p_changedBits) const	{ return m_nullSpacialTransformData;	}
 
 	// Stores observer information required for postChanges messages
 	struct ObserverData
@@ -98,13 +99,14 @@ private:
 		SpinWait m_observerListMutex;
 	#endif
 
-	const static Math::Vec3f m_nullVec3;
-	const static Math::Vec4f m_nullVec4;
-	const static Math::Mat4f m_nullMat4;
-	const static bool		 m_nullBool;
-	const static int		 m_nullInt;
-	const static float		 m_nullFloat;
-	const static double		 m_nullDouble;
-	const static std::string m_nullString;
-	const static SpatialData m_nullSpacialData;
+	const static Math::Vec3f			m_nullVec3;
+	const static Math::Vec4f			m_nullVec4;
+	const static Math::Mat4f			m_nullMat4;
+	const static bool					m_nullBool;
+	const static int					m_nullInt;
+	const static float					m_nullFloat;
+	const static double					m_nullDouble;
+	const static std::string			m_nullString;
+	const static SpatialData			m_nullSpacialData;
+	const static SpatialTransformData	m_nullSpacialTransformData;
 };
