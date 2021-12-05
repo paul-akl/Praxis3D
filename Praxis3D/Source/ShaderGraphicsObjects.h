@@ -41,7 +41,7 @@ public:
 
 	virtual ErrorCode loadToVideoMemory()
 	{
-		ErrorCode error;
+		//ErrorCode error;
 
 		// Load shader, check if it loaded successfully
 		//if(!ErrHandlerLoc::get().ifSuccessful(m_shader->loadToVideoMemory(), error))

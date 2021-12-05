@@ -19,7 +19,7 @@ public:
 
 	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
-		switch(p_changedBits)
+		/*switch (p_changedBits)
 		{
 		case Systems::Changes::Spatial::Position:
 			return m_positionVec;
@@ -27,19 +27,19 @@ public:
 		case Systems::Changes::Spatial::Rotation:
 			return m_targetVec;
 			break;
-		}
+		}*/
 
 		return ObservedSubject::getVec3(p_observer, p_changedBits);
 	}
 
 	const virtual Math::Mat4f &getMat4(const Observer *p_observer, BitMask p_changedBits) const
 	{
-		switch(p_changedBits)
+		/*switch (p_changedBits)
 		{
 		case Systems::Changes::Spatial::ModelMatrix:
 			return m_modelMatrix;
 			break;
-		}
+		}*/
 
 		return ObservedSubject::getMat4(p_observer, p_changedBits);
 	}

@@ -429,6 +429,7 @@ namespace Math
 			v.z = atan2 (2.0f * q.x * q.y + 2.0f * q.z * q.w, 1 - 2.0f * (q.y * q.y + q.z * q.z));	// Roll
 			return clamp(v * (float)RAD2DEG, 180.0f);
 		}
+		inline Vec4f getVec4f() { return Math::Vec4f(x, y, z, w); }
 
 		const inline Quaternion operator*(const Quaternion& p_quat)
 		{

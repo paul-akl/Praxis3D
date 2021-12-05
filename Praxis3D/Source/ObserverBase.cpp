@@ -1,15 +1,5 @@
 #include "ObserverBase.h"
 
-const Math::Vec3f ObservedSubject::m_nullVec3 = Math::Vec3f(1.0f);
-const Math::Vec4f ObservedSubject::m_nullVec4 = Math::Vec4f(1.0f);
-const Math::Mat4f ObservedSubject::m_nullMat4 = Math::Mat4f();
-const bool ObservedSubject::m_nullBool = false;
-const int ObservedSubject::m_nullInt = 0;
-const float ObservedSubject::m_nullFloat = 0.0f;
-const double ObservedSubject::m_nullDouble = 0.0;
-const std::string ObservedSubject::m_nullString;
-const SpatialData m_nullSpacialData;
-
 ObservedSubject::ObservedSubject()
 {
 
@@ -20,7 +10,7 @@ ObservedSubject::~ObservedSubject()
 }
 
 // Attach an observer for this subject
-ErrorCode ObservedSubject::attach(Observer *p_observer, unsigned int p_interestedBits, unsigned int p_ID, unsigned int p_shiftBits)
+ErrorCode ObservedSubject::attach(Observer *p_observer, BitMask p_interestedBits, SystemObjectID p_ID, unsigned int p_shiftBits)
 {
 	// If the concurrency is enabled, lock the current subject and wait for it to be free
 	#if ENABLE_CONCURRENT_SUBJECT_OPERATIONS
@@ -62,7 +52,7 @@ ErrorCode ObservedSubject::detach(Observer *p_observer)
 	return returnError;
 }
 
-ErrorCode ObservedSubject::updateInterestBits(Observer *p_observer, unsigned int p_interestedBits)
+ErrorCode ObservedSubject::updateInterestBits(Observer *p_observer, BitMask p_interestedBits)
 {
 	ErrorCode returnError = ErrorCode::Failure;
 
@@ -95,7 +85,7 @@ ErrorCode ObservedSubject::updateInterestBits(Observer *p_observer, unsigned int
 
 	return returnError;
 }
-BitMask ObservedSubject::getID(Observer *p_observer) const
+SystemObjectID ObservedSubject::getID(Observer *p_observer) const
 {
 	// Iterate through all the observers
 	for(ObserverDataList::const_iterator it = m_observerList.begin(); it != m_observerList.end(); it++)

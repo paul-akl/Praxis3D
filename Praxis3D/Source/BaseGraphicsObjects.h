@@ -27,7 +27,7 @@ public:
 	// Processes any spacial changes
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
-		if(p_changeType & Systems::Changes::Spatial::WorldPosition)
+		/*if(p_changeType & Systems::Changes::Spatial::WorldPosition)
 		{
 			m_baseObjectData.m_position = 
 				p_subject->getVec3(this, Systems::Changes::Spatial::WorldPosition) + m_baseObjectData.m_offsetPosition;
@@ -56,7 +56,7 @@ public:
 		if(p_changeType & Systems::Changes::Graphics::Lighting)
 		{
 			m_affectedByLighting = p_subject->getBool(this, Systems::Changes::Graphics::Lighting);
-		}
+		}*/
 	}
 
 	// Has the object been already loaded to memory (RAM)?
@@ -71,7 +71,7 @@ public:
 	// Getters
 	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
-		switch(p_changedBits)
+		/*switch(p_changedBits)
 		{
 		case Systems::Changes::Spatial::Position:
 			return m_baseObjectData.m_position;
@@ -82,18 +82,18 @@ public:
 		case Systems::Changes::Spatial::Scale:
 			return m_baseObjectData.m_scale;
 			break;
-		}
+		}*/
 
 		return ObservedSubject::getVec3(p_observer, p_changedBits);
 	}
 	const virtual bool getBool(const Observer *p_observer, BitMask p_changedBits) const
 	{
-		switch(p_changedBits)
+		/*switch(p_changedBits)
 		{
 		case Systems::Changes::Graphics::Lighting:
 			return m_affectedByLighting;
 			break;
-		}
+		}*/
 
 		return ObservedSubject::getBool(p_observer, p_changedBits);
 	}

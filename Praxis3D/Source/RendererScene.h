@@ -142,12 +142,16 @@ private:
 	SpotLightObject *loadSpotLight(const PropertySet &p_properties);
 		
 	// Object pools
+	// OLD
 	ObjectPool<ModelObject> m_modelObjPool;
 	ObjectPool<ModelObject> m_shaderObjPool;
 	ObjectPool<PointLightObject> m_pointLightPool;
 	ObjectPool<SpotLightObject> m_spotLightPool;
 	ObjectPool<EnvironmentMapObject> m_envMapPool;
 	
+	//NEW
+
+
 	// Stores objects that are currently being loaded to memory in background thread
 	std::vector<LoadableGraphicsObject> m_objectsBeingLoaded;
 	

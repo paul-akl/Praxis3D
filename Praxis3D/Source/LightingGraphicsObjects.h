@@ -130,8 +130,8 @@ public:
 
 	BitMask getSystemType() { return Systems::Graphics; }
 
-	BitMask getDesiredSystemChanges() { return Systems::Changes::Spatial::Position; }
-	BitMask getPotentialSystemChanges() { return Systems::Changes::Spatial::Position; }
+	BitMask getDesiredSystemChanges() { return Systems::Changes::Spatial::LocalPosition | Systems::Changes::Spatial::WorldPosition; }
+	BitMask getPotentialSystemChanges() { return Systems::Changes::Spatial::LocalPosition | Systems::Changes::Spatial::WorldPosition; }
 
 	// Processes any spacial changes
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)

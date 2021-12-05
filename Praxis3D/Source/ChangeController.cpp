@@ -71,7 +71,7 @@ ChangeController::~ChangeController()
 
 ErrorCode ChangeController::registerSubject(ObservedSubject *p_subject, BitMask p_interestedBits, Observer *p_observer, BitMask p_observerBits)
 {
-	// Current return error is "failed" untill the registering has been completed
+	// Current return error is "failed" until the registering has been completed
 	ErrorCode returnError = ErrorCode::Failure;
 
 	if(p_subject && p_observer)
@@ -79,7 +79,7 @@ ErrorCode ChangeController::registerSubject(ObservedSubject *p_subject, BitMask 
 		// Stop the updates and lock, during the subject registration
 		SpinWait::Lock lock(m_spinWaitUpdate);
 
-		unsigned int ID = p_subject->getID(this);
+		SystemObjectID ID = p_subject->getID(this);
 
 		// If subject has already been registered
 		if(ID != ObservedSubject::g_invalidID)
@@ -135,7 +135,7 @@ ErrorCode ChangeController::unregisterSubject(ObservedSubject *p_subject, Observ
 		// Stop the updates and lock, during the subject registration
 		SpinWait::Lock lock(m_spinWaitUpdate);
 
-		const unsigned int ID = p_subject->getID(this);
+		const auto ID = p_subject->getID(this);
 
 		if(m_subjectsList.size() <= ID || m_subjectsList[ID].m_subject != p_subject)
 		{
@@ -205,7 +205,7 @@ ErrorCode ChangeController::distributeChanges(BitMask p_systemsToNotify, BitMask
 				Notification &notification = currentList->at(i);
 
 				// Get subject's ID
-				unsigned int ID = notification.m_subject->getID(this);
+				const auto ID = notification.m_subject->getID(this);
 
 				// TODO ASSERT ERROR
 				_ASSERT(ID != ObservedSubject::g_invalidID);
@@ -499,7 +499,7 @@ ErrorCode ChangeController::removeSubject(ObservedSubject *p_subject)
 	{
 		SpinWait::Lock lock(m_spinWaitUpdate);
 
-		unsigned int ID = p_subject->getID(this);
+		const auto ID = p_subject->getID(this);
 		_ASSERT(ID != unsigned int(-1));
 		_ASSERT(m_subjectsList[ID].m_subject == p_subject);
 

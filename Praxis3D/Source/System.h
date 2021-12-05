@@ -1,5 +1,8 @@
 #pragma once
 
+// uncomment to disable assert()
+// #define NDEBUG
+#include <assert.h>
 #include <string>
 
 #include "Config.h"

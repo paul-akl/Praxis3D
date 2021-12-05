@@ -2,10 +2,11 @@
 
 #include "BaseGraphicsComponent.h"
 #include "GraphicsDataSets.h"
+#include "InheritanceObjects.h"
 #include "ObserverBase.h"
 #include "System.h"
 
-class LightComponent : public SystemObject
+class LightComponent : public SystemObject, public SpatialDataManagerObject
 {
 public:
 	enum LightComponentType
@@ -43,6 +44,13 @@ public:
 
 	void update(const float p_deltaTime)
 	{
+		// If the spatial data has changed, update the spatial data in light datasets
+		if(hasSpatialDataUpdated())
+		{
+			updatePosition(m_spatialData->getWorldSpaceData().m_spatialData.m_position);
+			updateRotation(m_spatialData->getWorldSpaceData().m_spatialData.m_rotationEuler);
+		}
+
 		if(isUpdateNeeded())
 		{
 			// Mark as updated
@@ -50,8 +58,8 @@ public:
 		}
 	}
 
-	BitMask getDesiredSystemChanges()	{ return Systems::Changes::Spatial::AllWorld | Systems::Changes::Graphics::All; }
-	BitMask getPotentialSystemChanges() { return Systems::Changes::Spatial::WorldTransform;								}
+	BitMask getDesiredSystemChanges()	{ return Systems::Changes::Graphics::AllLighting; }
+	BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
 
 	~LightComponent() 
 	{
@@ -73,91 +81,9 @@ public:
 		BitMask newChanges = Systems::Changes::None;
 		BitMask processedChange = 0;
 
-		// Deal with each change until there are no changes left
-		while(p_changeType)
-		{
-			switch(p_changeType)
-			{
-			case Systems::Changes::Spatial::AllWorld:
-				processedChange = Systems::Changes::Spatial::AllWorld; 
-				updateSpatialData(p_subject->getSpatialData(this, processedChange));
-				newChanges |= processedChange;
-				break;
-			case Systems::Changes::Spatial::AllWorldNoTransform:
-				processedChange = Systems::Changes::Spatial::AllWorldNoTransform;
-				updateSpatialData(p_subject->getSpatialData(this, processedChange));
-				newChanges |= processedChange;
-				break;
-			case Systems::Changes::Spatial::LocalPosition:
-				processedChange = Systems::Changes::Spatial::LocalPosition;
-				newChanges |= processedChange;
-				break;
-			case (Systems::Changes::Spatial::LocalRotation | Systems::Changes::Graphics::Direction):
-				processedChange = (Systems::Changes::Spatial::LocalRotation | Systems::Changes::Graphics::Direction);
-				newChanges |= processedChange;
-				break;
-			case Systems::Changes::Spatial::WorldPosition:
-				processedChange = Systems::Changes::Spatial::WorldPosition;
-				newChanges |= processedChange;
-				break;
-			case Systems::Changes::Spatial::WorldRotation:
-				processedChange = Systems::Changes::Spatial::WorldRotation;
-				newChanges |= processedChange;
-				break;
-			case Systems::Changes::Graphics::Color:
-				processedChange = Systems::Changes::Graphics::Color;
-				newChanges |= processedChange;
-				break;
-			case Systems::Changes::Graphics::CutoffAngle:
-				processedChange = Systems::Changes::Graphics::CutoffAngle;
-				newChanges |= processedChange;
-				break;
-			case Systems::Changes::Graphics::Intensity:
-				processedChange = Systems::Changes::Graphics::Intensity;
-				newChanges |= processedChange;
-				break;
-			}
-
-			// Remove the processed change mask from the bit mask value, and reset the processed change value
-			p_changeType &= ~processedChange;
-			processedChange = 0;
-		}
-
-		// Get all of the world spatial data, include the transform matrix; add up the bit-mask of changed data;
-		if(p_changeType & Systems::Changes::Spatial::AllWorld)
-		{
-			updateSpatialData(p_subject->getSpatialData(this, Systems::Changes::Spatial::AllWorldNoTransform));
-			newChanges = newChanges | Systems::Changes::Spatial::AllWorld;
-		}
-		else
-		{
-			// Get world spatial data without transform matrix; add up the bit-mask of changed data; flag object to need updating
-			if(p_changeType & Systems::Changes::Spatial::AllWorldNoTransform)
-			{
-				setUpdateNeeded(true);
-				newChanges = newChanges | Systems::Changes::Spatial::AllWorldNoTransform;
-			}
-			else
-			{
-				// Get world position vector; add up the bit-mask of changed data; flag object to need updating
-				if(p_changeType & Systems::Changes::Spatial::WorldPosition)
-				{
-					updatePosition(p_subject->getVec3(this, Systems::Changes::Spatial::WorldPosition));
-					newChanges = newChanges | Systems::Changes::Spatial::WorldPosition;
-
-					setUpdateNeeded(true);
-				}
-
-				// Get world rotation vector; add up the bit-mask of changed data; flag object to need updating; flag rotation quaternion to need updating
-				if(p_changeType & Systems::Changes::Spatial::WorldRotation)
-				{
-					updateRotation(p_subject->getVec3(this, Systems::Changes::Spatial::WorldRotation));
-					newChanges = newChanges | Systems::Changes::Spatial::WorldRotation;
-
-					setUpdateNeeded(true);
-				}
-			}
-		}
+		// Remove the processed change mask from the bit mask value, and reset the processed change value
+		p_changeType &= ~processedChange;
+		processedChange = 0;
 	}
 
 	LightComponentType getLightType() { return m_lightComponentType; }
@@ -179,7 +105,6 @@ private:
 		PointLightDataSet m_point;
 		SpotLightDataSet m_spot;
 	} m_lightComponent;
-
 
 	void updateColor(const Math::Vec3f &p_color)
 	{

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <climits>
 #include <GL\glew.h>
 #include <string>
 #include <unordered_map>
@@ -10,6 +11,9 @@
 #include "Utilities.h"
 
 typedef unsigned __int64 BitMask;
+
+// Tests if the given bitmask contains the given flag; returns true if the flag bits are present in the bitmask
+constexpr bool CheckBitmask(const BitMask p_bitmask, const BitMask p_flag) { return ((p_bitmask & p_flag) == p_flag); }
 
 //#define ever ;;
 
@@ -38,50 +42,84 @@ namespace Systems
 	namespace Types
 	{
 		static constexpr BitMask All = static_cast<BitMask>(-1);
-		static constexpr BitMask Max = 32;
+		static constexpr BitMask Max = 32;// (BitMask)1 << ((CHAR_BIT * sizeof(BitMask) - 1));
 	}
-
+	namespace GameObjectComponents
+	{
+		static constexpr BitMask None		= (BitMask)1 << 0;
+		static constexpr BitMask Graphics	= (BitMask)1 << 1;
+		static constexpr BitMask Scripting	= (BitMask)1 << 2;
+	}	
+	namespace GraphicsObjectComponents
+	{
+		static constexpr BitMask None		= (BitMask)1 << 0;
+		static constexpr BitMask Lighting	= (BitMask)1 << 1;
+		static constexpr BitMask Model		= (BitMask)1 << 2;
+		static constexpr BitMask Shader		= (BitMask)1 << 3;
+	}
 	namespace Changes
 	{
 		namespace Common
 		{
-			/*static constexpr BitMask Shared0	= (BitMask)1 << 0;
 			static constexpr BitMask Shared1	= (BitMask)1 << 1;
-			static constexpr BitMask Shared2	= (BitMask)1 << 3;
-			static constexpr BitMask Shared3	= (BitMask)1 << 4;
-			static constexpr BitMask Shared4	= (BitMask)1 << 5;
-			static constexpr BitMask Shared5	= (BitMask)1 << 6;
-			static constexpr BitMask Shared6	= (BitMask)1 << 7;
-			static constexpr BitMask Shared7	= (BitMask)1 << 8;
-			static constexpr BitMask Shared8	= (BitMask)1 << 9;
-			static constexpr BitMask Shared9	= (BitMask)1 << 10;*/
+			static constexpr BitMask Shared2	= (BitMask)1 << 2;
+			static constexpr BitMask Shared3	= (BitMask)1 << 3;
+			static constexpr BitMask Shared4	= (BitMask)1 << 4;
+			static constexpr BitMask Shared5	= (BitMask)1 << 5;
+			static constexpr BitMask Shared6	= (BitMask)1 << 6;
+			static constexpr BitMask Shared7	= (BitMask)1 << 7;
+			static constexpr BitMask Shared8	= (BitMask)1 << 8;
+			static constexpr BitMask Shared9	= (BitMask)1 << 9;
+			static constexpr BitMask Shared10	= (BitMask)1 << 10;
+			static constexpr BitMask Shared11	= (BitMask)1 << 11;
+			static constexpr BitMask Shared12	= (BitMask)1 << 12;
+			static constexpr BitMask Shared13	= (BitMask)1 << 13;
+			static constexpr BitMask Shared14	= (BitMask)1 << 14;
+			static constexpr BitMask Shared15	= (BitMask)1 << 15;
+			static constexpr BitMask Shared16	= (BitMask)1 << 16;
+			static constexpr BitMask Shared17	= (BitMask)1 << 17;
+			static constexpr BitMask Shared18	= (BitMask)1 << 18;
+			static constexpr BitMask Shared19	= (BitMask)1 << 19;
+			static constexpr BitMask Shared20	= (BitMask)1 << 20;
+			static constexpr BitMask Shared21	= (BitMask)1 << 21;
 		}
+		namespace Type
+		{
+			static constexpr BitMask Generic	= (BitMask)1 << 63;
+			static constexpr BitMask Spatial	= (BitMask)1 << 62;
+			static constexpr BitMask Graphics	= (BitMask)1 << 61;
+			static constexpr BitMask Physics	= (BitMask)1 << 60;
+			static constexpr BitMask Audio		= (BitMask)1 << 59;
+			static constexpr BitMask Scripting	= (BitMask)1 << 58;
+		}
+
 		namespace Generic
 		{
-			static constexpr BitMask CreateObject		= (BitMask)1 << 0;
-			static constexpr BitMask DeleteObject		= (BitMask)1 << 1;
-			static constexpr BitMask ExtendObject		= (BitMask)1 << 2;
-			static constexpr BitMask UnextendObject		= (BitMask)1 << 3;
-			static constexpr BitMask Name				= (BitMask)1 << 4;
+			static constexpr BitMask CreateObject		= Changes::Type::Generic + Changes::Common::Shared1;
+			static constexpr BitMask DeleteObject		= Changes::Type::Generic + Changes::Common::Shared2;
+			static constexpr BitMask ExtendObject		= Changes::Type::Generic + Changes::Common::Shared3;
+			static constexpr BitMask UnextendObject		= Changes::Type::Generic + Changes::Common::Shared4;
+			static constexpr BitMask Name				= Changes::Type::Generic + Changes::Common::Shared5;
 			static constexpr BitMask All				= CreateObject | DeleteObject | ExtendObject | Name;
 		}
 		namespace Spatial
 		{
-			static constexpr BitMask LocalModifier			= (BitMask)1 << 5;
-			static constexpr BitMask WorldModifier			= (BitMask)1 << 6;
-			static constexpr BitMask Position				= (BitMask)1 << 7;
-			static constexpr BitMask Rotation				= (BitMask)1 << 8;
-			static constexpr BitMask Scale					= (BitMask)1 << 9;
-			static constexpr BitMask Transform				= (BitMask)1 << 10;
+			/*static constexpr BitMask LocalModifier = Changes::Common::Shared0;
+			static constexpr BitMask WorldModifier			= Changes::Common::Shared1;
+			static constexpr BitMask Position				= Changes::Common::Shared2;
+			static constexpr BitMask Rotation				= Changes::Common::Shared3;
+			static constexpr BitMask Scale					= Changes::Common::Shared4;
+			static constexpr BitMask Transform				= Changes::Common::Shared5;*/
 
-			static constexpr BitMask LocalPosition			= LocalModifier | Position;
-			static constexpr BitMask LocalRotation			= LocalModifier | Rotation;
-			static constexpr BitMask LocalScale				= LocalModifier | Scale;
-			static constexpr BitMask LocalTransform			= LocalModifier | Transform;
-			static constexpr BitMask WorldPosition			= WorldModifier | Position;
-			static constexpr BitMask WorldRotation			= WorldModifier | Rotation;
-			static constexpr BitMask WorldScale				= WorldModifier | Scale;
-			static constexpr BitMask WorldTransform			= WorldModifier | Transform;
+			static constexpr BitMask LocalPosition			= Changes::Type::Spatial + Changes::Common::Shared1;
+			static constexpr BitMask LocalRotation			= Changes::Type::Spatial + Changes::Common::Shared2;
+			static constexpr BitMask LocalScale				= Changes::Type::Spatial + Changes::Common::Shared3;
+			static constexpr BitMask LocalTransform			= Changes::Type::Spatial + Changes::Common::Shared4;
+
+			static constexpr BitMask WorldPosition			= Changes::Type::Spatial + Changes::Common::Shared5;
+			static constexpr BitMask WorldRotation			= Changes::Type::Spatial + Changes::Common::Shared6;
+			static constexpr BitMask WorldScale				= Changes::Type::Spatial + Changes::Common::Shared7;
+			static constexpr BitMask WorldTransform			= Changes::Type::Spatial + Changes::Common::Shared8;
 
 			static constexpr BitMask AllLocalNoTransform	= LocalPosition | LocalRotation | LocalScale;
 			static constexpr BitMask AllWorldNoTransform	= WorldPosition | WorldRotation | WorldScale;
@@ -91,19 +129,18 @@ namespace Systems
 		}
 		namespace Graphics
 		{
-			static constexpr BitMask Lighting				= (BitMask)1 << 11;
-
-			static constexpr BitMask Target					= (BitMask)1 << 12;
-			static constexpr BitMask UpVector				= (BitMask)1 << 13;
+			static constexpr BitMask Target					= Changes::Type::Graphics + Changes::Common::Shared1;
+			static constexpr BitMask UpVector				= Changes::Type::Graphics + Changes::Common::Shared2;
 			static constexpr BitMask AllCamera				= Target | UpVector;
 
-			static constexpr BitMask Color					= (BitMask)1 << 14;
-			static constexpr BitMask CutoffAngle			= (BitMask)1 << 15;
-			static constexpr BitMask Direction				= (BitMask)1 << 16;
-			static constexpr BitMask Intensity				= (BitMask)1 << 17;
-			static constexpr BitMask AllLightig				= Color | CutoffAngle | Direction | Intensity;
+			static constexpr BitMask Lighting				= Changes::Type::Graphics + Changes::Common::Shared3;
+			static constexpr BitMask Color					= Changes::Type::Graphics + Changes::Common::Shared4;
+			static constexpr BitMask CutoffAngle			= Changes::Type::Graphics + Changes::Common::Shared5;
+			static constexpr BitMask Direction				= Changes::Type::Graphics + Changes::Common::Shared6;
+			static constexpr BitMask Intensity				= Changes::Type::Graphics + Changes::Common::Shared7;
+			static constexpr BitMask AllLighting			= Lighting | Color | CutoffAngle | Direction | Intensity;
 
-			static constexpr BitMask All					= AllCamera | AllLightig;
+			static constexpr BitMask All					= AllCamera | AllLighting;
 		}
 		namespace Physics
 		{
@@ -118,7 +155,7 @@ namespace Systems
 
 		}
 
-		static constexpr BitMask Link = (BitMask)1 << 29;
+		//static constexpr BitMask Link = (BitMask)1 << 29;
 
 		static constexpr BitMask None = 0;
 		static constexpr BitMask All = static_cast<BitMask>(-1);

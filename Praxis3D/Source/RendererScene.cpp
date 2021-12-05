@@ -936,9 +936,9 @@ EnvironmentMapObject *RendererScene::loadEnvironmentMap(const PropertySet &p_pro
 	{
 		switch(p_properties[i].getPropertyID())
 		{
-		case Properties::Position:
-			newObject->setPosition(p_properties[i].getVec3f());
-			break;
+		//case Properties::Position:
+		//	newObject->setPosition(p_properties[i].getVec3f());
+		//	break;
 		}
 	}
 

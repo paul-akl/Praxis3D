@@ -2,6 +2,8 @@
 
 #include <GL\glew.h>
 
+typedef unsigned int UpdateCount;
+
 enum BindCommandType : unsigned int
 {
 	BindCommandType_Texture,

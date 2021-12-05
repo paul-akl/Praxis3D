@@ -7,8 +7,10 @@ constexpr auto OBJECT_REGISTER_RESIZE_ADDED_OVERHEAD_MULTIPLIER = 1.5;
 #include <tbb/concurrent_vector.h>
 #include <vector>
 
+typedef std::size_t ObjectID;
+
 // An object directory, used for getting unique IDs to all registered objects.
-// Also contains a list of registered object pointers, an object can be retrieved based on its ID.
+// Also contains a list of registered object pointers, thus an object can be retrieved based on its ID.
 // Implementation is NOT thread-safe.
 template <class T_Object>
 class ObjectRegister
@@ -25,9 +27,9 @@ public:
 	}
 
 	// Returns a unique ID
-	inline std::size_t registerObject(T_Object p_object)
+	inline ObjectID registerObject(T_Object p_object)
 	{
-		std::size_t objectID = 0;
+		ObjectID objectID = 0;
 		
 		// Check if there is an index of an unregistered element in the object pool
 		if(!m_emptyObjectIDPool.empty())
@@ -62,9 +64,9 @@ public:
 
 	// Tries to register an object with the given ID
 	// Returns the ID object gets registered at. If ID is different than the given one, it was taken already
-	inline std::size_t registerObject(T_Object p_object, std::size_t p_id)
+	inline ObjectID registerObject(T_Object p_object, ObjectID p_id)
 	{
-		std::size_t objectID = 0;
+		ObjectID objectID = 0;
 
 		// Check if ID is within object pool bounds
 		if(p_id >= m_objectPool.size())
@@ -109,7 +111,7 @@ public:
 	}
 
 	// Removes object from directory, freeing up its ID
-	inline void unregisterObject(const std::size_t p_ID)
+	inline void unregisterObject(const ObjectID p_ID)
 	{
 		// Check if the object ID is within bounds
 		if(p_ID < m_objectPool.size())
@@ -127,7 +129,7 @@ public:
 	}
 
 	// Returns object based on its ID. Returns 'nullptr' if object wasn't found
-	inline T_Object getObject(const std::size_t p_ID) const
+	inline T_Object getObject(const ObjectID p_ID) const
 	{		
 		// Default the return object to nullptr
 		T_Object *returnObject;
@@ -166,7 +168,7 @@ public:
 private:
 	// Finds and removes the element of empty object ID pool that contains the given ID
 	// Slow, as it compares each element and uses std::vector erase
-	void removeIDfromEmptyObjectPool(std::size_t p_id)
+	void removeIDfromEmptyObjectPool(ObjectID p_id)
 	{
 		// Iterate over each element in empty object ID pool
 		for(decltype(m_emptyObjectIDPool.size()) i = 0, size = m_emptyObjectIDPool.size(); i < size; i++)
@@ -192,7 +194,7 @@ private:
 };
 
 // An object directory, used for getting unique IDs to all registered objects.
-// Also contains a list of registered object pointers, an object can be retrieved based on its ID.
+// Also contains a list of registered object pointers, thus an object can be retrieved based on its ID.
 // Implementation is thread-safe.
 template <class T_Object>
 class ObjectRegisterConcurrent 
@@ -208,7 +210,7 @@ public:
 	}
 
 	// Returns a unique ID
-	inline std::size_t registerObject(T_Object p_object)
+	inline ObjectID registerObject(T_Object p_object)
 	{
 		ObjectPoolIndexType objectID = 0;
 		
@@ -236,14 +238,14 @@ public:
 		}
 		
 		// Cast the object index (int) to size_t (unsigned int)
-		return static_cast<std::size_t>(objectID);
+		return static_cast<ObjectID>(objectID);
 	}
 	
 	// Tries to register an object with the given ID
 	// Returns the ID object gets registered at. If ID is different than the given one, it was taken already
-	inline std::size_t registerObject(T_Object p_object, std::size_t p_id)
+	inline ObjectID registerObject(T_Object p_object, ObjectID p_id)
 	{
-		std::size_t objectID = 0;
+		ObjectID objectID = 0;
 
 		// Check if ID is within object pool bounds
 		if(p_id >= m_objectPool.size())
@@ -288,7 +290,7 @@ public:
 	}
 
 	// Removes object from directory, freeing up its ID
-	inline void unregisterObject(const std::size_t p_ID)
+	inline void unregisterObject(const ObjectID p_ID)
 	{
 		// Check if the object ID is within bounds
 		if(p_ID < m_objectPool.size())
@@ -306,7 +308,7 @@ public:
 	}
 
 	// Returns object based on its ID. Returns 'nullptr' if object wasn't found
-	inline T_Object getObject(const std::size_t p_ID) const
+	inline T_Object getObject(const ObjectID p_ID) const
 	{	
 		// Default the return object to nullptr
 		T_Object *returnObject = nullptr;

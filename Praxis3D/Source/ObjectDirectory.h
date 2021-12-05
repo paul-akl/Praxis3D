@@ -59,7 +59,7 @@ public:
 			if(m_systemObjectPool[p_objectID] != nullptr)
 			{
 				// Make the slot empty
-				m_systemObjectPool[p_objectID] == nullptr;
+				m_systemObjectPool[p_objectID] = nullptr;
 
 				// Add the slot to the empty element pool, so it can be used for a new object
 				m_emptyObjectListElements.push(p_objectID);

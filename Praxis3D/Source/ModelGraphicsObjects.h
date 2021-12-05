@@ -2,7 +2,6 @@
 
 #include <functional>
 
-#include <assert.h>
 #include "BaseGraphicsObjects.h"
 #include "Loaders.h"
 #include "Renderer.h"

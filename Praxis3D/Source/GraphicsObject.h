@@ -2,10 +2,12 @@
 
 #include "Containers.h"
 #include "GraphicsDataSets.h"
+#include "InheritanceObjects.h"
 #include "LightComponent.h"
 #include "Loaders.h"
 #include "Math.h"
 #include "NullSystemObjects.h"
+#include "SpatialDataManager.h"
 #include "System.h"
 
 enum GraphicsComponentType : std::size_t
@@ -16,16 +18,18 @@ enum GraphicsComponentType : std::size_t
 	GraphicsComponentType_NumOfComponents
 };
 
-class GraphicsObject : public SystemObject
+class GraphicsObject : public SystemObject, public SpatialDataManagerObject
 {
 public:
 	GraphicsObject(SystemScene *p_systemScene, const std::string &p_name)
-		: SystemObject(p_systemScene, p_name, Properties::Graphics) 
+		: SystemObject(p_systemScene, p_name, Properties::Graphics)
 	{
 		m_modelComponent = nullptr;
 		m_shaderComponent = nullptr;
 		m_lightComponent = nullptr;
 		m_updateQuaternion = false;
+		m_componentsFlag = 0;
+
 	}
 	virtual ~GraphicsObject() 
 	{
@@ -39,6 +43,11 @@ public:
 		
 	void update(const float p_deltaTime)
 	{
+		if(hasSpatialDataUpdated())
+		{
+
+		}
+
 		if(isUpdateNeeded())
 		{
 			if(m_updateQuaternion)
@@ -48,107 +57,31 @@ public:
 			}
 
 			// Calculate model matrix
-			m_worldSpace.m_transformMat = Math::createTransformMat(m_worldSpace.m_spatialData.m_position, m_worldSpace.m_spatialData.m_rotationEuler, m_worldSpace.m_spatialData.m_scale);
+			//m_worldSpace.m_transformMat = Math::createTransformMat(m_worldSpace.m_spatialData.m_position, m_worldSpace.m_spatialData.m_rotationEuler, m_worldSpace.m_spatialData.m_scale);
 
 			// Mark as updated
 			updatePerformed();
 		}
 	}
 
-	virtual BitMask getDesiredSystemChanges()	{ return Systems::Changes::Spatial::AllWorld | Systems::Changes::Graphics::All;		}
-	virtual BitMask getPotentialSystemChanges() { return Systems::Changes::Spatial::WorldTransform;	}
+	virtual BitMask getDesiredSystemChanges()	{ return Systems::Changes::Graphics::All; }
+	virtual BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
 	
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
 		// Track what data has been modified
 		BitMask newChanges = Systems::Changes::None;
 		
-		// Get all of the world spatial data, include the transform matrix; add up the bit-mask of changed data;
-		if(p_changeType & Systems::Changes::Spatial::AllWorld)
-		{
-			m_worldSpace.m_spatialData = p_subject->getSpatialData(this, Systems::Changes::Spatial::AllWorldNoTransform);
-			m_worldSpace.m_transformMat = p_subject->getMat4(this, Systems::Changes::Spatial::WorldTransform);
 
-			newChanges = newChanges | Systems::Changes::Spatial::AllWorld;
-		}
-		else
-		{
-			// Get world spatial data without transform matrix; add up the bit-mask of changed data; flag object to need updating
-			if(p_changeType & Systems::Changes::Spatial::AllWorldNoTransform)
-			{
-				m_worldSpace.m_spatialData = p_subject->getSpatialData(this, Systems::Changes::Spatial::AllWorldNoTransform);
 
-				newChanges = newChanges | Systems::Changes::Spatial::AllWorldNoTransform;
-
-				setUpdateNeeded(true);
-			}
-			else
-			{
-				// Get world position vector; add up the bit-mask of changed data; flag object to need updating
-				if(p_changeType & Systems::Changes::Spatial::WorldPosition)
-				{
-					m_worldSpace.m_spatialData.m_position = p_subject->getVec3(this, Systems::Changes::Spatial::WorldPosition);
-
-					newChanges = newChanges | Systems::Changes::Spatial::WorldPosition;
-				
-					setUpdateNeeded(true);
-				}
-
-				// Get world rotation vector; add up the bit-mask of changed data; flag object to need updating; flag rotation quaternion to need updating
-				if(p_changeType & Systems::Changes::Spatial::WorldRotation)
-				{
-					m_worldSpace.m_spatialData.m_rotationEuler = p_subject->getVec3(this, Systems::Changes::Spatial::WorldRotation);
-
-					newChanges = newChanges | Systems::Changes::Spatial::WorldRotation;
-				
-					setUpdateNeeded(true);
-					m_updateQuaternion = true;
-				}
-
-				// Get world scale vector; add up the bit-mask of changed data; flag object to need updating
-				if(p_changeType & Systems::Changes::Spatial::WorldScale)
-				{
-					m_worldSpace.m_spatialData.m_scale = p_subject->getVec3(this, Systems::Changes::Spatial::WorldScale);
-
-					newChanges = newChanges | Systems::Changes::Spatial::WorldScale;
-
-					setUpdateNeeded(true);
-				}
-			}
-		}
-
-		// If any new data has been left, pass it to the components
+		// If any data has been updated, post the changes to listeners
 		if(newChanges != Systems::Changes::None)
 		{
-
+			postChanges(newChanges);
 		}
-			//postChanges(newChanges);
 	}
-		
-	const Math::Mat4f &getMat4(const Observer *p_observer, BitMask p_changedBits) const
-	{ 		
-		switch(p_changedBits)
-		{
-		case Systems::Changes::Spatial::WorldTransform:
-			return m_worldSpace.m_transformMat;
-			break;
-		}
-
-		return ObservedSubject::getMat4(p_observer, p_changedBits);
-	}
-	const SpatialData &getSpatialData(const Observer *p_observer, BitMask p_changedBits) const
-	{ 		
-		switch(p_changedBits)
-		{
-		case Systems::Changes::Spatial::AllWorld:
-			return m_worldSpace.m_spatialData;
-			break;
-		}
-
-		return ObservedSubject::getSpatialData(p_observer, p_changedBits);
-	}
-		
-	// Get the world spatial data (without transform matrix)
+			
+	/*/ Get the world spatial data (without transform matrix)
 	const inline SpatialData &getWorldSpatialData()	const					{ return m_worldSpace.m_spatialData;					}
 	// Get the world spatial transform data
 	const inline SpatialTransformData &getWorldSpatialTransformData() const	{ return m_worldSpace;									}
@@ -173,7 +106,7 @@ public:
 	inline void setWorldRotation(const Math::Quaternion &p_rotationQuat)				{ setUpdateNeeded(true); m_worldSpace.m_spatialData.m_rotationQuat = p_rotationQuat;								}
 	// Set the world scale
 	inline void setWorldScale(const Math::Vec3f &p_scale)								{ setUpdateNeeded(true); m_worldSpace.m_spatialData.m_scale = p_scale;												}
-	
+	*/
 	// Component functions
 	/*void addComponent(DirectionalLightDataSet &p_lightDataSet)
 	{
@@ -198,18 +131,30 @@ public:
 		// Make sure that this component isn't assigned already
 		removeComponent(GraphicsComponentType::GraphicsComponentType_Light);
 		m_lightComponent = p_component;
+
+		// Share the GraphicsObjects spatial data with the component
+		m_lightComponent->setSpatialDataManagerReference(*m_spatialData);
+
+		// Set the flag for the lighting component, so it is known from the flag that there is one currently present
+		m_componentsFlag |= Systems::GraphicsObjectComponents::Lighting;
 	}
 	void addComponent(ModelComponentData *p_component) 
 	{
 		// Make sure that this component isn't assigned already
 		removeComponent(GraphicsComponentType::GraphicsComponentType_Model);
-		m_modelComponent = p_component; 
+		m_modelComponent = p_component;
+
+		// Set the flag for the model component, so it is known from the flag that there is one currently present
+		m_componentsFlag |= Systems::GraphicsObjectComponents::Model;
 	}
 	void addComponent(ShaderData *p_component) 
 	{ 
 		// Make sure that this component isn't assigned already
 		removeComponent(GraphicsComponentType::GraphicsComponentType_Shader);
-		m_shaderComponent = p_component; 
+		m_shaderComponent = p_component;
+
+		// Set the flag for the shader component, so it is known from the flag that there is one currently present
+		m_componentsFlag |= Systems::GraphicsObjectComponents::Shader;
 	}
 	void removeComponent(const GraphicsComponentType p_compType)
 	{
@@ -218,19 +163,46 @@ public:
 		case GraphicsComponentType_Light:
 		{
 			if(m_lightComponent != nullptr)
-				delete m_lightComponent;
+			{
+				// Delete the actual component
+				//delete m_lightComponent;
+
+				// Assign the component pointer as nullptr to denote that it has been removed
+				m_lightComponent = nullptr;
+
+				// Remove the bit corresponding to lighting component from the componentsFlag bitmask
+				m_componentsFlag &= ~Systems::GraphicsObjectComponents::Lighting;
+			}
 			break;
 		}
 		case GraphicsComponentType_Model:
 		{
 			if(m_modelComponent != nullptr)
-				delete m_modelComponent;
+			{
+				// Delete the actual component
+				//delete m_modelComponent;
+
+				// Assign the component pointer as nullptr to denote that it has been removed
+				m_modelComponent = nullptr;
+
+				// Remove the bit corresponding to model component from the componentsFlag bitmask
+				m_componentsFlag &= ~Systems::GraphicsObjectComponents::Model;
+			}
 			break;
 		}
 		case GraphicsComponentType_Shader:
 		{
 			if(m_shaderComponent != nullptr)
-				delete m_shaderComponent;
+			{
+				// Delete the actual component
+				//delete m_shaderComponent;
+
+				// Assign the component pointer as nullptr to denote that it has been removed
+				m_shaderComponent = nullptr;
+
+				// Remove the bit corresponding to shader component from the componentsFlag bitmask
+				m_componentsFlag &= ~Systems::GraphicsObjectComponents::Shader;
+			}
 			break;
 		}
 		}
@@ -273,14 +245,17 @@ private:
 	ProxyValues m_proxyValues;
 	//std::vector<BaseGraphicsComponent&> m_components;
 
-	std::vector<MeshData> m_meshData;
-	SpatialTransformData m_worldSpace;
+	//std::vector<MeshData> m_meshData;
+	//SpatialTransformData m_worldSpace;
 
 	// Components
 	ModelComponentData *m_modelComponent;
 	ShaderData *m_shaderComponent;
 	LightComponent *m_lightComponent;
-	
+
+	// Stores a separate flag for each component currently present
+	BitMask m_componentsFlag;
+
 	// Flag data that needs to be updated
 	bool m_updateQuaternion;
 };

@@ -288,6 +288,15 @@
     <ClCompile Include="Source\LightComponent.cpp">
       <Filter>Renderer\Objects\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\SpatialDataChangeManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NullObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NullObjects.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ErrorCodes.h">
@@ -607,6 +616,15 @@
     </ClInclude>
     <ClInclude Include="Source\GameLogicObject.h">
       <Filter>Scripting\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\SpatialDataManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\InheritanceObjects.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NullObjects.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

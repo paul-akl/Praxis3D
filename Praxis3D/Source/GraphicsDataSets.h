@@ -46,7 +46,7 @@ struct ModelData
 	std::vector<MeshData>  m_meshes;
 };
 
-// Contains data multiple of multiple models, comprising a model component
+// Contains data of multiple models, comprising a model component
 struct ModelComponentData
 {
 	std::vector<ModelData> m_modelData;

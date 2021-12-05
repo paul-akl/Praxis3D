@@ -192,8 +192,8 @@ public:
 
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
-		if(p_changeType & Systems::Changes::Spacial::Position)
-			m_objectPosition = p_subject->getVec3(this, Systems::Changes::Spacial::Position);
+		//if(p_changeType & Systems::Changes::Spacial::Position)
+		//	m_objectPosition = p_subject->getVec3(this, Systems::Changes::Spacial::Position);
 
 		if(p_changeType & Systems::Changes::Generic::Name)
 			m_objectName = p_subject->getString(this, Systems::Changes::Generic::Name);
@@ -210,9 +210,9 @@ public:
 	{
 		switch(p_changedBits)
 		{
-		case Systems::Changes::Spacial::Position:
-			return m_objectPosition;
-			break;
+		//case Systems::Changes::Spacial::Position:
+		//	return m_objectPosition;
+		//	break;
 		}
 
 		return ObservedSubject::getVec3(p_observer, p_changedBits);

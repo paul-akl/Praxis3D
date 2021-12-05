@@ -37,7 +37,7 @@ public:
 		propertySet.addProperty(Properties::Type, Properties::DebugRotateScript);
 		propertySet.addProperty(Properties::Name, m_name);
 		propertySet.addProperty(Properties::Axis, m_axis);
-		propertySet.addProperty(Properties::Rotation, m_rotation);
+		propertySet.addProperty(Properties::LocalRotationQuaternion, m_rotation);
 		propertySet.addProperty(Properties::Speed, m_speed);
 
 		return propertySet;
@@ -48,17 +48,17 @@ public:
 		m_rotation.rotate(m_speed * p_deltaTime, m_axis);
 		m_rotation.normalize();
 		
-		postChanges(Systems::Changes::Spacial::Rotation);
+		//postChanges(Systems::Changes::Spatial::Rotation);
 	}
 
 	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
-		switch (p_changedBits)
+		/*switch (p_changedBits)
 		{
-		case Systems::Changes::Spacial::Rotation:
+		case Systems::Changes::Spatial::Rotation:
 			return m_rotation;
 			break;
-		}
+		}*/
 
 		return ObservedSubject::getVec3(p_observer, p_changedBits);
 	}
