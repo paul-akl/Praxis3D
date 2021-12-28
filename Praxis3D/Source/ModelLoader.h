@@ -84,6 +84,7 @@ public:
 
 	Model(LoaderBase<ModelLoader, Model> *p_loaderBase, std::string p_filename, size_t p_uniqueID, unsigned int p_handle) : UniqueObject(p_loaderBase, p_uniqueID, p_filename), m_handle(p_handle)
 	{
+		m_loadedToVideoMemory = false;
 		m_isBeingLoaded = false;
 
 		m_currentNumMeshes = 0;
@@ -224,15 +225,16 @@ public:
 		{
 			ErrorCode returnError = ErrorCode::Success;
 
+			//TODO: wait for the object to load, if it is currently being loaded
 			// If it's not loaded to memory already and is not currently being loaded, call load
-			if(!m_model->isLoaded() && !m_model->isBeingLoaded())
+			if(!m_model->isLoadedToMemory() && !m_model->isBeingLoaded())
 			{
 				returnError = m_model->loadToMemory();
 
 				// If the setLoadedToMemory flag is true and loading was successful, set the flag
 				if(p_setLoadedToMemoryFlag)
 					if(returnError == ErrorCode::Success)
-						m_model->setLoaded(true);
+						m_model->setLoadedToMemory(true);
 			}
 
 			return returnError;
@@ -251,16 +253,20 @@ public:
 		const inline Model::Mesh &operator[] (size_t p_index) const { return m_model->m_meshPool[p_index]; }
 		
 		// Getters
-		inline Model::MaterialArrays &getMaterialArrays() const		{ return m_model->getMaterialArrays();	}
-		inline const std::vector<Model::Mesh> &getMeshArray() const	{ return m_model->m_meshPool;			}
-		inline size_t getNumMeshes() const							{ return m_model->m_numMeshes;			}
-		inline MeshIterator getMeshIterator() const					{ return MeshIterator(*m_model);		}
-		inline const size_t getMeshSize() const						{ return m_model->m_numMeshes;			}
-		inline unsigned int getHandle() const						{ return m_model->m_handle;				}
-		inline std::string getFilename() const						{ return m_model->m_filename;			}
-		
+		inline Model::MaterialArrays &getMaterialArrays() const		{ return m_model->getMaterialArrays();		}
+		inline const std::vector<Model::Mesh> &getMeshArray() const	{ return m_model->m_meshPool;				}
+		inline size_t getNumMeshes() const							{ return m_model->m_numMeshes;				}
+		inline MeshIterator getMeshIterator() const					{ return MeshIterator(*m_model);			}
+		inline const size_t getMeshSize() const						{ return m_model->m_numMeshes;				}
+		inline unsigned int getHandle() const						{ return m_model->m_handle;					}
+		inline std::string getFilename() const						{ return m_model->m_filename;				}
+		inline const bool isLoadedToMemory() const					{ return m_model->isLoadedToMemory();		}
+		inline const bool isLoadedToVideoMemory() const				{ return m_model->isLoadedToVideoMemory();	}
+
 	private:
 		ModelHandle(Model &p_model) : m_model(&p_model) { m_model->incRefCounter(); }
+
+		void setLoadedToVideoMemory(bool p_loaded) { m_model->m_loadedToVideoMemory = p_loaded; }
 
 		Model *m_model;
 	};

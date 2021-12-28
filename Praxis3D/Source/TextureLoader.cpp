@@ -188,7 +188,7 @@ TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string &p_file
 	return Texture2DHandle(returnTexture);
 }
 
-TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string & p_filename)
+TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string &p_filename)
 {	
 	Texture2D *returnTexture;
 

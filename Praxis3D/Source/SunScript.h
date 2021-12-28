@@ -50,14 +50,14 @@ public:
 			cos(m_zenithAngle),
 			sin(m_azimuthAngle) * sin(m_zenithAngle));
 
-		postChanges(Systems::Changes::Spacial::Rotation);
+		postChanges(Systems::Changes::Spatial::LocalRotation);
 	}
 
 	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		switch(p_changedBits)
 		{
-		case Systems::Changes::Spacial::Rotation:
+		case Systems::Changes::Spatial::LocalRotation:
 			return m_rotation;
 			break;
 		}

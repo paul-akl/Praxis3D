@@ -626,6 +626,9 @@
     <ClInclude Include="Source\NullObjects.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\WorldSystem.h">
+      <Filter>World\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\config.ini" />

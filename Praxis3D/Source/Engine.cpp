@@ -181,6 +181,18 @@ ErrorCode Engine::init()
 
 	//  ___________________________________
 	// |								   |
+	// |  OBJECT DIRECTORY INITIALIZATION  |
+	// |___________________________________|
+	// Initialize the object directory, return failure if it wasn't successful
+	ErrorCode objectDirectoryError = ObjectDirectory::init();
+	if(objectDirectoryError != ErrorCode::Success)
+	{
+		ErrHandlerLoc::get().log(objectDirectoryError, ErrorSource::Source_ObjectDirectory);
+		return objectDirectoryError;
+	}
+
+	//  ___________________________________
+	// |								   |
 	// |	ENGINE STATE INITIALIZATION	   |
 	// |___________________________________|
 	// Initialize the play state, return failure if it wasn't successful
@@ -189,6 +201,7 @@ ErrorCode Engine::init()
 	else
 		return ErrorCode::Failure;
 	
+
 	// If this point is reached, all initializations passed, mark the engine as initialized
 	m_initialized = true;
 

@@ -61,7 +61,11 @@ protected:
 	ChangeController *m_objectChangeController;
 
 	SystemSceneMap		m_systemScenes;
+	ObjectLinkList		m_objectLinks;
 	UniversalObjectList	m_objects;
+
+public:
+	const ObjectLinkList &getObjectLinksList() { return m_objectLinks; }
 };
 
 class UniversalObject : public Observer, public ObservedSubject

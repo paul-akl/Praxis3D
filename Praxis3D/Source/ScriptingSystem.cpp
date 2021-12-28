@@ -7,6 +7,7 @@
 ScriptingSystem::ScriptingSystem()
 {
 	m_scriptingScene = nullptr;
+	m_systemName = GetString(Systems::Scripting);
 }
 
 ScriptingSystem::~ScriptingSystem()

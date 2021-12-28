@@ -98,7 +98,7 @@ public:
 		// Add variables
 		propertySet.addProperty(Properties::Type, Properties::FreeCamera);
 		propertySet.addProperty(Properties::Name, m_name);
-		propertySet.addProperty(Properties::Position, m_positionVec);
+		propertySet.addProperty(Properties::LocalPosition, m_positionVec);
 		propertySet.addProperty(Properties::Angle, Math::Vec2f(m_horizontalAngle, m_verticalAngle));
 		propertySet.addProperty(Properties::Speed, m_speed);
 		propertySet.addProperty(Properties::SprintSpeed, m_fasterSpeed);
@@ -191,9 +191,9 @@ public:
 		m_targetVec.z = m_horizontalAngle;
 		
 		// Notify listeners
-		postChanges(Systems::Changes::Spatial::Position | 
-					Systems::Changes::Spatial::Rotation | 
-					Systems::Changes::Spatial::ModelMatrix);
+		postChanges(Systems::Changes::Spatial::WorldPosition | 
+					Systems::Changes::Spatial::WorldRotation | 
+					Systems::Changes::Spatial::WorldTransform);
 	}
 	
 	// Setters for the movement keys:

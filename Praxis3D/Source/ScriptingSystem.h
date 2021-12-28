@@ -18,7 +18,6 @@ public:
 
 	void loadInBackground();
 
-	virtual std::string getName() { return GetString(Systems::Scripting); }
 	Systems::TypeID getSystemType() { return Systems::Scripting; }
 
 	virtual SystemScene *createScene(SceneLoader *p_sceneLoader);

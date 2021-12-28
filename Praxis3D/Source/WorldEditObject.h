@@ -131,7 +131,7 @@ public:
 
 					// Get the current data from the selected object
 					m_sceneLoader->getChangeController()->sendChange(m_selectedObject, this, 
-																	 Systems::Changes::Spacial::Position | 
+																	 Systems::Changes::Spatial::LocalPosition |
 																	 Systems::Changes::Generic::Name |
 																	 Systems::Changes::Graphics::Lighting);
 

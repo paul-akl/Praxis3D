@@ -80,6 +80,7 @@ namespace Math
 
 		*this = (*this * rotY * rotX * rotZ);*/
 
+		/*
 		const float t1 = toRadian(p_vec3f.x);
 		const float t2 = toRadian(p_vec3f.y);
 		const float t3 = toRadian(p_vec3f.z);
@@ -114,7 +115,33 @@ namespace Math
         rotMat.m[3] = static_cast<float>(0);
         rotMat.m[7] = static_cast<float>(0);
         rotMat.m[11] = static_cast<float>(0);
-        rotMat.m[15] = static_cast<float>(1);
+        rotMat.m[15] = static_cast<float>(1);*/
+
+		Math::Vec3f eulerInRadians = Math::toRadian(p_vec3f);
+
+		float cosY = cosf(eulerInRadians.y);     // Yaw
+		float sinY = sinf(eulerInRadians.y);
+
+		float cosP = cosf(eulerInRadians.x);     // Pitch
+		float sinP = sinf(eulerInRadians.x);
+
+		float cosR = cosf(eulerInRadians.z);     // Roll
+		float sinR = sinf(eulerInRadians.z);
+
+		Math::Mat4f rotMat;
+		rotMat.identity();
+
+		rotMat.m[0] = cosY * cosR + sinY * sinP * sinR;
+		rotMat.m[1] = cosR * sinY * sinP - sinR * cosY;
+		rotMat.m[2] = cosP * sinY;
+
+		rotMat.m[4] = cosP * sinR;
+		rotMat.m[5] = cosR * cosP;
+		rotMat.m[6] = -sinP;
+
+		rotMat.m[8] = sinR * cosY * sinP - sinY * cosR;
+		rotMat.m[9] = sinY * sinR + cosR * cosY * sinP;
+		rotMat.m[10] = cosP * cosY;
 
 		*this = *this * rotMat;
 	}

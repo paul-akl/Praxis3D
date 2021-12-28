@@ -68,7 +68,7 @@ protected:
 		SpinWait::Lock lock(m_mutex);
 
 		// Texture might have already been loaded when called from a different thread. Check if it was
-		if(!isLoaded())
+		if(!isLoadedToMemory())
 		{
 			// Read the format of the texture
 			FREE_IMAGE_FORMAT imageFormat = FreeImage_GetFileType((Config::PathsVariables().texture_path + m_filename).c_str(), 0);
@@ -117,7 +117,7 @@ protected:
 					m_pixelData[i * numChan + 2] = blue;						 // Set blue
 				}
 
-				setLoaded(true);
+				setLoadedToMemory(true);
 			}
 			else
 			{
@@ -220,7 +220,7 @@ public:
 			ErrorCode returnError = ErrorCode::Success;
 
 			// If it's not loaded to memory already, call load
-			if(!m_textureData->isLoaded())
+			if(!m_textureData->isLoadedToMemory())
 				returnError = m_textureData->loadToMemory();
 
 			return returnError;
@@ -247,7 +247,6 @@ public:
 		{
 			m_textureData->decRefCounter();
 			m_textureData = p_textureHandle.m_textureData;
-			m_handle = p_textureHandle.m_handle;
 			m_textureData->incRefCounter();
 			return *this;
 		}
@@ -258,25 +257,27 @@ public:
 		// Getters
 		inline unsigned int getTextureHeight() const { return m_textureData->m_textureHeight; }
 		inline unsigned int getTextureWidth() const { return m_textureData->m_textureWidth; }
-		inline unsigned int getHandle() const { return m_handle; }
+		inline unsigned int getHandle() const { return m_textureData->m_handle; }
 		inline int getMipmapLevel() const { return m_textureData->m_mipmapLevel; }
 		inline std::string getFilename() const { return m_textureData->m_filename; }
 		inline TextureFormat getTextureFormat() const { return m_textureData->m_textureFormat; }
 
-		// Setters
-		inline void setLoadedToMemory(bool p_loaded)		{ m_textureData->setLoaded(p_loaded);		}
-		inline void setLoadedToVideoMemory(bool p_loaded)	{ m_textureData->setLoadedToVideoMemory(p_loaded);	}
+		inline const bool isLoadedToVideoMemory() { return m_textureData->isLoadedToVideoMemory(); }
 
 	private:
 		// Increment the reference counter when creating a handle
-		Texture2DHandle(Texture2D *p_textureData) : m_textureData(p_textureData), m_handle(m_textureData->m_handle) { m_textureData->incRefCounter(); }
+		Texture2DHandle(Texture2D *p_textureData) : m_textureData(p_textureData) { m_textureData->incRefCounter(); }
+
+		// Setters
+		inline void setLoadedToMemory(bool p_loaded) { m_textureData->setLoadedToMemory(p_loaded); }
+		inline void setLoadedToVideoMemory(bool p_loaded) { m_textureData->setLoadedToVideoMemory(p_loaded); }
 
 		inline unsigned int &getHandleRef() { return m_textureData->m_handle; }
 
 		// Returns a void pointer to the pixel data
 		const inline void *getData() { return m_textureData->getData(); }
 
-		unsigned int m_handle;
+		//unsigned int m_handle;
 		Texture2D *m_textureData;
 	};
 		
@@ -402,7 +403,7 @@ protected:
 		SpinWait::Lock lock(m_mutex);
 
 		// Texture might have already been loaded when called from a different thread. Check if it was
-		if(!isLoaded())
+		if(!isLoadedToMemory())
 		{
 			for(unsigned int face = CubemapFace_PositiveX; face < CubemapFace_NumOfFaces; face++)
 			{
@@ -460,7 +461,7 @@ protected:
 
 			if(returnError == ErrorCode::Success)
 			{
-				setLoaded(true);
+				setLoadedToMemory(true);
 			}
 		}
 
@@ -646,7 +647,7 @@ public:
 			ErrorCode returnError = ErrorCode::Success;
 
 			// If it's not loaded to memory already, call load
-			if(!m_textureData->isLoaded())
+			if(!m_textureData->isLoadedToMemory())
 			{
 				// Load texture to memory (RAM)
 				returnError = m_textureData->loadToMemory();

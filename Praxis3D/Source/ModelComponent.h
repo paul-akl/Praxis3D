@@ -2,41 +2,63 @@
 
 #include "BaseGraphicsComponent.h"
 #include "GraphicsDataSets.h"
+#include "InheritanceObjects.h"
 
-class ModelComponent : public BaseGraphicsComponent
+class ModelComponent : public SystemObject, public LoadableGraphicsObject
 {
+	friend class RendererScene;
 public:
-	ModelComponent() { }
+	ModelComponent(SystemScene *p_systemScene, std::string p_name, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::Models)
+	{
+
+	}
 	~ModelComponent() { }
 
-	void load(PropertySet &p_properties) final override
-	{ 
+	ErrorCode init() { return ErrorCode::Success; }
+
+	void loadToMemory() { }
+
+	BitMask getSystemType() { return Systems::Graphics; }
+
+	void update(const float p_deltaTime) { }
+
+	BitMask getDesiredSystemChanges() { return Systems::Changes::None; }
+
+	BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
+
+	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
+
+	ErrorCode importObject(const PropertySet &p_properties)
+	{
+		ErrorCode importError = ErrorCode::Failure;
+
 		// Check if models node is present and the component hasn't been loaded already
-		if(p_properties && empty())
+		if(p_properties && !isLoadedToMemory())
 		{
 			// Loop over each model entry in the node
-			for(decltype(p_properties.getNumProperties()) iModel = 0, numModels = p_properties.getNumProperties(); iModel < numModels; iModel++)
+			for(decltype(p_properties.getNumPropertySets()) iModel = 0, numModels = p_properties.getNumPropertySets(); iModel < numModels; iModel++)
 			{
 				// Get model filename
 				auto modelName = p_properties.getPropertySet(iModel).getPropertyByID(Properties::Filename).getString();
 
 				// Add a new model data entry, and get a reference to it
-				m_modelData.m_modelData.push_back(ModelData(Loaders::model().load(modelName, false)));
-				auto &newModelData = m_modelData.m_modelData.back();
+				m_modelData.emplace_back(Loaders::model().load(modelName, false));
+				auto &newModelData = m_modelData.back();
 
 				// Load the model to memory, to be able to access all of its meshes
 				auto modelLoadError = newModelData.m_model.loadToMemory();
 
 				if(modelLoadError == ErrorCode::Success)
 				{
+					importError = ErrorCode::Success;
 					// Set the component as not being empty anymore, since a model has been loaded successfully
-					setEmpty(false);
+					//setEmpty(false);
 
 					// Get the meshes array
-					auto meshesInModelArray = newModelData.m_model.getMeshArray();
+					const std::vector<Model::Mesh> &meshesInModelArray = newModelData.m_model.getMeshArray();
 
 					// Get the meshes array
-					auto meshesProperty = p_properties.getPropertySet(iModel).getPropertySetByID(Properties::Meshes);
+					auto &meshesProperty = p_properties.getPropertySet(iModel).getPropertySetByID(Properties::Meshes);
 
 					// Check if the meshes array node is present;
 					// If it is present, only add the meshes included in the meshes node
@@ -44,15 +66,15 @@ public:
 					if(meshesProperty)
 					{
 						// Loop over each mesh entry in the model node
-						for(decltype(meshesProperty.getNumProperties()) iMesh = 0, numMeshes = meshesProperty.getNumProperties(); iMesh < numMeshes; iMesh++)
+						for(decltype(meshesProperty.getNumPropertySets()) iMesh = 0, numMeshes = meshesProperty.getNumPropertySets(); iMesh < numMeshes; iMesh++)
 						{
 							// Try to get the mesh index property node and check if it is present
-							auto meshIndexProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::Index);
+							auto &meshIndexProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::Index);
 							if(meshIndexProperty)
 							{
 								// Get the mesh index, check if it is valid and within the range of mesh array that was loaded from the model
 								const int meshDataIndex = meshIndexProperty.getInt();
-								if(meshDataIndex > 0 && meshDataIndex < meshesInModelArray.size())
+								if(meshDataIndex >= 0 && meshDataIndex < meshesInModelArray.size())
 								{
 									// Get material properties
 									auto materialsProperty = meshesProperty.getPropertySet(iMesh).getPropertySetByID(Properties::Materials);
@@ -79,6 +101,8 @@ public:
 									}
 
 									newModelData.m_meshes.push_back(MeshData(meshesInModelArray[iMesh], materials));
+
+									ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_ModelComponent, m_name + " - Model \'" + modelName + "\' imported");
 								}
 							}
 						}
@@ -95,7 +119,7 @@ public:
 							MaterialData materials[MaterialType::MaterialType_NumOfTypes];
 
 							// Go over each mesh in the model
-							if(iMesh > materialArrayFromModel.m_numMaterials)
+							//if(iMesh > materialArrayFromModel.m_numMaterials)
 							{
 								// Go over each material type
 								for(unsigned int iMatType = 0; iMatType < MaterialType::MaterialType_NumOfTypes; iMatType++)
@@ -117,24 +141,70 @@ public:
 
 								// Add the data for this mesh. Include materials loaded from the model itself, if they were present, otherwise, include default textures instead
 								newModelData.m_meshes.push_back(MeshData(meshesInModelArray[iMesh], materials));
+
+								ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_ModelComponent, m_name + " - Model \'" + modelName + "\' imported");
 							}
 						}
 					}
 				}
 				else
 				{
-					ErrHandlerLoc::get().log(modelLoadError, ErrorSource::Source_Renderer);
+					ErrHandlerLoc::get().log(modelLoadError, ErrorSource::Source_ModelComponent);
 				}
 			}
+
+			if(p_properties.getNumPropertySets() == 0)
+				ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_ModelComponent, m_name + " - missing model data");
 		}
 		
 		// Set the component as loaded, because the load function was called
-		setLoaded(true);
+		setLoadedToMemory(true);
+
+		return importError;
 	}
 
-	PropertySet exportObject() final override
+	PropertySet exportObject()
 	{ 
 		return PropertySet(); 
+	}
+
+	std::vector<LoadableObjectsContainer> getLoadableObjects()
+	{
+		std::vector<LoadableObjectsContainer> loadableObjects;
+
+		// Go over each model
+		for(decltype(m_modelData.size()) modelSize = m_modelData.size(), modelIndex = 0; modelIndex < modelSize; modelIndex++)
+		{
+			// Add model handle to the loadable object list
+			loadableObjects.emplace_back(m_modelData[modelIndex].m_model);
+
+			// Go over each mesh -> go over each material -> add texture handle to the loadable object list
+			for(decltype(m_modelData[modelIndex].m_meshes.size()) meshSize = m_modelData[modelIndex].m_meshes.size(), meshIndex = 0; meshIndex < meshSize; meshIndex++)
+				for(unsigned int materialIndex = 0; materialIndex < MaterialType::MaterialType_NumOfTypes; materialIndex++)
+					loadableObjects.emplace_back(m_modelData[modelIndex].m_meshes[meshIndex].m_materials[materialIndex].m_texture);
+		}
+
+		return loadableObjects;
+	}
+
+	void performCheckIsLoadedToVideoMemory() 
+	{
+		for(decltype(m_modelData.size()) modelSize = m_modelData.size(), modelIndex = 0; modelIndex < modelSize; modelIndex++)
+		{
+			if(!m_modelData[modelIndex].m_model.isLoadedToVideoMemory())
+				return;
+
+			for(decltype(m_modelData[modelIndex].m_meshes.size()) meshSize = m_modelData[modelIndex].m_meshes.size(), meshIndex = 0; meshIndex < meshSize; meshIndex++)
+			{
+				for(unsigned int materialIndex = 0; materialIndex < MaterialType::MaterialType_NumOfTypes; materialIndex++)
+				{
+					if(!m_modelData[modelIndex].m_meshes[meshIndex].m_materials[materialIndex].m_texture.isLoadedToVideoMemory())
+						return;
+				}
+			}
+		}
+
+		setLoadedToVideoMemory(true);
 	}
 
 private:
@@ -198,7 +268,7 @@ private:
 			}
 		}
 		
-		// All attempts to load the material were unsuccessful, so load a defaul material
+		// All attempts to load the material were unsuccessful, so load a default material
 		if(!materialWasLoaded)
 		{
 			newMaterialData.m_texture = Loaders::texture2D().getDefaultTexture(p_materialType);
@@ -208,5 +278,5 @@ private:
 		return newMaterialData;
 	}
 
-	ModelComponentData m_modelData;
+	std::vector<ModelData> m_modelData;
 };

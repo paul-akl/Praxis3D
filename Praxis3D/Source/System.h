@@ -14,6 +14,16 @@ class SystemObject;
 class SystemScene;
 class SystemTask;
 
+class ImportExportObject
+{
+public:
+	// Imports all the data of the object from a PropertySet
+	virtual ErrorCode importObject(const PropertySet &p_properties) { return ErrorCode::Success; }
+
+	// Exports all the data of the object as a PropertySet (for example, used for saving to map file)
+	virtual PropertySet exportObject() { return PropertySet(Properties::Null); }
+};
+
 class SystemBase
 {
 public:
@@ -26,7 +36,7 @@ public:
 	virtual ErrorCode setup(const PropertySet &p_properties) = 0;
 
 	virtual Systems::TypeID getSystemType() = 0;
-	virtual std::string getName() = 0;
+	virtual std::string getName() { return m_systemName; }
 
 	// Passes scene loader as argument so that scenes could have access to other system scenes 
 	// that are register with this scene loader
@@ -37,6 +47,7 @@ public:
 	virtual void loadInBackground() = 0;
 	
 protected:
+	std::string m_systemName;
 	bool m_initialized;
 };
 
@@ -78,7 +89,7 @@ protected:
 	SceneLoader *m_sceneLoader;
 };
 
-class SystemObject : public ObservedSubject, public Observer
+class SystemObject : public ObservedSubject, public Observer, public ImportExportObject
 {
 	friend SystemBase;
 	friend SystemScene;
@@ -87,19 +98,16 @@ public:
 	SystemObject(SystemScene *p_systemScene, const std::string &p_name, Properties::PropertyID p_objectType);
 	~SystemObject();
 
-	virtual ErrorCode init() = 0;
+	virtual ErrorCode init() { return ErrorCode::Success; };
 
-	virtual void loadToMemory() = 0;
+	virtual void loadToMemory() { };
 
 	virtual BitMask getSystemType() = 0;
 
-	virtual void update(const float p_deltaTime) = 0;
+	virtual void update(const float p_deltaTime) { };
 
 	virtual BitMask getDesiredSystemChanges() = 0;
 
-	// Exports all the data of the object as a PropertySet (for example, used for saving to map file)
-	virtual PropertySet exportObject() { return PropertySet(Properties::Null); }
-	
 	// Is the object active (i.e. should be drawn, updated, etc...)
 	const inline bool isObjectActive() const { return m_active; }
 

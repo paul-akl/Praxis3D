@@ -1,10 +1,13 @@
 #pragma once
 
+#define TBB_SUPPRESS_DEPRECATED_MESSAGES 1
+
 #include <tbb/parallel_for.h>
 #include <tbb/task_group.h>
 #include <tbb/task.h>
 #include <tbb/task_scheduler_init.h>
 #include <tbb/tbb_thread.h>
+
 #include <vector>
 #include "Window.h"
 

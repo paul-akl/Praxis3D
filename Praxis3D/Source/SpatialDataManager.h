@@ -18,10 +18,40 @@ public:
 	{
 		m_updateCount = 0;
 		worldSpaceNeedsUpdate = false;
+		localTransformNeedsUpdate = false;
+		parentTransformNeedsUpdate = false;
+		worldTransformNeedsUpdate = false;
 	}
 	~SpatialDataManager()
 	{
 
+	}
+
+	void update()
+	{	
+		// Calculate the needed transform matrices
+		if(localTransformNeedsUpdate)
+		{
+			updateTransformMatrix(m_localSpace);
+			localTransformNeedsUpdate = false;
+		}
+		if(parentTransformNeedsUpdate)
+		{
+			updateTransformMatrix(m_parentSpace);
+			parentTransformNeedsUpdate = false;
+		}
+		if(worldTransformNeedsUpdate)
+		{
+			updateTransformMatrix(m_worldSpace);
+			worldTransformNeedsUpdate = false;
+		}
+
+		// Update the world-space data if any changes have been made
+		if(worldSpaceNeedsUpdate)
+		{
+			updateWorldSpace();
+			incrementUpdateCount();
+		}
 	}
 
 	// Process spatial changes from the given subject and change type
@@ -218,6 +248,54 @@ public:
 	// Returns the current update count; each time data is changed, update count is incremented
 	const inline UpdateCount getUpdateCount() const { return m_updateCount; }
 
+	const inline void setLocalPosition(const Math::Vec3f p_position)		{ updateLocalPosition(p_position);		}
+	const inline void setLocalRotation(const Math::Vec3f p_rotation)		{ updateLocalRotation(p_rotation);		}
+	const inline void setLocalRotation(const Math::Quaternion p_rotation)	{ updateLocalRotation(p_rotation);		}
+	const inline void setLocalScale(const Math::Vec3f p_scale)				{ updateLocalScale(p_scale);			}
+	const inline void setLocalTransform(const Math::Mat4f p_transform)		{ updateLocalTransform(p_transform);	}
+
+	const inline void setParentPosition(const Math::Vec3f p_position)		{ updateParentPosition(p_position);		}
+	const inline void setParentRotation(const Math::Vec3f p_rotation)		{ updateParentRotation(p_rotation);		}
+	const inline void setParentRotation(const Math::Quaternion p_rotation)	{ updateParentRotation(p_rotation);		}
+	const inline void setParentScale(const Math::Vec3f p_scale)				{ updateParentScale(p_scale);			}
+	const inline void setParentTransform(const Math::Mat4f p_transform)		{ updateParentTransform(p_transform);	}
+
+	const inline void setWorldPosition(const Math::Vec3f p_position)		
+	{ 
+		m_worldSpace.m_spatialData.m_position = p_position; 
+		worldTransformNeedsUpdate = true;
+	}
+	const inline void setWorldRotation(const Math::Vec3f p_rotation)		
+	{ 
+		m_worldSpace.m_spatialData.m_rotationEuler = p_rotation;
+		worldTransformNeedsUpdate = true;
+	}
+	const inline void setWorldRotation(const Math::Quaternion p_rotation)	
+	{ 
+		m_worldSpace.m_spatialData.m_rotationQuat = p_rotation;
+		worldTransformNeedsUpdate = true;
+	}
+	const inline void setWorldScale(const Math::Vec3f p_scale)				
+	{ 
+		m_worldSpace.m_spatialData.m_scale = p_scale;
+		worldTransformNeedsUpdate = true;
+	}
+	const inline void setWorldTransform(const Math::Mat4f p_transform)		
+	{ 
+		m_worldSpace.m_transformMat = p_transform;
+		worldTransformNeedsUpdate = false;
+	}
+
+	const inline void calculateLocalTransform() { updateTransformMatrix(m_localSpace); }
+	const inline void calculateWorldTransform() { updateTransformMatrix(m_worldSpace); }
+
+	// Make up the world-space data from local and parent data
+	void updateWorldSpace()
+	{
+		m_worldSpace = m_parentSpace + m_localSpace;
+		worldSpaceNeedsUpdate = false;
+	}
+
 private:
 	// Recalculates the model transform matrix in the world-space
 	void updateTransformMatrix(SpatialTransformData &p_spacialTransformData)
@@ -232,35 +310,48 @@ private:
 	{
 		m_localSpace = p_spatialTransformData;
 		worldSpaceNeedsUpdate = true;
+		localTransformNeedsUpdate = false;
 	}
 	void updateLocalSpatialData(const SpatialData &p_spatialData)
 	{
 		m_localSpace.m_spatialData = p_spatialData;
-		updateTransformMatrix(m_localSpace);
+		//updateTransformMatrix(m_localSpace);
 		worldSpaceNeedsUpdate = true;
+		localTransformNeedsUpdate = false;
 	}
 	void updateLocalTransform(const Math::Mat4f &p_transform)
 	{
 		m_localSpace.m_transformMat = p_transform;
 		worldSpaceNeedsUpdate = true;
+		localTransformNeedsUpdate = false;
 	}
 	void updateLocalPosition(const Math::Vec3f &p_position)
 	{
 		m_localSpace.m_spatialData.m_position = p_position;
-		updateTransformMatrix(m_localSpace);
+		//updateTransformMatrix(m_localSpace);
 		worldSpaceNeedsUpdate = true;
+		localTransformNeedsUpdate = true;
 	}
 	void updateLocalRotation(const Math::Vec3f &p_rotation)
 	{
 		m_localSpace.m_spatialData.m_rotationEuler = p_rotation;
-		updateTransformMatrix(m_localSpace);
+		//updateTransformMatrix(m_localSpace);
 		worldSpaceNeedsUpdate = true;
+		localTransformNeedsUpdate = true;
+	}	
+	void updateLocalRotation(const Math::Quaternion &p_rotation)
+	{
+		m_localSpace.m_spatialData.m_rotationQuat = p_rotation;
+		//updateTransformMatrix(m_localSpace);
+		worldSpaceNeedsUpdate = true;
+		localTransformNeedsUpdate = true;
 	}
 	void updateLocalScale(const Math::Vec3f &p_scale)
 	{
 		m_localSpace.m_spatialData.m_scale = p_scale;
-		updateTransformMatrix(m_localSpace);
+		//updateTransformMatrix(m_localSpace);
 		worldSpaceNeedsUpdate = true;
+		localTransformNeedsUpdate = true;
 	}
 
 	// Functions of world spatial data of the parent object
@@ -268,42 +359,48 @@ private:
 	{
 		m_parentSpace = p_spatialTransformData;
 		worldSpaceNeedsUpdate = true;
+		parentTransformNeedsUpdate = false;
 	}
 	void updateParentSpatialData(const SpatialData &p_spatialData)
 	{
 		m_parentSpace.m_spatialData = p_spatialData;
 		updateTransformMatrix(m_parentSpace);
 		worldSpaceNeedsUpdate = true;
+		parentTransformNeedsUpdate = false;
 	}
 	void updateParentTransform(const Math::Mat4f &p_transform)
 	{
 		m_parentSpace.m_transformMat = p_transform;
 		worldSpaceNeedsUpdate = true;
+		parentTransformNeedsUpdate = false;
 	}
 	void updateParentPosition(const Math::Vec3f &p_position)
 	{
 		m_parentSpace.m_spatialData.m_position = p_position;
 		updateTransformMatrix(m_parentSpace);
 		worldSpaceNeedsUpdate = true;
+		parentTransformNeedsUpdate = true;
 	}
 	void updateParentRotation(const Math::Vec3f &p_rotation)
 	{
 		m_parentSpace.m_spatialData.m_rotationEuler = p_rotation;
 		updateTransformMatrix(m_parentSpace);
 		worldSpaceNeedsUpdate = true;
+		parentTransformNeedsUpdate = true;
+	}
+	void updateParentRotation(const Math::Quaternion &p_rotation)
+	{
+		m_parentSpace.m_spatialData.m_rotationQuat = p_rotation;
+		updateTransformMatrix(m_parentSpace);
+		worldSpaceNeedsUpdate = true;
+		parentTransformNeedsUpdate = true;
 	}
 	void updateParentScale(const Math::Vec3f &p_scale)
 	{
 		m_parentSpace.m_spatialData.m_scale = p_scale;
 		updateTransformMatrix(m_parentSpace);
 		worldSpaceNeedsUpdate = true;
-	}
-
-	// Make up the world-space data from local and parent data
-	void updateWorldSpace()
-	{
-		m_worldSpace = m_parentSpace + m_localSpace;
-		worldSpaceNeedsUpdate = false;
+		parentTransformNeedsUpdate = true;
 	}
 
 	// Increments the update count; should be called after any data has been changed
@@ -314,6 +411,9 @@ private:
 
 	// A flag to determine if the world space needs to be updated
 	bool worldSpaceNeedsUpdate;
+	bool localTransformNeedsUpdate;
+	bool parentTransformNeedsUpdate;
+	bool worldTransformNeedsUpdate;
 
 	// Transform data in local space
 	SpatialTransformData m_localSpace;

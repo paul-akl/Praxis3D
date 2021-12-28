@@ -1,32 +1,37 @@
 #pragma once
 
+#include "CameraComponent.h"
 #include "Containers.h"
 #include "GraphicsDataSets.h"
 #include "InheritanceObjects.h"
 #include "LightComponent.h"
 #include "Loaders.h"
 #include "Math.h"
+#include "ModelComponent.h"
 #include "NullSystemObjects.h"
+#include "ShaderComponent.h"
 #include "SpatialDataManager.h"
 #include "System.h"
 
 enum GraphicsComponentType : std::size_t
 {
-	GraphicsComponentType_Model = 0,
-	GraphicsComponentType_Shader,
+	GraphicsComponentType_Camera = 0,
 	GraphicsComponentType_Light,
+	GraphicsComponentType_Model,
+	GraphicsComponentType_Shader,
 	GraphicsComponentType_NumOfComponents
 };
 
-class GraphicsObject : public SystemObject, public SpatialDataManagerObject
+class GraphicsObject : public SystemObject, public SpatialDataManagerObject, public LoadableGraphicsObject
 {
 public:
 	GraphicsObject(SystemScene *p_systemScene, const std::string &p_name)
 		: SystemObject(p_systemScene, p_name, Properties::Graphics)
 	{
+		m_cameraComponent = nullptr;
+		m_lightComponent = nullptr;
 		m_modelComponent = nullptr;
 		m_shaderComponent = nullptr;
-		m_lightComponent = nullptr;
 		m_updateQuaternion = false;
 		m_componentsFlag = 0;
 
@@ -38,11 +43,170 @@ public:
 			removeComponent(static_cast<GraphicsComponentType>(i));
 	}
 	
-	// System type is Graphics
-	BitMask getSystemType() { return Systems::Graphics; }
+	ErrorCode init() { return ErrorCode::Success; }
+
+	ErrorCode importObject(const PropertySet &p_properties)
+	{
+		ErrorCode returnError = ErrorCode::Success;
+
+		// Check if the property set is valid and the graphics object hasn't been loaded already
+		if(p_properties)
+		{
+			if(!isLoadedToMemory())
+			{
+				// Check if there is a property set for camera and load the camera component if there is
+				auto const &camera = p_properties.getPropertySetByID(Properties::Camera);
+				if(camera)
+				{
+					// Create the camera component
+					addComponent(new CameraComponent(m_systemScene, m_name + Config::componentVar().camera_component_name));
+
+					// Try to initialize the camera component
+					auto componentInitError = m_cameraComponent->init();
+					if(componentInitError == ErrorCode::Success)
+					{
+						// Try to import the component
+						auto const &componentImportError = m_cameraComponent->importObject(camera);
+
+						// Remove the component if it failed to import
+						if(componentImportError != ErrorCode::Success)
+						{
+							removeComponent(GraphicsComponentType::GraphicsComponentType_Camera);
+							ErrHandlerLoc().get().log(componentImportError, ErrorSource::Source_CameraComponent, m_name);
+						}
+					}
+					else // Remove the component if it failed to initialize
+					{
+						removeComponent(GraphicsComponentType::GraphicsComponentType_Camera);
+						ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_CameraComponent, m_name);
+					}
+				}
+
+				// Check if there is a property set for lighting and load the light component if there is
+				auto const &lighting = p_properties.getPropertySetByID(Properties::Lighting);
+				if(lighting)
+				{
+					// Create the light component
+					addComponent(new LightComponent(m_systemScene, m_name + Config::componentVar().light_component_name));
+
+					// Try to initialize the light component
+					auto componentInitError = m_lightComponent->init();
+					if(componentInitError == ErrorCode::Success)
+					{
+						// Try to import the component
+						auto const &componentImportError = m_lightComponent->importObject(lighting);
+
+						// Remove the component if it failed to import
+						if(componentImportError != ErrorCode::Success)
+						{
+							removeComponent(GraphicsComponentType::GraphicsComponentType_Light);
+							ErrHandlerLoc().get().log(componentImportError, ErrorSource::Source_LightComponent, m_name);
+						}
+					}
+					else // Remove the component if it failed to initialize
+					{
+						removeComponent(GraphicsComponentType::GraphicsComponentType_Camera);
+						ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_LightComponent, m_name);
+					}
+				}
+
+				// Check if there is a property set for models and load the model component if there is
+				auto const &models = p_properties.getPropertySetByID(Properties::Models);
+				if(models)
+				{
+					// Create the model component
+					addComponent(new ModelComponent(m_systemScene, m_name + Config::componentVar().model_component_name));
+
+					// Try to initialize the model component
+					auto componentInitError = m_modelComponent->init();
+					if(componentInitError == ErrorCode::Success)
+					{
+						// Try to import the component
+						auto const &componentImportError = m_modelComponent->importObject(models);
+
+						// Remove the component if it failed to import
+						if(componentImportError != ErrorCode::Success)
+						{
+							removeComponent(GraphicsComponentType::GraphicsComponentType_Model);
+							ErrHandlerLoc().get().log(componentImportError, ErrorSource::Source_ModelComponent, m_name);
+						}
+					}
+					else // Remove the component if it failed to initialize
+					{
+						removeComponent(GraphicsComponentType::GraphicsComponentType_Camera);
+						ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_ModelComponent, m_name);
+					}
+				}
+
+				// Check if there is a property set for shaders and load the shader component if there is
+				auto const &shaders = p_properties.getPropertySetByID(Properties::Shaders);
+				if(shaders)
+				{
+					// Create the shader component
+					addComponent(new ShaderComponent(m_systemScene, m_name + Config::componentVar().shader_component_name));
+
+					// Try to initialize the shader component
+					auto componentInitError = m_shaderComponent->init();
+					if(componentInitError == ErrorCode::Success)
+					{
+						// Try to import the component
+						auto const &componentImportError = m_shaderComponent->importObject(shaders);
+
+						// Remove the component if it failed to import
+						if(componentImportError != ErrorCode::Success)
+						{
+							removeComponent(GraphicsComponentType::GraphicsComponentType_Shader);
+							ErrHandlerLoc().get().log(componentImportError, ErrorSource::Source_ShaderComponent, m_name);
+						}
+					}
+					else // Remove the component if it failed to initialize
+					{
+						removeComponent(GraphicsComponentType::GraphicsComponentType_Camera);
+						ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_ShaderComponent, m_name);
+					}
+				}
+			}
+		}
+		else
+		{
+			returnError = ErrorCode::Failure;
+		}
+
+		return returnError;
+	}
+
+	PropertySet exportObject()
+	{
+		// If there are components present, export each one; if there are no components, return an empty propertySet
+		if(containsComponents())
+		{
+			PropertySet exportPropertySet(Properties::Rendering);
+
+			if(cameraComponentPresent())
+				exportPropertySet.addPropertySet(m_cameraComponent->exportObject());
+			if(lightComponentPresent())
+				exportPropertySet.addPropertySet(m_lightComponent->exportObject());
+			if(modelComponentPresent())
+				exportPropertySet.addPropertySet(m_modelComponent->exportObject());
+			if(shaderComponentPresent())
+				exportPropertySet.addPropertySet(m_shaderComponent->exportObject());
+
+			return exportPropertySet;
+		}
+		else
+			return PropertySet();
+	}
 		
 	void update(const float p_deltaTime)
 	{
+		if(!isLoadedToVideoMemory())
+		{
+			performCheckIsLoadedToVideoMemory();
+
+			if(!isLoadedToVideoMemory())
+				return;
+		}
+
 		if(hasSpatialDataUpdated())
 		{
 
@@ -59,14 +223,45 @@ public:
 			// Calculate model matrix
 			//m_worldSpace.m_transformMat = Math::createTransformMat(m_worldSpace.m_spatialData.m_position, m_worldSpace.m_spatialData.m_rotationEuler, m_worldSpace.m_spatialData.m_scale);
 
+			// Update components
+			if(modelComponentPresent())
+				m_modelComponent->update(p_deltaTime);
+			if(shaderComponentPresent())
+				m_shaderComponent->update(p_deltaTime);
+			if(lightComponentPresent())
+				m_lightComponent->update(p_deltaTime);
+
 			// Mark as updated
 			updatePerformed();
 		}
 	}
 
+	// Assign a pointer to a const SpatialDataChangeManager, so the object can use it for its spatial data
+	// Also assigns the pointer to every component that needs it
+	virtual void setSpatialDataManagerReference(const SpatialDataManager &p_spatialData) 
+	{
+		SpatialDataManagerObject::setSpatialDataManagerReference(p_spatialData);
+
+		if(lightComponentPresent())
+			m_lightComponent->setSpatialDataManagerReference(*m_spatialData);
+	}
+
+	// System type is Graphics
+	BitMask getSystemType() { return Systems::Graphics; }
+
 	virtual BitMask getDesiredSystemChanges()	{ return Systems::Changes::Graphics::All; }
-	virtual BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
-	
+	virtual BitMask getPotentialSystemChanges() { return Systems::Changes::Graphics::All; }
+
+	inline CameraComponent *getCameraComponent()	{ return m_cameraComponent; }
+	inline LightComponent *getLightComponent()		{ return m_lightComponent;	}
+	inline ModelComponent *getModelComponent()		{ return m_modelComponent;	}
+	inline ShaderComponent *getShaderComponent()	{ return m_shaderComponent; }
+
+	inline const bool cameraComponentPresent()	const { return (m_cameraComponent	== nullptr) ? false : true;	}
+	inline const bool lightComponentPresent()	const { return (m_lightComponent	== nullptr) ? false : true;	}
+	inline const bool modelComponentPresent()	const { return (m_modelComponent	== nullptr) ? false : true;	}
+	inline const bool shaderComponentPresent()	const { return (m_shaderComponent	== nullptr) ? false : true;	}
+
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
 		// Track what data has been modified
@@ -126,6 +321,18 @@ public:
 		removeComponent(GraphicsComponentType::GraphicsComponentType_Light);
 		//m_lightComponent = new LightComponent(p_lightDataSet);
 	}*/	
+	void addComponent(CameraComponent *p_component)
+	{
+		// Make sure that this component isn't assigned already
+		removeComponent(GraphicsComponentType::GraphicsComponentType_Camera);
+		m_cameraComponent = p_component;
+
+		// Share the GraphicsObjects spatial data with the component
+		m_cameraComponent->setSpatialDataManagerReference(*m_spatialData);
+
+		// Set the flag for the camera component, so it is known from the flag that there is one currently present
+		m_componentsFlag |= Systems::GraphicsObjectComponents::Camera;
+	}
 	void addComponent(LightComponent *p_component)
 	{
 		// Make sure that this component isn't assigned already
@@ -138,7 +345,7 @@ public:
 		// Set the flag for the lighting component, so it is known from the flag that there is one currently present
 		m_componentsFlag |= Systems::GraphicsObjectComponents::Lighting;
 	}
-	void addComponent(ModelComponentData *p_component) 
+	void addComponent(ModelComponent *p_component)
 	{
 		// Make sure that this component isn't assigned already
 		removeComponent(GraphicsComponentType::GraphicsComponentType_Model);
@@ -147,7 +354,7 @@ public:
 		// Set the flag for the model component, so it is known from the flag that there is one currently present
 		m_componentsFlag |= Systems::GraphicsObjectComponents::Model;
 	}
-	void addComponent(ShaderData *p_component) 
+	void addComponent(ShaderComponent *p_component)
 	{ 
 		// Make sure that this component isn't assigned already
 		removeComponent(GraphicsComponentType::GraphicsComponentType_Shader);
@@ -160,12 +367,27 @@ public:
 	{
 		switch(p_compType)
 		{
-		case GraphicsComponentType_Light:
+		case GraphicsComponentType::GraphicsComponentType_Camera:
+		{
+			if(m_cameraComponent != nullptr)
+			{
+				// Delete the actual component
+				delete m_cameraComponent;
+
+				// Assign the component pointer as nullptr to denote that it has been removed
+				m_cameraComponent = nullptr;
+
+				// Remove the bit corresponding to camera component from the componentsFlag bitmask
+				m_componentsFlag &= ~Systems::GraphicsObjectComponents::Camera;
+			}
+			break;
+		}
+		case GraphicsComponentType::GraphicsComponentType_Light:
 		{
 			if(m_lightComponent != nullptr)
 			{
 				// Delete the actual component
-				//delete m_lightComponent;
+				delete m_lightComponent;
 
 				// Assign the component pointer as nullptr to denote that it has been removed
 				m_lightComponent = nullptr;
@@ -175,12 +397,12 @@ public:
 			}
 			break;
 		}
-		case GraphicsComponentType_Model:
+		case GraphicsComponentType::GraphicsComponentType_Model:
 		{
 			if(m_modelComponent != nullptr)
 			{
 				// Delete the actual component
-				//delete m_modelComponent;
+				delete m_modelComponent;
 
 				// Assign the component pointer as nullptr to denote that it has been removed
 				m_modelComponent = nullptr;
@@ -190,12 +412,12 @@ public:
 			}
 			break;
 		}
-		case GraphicsComponentType_Shader:
+		case GraphicsComponentType::GraphicsComponentType_Shader:
 		{
 			if(m_shaderComponent != nullptr)
 			{
 				// Delete the actual component
-				//delete m_shaderComponent;
+				delete m_shaderComponent;
 
 				// Assign the component pointer as nullptr to denote that it has been removed
 				m_shaderComponent = nullptr;
@@ -208,6 +430,108 @@ public:
 		}
 	}
 	
+	// Returns true if the graphics object contains any components
+	inline const bool containsComponents()
+	{
+		if(modelComponentPresent())
+			return true;
+		if(lightComponentPresent())
+			return true;
+		if(cameraComponentPresent())
+			return true;
+		if(shaderComponentPresent())
+			return true;
+
+		return false;
+	}
+
+	std::vector<LoadableObjectsContainer> getLoadableObjects() 
+	{ 
+		std::vector<LoadableObjectsContainer> returnLoadableObjects;
+
+		if(cameraComponentPresent())
+		{
+			auto loadableObjects = getCameraComponent()->getLoadableObjects();
+			//returnLoadableObjects.insert(returnLoadableObjects.end(), loadableObjects.begin(), loadableObjects.end());
+			returnLoadableObjects.insert(returnLoadableObjects.end(), std::make_move_iterator(loadableObjects.begin()), std::make_move_iterator(loadableObjects.end()));
+		}
+
+		if(modelComponentPresent())
+		{
+			auto loadableObjects = getModelComponent()->getLoadableObjects();
+			returnLoadableObjects.insert(returnLoadableObjects.end(), std::make_move_iterator(loadableObjects.begin()), std::make_move_iterator(loadableObjects.end()));
+		}
+
+		if(shaderComponentPresent())
+		{
+			auto loadableObjects = getShaderComponent()->getLoadableObjects();
+			returnLoadableObjects.insert(returnLoadableObjects.end(), std::make_move_iterator(loadableObjects.begin()), std::make_move_iterator(loadableObjects.end()));
+		}
+
+		if(lightComponentPresent())
+		{
+			auto loadableObjects = getLightComponent()->getLoadableObjects();
+			returnLoadableObjects.insert(returnLoadableObjects.end(), std::make_move_iterator(loadableObjects.begin()), std::make_move_iterator(loadableObjects.end()));
+		}
+
+		return returnLoadableObjects;
+	}
+
+	void performCheckIsLoadedToMemory()
+	{
+		bool componentsAreLoaded = true;
+
+		if(cameraComponentPresent() && !getCameraComponent()->isLoadedToMemory())
+			componentsAreLoaded = false;
+
+		if(modelComponentPresent() && !getModelComponent()->isLoadedToMemory())
+		{
+			getModelComponent()->performCheckIsLoadedToMemory();
+			if(!getModelComponent()->isLoadedToMemory())
+				componentsAreLoaded = false;
+		}
+
+		if(shaderComponentPresent() && !getShaderComponent()->isLoadedToMemory())
+		{
+			getShaderComponent()->performCheckIsLoadedToMemory();
+			if(!getShaderComponent()->isLoadedToMemory())
+				componentsAreLoaded = false;
+		}
+
+		if(lightComponentPresent() && !getLightComponent()->isLoadedToMemory())
+			componentsAreLoaded = false;
+
+		if(componentsAreLoaded)
+			setLoadedToMemory(true);
+	}
+	void performCheckIsLoadedToVideoMemory() 
+	{
+		bool componentsAreLoaded = true;
+
+		if(cameraComponentPresent() && !getCameraComponent()->isLoadedToVideoMemory())
+			componentsAreLoaded = false;
+
+		if(modelComponentPresent() && !getModelComponent()->isLoadedToVideoMemory())
+		{
+			getModelComponent()->performCheckIsLoadedToVideoMemory();
+			if(!getModelComponent()->isLoadedToVideoMemory())
+				componentsAreLoaded = false;
+		}
+
+		if(shaderComponentPresent() && !getShaderComponent()->isLoadedToVideoMemory())
+		{
+			getShaderComponent()->performCheckIsLoadedToVideoMemory();
+			if(!getShaderComponent()->isLoadedToVideoMemory())
+				componentsAreLoaded = false;
+		}
+
+		if(lightComponentPresent() && !getLightComponent()->isLoadedToVideoMemory())
+			componentsAreLoaded = false;
+
+		if(componentsAreLoaded)
+			setLoadedToVideoMemory(true);
+	}
+
 private:
 	//enum 
 	/*struct
@@ -249,9 +573,10 @@ private:
 	//SpatialTransformData m_worldSpace;
 
 	// Components
-	ModelComponentData *m_modelComponent;
-	ShaderData *m_shaderComponent;
-	LightComponent *m_lightComponent;
+	CameraComponent *m_cameraComponent;
+	LightComponent	*m_lightComponent;
+	ModelComponent	*m_modelComponent;
+	ShaderComponent *m_shaderComponent;
 
 	// Stores a separate flag for each component currently present
 	BitMask m_componentsFlag;

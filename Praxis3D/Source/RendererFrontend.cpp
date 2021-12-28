@@ -152,7 +152,7 @@ ErrorCode RendererFrontend::init()
 	return returnCode;
 }
 
-void RendererFrontend::renderFrame(const SceneObjects &p_sceneObjects, const float p_deltaTime)
+void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_deltaTime)
 {
 	if(m_frameData.m_screenSize.x != Config::graphicsVar().current_resolution_x ||
 		m_frameData.m_screenSize.y != Config::graphicsVar().current_resolution_y)
@@ -173,17 +173,45 @@ void RendererFrontend::renderFrame(const SceneObjects &p_sceneObjects, const flo
 	
 	// Load all the objects in the load-to-GPU queue. This needs to be done before any rendering, as objects in this
 	// array might have been also added to objects-to-render arrays, so they need to be loaded first
-	for (decltype(p_sceneObjects.m_objectsToLoad.size()) i = 0, size = p_sceneObjects.m_objectsToLoad.size(); i < size; i++)
+	for(decltype(p_sceneObjects.m_loadToVideoMemory.size()) i = 0, size = p_sceneObjects.m_loadToVideoMemory.size(); i < size; i++)
 	{
-		queueForLoading(*p_sceneObjects.m_objectsToLoad[i]);
+		switch(p_sceneObjects.m_loadToVideoMemory[i].m_objectType)
+		{
+		case LoadableObjectsContainer::LoadableObjectType_Model:
+			queueForLoading(p_sceneObjects.m_loadToVideoMemory[i].m_loadableObject.m_model);
+			break;
+		case LoadableObjectsContainer::LoadableObjectType_Shader:
+			queueForLoading(*p_sceneObjects.m_loadToVideoMemory[i].m_loadableObject.m_shader);
+			break;
+		case LoadableObjectsContainer::LoadableObjectType_Texture:
+			queueForLoading(p_sceneObjects.m_loadToVideoMemory[i].m_loadableObject.m_texture);
+			break;
+		}
 	}
 
 	// Handle loading before any rendering takes place
 	passLoadCommandsToBackend();
 
+	// Mark all loading-to-video-memory objects as loaded
+	for(decltype(p_sceneObjects.m_loadToVideoMemory.size()) i = 0, size = p_sceneObjects.m_loadToVideoMemory.size(); i < size; i++)
+	{
+		switch(p_sceneObjects.m_loadToVideoMemory[i].m_objectType)
+		{
+		case LoadableObjectsContainer::LoadableObjectType_Model:
+			p_sceneObjects.m_loadToVideoMemory[i].m_loadableObject.m_model.setLoadedToVideoMemory(true);
+			break;
+		case LoadableObjectsContainer::LoadableObjectType_Shader:
+			p_sceneObjects.m_loadToVideoMemory[i].m_loadableObject.m_shader->setLoadedToVideoMemory(true);
+			break;
+		case LoadableObjectsContainer::LoadableObjectType_Texture:
+			p_sceneObjects.m_loadToVideoMemory[i].m_loadableObject.m_texture.setLoadedToVideoMemory(true);
+			break;
+		}
+	}
+
 	// Calculate view and view-projection matrix here, so it is only done once, since it only changes between frames
-	m_frameData.m_viewMatrix = p_sceneObjects.m_camera->getBaseObjectData().m_modelMat;
-	m_frameData.m_viewProjMatrix = m_frameData.m_projMatrix * p_sceneObjects.m_camera->getBaseObjectData().m_modelMat;
+	m_frameData.m_viewMatrix = p_sceneObjects.m_camera.m_viewData.m_transformMat;
+	m_frameData.m_viewProjMatrix = m_frameData.m_projMatrix * m_frameData.m_viewMatrix;
 	
 	// Convert the view matrix to row major for the atmospheric scattering shaders
 	m_frameData.m_transposeViewMatrix = Math::transpose(m_frameData.m_viewMatrix);
@@ -214,12 +242,12 @@ void RendererFrontend::renderFrame(const SceneObjects &p_sceneObjects, const flo
 	std::cout << m_frameData.m_viewMatrix.m[12] << " : " << m_frameData.m_viewMatrix.m[13] << " : " << m_frameData.m_viewMatrix.m[14] << " : " << m_frameData.m_viewMatrix.m[15] << std::endl;
 	*/
 	// Set the camera position
-	m_frameData.m_cameraPosition = p_sceneObjects.m_camera->getVec3(nullptr, Systems::Changes::Spatial::WorldPosition);
+	m_frameData.m_cameraPosition = p_sceneObjects.m_camera.m_viewData.m_spatialData.m_position;
 	
 	// Set the camera target vector
-	m_frameData.m_cameraTarget = p_sceneObjects.m_camera->getVec3(nullptr, Systems::Changes::Spatial::WorldRotation);
+	m_frameData.m_cameraTarget = p_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler;
 
-	// Assign directional light values and also normalize its direction, so it's not neccessary to do it in a shader
+	// Assign directional light values and also normalize its direction, so it's not necessary to do it in a shader
 	m_frameData.m_dirLightColor = p_sceneObjects.m_directionalLight->m_color;
 	m_frameData.m_dirLightIntensity = p_sceneObjects.m_directionalLight->m_intensity;
 	m_frameData.m_dirLightDirection = p_sceneObjects.m_directionalLight->m_direction;

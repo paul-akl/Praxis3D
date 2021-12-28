@@ -47,15 +47,15 @@ public:
 		}
 
 		// Setters
-		inline void setLoaded(bool p_loaded)				{ m_loadedToMemory = p_loaded;		}
+		inline void setLoadedToMemory(bool p_loaded)		{ m_loadedToMemory = p_loaded;		}
 		inline void setLoadedToVideoMemory(bool p_loaded)	{ m_loadedToVideoMemory = p_loaded; }
 		inline void setUniqueID(unsigned int p_uniqueID)	{ m_uniqueID = p_uniqueID;			}
 
 		// Getters
-		inline const bool isLoaded()				{ return m_loadedToMemory;		}
-		inline const bool isLoadedToVideoMemory()	{ return m_loadedToVideoMemory; }
-		inline const unsigned int getUniqueID()		{ return m_uniqueID;			}
-		inline std::string getFilename()			{ return m_filename;			}
+		inline const bool isLoadedToMemory() const		{ return m_loadedToMemory;		}
+		inline const bool isLoadedToVideoMemory() const { return m_loadedToVideoMemory; }
+		inline const unsigned int getUniqueID()	const	{ return m_uniqueID;			}
+		inline const std::string &getFilename() const	{ return m_filename;			}
 
 		// Equality operator; compares filenames
 		inline bool operator==(std::string p_string) { return m_filename == p_string; }

@@ -189,7 +189,7 @@ FreeCamera *ScriptingScene::loadFreeCamera(const PropertySet & p_properties)
 	{
 		switch(p_properties[i].getPropertyID())
 		{
-		case Properties::Position:
+		case Properties::LocalPosition:
 			freeCamera->setPosition(p_properties[i].getVec3f());
 			break;
 		case Properties::Angle:
@@ -287,13 +287,13 @@ DebugMoveScript *ScriptingScene::loadDebugMove(const PropertySet &p_properties)
 	{
 		switch(p_properties[i].getPropertyID())
 		{
-		case Properties::Position:
+		case Properties::LocalPosition:
 			debugMove->setOriginPosition(p_properties[i].getVec3f());
 			break;
 		case Properties::Radius:
 			debugMove->setRadius(p_properties[i].getFloat());
 			break;
-		case Properties::Rotation:
+		case Properties::LocalRotation:
 			debugMove->setMovementAxis(p_properties[i].getVec3f());
 			break;
 		case Properties::Speed:
@@ -319,7 +319,7 @@ DebugRotateScript *ScriptingScene::loadDebugRotate(const PropertySet &p_properti
 		case Properties::Axis:
 			debugRotate->setRotationAxis(p_properties[i].getVec3f());
 			break;
-		case Properties::Rotation:
+		case Properties::LocalRotation:
 			debugRotate->setRotation(p_properties[i].getVec3f());
 			break;
 		case Properties::Speed:

@@ -37,9 +37,9 @@ public:
 		// Add variables
 		propertySet.addProperty(Properties::Type, Properties::DebugMoveScript);
 		propertySet.addProperty(Properties::Name, m_name);
-		propertySet.addProperty(Properties::Position, m_originPosVec);
+		propertySet.addProperty(Properties::LocalPosition, m_originPosVec);
 		propertySet.addProperty(Properties::Radius, m_radius);
-		propertySet.addProperty(Properties::Rotation, m_rotation);
+		propertySet.addProperty(Properties::LocalRotation, m_rotation);
 		propertySet.addProperty(Properties::Speed, m_speed);
 
 		return propertySet;
@@ -51,17 +51,17 @@ public:
 
 		m_positionVec = m_targetVec * m_radius + m_originPosVec;
 
-		postChanges(Systems::Changes::Spatial::Position);
+		postChanges(Systems::Changes::Spatial::LocalPosition);
 	}
 
 	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
-		switch(p_changedBits)
+		/*switch(p_changedBits)
 		{
-		case Systems::Changes::Spatial::Position:
+		case Systems::Changes::Spatial::LocalPosition:
 			return m_positionVec;
 			break;
-		}
+		}*/
 
 		return ObservedSubject::getVec3(p_observer, p_changedBits);
 	}

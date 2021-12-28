@@ -3,20 +3,58 @@
 #include "SceneLoader.h"
 #include "WorldScene.h"
 
+WorldScene::WorldScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader)
+{
+	m_worldTask = new WorldTask(this);
+}
+
+ErrorCode WorldScene::setup(const PropertySet &p_properties)
+{
+	// Get default object pool size
+	decltype(m_gameObjects.getPoolSize()) objectPoolSize = Config::objectPoolVar().object_pool_size;
+
+	for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
+	{
+		switch(p_properties[i].getPropertyID())
+		{
+		case Properties::ObjectPoolSize:
+			objectPoolSize = p_properties[i].getInt();
+			break;
+		}
+	}
+
+	// Initialize object pools
+	m_gameObjects.init(objectPoolSize);
+
+	return ErrorCode::Success;
+}
+
 SystemObject *WorldScene::createObject(const PropertySet &p_properties)
 {
 	ErrorCode objPoolError = ErrorCode::Failure;
-	SystemObject *returnObject = nullptr;
+	GameObject *newGameObject = nullptr;
+		
+	// Get the object name
+	auto &nameProperty = p_properties.getPropertyByID(Properties::Name);
 
-	// Try to add a new object to the pool
-	objPoolError = m_gameObjects.add(this, p_properties.getPropertyByID(Properties::Name).getString(), &m_sceneLoader);
-	
-	// If adding a new object was successful, continue to load data
-	if(objPoolError == ErrorCode::Success)
+	// Find a place for the new object in the pool
+	auto gameObjectFromPool = m_gameObjects.newObject();
+
+	// Check if the pool wasn't full
+	if(gameObjectFromPool != nullptr)
 	{
-		// The newly added object in the pool
-		auto newGameObject = m_gameObjects.getLastRawObject();
-				
+		std::string name;
+
+		// If the name property is missing, generate a unique name based on the object's index in the pool
+		if(nameProperty)
+			name = nameProperty.getString();
+		else
+			name = GetString(Properties::GameObject) + Utilities::toString(gameObjectFromPool->getIndex());
+
+		// Construct the new GameObject
+		gameObjectFromPool->construct(this, name, *m_sceneLoader);
+		newGameObject = gameObjectFromPool->getObject();
+						
 		// Load property data
 		for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
 		{
@@ -44,7 +82,7 @@ SystemObject *WorldScene::createObject(const PropertySet &p_properties)
 			case Properties::Parent:
 				{
 					// Get the ID if the parent object
-					decltype(GameObject::m_id) parentID = p_properties[i].getInt();
+					decltype(GameObject::m_GameObjectID) parentID = p_properties[i].getInt();
 
 					// Try to get the parent game object, from the object register, by its ID
 					auto parentObject = m_objectRegister.getObject(parentID);
@@ -53,7 +91,7 @@ SystemObject *WorldScene::createObject(const PropertySet &p_properties)
 					if(parentObject != nullptr)
 					{
 						// If it is valid, set it as the parent
-						newGameObject->setParent(parentObject);
+						newGameObject->setParent(*parentObject);
 					}
 					else
 					{
@@ -64,19 +102,22 @@ SystemObject *WorldScene::createObject(const PropertySet &p_properties)
 				}
 				break;
 			case Properties::LocalPosition:
-				newGameObject->m_localSpace.m_position = p_properties[i].getVec3f();
+				newGameObject->m_spatialData.setLocalPosition(p_properties[i].getVec3f());
 				break;
 			case Properties::LocalRotation:
-				newGameObject->m_localSpace.m_rotationEuler = p_properties[i].getVec3f();
+				newGameObject->m_spatialData.setLocalRotation(p_properties[i].getVec3f());
 				break;
 			case Properties::LocalRotationQuaternion:
-				newGameObject->m_localSpace.m_rotationQuat = p_properties[i].getVec4f();
+				newGameObject->m_spatialData.setLocalRotation(Math::Quaternion(p_properties[i].getVec4f()));
 				break;
 			case Properties::LocalScale:
-				newGameObject->m_localSpace.m_scale = p_properties[i].getVec3f();
+				newGameObject->m_spatialData.setLocalScale(p_properties[i].getVec3f());
 				break;
 			}
 		}
+
+		// Spatial data manager should be updated after setting all the spatial data
+		newGameObject->m_spatialData.update();
 
 		// Declare data struct for children whose IDs haven't been registered yet
 		GameObjectAndChildren unassignedChildren(newGameObject);
@@ -87,7 +128,7 @@ SystemObject *WorldScene::createObject(const PropertySet &p_properties)
 		// Iterate over every child entry
 		for(decltype(children.getNumPropertySets()) i = 0, size = children.getNumPropertySets(); i < size; i++)
 		{
-			decltype(GameObject::m_id) childID = children.getPropertySet(i).getPropertyByID(Properties::ID).getInt();
+			decltype(GameObject::m_GameObjectID) childID = children.getPropertySet(i).getPropertyByID(Properties::ID).getInt();
 								
 			// Try to get the child game object, from the object register, by its ID
 			auto childObject = m_objectRegister.getObject(childID);
@@ -96,7 +137,7 @@ SystemObject *WorldScene::createObject(const PropertySet &p_properties)
 			if(childObject != nullptr)
 			{
 				// If it is valid, set it as the parent
-				newGameObject->addChild(*childObject);
+				newGameObject->addChild(**childObject);
 			}
 			else
 			{
@@ -113,22 +154,43 @@ SystemObject *WorldScene::createObject(const PropertySet &p_properties)
 		auto &rendering = p_properties.getPropertySetByID(Properties::Rendering);
 		if(rendering)
 		{
-			m_sceneLoader->getSystemScene(Systems::Graphics);
+			auto graphicsObject = m_sceneLoader->getSystemScene(Systems::Graphics)->createObject(p_properties);
+			if(graphicsObject != nullptr)
+				newGameObject->addComponent(static_cast<GraphicsObject*>(graphicsObject));
 		}
 		
 		auto &scripting = p_properties.getPropertySetByID(Properties::Scripting);
 		if(scripting)
 		{
-
+			//auto scriptingObject = m_sceneLoader->getSystemScene(Systems::Scripting)->createObject(p_properties);
+			//if(scriptingObject != nullptr)
+			//	newGameObject->addComponent(static_cast<ScriptingObject *>(scriptingObject));
 		}
 
-		returnObject = newGameObject;
 	}
 	else
 	{
 		// If valid type was not specified, or object creation failed, assign a null object instead
-		returnObject = g_nullSystemBase.getScene()->createObject(p_properties);
+		//newGameObject = g_nullSystemBase.getScene()->createObject(p_properties);
+		ErrHandlerLoc::get().log(ErrorCode::ObjectPool_full, ErrorSource::Source_WorldScene, "Failed to add GameObject - \'" + nameProperty.getString() + "\'");
 	}
 
-    return returnObject;
+    return newGameObject;
+}
+
+ErrorCode WorldScene::destroyObject(SystemObject *p_systemObject)
+{
+	// Check if object is valid and belongs to world system
+	if(p_systemObject != nullptr && p_systemObject->getSystemType() == Systems::World)
+	{
+		// Cast the system object to game object, as it belongs to the renderer scene
+		GameObject *objectToDestroy = static_cast<GameObject*>(p_systemObject);
+
+		// Try to destroy the object; return success if it succeeds
+		if(removeObjectFromPool(*objectToDestroy))
+			return ErrorCode::Success;
+	}
+
+	// If this point is reached, no object was found, return an appropriate error
+	return ErrorCode::Destroy_obj_not_found;
 }

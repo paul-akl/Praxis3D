@@ -13,7 +13,7 @@ class GameObject : public SystemObject
 {
 	friend class WorldScene;
 public:
-	GameObject(SystemScene *p_systemScene, std::string p_name, SceneLoader &p_sceneLoader, ObjectID p_id = 0) : SystemObject(p_systemScene, p_name, Properties::GameObject), m_sceneLoader(p_sceneLoader), m_id(p_id), m_spatialData(*this)
+	GameObject(SystemScene *p_systemScene, std::string p_name, SceneLoader &p_sceneLoader, ObjectID p_gmaeObjectID = 0) : SystemObject(p_systemScene, p_name, Properties::GameObject), m_sceneLoader(p_sceneLoader), m_GameObjectID(p_gmaeObjectID), m_spatialData(*this)
 	{
 		m_parent = nullptr;
 		m_graphicsComponent = nullptr;
@@ -27,7 +27,9 @@ public:
 			removeComponent(static_cast<Systems::TypeID>(i));
 		}
 	}
-	
+
+	ErrorCode init() { return ErrorCode::Success; }
+
 	BitMask getSystemType() override final { return Systems::World; }
 	
 	void update(const float p_deltaTime)
@@ -35,8 +37,8 @@ public:
 		// If update is needed
 		if(m_updateNeeded)
 		{
-			
-			//m_localSpace.m_transformMat = Math::createTransformMat(m_localSpace.m_transformMat.getPosition(), m_localSpace.m_rotationEuler, m_localSpace.m_transformMat.getScale());
+		
+			//.m_transformMat = Math::createTransformMat(m_localSpace.m_transformMat.getPosition(), m_localSpace.m_rotationEuler, m_localSpace.m_transformMat.getScale());
 			//m_worldSpace.m_transformMat = Math::createTransformMat(m_worldSpace.m_transformMat.getPosition(), m_worldSpace.m_rotationEuler, m_worldSpace.m_transformMat.getScale());
 
 			// Mark as updated
@@ -114,7 +116,7 @@ public:
 		m_sceneLoader.getChangeController()->createObjectLink(this, &p_child);
 
 		// Add the child to the children array
-		m_children.push_back(p_child); 
+		m_children.push_back(&p_child); 
 	}
 	void removeChild(const std::size_t p_id)
 	{
@@ -122,19 +124,19 @@ public:
 		for(decltype(m_children.size()) size = m_children.size(), i = 0; i < size; i++)
 		{
 			// Match the child ID
-			if(m_children[i].m_id == p_id)
+			if(m_children[i]->m_GameObjectID == p_id)
 			{
 				// Unlink the child from the observer list
-				m_sceneLoader.getChangeController()->removeObjectLink(this, &m_children[i]);
+				m_sceneLoader.getChangeController()->removeObjectLink(this, m_children[i]);
 
 				// Erase the child if the IDs matched
 				m_children.erase(m_children.begin() + i);
 			}
 		}
 	}
-	void removeChild(const GameObject &p_child) { removeChild(p_child.m_id); }
+	void removeChild(const GameObject &p_child) { removeChild(p_child.m_GameObjectID); }
 	void clearChildren() { m_children.clear(); }
-	const std::vector<GameObject&> &getChildren() const { return m_children; }
+	const std::vector<GameObject*> &getChildren() const { return m_children; }
 
 	// Component functions
 	void addComponent(GraphicsObject *p_graphicsComponent) 
@@ -160,17 +162,20 @@ public:
 		{
 			case Systems::TypeID::Graphics:
 			{
-				unlinkComponent(m_graphicsComponent);
+				// First check if the component exists
+				if(m_graphicsComponent != nullptr)
+				{
+					unlinkComponent(m_graphicsComponent);
 
-				// Stop sharing the spatial data with the component
-				m_graphicsComponent->removeSpatialDataManagerReference();
+					// Stop sharing the spatial data with the component
+					m_graphicsComponent->removeSpatialDataManagerReference();
 
-				// Assign the component pointer as nullptr to denote that it has been removed
-				m_graphicsComponent = nullptr;
+					// Assign the component pointer as nullptr to denote that it has been removed
+					m_graphicsComponent = nullptr;
 
-				// Remove the bit corresponding to graphics component from the componentsFlag bitmask
-				m_componentsFlag &= ~Systems::GameObjectComponents::Graphics;
-
+					// Remove the bit corresponding to graphics component from the componentsFlag bitmask
+					m_componentsFlag &= ~Systems::GameObjectComponents::Graphics;
+				}
 				break;
 			}
 			case Systems::TypeID::Scripting:
@@ -190,7 +195,7 @@ public:
 
 private:
 	// Set the ID of the object. The ID must be unique
-	void setID(std::size_t p_id) { m_id = p_id; }
+	void setGameObjectID(std::size_t p_id) { m_GameObjectID = p_id; }
 
 	// Unlinks the given component, so that it is removed from observers/listeners
 	void unlinkComponent(SystemObject *p_component)
@@ -206,7 +211,7 @@ private:
 	SceneLoader &m_sceneLoader;
 
 	// Parent and children hierarchy
-	std::vector<GameObject&> m_children;
+	std::vector<GameObject*> m_children;
 	GameObject *m_parent;
 
 	//Components
@@ -218,9 +223,7 @@ private:
 
 	// Position data
 	SpatialDataManager m_spatialData;
-	//SpatialData m_localSpace,
-	//			m_worldSpace;
 
 	// ID of a GameObject; separate from m_objectID of a SystemObject
-	ObjectID m_id;
+	ObjectID m_GameObjectID;
 };

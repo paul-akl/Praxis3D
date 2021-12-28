@@ -2,7 +2,9 @@
 
 //#define _USE_MATH_DEFINES
 
+#include <algorithm>
 #include <cmath>
+#include <limits>
 
 #define E_CONST		2.71828182845904523536
 #define LOG2E		1.44269504088896340736
@@ -522,28 +524,28 @@ namespace Math
 		inline void setRotationZ(const Vec4f &p_rotZ)	{ m[2] = p_rotZ.x; m[6] = p_rotZ.y; m[10] = p_rotZ.z; m[14] = p_rotZ.w; }
 		inline void setPosition(const Vec4f &p_pos)		{ m[3] = p_pos.x;  m[7] = p_pos.y;  m[11] = p_pos.z;  m[15] = p_pos.w;	}
 
-		inline void Mat4f::identity()
+		inline void identity()
 		{
 			m[0] = 1.0f; m[4] = 0.0f; m[8] = 0.0f;	m[12] = 0.0f;
 			m[1] = 0.0f; m[5] = 1.0f; m[9] = 0.0f;	m[13] = 0.0f;
 			m[2] = 0.0f; m[6] = 0.0f; m[10] = 1.0f;	m[14] = 0.0f;
 			m[3] = 0.0f; m[7] = 0.0f; m[11] = 0.0f;	m[15] = 1.0f;
 		}
-		inline void Mat4f::transform(const Vec3f& p_vec3)
+		inline void transform(const Vec3f& p_vec3)
 		{
 			m[12] = p_vec3.x;
 			m[13] = p_vec3.y;
 			m[14] = p_vec3.z;
 		}
-		void Mat4f::translate(const Vec3f &p_vec3);
-		inline void Mat4f::scale(const float p_scale)
+		void translate(const Vec3f &p_vec3);
+		inline void scale(const float p_scale)
 		{
 			m[0] *= p_scale; m[4] *= p_scale; m[8] *= p_scale;
 			m[1] *= p_scale; m[5] *= p_scale; m[9] *= p_scale;
 			m[2] *= p_scale; m[6] *= p_scale; m[10] *= p_scale;
 			m[3] *= p_scale; m[7] *= p_scale;
 		}
-		inline void Mat4f::scale(const Vec3f& p_scale)
+		inline void scale(const Vec3f& p_scale)
 		{
 			m[0] *= p_scale.x; m[4] *= p_scale.y; m[8] *= p_scale.z;
 			m[1] *= p_scale.x; m[5] *= p_scale.y; m[9] *= p_scale.z;
@@ -649,5 +651,5 @@ namespace Math
 	inline double wrapRadianAngle(double p_angleInRadians) { return p_angleInRadians - TWOPI * floor(p_angleInRadians / TWOPI); }
 
 	template <typename T>
-	inline T clamp(T p_in, T p_low, T p_high) { return std::min(std::max(p_in, p_low), p_high); }
+	inline T clamp(T p_in, T p_low, T p_high) { return (std::min)((std::max)(p_in, p_low), p_high); }
 }

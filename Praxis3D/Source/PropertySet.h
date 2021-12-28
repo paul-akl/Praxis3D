@@ -488,7 +488,7 @@ public:
 	const inline bool operator<(const Property &p_property) const { return (m_propertyID < p_property.m_propertyID); }
 
 	// Assignment operator
-	Property &Property::operator=(const Property &p_property)
+	Property &operator=(const Property &p_property)
 	{
 		m_propertyID = p_property.m_propertyID;
 		m_variableType = p_property.m_variableType;

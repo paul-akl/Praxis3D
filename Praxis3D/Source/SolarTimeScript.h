@@ -190,29 +190,29 @@ public:
 		m_sunPosition = (-m_sunDirection * m_offsetPosition) + m_originPosition;
 
 		// Notify observers of the changes
-		postChanges(Systems::Changes::Spacial::Position | Systems::Changes::Spacial::Rotation);
+		postChanges(Systems::Changes::Spatial::LocalPosition | Systems::Changes::Spatial::LocalRotation);
 	}
 
-	virtual BitMask getDesiredSystemChanges() { return Systems::Changes::Spacial::All; }
-	virtual BitMask getPotentialSystemChanges() { return Systems::Changes::Spacial::All; }
+	virtual BitMask getDesiredSystemChanges() { return Systems::Changes::Spatial::All; }
+	virtual BitMask getPotentialSystemChanges() { return Systems::Changes::Spatial::All; }
 
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
-		if(p_changeType & Systems::Changes::Spacial::Position)
-			m_originPosition = p_subject->getVec3(this, Systems::Changes::Spacial::Position);
+		if(p_changeType & Systems::Changes::Spatial::LocalPosition)
+			m_originPosition = p_subject->getVec3(this, Systems::Changes::Spatial::LocalPosition);
 
-		if(p_changeType & Systems::Changes::Spacial::Rotation)
-			m_sunDirection = p_subject->getVec3(this, Systems::Changes::Spacial::Rotation);
+		if(p_changeType & Systems::Changes::Spatial::LocalRotation)
+			m_sunDirection = p_subject->getVec3(this, Systems::Changes::Spatial::LocalRotation);
 	}
 
 	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		switch(p_changedBits)
 		{
-		case Systems::Changes::Spacial::Position:
+		case Systems::Changes::Spatial::LocalPosition:
 			return m_sunPosition;
 			break;
-		case Systems::Changes::Spacial::Rotation:
+		case Systems::Changes::Spatial::LocalRotation:
 			return m_sunDirection;
 			break;
 		}

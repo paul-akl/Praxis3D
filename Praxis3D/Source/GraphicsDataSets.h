@@ -6,8 +6,13 @@
 // Contains data of a single material
 struct MaterialData
 {
+	MaterialData() :
+		m_texture(Loaders::texture2D().getDefaultTexture()),
+		m_textureScale(1.0f, 1.0f),
+		m_parallaxScale(1.0f),
+		m_alphaCutoff(1.0f) { }
 
-	MaterialData(TextureLoader2D::Texture2DHandle &m_texture = Loaders::texture2D().getDefaultTexture()) : 
+	MaterialData(TextureLoader2D::Texture2DHandle &m_texture) : 
 		m_texture(m_texture), 
 		m_textureScale(1.0f, 1.0f), 
 		m_parallaxScale(1.0f), 
@@ -26,24 +31,43 @@ struct MaterialData
 // Contains data of a single mesh and its materials
 struct MeshData
 {
-	MeshData(Model::Mesh &p_mesh, MaterialData p_materials[MaterialType_NumOfTypes]) : m_mesh(p_mesh), m_materials{ *p_materials } { }
+	MeshData(const Model::Mesh &p_mesh, MaterialData p_materials[MaterialType::MaterialType_NumOfTypes]) : m_mesh(p_mesh), m_materials{ *p_materials } { }
 
 	// Handle to a mesh
-	Model::Mesh &m_mesh;
+	const Model::Mesh &m_mesh;
 
 	// An array of materials of each type
-	MaterialData m_materials[MaterialType_NumOfTypes];
+	MaterialData m_materials[MaterialType::MaterialType_NumOfTypes];
 };
 
 // Contains data of a single model and its meshes
 struct ModelData
 {
-	ModelData(ModelLoader::ModelHandle &p_model) : m_model(p_model) { }
+	ModelData(ModelLoader::ModelHandle p_model) : m_model(p_model) { }
 
 	// Handle to a model
 	ModelLoader::ModelHandle m_model;
 	// An array of meshes
-	std::vector<MeshData>  m_meshes;
+	std::vector<MeshData> m_meshes;
+};
+
+// Contains model data and spatial data; needed by the renderer to draw a model using default shaders
+struct ModelAndSpatialData
+{
+	ModelAndSpatialData(ModelData &p_modelData, const Math::Mat4f &p_modelMatrix) : m_modelData(p_modelData), m_modelMatrix(p_modelMatrix) { }
+
+	ModelData &m_modelData;
+	const Math::Mat4f &m_modelMatrix;
+};
+
+// Contains model data, shader data and spatial data; needed by the renderer to draw a model using custom shaders
+struct ModelShaderSpatialData
+{
+	ModelShaderSpatialData(ModelData &p_modelData, ShaderLoader::ShaderProgram &p_shader, const Math::Mat4f &p_modelMatrix) : m_modelData(p_modelData), m_shader(&p_shader), m_modelMatrix(p_modelMatrix) { }
+
+	ModelData &m_modelData;
+	ShaderLoader::ShaderProgram *m_shader;
+	const Math::Mat4f &m_modelMatrix;
 };
 
 // Contains data of multiple models, comprising a model component
@@ -59,6 +83,12 @@ struct ShaderData
 
 	// Handle to a shader program
 	ShaderLoader::ShaderProgram &m_shader;
+};
+
+// Contains data of a camera, needed for view transformation
+struct CameraData
+{
+	SpatialTransformData m_viewData;
 };
 
 // All graphics objects contain an instance of this struct, which holds the necessary spacial and other data
@@ -115,6 +145,92 @@ struct RenderableObjectData
 
 	// Number of materials in each vector of the material type array (m_materials)
 	std::vector<TextureLoader2D::Texture2DHandle>::size_type m_numMaterials;
+};
+
+// A simple container storing a union which contains one of the loadable objects; uses an enum to distinguish which object is currently being stored
+struct LoadableObjectsContainer
+{
+	enum LoadableObjectType
+	{
+		LoadableObjectType_Model,
+		LoadableObjectType_Shader,
+		LoadableObjectType_Texture
+	};
+
+	LoadableObjectsContainer(ModelLoader::ModelHandle p_model)				: m_loadableObject(p_model), m_objectType(LoadableObjectType::LoadableObjectType_Model) { }
+	LoadableObjectsContainer(ShaderLoader::ShaderProgram *p_shader)			: m_loadableObject(p_shader), m_objectType(LoadableObjectType::LoadableObjectType_Shader) { }
+	LoadableObjectsContainer(TextureLoader2D::Texture2DHandle p_texture)	: m_loadableObject(p_texture), m_objectType(LoadableObjectType::LoadableObjectType_Texture) { }
+	~LoadableObjectsContainer() { }
+
+	union m_loadableObject
+	{
+		m_loadableObject(ModelLoader::ModelHandle p_model)				: m_model(p_model)  { }
+		m_loadableObject(ShaderLoader::ShaderProgram *p_shader)			: m_shader(p_shader) { }
+		m_loadableObject(TextureLoader2D::Texture2DHandle p_texture)	: m_texture(p_texture) { }
+		~m_loadableObject() { }
+
+		ModelLoader::ModelHandle m_model;
+		ShaderLoader::ShaderProgram *m_shader;
+		TextureLoader2D::Texture2DHandle m_texture;
+	} m_loadableObject;
+
+	inline const bool isLoadedToVideoMemory() const
+	{
+		switch(m_objectType)
+		{
+		case LoadableObjectsContainer::LoadableObjectType_Model:
+			return m_loadableObject.m_model.isLoadedToVideoMemory();
+			break;
+		case LoadableObjectsContainer::LoadableObjectType_Shader:
+			return m_loadableObject.m_shader->isLoadedToVideoMemory();
+			break;
+		case LoadableObjectsContainer::LoadableObjectType_Texture:
+			return m_loadableObject.m_texture.isLoadedToVideoMemory();
+			break;
+		}
+
+		return true;
+	}
+
+	// copy assignment
+	LoadableObjectsContainer &operator=(const LoadableObjectsContainer &p_arg)
+	{
+		// Guard self assignment
+		if(this == &p_arg)
+			return *this;
+
+		m_objectType = p_arg.m_objectType;
+
+		switch(p_arg.m_objectType)
+		{
+		case LoadableObjectsContainer::LoadableObjectType_Model:
+			m_loadableObject.m_model = p_arg.m_loadableObject.m_model;
+			break;
+		case LoadableObjectsContainer::LoadableObjectType_Shader:
+			m_loadableObject.m_shader = p_arg.m_loadableObject.m_shader;
+			break;
+		case LoadableObjectsContainer::LoadableObjectType_Texture:
+			m_loadableObject.m_texture = p_arg.m_loadableObject.m_texture;
+			break;
+		}
+
+		return *this;
+	}
+
+	LoadableObjectType m_objectType;
+};
+
+struct RenderableMeshData
+{
+	RenderableMeshData(Math::Mat4f &p_modelMatrix, MeshData &p_meshData)
+		: m_modelMatrix(p_modelMatrix), m_meshData(p_meshData), m_shader(*Loaders::shader().load()) { }
+
+	RenderableMeshData(Math::Mat4f &p_modelMatrix, MeshData &p_meshData, ShaderLoader::ShaderProgram &p_shader)// = *Loaders::shader().load())
+		: m_modelMatrix(p_modelMatrix), m_meshData(p_meshData), m_shader(p_shader) { }
+
+	Math::Mat4f &m_modelMatrix;
+	MeshData &m_meshData;
+	ShaderLoader::ShaderProgram &m_shader;
 };
 
 //	 ===========================================================================================================

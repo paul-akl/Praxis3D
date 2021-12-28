@@ -6,6 +6,7 @@
 RendererSystem::RendererSystem()
 {
 	m_rendererScene = nullptr;
+	m_systemName = GetString(Systems::Graphics);
 }
 
 RendererSystem::~RendererSystem()
@@ -45,11 +46,6 @@ void RendererSystem::loadInBackground()
 {
 	if(m_rendererScene != nullptr)
 		return m_rendererScene->loadInBackground();
-}
-
-std::string RendererSystem::getName()
-{
-	return "";
 }
 
 SystemScene *RendererSystem::createScene(SceneLoader *p_sceneLoader)

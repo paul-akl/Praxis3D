@@ -204,7 +204,8 @@ public:
 		const inline unsigned int getShaderHandle() const { return m_programHandle; }
 		inline ShaderUniformUpdater &getUniformUpdater() const { return *m_uniformUpdater; }
 
-		const inline bool isDefaultProgram() const { return m_defaultShader; }
+		const inline bool isDefaultProgram() const		{ return m_defaultShader;		}
+		const inline bool isLoadedToVideoMemory() const { return m_loadedToVideoMemory; }
 		
 		// Comparator operators
 		const inline bool operator==(const std::string &p_filename) const { return (m_combinedFilename == p_filename); }
@@ -249,6 +250,8 @@ public:
 			m_uniformUpdater = nullptr;
 		}
 		~ShaderProgram();
+
+		void setLoadedToVideoMemory(bool p_loaded) { m_loadedToVideoMemory = p_loaded; }
 
 		bool	m_defaultShader, 
 				m_loadedToMemory,

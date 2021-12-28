@@ -13,7 +13,6 @@
 class ObjectDirectory
 {
 public:
-
 	// Initialize the service locator
 	inline static ErrorCode init() 
 	{
@@ -33,7 +32,7 @@ public:
 		ObjectListIndexType objectIndex = 0;
 
 		// Try to get an index of an empty element in the object list and check if the element is empty (null)
-		if(m_emptyObjectListElements.try_pop(objectIndex) && m_systemObjectPool[objectIndex] == nullptr)
+		if(!m_emptyObjectListElements.empty() && m_emptyObjectListElements.try_pop(objectIndex) && m_systemObjectPool[objectIndex] == nullptr)
 		{
 			// Use the index that was acquired from the empty element list
 			m_systemObjectPool[objectIndex] = &p_systemObject;

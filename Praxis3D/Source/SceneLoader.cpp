@@ -20,36 +20,35 @@ ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 	// Get systems property set
 	auto &systemProperties = loadedProperties.getPropertySet().getPropertySetByID(Properties::Systems);
 
-	// Iterate over each system property set
-	for(decltype(systemProperties.getNumPropertySets()) propIndex = 0, propSize = systemProperties.getNumPropertySets(); propIndex < propSize; propIndex++)
+	// Iterate over all systems scenes
+	for(int sysIndex = 0; sysIndex < Systems::NumberOfSystems; sysIndex++)
 	{
-		// Iterate over all systems scenes
-		for(int sysIndex = 0; sysIndex < Systems::NumberOfSystems; sysIndex++)
+		// Create an empty property set, in case there is none in the loaded file, because a system scene setup must be called either way
+		PropertySet scenePropertySet;
+
+		// Iterate over each system property set
+		for(decltype(systemProperties.getNumPropertySets()) propIndex = 0, propSize = systemProperties.getNumPropertySets(); propIndex < propSize; propIndex++)
 		{
-			// If system scene name and property set name match
-			if(Systems::SystemNames[m_systemScenes[sysIndex]->getSystemType()]
-			   == GetString(systemProperties.getPropertySetUnsafe(propIndex).getPropertyID()))
-			{
-				// Pass the 'scene' property set to the matched system scene
-				m_systemScenes[sysIndex]->setup(systemProperties.getPropertySetUnsafe(propIndex).getPropertySetByID(Properties::Scene));
-
-				// Get 'objects' property set
-				auto &objectProperties = systemProperties.getPropertySetUnsafe(propIndex).getPropertySetByID(Properties::Objects);
-
-				// Iterate over all object property sets
-				for(decltype(objectProperties.getNumPropertySets()) objIndex = 0, objSize = objectProperties.getNumPropertySets(); objIndex < objSize; objIndex++)
-				{
-					// Create a new system object (by pasting the object property set)
-					auto *newObject = m_systemScenes[sysIndex]->createObject(objectProperties.getPropertySetUnsafe(objIndex));
-
-					// Save the newly created object for later linking
-					createdObjects.push_back(std::pair<const std::string&, SystemObject*>(newObject->getName(), newObject));
-				}
-			}
+			// If the system scene property matches in the loaded file, retrieve it so it can be passed to the corresponding scene
+			if(Systems::SystemNames[m_systemScenes[sysIndex]->getSystemType()] == GetString(systemProperties.getPropertySetUnsafe(propIndex).getPropertyID()))
+				scenePropertySet = systemProperties.getPropertySetUnsafe(propIndex).getPropertySetByID(Properties::Scene);
 		}
+
+		// Pass the scene propertySet parameters
+		m_systemScenes[sysIndex]->setup(scenePropertySet);
 	}
 
-	// Get the object link property sets
+	// Get Game Objects
+	auto &gameObjects = loadedProperties.getPropertySet().getPropertySetByID(Properties::GameObject);
+
+	// Iterate over all game object
+	for(decltype(gameObjects.getNumPropertySets()) objIndex = 0, objSize = gameObjects.getNumPropertySets(); objIndex < objSize; objIndex++)
+	{
+		// Create each game object by passing its PropertySet
+		m_systemScenes[Systems::World]->createObject(gameObjects.getPropertySetUnsafe(objIndex));
+	}
+
+	/*/ Get the object link property sets
 	auto &objLinkProperties = loadedProperties.getPropertySet().getPropertySetByID(Properties::ObjectLinks);
 
 	// Iterate over all object link property sets
@@ -89,9 +88,9 @@ ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 				break;
 			}
 		}
-	}
+	}*/
 
-
+	// Check if the scene should be loaded in background
 	if(loadedProperties.getPropertySet().getPropertyByID(Properties::LoadInBackground).getBool())
 	{
 		// Start loading in background threads in all scenes

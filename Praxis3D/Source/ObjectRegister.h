@@ -177,14 +177,14 @@ private:
 			if(m_emptyObjectIDPool[i] == p_id)
 			{
 				// Erase the matched element and return from the function
-				m_emptyObjectIDPool.erase(vec.begin() + i);
+				m_emptyObjectIDPool.erase(m_emptyObjectIDPool.begin() + i);
 				return;
 			}
 		}
 	}
 
 	// Object pool index variable type
-	typedef std::vector<T_Object>::size_type ObjectPoolIndexType;
+	using ObjectPoolIndexType = typename std::vector<T_Object>::size_type;
 
 	// All registered objects
 	std::vector<T_Object> m_objectPool;
@@ -252,7 +252,7 @@ public:
 		{
 			// Get the current size of the pool and calculate the new size
 			decltype(m_objectPool.size()) oldSize = m_objectPool.size();
-			decltype(m_objectPool.size()) newSize = (p_id * OBJECT_REGISTER_RESIZE_ADDED_OVERHEAD_MULTIPLIER) + 1;
+			decltype(m_objectPool.size()) newSize = static_cast<decltype(m_objectPool.size())>((p_id * OBJECT_REGISTER_RESIZE_ADDED_OVERHEAD_MULTIPLIER) + 1);
 
 			// Grow the object pool to fit in the given ID and get the starting index at which it was grown from
 			// Add some overhead to the size, as there's a high chance that there will be more objects to be registered
@@ -263,7 +263,7 @@ public:
 			{
 				// Add each new element to the empty object ID pool, excluding the given ID of the given object to be registered
 				if(i != p_id)
-					m_emptyObjectIDPool.push_back(i);
+					m_emptyObjectIDPool.push(i);
 			}
 
 			// Recursively call to register the given object, as the size should now fit the given ID
@@ -308,14 +308,14 @@ public:
 	}
 
 	// Returns object based on its ID. Returns 'nullptr' if object wasn't found
-	inline T_Object getObject(const ObjectID p_ID) const
+	inline T_Object *getObject(const ObjectID p_ID)
 	{	
 		// Default the return object to nullptr
 		T_Object *returnObject = nullptr;
 
 		// Check if the object ID is within bounds and assign the return object if it is
 		if(p_ID < m_objectPool.size())
-			returnObject = m_objectPool[p_ID];
+			returnObject = &m_objectPool[p_ID];
 
 		// Return the object; 'nullptr' if it wasn't found
 		return returnObject;
@@ -345,7 +345,7 @@ public:
 
 private:
 	// Object pool index variable type
-	typedef tbb::concurrent_vector<T_Object>::size_type ObjectPoolIndexType;
+	using ObjectPoolIndexType = typename tbb::concurrent_vector<T_Object>::size_type;
 	
 	// All registered objects
 	tbb::concurrent_vector<T_Object> m_objectPool;

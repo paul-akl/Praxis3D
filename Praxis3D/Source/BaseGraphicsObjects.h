@@ -138,13 +138,13 @@ protected:
 
 // Used to hold objects that need to be loaded or are already being loaded, in a list
 // Holds any of the graphics object (in a union) so the data of an object can be access and be loaded
-class LoadableGraphicsObject
+class LoadableGraphicsObjectOLD
 {
 	friend class RendererScene;
 public:
-	LoadableGraphicsObject(ModelObject *p_modelObject, size_t p_index);
-	LoadableGraphicsObject(EnvironmentMapObject *p_envMapStatic, size_t p_index);
-	LoadableGraphicsObject(ShaderModelGraphicsObject *p_shaderModelObject, size_t p_index);
+	LoadableGraphicsObjectOLD(ModelObject *p_modelObject, size_t p_index);
+	LoadableGraphicsObjectOLD(EnvironmentMapObject *p_envMapStatic, size_t p_index);
+	LoadableGraphicsObjectOLD(ShaderModelGraphicsObject *p_shaderModelObject, size_t p_index);
 
 	// Load object data to memory (RAM)
 	void LoadToMemory();

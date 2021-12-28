@@ -53,9 +53,10 @@ namespace Systems
 	namespace GraphicsObjectComponents
 	{
 		static constexpr BitMask None		= (BitMask)1 << 0;
-		static constexpr BitMask Lighting	= (BitMask)1 << 1;
-		static constexpr BitMask Model		= (BitMask)1 << 2;
-		static constexpr BitMask Shader		= (BitMask)1 << 3;
+		static constexpr BitMask Camera		= (BitMask)1 << 1;
+		static constexpr BitMask Lighting	= (BitMask)1 << 2;
+		static constexpr BitMask Model		= (BitMask)1 << 3;
+		static constexpr BitMask Shader		= (BitMask)1 << 4;
 	}
 	namespace Changes
 	{
@@ -100,17 +101,11 @@ namespace Systems
 			static constexpr BitMask ExtendObject		= Changes::Type::Generic + Changes::Common::Shared3;
 			static constexpr BitMask UnextendObject		= Changes::Type::Generic + Changes::Common::Shared4;
 			static constexpr BitMask Name				= Changes::Type::Generic + Changes::Common::Shared5;
-			static constexpr BitMask All				= CreateObject | DeleteObject | ExtendObject | Name;
+			static constexpr BitMask Link				= Changes::Type::Generic + Changes::Common::Shared6;
+			static constexpr BitMask All				= CreateObject | DeleteObject | ExtendObject | Name | Link;
 		}
 		namespace Spatial
 		{
-			/*static constexpr BitMask LocalModifier = Changes::Common::Shared0;
-			static constexpr BitMask WorldModifier			= Changes::Common::Shared1;
-			static constexpr BitMask Position				= Changes::Common::Shared2;
-			static constexpr BitMask Rotation				= Changes::Common::Shared3;
-			static constexpr BitMask Scale					= Changes::Common::Shared4;
-			static constexpr BitMask Transform				= Changes::Common::Shared5;*/
-
 			static constexpr BitMask LocalPosition			= Changes::Type::Spatial + Changes::Common::Shared1;
 			static constexpr BitMask LocalRotation			= Changes::Type::Spatial + Changes::Common::Shared2;
 			static constexpr BitMask LocalScale				= Changes::Type::Spatial + Changes::Common::Shared3;
@@ -129,16 +124,19 @@ namespace Systems
 		}
 		namespace Graphics
 		{
-			static constexpr BitMask Target					= Changes::Type::Graphics + Changes::Common::Shared1;
-			static constexpr BitMask UpVector				= Changes::Type::Graphics + Changes::Common::Shared2;
+			static constexpr BitMask Lighting				= Changes::Type::Graphics + Changes::Common::Shared21;
+			static constexpr BitMask Camera					= Changes::Type::Graphics + Changes::Common::Shared20;
+
+			static constexpr BitMask Target					= Changes::Type::Graphics + Changes::Graphics::Camera + Changes::Common::Shared1;
+			static constexpr BitMask UpVector				= Changes::Type::Graphics + Changes::Graphics::Camera + Changes::Common::Shared2;
 			static constexpr BitMask AllCamera				= Target | UpVector;
 
-			static constexpr BitMask Lighting				= Changes::Type::Graphics + Changes::Common::Shared3;
-			static constexpr BitMask Color					= Changes::Type::Graphics + Changes::Common::Shared4;
-			static constexpr BitMask CutoffAngle			= Changes::Type::Graphics + Changes::Common::Shared5;
-			static constexpr BitMask Direction				= Changes::Type::Graphics + Changes::Common::Shared6;
-			static constexpr BitMask Intensity				= Changes::Type::Graphics + Changes::Common::Shared7;
-			static constexpr BitMask AllLighting			= Lighting | Color | CutoffAngle | Direction | Intensity;
+			static constexpr BitMask LightEnabled			= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared3;
+			static constexpr BitMask Color					= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared4;
+			static constexpr BitMask CutoffAngle			= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared5;
+			static constexpr BitMask Direction				= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared6;
+			static constexpr BitMask Intensity				= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared7;
+			static constexpr BitMask AllLighting			= LightEnabled | Color | CutoffAngle | Direction | Intensity;
 
 			static constexpr BitMask All					= AllCamera | AllLighting;
 		}
@@ -175,6 +173,7 @@ namespace Properties
 	Code(LoadInBackground,) \
 	Code(Name,) \
 	Code(Objects,) \
+	Code(ObjectPoolSize,) \
 	Code(Scene,) \
 	Code(Systems,) \
 	Code(Type,) \
@@ -194,6 +193,7 @@ namespace Properties
 	Code(AmbientOcclusion, ) \
 	Code(Attenuation,) \
 	Code(Camera,) \
+	Code(CameraComponent,) \
 	Code(Color,) \
 	Code(CombinedTexture,) \
 	Code(CutoffAngle,) \
@@ -206,6 +206,7 @@ namespace Properties
 	Code(FragmentShader,) \
 	Code(GeometryShader,) \
 	Code(Graphics,) \
+	Code(GraphicsObject,) \
 	Code(Height,) \
 	Code(HeightScale,) \
 	Code(Intensity,) \
@@ -227,6 +228,7 @@ namespace Properties
 	Code(PositiveY,) \
 	Code(PositiveZ,) \
 	Code(PostProcess,) \
+	Code(Renderer,) \
 	Code(Rendering,) \
 	Code(RMHAO,) \
 	Code(Roughness,) \
@@ -308,6 +310,7 @@ namespace Properties
 	Code(GameObject,) \
 	Code(ID,) \
 	Code(Parent,) \
+	Code(World,) \
 	/* End of property IDs */ \
 	Code(NumberOfPropertyIDs,) 
 	DECLARE_ENUM(PropertyID, PROPERTYID)
@@ -323,6 +326,7 @@ namespace Properties
 		GetString(LoadInBackground),
 		GetString(Name),
 		GetString(Objects),
+		GetString(ObjectPoolSize),
 		GetString(Scene),
 		GetString(Systems),
 		GetString(Type),
@@ -340,6 +344,7 @@ namespace Properties
 		GetString(AmbientOcclusion),
 		GetString(Attenuation),
 		GetString(Camera),
+		GetString(CameraComponent),
 		GetString(Color),
 		GetString(CombinedTexture),
 		GetString(CutoffAngle),
@@ -352,6 +357,7 @@ namespace Properties
 		GetString(FragmentShader),
 		GetString(GeometryShader),
 		GetString(Graphics),
+		GetString(GraphicsObject),
 		GetString(Height),
 		GetString(HeightScale),
 		GetString(Intensity),
@@ -373,6 +379,7 @@ namespace Properties
 		GetString(PositiveY),
 		GetString(PositiveZ),
 		GetString(PostProcess),
+		GetString(Renderer),
 		GetString(Rendering),
 		GetString(RMHAO),
 		GetString(Roughness),
@@ -448,7 +455,8 @@ namespace Properties
 		GetString(Children),
 		GetString(GameObject),
 		GetString(ID),
-		GetString(Parent)
+		GetString(Parent),
+		GetString(World)
 	};
 
 	// A few overloaded static functions to convert other values to PropertyID enum
@@ -503,6 +511,21 @@ class Config
 	friend class RendererFrontend;
 	friend class Window;
 public:
+	struct ComponentVariables
+	{
+		ComponentVariables()
+		{
+			camera_component_name = " (Camera Component)";
+			light_component_name = " (Light Component)";
+			model_component_name = " (Model Component)";
+			shader_component_name = " (Shader Component)";
+		}
+
+		std::string camera_component_name;
+		std::string light_component_name;
+		std::string model_component_name;
+		std::string shader_component_name;
+	};
 	struct ConfigFileVariables
 	{
 		ConfigFileVariables()
@@ -862,12 +885,14 @@ public:
 	{
 		ObjectPoolVariables()
 		{
+			object_pool_size = 50;
 			model_object_pool_size = 20;
 			point_light_pool_size = 50;
 			shader_object_pool_size = 10;
 			spot_light_pool_size = 25;
 		}
 
+		int object_pool_size;
 		int model_object_pool_size;
 		int point_light_pool_size;
 		int shader_object_pool_size;
@@ -1287,6 +1312,7 @@ public:
 		bool window_in_focus;
 	};
 
+	const inline static ComponentVariables	&componentVar()		{ return m_componentVar;	}
 	const inline static ConfigFileVariables	&configFileVar()	{ return m_configFileVar;	}
 	const inline static EngineVariables		&engineVar()		{ return m_engineVar;		}
 	const inline static FramebfrVariables	&getFramebfrVar()	{ return m_framebfrVar;		}
@@ -1400,6 +1426,7 @@ private:
 		size_t m_mapKey;
 	};
 
+	static ComponentVariables	m_componentVar;
 	static ConfigFileVariables	m_configFileVar;
 	static EngineVariables		m_engineVar;
 	static FramebfrVariables	m_framebfrVar;
@@ -1421,6 +1448,7 @@ private:
 
 	static void setVariable(std::string p_name, std::string p_variable);
 
+	inline static ComponentVariables	&setComponentVar()	{ return m_componentVar;	}
 	inline static ConfigFileVariables	&setConfigFileVar()	{ return m_configFileVar;	}
 	inline static EngineVariables		&setEngineVar()		{ return m_engineVar;		}
 	inline static FramebfrVariables		&setFramebfrVar()	{ return m_framebfrVar;		}

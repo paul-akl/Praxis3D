@@ -26,6 +26,7 @@ namespace Properties
 // A version of the "AddVariable" macro, with 3 of the 5 parameters predefined
 #define AddVariablePredef(STRUCT, VAR) AddVariable(VEC_PREDEF, HASH_PREDEF, VEC_PREDEF.size() + OFFSET_PREDEF, STRUCT, VAR)
 
+Config::ComponentVariables	Config::m_componentVar;
 Config::ConfigFileVariables	Config::m_configFileVar;
 Config::EngineVariables		Config::m_engineVar;
 Config::FramebfrVariables	Config::m_framebfrVar;
@@ -47,6 +48,12 @@ void Config::init()
 {
 	// Add variables and their names to internal containers, so they could be checked / names matched later.
 	// Note: not all the variables are assigned to containers, as some are not meant to be loaded from config file.
+
+	// Component Variables
+	AddVariablePredef(m_componentVar, camera_component_name);
+	AddVariablePredef(m_componentVar, light_component_name);
+	AddVariablePredef(m_componentVar, model_component_name);
+	AddVariablePredef(m_componentVar, shader_component_name);
 
 	// Engine variables
 	AddVariablePredef(m_engineVar, change_ctrl_cml_notify_list_reserv);
@@ -196,6 +203,7 @@ void Config::init()
 	AddVariablePredef(m_modelVar, optimizeGraph);
 
 	// Object pool variables
+	AddVariablePredef(m_objPoolVar, object_pool_size);
 	AddVariablePredef(m_objPoolVar, model_object_pool_size);
 	AddVariablePredef(m_objPoolVar, point_light_pool_size);
 	AddVariablePredef(m_objPoolVar, shader_object_pool_size);
@@ -403,7 +411,7 @@ ErrorCode Config::loadFromFile(const std::string &p_filename)
 			configFile >> singleWord;
 
 			// Match the word in the hash table
-			auto &tableEntry = m_hashTable.find(singleWord);
+			auto tableEntry = m_hashTable.find(singleWord);
 
 			// If match was found
 			if(tableEntry != m_hashTable.end())
@@ -454,7 +462,7 @@ ErrorCode Config::saveToFile(const std::string &p_filename)
 void Config::setVariable(std::string p_name, std::string p_variable)
 {
 	// Match the name in the hash table
-	auto &tableEntry = m_hashTable.find(p_name);
+	auto tableEntry = m_hashTable.find(p_name);
 
 	// If match was found
 	if(tableEntry != m_hashTable.end())

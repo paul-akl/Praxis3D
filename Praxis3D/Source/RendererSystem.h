@@ -21,7 +21,6 @@ public:
 	virtual ErrorCode preload();
 	void loadInBackground();
 
-	virtual std::string getName();
 	Systems::TypeID getSystemType() { return Systems::Graphics; }
 
 	virtual SystemScene *createScene(SceneLoader *p_sceneLoader);

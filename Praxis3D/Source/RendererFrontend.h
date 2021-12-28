@@ -52,39 +52,40 @@ public:
 	ErrorCode init();
 
 	// Renders a complete frame
-	void renderFrame(const SceneObjects &p_sceneObjects, const float p_deltaTime);
+	void renderFrame(SceneObjects &p_sceneObjects, const float p_deltaTime);
 	
 protected:
-	inline void queueForDrawing(const RenderableObjectData &p_object, const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const Math::Mat4f &p_viewProjMatrix)
+	inline void queueForDrawing(const ModelData &p_modelData, const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const Math::Mat4f &p_modelMatrix, const Math::Mat4f &p_viewProjMatrix)
 	{
-		// Get the neccessary handles
-		const unsigned int modelHandle = p_object.m_model.getHandle();
+		// Get the necessary handles
+		const unsigned int modelHandle = p_modelData.m_model.getHandle();
 
-		// Calculare model-view-projection matrix
-		const Math::Mat4f modelViewProjMatrix = p_viewProjMatrix * p_object.m_baseObjectData.m_modelMat;
+		// Calculate model-view-projection matrix
+		const Math::Mat4f modelViewProjMatrix = p_viewProjMatrix * p_modelMatrix;
 
 		// Unused for now
 		//unsigned int materials[MaterialType_NumOfTypes];
 
-		for(decltype(p_object.m_materials[0].size()) i = 0; i < MaterialType_NumOfTypes; i++)
-		{
+		//for(decltype(p_modelData.m_materials[0].size()) i = 0; i < MaterialType_NumOfTypes; i++)
+		//{
 			//materials[i] = p_object.m_materials[i]
-		}
-
-		// Assign the object data that is later passed to the shaders
-		const UniformObjectData objectData(p_object.m_baseObjectData.m_modelMat,
-										   modelViewProjMatrix,
-										   p_object.m_baseObjectData.m_heightScale,
-										   p_object.m_baseObjectData.m_alphaThreshold,
-										   p_object.m_baseObjectData.m_emissiveThreshold,
-										   p_object.m_baseObjectData.m_textureTilingFactor);
+		//}
 
 		// Calculate the sort key
 		RendererBackend::DrawCommands::value_type::first_type sortKey = 0;
 		
 		// Add a draw command for each mesh, using the same object data
-		for(decltype(p_object.m_model.getNumMeshes()) meshIndex = 0, numMeshes = p_object.m_model.getNumMeshes(); meshIndex < numMeshes; meshIndex++)
+		for(decltype(p_modelData.m_model.getNumMeshes()) meshIndex = 0, numMeshes = p_modelData.m_model.getNumMeshes(); meshIndex < numMeshes; meshIndex++)
 		{
+			// TODO: per-texture material parameters
+			// Assign the object data that is later passed to the shaders
+			const UniformObjectData objectData(p_modelMatrix,
+				modelViewProjMatrix,
+				p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Diffuse].m_parallaxScale,
+				p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Diffuse].m_alphaCutoff,
+				p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Diffuse].m_parallaxScale,
+				p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Diffuse].m_textureScale.x);
+
 			m_drawCommands.emplace_back(
 				sortKey,
 				RendererBackend::DrawCommand(
@@ -92,13 +93,13 @@ protected:
 					objectData,
 					p_shaderHandle,
 					modelHandle,
-					p_object.m_model[meshIndex].m_numIndices,
-					p_object.m_model[meshIndex].m_baseVertex,
-					p_object.m_model[meshIndex].m_baseIndex,
-					p_object.m_materials[MaterialType_Diffuse][meshIndex].getHandle(),
-					p_object.m_materials[MaterialType_Normal][meshIndex].getHandle(),
-					p_object.m_materials[MaterialType_Emissive][meshIndex].getHandle(),
-					p_object.m_materials[MaterialType_Combined][meshIndex].getHandle())
+					p_modelData.m_model[meshIndex].m_numIndices,
+					p_modelData.m_model[meshIndex].m_baseVertex,
+					p_modelData.m_model[meshIndex].m_baseIndex,
+					p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Diffuse].m_texture.getHandle(),
+					p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Normal].m_texture.getHandle(),
+					p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Emissive].m_texture.getHandle(),
+					p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Combined].m_texture.getHandle())
 				);
 		}
 	}

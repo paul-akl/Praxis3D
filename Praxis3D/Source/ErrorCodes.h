@@ -83,6 +83,7 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_BloomCompositePass,) \
     Code(Source_BloomPass,) \
     Code(Source_BlurPass,) \
+    Code(Source_CameraComponent,) \
     Code(Source_Config,) \
     Code(Source_ConfigLoader,) \
     Code(Source_Engine,) \
@@ -95,23 +96,31 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_HdrMappingPass,) \
     Code(Source_LensFlareCompositePass,) \
     Code(Source_LensFlarePass,) \
+    Code(Source_LightComponent,) \
     Code(Source_LightObject,) \
     Code(Source_LightingPass,) \
+    Code(Source_ModelComponent,) \
     Code(Source_ModelLoader,) \
+    Code(Source_ObjectDirectory,) \
     Code(Source_PlayerObject,) \
     Code(Source_PostProcessPass,) \
     Code(Source_PropertyLoader,) \
     Code(Source_ReflectionPass,) \
     Code(Source_Renderer,) \
+    Code(Source_RendererScene,) \
+    Code(Source_RendererSystem,) \
     Code(Source_SceneLoader,) \
     Code(Source_Scripting,) \
     Code(Source_ScriptObject,) \
+    Code(Source_ShaderComponent,) \
     Code(Source_ShaderLoader,) \
     Code(Source_SkyObject,) \
     Code(Source_SkyPass,) \
     Code(Source_TextureLoader,) \
     Code(Source_Window,) \
     Code(Source_World,) \
+    Code(Source_WorldScene,) \
+    Code(Source_WorldSystem,) \
     Code(Source_NumberOfErrorSources,) 
 DECLARE_ENUM(ErrorSource, ERROR_SOURCE)
 

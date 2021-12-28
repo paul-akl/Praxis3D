@@ -29,7 +29,7 @@ UniversalScene::~UniversalScene()
 	}
 	m_objects.clear();
 
-	// Make a "snapshot" of current list, so we can propery iterate over it (since calling "unextend" removes entries)
+	// Make a "snapshot" of current list, so we can properly iterate over it (since calling "unextend" removes entries)
 	SystemSceneMap systemScenesOld = m_systemScenes;
 	for(SystemSceneMap::iterator it = systemScenesOld.begin(); it != systemScenesOld.end(); it++)
 	{
@@ -187,7 +187,7 @@ void UniversalScene::createObjectLink(ObservedSubject *p_subject, SystemObject *
 		m_objectChangeController->registerSubject(p_subject, changes, p_observer);
 		
 		// Inform the subject about established link
-		p_subject->postChanges(Systems::Changes::Link);
+		p_subject->postChanges(Systems::Changes::Generic::Link);
 	}
 }
 

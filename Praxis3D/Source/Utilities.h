@@ -21,6 +21,12 @@ namespace Utilities
 		stringstream_ret << p_value;
 		return stringstream_ret.str();
 	}
+	static std::string toString(const unsigned __int64 p_value)
+	{
+		std::stringstream stringstream_ret;
+		stringstream_ret << p_value;
+		return stringstream_ret.str();
+	}
 	static std::string toString(const double p_value)
 	{
 		std::stringstream stringstream_ret;

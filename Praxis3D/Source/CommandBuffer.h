@@ -8,10 +8,10 @@ class CommandBuffer
 public:
 	struct Command
 	{
-		Command(RendererBackend::ScreenSpaceDrawCommand &p_screenSpaceCommand) : m_commandUnion(p_screenSpaceCommand), m_commandType(CommandType_ScreenSpaceDraw) { }
-		Command(RendererBackend::DrawCommand &p_drawCommand) : m_commandUnion(p_drawCommand), m_commandType(CommandType_Draw) { }
-		Command(RendererBackend::BindCommand &p_bindCommand) : m_commandUnion(p_bindCommand), m_commandType(CommandType_Bind) { }
-		Command(RendererBackend::LoadCommand &p_loadCommand) : m_commandUnion(p_loadCommand), m_commandType(CommandType_Load) { }
+		Command(RendererBackend::ScreenSpaceDrawCommand &&p_screenSpaceCommand) : m_commandUnion(p_screenSpaceCommand), m_commandType(CommandType_ScreenSpaceDraw) { }
+		Command(RendererBackend::DrawCommand &&p_drawCommand) : m_commandUnion(p_drawCommand), m_commandType(CommandType_Draw) { }
+		Command(RendererBackend::BindCommand &&p_bindCommand) : m_commandUnion(p_bindCommand), m_commandType(CommandType_Bind) { }
+		Command(RendererBackend::LoadCommand &&p_loadCommand) : m_commandUnion(p_loadCommand), m_commandType(CommandType_Load) { }
 
 		union CommandUnion
 		{
@@ -57,7 +57,7 @@ public:
 		// Add a draw command for each mesh, using the same object data
 		for(decltype(p_object.m_model.getNumMeshes()) meshIndex = 0, numMeshes = p_object.m_model.getNumMeshes(); meshIndex < numMeshes; meshIndex++)
 		{
-			m_commands.emplace_back(
+			m_commands.emplace_back(std::make_pair(
 				sortKey,
 				RendererBackend::DrawCommand(
 					p_uniformUpdater,
@@ -70,7 +70,7 @@ public:
 					p_object.m_materials[MaterialType_Diffuse][meshIndex].getHandle(),
 					p_object.m_materials[MaterialType_Normal][meshIndex].getHandle(),
 					p_object.m_materials[MaterialType_Emissive][meshIndex].getHandle(),
-					p_object.m_materials[MaterialType_Combined][meshIndex].getHandle())
+					p_object.m_materials[MaterialType_Combined][meshIndex].getHandle()))
 			);
 		}
 	}
@@ -87,12 +87,12 @@ public:
 		// Calculate the sort key
 		RendererBackend::DrawCommands::value_type::first_type sortKey = 0;
 
-		m_commands.emplace_back(
+		m_commands.emplace_back(std::make_pair(
 			sortKey,
 			RendererBackend::ScreenSpaceDrawCommand(
 				p_uniformUpdater,
 				objectData,
-				p_shaderHandle)
+				p_shaderHandle))
 		);
 	}
 
@@ -101,34 +101,34 @@ public:
 		// Calculate the sort key
 		RendererBackend::DrawCommands::value_type::first_type sortKey = 0;
 
-		m_commands.emplace_back(
+		m_commands.emplace_back(std::make_pair(
 			sortKey,
 			RendererBackend::LoadCommand(p_shader.m_shaderFilename,
 										 p_shader.m_programHandle,
 										 p_shader.getUniformUpdater(),
 										 p_shader.m_shaderSource,
-										 p_shader.m_errorMessages));
+										 p_shader.m_errorMessages)));
 	}
 	inline void queueForLoading(ModelLoader::ModelHandle &p_model)
 	{
 		// Calculate the sort key
 		RendererBackend::DrawCommands::value_type::first_type sortKey = 0;
 
-		m_commands.emplace_back(
+		m_commands.emplace_back(std::make_pair(
 			sortKey,
 			RendererBackend::LoadCommand(p_model.getFilename(),
 										 p_model.m_model->m_handle,
 										 p_model.m_model->m_buffers,
 										 p_model.m_model->m_numElements,
 										 p_model.m_model->m_bufferSize,
-										 p_model.m_model->getData()));
+										 p_model.m_model->getData())));
 	}
 	inline void queueForLoading(TextureLoader2D::Texture2DHandle &p_texture)
 	{
 		// Calculate the sort key
 		RendererBackend::DrawCommands::value_type::first_type sortKey = 0;
 
-		m_commands.emplace_back(
+		m_commands.emplace_back(std::make_pair(
 			sortKey,
 			RendererBackend::LoadCommand(p_texture.getFilename(),
 										 p_texture.getHandleRef(),
@@ -136,7 +136,7 @@ public:
 										 p_texture.getMipmapLevel(),
 										 p_texture.getTextureWidth(),
 										 p_texture.getTextureHeight(),
-										 p_texture.getData()));
+										 p_texture.getData())));
 	}
 	inline void queueForLoading(RenderableObjectData &p_objectData)
 	{
@@ -158,14 +158,14 @@ public:
 		// Calculate the sort key
 		RendererBackend::DrawCommands::value_type::first_type sortKey = 0;
 
-		m_commands.emplace_back(
+		m_commands.emplace_back(std::make_pair(
 			sortKey,
 			RendererBackend::LoadCommand(p_lightBuffer.m_handle,
 										 p_lightBuffer.m_bufferType,
 										 p_lightBuffer.m_bufferUsage,
 										 p_lightBuffer.m_bindingIndex,
 										 p_lightBuffer.m_size,
-										 (void*)0));
+										 (void*)0)));
 	}
 
 	Commands &getCommands()	{ return m_commands; }

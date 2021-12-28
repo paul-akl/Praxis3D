@@ -4,6 +4,7 @@
 #include "PropertySet.h"
 #include "ScriptingSystem.h"
 #include "RendererSystem.h"
+#include "WorldSystem.h"
 
 PlayState::PlayState()
 {
@@ -56,6 +57,18 @@ ErrorCode PlayState::init(TaskManager *p_taskManager)
 	{
 		delete m_systems[Systems::Scripting];
 		m_systems[Systems::Scripting] = &g_nullSystemBase;
+	}
+
+	//  ___________________________________
+	// |								   |
+	// |	WORLD SYSTEM INITIALIZATION	   |
+	// |___________________________________|
+	// Create scripting system and check if it was successful (if not, assign a null system in it's place)
+	m_systems[Systems::World] = new WorldSystem();
+	if(m_systems[Systems::World]->init() != ErrorCode::Success)
+	{
+		delete m_systems[Systems::World];
+		m_systems[Systems::World] = &g_nullSystemBase;
 	}
 
 	// Register systems with change controller and scenes with scene loader
