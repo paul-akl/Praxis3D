@@ -180,13 +180,13 @@
     <ClCompile Include="Source\WindowLocator.cpp">
       <Filter>Service Locators\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ScriptingScene.cpp">
+    <ClCompile Include="Source\ScriptScene.cpp">
       <Filter>Scripting\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ScriptingSystem.cpp">
+    <ClCompile Include="Source\ScriptSystem.cpp">
       <Filter>Scripting\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ScriptingTask.cpp">
+    <ClCompile Include="Source\ScriptTask.cpp">
       <Filter>Scripting\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\DeferredRenderer.cpp">
@@ -297,6 +297,9 @@
     <ClCompile Include="Source\NullObjects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\LuaScript.cpp">
+      <Filter>Renderer\Objects\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ErrorCodes.h">
@@ -350,13 +353,13 @@
     <ClInclude Include="Source\WindowLocator.h">
       <Filter>Service Locators\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ScriptingScene.h">
+    <ClInclude Include="Source\ScriptScene.h">
       <Filter>Scripting\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ScriptingSystem.h">
+    <ClInclude Include="Source\ScriptSystem.h">
       <Filter>Scripting\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ScriptingTask.h">
+    <ClInclude Include="Source\ScriptTask.h">
       <Filter>Scripting\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\BaseScriptObject.h">
@@ -628,6 +631,15 @@
     </ClInclude>
     <ClInclude Include="Source\WorldSystem.h">
       <Filter>World\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ScriptObject.h">
+      <Filter>Scripting\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\LuaComponent.h">
+      <Filter>Scripting\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\LuaScript.h">
+      <Filter>Scripting\Objects\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

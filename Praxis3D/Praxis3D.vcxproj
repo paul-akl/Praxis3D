@@ -144,6 +144,7 @@
     <ClCompile Include="Source\KeyCommand.cpp" />
     <ClCompile Include="Source\LightComponent.cpp" />
     <ClCompile Include="Source\Loaders.cpp" />
+    <ClCompile Include="Source\LuaScript.cpp" />
     <ClCompile Include="Source\Math.cpp" />
     <ClCompile Include="Source\ModelLoader.cpp" />
     <ClCompile Include="Source\NullObject.cpp" />
@@ -163,9 +164,9 @@
     <ClCompile Include="Source\RenderTask.cpp" />
     <ClCompile Include="Source\Scancodes.cpp" />
     <ClCompile Include="Source\SceneLoader.cpp" />
-    <ClCompile Include="Source\ScriptingScene.cpp" />
-    <ClCompile Include="Source\ScriptingSystem.cpp" />
-    <ClCompile Include="Source\ScriptingTask.cpp" />
+    <ClCompile Include="Source\ScriptScene.cpp" />
+    <ClCompile Include="Source\ScriptSystem.cpp" />
+    <ClCompile Include="Source\ScriptTask.cpp" />
     <ClCompile Include="Source\ShaderLoader.cpp" />
     <ClCompile Include="Source\ShaderUniformUpdater.cpp" />
     <ClCompile Include="Source\SpatialDataChangeManager.cpp" />
@@ -239,6 +240,8 @@
     <ClInclude Include="Source\LightingPass.h" />
     <ClInclude Include="Source\LoaderBase.h" />
     <ClInclude Include="Source\Loaders.h" />
+    <ClInclude Include="Source\LuaComponent.h" />
+    <ClInclude Include="Source\LuaScript.h" />
     <ClInclude Include="Source\Math.h" />
     <ClInclude Include="Source\ModelComponent.h" />
     <ClInclude Include="Source\ModelLoader.h" />
@@ -263,9 +266,10 @@
     <ClInclude Include="Source\RenderTaskBase.h" />
     <ClInclude Include="Source\Scancodes.h" />
     <ClInclude Include="Source\SceneLoader.h" />
-    <ClInclude Include="Source\ScriptingScene.h" />
-    <ClInclude Include="Source\ScriptingSystem.h" />
-    <ClInclude Include="Source\ScriptingTask.h" />
+    <ClInclude Include="Source\ScriptObject.h" />
+    <ClInclude Include="Source\ScriptScene.h" />
+    <ClInclude Include="Source\ScriptSystem.h" />
+    <ClInclude Include="Source\ScriptTask.h" />
     <ClInclude Include="Source\ServiceBase.h" />
     <ClInclude Include="Source\ShaderComponent.h" />
     <ClInclude Include="Source\ShaderGraphicsObjects.h" />

@@ -1,7 +1,7 @@
 
 #include "ClockLocator.h"
 #include "PropertySet.h"
-#include "ScriptingSystem.h"
+#include "ScriptSystem.h"
 #include "RendererSystem.h"
 #include "WorldEditState.h"
 
@@ -47,14 +47,14 @@ ErrorCode WorldEditState::init(TaskManager *p_taskManager)
 
 	//  ___________________________________
 	// |								   |
-	// |  SCRIPTING SYSTEM INITIALIZATION  |
+	// |   SCRIPT SYSTEM INITIALIZATION    |
 	// |___________________________________|
 	// Create scripting system and check if it was successful (if not, assign a null system in it's place)
-	m_systems[Systems::Scripting] = new ScriptingSystem();
-	if(m_systems[Systems::Scripting]->init() != ErrorCode::Success)
+	m_systems[Systems::Script] = new ScriptSystem();
+	if(m_systems[Systems::Script]->init() != ErrorCode::Success)
 	{
-		delete m_systems[Systems::Scripting];
-		m_systems[Systems::Scripting] = &g_nullSystemBase;
+		delete m_systems[Systems::Script];
+		m_systems[Systems::Script] = &g_nullSystemBase;
 	}
 
 	// Register systems with change controller and scenes with scene loader

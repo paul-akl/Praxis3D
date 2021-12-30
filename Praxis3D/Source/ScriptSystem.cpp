@@ -1,30 +1,30 @@
 
 #include "ErrorHandlerLocator.h"
 #include "NullSystemObjects.h"
-#include "ScriptingScene.h"
-#include "ScriptingSystem.h"
+#include "ScriptScene.h"
+#include "ScriptSystem.h"
 
-ScriptingSystem::ScriptingSystem()
+ScriptSystem::ScriptSystem()
 {
 	m_scriptingScene = nullptr;
-	m_systemName = GetString(Systems::Scripting);
+	m_systemName = GetString(Systems::Script);
 }
 
-ScriptingSystem::~ScriptingSystem()
+ScriptSystem::~ScriptSystem()
 {
 
 }
 
-ErrorCode ScriptingSystem::init()
+ErrorCode ScriptSystem::init()
 {
 	ErrorCode returnCode = ErrorCode::Success;
 	
-	ErrHandlerLoc::get().log(ErrorType::Info, ErrorSource::Source_Scripting, "Scripting system has been initialized");
+	ErrHandlerLoc::get().log(ErrorType::Info, ErrorSource::Source_Script, "Script system has been initialized");
 	
 	return returnCode;
 }
 
-ErrorCode ScriptingSystem::setup(const PropertySet &p_properties)
+ErrorCode ScriptSystem::setup(const PropertySet &p_properties)
 {
 	/*for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
 	{
@@ -37,16 +37,16 @@ ErrorCode ScriptingSystem::setup(const PropertySet &p_properties)
 	return ErrorCode::Success;
 }
 
-void ScriptingSystem::loadInBackground()
+void ScriptSystem::loadInBackground()
 {
 }
 
-SystemScene *ScriptingSystem::createScene(SceneLoader *p_sceneLoader)
+SystemScene *ScriptSystem::createScene(SceneLoader *p_sceneLoader)
 {
 	if(m_scriptingScene == nullptr)
 	{
 		// Create new scene
-		m_scriptingScene = new ScriptingScene(this, p_sceneLoader);
+		m_scriptingScene = new ScriptScene(this, p_sceneLoader);
 		ErrorCode sceneError = m_scriptingScene->init();
 
 		// Check if it initialized correctly (cannot continue without the scene)
@@ -59,7 +59,7 @@ SystemScene *ScriptingSystem::createScene(SceneLoader *p_sceneLoader)
 	return m_scriptingScene;
 }
 
-SystemScene *ScriptingSystem::getScene()
+SystemScene *ScriptSystem::getScene()
 {
 	return m_scriptingScene;
 }

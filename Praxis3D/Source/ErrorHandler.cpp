@@ -27,6 +27,7 @@ ErrorHandler::ErrorHandler()
 	AssignErrorType(Failure, Warning);
 	AssignErrorType(Initialize_success, Info);
 	AssignErrorType(Initialize_failure, Info);
+	AssignErrorType(File_not_found, Warning);
 	AssignErrorType(Destroy_obj_not_found, Warning);
 	AssignErrorType(Glew_failed, FatalError);
 	AssignErrorType(Ifstream_failed, Warning);
@@ -72,7 +73,8 @@ ErrorHandler::ErrorHandler()
     m_errHashmap[GetString(Source_LensFlarePass)]				= NumberOfErrorCodes + Source_LensFlarePass;
 	m_errHashmap[GetString(Source_LightComponent)]				= NumberOfErrorCodes + Source_LightComponent;
     m_errHashmap[GetString(Source_LightObject)]					= NumberOfErrorCodes + Source_LightObject;
-    m_errHashmap[GetString(Source_LightingPass)]				= NumberOfErrorCodes + Source_LightingPass;
+	m_errHashmap[GetString(Source_LightingPass)]				= NumberOfErrorCodes + Source_LightingPass;
+	m_errHashmap[GetString(Source_LuaComponent)]				= NumberOfErrorCodes + Source_LuaComponent;
 	m_errHashmap[GetString(Source_ObjectDirectory)]				= NumberOfErrorCodes + Source_ObjectDirectory;
 	m_errHashmap[GetString(Source_ModelComponent)]				= NumberOfErrorCodes + Source_ModelComponent;
     m_errHashmap[GetString(Source_ModelLoader)]					= NumberOfErrorCodes + Source_ModelLoader;
@@ -84,7 +86,7 @@ ErrorHandler::ErrorHandler()
 	m_errHashmap[GetString(Source_RendererScene)]				= NumberOfErrorCodes + Source_RendererScene;
 	m_errHashmap[GetString(Source_RendererSystem)]				= NumberOfErrorCodes + Source_RendererSystem;
     m_errHashmap[GetString(Source_SceneLoader)]					= NumberOfErrorCodes + Source_SceneLoader;
-    m_errHashmap[GetString(Source_Scripting)]					= NumberOfErrorCodes + Source_Scripting;
+    m_errHashmap[GetString(Source_Script)]						= NumberOfErrorCodes + Source_Script;
     m_errHashmap[GetString(Source_ScriptObject)]				= NumberOfErrorCodes + Source_ScriptObject;
 	m_errHashmap[GetString(Source_ShaderComponent)]				= NumberOfErrorCodes + Source_ShaderComponent;
     m_errHashmap[GetString(Source_ShaderLoader)]				= NumberOfErrorCodes + Source_ShaderLoader;

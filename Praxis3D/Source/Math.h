@@ -189,6 +189,7 @@ namespace Math
 			x = p_vec.x;	y = p_vec.y;	z = z_arg;
 		}
 		Vec3f(const Vec4f p_vec);
+		~Vec3f() { }
 
 		const inline Vec3f &operator=(const Vec3f& p_vec)
 		{
@@ -260,9 +261,13 @@ namespace Math
 		}
 		const inline Vec3f &target(float verticalAngle_arg, float horizontalAngle_arg)
 		{
-			*this = Vec3f(cosf(verticalAngle_arg) * sinf(horizontalAngle_arg),
-						  sinf(verticalAngle_arg),
-						  cosf(verticalAngle_arg) * cosf(horizontalAngle_arg));
+			//*this = Vec3f(cosf(verticalAngle_arg) * sinf(horizontalAngle_arg),
+			//			  sinf(verticalAngle_arg),
+			//			  cosf(verticalAngle_arg) * cosf(horizontalAngle_arg));
+
+			*this = Vec3f(	cosf(verticalAngle_arg) * cosf(horizontalAngle_arg),
+							cosf(verticalAngle_arg) * sinf(horizontalAngle_arg),
+							sinf(verticalAngle_arg));
 			return *this;
 		}
 		const inline Vec3f &horizontal(float horizontalAngle_arg)

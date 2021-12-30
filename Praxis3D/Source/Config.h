@@ -27,7 +27,7 @@ namespace Systems
 	#define TYPEID(Code) \
 	Code(Null, = -1) \
 	Code(Graphics,) \
-	Code(Scripting,) \
+	Code(Script,) \
 	Code(World,) \
 	Code(NumberOfSystems,) 
 	DECLARE_ENUM(TypeID, TYPEID)
@@ -35,7 +35,7 @@ namespace Systems
 	const static std::string SystemNames[NumberOfSystems] =
 	{
 		GetString(Graphics),
-		GetString(Scripting),
+		GetString(Script),
 		GetString(World)
 	};
 	
@@ -48,8 +48,8 @@ namespace Systems
 	{
 		static constexpr BitMask None		= (BitMask)1 << 0;
 		static constexpr BitMask Graphics	= (BitMask)1 << 1;
-		static constexpr BitMask Scripting	= (BitMask)1 << 2;
-	}	
+		static constexpr BitMask Script		= (BitMask)1 << 2;
+	}
 	namespace GraphicsObjectComponents
 	{
 		static constexpr BitMask None		= (BitMask)1 << 0;
@@ -57,6 +57,11 @@ namespace Systems
 		static constexpr BitMask Lighting	= (BitMask)1 << 2;
 		static constexpr BitMask Model		= (BitMask)1 << 3;
 		static constexpr BitMask Shader		= (BitMask)1 << 4;
+	}
+	namespace ScriptObjectComponents
+	{
+		static constexpr BitMask None = (BitMask)1 << 0;
+		static constexpr BitMask Lua = (BitMask)1 << 1;
 	}
 	namespace Changes
 	{
@@ -91,7 +96,7 @@ namespace Systems
 			static constexpr BitMask Graphics	= (BitMask)1 << 61;
 			static constexpr BitMask Physics	= (BitMask)1 << 60;
 			static constexpr BitMask Audio		= (BitMask)1 << 59;
-			static constexpr BitMask Scripting	= (BitMask)1 << 58;
+			static constexpr BitMask Script		= (BitMask)1 << 58;
 		}
 
 		namespace Generic
@@ -148,7 +153,7 @@ namespace Systems
 		{
 
 		}
-		namespace Scripting
+		namespace Script
 		{
 
 		}
@@ -267,7 +272,7 @@ namespace Properties
 	Code(ObjectLinks,) \
 	Code(Observer,) \
 	Code(Subject,) \
-	/* Scripting */ \
+	/* Script */ \
 	Code(Angle,) \
 	Code(Axis,) \
 	Code(Azimuth,) \
@@ -281,6 +286,8 @@ namespace Properties
 	Code(Latitude,) \
 	Code(Longitude,) \
 	Code(LowerLimit,) \
+	Code(Lua,) \
+	Code(LuaComponent,) \
 	Code(InputScript,) \
 	Code(Hours,) \
 	Code(KeyCode,) \
@@ -288,7 +295,8 @@ namespace Properties
 	Code(Minutes,) \
 	Code(Month,) \
 	Code(Radius,) \
-	Code(Scripting,) \
+	Code(Script,) \
+	Code(ScriptObject,) \
 	Code(Seconds,) \
 	Code(SolarTimeScript,) \
 	Code(Speed,) \
@@ -429,6 +437,8 @@ namespace Properties
 		GetString(Latitude),
 		GetString(Longitude),
 		GetString(LowerLimit),
+		GetString(Lua),
+		GetString(LuaComponent),
 		GetString(InputScript),
 		GetString(Hours),
 		GetString(KeyCode),
@@ -436,7 +446,8 @@ namespace Properties
 		GetString(Minutes),
 		GetString(Month),
 		GetString(Radius),
-		GetString(Scripting),
+		GetString(Script),
+		GetString(ScriptObject),
 		GetString(Seconds),
 		GetString(SolarTimeScript),
 		GetString(Speed),
@@ -517,12 +528,14 @@ public:
 		{
 			camera_component_name = " (Camera Component)";
 			light_component_name = " (Light Component)";
+			lua_component_name = " (Lua Component)";
 			model_component_name = " (Model Component)";
 			shader_component_name = " (Shader Component)";
 		}
 
 		std::string camera_component_name;
 		std::string light_component_name;
+		std::string lua_component_name;
 		std::string model_component_name;
 		std::string shader_component_name;
 	};
@@ -906,6 +919,7 @@ public:
 			map_path = "Data\\Maps\\";
 			model_path = "Data\\Models\\";
 			object_path = "Data\\Objects\\";
+			script_path = "Data\\Scripts\\";
 			shader_path = "Data\\Shaders\\";
 			sound_path = "Data\\Sounds\\";
 			texture_path = "Data\\Materials\\";
@@ -915,6 +929,7 @@ public:
 		std::string map_path;
 		std::string model_path;
 		std::string object_path;
+		std::string script_path;
 		std::string shader_path;
 		std::string sound_path;
 		std::string texture_path;
@@ -1047,6 +1062,21 @@ public:
 		int shader_pool_size;
 		bool depth_test;
 		bool face_culling;
+	};
+	struct ScriptVariables
+	{
+		ScriptVariables()
+		{
+			iniFunctionName = "init";
+			updateFunctionName = "update";
+			createObjectFunctionName = "create";
+			userTypeTableName = "Types";
+		}
+
+		std::string iniFunctionName;
+		std::string updateFunctionName;
+		std::string createObjectFunctionName;
+		std::string userTypeTableName;
 	};
 	struct ShaderVariables
 	{
@@ -1323,6 +1353,7 @@ public:
 	const inline static ObjectPoolVariables &objectPoolVar()	{ return m_objPoolVar;		}
 	const inline static PathsVariables		&filepathVar()		{ return m_filepathVar;		}
 	const inline static RendererVariables	&rendererVar()		{ return m_rendererVar;		}
+	const inline static ScriptVariables		&scriptVar()		{ return m_scriptVar;		}
 	const inline static ShaderVariables		&shaderVar()		{ return m_shaderVar;		}
 	const inline static TextureVariables	&textureVar()		{ return m_textureVar;		}
 	const inline static WindowVariables		&windowVar()		{ return m_windowVar;		}
@@ -1437,6 +1468,7 @@ private:
 	static ObjectPoolVariables	m_objPoolVar;
 	static PathsVariables		m_filepathVar;
 	static RendererVariables	m_rendererVar;
+	static ScriptVariables		m_scriptVar;
 	static ShaderVariables		m_shaderVar;
 	static TextureVariables		m_textureVar;
 	static WindowVariables		m_windowVar;
@@ -1458,6 +1490,7 @@ private:
 	inline static ModelVariables		&setModelVar()		{ return m_modelVar;		}
 	inline static PathsVariables		&setFilepathVar()	{ return m_filepathVar;		}
 	inline static RendererVariables		&setRendererVar()	{ return m_rendererVar;		}
+	inline static ScriptVariables		&setScriptVar()		{ return m_scriptVar;		}
 	inline static ShaderVariables		&setShaderVar()		{ return m_shaderVar;		}
 	inline static TextureVariables		&setTextureVar()	{ return m_textureVar;		}
 	inline static WindowVariables		&setWindowVar()		{ return m_windowVar;		}

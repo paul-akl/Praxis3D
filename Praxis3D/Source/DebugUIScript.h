@@ -131,7 +131,7 @@ public:
 	inline void setMouseCaptureKey(std::string &p_string)
 	{
 		m_mouseCaptureCommand.unbindAll();
-		m_mouseCaptureCommand.bind(p_string);
+		m_mouseCaptureCommand.bindByKeyName(p_string);
 	}
 
 	inline void setFullscreenKey(Scancode p_key)
@@ -142,7 +142,7 @@ public:
 	inline void setFullscreenKey(std::string &p_string)
 	{
 		m_fullscreenCommand.unbindAll();
-		m_fullscreenCommand.bind(p_string);
+		m_fullscreenCommand.bindByKeyName(p_string);
 	}
 
 	inline void setVerticalSyncKey(Scancode p_key)
@@ -153,7 +153,7 @@ public:
 	inline void setVerticalSyncKey(std::string &p_string)
 	{
 		m_vertSyncCommand.unbindAll();
-		m_vertSyncCommand.bind(p_string);
+		m_vertSyncCommand.bindByKeyName(p_string);
 	}
 
 	inline void setCloseWindowKey(Scancode p_key)
@@ -164,7 +164,7 @@ public:
 	inline void setCloseWindowKey(std::string &p_string)
 	{
 		m_closeWindowCommand.unbindAll();
-		m_closeWindowCommand.bind(p_string);
+		m_closeWindowCommand.bindByKeyName(p_string);
 	}
 	
 protected:

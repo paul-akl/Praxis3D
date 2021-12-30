@@ -26,7 +26,7 @@ class GraphicsObject : public SystemObject, public SpatialDataManagerObject, pub
 {
 public:
 	GraphicsObject(SystemScene *p_systemScene, const std::string &p_name)
-		: SystemObject(p_systemScene, p_name, Properties::Graphics)
+		: SystemObject(p_systemScene, p_name, Properties::GraphicsObject)
 	{
 		m_cameraComponent = nullptr;
 		m_lightComponent = nullptr;
@@ -36,7 +36,7 @@ public:
 		m_componentsFlag = 0;
 
 	}
-	virtual ~GraphicsObject() 
+	~GraphicsObject() 
 	{
 		// Iterate over all component types and delete components if they have been created
 		for(std::size_t i = 0; i < GraphicsComponentType::GraphicsComponentType_NumOfComponents; i++)

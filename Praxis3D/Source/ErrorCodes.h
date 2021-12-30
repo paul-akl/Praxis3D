@@ -38,6 +38,7 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
     Code(Failure,) \
     Code(Initialize_success,) \
     Code(Initialize_failure,) \
+    Code(File_not_found,) \
 	/* General engine errors */\
     Code(Destroy_obj_not_found,) \
     Code(Glew_failed,) \
@@ -99,6 +100,7 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_LightComponent,) \
     Code(Source_LightObject,) \
     Code(Source_LightingPass,) \
+    Code(Source_LuaComponent,) \
     Code(Source_ModelComponent,) \
     Code(Source_ModelLoader,) \
     Code(Source_ObjectDirectory,) \
@@ -110,7 +112,7 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_RendererScene,) \
     Code(Source_RendererSystem,) \
     Code(Source_SceneLoader,) \
-    Code(Source_Scripting,) \
+    Code(Source_Script,) \
     Code(Source_ScriptObject,) \
     Code(Source_ShaderComponent,) \
     Code(Source_ShaderLoader,) \

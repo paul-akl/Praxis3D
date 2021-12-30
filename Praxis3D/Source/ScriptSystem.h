@@ -2,13 +2,13 @@
 
 #include "System.h"
 
-class ScriptingScene;
+class ScriptScene;
 
-class ScriptingSystem : public SystemBase
+class ScriptSystem : public SystemBase
 {
 public:
-	ScriptingSystem();
-	virtual ~ScriptingSystem();
+	ScriptSystem();
+	virtual ~ScriptSystem();
 
 	virtual ErrorCode init();
 
@@ -18,13 +18,13 @@ public:
 
 	void loadInBackground();
 
-	Systems::TypeID getSystemType() { return Systems::Scripting; }
+	Systems::TypeID getSystemType() { return Systems::Script; }
 
 	virtual SystemScene *createScene(SceneLoader *p_sceneLoader);
 
 	virtual SystemScene *getScene();
 	
 protected:
-	ScriptingScene *m_scriptingScene;
+	ScriptScene *m_scriptingScene;
 };
 

@@ -5,7 +5,7 @@
 // Provides bare object rotation functionality for debugging purposes (like making a spotlight rotate)
 class DebugRotateScript : public BaseScriptObject
 {
-	friend class ScriptingScene;
+	friend class ScriptScene;
 public:
 	DebugRotateScript(SystemScene *p_systemScene, std::string p_name)
 		: BaseScriptObject(p_systemScene, p_name, Properties::DebugRotateScript)

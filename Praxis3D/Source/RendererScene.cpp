@@ -690,7 +690,8 @@ SystemObject *RendererScene::createObject(const PropertySet &p_properties)
 				//graphicsObject->importObject(renderingProperty);
 
 				// Start importing the newly created object in a background thread
-				TaskManagerLocator::get().startBackgroundThread(std::bind(&GraphicsObject::importObject, graphicsObject, renderingProperty));
+				//TaskManagerLocator::get().startBackgroundThread(std::bind(&GraphicsObject::importObject, graphicsObject, renderingProperty));
+				graphicsObject->importObject(renderingProperty);
 			
 				return graphicsObject;
 			}

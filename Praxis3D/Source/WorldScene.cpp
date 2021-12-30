@@ -151,20 +151,22 @@ SystemObject *WorldScene::createObject(const PropertySet &p_properties)
 		if(!unassignedChildren.m_children.empty())
 			m_unassignedChildren.emplace_back(unassignedChildren);
 
+		// Add a GraphicsObject as a component if the Rendering property is present
 		auto &rendering = p_properties.getPropertySetByID(Properties::Rendering);
 		if(rendering)
 		{
 			auto graphicsObject = m_sceneLoader->getSystemScene(Systems::Graphics)->createObject(p_properties);
-			if(graphicsObject != nullptr)
+			if(graphicsObject != nullptr && graphicsObject->getSystemType() != Systems::Null)
 				newGameObject->addComponent(static_cast<GraphicsObject*>(graphicsObject));
 		}
-		
-		auto &scripting = p_properties.getPropertySetByID(Properties::Scripting);
+
+		// Add a ScriptObject as a component if the Script property is present
+		auto &scripting = p_properties.getPropertySetByID(Properties::Script);
 		if(scripting)
 		{
-			//auto scriptingObject = m_sceneLoader->getSystemScene(Systems::Scripting)->createObject(p_properties);
-			//if(scriptingObject != nullptr)
-			//	newGameObject->addComponent(static_cast<ScriptingObject *>(scriptingObject));
+			auto scriptObject = m_sceneLoader->getSystemScene(Systems::Script)->createObject(p_properties);
+			if(scriptObject != nullptr && scriptObject->getSystemType() != Systems::Null)
+				newGameObject->addComponent(static_cast<ScriptObject *>(scriptObject));
 		}
 
 	}

@@ -152,6 +152,7 @@ private:
 		p_viewData.m_transformMat.initCamera(p_viewData.m_spatialData.m_position, targetVector + p_viewData.m_spatialData.m_position, upVector);*/
 
 		p_viewData.m_transformMat.identity();
+		p_viewData.m_transformMat.translate(-p_viewData.m_spatialData.m_position);
 		p_viewData.m_transformMat.rotate(p_viewData.m_spatialData.m_rotationEuler);
 	}
 

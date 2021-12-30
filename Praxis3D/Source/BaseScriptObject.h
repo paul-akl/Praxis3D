@@ -11,7 +11,7 @@ public:
 
 	}
 	
-	BitMask getSystemType() final { return Systems::Scripting; }
+	BitMask getSystemType() final { return Systems::Script; }
 
 	virtual BitMask getDesiredSystemChanges() { return Systems::Changes::None; }
 

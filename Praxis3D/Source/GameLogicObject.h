@@ -9,7 +9,7 @@ class GameLogicObject : public SystemObject
 {
 public:
 	GameLogicObject(SystemScene *p_systemScene, const std::string &p_name)
-		: SystemObject(p_systemScene, p_name, Properties::Scripting)
+		: SystemObject(p_systemScene, p_name, Properties::Script)
 	{
 
 
@@ -21,7 +21,7 @@ public:
 	}
 
 	// System type is Graphics
-	BitMask getSystemType() { return Systems::Scripting; }
+	BitMask getSystemType() { return Systems::Script; }
 
 	void update(const float p_deltaTime)
 	{

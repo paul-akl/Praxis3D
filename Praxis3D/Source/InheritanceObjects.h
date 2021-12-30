@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CommonDefinitions.h"
+#include "GraphicsDataSets.h"
 #include "NullObjects.h"
 #include "SpatialDataManager.h"
 

@@ -5,7 +5,7 @@
 // Provides bare object movement functionality for debugging purposes (like making a light move around the scene)
 class DebugMoveScript : public BaseScriptObject
 {
-	friend class ScriptingScene;
+	friend class ScriptScene;
 public:
 	DebugMoveScript(SystemScene *p_systemScene, std::string p_name)
 		: BaseScriptObject(p_systemScene, p_name, Properties::DebugMoveScript)

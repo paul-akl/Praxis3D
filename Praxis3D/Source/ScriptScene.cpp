@@ -2,88 +2,160 @@
 #include <functional>
 
 #include "NullSystemObjects.h"
-#include "ScriptingSystem.h"
-#include "ScriptingScene.h"
+#include "ScriptSystem.h"
+#include "ScriptScene.h"
 #include "TaskManagerLocator.h"
 
-ScriptingScene::ScriptingScene(ScriptingSystem *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader)
+ScriptScene::ScriptScene(ScriptSystem *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader)
 {
 	m_scriptingTask = nullptr;
 }
 
-ScriptingScene::~ScriptingScene()
+ScriptScene::~ScriptScene()
 {
 }
 
-ErrorCode ScriptingScene::init()
+ErrorCode ScriptScene::init()
 {
-	m_scriptingTask = new ScriptingTask(this);
+	m_scriptingTask = new ScriptTask(this);
 	return ErrorCode::Success;
 }
 
-ErrorCode ScriptingScene::setup(const PropertySet &p_properties)
+ErrorCode ScriptScene::setup(const PropertySet &p_properties)
 {
-	/*for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
+	// Get default object pool size
+	decltype(m_scriptObjects.getPoolSize()) objectPoolSize = Config::objectPoolVar().object_pool_size;
+
+	for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
 	{
 		switch(p_properties[i].getPropertyID())
 		{
-
+		case Properties::ObjectPoolSize:
+			objectPoolSize = p_properties[i].getInt();
+			break;
 		}
-	}*/
+	}
+
+	// Initialize object pools
+	m_scriptObjects.init(objectPoolSize);
 
 	return ErrorCode::Success;
 }
 
-void ScriptingScene::update(const float p_deltaTime)
+void ScriptScene::update(const float p_deltaTime)
 {
-	for(decltype(m_scriptObjects.size()) i = 0, size = m_scriptObjects.size(); i < size; i++)
+	for(decltype(m_scriptObjects.getPoolSize()) i = 0, numAllocObjecs = 0, totalNumAllocObjs = m_scriptObjects.getNumAllocated(),
+		size = m_scriptObjects.getPoolSize(); i < size && numAllocObjecs < totalNumAllocObjs; i++)
 	{
-		m_scriptObjects[i]->update(p_deltaTime);
+		// Check if the script object is allocated inside the pool container
+		if(m_scriptObjects[i].allocated())
+		{
+			auto *scriptObject = m_scriptObjects[i].getObject();
+
+			// Increment the number of allocated objects (early bail mechanism)
+			numAllocObjecs++;
+
+			// Check if the script object is enabled
+			if(scriptObject->isObjectActive())
+			{
+				// Update the object
+				scriptObject->update(p_deltaTime);
+			}
+		}
 	}
 }
 
-void ScriptingScene::loadInBackground()
+void ScriptScene::loadInBackground()
 {
-	// Iterate over script objects and start loading them in background
-	for(decltype(m_scriptObjects.size()) i = 0, size = m_scriptObjects.size(); i < size; i++)
-	{
-		TaskManagerLocator::get().startBackgroundThread(std::bind(&BaseScriptObject::loadToMemory, m_scriptObjects[i]));
-	}
+	//// Iterate over script objects and start loading them in background
+	//for(decltype(m_scriptObjects.size()) i = 0, size = m_scriptObjects.size(); i < size; i++)
+	//{
+	//	TaskManagerLocator::get().startBackgroundThread(std::bind(&BaseScriptObject::loadToMemory, m_scriptObjects[i]));
+	//}
 }
 
-PropertySet ScriptingScene::exportObject()
+PropertySet ScriptScene::exportObject()
 {
-	// Create the root property set
-	PropertySet propertySet(Properties::Scripting);
+	//// Create the root property set
+	PropertySet propertySet(Properties::Script);
 
-	// Add root property set for scene values
-	auto &scene = propertySet.addPropertySet(Properties::Scene);
+	//// Add root property set for scene values
+	//auto &scene = propertySet.addPropertySet(Properties::Scene);
 
-	// Add root property set for all the objects
-	auto &objects = propertySet.addPropertySet(Properties::Objects);
+	//// Add root property set for all the objects
+	//auto &objects = propertySet.addPropertySet(Properties::Objects);
 
-	// Add script object property sets
-	for(decltype(m_scriptObjects.size()) i = 0, size = m_scriptObjects.size(); i < size; i++)
-		objects.addPropertySet(m_scriptObjects[i]->exportObject());
+	//// Add script object property sets
+	//for(decltype(m_scriptObjects.size()) i = 0, size = m_scriptObjects.size(); i < size; i++)
+	//	objects.addPropertySet(m_scriptObjects[i]->exportObject());
 
 	return propertySet;
 }
 
-ErrorCode ScriptingScene::preload()
+ErrorCode ScriptScene::preload()
 {	
 	// Load every script object. It still works in parallel, however,
 	// it returns only when all objects have finished loading (simulating sequential call)
-	TaskManagerLocator::get().parallelFor(size_t(0), m_scriptObjects.size(), size_t(1), [=](size_t i)
+	TaskManagerLocator::get().parallelFor(size_t(0), m_scriptObjects.getPoolSize(), size_t(1), [=](size_t i)
 	{
-		m_scriptObjects[i]->loadToMemory();
+		if(m_scriptObjects[i].allocated())
+		{
+			m_scriptObjects[i].getObject()->loadToMemory();
+		}
 	});
 
 	return ErrorCode::Success;
 }
 
-SystemObject *ScriptingScene::createObject(const PropertySet &p_properties)
+SystemObject *ScriptScene::createObject(const PropertySet &p_properties)
 {
-	//  Get certain object properties
+	// Check if property set node is present
+	if(p_properties)
+	{
+		// Check if the rendering property is present
+		auto &scriptProperty = p_properties.getPropertySetByID(Properties::Script);
+		if(scriptProperty)
+		{
+			// Get the object name
+			auto &nameProperty = p_properties.getPropertyByID(Properties::Name);
+
+			// Find a place for the new object in the pool
+			auto scriptObjectFromPool = m_scriptObjects.newObject();
+
+			// Check if the pool wasn't full
+			if(scriptObjectFromPool != nullptr)
+			{
+				std::string name;
+
+				// If the name property is missing, generate a unique name based on the object's index in the pool
+				if(nameProperty)
+					name = nameProperty.getString();
+				else
+					name = GetString(Properties::GraphicsObject) + Utilities::toString(scriptObjectFromPool->getIndex());
+
+				// Construct the GraphicsObject
+				scriptObjectFromPool->construct(this, name);
+				auto scriptObject = scriptObjectFromPool->getObject();
+
+				//graphicsObject->importObject(renderingProperty);
+
+				// Start importing the newly created object in a background thread
+				//TaskManagerLocator::get().startBackgroundThread(std::bind(&ScriptObject::importObject, scriptObject, scriptProperty));
+				scriptObject->importObject(scriptProperty);
+
+				return scriptObject;
+			}
+			else
+			{
+				ErrHandlerLoc::get().log(ErrorCode::ObjectPool_full, ErrorSource::Source_Script, "Failed to add ScriptObject - \'" + nameProperty.getString() + "\'");
+			}
+		}
+	}
+
+	// If valid type was not specified, or object creation failed, return a null object instead
+	return g_nullSystemBase.getScene()->createObject(p_properties);
+
+	/*/  Get certain object properties
 	auto const &type = p_properties.getPropertyByID(Properties::Type).getID();
 
 	SystemObject *newObject = nullptr;
@@ -119,36 +191,31 @@ SystemObject *ScriptingScene::createObject(const PropertySet &p_properties)
 		return newObject;
 
 	// If valid type was not specified, or object creation failed, return a null object instead
-	return g_nullSystemBase.getScene()->createObject(p_properties);
+	return g_nullSystemBase.getScene()->createObject(p_properties);*/
 }
 
-ErrorCode ScriptingScene::destroyObject(SystemObject *p_systemObject)
+ErrorCode ScriptScene::destroyObject(SystemObject *p_systemObject)
 {
-	if(p_systemObject != nullptr)
+	// Check if object is valid and belongs to graphics system
+	if(p_systemObject != nullptr && p_systemObject->getSystemType() == Systems::Graphics)
 	{
-		// Iterate over all elements and match the pointer address
-		for(decltype(m_scriptObjects.size()) i = 0, size = m_scriptObjects.size(); i < size; i++)
-		{
-			// If pointer addresses match, remove it and return success
-			if(m_scriptObjects[i] == p_systemObject)
-			{
-				std::swap(m_scriptObjects[i], m_scriptObjects.back());
-				m_scriptObjects.pop_back();
+		// Cast the system object to graphics object, as it belongs to the renderer scene
+		ScriptObject *objectToDestroy = static_cast<ScriptObject *>(p_systemObject);
 
-				return ErrorCode::Success;
-			}
-		}
+		// Try to destroy the object; return success if it succeeds
+		if(removeObjectFromPool(*objectToDestroy))
+			return ErrorCode::Success;
 	}
 
 	// If this point is reached, no object was found, return an appropriate error
 	return ErrorCode::Destroy_obj_not_found;
 }
 
-void ScriptingScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
+void ScriptScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 {
 }
 
-FreeCamera *ScriptingScene::loadFreeCamera(const PropertySet & p_properties)
+FreeCamera *ScriptScene::loadFreeCamera(const PropertySet & p_properties)
 {
 	FreeCamera *freeCamera = new FreeCamera(this, p_properties.getPropertyByID(Properties::Name).getString());
 
@@ -224,12 +291,12 @@ FreeCamera *ScriptingScene::loadFreeCamera(const PropertySet & p_properties)
 	freeCamera->setStrafeRightKey(rightStrafeKey);
 	freeCamera->setSprintKey(sprintKey);
 
-	m_scriptObjects.push_back(freeCamera);
+	//m_scriptObjects.push_back(freeCamera);
 
 	return freeCamera;
 }
 
-DebugUIScript *ScriptingScene::loadDebugUI(const PropertySet &p_properties)
+DebugUIScript *ScriptScene::loadDebugUI(const PropertySet &p_properties)
 {
 	DebugUIScript *debugUI = new DebugUIScript(this, p_properties.getPropertyByID(Properties::Name).getString());
 
@@ -273,12 +340,12 @@ DebugUIScript *ScriptingScene::loadDebugUI(const PropertySet &p_properties)
 	debugUI->setMouseCaptureKey(mouseCaptureKey);
 	debugUI->setVerticalSyncKey(verticalSyncKey);
 
-	m_scriptObjects.push_back(debugUI);
+	//m_scriptObjects.push_back(debugUI);
 
 	return debugUI;
 }
 
-DebugMoveScript *ScriptingScene::loadDebugMove(const PropertySet &p_properties)
+DebugMoveScript *ScriptScene::loadDebugMove(const PropertySet &p_properties)
 {
 	DebugMoveScript *debugMove = new DebugMoveScript(this, p_properties.getPropertyByID(Properties::Name).getString());
 
@@ -302,12 +369,12 @@ DebugMoveScript *ScriptingScene::loadDebugMove(const PropertySet &p_properties)
 		}
 	}
 
-	m_scriptObjects.push_back(debugMove);
+	//m_scriptObjects.push_back(debugMove);
 
 	return debugMove;
 }
 
-DebugRotateScript *ScriptingScene::loadDebugRotate(const PropertySet &p_properties)
+DebugRotateScript *ScriptScene::loadDebugRotate(const PropertySet &p_properties)
 {
 	DebugRotateScript *debugRotate = new DebugRotateScript(this, p_properties.getPropertyByID(Properties::Name).getString());
 
@@ -328,12 +395,12 @@ DebugRotateScript *ScriptingScene::loadDebugRotate(const PropertySet &p_properti
 		}
 	}
 
-	m_scriptObjects.push_back(debugRotate);
+	//m_scriptObjects.push_back(debugRotate);
 
 	return debugRotate;
 }
 
-SolarTimeScript *ScriptingScene::loadSolarTime(const PropertySet & p_properties)
+SolarTimeScript *ScriptScene::loadSolarTime(const PropertySet & p_properties)
 {
 	SolarTimeScript *solarTimeScript = new SolarTimeScript(this, p_properties.getPropertyByID(Properties::Name).getString());
 
@@ -378,12 +445,12 @@ SolarTimeScript *ScriptingScene::loadSolarTime(const PropertySet & p_properties)
 		}
 	}
 
-	m_scriptObjects.push_back(solarTimeScript);
+	//m_scriptObjects.push_back(solarTimeScript);
 
 	return solarTimeScript;
 }
 
-SunScript *ScriptingScene::loadSun(const PropertySet & p_properties)
+SunScript *ScriptScene::loadSun(const PropertySet & p_properties)
 {
 	SunScript *sunScript = new SunScript(this, p_properties.getPropertyByID(Properties::Name).getString());
 
@@ -401,12 +468,12 @@ SunScript *ScriptingScene::loadSun(const PropertySet & p_properties)
 		}
 	}
 
-	m_scriptObjects.push_back(sunScript);
+	//m_scriptObjects.push_back(sunScript);
 
 	return sunScript;
 }
 
-WorldEditScript *ScriptingScene::loadWorldEdit(const PropertySet & p_properties)
+WorldEditScript *ScriptScene::loadWorldEdit(const PropertySet & p_properties)
 {
 	WorldEditScript *worldEditor = new WorldEditScript(this, p_properties.getPropertyByID(Properties::Name).getString(), m_sceneLoader);
 
@@ -501,11 +568,11 @@ WorldEditScript *ScriptingScene::loadWorldEdit(const PropertySet & p_properties)
 	}
 
 	// Check if the movement speeds were set
-	if(worldEditor->m_movementSpeed == 0.0f)
-		worldEditor->setSpeed(Config::gameplayVar().camera_freelook_speed);
+	//if(worldEditor->m_movementSpeed == 0.0f)
+	//	worldEditor->setSpeed(Config::gameplayVar().camera_freelook_speed);
 
-	if(worldEditor->m_fasterMovementSpeed == 0.0f)
-		worldEditor->setFasterSpeed(worldEditor->m_movementSpeed * 10.0f);
+	//if(worldEditor->m_fasterMovementSpeed == 0.0f)
+	//	worldEditor->setFasterSpeed(worldEditor->m_movementSpeed * 10.0f);
 
 	// Set the keys of the object
 	worldEditor->setUpKey(upKey);
@@ -521,7 +588,7 @@ WorldEditScript *ScriptingScene::loadWorldEdit(const PropertySet & p_properties)
 	worldEditor->setSaveKey(saveKey);
 	worldEditor->setModifierKey(modifierKey);
 
-	m_scriptObjects.push_back(worldEditor);
+	//m_scriptObjects.push_back(worldEditor);
 
 	return worldEditor;
 }

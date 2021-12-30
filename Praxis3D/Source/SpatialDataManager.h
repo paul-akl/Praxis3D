@@ -17,6 +17,7 @@ public:
 	SpatialDataManager(const Observer &p_parent) : m_parent(p_parent)
 	{
 		m_updateCount = 0;
+		m_trackLocalChanges = false;
 		worldSpaceNeedsUpdate = false;
 		localTransformNeedsUpdate = false;
 		parentTransformNeedsUpdate = false;
@@ -27,6 +28,22 @@ public:
 
 	}
 
+	SpatialDataManager &operator=(const SpatialDataManager &p_spatialDataManager)
+	{
+		m_trackLocalChanges = p_spatialDataManager.m_trackLocalChanges;
+		worldSpaceNeedsUpdate = p_spatialDataManager.worldSpaceNeedsUpdate;
+		localTransformNeedsUpdate = p_spatialDataManager.localTransformNeedsUpdate;
+		parentTransformNeedsUpdate = p_spatialDataManager.parentTransformNeedsUpdate;
+		worldTransformNeedsUpdate = p_spatialDataManager.worldTransformNeedsUpdate;
+		m_localSpace = p_spatialDataManager.m_localSpace;
+		m_parentSpace = p_spatialDataManager.m_parentSpace;
+		m_worldSpace = p_spatialDataManager.m_worldSpace;
+		m_updateCount = p_spatialDataManager.m_updateCount;
+		m_changes = p_spatialDataManager.m_changes;
+
+		return *this;
+	}
+
 	void update()
 	{	
 		// Calculate the needed transform matrices
@@ -34,6 +51,8 @@ public:
 		{
 			updateTransformMatrix(m_localSpace);
 			localTransformNeedsUpdate = false;
+			if(m_trackLocalChanges)
+				m_changes |= Systems::Changes::Spatial::LocalTransform;
 		}
 		if(parentTransformNeedsUpdate)
 		{
@@ -51,15 +70,14 @@ public:
 		{
 			updateWorldSpace();
 			incrementUpdateCount();
+			m_changes |= Systems::Changes::Spatial::WorldTransform;
 		}
 	}
 
 	// Process spatial changes from the given subject and change type
-	// Returns the changes that have been made; RETURNS ONLY WORLD-SPACE CHANGES!
+	// Returns the changes that have been made; RETURNS ONLY WORLD-SPACE CHANGES BY DEFAULT!
 	BitMask changeOccurred(const ObservedSubject &p_subject, const BitMask p_changeType)
 	{
-		BitMask newChanges = Systems::Changes::None;
-
 		// Process the "All" changes first, as their bitmask is a combination of multiple changes, so it's faster to process the changes all at once, instead of individually
 		// Checks are laid out in hierarchical sequence, starting with combinations of multiple changes and ending with each individual change
 		if(CheckBitmask(p_changeType, Systems::Changes::Spatial::All))
@@ -67,7 +85,7 @@ public:
 			// Update both the local-space and parent world-space data
 			updateLocalSpatialTransformData(p_subject.getSpatialTransformData(&m_parent, Systems::Changes::Spatial::AllLocal));
 			updateParentSpatialTransformData(p_subject.getSpatialTransformData(&m_parent, Systems::Changes::Spatial::AllWorld));
-			newChanges |= Systems::Changes::Spatial::AllWorld;
+			m_changes |= Systems::Changes::Spatial::AllWorld;
 		}
 		else // If the "All" flag wasn't set, check each local and world (parent) change
 		{
@@ -111,7 +129,7 @@ public:
 			if(CheckBitmask(p_changeType, Systems::Changes::Spatial::AllWorld))
 			{
 				updateParentSpatialTransformData(p_subject.getSpatialTransformData(&m_parent, Systems::Changes::Spatial::AllWorld));
-				newChanges |= Systems::Changes::Spatial::AllWorld;
+				m_changes |= Systems::Changes::Spatial::AllWorld;
 			}
 			else
 			{
@@ -119,32 +137,32 @@ public:
 				if(CheckBitmask(p_changeType, Systems::Changes::Spatial::AllWorldNoTransform))
 				{
 					updateParentSpatialData(p_subject.getSpatialData(&m_parent, Systems::Changes::Spatial::AllWorldNoTransform));
-					newChanges |= Systems::Changes::Spatial::AllWorldNoTransform;
+					m_changes |= Systems::Changes::Spatial::AllWorldNoTransform;
 				}
 				else // If this is reached, check each individual piece of data has changed
 				{
 					if(CheckBitmask(p_changeType, Systems::Changes::Spatial::WorldPosition))
 					{
 						updateParentPosition(p_subject.getVec3(&m_parent, Systems::Changes::Spatial::WorldPosition));
-						newChanges |= Systems::Changes::Spatial::WorldPosition;
+						m_changes |= Systems::Changes::Spatial::WorldPosition;
 					}
 
 					if(CheckBitmask(p_changeType, Systems::Changes::Spatial::WorldRotation))
 					{
 						updateParentRotation(p_subject.getVec3(&m_parent, Systems::Changes::Spatial::WorldRotation));
-						newChanges |= Systems::Changes::Spatial::WorldRotation;
+						m_changes |= Systems::Changes::Spatial::WorldRotation;
 					}
 
 					if(CheckBitmask(p_changeType, Systems::Changes::Spatial::WorldScale))
 					{
 						updateParentScale(p_subject.getVec3(&m_parent, Systems::Changes::Spatial::WorldScale));
-						newChanges |= Systems::Changes::Spatial::WorldScale;
+						m_changes |= Systems::Changes::Spatial::WorldScale;
 					}
 
 					if(CheckBitmask(p_changeType, Systems::Changes::Spatial::WorldTransform))
 					{
 						updateParentTransform(p_subject.getMat4(&m_parent, Systems::Changes::Spatial::WorldTransform));
-						newChanges |= Systems::Changes::Spatial::WorldTransform;
+						m_changes |= Systems::Changes::Spatial::WorldTransform;
 					}
 				}
 			}
@@ -154,11 +172,11 @@ public:
 		if(worldSpaceNeedsUpdate)
 		{
 			updateWorldSpace();
-			newChanges |= Systems::Changes::Spatial::WorldTransform;
 			incrementUpdateCount();
+			m_changes |= Systems::Changes::Spatial::WorldTransform;
 		}
 
-		return newChanges;
+		return m_changes;
 	}
 
 	// Get local-space spatial data
@@ -245,8 +263,36 @@ public:
 		return NullObjects::NullSpacialTransformData;
 	}
 
+	const inline Math::Vec3f &getWorldPosition() const { return m_worldSpace.m_spatialData.m_position; }
+	const inline Math::Vec3f &getWorldRotation() const { return m_worldSpace.m_spatialData.m_rotationEuler; }
+
 	// Returns the current update count; each time data is changed, update count is incremented
 	const inline UpdateCount getUpdateCount() const { return m_updateCount; }
+
+	// Returns all the changes made since the last reset of changes
+	const inline BitMask getCurrentChanges() const { return m_changes; }
+
+	// Returns all the changes made since the last reset of changes; and resets the changes
+	const inline BitMask getCurrentChangesAndReset() 
+	{ 
+		auto returnChanges = m_changes;
+		resetChanges();
+		return returnChanges;
+	}
+	
+	// Reset the tracking of changes
+	inline void resetChanges() { m_changes = Systems::Changes::None; }
+
+	// Should the local changes be tracked and returned when getting current changes
+	inline void setTrackLocalChanges(const bool p_trackLocalChanges) { m_trackLocalChanges = p_trackLocalChanges; }
+
+	// Set only the local, parent and world spatial data
+	inline void setSpatialData(const SpatialDataManager &p_spatialDataManager)
+	{
+		m_localSpace = p_spatialDataManager.m_localSpace;
+		m_parentSpace = p_spatialDataManager.m_parentSpace;
+		m_worldSpace = p_spatialDataManager.m_worldSpace;
+	}
 
 	const inline void setLocalPosition(const Math::Vec3f p_position)		{ updateLocalPosition(p_position);		}
 	const inline void setLocalRotation(const Math::Vec3f p_rotation)		{ updateLocalRotation(p_rotation);		}
@@ -264,36 +310,50 @@ public:
 	{ 
 		m_worldSpace.m_spatialData.m_position = p_position; 
 		worldTransformNeedsUpdate = true;
+		m_changes |= Systems::Changes::Spatial::WorldPosition;
 	}
 	const inline void setWorldRotation(const Math::Vec3f p_rotation)		
 	{ 
 		m_worldSpace.m_spatialData.m_rotationEuler = p_rotation;
 		worldTransformNeedsUpdate = true;
+		m_changes |= Systems::Changes::Spatial::WorldRotation;
 	}
 	const inline void setWorldRotation(const Math::Quaternion p_rotation)	
 	{ 
 		m_worldSpace.m_spatialData.m_rotationQuat = p_rotation;
 		worldTransformNeedsUpdate = true;
+		m_changes |= Systems::Changes::Spatial::WorldRotation;
 	}
 	const inline void setWorldScale(const Math::Vec3f p_scale)				
 	{ 
 		m_worldSpace.m_spatialData.m_scale = p_scale;
 		worldTransformNeedsUpdate = true;
+		m_changes |= Systems::Changes::Spatial::WorldScale;
 	}
 	const inline void setWorldTransform(const Math::Mat4f p_transform)		
 	{ 
 		m_worldSpace.m_transformMat = p_transform;
 		worldTransformNeedsUpdate = false;
+		m_changes |= Systems::Changes::Spatial::WorldTransform;
 	}
 
-	const inline void calculateLocalTransform() { updateTransformMatrix(m_localSpace); }
-	const inline void calculateWorldTransform() { updateTransformMatrix(m_worldSpace); }
+	const inline void calculateLocalTransform() 
+	{ 
+		updateTransformMatrix(m_localSpace); 
+	}
+	const inline void calculateWorldTransform() 
+	{ 
+		updateTransformMatrix(m_worldSpace);
+		m_changes |= Systems::Changes::Spatial::WorldRotation;
+	}
 
 	// Make up the world-space data from local and parent data
 	void updateWorldSpace()
 	{
 		m_worldSpace = m_parentSpace + m_localSpace;
 		worldSpaceNeedsUpdate = false;
+		if(m_trackLocalChanges)
+			m_changes |= Systems::Changes::Spatial::LocalTransform;
 	}
 
 private:
@@ -311,6 +371,8 @@ private:
 		m_localSpace = p_spatialTransformData;
 		worldSpaceNeedsUpdate = true;
 		localTransformNeedsUpdate = false;
+		if(m_trackLocalChanges)
+			m_changes |= Systems::Changes::Spatial::AllLocal;
 	}
 	void updateLocalSpatialData(const SpatialData &p_spatialData)
 	{
@@ -318,12 +380,16 @@ private:
 		//updateTransformMatrix(m_localSpace);
 		worldSpaceNeedsUpdate = true;
 		localTransformNeedsUpdate = false;
+		if(m_trackLocalChanges)
+			m_changes |= Systems::Changes::Spatial::AllLocalNoTransform;
 	}
 	void updateLocalTransform(const Math::Mat4f &p_transform)
 	{
 		m_localSpace.m_transformMat = p_transform;
 		worldSpaceNeedsUpdate = true;
 		localTransformNeedsUpdate = false;
+		if(m_trackLocalChanges)
+			m_changes |= Systems::Changes::Spatial::LocalTransform;
 	}
 	void updateLocalPosition(const Math::Vec3f &p_position)
 	{
@@ -331,6 +397,8 @@ private:
 		//updateTransformMatrix(m_localSpace);
 		worldSpaceNeedsUpdate = true;
 		localTransformNeedsUpdate = true;
+		if(m_trackLocalChanges)
+			m_changes |= Systems::Changes::Spatial::LocalPosition;
 	}
 	void updateLocalRotation(const Math::Vec3f &p_rotation)
 	{
@@ -338,6 +406,8 @@ private:
 		//updateTransformMatrix(m_localSpace);
 		worldSpaceNeedsUpdate = true;
 		localTransformNeedsUpdate = true;
+		if(m_trackLocalChanges)
+			m_changes |= Systems::Changes::Spatial::LocalRotation;
 	}	
 	void updateLocalRotation(const Math::Quaternion &p_rotation)
 	{
@@ -345,6 +415,8 @@ private:
 		//updateTransformMatrix(m_localSpace);
 		worldSpaceNeedsUpdate = true;
 		localTransformNeedsUpdate = true;
+		if(m_trackLocalChanges)
+			m_changes |= Systems::Changes::Spatial::LocalRotation;
 	}
 	void updateLocalScale(const Math::Vec3f &p_scale)
 	{
@@ -352,6 +424,8 @@ private:
 		//updateTransformMatrix(m_localSpace);
 		worldSpaceNeedsUpdate = true;
 		localTransformNeedsUpdate = true;
+		if(m_trackLocalChanges)
+			m_changes |= Systems::Changes::Spatial::LocalScale;
 	}
 
 	// Functions of world spatial data of the parent object
@@ -409,6 +483,9 @@ private:
 	// A reference to the parent (which is the observer of all the received changes); required to retrieve the changed data from the observed subject
 	const Observer &m_parent;
 
+	// Should the local changes be tracked
+	bool m_trackLocalChanges;
+
 	// A flag to determine if the world space needs to be updated
 	bool worldSpaceNeedsUpdate;
 	bool localTransformNeedsUpdate;
@@ -424,4 +501,7 @@ private:
 
 	// Used for update tracking; each time data is change, update count is incremented
 	UpdateCount m_updateCount;
+
+	// Holds a bit-mask of all recent changes
+	BitMask m_changes;
 };

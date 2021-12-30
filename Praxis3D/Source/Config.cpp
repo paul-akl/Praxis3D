@@ -37,6 +37,7 @@ Config::ModelVariables		Config::m_modelVar;
 Config::ObjectPoolVariables	Config::m_objPoolVar;
 Config::PathsVariables		Config::m_filepathVar;
 Config::RendererVariables	Config::m_rendererVar;
+Config::ScriptVariables		Config::m_scriptVar;
 Config::ShaderVariables		Config::m_shaderVar;
 Config::TextureVariables	Config::m_textureVar;
 Config::WindowVariables		Config::m_windowVar;
@@ -52,6 +53,7 @@ void Config::init()
 	// Component Variables
 	AddVariablePredef(m_componentVar, camera_component_name);
 	AddVariablePredef(m_componentVar, light_component_name);
+	AddVariablePredef(m_componentVar, lua_component_name);
 	AddVariablePredef(m_componentVar, model_component_name);
 	AddVariablePredef(m_componentVar, shader_component_name);
 
@@ -214,6 +216,7 @@ void Config::init()
 	AddVariablePredef(m_filepathVar, map_path);
 	AddVariablePredef(m_filepathVar, model_path);
 	AddVariablePredef(m_filepathVar, object_path);
+	AddVariablePredef(m_filepathVar, script_path);
 	AddVariablePredef(m_filepathVar, shader_path);
 	AddVariablePredef(m_filepathVar, sound_path);
 	AddVariablePredef(m_filepathVar, texture_path);
@@ -280,6 +283,12 @@ void Config::init()
 	AddVariablePredef(m_rendererVar, shader_pool_size);
 	AddVariablePredef(m_rendererVar, depth_test);
 	AddVariablePredef(m_rendererVar, face_culling);
+
+	// Script variables
+	AddVariablePredef(m_scriptVar, iniFunctionName);
+	AddVariablePredef(m_scriptVar, updateFunctionName);
+	AddVariablePredef(m_scriptVar, createObjectFunctionName);
+	AddVariablePredef(m_scriptVar, userTypeTableName);
 
 	// Shader variables
 	AddVariablePredef(m_shaderVar, atmScatProjMatUniform);

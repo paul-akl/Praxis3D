@@ -90,12 +90,19 @@
 			"Name": "Camera 1",
 			"Parent": "0",
 			"LocalPosition": "0.0f, 0.0f, 0.0f",
-			"LocalRotation": "0.0f, 0.0f, 0.0f",
+			"LocalRotation": "9.0f, 5.0f, 0.0f",
 			"Rendering":
 			{
 				"Camera":
 				{
 
+				}
+			},
+			"Script":
+			{
+				"Lua":
+				{
+					"Filename": "test.lua"
 				}
 			}
 		}
@@ -104,6 +111,13 @@
 	"Systems":
 	{
 		"Graphics":
+		{
+			"Scene":
+			{
+				"ObjectPoolSize": "50"
+			}
+		},
+		"Script":
 		{
 			"Scene":
 			{

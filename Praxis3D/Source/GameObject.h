@@ -4,6 +4,7 @@
 #include "GraphicsObject.h"
 #include "ObjectRegister.h"
 #include "SceneLoader.h"
+#include "ScriptObject.h"
 #include "SpatialDataManager.h"
 #include "System.h"
 
@@ -17,6 +18,7 @@ public:
 	{
 		m_parent = nullptr;
 		m_graphicsComponent = nullptr;
+		m_scriptComponent = nullptr;
 		m_componentsFlag = 0;
 	}
 	~GameObject()
@@ -55,7 +57,7 @@ public:
 	// Notify this object of the data that has been changed
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) override 
 	{
-		assert(p_subject == nullptr);
+		//assert(p_subject == nullptr);
 
 		// Process the spatial changes and record the world-space changes to be passed to the children objects
 		BitMask newChanges = m_spatialData.changeOccurred(*p_subject, p_changeType);
@@ -139,13 +141,13 @@ public:
 	const std::vector<GameObject*> &getChildren() const { return m_children; }
 
 	// Component functions
-	void addComponent(GraphicsObject *p_graphicsComponent) 
+	void addComponent(GraphicsObject *p_component)
 	{ 
 		// Remove the old component if it exists
 		removeComponent(Systems::TypeID::Graphics);
 
 		// Assign the new graphics component
-		m_graphicsComponent = p_graphicsComponent;
+		m_graphicsComponent = p_component;
 
 		// Share the GameObjects spatial data with the component
 		m_graphicsComponent->setSpatialDataManagerReference(m_spatialData);
@@ -155,6 +157,25 @@ public:
 
 		// Set the graphics component as an observer of this game object
 		m_sceneLoader.getChangeController()->createObjectLink(this, m_graphicsComponent);
+	}	
+	void addComponent(ScriptObject *p_component)
+	{
+		// Remove the old component if it exists
+		removeComponent(Systems::TypeID::Script);
+
+		// Assign the new script component
+		m_scriptComponent = p_component;
+
+		// Share the GameObjects spatial data with the component
+		m_scriptComponent->setSpatialDataManagerReference(m_spatialData);
+
+		// Set the flag for the script component, so it is known from the flag that there is one currently present
+		m_componentsFlag |= Systems::GameObjectComponents::Script;
+
+		m_sceneLoader.getChangeController()->createObjectLink(m_scriptComponent->getLuaComponent(), this);
+
+		// Set the script component as an observer of this game object
+		//m_sceneLoader.getChangeController()->createObjectLink(this, m_scriptComponent);
 	}
 	void removeComponent(Systems::TypeID p_componentType) 
 	{
@@ -178,9 +199,22 @@ public:
 				}
 				break;
 			}
-			case Systems::TypeID::Scripting:
+			case Systems::TypeID::Script:
 			{
+				// First check if the component exists
+				if(m_scriptComponent != nullptr)
+				{
+					unlinkComponent(m_scriptComponent);
 
+					// Stop sharing the spatial data with the component
+					m_scriptComponent->removeSpatialDataManagerReference();
+
+					// Assign the component pointer as nullptr to denote that it has been removed
+					m_scriptComponent = nullptr;
+
+					// Remove the bit corresponding to script component from the componentsFlag bitmask
+					m_componentsFlag &= ~Systems::GameObjectComponents::Script;
+				}
 				break;
 			}
 		}
@@ -216,7 +250,7 @@ private:
 
 	//Components
 	GraphicsObject *m_graphicsComponent;
-	SystemObject *m_scriptingComponent;
+	ScriptObject *m_scriptComponent;
 
 	// Stores a separate flag for each component currently present
 	BitMask m_componentsFlag;
