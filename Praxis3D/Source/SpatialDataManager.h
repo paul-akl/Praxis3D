@@ -96,7 +96,7 @@ public:
 			}
 
 			// Scale SHOULD NEVER need an update, but in case it somehow happens, update it anyway
-			// VERY computationally expensive!
+			/*/ VERY computationally expensive!
 			if(!m_localScaleUpToDate)
 			{
 				glm::quat rotation;
@@ -109,7 +109,7 @@ public:
 
 				if(m_trackLocalChanges)
 					m_changes |= Systems::Changes::Spatial::LocalScale;
-			}
+			}*/
 
 			if(!m_localTransformUpToDate)
 			{

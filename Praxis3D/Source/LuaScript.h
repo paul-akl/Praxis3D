@@ -14,6 +14,7 @@ namespace LuaDefinitions
 #define LUA_USER_TYPES(Code) \
     Code(MouseInfo,) \
     Code(KeyCommand,) \
+	Code(GameplayVariables,) \
 	Code(InputVariables,) \
 	Code(SpatialDataManager,) \
 	Code(NumOfTypes, )
@@ -127,6 +128,9 @@ private:
 	}
 	void setUsertypes()
 	{
+		m_luaState.new_usertype<Config::GameplayVariables>("GameplayVariables",
+			"camera_freelook_speed", &Config::GameplayVariables::camera_freelook_speed);
+
 		m_luaState.new_usertype<Config::InputVariables>("InputVariables",
 			"back_key", &Config::InputVariables::back_key,
 			"backward_editor_key", &Config::InputVariables::backward_editor_key,
@@ -162,24 +166,6 @@ private:
 			"mouse_pitch", &Config::InputVariables::mouse_pitch,
 			"mouse_pitch_clip", &Config::InputVariables::mouse_pitch_clip,
 			"mouse_sensitivity", &Config::InputVariables::mouse_sensitivity);
-
-		/*m_luaState.new_usertype<glm::vec3>("Vec3f",
-			"x", &glm::vec3::x,
-			"y", &glm::vec3::y,
-			"z", &glm::vec3::z,
-			"cross", &glm::vec3::cross,
-			"dot", &glm::vec3::dot,
-			"length", &glm::vec3::length,
-			"normalize", &glm::vec3::normalize,
-			"target", &glm::vec3::target,
-			"rotateAngleAxis", sol::resolve<void(float, const glm::vec3 &)>(&glm::vec3::rotate),
-			"rotateVec3f", sol::resolve<void (const glm::vec3&)>(&glm::vec3::rotate),
-			"addVec3f", &glm::vec3::operator+=,
-			"subVec3f", &glm::vec3::operator-=,
-			"mulF", sol::resolve<const glm::vec3 &(const float)>(&glm::vec3::operator*=),
-			"mulVec3f", sol::resolve<const glm::vec3 &(const glm::vec3&)>(&glm::vec3::operator*=),
-			"divF", sol::resolve<const glm::vec3 &(const float)>(&glm::vec3::operator/=),
-			"divVec3f", sol::resolve<const glm::vec3 &(const glm::vec3 &)>(&glm::vec3::operator/=));*/
 
 		m_luaState.new_usertype<glm::vec3>("Vec3",
 			sol::constructors<glm::vec3(), glm::vec3(float), glm::vec3(float, float, float), glm::vec3(glm::vec4)>(),
@@ -246,16 +232,18 @@ private:
 			"mulVec4", [](const glm::mat4 &m1, const glm::vec4 &v2) -> glm::vec4 { return m1 * v2; },
 			"divVec4", [](const glm::mat4 &m1, const glm::vec4 &v2) -> glm::vec4 { return m1 / v2; },
 			"inverse", [](const glm::mat4 &m1) -> glm::mat4 { return glm::inverse(m1); },
+			"rotate", [](const glm::mat4 &m1, const float f1, const glm::vec3 &v1) -> glm::mat4 { return glm::rotate(m1, f1, v1); },
 			"toQuat", [](const glm::mat4 &m1) -> glm::quat { return glm::toQuat(m1); },
 			"getRotXVec3", [](const glm::mat4 &m1) -> glm::vec3 { return m1[0]; },
 			"getRotYVec3", [](const glm::mat4 &m1) -> glm::vec3 { return m1[1]; },
 			"getRotZVec3", [](const glm::mat4 &m1) -> glm::vec3 { return m1[2]; },
-			//"getRotZVec3", [](const glm::mat4 &m1) -> glm::vec3 { return glm::vec3(m1[0][2], m1[1][2], m1[2][2]); },
 			"getPosVec3", [](const glm::mat4 &m1) -> glm::vec3 { return m1[3]; },
 			"getRotXVec4", [](const glm::mat4 &m1) -> glm::vec4 { return m1[0]; },
 			"getRotYVec4", [](const glm::mat4 &m1) -> glm::vec4 { return m1[1]; },
 			"getRotZVec4", [](const glm::mat4 &m1) -> glm::vec4 { return m1[2]; },
 			"getPosVec4", [](const glm::mat4 &m1) -> glm::vec4 { return m1[3]; },
+			"setPosVec3", [](glm::mat4 &m1, const glm::vec3 &v2) -> void { m1[3] = glm::vec4(v2, 1.0f); },
+			"setPosVec4", [](glm::mat4 &m1, const glm::vec4 &v2) -> void { m1[3] = v2; },
 			sol::meta_function::addition, [](const glm::mat4 &m1, glm::mat4 &m2) -> glm::mat4 { return m1 + m2; },
 			sol::meta_function::subtraction, [](const glm::mat4 &m1, glm::mat4 &m2) -> glm::mat4 { return m1 - m2; },
 			sol::meta_function::multiplication, [](const glm::mat4 &m1, glm::mat4 &m2) -> glm::mat4 { return m1 * m2; },
@@ -329,9 +317,17 @@ private:
 				m_keyCommands.push_back(keyCommand);
 			}
 				break;
+
+			case LuaDefinitions::GameplayVariables:
+
+				// Set the given variable name in Lua to point to the GameplayVariables object
+				m_luaState.set(p_variableName, Config::gameplayVar());
+
+				break;
+
 			case LuaDefinitions::InputVariables:
 
-				// Set the given variable name in Lua to point to the MouseInfo object
+				// Set the given variable name in Lua to point to the InputVariables object
 				m_luaState.set(p_variableName, Config::inputVar());
 
 				break;
