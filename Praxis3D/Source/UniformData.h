@@ -12,23 +12,23 @@ struct UniformFrameData
 	}
 
 	// Framebuffer size (can be different from the window size)
-	Math::Vec2i m_screenSize;
+	glm::ivec2 m_screenSize;
 
 	// Camera's position in the scene
-	Math::Vec3f m_cameraPosition;
+	glm::vec3 m_cameraPosition;
 
 	// Camera's target vector in the scene
-	Math::Vec3f m_cameraTarget;
+	glm::vec3 m_cameraTarget;
 
 	// Matrices that can only change once per frame
-	Math::Mat4f m_projMatrix,
+	glm::mat4 m_projMatrix,
 				m_viewMatrix,
 				m_viewProjMatrix,
 				m_atmScatProjMatrix,
 				m_transposeViewMatrix;
 
 	// Parameters of direction light, since there can be only one of it
-	Math::Vec3f m_dirLightColor,
+	glm::vec3 m_dirLightColor,
 				m_dirLightDirection;
 	float		m_dirLightIntensity;
 
@@ -50,8 +50,8 @@ struct UniformObjectData
 		m_textureTilingFactor = 1.0f;
 	}
 
-	UniformObjectData(const Math::Mat4f &p_modelMat,
-					  const Math::Mat4f &p_modelViewProjMatrix,
+	UniformObjectData(const glm::mat4 &p_modelMat,
+					  const glm::mat4 &p_modelViewProjMatrix,
 					  //const unsigned int (&p_materials)[MaterialType_NumOfTypes],
 					  float	p_heightScale = 0.0f,
 					  float p_alphaThreshold = 0.0f,
@@ -69,7 +69,7 @@ struct UniformObjectData
 		//memcpy(m_materials, p_materials, sizeof(m_materials));
 	}
 
-	Math::Mat4f m_modelMat,
+	glm::mat4 m_modelMat,
 				m_modelViewProjMatrix;
 
 	float	m_heightScale,

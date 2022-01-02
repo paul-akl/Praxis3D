@@ -366,9 +366,9 @@ public:
 	const inline int getScreenWidth() const { return Config::graphicsVar().current_resolution_x; }
 	const inline int getScreenHeight() const { return Config::graphicsVar().current_resolution_y; }
 
-	const inline Math::Vec2i getWindowSize() const
+	const inline glm::ivec2 getWindowSize() const
 	{
-		Math::Vec2i returnVec;
+		glm::ivec2 returnVec;
 		SDL_GetWindowSize(m_SDLWindow, &returnVec.x, &returnVec.y);
 		return returnVec;
 	}

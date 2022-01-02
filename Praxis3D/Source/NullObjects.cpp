@@ -13,10 +13,10 @@ public:
 
 constexpr NullObserver nullObserver;
 
-const Math::Quaternion		NullObjects::NullQuaterion = Math::Quaternion();
-const Math::Vec3f			NullObjects::NullVec3f = Math::Vec3f(1.0f);
-const Math::Vec4f			NullObjects::NullVec4f = Math::Vec4f(1.0f);
-const Math::Mat4f			NullObjects::NullMat4f = Math::Mat4f();
+const glm::quat				NullObjects::NullQuaterion = glm::quat();
+const glm::vec3				NullObjects::NullVec3f = glm::vec3(1.0f);
+const glm::vec4				NullObjects::NullVec4f = glm::vec4(1.0f);
+const glm::mat4				NullObjects::NullMat4f = glm::mat4();
 const bool					NullObjects::NullBool = false;
 const int					NullObjects::NullInt = 0;
 const float					NullObjects::NullFloat = 0.0f;

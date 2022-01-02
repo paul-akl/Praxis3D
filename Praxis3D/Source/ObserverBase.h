@@ -61,10 +61,10 @@ public:
 
 	const static SystemObjectID g_invalidID = static_cast<unsigned int>(-1);
 
-	const virtual Math::Quaternion	&getQuaternion(const Observer *p_observer, BitMask p_changedBits)	const { return NullObjects::NullQuaterion;	}
-	const virtual Math::Vec3f		&getVec3(const Observer *p_observer, BitMask p_changedBits)			const { return NullObjects::NullVec3f;		}
-	const virtual Math::Vec4f		&getVec4(const Observer *p_observer, BitMask p_changedBits)			const { return NullObjects::NullVec4f;		}
-	const virtual Math::Mat4f		&getMat4(const Observer *p_observer, BitMask p_changedBits)			const { return NullObjects::NullMat4f;		}
+	const virtual glm::quat				&getQuaternion(const Observer *p_observer, BitMask p_changedBits)	const { return NullObjects::NullQuaterion;	}
+	const virtual glm::vec3				&getVec3(const Observer *p_observer, BitMask p_changedBits)			const { return NullObjects::NullVec3f;		}
+	const virtual glm::vec4				&getVec4(const Observer *p_observer, BitMask p_changedBits)			const { return NullObjects::NullVec4f;		}
+	const virtual glm::mat4				&getMat4(const Observer *p_observer, BitMask p_changedBits)			const { return NullObjects::NullMat4f;		}
 
 	const virtual bool					getBool(const Observer *p_observer, BitMask p_changedBits) const					{ return NullObjects::NullBool;					}
 	const virtual int					getInt(const Observer *p_observer, BitMask p_changedBits) const						{ return NullObjects::NullInt;					}

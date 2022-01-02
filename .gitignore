@@ -28,3 +28,5 @@ VC/
 *.obj
 *.log
 *.pdb
+Builds/x64/Debug/Praxis3D.exp
+Builds/x64/Debug/Praxis3D.lib

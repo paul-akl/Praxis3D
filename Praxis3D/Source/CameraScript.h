@@ -17,7 +17,7 @@ public:
 		m_horizontalAngle = 0.0f;
 	}
 
-	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
+	const virtual glm::vec3 &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		/*switch (p_changedBits)
 		{
@@ -32,7 +32,7 @@ public:
 		return ObservedSubject::getVec3(p_observer, p_changedBits);
 	}
 
-	const virtual Math::Mat4f &getMat4(const Observer *p_observer, BitMask p_changedBits) const
+	const virtual glm::mat4 &getMat4(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		/*switch (p_changedBits)
 		{
@@ -45,10 +45,10 @@ public:
 	}
 
 	// Setters
-	const inline void setPosition(const Math::Vec3f &p_position)	{ m_positionVec = p_position; }
+	const inline void setPosition(const glm::vec3 &p_position)	{ m_positionVec = p_position; }
 	const inline void setFasterSpeed(const float p_speed)			{ m_fasterSpeed = p_speed; }
 	const inline void setSpeed(const float p_speed)					{ m_speed = p_speed; }
-	const inline void setAngles(const Math::Vec2f &p_angles) 
+	const inline void setAngles(const glm::vec2 &p_angles) 
 	{ 
 		m_horizontalAngle = p_angles.x;
 		m_verticalAngle = p_angles.y;
@@ -60,8 +60,8 @@ protected:
 			m_verticalAngle,
 			m_horizontalAngle;
 
-	Math::Mat4f m_modelMatrix;
-	Math::Vec3f m_positionVec,
+	glm::mat4 m_modelMatrix;
+	glm::vec3 m_positionVec,
 				m_targetVec,
 				m_upVector,
 				m_horizontalVec;
@@ -99,7 +99,7 @@ public:
 		propertySet.addProperty(Properties::Type, Properties::FreeCamera);
 		propertySet.addProperty(Properties::Name, m_name);
 		propertySet.addProperty(Properties::LocalPosition, m_positionVec);
-		propertySet.addProperty(Properties::Angle, Math::Vec2f(m_horizontalAngle, m_verticalAngle));
+		propertySet.addProperty(Properties::Angle, glm::vec2(m_horizontalAngle, m_verticalAngle));
 		propertySet.addProperty(Properties::Speed, m_speed);
 		propertySet.addProperty(Properties::SprintSpeed, m_fasterSpeed);
 
@@ -132,12 +132,12 @@ public:
 			m_horizontalAngle -= Config::inputVar().mouse_jaw * mouseInfo.m_movementX * (Config::inputVar().mouse_sensitivity * 0.01f);
 			m_verticalAngle -= Config::inputVar().mouse_pitch * mouseInfo.m_movementY * (Config::inputVar().mouse_sensitivity * 0.01f);
 
-			m_verticalAngle = Math::clamp(m_verticalAngle, -Config::inputVar().mouse_pitch_clip, Config::inputVar().mouse_pitch_clip);
+			//m_verticalAngle = Math::clamp(m_verticalAngle, -Config::inputVar().mouse_pitch_clip, Config::inputVar().mouse_pitch_clip);
 		}
 
 		// Calculate camera's rotation
-		m_targetVec.target(m_verticalAngle, m_horizontalAngle);
-		m_horizontalVec.horizontal(m_horizontalAngle);
+		//m_targetVec.target(m_verticalAngle, m_horizontalAngle);
+		//m_horizontalVec.horizontal(m_horizontalAngle);
 
 		// Set speed for movement
 		float speed = m_speed;
@@ -163,8 +163,8 @@ public:
 			m_positionVec.y = m_upperLimit;
 
 		// Calculate camera's position based on the pressed movement keys
-		m_upVector = Math::cross(m_horizontalVec, m_targetVec);
-		m_modelMatrix.initCamera(m_positionVec, m_targetVec + m_positionVec, m_upVector);
+		//m_upVector = Math::cross(m_horizontalVec, m_targetVec);
+		//m_modelMatrix.initCamera(m_positionVec, m_targetVec + m_positionVec, m_upVector);
 
 		/*
 		float cos_z = cos(m_verticalAngle);
@@ -186,7 +186,7 @@ public:
 		};*/
 
 		// Set the target vector variable, so it can be retrieved later by listeners
-		m_targetVec = Math::Vec3f(0.0f);
+		m_targetVec = glm::vec3(0.0f);
 		m_targetVec.y = m_verticalAngle;
 		m_targetVec.z = m_horizontalAngle;
 		

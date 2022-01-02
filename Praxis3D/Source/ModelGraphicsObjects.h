@@ -43,13 +43,13 @@ public:
 		if(m_needsUpdate)
 		{
 			// Update model matrix
-			m_baseObjectData.m_modelMat.identity();
-			m_baseObjectData.m_modelMat.translate(m_baseObjectData.m_position);
+			//m_baseObjectData.m_modelMat.identity();
+			//m_baseObjectData.m_modelMat.translate(m_baseObjectData.m_position);
 			//m_baseObjectData.m_modelMat.rotate(m_baseObjectData.m_rotation);
-			m_baseObjectData.m_modelMat.rotate(Math::Vec3f(0.0f, m_baseObjectData.m_rotation.y, 0.0f));
-			m_baseObjectData.m_modelMat.rotate(Math::Vec3f(m_baseObjectData.m_rotation.x, 0.0f, 0.0f));
-			m_baseObjectData.m_modelMat.rotate(Math::Vec3f(0.0f, 0.0f, -m_baseObjectData.m_rotation.z));
-			m_baseObjectData.m_modelMat.scale(m_baseObjectData.m_scale);
+			//m_baseObjectData.m_modelMat.rotate(glm::vec3(0.0f, m_baseObjectData.m_rotation.y, 0.0f));
+			//m_baseObjectData.m_modelMat.rotate(glm::vec3(m_baseObjectData.m_rotation.x, 0.0f, 0.0f));
+			//m_baseObjectData.m_modelMat.rotate(glm::vec3(0.0f, 0.0f, -m_baseObjectData.m_rotation.z));
+			//m_baseObjectData.m_modelMat.scale(m_baseObjectData.m_scale);
 
 			// Mark as updated
 			m_needsUpdate = false;

@@ -108,7 +108,20 @@ private:
 	}
 	void setFunctions()
 	{
-		m_luaState.set_function("toRadianF", sol::resolve<float(const float)>(&Math::toRadian));
+		//m_luaState.set_function("toRadianF", sol::resolve<float(const float)>(&Math::toRadian));
+
+		m_luaState.set_function("toRadianF", sol::resolve<float(const float)>(&glm::radians));
+		m_luaState.set_function("toRadianVec3", sol::resolve<glm::vec3(const glm::vec3 &)>(&glm::radians));
+		m_luaState.set_function("toRadianVec4", sol::resolve<glm::vec4(const glm::vec4 &)>(&glm::radians));
+
+		m_luaState.set_function("toDegreesF", sol::resolve<float(const float)>(&glm::degrees));
+		m_luaState.set_function("toDegreesVec3", sol::resolve<glm::vec3(const glm::vec3 &)>(&glm::degrees));
+		m_luaState.set_function("toDegreesVec4", sol::resolve<glm::vec4(const glm::vec4 &)>(&glm::degrees));
+
+		m_luaState.set_function("angleAxisQuat", sol::resolve<glm::quat(const float &, const glm::vec3 &)>(&glm::angleAxis));
+
+		m_luaState.set_function("getMouseInfo", []() -> const Window::MouseInfo { return WindowLocator::get().getMouseInfo(); });
+		m_luaState.set_function("mouseCaptured", []() -> const bool { return Config::windowVar().mouse_captured; });
 
 		m_luaState.set_function(Config::scriptVar().createObjectFunctionName, &LuaScript::createObjectInLua, this);
 	}
@@ -150,23 +163,103 @@ private:
 			"mouse_pitch_clip", &Config::InputVariables::mouse_pitch_clip,
 			"mouse_sensitivity", &Config::InputVariables::mouse_sensitivity);
 
-		m_luaState.new_usertype<Math::Vec3f>("Vec3f",
-			"x", &Math::Vec3f::x,
-			"y", &Math::Vec3f::y,
-			"z", &Math::Vec3f::z,
-			"cross", &Math::Vec3f::cross,
-			"dot", &Math::Vec3f::dot,
-			"length", &Math::Vec3f::length,
-			"normalize", &Math::Vec3f::normalize,
-			"target", &Math::Vec3f::target,
-			"rotateAngleAxis", sol::resolve<void(float, const Math::Vec3f &)>(&Math::Vec3f::rotate),
-			"rotateVec3f", sol::resolve<void (const Math::Vec3f&)>(&Math::Vec3f::rotate),
-			"addVec3f", &Math::Vec3f::operator+=,
-			"subVec3f", &Math::Vec3f::operator-=,
-			"mulF", sol::resolve<const Math::Vec3f &(const float)>(&Math::Vec3f::operator*=),
-			"mulVec3f", sol::resolve<const Math::Vec3f &(const Math::Vec3f&)>(&Math::Vec3f::operator*=),
-			"divF", sol::resolve<const Math::Vec3f &(const float)>(&Math::Vec3f::operator/=),
-			"divVec3f", sol::resolve<const Math::Vec3f &(const Math::Vec3f &)>(&Math::Vec3f::operator/=));
+		/*m_luaState.new_usertype<glm::vec3>("Vec3f",
+			"x", &glm::vec3::x,
+			"y", &glm::vec3::y,
+			"z", &glm::vec3::z,
+			"cross", &glm::vec3::cross,
+			"dot", &glm::vec3::dot,
+			"length", &glm::vec3::length,
+			"normalize", &glm::vec3::normalize,
+			"target", &glm::vec3::target,
+			"rotateAngleAxis", sol::resolve<void(float, const glm::vec3 &)>(&glm::vec3::rotate),
+			"rotateVec3f", sol::resolve<void (const glm::vec3&)>(&glm::vec3::rotate),
+			"addVec3f", &glm::vec3::operator+=,
+			"subVec3f", &glm::vec3::operator-=,
+			"mulF", sol::resolve<const glm::vec3 &(const float)>(&glm::vec3::operator*=),
+			"mulVec3f", sol::resolve<const glm::vec3 &(const glm::vec3&)>(&glm::vec3::operator*=),
+			"divF", sol::resolve<const glm::vec3 &(const float)>(&glm::vec3::operator/=),
+			"divVec3f", sol::resolve<const glm::vec3 &(const glm::vec3 &)>(&glm::vec3::operator/=));*/
+
+		m_luaState.new_usertype<glm::vec3>("Vec3",
+			sol::constructors<glm::vec3(), glm::vec3(float), glm::vec3(float, float, float), glm::vec3(glm::vec4)>(),
+			"x", &glm::vec3::x,
+			"y", &glm::vec3::y,
+			"z", &glm::vec3::z,
+			"addF", [](const glm::vec3 &v1, const float f) -> glm::vec3 { return v1 + f; },
+			"subF", [](const glm::vec3 &v1, const float f) -> glm::vec3 { return v1 - f; },
+			"mulF", [](const glm::vec3 &v1, const float f) -> glm::vec3 { return v1 * f; },
+			"divF", [](const glm::vec3 &v1, const float f) -> glm::vec3 { return v1 / f; },
+			"addVec3", [](const glm::vec3 &v1, const glm::vec3 &v2) -> glm::vec3 { return v1 + v2; },
+			"subVec3", [](const glm::vec3 &v1, const glm::vec3 &v2) -> glm::vec3 { return v1 - v2; },
+			"mulVec3", [](const glm::vec3 &v1, const glm::vec3 &v2) -> glm::vec3 { return v1 * v2; },
+			"divVec3", [](const glm::vec3 &v1, const glm::vec3 &v2) -> glm::vec3 { return v1 / v2; },
+			"normalize", [](const glm::vec3 &v1) -> glm::vec3 { return glm::normalize(v1); },
+			sol::meta_function::addition,		[](const glm::vec3 &v1, glm::vec3 &v2) -> glm::vec3 { return v1 + v2; },
+			sol::meta_function::subtraction,	[](const glm::vec3 &v1, glm::vec3 &v2) -> glm::vec3 { return v1 - v2; },
+			sol::meta_function::multiplication, [](const glm::vec3 &v1, glm::vec3 &v2) -> glm::vec3 { return v1 * v2; },
+			sol::meta_function::division,		[](const glm::vec3 &v1, glm::vec3 &v2) -> glm::vec3 { return v1 / v2; });
+
+		m_luaState.new_usertype<glm::vec4>("Vec4",
+			sol::constructors<glm::vec4(), glm::vec4(float), glm::vec4(glm::vec3, float), glm::vec4(float, float, float, float)>(),
+			"x", &glm::vec4::x,
+			"y", &glm::vec4::y,
+			"z", &glm::vec4::z,
+			"w", &glm::vec4::w,
+			"addF", [](const glm::vec4 &v1, const float f) -> glm::vec4 { return v1 + f; },
+			"subF", [](const glm::vec4 &v1, const float f) -> glm::vec4 { return v1 - f; },
+			"mulF", [](const glm::vec4 &v1, const float f) -> glm::vec4 { return v1 * f; },
+			"divF", [](const glm::vec4 &v1, const float f) -> glm::vec4 { return v1 / f; },
+			"addVec4", [](const glm::vec4 &v1, const glm::vec4 &v2) -> glm::vec4 { return v1 + v2; },
+			"subVec4", [](const glm::vec4 &v1, const glm::vec4 &v2) -> glm::vec4 { return v1 - v2; },
+			"mulVec4", [](const glm::vec4 &v1, const glm::vec4 &v2) -> glm::vec4 { return v1 * v2; },
+			"divVec4", [](const glm::vec4 &v1, const glm::vec4 &v2) -> glm::vec4 { return v1 / v2; },
+			"normalize", [](const glm::vec4 &v1) -> glm::vec4 { return glm::normalize(v1); },
+			sol::meta_function::addition, [](const glm::vec4 &v1, glm::vec4 &v2) -> glm::vec4 { return v1 + v2; },
+			sol::meta_function::subtraction, [](const glm::vec4 &v1, glm::vec4 &v2) -> glm::vec4 { return v1 - v2; },
+			sol::meta_function::multiplication, [](const glm::vec4 &v1, glm::vec4 &v2) -> glm::vec4 { return v1 * v2; },
+			sol::meta_function::division, [](const glm::vec4 &v1, glm::vec4 &v2) -> glm::vec4 { return v1 / v2; });
+
+		m_luaState.new_usertype<glm::quat>("Quat",
+			sol::constructors<glm::quat(), glm::quat(glm::vec4)>(),
+			"x", &glm::quat::x,
+			"y", &glm::quat::y,
+			"z", &glm::quat::z,
+			"w", &glm::quat::w,
+			"mulF", [](const glm::quat &q1, const float f) -> glm::quat { return q1 * f; },
+			"divF", [](const glm::quat &q1, const float f) -> glm::quat { return q1 / f; },
+			"mulVec3", [](const glm::quat &q1, const glm::vec3 &v2) -> glm::quat { return q1 * v2; },
+			"normalize", [](const glm::quat &q1) -> glm::quat { return glm::normalize(q1); },
+			"inverse", [](const glm::quat &q1) -> glm::quat { return glm::inverse(q1); },
+			"rotateVec3", [](const glm::quat &q1, const glm::vec3 &v2) -> glm::vec3 { return glm::rotate(q1, v2); },
+			"toMat4", [](const glm::quat &q1) -> glm::mat4 { return glm::toMat4(q1); },
+			sol::meta_function::addition, [](const glm::quat &q1, glm::quat &q2) -> glm::quat { return q1 + q2; },
+			sol::meta_function::subtraction, [](const glm::quat &q1, glm::quat &q2) -> glm::quat { return q1 - q2; },
+			sol::meta_function::multiplication, [](const glm::quat &q1, glm::quat &q2) -> glm::quat { return q1 * q2; });
+
+		m_luaState.new_usertype<glm::mat4>("Mat4",
+			sol::constructors<glm::mat4(), glm::mat4(float)>(),
+			"mulF", [](const glm::mat4 &v1, const float f) -> glm::mat4 { return v1 * f; },
+			"divF", [](const glm::mat4 &v1, const float f) -> glm::mat4 { return v1 / f; },
+			"mulVec3", [](const glm::mat4 &m1, const glm::vec3 &v2) -> glm::vec4 { return m1 * glm::vec4(v2, 1.0f); },
+			"divVec3", [](const glm::mat4 &m1, const glm::vec3 &v2) -> glm::vec4 { return m1 / glm::vec4(v2, 1.0f); },
+			"mulVec4", [](const glm::mat4 &m1, const glm::vec4 &v2) -> glm::vec4 { return m1 * v2; },
+			"divVec4", [](const glm::mat4 &m1, const glm::vec4 &v2) -> glm::vec4 { return m1 / v2; },
+			"inverse", [](const glm::mat4 &m1) -> glm::mat4 { return glm::inverse(m1); },
+			"toQuat", [](const glm::mat4 &m1) -> glm::quat { return glm::toQuat(m1); },
+			"getRotXVec3", [](const glm::mat4 &m1) -> glm::vec3 { return m1[0]; },
+			"getRotYVec3", [](const glm::mat4 &m1) -> glm::vec3 { return m1[1]; },
+			"getRotZVec3", [](const glm::mat4 &m1) -> glm::vec3 { return m1[2]; },
+			//"getRotZVec3", [](const glm::mat4 &m1) -> glm::vec3 { return glm::vec3(m1[0][2], m1[1][2], m1[2][2]); },
+			"getPosVec3", [](const glm::mat4 &m1) -> glm::vec3 { return m1[3]; },
+			"getRotXVec4", [](const glm::mat4 &m1) -> glm::vec4 { return m1[0]; },
+			"getRotYVec4", [](const glm::mat4 &m1) -> glm::vec4 { return m1[1]; },
+			"getRotZVec4", [](const glm::mat4 &m1) -> glm::vec4 { return m1[2]; },
+			"getPosVec4", [](const glm::mat4 &m1) -> glm::vec4 { return m1[3]; },
+			sol::meta_function::addition, [](const glm::mat4 &m1, glm::mat4 &m2) -> glm::mat4 { return m1 + m2; },
+			sol::meta_function::subtraction, [](const glm::mat4 &m1, glm::mat4 &m2) -> glm::mat4 { return m1 - m2; },
+			sol::meta_function::multiplication, [](const glm::mat4 &m1, glm::mat4 &m2) -> glm::mat4 { return m1 * m2; },
+			sol::meta_function::division, [](const glm::mat4 &m1, glm::mat4 &m2) -> glm::mat4 { return m1 / m2; });
 
 		m_luaState.new_usertype<SpatialData>("SpatialData",
 			"clear", &SpatialData::clear,
@@ -180,16 +273,16 @@ private:
 
 		m_luaState.new_usertype<SpatialDataManager>("SpatialDataManager",
 			"getLocalSpaceData", &SpatialDataManager::getLocalSpaceData,
+			"getLocalTransform", &SpatialDataManager::getLocalTransform,
+			"getParemtTransform", &SpatialDataManager::getParemtTransform,
+			"getWorldTransform", &SpatialDataManager::getWorldTransform,
 			"setLocalPosition", &SpatialDataManager::setLocalPosition,
-			"setLocalRotation", sol::resolve<const void (const Math::Vec3f)>(&SpatialDataManager::setLocalRotation),
+			"setLocalRotationEuler", sol::resolve<const void (const glm::vec3)>(&SpatialDataManager::setLocalRotation),
+			"setLocalRotationQuat", sol::resolve<const void(const glm::quat)>(&SpatialDataManager::setLocalRotation),
 			"setLocalScale", &SpatialDataManager::setLocalScale,
 			"setLocalTransform", &SpatialDataManager::setLocalTransform,
-			"getWorldSpaceData", &SpatialDataManager::getWorldSpaceData,
-			"setWorldPosition", &SpatialDataManager::setWorldPosition,
-			"setWorldRotation", sol::resolve<const void(const Math::Vec3f)>(&SpatialDataManager::setWorldRotation),
-			"setWorldScale", &SpatialDataManager::setWorldScale,
-			"setWorldTransform", &SpatialDataManager::setWorldTransform,
-			"getWorldRotation", &SpatialDataManager::getWorldRotation);
+			"setParentTransform", &SpatialDataManager::setParentTransform,
+			"setWorldTransform", &SpatialDataManager::setWorldTransform);
 
 		m_luaState.new_usertype<Window::MouseInfo>("MouseInfo",
 			"m_movementCurrentFrameX", &Window::MouseInfo::m_movementCurrentFrameX,
@@ -199,7 +292,7 @@ private:
 			"m_wheelX", &Window::MouseInfo::m_wheelX,
 			"m_wheelY", &Window::MouseInfo::m_wheelY,
 			"m_movementX", &Window::MouseInfo::m_movementX,
-			"activm_movementYate", &Window::MouseInfo::m_movementY);
+			"m_movementY", &Window::MouseInfo::m_movementY);
 
 		m_luaState.new_usertype<KeyCommand>("KeyCommand",
 			"activate", &KeyCommand::activate,
@@ -267,7 +360,7 @@ private:
 	{
 
 	}
-	void recordVec3fChange(const Math::Vec3f p_change, const unsigned int p_changeType)
+	void recordVec3fChange(const glm::vec3 p_change, const unsigned int p_changeType)
 	{
 
 	}

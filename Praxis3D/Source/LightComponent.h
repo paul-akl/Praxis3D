@@ -80,7 +80,7 @@ public:
 
 				m_lightComponent.m_directional.m_color = p_properties.getPropertyByID(Properties::Color).getVec3f();
 				m_lightComponent.m_directional.m_intensity = p_properties.getPropertyByID(Properties::Intensity).getFloat();
-				m_lightComponent.m_directional.m_direction = m_spatialData->getWorldSpaceData().m_spatialData.m_rotationEuler;
+				m_lightComponent.m_directional.m_direction = glm::vec3(m_spatialData->getWorldTransform()[2]);
 				setLoadedToMemory(true);
 				importError = ErrorCode::Success;
 
@@ -93,7 +93,7 @@ public:
 
 				m_lightComponent.m_point.m_color = p_properties.getPropertyByID(Properties::Color).getVec3f();
 				m_lightComponent.m_point.m_intensity = p_properties.getPropertyByID(Properties::Intensity).getFloat();
-				m_lightComponent.m_point.m_position = m_spatialData->getWorldSpaceData().m_spatialData.m_position;
+				m_lightComponent.m_point.m_position = glm::vec3(m_spatialData->getWorldTransform()[3]);
 				setLoadedToMemory(true);
 				importError = ErrorCode::Success;
 
@@ -107,8 +107,8 @@ public:
 				m_lightComponent.m_spot.m_color = p_properties.getPropertyByID(Properties::Color).getVec3f();
 				m_lightComponent.m_spot.m_cutoffAngle = p_properties.getPropertyByID(Properties::CutoffAngle).getFloat();
 				m_lightComponent.m_spot.m_intensity = p_properties.getPropertyByID(Properties::Intensity).getFloat();
-				m_lightComponent.m_spot.m_direction = m_spatialData->getWorldSpaceData().m_spatialData.m_rotationEuler;
-				m_lightComponent.m_spot.m_position = m_spatialData->getWorldSpaceData().m_spatialData.m_position;
+				m_lightComponent.m_spot.m_direction = glm::vec3(m_spatialData->getWorldTransform()[2]);
+				m_lightComponent.m_spot.m_position = glm::vec3(m_spatialData->getWorldTransform()[3]);
 				setLoadedToMemory(true);
 				importError = ErrorCode::Success;
 
@@ -171,8 +171,8 @@ public:
 
 	void loadToMemory() 
 	{
-		updatePosition(m_spatialData->getWorldSpaceData().m_spatialData.m_position);
-		updateRotation(m_spatialData->getWorldSpaceData().m_spatialData.m_rotationEuler);
+		updatePosition(glm::vec3(m_spatialData->getWorldTransform()[3]));
+		updateRotation(glm::vec3(m_spatialData->getWorldTransform()[2]));
 	}
 
 	// System type is Graphics
@@ -183,8 +183,8 @@ public:
 		// If the spatial data has changed, update the spatial data in light datasets
 		if(hasSpatialDataUpdated())
 		{
-			updatePosition(m_spatialData->getWorldSpaceData().m_spatialData.m_position);
-			updateRotation(m_spatialData->getWorldSpaceData().m_spatialData.m_rotationEuler);
+			updatePosition(glm::vec3(m_spatialData->getWorldTransform()[3]));
+			updateRotation(glm::vec3(m_spatialData->getWorldTransform()[2]));
 		}
 
 		if(isUpdateNeeded())
@@ -274,7 +274,7 @@ private:
 		SpotLightDataSet m_spot;
 	} m_lightComponent;
 
-	inline void updateColor(const Math::Vec3f &p_color)
+	inline void updateColor(const glm::vec3 &p_color)
 	{
 		// Update each type of light individually
 		switch(m_lightComponentType)
@@ -332,7 +332,7 @@ private:
 			break;
 		}
 	}
-	inline void updatePosition(const Math::Vec3f &p_position)
+	inline void updatePosition(const glm::vec3 &p_position)
 	{
 		// Update each type of light individually, as their spatial data is made up of different attributes
 		switch(m_lightComponentType)
@@ -345,7 +345,7 @@ private:
 			break;
 		}
 	}
-	inline void updateRotation(const Math::Vec3f &p_rotation)
+	inline void updateRotation(const glm::vec3 &p_rotation)
 	{
 		// Update each type of light individually, as their spatial data is made up of different attributes
 		switch(m_lightComponentType)

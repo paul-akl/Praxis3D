@@ -805,7 +805,7 @@ public:
 			debug_1_key = 58;
 			debug_2_key = 59;
 			down_editor_key = 89;
-			down_key = 89;
+			down_key = 6;
 			escape_key = 41;
 			forward_editor_key = 96;
 			forward_key = 26;
@@ -822,14 +822,14 @@ public:
 			save_editor_key = 22;
 			sprint_key = 225;
 			up_editor_key = 75;
-			up_key = 95;
+			up_key = 44;
 			vsync_key = 68;
 			mouse_filter = false;
 			mouse_warp_mode = false;
-			mouse_jaw = 0.022f;
-			mouse_pitch = 0.022f;
+			mouse_jaw = 0.005f;
+			mouse_pitch = 0.005f;
 			mouse_pitch_clip = 1.2f;
-			mouse_sensitivity = 3.0f;
+			mouse_sensitivity = 1.0f;
 		}
 
 		int back_key;

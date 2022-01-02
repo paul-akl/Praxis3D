@@ -19,9 +19,9 @@
 		},
 		{
 			"ID": "1",
-			"LocalPosition": "0.0f, 10.0f, -300.0f",
-			"LocalRotation": "90.0f, 0.0f, 45.0f",
-			"LocalScale": "2.0f, 2.0f, 2.0f",
+			"LocalPosition": "0.0f, 0.0f, 0.0f",
+			"LocalRotation": "0.0f, 0.0f, 0.0f",
+			"LocalScale": "1.0f, 1.0f, 1.0f",
 			"Name": "Terrain 1",
 			"Parent": "0",
 			"Rendering":
@@ -29,7 +29,7 @@
 				"Models":
 				[
 					{
-						"Filename": "plane.obj",
+						"Filename": "cube.obj",
 						"Meshes":
 						[
 							{
@@ -89,8 +89,8 @@
 			"ID": "3",
 			"Name": "Camera 1",
 			"Parent": "0",
-			"LocalPosition": "0.0f, 0.0f, 0.0f",
-			"LocalRotation": "9.0f, 5.0f, 0.0f",
+			"LocalPosition": "0.0f, 5.0f, 5.0f",
+			"LocalRotation": "30.0f, 00.0f, 0.0f",
 			"Rendering":
 			{
 				"Camera":

@@ -209,12 +209,50 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 		}
 	}
 
+	glm::quat qPitch = glm::angleAxis(glm::radians(p_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.x), glm::vec3(1, 0, 0));
+	glm::quat qYaw = glm::angleAxis(glm::radians(p_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.y), glm::vec3(0, 1, 0));
+	glm::quat qRoll = glm::angleAxis(glm::radians(p_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.z), glm::vec3(0, 0, 1));
+	glm::quat orientation = qPitch * qYaw * qRoll;
+	
+	orientation = glm::toQuat(p_sceneObjects.m_camera.m_viewData.m_transformMat);
+
+	//glm::quat orientation = qPitch * qYaw * qRoll; 
+	//glm::quat orientation(glm::radians(p_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler));
+	orientation = glm::normalize(orientation);
+	glm::mat4 rotate = glm::mat4_cast(orientation);
+	glm::mat4 translate = glm::mat4(1.0f);
+	//translate = glm::translate(translate, -p_sceneObjects.m_camera.m_viewData.m_spatialData.m_position);
+	translate = glm::translate(translate, -glm::vec3(p_sceneObjects.m_camera.m_viewData.m_transformMat[3]));
+
+	m_frameData.m_viewMatrix = rotate * translate;
+
+	glm::mat4 rotationOnly = p_sceneObjects.m_camera.m_viewData.m_transformMat;
+	rotationOnly[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+	//m_frameData.m_viewMatrix = rotationOnly * translate;
+
+
+	//glm::vec3 direction = glm::rotate(p_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationQuat, glm::vec3(0.0f, 0.0f, -1.0f));
+	glm::vec3 direction = glm::normalize(glm::rotate(orientation, glm::vec3(0.0f, 0.0f, -1.0f)));
+	//direction = glm::normalize(direction);
+	glm::vec3 up = glm::normalize(glm::rotate(p_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationQuat, glm::vec3(0.0f, 1.0f, 0.0f)));
+
+	//glm::mat4 ViewTranslate = glm::translate(glm::mat4(1.0f), -p_sceneObjects.m_camera.m_viewData.m_spatialData.m_position);
+	//glm::mat4 ViewRotateX = glm::rotate(ViewTranslate, glm::radians(p_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.x), glm::vec3(1.0f, 0.0f, 0.0f));
+	//glm::mat4 View = glm::rotate(ViewRotateX, glm::radians(p_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.y), glm::vec3(0.0f, 1.0f, 0.0f));
+
+	//m_frameData.m_viewMatrix = View;
+
+	//m_frameData.m_viewMatrix = glm::lookAt(p_sceneObjects.m_camera.m_viewData.m_spatialData.m_position, direction, up);
+	//m_frameData.m_viewMatrix = glm::lookAt(p_sceneObjects.m_camera.m_viewData.m_spatialData.m_position, direction, up);
+	//m_frameData.m_viewMatrix = glm::lookAt(p_sceneObjects.m_camera.m_viewData.m_spatialData.m_position, glm::vec3(0.0f, 0.0, -1.0f), glm::vec3(0.0f, 1.0, 0.0f));
+
 	// Calculate view and view-projection matrix here, so it is only done once, since it only changes between frames
-	m_frameData.m_viewMatrix = p_sceneObjects.m_camera.m_viewData.m_transformMat;
+	//m_frameData.m_viewMatrix = p_sceneObjects.m_camera.m_viewData.m_transformMat;
 	m_frameData.m_viewProjMatrix = m_frameData.m_projMatrix * m_frameData.m_viewMatrix;
 	
 	// Convert the view matrix to row major for the atmospheric scattering shaders
-	m_frameData.m_transposeViewMatrix = Math::transpose(m_frameData.m_viewMatrix);
+	m_frameData.m_transposeViewMatrix = glm::transpose(m_frameData.m_viewMatrix);
 
 	/*auto tempMatrix = m_frameData.m_viewMatrix;
 	
@@ -251,7 +289,7 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 	m_frameData.m_dirLightColor = p_sceneObjects.m_directionalLight->m_color;
 	m_frameData.m_dirLightIntensity = p_sceneObjects.m_directionalLight->m_intensity;
 	m_frameData.m_dirLightDirection = p_sceneObjects.m_directionalLight->m_direction;
-	m_frameData.m_dirLightDirection.normalize();
+	m_frameData.m_dirLightDirection = glm::normalize(m_frameData.m_dirLightDirection);
 
 	// Set number of lights so they can be send to the shader
 	m_frameData.m_numPointLights = (decltype(m_frameData.m_numPointLights))p_sceneObjects.m_pointLights.size();

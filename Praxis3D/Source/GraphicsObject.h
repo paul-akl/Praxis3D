@@ -281,26 +281,26 @@ public:
 	// Get the world spatial transform data
 	const inline SpatialTransformData &getWorldSpatialTransformData() const	{ return m_worldSpace;									}
 	// Get the world position
-	const inline Math::Vec3f &getWorldPosition() const						{ return m_worldSpace.m_spatialData.m_position;			}
+	const inline glm::vec3 &getWorldPosition() const						{ return m_worldSpace.m_spatialData.m_position;			}
 	// Get the world rotation in Euler
-	const inline Math::Vec3f getWorldRotationEuler() const					{ return m_worldSpace.m_spatialData.m_rotationEuler;	}
+	const inline glm::vec3 getWorldRotationEuler() const					{ return m_worldSpace.m_spatialData.m_rotationEuler;	}
 	// Get the world rotation as a quaternion
-	const inline Math::Quaternion getWorldRotationQuat() const				{ return m_worldSpace.m_spatialData.m_rotationQuat;		}
+	const inline glm::quat getWorldRotationQuat() const				{ return m_worldSpace.m_spatialData.m_rotationQuat;		}
 	// Get the world scale
-	const inline Math::Vec3f &getWorldScale() const							{ return m_worldSpace.m_spatialData.m_scale;			}
+	const inline glm::vec3 &getWorldScale() const							{ return m_worldSpace.m_spatialData.m_scale;			}
 
 	// Set the world spatial data (without transform matrix)
 	inline void setWorldSpatialData(const SpatialData &p_spatialData)					{ setUpdateNeeded(true); m_worldSpace.m_spatialData = p_spatialData;												}
 	// Set the world spatial transform data
 	inline void setWorldSpatialTransformData(const SpatialTransformData &p_spatialData)	{ m_worldSpace = p_spatialData;																						}
 	// Set the world position
-	inline void setWorldPosition(const Math::Vec3f &p_position)							{ setUpdateNeeded(true); m_worldSpace.m_spatialData.m_position = p_position;										}
+	inline void setWorldPosition(const glm::vec3 &p_position)							{ setUpdateNeeded(true); m_worldSpace.m_spatialData.m_position = p_position;										}
 	// Set the world rotation in Euler
-	inline void setWorldRotation(const Math::Vec3f &p_rotationEuler)					{ setUpdateNeeded(true); m_updateQuaternion - true; m_worldSpace.m_spatialData.m_rotationEuler = p_rotationEuler;	}
+	inline void setWorldRotation(const glm::vec3 &p_rotationEuler)					{ setUpdateNeeded(true); m_updateQuaternion - true; m_worldSpace.m_spatialData.m_rotationEuler = p_rotationEuler;	}
 	// Set the world rotation as a quaternion
-	inline void setWorldRotation(const Math::Quaternion &p_rotationQuat)				{ setUpdateNeeded(true); m_worldSpace.m_spatialData.m_rotationQuat = p_rotationQuat;								}
+	inline void setWorldRotation(const glm::quat &p_rotationQuat)				{ setUpdateNeeded(true); m_worldSpace.m_spatialData.m_rotationQuat = p_rotationQuat;								}
 	// Set the world scale
-	inline void setWorldScale(const Math::Vec3f &p_scale)								{ setUpdateNeeded(true); m_worldSpace.m_spatialData.m_scale = p_scale;												}
+	inline void setWorldScale(const glm::vec3 &p_scale)								{ setUpdateNeeded(true); m_worldSpace.m_spatialData.m_scale = p_scale;												}
 	*/
 	// Component functions
 	/*void addComponent(DirectionalLightDataSet &p_lightDataSet)
@@ -563,7 +563,7 @@ private:
 			m_color = nullptr;
 		}
 
-		Math::Vec3f *m_color;
+		glm::vec3 *m_color;
 	};
 
 	ProxyValues m_proxyValues;
@@ -639,7 +639,7 @@ public:
 	const inline bool isLoadedToVideoMemory() const { return m_loadedToVideoMemory; }
 
 	// Getters
-	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
+	const virtual glm::vec3 &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		switch(p_changedBits)
 		{
@@ -670,11 +670,11 @@ public:
 	const inline GraphicsData &getBaseObjectData() const { return m_baseObjectData; }
 
 	// Setters for spacial data
-	inline void setScale(const Math::Vec3f &p_scale)				{ m_baseObjectData.m_scale = p_scale;				}
-	inline void setPosition(const Math::Vec3f &p_position)			{ m_baseObjectData.m_position = p_position;			}
-	inline void setRotation(const Math::Vec3f &p_rotation)			{ m_baseObjectData.m_rotation = p_rotation;			}
-	inline void setOffsetPosition(const Math::Vec3f &p_position)	{ m_baseObjectData.m_offsetPosition = p_position;	}
-	inline void setOffsetRotation(const Math::Vec3f &p_rotation)	{ m_baseObjectData.m_offsetRotation = p_rotation;	}
+	inline void setScale(const glm::vec3 &p_scale)				{ m_baseObjectData.m_scale = p_scale;				}
+	inline void setPosition(const glm::vec3 &p_position)			{ m_baseObjectData.m_position = p_position;			}
+	inline void setRotation(const glm::vec3 &p_rotation)			{ m_baseObjectData.m_rotation = p_rotation;			}
+	inline void setOffsetPosition(const glm::vec3 &p_position)	{ m_baseObjectData.m_offsetPosition = p_position;	}
+	inline void setOffsetRotation(const glm::vec3 &p_rotation)	{ m_baseObjectData.m_offsetRotation = p_rotation;	}
 
 	// Setters for misc data
 	inline void setAffectedByLighting(const bool p_flag)		{ m_affectedByLighting = p_flag;					}

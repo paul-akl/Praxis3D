@@ -17,7 +17,7 @@ public:
 
 	ErrorCode setup(const PropertySet &p_properties);
 
-	void update(const float p_deltaTime) { }
+	void update(const float p_deltaTime);
 
 	ErrorCode preload() { return ErrorCode::Success; }
 
@@ -71,17 +71,17 @@ private:
 	// Removes an object from a pool, by iterating checking each pool for matched index; returns true if the object was found and removed
 	inline bool removeObjectFromPool(GameObject &p_object)
 	{
-		// Go over each graphics object
+		// Go over each game object
 		for(decltype(m_gameObjects.getPoolSize()) i = 0, numAllocObjecs = 0, totalNumAllocObjs = m_gameObjects.getNumAllocated(),
 			size = m_gameObjects.getPoolSize(); i < size && numAllocObjecs < totalNumAllocObjs; i++)
 		{
-			// Check if the graphics object is allocated inside the pool container
+			// Check if the game object is allocated inside the pool container
 			if(m_gameObjects[i].allocated())
 			{
 				// Increment the number of allocated objects (early bail mechanism)
 				numAllocObjecs++;
 
-				// If the object matches with the one we are looking for, remove it from the graphics object pool
+				// If the object matches with the one we are looking for, remove it from the game object pool
 				if(*m_gameObjects[i].getObject() == p_object)
 				{
 					m_gameObjects.remove(m_gameObjects[i].getIndex());

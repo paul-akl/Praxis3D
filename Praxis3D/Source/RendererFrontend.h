@@ -55,13 +55,13 @@ public:
 	void renderFrame(SceneObjects &p_sceneObjects, const float p_deltaTime);
 	
 protected:
-	inline void queueForDrawing(const ModelData &p_modelData, const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const Math::Mat4f &p_modelMatrix, const Math::Mat4f &p_viewProjMatrix)
+	inline void queueForDrawing(const ModelData &p_modelData, const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_modelMatrix, const glm::mat4 &p_viewProjMatrix)
 	{
 		// Get the necessary handles
 		const unsigned int modelHandle = p_modelData.m_model.getHandle();
 
 		// Calculate model-view-projection matrix
-		const Math::Mat4f modelViewProjMatrix = p_viewProjMatrix * p_modelMatrix;
+		const glm::mat4 modelViewProjMatrix = p_viewProjMatrix * p_modelMatrix;
 
 		// Unused for now
 		//unsigned int materials[MaterialType_NumOfTypes];
@@ -103,7 +103,7 @@ protected:
 				);
 		}
 	}
-	inline void queueForDrawing(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const Math::Mat4f &p_viewProjMatrix)
+	inline void queueForDrawing(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_viewProjMatrix)
 	{
 		// Assign the object data that is later passed to the shaders
 		const UniformObjectData objectData(p_viewProjMatrix,
@@ -249,15 +249,26 @@ protected:
 	// Recalculates the projection matrix
 	inline void updateProjectionMatrix()
 	{
-		m_frameData.m_projMatrix.perspective(	Config::graphicsVar().fov, 
-												m_frameData.m_screenSize.x, 
-												m_frameData.m_screenSize.y, 
-												Config::graphicsVar().z_near, 
-												Config::graphicsVar().z_far);
+		//m_frameData.m_projMatrix = glm::perspective(
+		//	Config::graphicsVar().fov, 
+		//	(float) m_frameData.m_screenSize.x / (float) m_frameData.m_screenSize.y, 
+		//	Config::graphicsVar().z_near,
+		//	Config::graphicsVar().z_far);
 
-		m_frameData.m_atmScatProjMatrix.perspectiveRadian(	Config::graphicsVar().fov,
-															m_frameData.m_screenSize.x,
-															m_frameData.m_screenSize.y);
+		m_frameData.m_projMatrix = glm::perspectiveFov(
+			glm::radians(Config::graphicsVar().fov),
+			(float)m_frameData.m_screenSize.x,
+			(float)m_frameData.m_screenSize.y,
+			Config::graphicsVar().z_near,
+			Config::graphicsVar().z_far);
+
+		m_frameData.m_atmScatProjMatrix = Math::perspectiveRadian(Config::graphicsVar().fov,
+																m_frameData.m_screenSize.x,
+																m_frameData.m_screenSize.y);
+
+		//m_frameData.m_atmScatProjMatrix.perspectiveRadian(	Config::graphicsVar().fov,
+		//													m_frameData.m_screenSize.x,
+		//													m_frameData.m_screenSize.y);
 	}
 
 	// Renderer backend, serves as an interface layer to GPU
@@ -276,7 +287,7 @@ protected:
 	RenderPassData *m_renderPassData;
 
 	// View - projection matrix
-	Math::Mat4f m_viewProjMatrix;
+	glm::mat4 m_viewProjMatrix;
 	
 	// An array of all active rendering passes
 	std::vector<RenderPass*> m_renderingPasses;

@@ -288,12 +288,6 @@
     <ClCompile Include="Source\LightComponent.cpp">
       <Filter>Renderer\Objects\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\SpatialDataChangeManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\NullObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\NullObjects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

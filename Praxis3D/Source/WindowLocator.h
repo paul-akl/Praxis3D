@@ -16,7 +16,7 @@ public:
 	public:
 		virtual int getScreenWidth() const { return 0; }
 		virtual int getScreenHeight() const { return 0; }
-		virtual Math::Vec2i getScreenSize() const { return Math::Vec2i(); }
+		virtual glm::ivec2 getScreenSize() const { return glm::ivec2(); }
 
 		virtual void bindCommand(std::string &p_keyName, KeyCommand *p_command) { }
 		virtual void bindCommand(Scancode p_scancode, KeyCommand *p_command) { }
@@ -69,7 +69,7 @@ public:
 	public:
 		int getScreenWidth() const { return m_window->getScreenWidth(); }
 		int getScreenHeight() const { return m_window->getScreenHeight(); }
-		Math::Vec2i getScreenSize() const { return m_window->getWindowSize(); }
+		glm::ivec2 getScreenSize() const { return m_window->getWindowSize(); }
 
 		void bindCommand(std::string &p_keyName, KeyCommand *p_command) { m_window->bindCommand(p_keyName, p_command); }
 		void bindCommand(Scancode p_scancode, KeyCommand *p_command) { m_window->bindCommand(p_scancode, p_command); }

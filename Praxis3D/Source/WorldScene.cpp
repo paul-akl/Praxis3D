@@ -29,6 +29,24 @@ ErrorCode WorldScene::setup(const PropertySet &p_properties)
 	return ErrorCode::Success;
 }
 
+void WorldScene::update(const float p_deltaTime)
+{
+	// Go over each game object
+	for(decltype(m_gameObjects.getPoolSize()) i = 0, numAllocObjecs = 0, totalNumAllocObjs = m_gameObjects.getNumAllocated(),
+		size = m_gameObjects.getPoolSize(); i < size && numAllocObjecs < totalNumAllocObjs; i++)
+	{
+		// Check if the game object is allocated inside the pool container
+		if(m_gameObjects[i].allocated())
+		{
+			// Increment the number of allocated objects (early bail mechanism)
+			numAllocObjecs++;
+
+			// Update the game object
+			m_gameObjects[i].getObject()->update(p_deltaTime);
+		}
+	}
+}
+
 SystemObject *WorldScene::createObject(const PropertySet &p_properties)
 {
 	ErrorCode objPoolError = ErrorCode::Failure;
@@ -108,7 +126,7 @@ SystemObject *WorldScene::createObject(const PropertySet &p_properties)
 				newGameObject->m_spatialData.setLocalRotation(p_properties[i].getVec3f());
 				break;
 			case Properties::LocalRotationQuaternion:
-				newGameObject->m_spatialData.setLocalRotation(Math::Quaternion(p_properties[i].getVec4f()));
+				newGameObject->m_spatialData.setLocalRotation(glm::quat(p_properties[i].getVec4f()));
 				break;
 			case Properties::LocalScale:
 				newGameObject->m_spatialData.setLocalScale(p_properties[i].getVec3f());
@@ -118,6 +136,7 @@ SystemObject *WorldScene::createObject(const PropertySet &p_properties)
 
 		// Spatial data manager should be updated after setting all the spatial data
 		newGameObject->m_spatialData.update();
+		newGameObject->m_spatialData.resetChanges();
 
 		// Declare data struct for children whose IDs haven't been registered yet
 		GameObjectAndChildren unassignedChildren(newGameObject);

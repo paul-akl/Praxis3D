@@ -29,10 +29,10 @@ public:
 		if(m_needsUpdate)
 		{
 			// Update model matrix
-			m_baseObjectData.m_modelMat.identity();
-			m_baseObjectData.m_modelMat.translate(m_baseObjectData.m_position);
-			m_baseObjectData.m_modelMat.rotate(m_baseObjectData.m_rotation);
-			m_baseObjectData.m_modelMat.scale(m_baseObjectData.m_scale);
+			//m_baseObjectData.m_modelMat.identity();
+			//m_baseObjectData.m_modelMat.translate(m_baseObjectData.m_position);
+			//m_baseObjectData.m_modelMat.rotate(m_baseObjectData.m_rotation);
+			//m_baseObjectData.m_modelMat.scale(m_baseObjectData.m_scale);
 
 			// Mark as updated
 			m_needsUpdate = false;

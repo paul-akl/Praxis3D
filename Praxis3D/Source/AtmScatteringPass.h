@@ -33,26 +33,26 @@ public:
 	})";
 
 		m_atmosphereParam = AtmosphereParameters(
-			Math::Vec3f(1.474000f, 1.850400f, 1.911980f),
+			glm::vec3(1.474000f, 1.850400f, 1.911980f),
 			0.004675f,
 			DensityProfile(DensityProfLayer(0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f), DensityProfLayer(0.000000f, 1.000000f, -0.125000f, 0.000000f, 0.000000f)),
 			DensityProfile(DensityProfLayer(0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f), DensityProfLayer(0.000000f, 1.000000f, -0.833333f, 0.000000f, 0.000000f)),
 			DensityProfile(DensityProfLayer(25.000000f, 0.000000f, 0.000000f, 0.066667f, -0.666667f), DensityProfLayer(0.000000f, 0.000000f, 0.000000f, -0.066667f, 2.666667f)),
-			Math::Vec3f(0.005802f, 0.013558f, 0.033100f),
+			glm::vec3(0.005802f, 0.013558f, 0.033100f),
 			6360.000000f,
-			Math::Vec3f(0.003996f, 0.003996f, 0.003996f),
+			glm::vec3(0.003996f, 0.003996f, 0.003996f),
 			6420.000000f,
-			Math::Vec3f(0.004440f, 0.004440f, 0.004440f),
+			glm::vec3(0.004440f, 0.004440f, 0.004440f),
 			0.800000f,
-			Math::Vec3f(0.000650f, 0.001881f, 0.000085f),
+			glm::vec3(0.000650f, 0.001881f, 0.000085f),
 			-0.207912f,
-			Math::Vec3f(0.100000f, 0.100000f, 0.100000f));
+			glm::vec3(0.100000f, 0.100000f, 0.100000f));
 
 		m_atmScatteringParam = AtmScatteringParameters(
 			m_atmosphereParam,
-			Math::Vec3f(1.0f, 1.0f, 1.0f),
-			Math::Vec3f(0.0f, -6360000.0f / 1000.0f, 0.0f),
-			Math::Vec2f(tan(0.00935f / 2.0f), cos(0.00935f / 2.0f)));
+			glm::vec3(1.0f, 1.0f, 1.0f),
+			glm::vec3(0.0f, -6360000.0f / 1000.0f, 0.0f),
+			glm::vec2(tan(0.00935f / 2.0f), cos(0.00935f / 2.0f)));
 
 	}
 
@@ -244,7 +244,7 @@ private:
 
 	std::string m_vertexShaderSource;
 
-	//Math::Vec3f m_whitePoint;
+	//glm::vec3 m_whitePoint;
 
 	ShaderLoader::ShaderProgram	*m_skyShader;
 	ShaderLoader::ShaderProgram	*m_groundShader;

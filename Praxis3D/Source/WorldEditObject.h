@@ -206,7 +206,7 @@ public:
 		printf("Selected object: %s\n", m_objectName.c_str());
 	}
 
-	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
+	const virtual glm::vec3 &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		switch(p_changedBits)
 		{
@@ -389,7 +389,7 @@ private:
 	SystemObject *m_selectedObject;
 
 	std::string m_objectName;
-	Math::Vec3f m_objectPosition;
+	glm::vec3 m_objectPosition;
 
 	size_t m_objectIndex;
 	float m_movementSpeed;

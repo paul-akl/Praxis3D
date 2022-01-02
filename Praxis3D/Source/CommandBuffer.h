@@ -35,13 +35,13 @@ public:
 	CommandBuffer() { }
 	~CommandBuffer() { }
 
-	inline void queueForDrawing(const RenderableObjectData &p_object, const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const Math::Mat4f &p_viewProjMatrix)
+	inline void queueForDrawing(const RenderableObjectData &p_object, const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_viewProjMatrix)
 	{
 		// Get the neccessary handles
 		const unsigned int modelHandle = p_object.m_model.getHandle();
 
 		// Calculare model-view-projection matrix
-		const Math::Mat4f modelViewProjMatrix = p_viewProjMatrix * p_object.m_baseObjectData.m_modelMat;
+		const glm::mat4 modelViewProjMatrix = p_viewProjMatrix * p_object.m_baseObjectData.m_modelMat;
 
 		// Assign the object data that is later passed to the shaders
 		const UniformObjectData objectData(p_object.m_baseObjectData.m_modelMat,
@@ -74,7 +74,7 @@ public:
 			);
 		}
 	}
-	inline void queueForDrawing(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const Math::Mat4f &p_viewProjMatrix)
+	inline void queueForDrawing(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_viewProjMatrix)
 	{
 		// Assign the object data that is later passed to the shaders
 		const UniformObjectData objectData(p_viewProjMatrix,

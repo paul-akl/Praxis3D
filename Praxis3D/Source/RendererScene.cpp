@@ -350,13 +350,13 @@ void RendererScene::update(const float p_deltaTime)
 						{
 							// Loop over each model and add it to the render list of models with custom shaders
 							for(decltype(modelComponent->m_modelData.size()) size = modelComponent->m_modelData.size(), i = 0; i < size; i++)
-								m_sceneObjects.m_modelDataWithShaders.emplace_back(modelComponent->m_modelData[i], graphicsObject->getShaderComponent()->m_shaderData->m_shader, graphicsObject->getSpatialDataManagerReference().getWorldSpaceData().m_transformMat);
+								m_sceneObjects.m_modelDataWithShaders.emplace_back(modelComponent->m_modelData[i], graphicsObject->getShaderComponent()->m_shaderData->m_shader, graphicsObject->getSpatialDataManagerReference().getWorldTransform());
 						}
 						else
 						{
 							// Loop over each model and add it to the render list of models with default shaders
 							for(decltype(modelComponent->m_modelData.size()) size = modelComponent->m_modelData.size(), i = 0; i < size; i++)
-								m_sceneObjects.m_modelData.emplace_back(modelComponent->m_modelData[i], graphicsObject->getSpatialDataManagerReference().getWorldSpaceData().m_transformMat);
+								m_sceneObjects.m_modelData.emplace_back(modelComponent->m_modelData[i], graphicsObject->getSpatialDataManagerReference().getWorldTransform());
 						}
 					}
 
@@ -387,12 +387,12 @@ void RendererScene::update(const float p_deltaTime)
 					// Check if the graphics object contains a camera component
 					if(graphicsObject->cameraComponentPresent())
 					{
-						m_sceneObjects.m_camera.m_viewData = graphicsObject->getSpatialDataManagerReference().getWorldSpaceData();
+						m_sceneObjects.m_camera.m_viewData.m_transformMat = graphicsObject->getSpatialDataManagerReference().getWorldTransform();
 
-						/*Math::Vec3f m_positionVec(0.0f, 0.0f, 0.0f);
-						Math::Vec3f m_targetVec(0.0f, 0.0f, 0.0f);
-						Math::Vec3f m_upVector(0.0f, 1.0f, 0.0f);
-						Math::Vec3f m_horizontalVec(0.0f, 0.0f, 0.0f);
+						/*glm::vec3 m_positionVec(0.0f, 0.0f, 0.0f);
+						glm::vec3 m_targetVec(0.0f, 0.0f, 0.0f);
+						glm::vec3 m_upVector(0.0f, 1.0f, 0.0f);
+						glm::vec3 m_horizontalVec(0.0f, 0.0f, 0.0f);
 
 						float m_verticalAngle = 0.5f;
 						float m_horizontalAngle = 3.14f;
@@ -406,7 +406,7 @@ void RendererScene::update(const float p_deltaTime)
 						m_sceneObjects.m_camera.m_viewData.m_transformMat.initCamera(m_positionVec, m_targetVec + m_positionVec, m_upVector);
 
 						// Set the target vector variable, so it can be retrieved later by listeners
-						m_targetVec = Math::Vec3f(0.0f);
+						m_targetVec = glm::vec3(0.0f);
 						m_targetVec.y = m_verticalAngle;
 						m_targetVec.z = m_horizontalAngle;
 
@@ -589,15 +589,15 @@ void RendererScene::update(const float p_deltaTime)
 	/*m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.y = 0.5f;
 	m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.z = 3.14f;
 
-	//const Math::Vec3f upVector = Math::cross(m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.z, m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.y);
-	//const Math::Vec3f targetVector(0.0f, m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.y, m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.z);
+	//const glm::vec3 upVector = Math::cross(m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.z, m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.y);
+	//const glm::vec3 targetVector(0.0f, m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.y, m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.z);
 
 	//m_sceneObjects.m_camera.m_viewData.m_transformMat.initCamera(m_sceneObjects.m_camera.m_viewData.m_spatialData.m_position, targetVector + m_sceneObjects.m_camera.m_viewData.m_spatialData.m_position, upVector);
 
-	Math::Vec3f m_positionVec(0.0f, 0.0f, 0.0f);
-	Math::Vec3f m_targetVec(0.0f, 0.0f, 0.0f);
-	Math::Vec3f m_upVector(0.0f, 1.0f, 0.0f);
-	Math::Vec3f m_horizontalVec(0.0f, 0.0f, 0.0f);
+	glm::vec3 m_positionVec(0.0f, 0.0f, 0.0f);
+	glm::vec3 m_targetVec(0.0f, 0.0f, 0.0f);
+	glm::vec3 m_upVector(0.0f, 1.0f, 0.0f);
+	glm::vec3 m_horizontalVec(0.0f, 0.0f, 0.0f);
 
 	float m_verticalAngle = 0.0f;
 	float m_horizontalAngle = 3.14f;
@@ -611,21 +611,21 @@ void RendererScene::update(const float p_deltaTime)
 	m_sceneObjects.m_camera.m_viewData.m_transformMat.initCamera(m_positionVec, m_targetVec + m_positionVec, m_upVector);
 
 	// Set the target vector variable, so it can be retrieved later by listeners
-	m_targetVec = Math::Vec3f(0.0f);
+	m_targetVec = glm::vec3(0.0f);
 	m_targetVec.y = m_verticalAngle;
 	m_targetVec.z = m_horizontalAngle;
 
 	m_sceneObjects.m_camera.m_viewData.m_spatialData.m_position = m_positionVec;
 	m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler = m_targetVec;
 
-	m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler = Math::Vec3f(0.0f);
+	m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler = glm::vec3(0.0f);
 
 	m_sceneObjects.m_camera.m_viewData.m_transformMat = Math::createTransformMat(
-		Math::Vec3f(0.0f),
-		Math::Vec3f(0.0f, 0.0f, 45.0f),
-		Math::Vec3f(1.0f));
+		glm::vec3(0.0f),
+		glm::vec3(0.0f, 0.0f, 45.0f),
+		glm::vec3(1.0f));
 
-	Math::Vec3f rotation(30.0f, 30.0f, 0.0f);
+	glm::vec3 rotation(30.0f, 30.0f, 0.0f);
 	rotation = Math::toRadian(rotation);
 
 	float cosY = cosf(rotation.y);     // Yaw
@@ -637,7 +637,7 @@ void RendererScene::update(const float p_deltaTime)
 	float cosR = cosf(rotation.z);     // Roll
 	float sinR = sinf(rotation.z);
 
-	Math::Mat4f mat;
+	glm::mat4 mat;
 	mat.identity();
 	mat.m[0] = cosY * cosR + sinY * sinP * sinR;
 	mat.m[1] = cosR * sinY * sinP - sinR * cosY;
@@ -651,7 +651,7 @@ void RendererScene::update(const float p_deltaTime)
 	mat.m[9] = sinY * sinR + cosR * cosY * sinP;
 	mat.m[10] = cosP * cosY;
 
-	m_sceneObjects.m_camera.m_viewData.m_transformMat = mat * Math::Mat4f();*/
+	m_sceneObjects.m_camera.m_viewData.m_transformMat = mat * glm::mat4();*/
 
 	m_sceneObjects.m_staticSkybox = m_skybox;
 	m_sceneObjects.m_directionalLight = &m_directionalLight->getLightDataSet();
@@ -982,7 +982,7 @@ LightComponent *RendererScene::loadLightComponent(const PropertySet &p_propertie
 	// Check if the property node is valid
 	if(p_properties)
 	{
-		Math::Vec3f color;
+		glm::vec3 color;
 		float	intensity = 0.0f,
 				cutoffAngle = 0.0f;
 		Properties::PropertyID type = Properties::PropertyID::Null;
@@ -998,7 +998,7 @@ LightComponent *RendererScene::loadLightComponent(const PropertySet &p_propertie
 
 			case Properties::CutoffAngle:
 				// Convert to radians
-				cutoffAngle = cosf(Math::toRadian(p_properties[i].getFloat()));
+				cutoffAngle = cosf(glm::radians(p_properties[i].getFloat()));
 				break;
 
 			case Properties::Intensity:
@@ -1262,7 +1262,7 @@ DirectionalLightObject *RendererScene::loadDirectionalLight(const PropertySet &p
 
 		case Properties::Direction:
 			// Need to normalize the light direction
-			m_directionalLight->setDirection(Math::normalize(p_properties[i].getVec3f()));
+			m_directionalLight->setDirection(glm::normalize(p_properties[i].getVec3f()));
 			break;
 
 		case Properties::Intensity:

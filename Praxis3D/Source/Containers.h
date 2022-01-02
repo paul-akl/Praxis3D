@@ -5,8 +5,11 @@
 // Stores all spatial data (position, rotation, scale)
 struct SpatialData
 {	
-	SpatialData() { }
-	SpatialData(const Math::Vec3f &p_position, const Math::Vec3f &p_rotationEuler, const Math::Vec3f &p_scale, const Math::Quaternion &p_rotationQuat)
+	SpatialData() 
+	{
+		clear();
+	}
+	SpatialData(const glm::vec3 &p_position, const glm::vec3 &p_rotationEuler, const glm::vec3 &p_scale, const glm::quat &p_rotationQuat)
 		: m_position(p_position), m_scale(p_scale), m_rotationEuler(p_rotationEuler), m_rotationQuat(p_rotationQuat) { }
 
 	friend const inline SpatialData operator+(const SpatialData &p_left, const SpatialData &p_right)
@@ -28,23 +31,26 @@ struct SpatialData
 	// Set all data to default
 	void clear()
 	{
-		m_position = Math::Vec3f();
-		m_rotationEuler = Math::Vec3f();
-		m_scale = Math::Vec3f();
-		m_rotationQuat = Math::Quaternion();
+		m_position = glm::vec3(0.0f);
+		m_rotationEuler = glm::vec3(0.0f);
+		m_scale = glm::vec3(1.0f);
+		m_rotationQuat = glm::quat();
 	}
 
-	Math::Vec3f m_position,
+	glm::vec3 m_position,
 				m_rotationEuler,
 				m_scale;
-	Math::Quaternion m_rotationQuat;
+	glm::quat m_rotationQuat;
 };
 
 // Stores all spatial data (position, rotation, scale) plus the transform matrix
 struct SpatialTransformData
 {
-	SpatialTransformData() { }
-	SpatialTransformData(const SpatialData &p_spatialData, const Math::Mat4f &p_transformMat) : m_spatialData(p_spatialData), m_transformMat(p_transformMat) { }
+	SpatialTransformData() 
+	{
+		clear();
+	}
+	SpatialTransformData(const SpatialData &p_spatialData, const glm::mat4 &p_transformMat) : m_spatialData(p_spatialData), m_transformMat(p_transformMat) { }
 
 	friend const inline SpatialTransformData operator+(const SpatialTransformData &p_left, const SpatialTransformData &p_right)
 	{
@@ -59,9 +65,9 @@ struct SpatialTransformData
 	void clear()
 	{
 		m_spatialData.clear();
-		m_transformMat.identity();
+		m_transformMat = glm::mat4(1.0f);
 	}
 
 	SpatialData m_spatialData;
-	Math::Mat4f m_transformMat;
+	glm::mat4 m_transformMat;
 };

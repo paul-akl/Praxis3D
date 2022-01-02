@@ -11,8 +11,8 @@ public:
 		: BaseScriptObject(p_systemScene, p_name, Properties::DebugRotateScript)
 	{
 		m_speed = 10.0f;
-		m_axis = Math::normalize(Math::Vec3f(1.0f, 0.0f, 1.0f));
-		m_rotation = Math::normalize(Math::Vec3f(1.0f, 0.0f, 1.0f));
+		m_axis = glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f));
+		m_rotation = glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f));
 	}
 	~DebugRotateScript() { }
 
@@ -45,13 +45,13 @@ public:
 
 	virtual void update(const float p_deltaTime)
 	{
-		m_rotation.rotate(m_speed * p_deltaTime, m_axis);
-		m_rotation.normalize();
+		//m_rotation.rotate(m_speed * p_deltaTime, m_axis);
+		//m_rotation.normalize();
 		
 		//postChanges(Systems::Changes::Spatial::Rotation);
 	}
 
-	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
+	const virtual glm::vec3 &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		/*switch (p_changedBits)
 		{
@@ -65,13 +65,13 @@ public:
 
 	// Setters
 	inline void setMovementSpeed(float p_speed) { m_speed = p_speed; }
-	inline void setRotation(Math::Vec3f p_rotation) { m_rotation = p_rotation; }
-	inline void setRotationAxis(Math::Vec3f p_axis) { m_axis = p_axis; }
+	inline void setRotation(glm::vec3 p_rotation) { m_rotation = p_rotation; }
+	inline void setRotationAxis(glm::vec3 p_axis) { m_axis = p_axis; }
 
 protected:
 	float m_speed;
 
-	Math::Mat4f m_modelMatrix;
-	Math::Vec3f m_rotation,
+	glm::mat4 m_modelMatrix;
+	glm::vec3 m_rotation,
 				m_axis;
 };

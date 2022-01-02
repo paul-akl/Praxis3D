@@ -134,22 +134,22 @@ public:
 		calcSunPosition();
 
 		// Transform angle values into radian
-		m_azimuthAngle = Math::toRadian(m_azimuthAngle);
-		m_zenithAngle = Math::toRadian(m_zenithAngle);
-		m_elevationAngle = Math::toRadian(m_elevationAngle);
+		m_azimuthAngle = glm::radians(m_azimuthAngle);
+		m_zenithAngle = glm::radians(m_zenithAngle);
+		m_elevationAngle = glm::radians(m_elevationAngle);
 		
 		/*
-		m_sunDirection = Math::Vec3f(
+		m_sunDirection = glm::vec3(
 			cos(m_azimuthAngle) * sin(m_zenithAngle),
 			cos(m_zenithAngle),
 			sin(m_azimuthAngle) * sin(m_zenithAngle));
 
-		m_sunDirection = Math::Vec3f(
+		m_sunDirection = glm::vec3(
 			sin(m_azimuthAngle) * sin(altitude),
 			cos(m_azimuthAngle) * sin(altitude),
 			sin(altitude));
 
-		m_sunDirection = Math::Vec3f(
+		m_sunDirection = glm::vec3(
 			sin(m_zenithAngle) * cos(m_azimuthAngle),
 			sin(m_zenithAngle) * sin(m_azimuthAngle),
 			cos(m_zenithAngle));
@@ -184,7 +184,7 @@ public:
 		m_sunDirection.z = static_cast<float>(cos(m_azimuthAngle) * cos(m_elevationAngle));
 		
 		// Normalize sun direction
-		m_sunDirection.normalize();
+		m_sunDirection = glm::normalize(m_sunDirection);
 
 		// Calculate sun position in the sky
 		m_sunPosition = (-m_sunDirection * m_offsetPosition) + m_originPosition;
@@ -205,7 +205,7 @@ public:
 			m_sunDirection = p_subject->getVec3(this, Systems::Changes::Spatial::LocalRotation);
 	}
 
-	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
+	const virtual glm::vec3 &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		switch(p_changedBits)
 		{
@@ -256,7 +256,7 @@ public:
 	const inline void setTimeZone(const int p_timeZone)						{ m_timeZone = p_timeZone;				}
 	const inline void setTimeMultiplier(const float p_timeMultiplier)		{ m_timeMultiplier = p_timeMultiplier;	}
 	const inline void setOffsetPosition(const float p_offSetPosition)		{ m_offsetPosition = p_offSetPosition;	}
-	const inline void setOriginPosition(const Math::Vec3f p_originPosition) { m_originPosition = p_originPosition;	}
+	const inline void setOriginPosition(const glm::vec3 p_originPosition) { m_originPosition = p_originPosition;	}
 
 	// Setters for the key binds:
 	inline void setForwardKey(Scancode p_key)
@@ -425,7 +425,7 @@ private:
 			m_zenithAngle,
 			m_elevationAngle;
 
-	Math::Vec3f	m_originPosition,
+	glm::vec3	m_originPosition,
 				m_sunPosition,
 				m_sunDirection;
 };

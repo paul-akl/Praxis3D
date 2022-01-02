@@ -69,7 +69,7 @@ public:
 	const inline bool isObjectActive() const { return m_isActive; }
 
 	// Getters
-	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
+	const virtual glm::vec3 &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		/*switch(p_changedBits)
 		{
@@ -100,11 +100,11 @@ public:
 	const inline GraphicsData &getBaseObjectData() const { return m_baseObjectData; }
 
 	// Setters for spacial data
-	inline void setScale(const Math::Vec3f &p_scale)				{ m_baseObjectData.m_scale = p_scale;				}
-	inline void setPosition(const Math::Vec3f &p_position)			{ m_baseObjectData.m_position = p_position;			}
-	inline void setRotation(const Math::Vec3f &p_rotation)			{ m_baseObjectData.m_rotation = p_rotation;			}
-	inline void setOffsetPosition(const Math::Vec3f &p_position)	{ m_baseObjectData.m_offsetPosition = p_position;	}
-	inline void setOffsetRotation(const Math::Vec3f &p_rotation)	{ m_baseObjectData.m_offsetRotation = p_rotation;	}
+	inline void setScale(const glm::vec3 &p_scale)				{ m_baseObjectData.m_scale = p_scale;				}
+	inline void setPosition(const glm::vec3 &p_position)			{ m_baseObjectData.m_position = p_position;			}
+	inline void setRotation(const glm::vec3 &p_rotation)			{ m_baseObjectData.m_rotation = p_rotation;			}
+	inline void setOffsetPosition(const glm::vec3 &p_position)	{ m_baseObjectData.m_offsetPosition = p_position;	}
+	inline void setOffsetRotation(const glm::vec3 &p_rotation)	{ m_baseObjectData.m_offsetRotation = p_rotation;	}
 
 	// Setters for misc data
 	inline void setAffectedByLighting(const bool p_flag)		{ m_affectedByLighting = p_flag;					}

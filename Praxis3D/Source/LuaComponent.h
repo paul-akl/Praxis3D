@@ -48,19 +48,24 @@ public:
 		if(m_luaScriptLoaded)
 			m_luaScript.update(p_deltaTime);
 
-		m_luaSpatialData.update();
+		//m_luaSpatialData.update();
 
 		auto changes = m_luaSpatialData.getCurrentChangesAndReset();
 
-		//if(CheckBitmask(changes, Systems::Changes::Spatial::WorldPosition))
+		//changes &= Systems::Changes::Spatial::AllLocal;
+
+		//if(CheckBitmask(changes, Systems::Changes::Spatial::LocalPosition))
 		//	std::cout << "Position changes occurred" << std::endl;
 
-		//if(CheckBitmask(changes, Systems::Changes::Spatial::WorldRotation))
+		//if(CheckBitmask(changes, Systems::Changes::Spatial::LocalTransform))
+		//	std::cout << "Transform changes occurred" << std::endl;
+
+		//if(CheckBitmask(changes, Systems::Changes::Spatial::LocalRotation))
 		//	std::cout << "Rotation changes occurred" << std::endl;
 
 		postChanges(changes);
 
-		std::cout << m_spatialData->getWorldSpaceData().m_spatialData.m_position.x << " : " << m_spatialData->getWorldSpaceData().m_spatialData.m_position.y << " : " << m_spatialData->getWorldSpaceData().m_spatialData.m_position.z << std::endl;
+		//std::cout << m_spatialData->getWorldTransform()[3].x << " : " << m_spatialData->getWorldTransform()[3].y << " : " << m_spatialData->getWorldTransform()[3].z << std::endl;
 	}
 
 	ErrorCode importObject(const PropertySet &p_properties) final override
@@ -130,18 +135,18 @@ public:
 	BitMask getDesiredSystemChanges() final override { return Systems::Changes::None; }
 	BitMask getPotentialSystemChanges() final override { return Systems::Changes::All; }
 
-	const inline Math::Quaternion &getQuaternion(const Observer *p_observer, BitMask p_changedBits) const
+	const inline glm::quat &getQuaternion(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		return m_luaSpatialData.getQuaternion(p_observer, p_changedBits);
 	}
-	const inline Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
+	const inline glm::vec3 &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		if(CheckBitmask(p_changedBits, Systems::Changes::Type::Spatial))
 			return m_luaSpatialData.getVec3(p_observer, p_changedBits);
 
 		return NullObjects::NullVec3f;
 	}
-	const inline Math::Mat4f &getMat4(const Observer *p_observer, BitMask p_changedBits) const
+	const inline glm::mat4 &getMat4(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		if(CheckBitmask(p_changedBits, Systems::Changes::Type::Spatial))
 			return m_luaSpatialData.getMat4(p_observer, p_changedBits);

@@ -65,7 +65,7 @@ public:
 
 	// Setters
 	inline void setCubemap(const TextureLoaderCubemap::TextureCubemapHandle &p_cubemap) { m_cubemap = p_cubemap; }
-	inline void setPosition(const Math::Vec3f &p_position) { m_baseObjectData.m_position = p_position; }
+	inline void setPosition(const glm::vec3 &p_position) { m_baseObjectData.m_position = p_position; }
 
 	// Getters
 	const inline unsigned int getCubemapHandle() const { return m_cubemap.getHandle(); }

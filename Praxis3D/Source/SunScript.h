@@ -45,7 +45,7 @@ public:
 
 	virtual void update(const float p_deltaTime)
 	{
-		m_rotation = Math::Vec3f(
+		m_rotation = glm::vec3(
 			cos(m_azimuthAngle) * sin(m_zenithAngle),
 			cos(m_zenithAngle),
 			sin(m_azimuthAngle) * sin(m_zenithAngle));
@@ -53,7 +53,7 @@ public:
 		postChanges(Systems::Changes::Spatial::LocalRotation);
 	}
 
-	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
+	const virtual glm::vec3 &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		switch(p_changedBits)
 		{
@@ -79,5 +79,5 @@ protected:
 	float	m_azimuthAngle,
 			m_zenithAngle;
 
-	Math::Vec3f m_rotation;
+	glm::vec3 m_rotation;
 };

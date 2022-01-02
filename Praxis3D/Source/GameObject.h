@@ -36,6 +36,9 @@ public:
 	
 	void update(const float p_deltaTime)
 	{
+		m_spatialData.update();
+		BitMask newChanges = m_spatialData.getCurrentChangesAndReset();
+
 		// If update is needed
 		if(m_updateNeeded)
 		{
@@ -46,6 +49,9 @@ public:
 			// Mark as updated
 			m_updateNeeded = false;
 		}
+
+		if(newChanges != Systems::Changes::None)
+			postChanges(newChanges);
 	}
 
 	// Get the data change types that this object is interested in
@@ -175,7 +181,7 @@ public:
 		m_sceneLoader.getChangeController()->createObjectLink(m_scriptComponent->getLuaComponent(), this);
 
 		// Set the script component as an observer of this game object
-		//m_sceneLoader.getChangeController()->createObjectLink(this, m_scriptComponent);
+		m_sceneLoader.getChangeController()->createObjectLink(this, m_scriptComponent);
 	}
 	void removeComponent(Systems::TypeID p_componentType) 
 	{
@@ -221,9 +227,9 @@ public:
 	}
 
 	const SpatialDataManager &getSpatialDataChangeManager() const { return m_spatialData; }
-	const Math::Quaternion &getQuaternion(const Observer *p_observer, BitMask p_changedBits)				const override { return m_spatialData.getQuaternion(p_observer, p_changedBits); }
-	const Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits)							const override { return m_spatialData.getVec3(p_observer, p_changedBits); }
-	const Math::Mat4f &getMat4(const Observer *p_observer, BitMask p_changedBits)							const override { return m_spatialData.getMat4(p_observer, p_changedBits); }
+	const glm::quat &getQuaternion(const Observer *p_observer, BitMask p_changedBits)						const override { return m_spatialData.getQuaternion(p_observer, p_changedBits); }
+	const glm::vec3 &getVec3(const Observer *p_observer, BitMask p_changedBits)								const override { return m_spatialData.getVec3(p_observer, p_changedBits); }
+	const glm::mat4 &getMat4(const Observer *p_observer, BitMask p_changedBits)								const override { return m_spatialData.getMat4(p_observer, p_changedBits); }
 	const SpatialData &getSpatialData(const Observer *p_observer, BitMask p_changedBits)					const override { return m_spatialData.getSpatialData(p_observer, p_changedBits); }
 	const SpatialTransformData &getSpatialTransformData(const Observer *p_observer, BitMask p_changedBits)	const override { return m_spatialData.getSpatialTransformData(p_observer, p_changedBits); }
 

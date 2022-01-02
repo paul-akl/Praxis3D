@@ -21,7 +21,7 @@ struct MaterialData
 	// Handle to a texture
 	TextureLoader2D::Texture2DHandle m_texture;
 	// Texture coordinates scale (for example, used for tilling)
-	Math::Vec2f m_textureScale;
+	glm::vec2 m_textureScale;
 	// Texture parallax effect scale (height multiplier)
 	float m_parallaxScale;
 	// Transparency threshold after which the fragment is discarded
@@ -54,20 +54,20 @@ struct ModelData
 // Contains model data and spatial data; needed by the renderer to draw a model using default shaders
 struct ModelAndSpatialData
 {
-	ModelAndSpatialData(ModelData &p_modelData, const Math::Mat4f &p_modelMatrix) : m_modelData(p_modelData), m_modelMatrix(p_modelMatrix) { }
+	ModelAndSpatialData(ModelData &p_modelData, const glm::mat4 &p_modelMatrix) : m_modelData(p_modelData), m_modelMatrix(p_modelMatrix) { }
 
 	ModelData &m_modelData;
-	const Math::Mat4f &m_modelMatrix;
+	const glm::mat4 &m_modelMatrix;
 };
 
 // Contains model data, shader data and spatial data; needed by the renderer to draw a model using custom shaders
 struct ModelShaderSpatialData
 {
-	ModelShaderSpatialData(ModelData &p_modelData, ShaderLoader::ShaderProgram &p_shader, const Math::Mat4f &p_modelMatrix) : m_modelData(p_modelData), m_shader(&p_shader), m_modelMatrix(p_modelMatrix) { }
+	ModelShaderSpatialData(ModelData &p_modelData, ShaderLoader::ShaderProgram &p_shader, const glm::mat4 &p_modelMatrix) : m_modelData(p_modelData), m_shader(&p_shader), m_modelMatrix(p_modelMatrix) { }
 
 	ModelData &m_modelData;
 	ShaderLoader::ShaderProgram *m_shader;
-	const Math::Mat4f &m_modelMatrix;
+	const glm::mat4 &m_modelMatrix;
 };
 
 // Contains data of multiple models, comprising a model component
@@ -96,13 +96,13 @@ struct GraphicsData
 {
 	GraphicsData() : m_scale(1.0f, 1.0f, 1.0f), m_alphaThreshold(0.0f), m_emissiveThreshold(0.0f), m_heightScale(0.0f), m_textureTilingFactor(1.0f) { }
 
-	Math::Vec3f m_position,
+	glm::vec3 m_position,
 				m_rotation,
 				m_scale,
 				m_offsetPosition,
 				m_offsetRotation;
 
-	Math::Mat4f m_modelMat;
+	glm::mat4 m_modelMat;
 
 	float	m_alphaThreshold,
 			m_emissiveThreshold,
@@ -222,13 +222,13 @@ struct LoadableObjectsContainer
 
 struct RenderableMeshData
 {
-	RenderableMeshData(Math::Mat4f &p_modelMatrix, MeshData &p_meshData)
+	RenderableMeshData(glm::mat4 &p_modelMatrix, MeshData &p_meshData)
 		: m_modelMatrix(p_modelMatrix), m_meshData(p_meshData), m_shader(*Loaders::shader().load()) { }
 
-	RenderableMeshData(Math::Mat4f &p_modelMatrix, MeshData &p_meshData, ShaderLoader::ShaderProgram &p_shader)// = *Loaders::shader().load())
+	RenderableMeshData(glm::mat4 &p_modelMatrix, MeshData &p_meshData, ShaderLoader::ShaderProgram &p_shader)// = *Loaders::shader().load())
 		: m_modelMatrix(p_modelMatrix), m_meshData(p_meshData), m_shader(p_shader) { }
 
-	Math::Mat4f &m_modelMatrix;
+	glm::mat4 &m_modelMatrix;
 	MeshData &m_meshData;
 	ShaderLoader::ShaderProgram &m_shader;
 };
@@ -243,47 +243,47 @@ struct RenderableMeshData
 
 struct DirectionalLightDataSet
 {
-	DirectionalLightDataSet(Math::Vec3f p_color = Math::Vec3f(1.0f), Math::Vec3f p_direction = Math::Vec3f(0.0f, 1.0f, 0.0f),
+	DirectionalLightDataSet(glm::vec3 p_color = glm::vec3(1.0f), glm::vec3 p_direction = glm::vec3(0.0f, 1.0f, 0.0f),
 							float p_intensity = 1.0f) : m_color(p_color), m_direction(p_direction), m_intensity(p_intensity) { }
 
 	void clear()
 	{
-		m_color = Math::Vec3f(0.0f);
+		m_color = glm::vec3(0.0f);
 		m_intensity = 0.0f;
 	}
 
-	Math::Vec3f m_color;
-	Math::Vec3f m_direction;
+	glm::vec3 m_color;
+	glm::vec3 m_direction;
 	float m_intensity;
 };
 
 struct PointLightDataSet
 {
-	PointLightDataSet(Math::Vec3f p_color = Math::Vec3f(1.0f), Math::Vec3f p_position = Math::Vec3f(0.0f), 
-					  Math::Vec3f p_attenuation = Math::Vec3f(0.0f, 0.0f, 1.0f), float p_intensity = 1.0f)
+	PointLightDataSet(glm::vec3 p_color = glm::vec3(1.0f), glm::vec3 p_position = glm::vec3(0.0f), 
+					  glm::vec3 p_attenuation = glm::vec3(0.0f, 0.0f, 1.0f), float p_intensity = 1.0f)
 					: m_color(p_color), m_position(p_position), m_attenuation(p_attenuation), m_intensity(p_intensity) { }
 
-	Math::Vec3f m_color;
+	glm::vec3 m_color;
 	float m_padding1;	// Unused variable, declared for padding
-	Math::Vec3f m_position;
-	Math::Vec3f m_attenuation;
+	glm::vec3 m_position;
+	glm::vec3 m_attenuation;
 	float m_intensity;
 	float m_padding2;	// Unused variable, declared for padding
 };
 
 struct SpotLightDataSet
 {
-	SpotLightDataSet(Math::Vec3f p_color = Math::Vec3f(1.0f), Math::Vec3f p_position = Math::Vec3f(0.0f),
-					 Math::Vec3f p_direction = Math::Vec3f(0.0f, 1.0f, 0.0f), Math::Vec3f p_attenuation = Math::Vec3f(0.0f, 0.0f, 1.0f),
+	SpotLightDataSet(glm::vec3 p_color = glm::vec3(1.0f), glm::vec3 p_position = glm::vec3(0.0f),
+					 glm::vec3 p_direction = glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3 p_attenuation = glm::vec3(0.0f, 0.0f, 1.0f),
 					 float p_intensity = 1.0f)
 		: m_color(p_color), m_position(p_position), m_direction(p_direction), m_attenuation(p_attenuation), m_intensity(p_intensity) { }
 	
-	Math::Vec3f m_color;
+	glm::vec3 m_color;
 	float m_padding1;	// Unused variable, declared for padding
-	Math::Vec3f m_position;
+	glm::vec3 m_position;
 	float m_padding2;	// Unused variable, declared for padding
-	Math::Vec3f m_direction;
-	Math::Vec3f m_attenuation;
+	glm::vec3 m_direction;
+	glm::vec3 m_attenuation;
 	float m_intensity;
 	float m_cutoffAngle;
 };
@@ -311,7 +311,7 @@ struct DensityProfLayer
 	float m_linearTerm;
 	float m_constantTerm;
 
-	Math::Vec3f m_padding1;
+	glm::vec3 m_padding1;
 };
 
 // An atmosphere density profile made of several layers on top of each other
@@ -353,20 +353,20 @@ struct AtmosphereParameters
 	}
 
 	AtmosphereParameters(
-		Math::Vec3f p_solarIrradiance, 
+		glm::vec3 p_solarIrradiance, 
 		float p_sunAngularRadius, 
 		DensityProfile p_rayleighDensity, 
 		DensityProfile p_mieDensity, 
 		DensityProfile p_absorptionDensity, 
-		Math::Vec3f p_rayleighScattering, 
+		glm::vec3 p_rayleighScattering, 
 		float p_bottomRadius, 
-		Math::Vec3f p_mieScattering, 
+		glm::vec3 p_mieScattering, 
 		float p_topRadius, 
-		Math::Vec3f p_mieExtinction, 
+		glm::vec3 p_mieExtinction, 
 		float p_miePhaseFunctionG, 
-		Math::Vec3f p_absorptionExtinction, 
+		glm::vec3 p_absorptionExtinction, 
 		float p_muSMin, 
-		Math::Vec3f p_groundAlbedo) :
+		glm::vec3 p_groundAlbedo) :
 		m_solarIrradiance(p_solarIrradiance),
 		m_sunAngularRadius(p_sunAngularRadius),
 		m_rayleighDensity(p_rayleighDensity),
@@ -386,7 +386,7 @@ struct AtmosphereParameters
 	}
 	
 	// The solar irradiance at the top of the atmosphere.
-	Math::Vec3f m_solarIrradiance;
+	glm::vec3 m_solarIrradiance;
 	
 	// The sun's angular radius
 	float m_sunAngularRadius;
@@ -401,31 +401,31 @@ struct AtmosphereParameters
 	DensityProfile m_absorptionDensity;
 
 	// The scattering coefficient of air molecules at the altitude where their density is maximum
-	Math::Vec3f m_rayleighScattering;
+	glm::vec3 m_rayleighScattering;
 	
 	// The distance between the planet center and the bottom of the atmosphere.
 	float m_bottomRadius;
 
 	// The scattering coefficient of aerosols at the altitude where their density is maximum
-	Math::Vec3f m_mieScattering;
+	glm::vec3 m_mieScattering;
 
 	// The distance between the planet center and the top of the atmosphere.
 	float m_topRadius;
 
 	// The extinction coefficient of aerosols at the altitude where their density is maximum
-	Math::Vec3f m_mieExtinction;
+	glm::vec3 m_mieExtinction;
 	
 	// The asymetry parameter for the Cornette-Shanks phase function for the aerosols.
 	float m_miePhaseFunctionG;
 
 	// The extinction coefficient of molecules that absorb light (e.g. ozone)
-	Math::Vec3f m_absorptionExtinction;
+	glm::vec3 m_absorptionExtinction;
 	
 	// The cosine of the maximum Sun zenith angle for which atmospheric scattering must be precomputed
 	float m_muSMin;
 
 	// The average albedo of the ground.
-	Math::Vec3f m_groundAlbedo;
+	glm::vec3 m_groundAlbedo;
 };
 
 // Parameters for atmospheric scattering shader
@@ -444,19 +444,19 @@ struct AtmScatteringParameters
 	
 	AtmScatteringParameters(
 		AtmosphereParameters p_atmosphereParam,
-		Math::Vec3f p_whitePoint,
-		Math::Vec3f p_earthCenter,
-		Math::Vec2f p_sunSize) : 
+		glm::vec3 p_whitePoint,
+		glm::vec3 p_earthCenter,
+		glm::vec2 p_sunSize) : 
 		m_atmosphereParam(p_atmosphereParam),
 		m_whitePoint(p_whitePoint),
 		m_earthCenter(p_earthCenter),
 		m_sunSize(p_sunSize) { }
 
-	Math::Vec3f m_whitePoint;
+	glm::vec3 m_whitePoint;
 	float m_padding1;
-	Math::Vec3f m_earthCenter;
+	glm::vec3 m_earthCenter;
 	float m_padding2;
-	Math::Vec2f m_sunSize;
+	glm::vec2 m_sunSize;
 	float m_padding3;
 	float m_padding4;
 

@@ -47,14 +47,14 @@ protected:
 	// Recalculates the projection matrix
 	void updateProjectionMatrix()
 	{
-		m_projMatrix.perspective(Config::graphicsVar().fov, m_screenSize.x, m_screenSize.y, Config::graphicsVar().z_near, Config::graphicsVar().z_far);
+		m_projMatrix = glm::perspectiveFov(Config::graphicsVar().fov, (float)m_screenSize.x, (float)m_screenSize.y, Config::graphicsVar().z_near, Config::graphicsVar().z_far);
 	}
 
 	const CameraObject *m_currentCamera;
 	const GraphicsData *m_currentObjectData;
 
-	Math::Vec2i m_screenSize;
-	Math::Mat4f m_projMatrix,
+	glm::ivec2 m_screenSize;
+	glm::mat4 m_projMatrix,
 				m_viewProjMatrix,
 				m_modelViewMatrix,
 				m_modelViewProjMatrix;
@@ -66,33 +66,33 @@ public:
 	RendererState(Renderer *p_renderer) : m_renderer(p_renderer), m_emptyVec(1.0f) { }
 	virtual ~RendererState() { }
 
-	const inline Math::Mat4f &getModelMatrix()			const { return m_renderer->m_currentObjectData->m_modelMat;				 }
-	const inline Math::Mat4f &getViewMatrix()			const { return m_renderer->m_currentCamera->m_baseObjectData.m_modelMat; }
-	const inline Math::Mat4f &getProjectionMatrix()		const { return m_renderer->m_projMatrix;								 }
-	const inline Math::Mat4f &getViewProjMatrix()		const { return m_renderer->m_viewProjMatrix;							 }
-	const inline Math::Mat4f &getModelViewMatrix()		const { return m_renderer->m_modelViewMatrix;							 }
-	const inline Math::Mat4f &getModelViewProjMatrix()	const { return m_renderer->m_modelViewProjMatrix;						 }
+	const inline glm::mat4 &getModelMatrix()			const { return m_renderer->m_currentObjectData->m_modelMat;				 }
+	const inline glm::mat4 &getViewMatrix()			const { return m_renderer->m_currentCamera->m_baseObjectData.m_modelMat; }
+	const inline glm::mat4 &getProjectionMatrix()		const { return m_renderer->m_projMatrix;								 }
+	const inline glm::mat4 &getViewProjMatrix()		const { return m_renderer->m_viewProjMatrix;							 }
+	const inline glm::mat4 &getModelViewMatrix()		const { return m_renderer->m_modelViewMatrix;							 }
+	const inline glm::mat4 &getModelViewProjMatrix()	const { return m_renderer->m_modelViewProjMatrix;						 }
 
-	const inline Math::Vec2i getScreenSize()			const { return m_renderer->m_screenSize;								}
+	const inline glm::ivec2 getScreenSize()			const { return m_renderer->m_screenSize;								}
 	const inline float getElapsedTime()					const { return ClockLocator::get().getElapsedSecondsF();				}
 	const inline float getAlphaThreshold()				const { return m_renderer->m_currentObjectData->m_alphaThreshold;		}
 	const inline float getEmissiveThreshold()			const { return m_renderer->m_currentObjectData->m_emissiveThreshold;	}
 	const inline float getHeightScale()					const { return m_renderer->m_currentObjectData->m_heightScale;			}
 	const inline float getTextureTilingFactor()			const { return m_renderer->m_currentObjectData->m_textureTilingFactor;	}
 
-	const virtual Math::Vec3f &getDirLightColor()		const { return m_emptyVec; }
-	const virtual Math::Vec3f &getDirLightDirection()	const { return m_emptyVec; }
+	const virtual glm::vec3 &getDirLightColor()		const { return m_emptyVec; }
+	const virtual glm::vec3 &getDirLightDirection()	const { return m_emptyVec; }
 	const virtual float getDirLightintensity()			const { return 1.0f; }
 	const virtual unsigned int getNumPointLights()		const { return 0; }
 	const virtual unsigned int getNumSpotLights()		const { return 0; }
 
-	const inline Math::Vec3f &getCameraPosition()		const { return m_renderer->m_currentCamera->m_baseObjectData.m_position; }
-	const inline Math::Vec2f &getCameraAngle()			const { return m_renderer->m_currentCamera->m_cameraAngle;				 }
-	const inline Math::Vec3f &getCameraTarget()			const { return m_renderer->m_currentCamera->m_baseObjectData.m_rotation; }
-	const inline Math::Vec3f &getCameraRightVec()		const { return m_emptyVec; } // Unused
-	const inline Math::Vec3f &getCameraUpVec()			const { return m_emptyVec; } // Unused
+	const inline glm::vec3 &getCameraPosition()		const { return m_renderer->m_currentCamera->m_baseObjectData.m_position; }
+	const inline glm::vec2 &getCameraAngle()			const { return m_renderer->m_currentCamera->m_cameraAngle;				 }
+	const inline glm::vec3 &getCameraTarget()			const { return m_renderer->m_currentCamera->m_baseObjectData.m_rotation; }
+	const inline glm::vec3 &getCameraRightVec()		const { return m_emptyVec; } // Unused
+	const inline glm::vec3 &getCameraUpVec()			const { return m_emptyVec; } // Unused
 
-	const virtual Math::Vec3f getFogColor()				const { return m_emptyVec; }
+	const virtual glm::vec3 getFogColor()				const { return m_emptyVec; }
 	const virtual float getFogDensity()					const { return 0.0f; }
 
 	const unsigned int getBlurMapPosition()				const { return GeometryBuffer::GBufferTextureType::GBufferIntermediate;			 }
@@ -111,13 +111,13 @@ public:
 	const inline unsigned int getDynamicEnvMapPos()	const { return Renderer::CubemapTypes::DynamicEnvMap;	}
 	const inline unsigned int getStaticEnvMapPos()	const { return Renderer::CubemapTypes::StaticEnvMap;	}
 
-	const virtual Math::Mat4f getTestMat()	const { return m_emptyMatrix;	}
-	const virtual Math::Vec4f getTestVec()	const { return Math::Vec4f();	}
+	const virtual glm::mat4 getTestMat()	const { return m_emptyMatrix;	}
+	const virtual glm::vec4 getTestVec()	const { return glm::vec4();	}
 	const virtual float getTestFloat()		const { return 0.0f;			}
 
 private:
 	Renderer *m_renderer;
 
-	Math::Vec3f m_emptyVec;
-	Math::Mat4f m_emptyMatrix;
+	glm::vec3 m_emptyVec;
+	glm::mat4 m_emptyMatrix;
 };
