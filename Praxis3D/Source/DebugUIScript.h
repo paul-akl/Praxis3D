@@ -96,7 +96,7 @@ public:
 		if(m_mouseCaptureCommand.isActivated())
 		{
 			// Toggle the mouse capture mode
-			WindowLocator().get().setMouseCapture(!Config::windowVar().mouse_captured);
+			WindowLocator::get().setMouseCapture(!Config::windowVar().mouse_captured);
 
 			// Deactivate the key command so this piece of code is not triggered again if the key wasn't released
 			m_mouseCaptureCommand.deactivate();
@@ -105,7 +105,7 @@ public:
 		if(m_vertSyncCommand.isActivated())
 		{
 			// Toggle the vertical synchronization
-			WindowLocator().get().setVerticalSync(!Config::windowVar().vertical_sync);
+			WindowLocator::get().setVerticalSync(!Config::windowVar().vertical_sync);
 
 			// Deactivate the key command so this piece of code is not triggered again if the key wasn't released
 			m_vertSyncCommand.deactivate();

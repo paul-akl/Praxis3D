@@ -118,7 +118,7 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/bigobj /MP24 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>opengl32.lib;assimp.lib;SDL2.lib;SDL2main.lib;glew32.lib;FreeImage.lib;tbb.lib;luajit.lib;lua51.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -141,6 +141,8 @@
     <ClCompile Include="Source\ErrorHandler.cpp" />
     <ClCompile Include="Source\ErrorHandlerLocator.cpp" />
     <ClCompile Include="Source\GeometryBuffer.cpp" />
+    <ClCompile Include="Source\GUIScene.cpp" />
+    <ClCompile Include="Source\GUITask.cpp" />
     <ClCompile Include="Source\Input.cpp" />
     <ClCompile Include="Source\KeyCommand.cpp" />
     <ClCompile Include="Source\LightComponent.cpp" />
@@ -228,6 +230,9 @@
     <ClInclude Include="Source\GeometryPass.h" />
     <ClInclude Include="Source\GraphicsDataSets.h" />
     <ClInclude Include="Source\GraphicsObject.h" />
+    <ClInclude Include="Source\GUIScene.h" />
+    <ClInclude Include="Source\GUISystem.h" />
+    <ClInclude Include="Source\GUITask.h" />
     <ClInclude Include="Source\HdrMappingPass.h" />
     <ClInclude Include="Source\InheritanceObjects.h" />
     <ClInclude Include="Source\Input.h" />

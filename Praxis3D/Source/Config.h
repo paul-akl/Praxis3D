@@ -27,6 +27,7 @@ namespace Systems
 	#define TYPEID(Code) \
 	Code(Null, = -1) \
 	Code(Graphics,) \
+	Code(GUI,) \
 	Code(Script,) \
 	Code(World,) \
 	Code(NumberOfSystems,) 
@@ -35,6 +36,7 @@ namespace Systems
 	const static std::string SystemNames[NumberOfSystems] =
 	{
 		GetString(Graphics),
+		GetString(GUI),
 		GetString(Script),
 		GetString(World)
 	};
@@ -519,6 +521,7 @@ class Config
 	friend class DebugUIScript;
 	friend class DeferredRenderer;
 	friend class ErrorHandler;
+	friend class LuaScript;
 	friend class RendererFrontend;
 	friend class Window;
 public:

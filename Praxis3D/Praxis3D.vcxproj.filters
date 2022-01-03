@@ -127,6 +127,24 @@
     <Filter Include="World\Objects">
       <UniqueIdentifier>{073f3e46-6b78-459f-b76e-6a8931bf6a7d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GUI">
+      <UniqueIdentifier>{5d9cc408-17a7-4f79-a669-b3449d7c1f4b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Header Files">
+      <UniqueIdentifier>{5b18d5ae-2a79-4bb2-86d8-b021445d22a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Source Files">
+      <UniqueIdentifier>{4257612d-0208-4a78-b788-2553db8da2f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Objects">
+      <UniqueIdentifier>{29af1193-a5e7-4f6c-9fc7-a7a1b4382503}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Objects\Header Files">
+      <UniqueIdentifier>{2111e2f4-fd05-445b-9534-8e7beb5504fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Objects\Source Files">
+      <UniqueIdentifier>{e75f10ec-4a83-4f51-8b00-0c9dc4522066}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -293,6 +311,12 @@
     </ClCompile>
     <ClCompile Include="Source\LuaScript.cpp">
       <Filter>Renderer\Objects\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GUIScene.cpp">
+      <Filter>GUI\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GUITask.cpp">
+      <Filter>GUI\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -634,6 +658,15 @@
     </ClInclude>
     <ClInclude Include="Source\LuaScript.h">
       <Filter>Scripting\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GUIScene.h">
+      <Filter>GUI\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GUITask.h">
+      <Filter>GUI\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GUISystem.h">
+      <Filter>GUI\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

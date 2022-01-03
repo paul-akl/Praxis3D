@@ -7,7 +7,7 @@
 			"LocalPosition": "0.0f, 0.0f, 0.0f",
 			"LocalRotation": "0.0f, 0.0f, 0.0f",
 			"LocalScale": "1.0f, 1.0f, 1.0f",
-			"Children":
+			"Children": 
 			[
 				{
 					"ID": "1"
@@ -15,7 +15,14 @@
 				{
 					"ID": "2"
 				}
-			]
+			],
+			"Script":
+			{
+				"Lua": 
+				{
+					"Filename": "Window_controls.lua"
+				}
+			}
 		},
 		{
 			"ID": "1",

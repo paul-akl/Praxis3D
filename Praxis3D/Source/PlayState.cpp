@@ -1,5 +1,6 @@
 
 #include "ClockLocator.h"
+#include "GUISystem.h"
 #include "PlayState.h"
 #include "PropertySet.h"
 #include "ScriptSystem.h"
@@ -45,6 +46,18 @@ ErrorCode PlayState::init(TaskManager *p_taskManager)
 	{
 		delete m_systems[Systems::Graphics];
 		m_systems[Systems::Graphics] = &g_nullSystemBase;
+	}
+
+	//  ___________________________________
+	// |								   |
+	// |	 GUI SYSTEM INITIALIZATION	   |
+	// |___________________________________|
+	// Create GUI system and check if it was successful (if not, assign a null system in it's place)
+	m_systems[Systems::GUI] = new GUISystem();
+	if (m_systems[Systems::GUI]->init() != ErrorCode::Success)
+	{
+		delete m_systems[Systems::GUI];
+		m_systems[Systems::GUI] = &g_nullSystemBase;
 	}
 
 	//  ___________________________________

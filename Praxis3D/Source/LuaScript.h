@@ -14,8 +14,10 @@ namespace LuaDefinitions
 #define LUA_USER_TYPES(Code) \
     Code(MouseInfo,) \
     Code(KeyCommand,) \
+	Code(EngineVariables, ) \
 	Code(GameplayVariables,) \
 	Code(InputVariables,) \
+	Code(WindowVariables,) \
 	Code(SpatialDataManager,) \
 	Code(NumOfTypes, )
 	DECLARE_ENUM(UserTypes, LUA_USER_TYPES)
@@ -124,10 +126,30 @@ private:
 		m_luaState.set_function("getMouseInfo", []() -> const Window::MouseInfo { return WindowLocator::get().getMouseInfo(); });
 		m_luaState.set_function("mouseCaptured", []() -> const bool { return Config::windowVar().mouse_captured; });
 
+		m_luaState.set_function("setFullscreen", [](const bool p_v1) -> const void { WindowLocator::get().setFullscreen(p_v1); });
+		m_luaState.set_function("setMouseCapture", [](const bool p_v1) -> const void { WindowLocator::get().setMouseCapture(p_v1); });
+		m_luaState.set_function("setVerticalSync", [](const bool p_v1) -> const void { WindowLocator::get().setVerticalSync(p_v1); });
+		m_luaState.set_function("setWindowTitle", [](const std::string &p_v1) -> const void { WindowLocator::get().setWindowTitle(p_v1); });
+
+		m_luaState.set_function("setEngineRunning", [](const bool p_v1) -> const void {Config::m_engineVar.running = p_v1; });
+
 		m_luaState.set_function(Config::scriptVar().createObjectFunctionName, &LuaScript::createObjectInLua, this);
 	}
 	void setUsertypes()
 	{
+		m_luaState.new_usertype<Config::EngineVariables>("EngineVariables",
+			"change_ctrl_cml_notify_list_reserv", &Config::EngineVariables::change_ctrl_cml_notify_list_reserv,
+			"change_ctrl_grain_size", &Config::EngineVariables::change_ctrl_grain_size,
+			"change_ctrl_notify_list_reserv", &Config::EngineVariables::change_ctrl_notify_list_reserv,
+			"change_ctrl_oneoff_notify_list_reserv", &Config::EngineVariables::change_ctrl_oneoff_notify_list_reserv,
+			"change_ctrl_subject_list_reserv", &Config::EngineVariables::change_ctrl_subject_list_reserv,
+			"delta_time_divider", &Config::EngineVariables::delta_time_divider,
+			"gl_context_major_version", &Config::EngineVariables::gl_context_major_version,
+			"gl_context_minor_version", &Config::EngineVariables::gl_context_minor_version,
+			"object_directory_init_pool_size", &Config::EngineVariables::object_directory_init_pool_size,
+			"smoothing_tick_samples", &Config::EngineVariables::smoothing_tick_samples,
+			"running", &Config::EngineVariables::running);
+
 		m_luaState.new_usertype<Config::GameplayVariables>("GameplayVariables",
 			"camera_freelook_speed", &Config::GameplayVariables::camera_freelook_speed);
 
@@ -161,11 +183,28 @@ private:
 			"up_key", &Config::InputVariables::up_key,
 			"vsync_key", &Config::InputVariables::vsync_key,
 			"mouse_filter", &Config::InputVariables::mouse_filter,
-			"cromouse_warp_modess", &Config::InputVariables::mouse_warp_mode,
+			"mouse_warp_mode", &Config::InputVariables::mouse_warp_mode,
 			"mouse_jaw", &Config::InputVariables::mouse_jaw,
 			"mouse_pitch", &Config::InputVariables::mouse_pitch,
 			"mouse_pitch_clip", &Config::InputVariables::mouse_pitch_clip,
 			"mouse_sensitivity", &Config::InputVariables::mouse_sensitivity);
+
+		m_luaState.new_usertype<Config::WindowVariables>("WindowVariables",
+			"name", &Config::WindowVariables::name,
+			"default_display", &Config::WindowVariables::default_display,
+			"window_position_x", &Config::WindowVariables::window_position_x,
+			"window_position_y", &Config::WindowVariables::window_position_y,
+			"window_size_fullscreen_x", &Config::WindowVariables::window_size_fullscreen_x,
+			"window_size_fullscreen_y", &Config::WindowVariables::window_size_fullscreen_y,
+			"window_size_windowed_x", &Config::WindowVariables::window_size_windowed_x,
+			"window_size_windowed_y", &Config::WindowVariables::window_size_windowed_y,
+			"fullscreen", &Config::WindowVariables::fullscreen,
+			"fullscreen_borderless", &Config::WindowVariables::fullscreen_borderless,
+			"mouse_captured", &Config::WindowVariables::mouse_captured,
+			"mouse_release_on_lost_focus", &Config::WindowVariables::mouse_release_on_lost_focus,
+			"resizable", &Config::WindowVariables::resizable,
+			"vertical_sync", &Config::WindowVariables::vertical_sync,
+			"window_in_focus", &Config::WindowVariables::window_in_focus);
 
 		m_luaState.new_usertype<glm::vec3>("Vec3",
 			sol::constructors<glm::vec3(), glm::vec3(float), glm::vec3(float, float, float), glm::vec3(glm::vec4)>(),
@@ -317,6 +356,13 @@ private:
 				m_keyCommands.push_back(keyCommand);
 			}
 				break;
+				
+			case LuaDefinitions::EngineVariables:
+
+				// Set the given variable name in Lua to point to the EngineVariables object
+				m_luaState.set(p_variableName, Config::engineVar());
+
+				break;
 
 			case LuaDefinitions::GameplayVariables:
 
@@ -329,6 +375,13 @@ private:
 
 				// Set the given variable name in Lua to point to the InputVariables object
 				m_luaState.set(p_variableName, Config::inputVar());
+
+				break;
+
+			case LuaDefinitions::WindowVariables:
+
+				// Set the given variable name in Lua to point to the WindowVariables object
+				m_luaState.set(p_variableName, Config::windowVar());
 
 				break;
 
