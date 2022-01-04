@@ -145,6 +145,33 @@
     <Filter Include="GUI\Objects\Source Files">
       <UniqueIdentifier>{e75f10ec-4a83-4f51-8b00-0c9dc4522066}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Physics">
+      <UniqueIdentifier>{64d4b142-cab0-4ebf-91d1-0825ea522a06}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics\Header Files">
+      <UniqueIdentifier>{727c47c4-6719-4f55-a31d-c926f6ca7f9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics\Source Files">
+      <UniqueIdentifier>{3ce1f9b3-cfd0-497a-9015-72a1bd709383}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics\Objects">
+      <UniqueIdentifier>{ca05ff66-0884-4e5e-82cf-a7ec62640633}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics\Objects\Header Files">
+      <UniqueIdentifier>{22318761-baf8-4bed-9e91-3a324bf6a25e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics\Objects\Source Files">
+      <UniqueIdentifier>{e4bd1596-5b50-413b-a01b-50f9b63d2f61}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="iImgui">
+      <UniqueIdentifier>{21610611-3d67-4391-9a40-c517773edd85}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="iImgui\Header Files">
+      <UniqueIdentifier>{91bc37cb-772a-4d51-9b83-3f9af2806aab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="iImgui\Source Files">
+      <UniqueIdentifier>{62cfc7e5-8f92-4ff5-bcc3-0319fec10b3c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -317,6 +344,36 @@
     </ClCompile>
     <ClCompile Include="Source\GUITask.cpp">
       <Filter>GUI\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PhysicsScene.cpp">
+      <Filter>Physics\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PhysicsTask.cpp">
+      <Filter>Physics\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GUIHandlerLocator.cpp">
+      <Filter>Service Locators\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\imgui\imgui.cpp">
+      <Filter>iImgui\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\imgui\imgui_demo.cpp">
+      <Filter>iImgui\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\imgui\imgui_draw.cpp">
+      <Filter>iImgui\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\imgui\imgui_tables.cpp">
+      <Filter>iImgui\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\imgui\imgui_widgets.cpp">
+      <Filter>iImgui\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3.cpp">
+      <Filter>iImgui\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl.cpp">
+      <Filter>iImgui\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -667,6 +724,42 @@
     </ClInclude>
     <ClInclude Include="Source\GUISystem.h">
       <Filter>GUI\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PhysicsSystem.h">
+      <Filter>Physics\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PhysicsScene.h">
+      <Filter>Physics\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PhysicsTask.h">
+      <Filter>Physics\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GUIHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GUIHandlerLocator.h">
+      <Filter>Service Locators\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\imgui\imconfig.h">
+      <Filter>iImgui\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\imgui\imgui.h">
+      <Filter>iImgui\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\imgui\imgui_internal.h">
+      <Filter>iImgui\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3.h">
+      <Filter>iImgui\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3_loader.h">
+      <Filter>iImgui\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl.h">
+      <Filter>iImgui\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GUIPass.h">
+      <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

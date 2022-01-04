@@ -11,12 +11,11 @@ public:
 	PlayState();
 	~PlayState();
 
-	ErrorCode init(TaskManager *p_taskManager);
+	ErrorCode init(TaskManager *p_taskManager, SystemBase *p_systems[Systems::NumberOfSystems]);
 	void update(Engine &p_engine);
 
 	void shutdown();
 private:
-	SystemBase *m_systems[Systems::NumberOfSystems];
 	SceneLoader m_sceneLoader;
 
 	TaskScheduler *m_scheduler;

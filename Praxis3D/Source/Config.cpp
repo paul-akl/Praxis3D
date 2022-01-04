@@ -32,6 +32,7 @@ Config::EngineVariables		Config::m_engineVar;
 Config::FramebfrVariables	Config::m_framebfrVar;
 Config::GameplayVariables	Config::m_gameplayVar;
 Config::GraphicsVariables	Config::m_graphicsVar;
+Config::GUIVariables		Config::m_GUIVar;
 Config::InputVariables		Config::m_inputVar;
 Config::ModelVariables		Config::m_modelVar;
 Config::ObjectPoolVariables	Config::m_objPoolVar;
@@ -64,6 +65,7 @@ void Config::init()
 	AddVariablePredef(m_engineVar, change_ctrl_oneoff_notify_list_reserv);
 	AddVariablePredef(m_engineVar, change_ctrl_subject_list_reserv);
 	AddVariablePredef(m_engineVar, delta_time_divider);
+	AddVariablePredef(m_engineVar, glsl_version);
 	AddVariablePredef(m_engineVar, gl_context_major_version);
 	AddVariablePredef(m_engineVar, gl_context_minor_version);
 	AddVariablePredef(m_engineVar, object_directory_init_pool_size);
@@ -154,7 +156,11 @@ void Config::init()
 	AddVariablePredef(m_graphicsVar, texture_tiling_factor);
 	AddVariablePredef(m_graphicsVar, z_far);
 	AddVariablePredef(m_graphicsVar, z_near);
-	
+
+	// GUI variables
+	AddVariablePredef(m_GUIVar, gui_render);
+	AddVariablePredef(m_GUIVar, gui_dark_style);
+
 	// Input variables
 	AddVariablePredef(m_inputVar, back_key);
 	AddVariablePredef(m_inputVar, backward_editor_key);

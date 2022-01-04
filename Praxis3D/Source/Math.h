@@ -50,7 +50,7 @@ namespace Math
 		glm::mat4 m(1.0f);
 
 		float aspectRatio = static_cast<float>(p_screenWidth) / static_cast<float>(p_screenHeight);
-		float kFovY = 80.0f / 180.0f * (float)PI;
+		float kFovY = p_FOV / 180.0f * (float)PI;
 		float kTanFovY = tan(kFovY / 2.0f);
 
 		m[0][0] = kTanFovY * aspectRatio;	m[1][0] = 0.0f;		m[2][0] = 0.0f;		m[3][0] = 0.0f;

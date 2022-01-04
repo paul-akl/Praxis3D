@@ -208,12 +208,12 @@ public:
 
 	const virtual glm::vec3 &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
-		switch(p_changedBits)
-		{
+		//switch(p_changedBits)
+		//{
 		//case Systems::Changes::Spacial::Position:
 		//	return m_objectPosition;
 		//	break;
-		}
+		//}
 
 		return ObservedSubject::getVec3(p_observer, p_changedBits);
 	}

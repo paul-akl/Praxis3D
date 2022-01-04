@@ -1,3 +1,4 @@
+#include "GUIHandler.h"
 #include "WindowLocator.h"
 
 WindowLocator::WindowWrapperBase WindowLocator::m_nullWindowWrapper;

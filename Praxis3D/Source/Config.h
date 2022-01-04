@@ -28,6 +28,7 @@ namespace Systems
 	Code(Null, = -1) \
 	Code(Graphics,) \
 	Code(GUI,) \
+	Code(Physics,) \
 	Code(Script,) \
 	Code(World,) \
 	Code(NumberOfSystems,) 
@@ -37,6 +38,7 @@ namespace Systems
 	{
 		GetString(Graphics),
 		GetString(GUI),
+		GetString(Physics),
 		GetString(Script),
 		GetString(World)
 	};
@@ -563,6 +565,7 @@ public:
 			change_ctrl_oneoff_notify_list_reserv = 64;
 			change_ctrl_subject_list_reserv = 8192;
 			delta_time_divider = 1000;
+			glsl_version = 430;
 			gl_context_major_version = 3;
 			gl_context_minor_version = 3;
 			object_directory_init_pool_size = 1000;
@@ -576,6 +579,7 @@ public:
 		int change_ctrl_oneoff_notify_list_reserv;
 		int change_ctrl_subject_list_reserv;
 		int delta_time_divider;
+		int glsl_version;
 		int gl_context_major_version;
 		int gl_context_minor_version;
 		int object_directory_init_pool_size;
@@ -794,6 +798,16 @@ public:
 		float texture_tiling_factor;
 		float z_far;
 		float z_near;
+	};
+	struct GUIVariables
+	{
+		GUIVariables()
+		{
+			gui_render = true;
+			gui_dark_style = true;
+		}
+		bool gui_render;
+		bool gui_dark_style;
 	};
 	struct InputVariables
 	{
@@ -1351,6 +1365,7 @@ public:
 	const inline static FramebfrVariables	&getFramebfrVar()	{ return m_framebfrVar;		}
 	const inline static GameplayVariables	&gameplayVar()		{ return m_gameplayVar;		}
 	const inline static GraphicsVariables	&graphicsVar()		{ return m_graphicsVar;		}
+	const inline static GUIVariables		&GUIVar()			{ return m_GUIVar;			}
 	const inline static InputVariables		&inputVar()			{ return m_inputVar;		}
 	const inline static ModelVariables		&modelVar()			{ return m_modelVar;		}
 	const inline static ObjectPoolVariables &objectPoolVar()	{ return m_objPoolVar;		}
@@ -1466,6 +1481,7 @@ private:
 	static FramebfrVariables	m_framebfrVar;
 	static GameplayVariables	m_gameplayVar;
 	static GraphicsVariables	m_graphicsVar;
+	static GUIVariables			m_GUIVar;
 	static InputVariables		m_inputVar;
 	static ModelVariables		m_modelVar;
 	static ObjectPoolVariables	m_objPoolVar;
@@ -1489,6 +1505,7 @@ private:
 	inline static FramebfrVariables		&setFramebfrVar()	{ return m_framebfrVar;		}
 	inline static GameplayVariables		&setGameplayVar()	{ return m_gameplayVar;		}
 	inline static GraphicsVariables		&setGraphicsVar()	{ return m_graphicsVar;		}
+	inline static GUIVariables			&setGUIVar()		{ return m_GUIVar;			}
 	inline static InputVariables		&setInputVar()		{ return m_inputVar;		}
 	inline static ModelVariables		&setModelVar()		{ return m_modelVar;		}
 	inline static PathsVariables		&setFilepathVar()	{ return m_filepathVar;		}

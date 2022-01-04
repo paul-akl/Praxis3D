@@ -1,7 +1,7 @@
 #pragma once
 
-#include "System.h"
 #include "GUITask.h"
+#include "System.h"
 
 class GUISystem;
 
@@ -10,7 +10,7 @@ class GUIScene : public SystemScene
 public:
 	GUIScene(SystemBase* p_system, SceneLoader* p_sceneLoader);
 
-	ErrorCode init() { return ErrorCode::Success; }
+	ErrorCode init();
 
 	ErrorCode setup(const PropertySet& p_properties);
 

@@ -34,6 +34,8 @@ ErrorHandler::ErrorHandler()
 	AssignErrorType(Clock_QueryFrequency, FatalError);
 	AssignErrorType(Framebuffer_failed, FatalError);
 	AssignErrorType(Geometrybuffer_failed, FatalError);
+	AssignErrorType(GL_context_missing, Error);
+	AssignErrorType(Window_handle_missing, Error);
 	AssignErrorType(AssimpScene_failed, Error);
 	AssignErrorType(ObjectPool_full, Warning); 
 	AssignErrorType(Property_no_filename, Warning);
@@ -68,6 +70,7 @@ ErrorHandler::ErrorHandler()
     m_errHashmap[GetString(Source_GeometryBuffer)]				= NumberOfErrorCodes + Source_GeometryBuffer;
     m_errHashmap[GetString(Source_GeometryPass)]				= NumberOfErrorCodes + Source_GeometryPass;
     m_errHashmap[GetString(Source_GraphicsObject)]				= NumberOfErrorCodes + Source_GraphicsObject;
+    m_errHashmap[GetString(Source_GUI)]							= NumberOfErrorCodes + Source_GUI;
     m_errHashmap[GetString(Source_HdrMappingPass)]				= NumberOfErrorCodes + Source_HdrMappingPass;
     m_errHashmap[GetString(Source_LensFlareCompositePass)]		= NumberOfErrorCodes + Source_LensFlareCompositePass;
     m_errHashmap[GetString(Source_LensFlarePass)]				= NumberOfErrorCodes + Source_LensFlarePass;

@@ -3,6 +3,7 @@
 #include "BloomCompositePass.h"
 #include "BlurPass.h"
 #include "GeometryPass.h"
+#include "GUIPass.h"
 #include "LenseFlareCompositePass.h"
 #include "LenseFlarePass.h"
 #include "LightingPass.h"
@@ -27,6 +28,7 @@ RendererFrontend::RendererFrontend()
 	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Blur);
 	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_LenseFlareComposite);
 	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Final);
+	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_GUI);
 
 	// Make sure the entries of the rendering passes are set to nullptr
 	for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
@@ -72,6 +74,10 @@ RendererFrontend::RendererFrontend()
 		case RenderPassType_Final:
 			if(m_initializedRenderingPasses[RenderPassType_Final] == nullptr)
 				m_initializedRenderingPasses[RenderPassType_Final] = new FinalPass(*this);
+			break;
+		case RenderPassType_GUI:
+			if(m_initializedRenderingPasses[RenderPassType_GUI] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_GUI] = new GUIPass(*this);
 			break;
 		}
 	}
@@ -119,7 +125,7 @@ ErrorCode RendererFrontend::init()
 		// Check if has been created
 		if(m_initializedRenderingPasses[i] != nullptr)
 		{
-			// Initialize the rendering pass and check if it was successfull
+			// Initialize the rendering pass and check if it was successful
 			if(m_initializedRenderingPasses[i]->init() != ErrorCode::Success)
 			{
 				// Log an error and delete the rendering pass
@@ -142,7 +148,7 @@ ErrorCode RendererFrontend::init()
 		if(m_initializedRenderingPasses[m_renderingPassesTypes[i]] != nullptr)
 			m_renderingPasses.push_back(m_initializedRenderingPasses[m_renderingPassesTypes[i]]);
 	}
-	
+
 	updateProjectionMatrix();
 
 	passLoadCommandsToBackend();
@@ -280,7 +286,7 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 	std::cout << m_frameData.m_viewMatrix.m[12] << " : " << m_frameData.m_viewMatrix.m[13] << " : " << m_frameData.m_viewMatrix.m[14] << " : " << m_frameData.m_viewMatrix.m[15] << std::endl;
 	*/
 	// Set the camera position
-	m_frameData.m_cameraPosition = p_sceneObjects.m_camera.m_viewData.m_spatialData.m_position;
+	m_frameData.m_cameraPosition = p_sceneObjects.m_camera.m_viewData.m_transformMat[3]; //p_sceneObjects.m_camera.m_viewData.m_spatialData.m_position;
 	
 	// Set the camera target vector
 	m_frameData.m_cameraTarget = p_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler;

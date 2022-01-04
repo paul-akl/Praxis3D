@@ -45,6 +45,17 @@ public:
 	
 	ErrorCode init() { return ErrorCode::Success; }
 
+
+	void loadToMemory()
+	{
+		if (modelComponentPresent())
+			m_modelComponent->loadToMemory();
+		if (shaderComponentPresent())
+			m_shaderComponent->loadToMemory();
+		if (lightComponentPresent())
+			m_lightComponent->loadToMemory();
+	}
+
 	ErrorCode importObject(const PropertySet &p_properties)
 	{
 		ErrorCode returnError = ErrorCode::Success;

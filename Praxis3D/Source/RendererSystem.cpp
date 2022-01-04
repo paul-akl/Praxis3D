@@ -6,6 +6,7 @@
 RendererSystem::RendererSystem()
 {
 	m_rendererScene = nullptr;
+	m_guiHandler = nullptr;
 	m_systemName = GetString(Systems::Graphics);
 }
 

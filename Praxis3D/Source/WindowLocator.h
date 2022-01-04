@@ -56,6 +56,15 @@ public:
 		// Current info about mouse
 		virtual const Window::MouseInfo &getMouseInfo() const { return m_mouseInfo; }
 
+		// Get the handle to SDL Window; returns nullptr if it's not present
+		virtual SDL_Window *getSDLWindowHandle() { return nullptr; }
+
+		// Get the handle to GL Context; returns nullptr if it's not present
+		virtual SDL_GLContext *getGLContextHandle() { return nullptr; }
+
+		// Register a GUI handler base
+		virtual void registerGUIHandler(GUIHandlerBase *p_guiHanlder) { }
+
 	protected:
 		WindowWrapperBase() : m_validWindow(false) { }
 
@@ -128,6 +137,15 @@ public:
 
 		// Current info about mouse
 		const Window::MouseInfo &getMouseInfo() const { return m_window->getMouseInfo(); }
+
+		// Get the handle to SDL Window
+		SDL_Window *getSDLWindowHandle() { return m_window->getSDLWindowHandle(); }
+
+		// Get the handle to GL Context
+		SDL_GLContext *getGLContextHandle() { return m_window->getGLContextHandle(); }
+
+		// Register a GUI handler base
+		virtual void registerGUIHandler(GUIHandlerBase *p_guiHanlder) { m_window->registerGUIHandler(p_guiHanlder); }
 
 	protected:
 		WindowWrapper(Window *p_window) : m_window(p_window) { m_validWindow = true; }

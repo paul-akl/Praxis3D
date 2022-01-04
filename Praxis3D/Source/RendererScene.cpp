@@ -227,7 +227,8 @@ void RendererScene::update(const float p_deltaTime)
 {
 	// Clear variables
 	m_sceneObjects.m_staticSkybox = nullptr;
-	m_sceneObjects.m_directionalLight = nullptr;
+	//m_sceneObjects.m_directionalLight = nullptr;
+	m_sceneObjects.m_directionalLight = &m_directionalLight->getLightDataSet();
 
 	// Clear arrays from previous frame
 	m_sceneObjects.m_pointLights.clear();
@@ -654,7 +655,6 @@ void RendererScene::update(const float p_deltaTime)
 	m_sceneObjects.m_camera.m_viewData.m_transformMat = mat * glm::mat4();*/
 
 	m_sceneObjects.m_staticSkybox = m_skybox;
-	m_sceneObjects.m_directionalLight = &m_directionalLight->getLightDataSet();
 }
 
 SystemObject *RendererScene::createObject(const PropertySet &p_properties)
@@ -692,6 +692,7 @@ SystemObject *RendererScene::createObject(const PropertySet &p_properties)
 				// Start importing the newly created object in a background thread
 				//TaskManagerLocator::get().startBackgroundThread(std::bind(&GraphicsObject::importObject, graphicsObject, renderingProperty));
 				graphicsObject->importObject(renderingProperty);
+				graphicsObject->loadToMemory();
 			
 				return graphicsObject;
 			}
@@ -899,7 +900,7 @@ ModelComponent *RendererScene::loadModelComponent(const PropertySet &p_propertie
 								//materials[MaterialType_Combined] = &materialProperty.getPropertySetByID(Properties::RMHAO);
 							}*/
 							
-							newModelData.m_meshes.push_back(MeshData(meshesInModelArray[iMesh], materials));
+							//newModelData.m_meshes.push_back(MeshData(meshesInModelArray[iMesh], materials));
 						}
 					}
 				}
@@ -937,7 +938,7 @@ ModelComponent *RendererScene::loadModelComponent(const PropertySet &p_propertie
 						}
 						
 						// Add the data for this mesh. Include materials loaded from the model itself, if they were present, otherwise, include default textures instead
-						newModelData.m_meshes.push_back(MeshData(meshesInModelArray[iMesh], materials));
+						//newModelData.m_meshes.push_back(MeshData(meshesInModelArray[iMesh], materials));
 					}
 				}
 			}

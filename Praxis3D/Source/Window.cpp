@@ -1,5 +1,6 @@
 
 #include "ErrorHandlerLocator.h"
+#include "GUIHandler.h"
 #include "Window.h"
 
 Window::Window()
@@ -7,11 +8,13 @@ Window::Window()
 	m_mouseInfo.clear();
 	
 	m_mouseCapturedBeforeLostFocus = false;
+	m_enableGUI = false;
 	m_changesQueued = false;
 	m_inFullscreen = false;
 
 	m_numDisplays = 0;
 
+	m_SDLWindow = nullptr;
 	m_SDLWindow = nullptr;
 
 	// Reserve the space, since we know the number of supported scancodes
@@ -149,6 +152,7 @@ void Window::handleEvents()
 	SDL_Event SDLEvent;
 	while(SDL_PollEvent(&SDLEvent))
 	{
+		// If QUIT event is received, shutdown the engine
 		if(SDLEvent.type == SDL_QUIT)
 		{
 			Config::setEngineVar().running = false;
@@ -156,6 +160,10 @@ void Window::handleEvents()
 		}
 		else
 		{
+			// If GUI is enabled, send the event to it
+			if(m_enableGUI)
+				m_guiHandler->processSDLEvent(SDLEvent);
+
 			handleSDLEvent(SDLEvent);
 		}
 	}

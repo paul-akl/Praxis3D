@@ -4,6 +4,7 @@
 #include "Config.h"
 #include "ErrorCodes.h"
 #include "ErrorHandlerLocator.h"
+#include "GUIHandlerLocator.h"
 #include "PlayState.h"
 #include "TaskManager.h"
 #include "Window.h"
@@ -22,6 +23,12 @@ public:
 	void run();
 
 private:
+	// Creates and initializes all the services and their locators
+	ErrorCode initServices();
+
+	// Creates and initializes all the engine systems
+	ErrorCode initSystems();
+
 	// Shuts all the systems, etc. down, called before returning from run()
 	void shutdown();
 
@@ -31,10 +38,14 @@ private:
 	// Different execution states
 	PlayState m_playstate;
 
-	// Various required systems
+	// Various required services
 	ErrorHandler *m_errorHandler;
+	GUIHandler *m_GUIHandler;
 	Window *m_window;
 	Clock *m_clock;
+
+	// All engine systems
+	SystemBase *m_systems[Systems::NumberOfSystems];
 
 	// Task manager and scheduler for multi-threading
 	TaskManager *m_taskManager;

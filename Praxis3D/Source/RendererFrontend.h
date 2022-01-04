@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Config.h"
+#include "GUIHandler.h"
 #include "RendererBackend.h"
 #include "RendererScene.h"
 
@@ -13,6 +14,7 @@ class RendererFrontend
 	friend class BloomCompositePass;
 	friend class BlurPass;
 	friend class GeometryPass;
+	friend class GUIPass;
 	friend class HdrMappingPass;
 	friend class LenseFlareCompositePass;
 	friend class LenseFlarePass;
@@ -81,9 +83,9 @@ protected:
 			// Assign the object data that is later passed to the shaders
 			const UniformObjectData objectData(p_modelMatrix,
 				modelViewProjMatrix,
-				p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Diffuse].m_parallaxScale,
-				p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Diffuse].m_alphaCutoff,
-				p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Diffuse].m_parallaxScale,
+				p_modelData.m_meshes[meshIndex].m_heightScale,
+				p_modelData.m_meshes[meshIndex].m_alphaThreshold,
+				p_modelData.m_meshes[meshIndex].m_alphaThreshold,
 				p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Diffuse].m_textureScale.x);
 
 			m_drawCommands.emplace_back(

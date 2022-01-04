@@ -49,6 +49,9 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
 	/* Frame-buffer errors */ \
 	Code(Framebuffer_failed,) \
 	Code(Geometrybuffer_failed,) \
+	/* GUI errors */ \
+	Code(GL_context_missing,) \
+	Code(Window_handle_missing,) \
 	/* Model loader errors */ \
 	Code(AssimpScene_failed,) \
 	/* Object pool errors */ \
@@ -94,6 +97,7 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_GeometryBuffer,) \
     Code(Source_GeometryPass,) \
     Code(Source_GraphicsObject,) \
+    Code(Source_GUI,) \
     Code(Source_HdrMappingPass,) \
     Code(Source_LensFlareCompositePass,) \
     Code(Source_LensFlarePass,) \

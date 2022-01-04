@@ -27,6 +27,7 @@ enum RenderPassType : unsigned int
 	RenderPassType_LenseFlare,
 	RenderPassType_LenseFlareComposite,
 	RenderPassType_Final,
+	RenderPassType_GUI,
 	RenderPassType_NumOfTypes
 };
 

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <algorithm>
+#include <iterator>
+
 #include "Math.h"
 #include "Loaders.h"
 
@@ -8,30 +11,33 @@ struct MaterialData
 {
 	MaterialData() :
 		m_texture(Loaders::texture2D().getDefaultTexture()),
-		m_textureScale(1.0f, 1.0f),
-		m_parallaxScale(1.0f),
-		m_alphaCutoff(1.0f) { }
+		m_textureScale(1.0f, 1.0f) { }
 
 	MaterialData(TextureLoader2D::Texture2DHandle &m_texture) : 
 		m_texture(m_texture), 
-		m_textureScale(1.0f, 1.0f), 
-		m_parallaxScale(1.0f), 
-		m_alphaCutoff(1.0f) { }
+		m_textureScale(1.0f, 1.0f) { }
 
 	// Handle to a texture
 	TextureLoader2D::Texture2DHandle m_texture;
 	// Texture coordinates scale (for example, used for tilling)
 	glm::vec2 m_textureScale;
-	// Texture parallax effect scale (height multiplier)
-	float m_parallaxScale;
-	// Transparency threshold after which the fragment is discarded
-	float m_alphaCutoff;
 };
 
 // Contains data of a single mesh and its materials
 struct MeshData
 {
-	MeshData(const Model::Mesh &p_mesh, MaterialData p_materials[MaterialType::MaterialType_NumOfTypes]) : m_mesh(p_mesh), m_materials{ *p_materials } { }
+	MeshData(const Model::Mesh &p_mesh, MaterialData p_materials[MaterialType::MaterialType_NumOfTypes], const float p_heightScale, const float p_alphaThreshold) : 
+		m_mesh(p_mesh), 
+		m_heightScale(p_heightScale),
+		m_alphaThreshold(p_alphaThreshold) 
+	{
+		std::copy(p_materials, p_materials + MaterialType::MaterialType_NumOfTypes, m_materials);
+	}
+
+	// Texture parallax effect scale (height multiplier)
+	float m_heightScale;
+	// Transparency threshold after which the fragment is discarded
+	float m_alphaThreshold;
 
 	// Handle to a mesh
 	const Model::Mesh &m_mesh;

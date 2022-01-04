@@ -5,6 +5,12 @@ GUIScene::GUIScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : SystemSce
 	m_GUITask = new GUITask(this);
 }
 
+ErrorCode GUIScene::init()
+{
+
+	return ErrorCode::Success;
+}
+
 ErrorCode GUIScene::setup(const PropertySet& p_properties)
 {
 	return ErrorCode();

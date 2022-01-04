@@ -124,6 +124,7 @@ public:
 			{
 				setLoadedToMemory(true);
 				setLoadedToVideoMemory(true);
+				setActive(true);
 			}
 		}
 		return importError;
@@ -351,7 +352,7 @@ private:
 		switch(m_lightComponentType)
 		{
 		case LightComponent::LightComponentType_directional:
-			m_lightComponent.m_directional.m_direction = p_rotation;
+			m_lightComponent.m_directional.m_direction = glm::normalize(p_rotation);
 			break;
 		case LightComponent::LightComponentType_spot:
 			m_lightComponent.m_spot.m_direction = p_rotation;

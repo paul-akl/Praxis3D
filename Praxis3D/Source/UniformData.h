@@ -69,7 +69,7 @@ struct UniformObjectData
 		//memcpy(m_materials, p_materials, sizeof(m_materials));
 	}
 
-	glm::mat4 m_modelMat,
+	glm::mat4	m_modelMat,
 				m_modelViewProjMatrix;
 
 	float	m_heightScale,

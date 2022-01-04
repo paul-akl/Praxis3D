@@ -68,7 +68,7 @@
     <OutDir>$(SolutionDir)\Builds\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)Dependencies\include\;$(SolutionDir)Dependencies\include\Lua;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Dependencies\include\;$(SolutionDir)Dependencies\include\Lua\;$(SolutionDir)Dependencies\include\imgui\;$(SolutionDir)Dependencies\include\sdl\;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Dependencies\$(Platform)\$(Configuration)\lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)Builds\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
@@ -126,6 +126,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl.cpp" />
+    <ClCompile Include="..\Dependencies\include\imgui\imgui.cpp" />
+    <ClCompile Include="..\Dependencies\include\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\Dependencies\include\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\Dependencies\include\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\Dependencies\include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Source\AtmScatteringModel.cpp" />
     <ClCompile Include="Source\AtmScatteringPass.cpp" />
@@ -141,6 +148,7 @@
     <ClCompile Include="Source\ErrorHandler.cpp" />
     <ClCompile Include="Source\ErrorHandlerLocator.cpp" />
     <ClCompile Include="Source\GeometryBuffer.cpp" />
+    <ClCompile Include="Source\GUIHandlerLocator.cpp" />
     <ClCompile Include="Source\GUIScene.cpp" />
     <ClCompile Include="Source\GUITask.cpp" />
     <ClCompile Include="Source\Input.cpp" />
@@ -154,6 +162,8 @@
     <ClCompile Include="Source\NullSystemObjects.cpp" />
     <ClCompile Include="Source\ObjectDirectory.cpp" />
     <ClCompile Include="Source\ObserverBase.cpp" />
+    <ClCompile Include="Source\PhysicsScene.cpp" />
+    <ClCompile Include="Source\PhysicsTask.cpp" />
     <ClCompile Include="Source\PlayState.cpp" />
     <ClCompile Include="Source\PropertyLoader.cpp" />
     <ClCompile Include="Source\PropertySet.cpp" />
@@ -185,6 +195,12 @@
     <ClCompile Include="Source\WorldTask.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3.h" />
+    <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl.h" />
+    <ClInclude Include="..\Dependencies\include\imgui\imconfig.h" />
+    <ClInclude Include="..\Dependencies\include\imgui\imgui.h" />
+    <ClInclude Include="..\Dependencies\include\imgui\imgui_internal.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="resource1.h" />
     <ClInclude Include="Source\AtmScatteringConstants.h" />
@@ -230,6 +246,9 @@
     <ClInclude Include="Source\GeometryPass.h" />
     <ClInclude Include="Source\GraphicsDataSets.h" />
     <ClInclude Include="Source\GraphicsObject.h" />
+    <ClInclude Include="Source\GUIHandler.h" />
+    <ClInclude Include="Source\GUIHandlerLocator.h" />
+    <ClInclude Include="Source\GUIPass.h" />
     <ClInclude Include="Source\GUIScene.h" />
     <ClInclude Include="Source\GUISystem.h" />
     <ClInclude Include="Source\GUITask.h" />
@@ -255,6 +274,9 @@
     <ClInclude Include="Source\ObjectDirectory.h" />
     <ClInclude Include="Source\ObjectPool.h" />
     <ClInclude Include="Source\ObserverBase.h" />
+    <ClInclude Include="Source\PhysicsScene.h" />
+    <ClInclude Include="Source\PhysicsSystem.h" />
+    <ClInclude Include="Source\PhysicsTask.h" />
     <ClInclude Include="Source\PlayState.h" />
     <ClInclude Include="Source\PostProcessPass.h" />
     <ClInclude Include="Source\PropertyLoader.h" />

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GUIHandler.h"
 #include "Loaders.h"
 #include "RendererFrontend.h"
 #include "System.h"
@@ -29,8 +30,11 @@ public:
 
 	RendererFrontend &getRenderer() { return m_renderer; }
 
+	void registerGUIHanlder(GUIHandler *p_guiHandler) { m_guiHandler = p_guiHandler; }
+
 protected:
 	RendererFrontend m_renderer;
 	RendererScene *m_rendererScene;
+	GUIHandler *m_guiHandler;
 };
 

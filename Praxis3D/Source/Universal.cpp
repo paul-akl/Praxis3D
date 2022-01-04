@@ -55,6 +55,7 @@ SystemScene *UniversalScene::extend(SystemBase *p_system)
 	{
 		// TODO ERROR
 		// System already exists.
+		_ASSERT(true);
 	}
 
 	// Get the new scene

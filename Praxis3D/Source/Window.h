@@ -12,6 +12,8 @@
 #include "Scancodes.h"
 #include "SpinWait.h"
 
+class GUIHandlerBase;
+
 class Window
 {
 public:
@@ -356,6 +358,18 @@ public:
 		SDL_SetWindowFullscreen(m_SDLWindow, p_fullscreen ? Config::windowVar().fullscreen_borderless ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN : 0);
 	}
 
+	// Enable GUI callbacks
+	void setEnableGUI(const bool p_enable) 
+	{
+		if(p_enable && m_guiHandler != nullptr)
+			m_enableGUI = true;
+		else
+			m_enableGUI = false;
+	}
+
+	// Register a GUI handler base
+	void registerGUIHandler(GUIHandlerBase *p_guiHanlder) { m_guiHandler = p_guiHanlder; }
+
 	// Swap front and back screen buffers
 	inline void swapBuffers()
 	{
@@ -374,6 +388,9 @@ public:
 	}
 
 	const inline MouseInfo &getMouseInfo() const { return m_mouseInfo; }
+
+	SDL_Window *getSDLWindowHandle() { return m_SDLWindow; }
+	SDL_GLContext *getGLContextHandle() { return &m_GLContext; }
 
 	// Queues a change to be dealt with later (when handling events). Thread-safe.
 	// Some changes require to be made on the main thread (one that created the window context),
@@ -503,6 +520,12 @@ private:
 
 	// Flag that tells if any changes are queued up, to be able to early bail if none are queued
 	bool m_changesQueued;
+
+	// Flag that tells if the GUI should be enabled (sending events to GUI and such)
+	bool m_enableGUI;
+
+	// A pointer to a GUI handler
+	GUIHandlerBase *m_guiHandler;
 
 	// Holds queued changes, in a form of properties
 	std::vector<Property> m_changeQueue;
