@@ -36,20 +36,20 @@ public:
 	{
 		m_variable.m_double = p_variable;
 	}
-	Property(const Properties::PropertyID p_propertyID, const Math::Vec2i &p_variable) : m_propertyID(p_propertyID), m_variableType(Type_vec2i)
+	Property(const Properties::PropertyID p_propertyID, const glm::ivec2 &p_variable) : m_propertyID(p_propertyID), m_variableType(Type_vec2i)
 	{
 		m_variable.m_vec2i = p_variable;
 	}
-	Property(const Properties::PropertyID p_propertyID, const Math::Vec2f &p_variable) : m_propertyID(p_propertyID), m_variableType(Type_vec2f)
+	Property(const Properties::PropertyID p_propertyID, const glm::vec2 &p_variable) : m_propertyID(p_propertyID), m_variableType(Type_vec2f)
 	{
 		m_variable.m_vec2f = p_variable;
-		//m_vec2f = new Math::Vec2f(p_variable);
+		//m_vec2f = new glm::vec2(p_variable);
 	}
-	Property(const Properties::PropertyID p_propertyID, const Math::Vec3f &p_variable) : m_propertyID(p_propertyID), m_variableType(Type_vec3f)
+	Property(const Properties::PropertyID p_propertyID, const glm::vec3 &p_variable) : m_propertyID(p_propertyID), m_variableType(Type_vec3f)
 	{
 		m_variable.m_vec3f = p_variable;
 	}
-	Property(const Properties::PropertyID p_propertyID, const Math::Vec4f &p_variable) : m_propertyID(p_propertyID), m_variableType(Type_vec4f)
+	Property(const Properties::PropertyID p_propertyID, const glm::vec4 &p_variable) : m_propertyID(p_propertyID), m_variableType(Type_vec4f)
 	{
 		m_variable.m_vec4f = p_variable;
 	}
@@ -262,163 +262,163 @@ public:
 			break;
 		}
 	}
-	const inline Math::Vec2i getVec2i() const
+	const inline glm::ivec2 getVec2i() const
 	{
 		switch(m_variableType)
 		{
 		default:
 		case Property::Type_null:
-			return Math::Vec2i(0);
+			return glm::ivec2(0);
 			break;
 		case Property::Type_bool:
-			return m_variable.m_bool == false ? Math::Vec2i(0) : Math::Vec2i(1);
+			return m_variable.m_bool == false ? glm::ivec2(0) : glm::ivec2(1);
 			break;
 		case Property::Type_int:
-			return Math::Vec2i(m_variable.m_int);
+			return glm::ivec2(m_variable.m_int);
 			break;
 		case Property::Type_float:
-			return Math::Vec2i((int)m_variable.m_float);
+			return glm::ivec2((int)m_variable.m_float);
 			break;
 		case Property::Type_double:
-			return Math::Vec2i((int)m_variable.m_double);
+			return glm::ivec2((int)m_variable.m_double);
 			break;
 		case Property::Type_vec2i:
 			return m_variable.m_vec2i;
 			break;
 		case Property::Type_vec2f:
-			return Math::Vec2i((int)m_variable.m_vec2f.x, (int)m_variable.m_vec2f.y);
+			return glm::ivec2((int)m_variable.m_vec2f.x, (int)m_variable.m_vec2f.y);
 			break;
 		case Property::Type_vec3f:
-			return Math::Vec2i((int)m_variable.m_vec3f.x, (int)m_variable.m_vec3f.y);
+			return glm::ivec2((int)m_variable.m_vec3f.x, (int)m_variable.m_vec3f.y);
 			break;
 		case Property::Type_vec4f:
-			return Math::Vec2i((int)m_variable.m_vec4f.x, (int)m_variable.m_vec4f.y);
+			return glm::ivec2((int)m_variable.m_vec4f.x, (int)m_variable.m_vec4f.y);
 			break;
 		case Property::Type_string:
-			return m_variable.m_string == "" ? Math::Vec2i(0) : Math::Vec2i((int)(m_variable.m_string)[0]);
+			return m_variable.m_string == "" ? glm::ivec2(0) : glm::ivec2((int)(m_variable.m_string)[0]);
 			break;
 		case Property::Type_propertyID:
-			return Math::Vec2i((int)m_variable.m_ID);
+			return glm::ivec2((int)m_variable.m_ID);
 			break;
 		}
 	}
-	const inline Math::Vec2f getVec2f() const
+	const inline glm::vec2 getVec2f() const
 	{
 		switch(m_variableType)
 		{
 		default:
 		case Property::Type_null:
-			return Math::Vec2f(0.0f);
+			return glm::vec2(0.0f);
 			break;
 		case Property::Type_bool:
-			return m_variable.m_bool == false ? Math::Vec2f(0.0f) : Math::Vec2f(1.0f);
+			return m_variable.m_bool == false ? glm::vec2(0.0f) : glm::vec2(1.0f);
 			break;
 		case Property::Type_int:
-			return Math::Vec2f((float)m_variable.m_int);
+			return glm::vec2((float)m_variable.m_int);
 			break;
 		case Property::Type_float:
-			return Math::Vec2f(m_variable.m_float);
+			return glm::vec2(m_variable.m_float);
 			break;
 		case Property::Type_double:
-			return Math::Vec2f((float)m_variable.m_double);
+			return glm::vec2((float)m_variable.m_double);
 			break;
 		case Property::Type_vec2i:
-			return Math::Vec2f((float)m_variable.m_vec2i.x, (float)m_variable.m_vec2i.y);
+			return glm::vec2((float)m_variable.m_vec2i.x, (float)m_variable.m_vec2i.y);
 			break;
 		case Property::Type_vec2f:
 			return m_variable.m_vec2f;
 			break;
 		case Property::Type_vec3f:
-			return Math::Vec2f(m_variable.m_vec3f);
+			return glm::vec2(m_variable.m_vec3f);
 			break;
 		case Property::Type_vec4f:
-			return Math::Vec2f(m_variable.m_vec4f);
+			return glm::vec2(m_variable.m_vec4f);
 			break;
 		case Property::Type_string:
-			return m_variable.m_string == "" ? Math::Vec2f(0.0f) : Math::Vec2f((float)(m_variable.m_string)[0]);
+			return m_variable.m_string == "" ? glm::vec2(0.0f) : glm::vec2((float)(m_variable.m_string)[0]);
 			break;
 		case Property::Type_propertyID:
-			return Math::Vec2f((float)m_variable.m_ID);
+			return glm::vec2((float)m_variable.m_ID);
 			break;
 		}
 	}
-	const inline Math::Vec3f getVec3f() const
+	const inline glm::vec3 getVec3f() const
 	{
 		switch(m_variableType)
 		{
 		default:
 		case Property::Type_null:
-			return Math::Vec3f(0.0f);
+			return glm::vec3(0.0f);
 			break;
 		case Property::Type_bool:
-			return m_variable.m_bool == false ? Math::Vec3f(0.0f) : Math::Vec3f(1.0f);
+			return m_variable.m_bool == false ? glm::vec3(0.0f) : glm::vec3(1.0f);
 			break;
 		case Property::Type_int:
-			return Math::Vec3f((float)m_variable.m_int);
+			return glm::vec3((float)m_variable.m_int);
 			break;
 		case Property::Type_float:
-			return Math::Vec3f(m_variable.m_float);
+			return glm::vec3(m_variable.m_float);
 			break;
 		case Property::Type_double:
-			return Math::Vec3f((float)m_variable.m_double);
+			return glm::vec3((float)m_variable.m_double);
 			break;
 		case Property::Type_vec2i:
-			return Math::Vec3f((float)m_variable.m_vec2i.x, (float)m_variable.m_vec2i.y, 0.0f);
+			return glm::vec3((float)m_variable.m_vec2i.x, (float)m_variable.m_vec2i.y, 0.0f);
 			break;
 		case Property::Type_vec2f:
-			return Math::Vec3f(m_variable.m_vec2f, 0.0f);
+			return glm::vec3(m_variable.m_vec2f, 0.0f);
 			break;
 		case Property::Type_vec3f:
 			return m_variable.m_vec3f;
 			break;
 		case Property::Type_vec4f:
-			return Math::Vec3f(m_variable.m_vec4f);
+			return glm::vec3(m_variable.m_vec4f);
 			break;
 		case Property::Type_string:
-			return m_variable.m_string == "" ? Math::Vec3f(0.0f) : Math::Vec3f((float)(m_variable.m_string)[0]);
+			return m_variable.m_string == "" ? glm::vec3(0.0f) : glm::vec3((float)(m_variable.m_string)[0]);
 			break;
 		case Property::Type_propertyID:
-			return Math::Vec3f((float)m_variable.m_ID);
+			return glm::vec3((float)m_variable.m_ID);
 			break;
 		}
 	}
-	const inline Math::Vec4f getVec4f() const
+	const inline glm::vec4 getVec4f() const
 	{
 		switch(m_variableType)
 		{
 		default:
 		case Property::Type_null:
-			return Math::Vec4f(0.0f);
+			return glm::vec4(0.0f);
 			break;
 		case Property::Type_bool:
-			return m_variable.m_bool == false ? Math::Vec4f(0.0f) : Math::Vec4f(1.0f);
+			return m_variable.m_bool == false ? glm::vec4(0.0f) : glm::vec4(1.0f);
 			break;
 		case Property::Type_int:
-			return Math::Vec4f((float)m_variable.m_int);
+			return glm::vec4((float)m_variable.m_int);
 			break;
 		case Property::Type_float:
-			return Math::Vec4f(m_variable.m_float);
+			return glm::vec4(m_variable.m_float);
 			break;
 		case Property::Type_double:
-			return Math::Vec4f((float)m_variable.m_double);
+			return glm::vec4((float)m_variable.m_double);
 			break;
 		case Property::Type_vec2i:
-			return Math::Vec4f((float)m_variable.m_vec2i.x, (float)m_variable.m_vec2i.y, 0.0f, 0.0f);
+			return glm::vec4((float)m_variable.m_vec2i.x, (float)m_variable.m_vec2i.y, 0.0f, 0.0f);
 			break;
 		case Property::Type_vec2f:
-			return  Math::Vec4f(m_variable.m_vec2f, 0.0f, 0.0f);
+			return  glm::vec4(m_variable.m_vec2f, 0.0f, 0.0f);
 			break;
 		case Property::Type_vec3f:
-			return Math::Vec4f(m_variable.m_vec3f, 0.0f);
+			return glm::vec4(m_variable.m_vec3f, 0.0f);
 			break;
 		case Property::Type_vec4f:
 			return m_variable.m_vec4f;
 			break;
 		case Property::Type_string:
-			return m_variable.m_string == "" ? Math::Vec4f(0.0f) : Math::Vec4f((float)(m_variable.m_string)[0]);
+			return m_variable.m_string == "" ? glm::vec4(0.0f) : glm::vec4((float)(m_variable.m_string)[0]);
 			break;
 		case Property::Type_propertyID:
-			return Math::Vec4f((float)m_variable.m_ID);
+			return glm::vec4((float)m_variable.m_ID);
 			break;
 		}
 	}
@@ -488,7 +488,7 @@ public:
 	const inline bool operator<(const Property &p_property) const { return (m_propertyID < p_property.m_propertyID); }
 
 	// Assignment operator
-	Property &Property::operator=(const Property &p_property)
+	Property &operator=(const Property &p_property)
 	{
 		m_propertyID = p_property.m_propertyID;
 		m_variableType = p_property.m_variableType;
@@ -533,6 +533,9 @@ public:
 	// Bool operator; returns true if the property is valid and false if the property is null
 	inline explicit operator bool() const { return m_propertyID != Properties::Null; }
 
+	// Returns true if the native variable type of the property is string (meaning the string that was retrieved from the property is
+	const inline bool isVariableTypeString() const { return (m_variableType == VariableType::Type_string); }
+
 	// Converts the property to text (used for saving properties to text files)
 	const inline std::string toString() { return "\"" + std::string(GetString(m_propertyID)) + "\": \"" + getString() + "\""; }
 private:
@@ -559,10 +562,10 @@ private:
 		int m_int;
 		float m_float;
 		double m_double;
-		Math::Vec2i m_vec2i;
-		Math::Vec2f m_vec2f;
-		Math::Vec3f m_vec3f;
-		Math::Vec4f m_vec4f;
+		glm::ivec2 m_vec2i;
+		glm::vec2 m_vec2f;
+		glm::vec3 m_vec3f;
+		glm::vec4 m_vec4f;
 		std::string m_string;
 		Properties::PropertyID m_ID;
 	} m_variable;
@@ -721,6 +724,27 @@ public:
 	// Equal and less than operators accepting property set class
 	const inline bool operator==(const PropertySet &p_propertySet) const { return (m_propertyID == p_propertySet.m_propertyID); }
 	const inline bool operator<(const PropertySet &p_propertySet) const { return (m_propertyID < p_propertySet.m_propertyID); }
+
+	// Adds two PropertySets together (including their pripertySets and individual properties)
+	inline PropertySet operator+(const PropertySet &p_propertySet) const 
+	{
+		// Create a new propertySet that is a copy of the currentProperty set
+		PropertySet combinedSet(*this);
+
+		// Add all propertySets from the given propertySet
+		for(decltype(p_propertySet.m_numPropertySets) i = 0, size = p_propertySet.m_numPropertySets; i < size; i++)
+			combinedSet.addPropertySet(p_propertySet.getPropertySet(i));
+		
+		// Add all properties from the given propertySet
+		for(decltype(p_propertySet.m_numProperties) i = 0, size = p_propertySet.m_numProperties; i < size; i++)
+			combinedSet.addProperty(p_propertySet[i]);
+
+		// Optimize the new propertySet
+		combinedSet.optimizeForSearch();
+
+		// Returned the combined set
+		return combinedSet;
+	}
 
 	// Setters
 	const inline void setPropertyID(Properties::PropertyID p_propertyID) { m_propertyID = p_propertyID; }

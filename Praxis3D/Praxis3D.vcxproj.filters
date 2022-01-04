@@ -115,6 +115,63 @@
     <Filter Include="Renderer\Render Passes\Source Files">
       <UniqueIdentifier>{708c459e-c8f0-4a2c-b313-f0ab523d5163}</UniqueIdentifier>
     </Filter>
+    <Filter Include="World">
+      <UniqueIdentifier>{47bff9fb-661a-461d-9b39-a2364304b669}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\Header Files">
+      <UniqueIdentifier>{2a3e7aee-9afd-4007-8de7-83252feb3b9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\Source Files">
+      <UniqueIdentifier>{ef9fc0a2-c5b9-4436-9390-d0e8b46beeb7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\Objects">
+      <UniqueIdentifier>{073f3e46-6b78-459f-b76e-6a8931bf6a7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI">
+      <UniqueIdentifier>{5d9cc408-17a7-4f79-a669-b3449d7c1f4b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Header Files">
+      <UniqueIdentifier>{5b18d5ae-2a79-4bb2-86d8-b021445d22a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Source Files">
+      <UniqueIdentifier>{4257612d-0208-4a78-b788-2553db8da2f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Objects">
+      <UniqueIdentifier>{29af1193-a5e7-4f6c-9fc7-a7a1b4382503}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Objects\Header Files">
+      <UniqueIdentifier>{2111e2f4-fd05-445b-9534-8e7beb5504fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Objects\Source Files">
+      <UniqueIdentifier>{e75f10ec-4a83-4f51-8b00-0c9dc4522066}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics">
+      <UniqueIdentifier>{64d4b142-cab0-4ebf-91d1-0825ea522a06}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics\Header Files">
+      <UniqueIdentifier>{727c47c4-6719-4f55-a31d-c926f6ca7f9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics\Source Files">
+      <UniqueIdentifier>{3ce1f9b3-cfd0-497a-9015-72a1bd709383}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics\Objects">
+      <UniqueIdentifier>{ca05ff66-0884-4e5e-82cf-a7ec62640633}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics\Objects\Header Files">
+      <UniqueIdentifier>{22318761-baf8-4bed-9e91-3a324bf6a25e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics\Objects\Source Files">
+      <UniqueIdentifier>{e4bd1596-5b50-413b-a01b-50f9b63d2f61}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="iImgui">
+      <UniqueIdentifier>{21610611-3d67-4391-9a40-c517773edd85}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="iImgui\Header Files">
+      <UniqueIdentifier>{91bc37cb-772a-4d51-9b83-3f9af2806aab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="iImgui\Source Files">
+      <UniqueIdentifier>{62cfc7e5-8f92-4ff5-bcc3-0319fec10b3c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -168,13 +225,13 @@
     <ClCompile Include="Source\WindowLocator.cpp">
       <Filter>Service Locators\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ScriptingScene.cpp">
+    <ClCompile Include="Source\ScriptScene.cpp">
       <Filter>Scripting\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ScriptingSystem.cpp">
+    <ClCompile Include="Source\ScriptSystem.cpp">
       <Filter>Scripting\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ScriptingTask.cpp">
+    <ClCompile Include="Source\ScriptTask.cpp">
       <Filter>Scripting\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\DeferredRenderer.cpp">
@@ -252,9 +309,6 @@
     <ClCompile Include="Source\BaseGraphicsObjects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ObjectDirectorycpp.cpp">
-      <Filter>Service Locators\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\System.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -263,6 +317,63 @@
     </ClCompile>
     <ClCompile Include="Source\AtmScatteringPass.cpp">
       <Filter>Renderer\Render Passes\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\WorldTask.cpp">
+      <Filter>World\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\WorldScene.cpp">
+      <Filter>World\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ObjectDirectory.cpp">
+      <Filter>Service Locators\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BaseGraphicsComponent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\LightComponent.cpp">
+      <Filter>Renderer\Objects\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NullObjects.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\LuaScript.cpp">
+      <Filter>Renderer\Objects\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GUIScene.cpp">
+      <Filter>GUI\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GUITask.cpp">
+      <Filter>GUI\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PhysicsScene.cpp">
+      <Filter>Physics\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PhysicsTask.cpp">
+      <Filter>Physics\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GUIHandlerLocator.cpp">
+      <Filter>Service Locators\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\imgui\imgui.cpp">
+      <Filter>iImgui\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\imgui\imgui_demo.cpp">
+      <Filter>iImgui\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\imgui\imgui_draw.cpp">
+      <Filter>iImgui\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\imgui\imgui_tables.cpp">
+      <Filter>iImgui\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\imgui\imgui_widgets.cpp">
+      <Filter>iImgui\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3.cpp">
+      <Filter>iImgui\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl.cpp">
+      <Filter>iImgui\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -317,13 +428,13 @@
     <ClInclude Include="Source\WindowLocator.h">
       <Filter>Service Locators\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ScriptingScene.h">
+    <ClInclude Include="Source\ScriptScene.h">
       <Filter>Scripting\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ScriptingSystem.h">
+    <ClInclude Include="Source\ScriptSystem.h">
       <Filter>Scripting\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ScriptingTask.h">
+    <ClInclude Include="Source\ScriptTask.h">
       <Filter>Scripting\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\BaseScriptObject.h">
@@ -548,10 +659,111 @@
     <ClInclude Include="Source\Filesystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\WorldScene.h">
+      <Filter>World\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GameObject.h">
+      <Filter>World\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\WorldTask.h">
+      <Filter>World\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Containers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GraphicsObject.h">
+      <Filter>Renderer\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ObjectRegister.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BaseGraphicsComponent.h">
+      <Filter>Renderer\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ModelComponent.h">
+      <Filter>Renderer\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShaderComponent.h">
+      <Filter>Renderer\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\CameraComponent.h">
+      <Filter>Renderer\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\LightComponent.h">
+      <Filter>Renderer\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GameLogicObject.h">
+      <Filter>Scripting\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\SpatialDataManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\InheritanceObjects.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NullObjects.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\WorldSystem.h">
+      <Filter>World\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ScriptObject.h">
+      <Filter>Scripting\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\LuaComponent.h">
+      <Filter>Scripting\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\LuaScript.h">
+      <Filter>Scripting\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GUIScene.h">
+      <Filter>GUI\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GUITask.h">
+      <Filter>GUI\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GUISystem.h">
+      <Filter>GUI\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PhysicsSystem.h">
+      <Filter>Physics\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PhysicsScene.h">
+      <Filter>Physics\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PhysicsTask.h">
+      <Filter>Physics\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GUIHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GUIHandlerLocator.h">
+      <Filter>Service Locators\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\imgui\imconfig.h">
+      <Filter>iImgui\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\imgui\imgui.h">
+      <Filter>iImgui\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\imgui\imgui_internal.h">
+      <Filter>iImgui\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3.h">
+      <Filter>iImgui\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3_loader.h">
+      <Filter>iImgui\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl.h">
+      <Filter>iImgui\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GUIPass.h">
+      <Filter>Renderer\Render Passes\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\config.ini" />
-    <None Include="Data\error-strings-eng.data" />
     <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <ItemGroup>
@@ -566,5 +778,8 @@
     <Image Include="..\praxis icon.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Data\error-strings-eng.data" />
   </ItemGroup>
 </Project>

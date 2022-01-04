@@ -1,5 +1,6 @@
 #pragma once
 
+#include <climits>
 #include <GL\glew.h>
 #include <string>
 #include <unordered_map>
@@ -9,7 +10,10 @@
 #include "EnumFactory.h"
 #include "Utilities.h"
 
-typedef unsigned int BitMask;
+typedef unsigned __int64 BitMask;
+
+// Tests if the given bitmask contains the given flag; returns true if the flag bits are present in the bitmask
+constexpr bool CheckBitmask(const BitMask p_bitmask, const BitMask p_flag) { return ((p_bitmask & p_flag) == p_flag); }
 
 //#define ever ;;
 
@@ -23,47 +27,127 @@ namespace Systems
 	#define TYPEID(Code) \
 	Code(Null, = -1) \
 	Code(Graphics,) \
-	Code(Scripting,) \
+	Code(GUI,) \
+	Code(Physics,) \
+	Code(Script,) \
+	Code(World,) \
 	Code(NumberOfSystems,) 
 	DECLARE_ENUM(TypeID, TYPEID)
 
 	const static std::string SystemNames[NumberOfSystems] =
 	{
 		GetString(Graphics),
-		GetString(Scripting)
+		GetString(GUI),
+		GetString(Physics),
+		GetString(Script),
+		GetString(World)
 	};
 	
 	namespace Types
 	{
-		static const BitMask All = static_cast<BitMask>(-1);
-		static const BitMask Max = 32;
+		static constexpr BitMask All = static_cast<BitMask>(-1);
+		static constexpr BitMask Max = 32;// (BitMask)1 << ((CHAR_BIT * sizeof(BitMask) - 1));
 	}
-
+	namespace GameObjectComponents
+	{
+		static constexpr BitMask None		= (BitMask)1 << 0;
+		static constexpr BitMask Graphics	= (BitMask)1 << 1;
+		static constexpr BitMask Script		= (BitMask)1 << 2;
+	}
+	namespace GraphicsObjectComponents
+	{
+		static constexpr BitMask None		= (BitMask)1 << 0;
+		static constexpr BitMask Camera		= (BitMask)1 << 1;
+		static constexpr BitMask Lighting	= (BitMask)1 << 2;
+		static constexpr BitMask Model		= (BitMask)1 << 3;
+		static constexpr BitMask Shader		= (BitMask)1 << 4;
+	}
+	namespace ScriptObjectComponents
+	{
+		static constexpr BitMask None = (BitMask)1 << 0;
+		static constexpr BitMask Lua = (BitMask)1 << 1;
+	}
 	namespace Changes
 	{
+		namespace Common
+		{
+			static constexpr BitMask Shared1	= (BitMask)1 << 1;
+			static constexpr BitMask Shared2	= (BitMask)1 << 2;
+			static constexpr BitMask Shared3	= (BitMask)1 << 3;
+			static constexpr BitMask Shared4	= (BitMask)1 << 4;
+			static constexpr BitMask Shared5	= (BitMask)1 << 5;
+			static constexpr BitMask Shared6	= (BitMask)1 << 6;
+			static constexpr BitMask Shared7	= (BitMask)1 << 7;
+			static constexpr BitMask Shared8	= (BitMask)1 << 8;
+			static constexpr BitMask Shared9	= (BitMask)1 << 9;
+			static constexpr BitMask Shared10	= (BitMask)1 << 10;
+			static constexpr BitMask Shared11	= (BitMask)1 << 11;
+			static constexpr BitMask Shared12	= (BitMask)1 << 12;
+			static constexpr BitMask Shared13	= (BitMask)1 << 13;
+			static constexpr BitMask Shared14	= (BitMask)1 << 14;
+			static constexpr BitMask Shared15	= (BitMask)1 << 15;
+			static constexpr BitMask Shared16	= (BitMask)1 << 16;
+			static constexpr BitMask Shared17	= (BitMask)1 << 17;
+			static constexpr BitMask Shared18	= (BitMask)1 << 18;
+			static constexpr BitMask Shared19	= (BitMask)1 << 19;
+			static constexpr BitMask Shared20	= (BitMask)1 << 20;
+			static constexpr BitMask Shared21	= (BitMask)1 << 21;
+		}
+		namespace Type
+		{
+			static constexpr BitMask Generic	= (BitMask)1 << 63;
+			static constexpr BitMask Spatial	= (BitMask)1 << 62;
+			static constexpr BitMask Graphics	= (BitMask)1 << 61;
+			static constexpr BitMask Physics	= (BitMask)1 << 60;
+			static constexpr BitMask Audio		= (BitMask)1 << 59;
+			static constexpr BitMask Script		= (BitMask)1 << 58;
+		}
+
 		namespace Generic
 		{
-			static const BitMask CreateObject	= (1 << 0);
-			static const BitMask DeleteObject	= (1 << 1);
-			static const BitMask ExtendObject	= (1 << 2);
-			static const BitMask UnextendObject = (1 << 3);
-			static const BitMask Name			= (1 << 4);
-			static const BitMask All			= CreateObject | DeleteObject | ExtendObject;
+			static constexpr BitMask CreateObject		= Changes::Type::Generic + Changes::Common::Shared1;
+			static constexpr BitMask DeleteObject		= Changes::Type::Generic + Changes::Common::Shared2;
+			static constexpr BitMask ExtendObject		= Changes::Type::Generic + Changes::Common::Shared3;
+			static constexpr BitMask UnextendObject		= Changes::Type::Generic + Changes::Common::Shared4;
+			static constexpr BitMask Name				= Changes::Type::Generic + Changes::Common::Shared5;
+			static constexpr BitMask Link				= Changes::Type::Generic + Changes::Common::Shared6;
+			static constexpr BitMask All				= CreateObject | DeleteObject | ExtendObject | Name | Link;
 		}
-		namespace Spacial
+		namespace Spatial
 		{
-			static const BitMask Position		= (1 << 5);
-			static const BitMask Rotation		= (1 << 6);
-			static const BitMask Scale			= (1 << 7);
-			static const BitMask ModelMatrix	= (1 << 8);
-			static const BitMask All			= Position | Rotation | Scale | ModelMatrix;
+			static constexpr BitMask LocalPosition			= Changes::Type::Spatial + Changes::Common::Shared1;
+			static constexpr BitMask LocalRotation			= Changes::Type::Spatial + Changes::Common::Shared2;
+			static constexpr BitMask LocalScale				= Changes::Type::Spatial + Changes::Common::Shared3;
+			static constexpr BitMask LocalTransform			= Changes::Type::Spatial + Changes::Common::Shared4;
+
+			static constexpr BitMask WorldPosition			= Changes::Type::Spatial + Changes::Common::Shared5;
+			static constexpr BitMask WorldRotation			= Changes::Type::Spatial + Changes::Common::Shared6;
+			static constexpr BitMask WorldScale				= Changes::Type::Spatial + Changes::Common::Shared7;
+			static constexpr BitMask WorldTransform			= Changes::Type::Spatial + Changes::Common::Shared8;
+
+			static constexpr BitMask AllLocalNoTransform	= LocalPosition | LocalRotation | LocalScale;
+			static constexpr BitMask AllWorldNoTransform	= WorldPosition | WorldRotation | WorldScale;
+			static constexpr BitMask AllLocal				= AllLocalNoTransform | LocalTransform;
+			static constexpr BitMask AllWorld				= AllWorldNoTransform | WorldTransform;
+			static constexpr BitMask All					= AllLocal | AllWorld;
 		}
 		namespace Graphics
 		{
-			static const BitMask Target		= (1 << 9);
-			static const BitMask UpVector	= (1 << 10);
-			static const BitMask Lighting	= (1 << 11);
-			static const BitMask All		= Target | UpVector | Lighting;
+			static constexpr BitMask Lighting				= Changes::Type::Graphics + Changes::Common::Shared21;
+			static constexpr BitMask Camera					= Changes::Type::Graphics + Changes::Common::Shared20;
+
+			static constexpr BitMask Target					= Changes::Type::Graphics + Changes::Graphics::Camera + Changes::Common::Shared1;
+			static constexpr BitMask UpVector				= Changes::Type::Graphics + Changes::Graphics::Camera + Changes::Common::Shared2;
+			static constexpr BitMask AllCamera				= Target | UpVector;
+
+			static constexpr BitMask LightEnabled			= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared3;
+			static constexpr BitMask Color					= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared4;
+			static constexpr BitMask CutoffAngle			= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared5;
+			static constexpr BitMask Direction				= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared6;
+			static constexpr BitMask Intensity				= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared7;
+			static constexpr BitMask AllLighting			= LightEnabled | Color | CutoffAngle | Direction | Intensity;
+
+			static constexpr BitMask All					= AllCamera | AllLighting;
 		}
 		namespace Physics
 		{
@@ -73,15 +157,15 @@ namespace Systems
 		{
 
 		}
-		namespace Scripting
+		namespace Script
 		{
 
 		}
 
-		static const BitMask Link = (1 << 29);
+		//static constexpr BitMask Link = (BitMask)1 << 29;
 
-		static const BitMask None = 0;
-		static const BitMask All = static_cast<BitMask>(-1);
+		static constexpr BitMask None = 0;
+		static constexpr BitMask All = static_cast<BitMask>(-1);
 	}
 }
 
@@ -98,20 +182,27 @@ namespace Properties
 	Code(LoadInBackground,) \
 	Code(Name,) \
 	Code(Objects,) \
+	Code(ObjectPoolSize,) \
 	Code(Scene,) \
 	Code(Systems,) \
 	Code(Type,) \
 	/* Geometry */ \
 	Code(OffsetPosition,) \
 	Code(OffsetRotation,) \
-	Code(Position,) \
-	Code(Rotation,) \
-	Code(Scale,) \
+	Code(LocalPosition,) \
+	Code(LocalRotation,) \
+	Code(LocalRotationQuaternion,) \
+	Code(LocalScale,) \
+	Code(WorldPosition,) \
+	Code(WorldRotation,) \
+	Code(WorldRotationQuaternion,) \
+	Code(WorldScale,) \
 	/* Graphics */ \
 	Code(AlphaThreshold, ) \
 	Code(AmbientOcclusion, ) \
 	Code(Attenuation,) \
 	Code(Camera,) \
+	Code(CameraComponent,) \
 	Code(Color,) \
 	Code(CombinedTexture,) \
 	Code(CutoffAngle,) \
@@ -124,12 +215,14 @@ namespace Properties
 	Code(FragmentShader,) \
 	Code(GeometryShader,) \
 	Code(Graphics,) \
+	Code(GraphicsObject,) \
 	Code(Height,) \
 	Code(HeightScale,) \
 	Code(Intensity,) \
 	Code(Lighting,) \
 	Code(Materials,) \
 	Code(Metalness,) \
+	Code(Meshes,) \
 	Code(Models,) \
 	Code(ModelObject,) \
 	Code(ModelPoolSize,) \
@@ -144,6 +237,8 @@ namespace Properties
 	Code(PositiveY,) \
 	Code(PositiveZ,) \
 	Code(PostProcess,) \
+	Code(Renderer,) \
+	Code(Rendering,) \
 	Code(RMHAO,) \
 	Code(Roughness,) \
 	Code(Shaders,) \
@@ -156,6 +251,7 @@ namespace Properties
 	Code(TessControlShader,) \
 	Code(TessEvaluationShader,) \
 	Code(TextureTilingFactor,) \
+	Code(TextureScale,) \
 	Code(VertexShader,) \
 	/* Key binds */ \
 	Code(BackwardKey,) \
@@ -180,7 +276,7 @@ namespace Properties
 	Code(ObjectLinks,) \
 	Code(Observer,) \
 	Code(Subject,) \
-	/* Scripting */ \
+	/* Script */ \
 	Code(Angle,) \
 	Code(Axis,) \
 	Code(Azimuth,) \
@@ -194,6 +290,8 @@ namespace Properties
 	Code(Latitude,) \
 	Code(Longitude,) \
 	Code(LowerLimit,) \
+	Code(Lua,) \
+	Code(LuaComponent,) \
 	Code(InputScript,) \
 	Code(Hours,) \
 	Code(KeyCode,) \
@@ -201,7 +299,8 @@ namespace Properties
 	Code(Minutes,) \
 	Code(Month,) \
 	Code(Radius,) \
-	Code(Scripting,) \
+	Code(Script,) \
+	Code(ScriptObject,) \
 	Code(Seconds,) \
 	Code(SolarTimeScript,) \
 	Code(Speed,) \
@@ -218,6 +317,12 @@ namespace Properties
 	Code(MouseCapture,) \
 	Code(VerticalSync,) \
 	Code(WindowTitle,) \
+	/* World */ \
+	Code(Children,) \
+	Code(GameObject,) \
+	Code(ID,) \
+	Code(Parent,) \
+	Code(World,) \
 	/* End of property IDs */ \
 	Code(NumberOfPropertyIDs,) 
 	DECLARE_ENUM(PropertyID, PROPERTYID)
@@ -233,18 +338,25 @@ namespace Properties
 		GetString(LoadInBackground),
 		GetString(Name),
 		GetString(Objects),
+		GetString(ObjectPoolSize),
 		GetString(Scene),
 		GetString(Systems),
 		GetString(Type),
 		GetString(OffsetPosition),
 		GetString(OffsetRotation),
-		GetString(Position),
-		GetString(Rotation),
-		GetString(Scale),
+		GetString(LocalPosition),
+		GetString(LocalRotation),
+		GetString(LocalRotationQuaternion),
+		GetString(LocalScale),
+		GetString(WorldPosition),
+		GetString(WorldRotation),
+		GetString(WorldRotationQuaternion),
+		GetString(WorldScale),
 		GetString(AlphaThreshold),
 		GetString(AmbientOcclusion),
 		GetString(Attenuation),
 		GetString(Camera),
+		GetString(CameraComponent),
 		GetString(Color),
 		GetString(CombinedTexture),
 		GetString(CutoffAngle),
@@ -257,12 +369,14 @@ namespace Properties
 		GetString(FragmentShader),
 		GetString(GeometryShader),
 		GetString(Graphics),
+		GetString(GraphicsObject),
 		GetString(Height),
 		GetString(HeightScale),
 		GetString(Intensity),
 		GetString(Lighting),
 		GetString(Materials),
 		GetString(Metalness),
+		GetString(Meshes),
 		GetString(Models),
 		GetString(ModelObject),
 		GetString(ModelPoolSize),
@@ -277,6 +391,8 @@ namespace Properties
 		GetString(PositiveY),
 		GetString(PositiveZ),
 		GetString(PostProcess),
+		GetString(Renderer),
+		GetString(Rendering),
 		GetString(RMHAO),
 		GetString(Roughness),
 		GetString(Shaders),
@@ -289,6 +405,7 @@ namespace Properties
 		GetString(TessControlShader),
 		GetString(TessEvaluationShader),
 		GetString(TextureTilingFactor),
+		GetString(TextureScale),
 		GetString(VertexShader),
 		GetString(BackwardKey),
 		GetString(CenterKey),
@@ -324,6 +441,8 @@ namespace Properties
 		GetString(Latitude),
 		GetString(Longitude),
 		GetString(LowerLimit),
+		GetString(Lua),
+		GetString(LuaComponent),
 		GetString(InputScript),
 		GetString(Hours),
 		GetString(KeyCode),
@@ -331,7 +450,8 @@ namespace Properties
 		GetString(Minutes),
 		GetString(Month),
 		GetString(Radius),
-		GetString(Scripting),
+		GetString(Script),
+		GetString(ScriptObject),
 		GetString(Seconds),
 		GetString(SolarTimeScript),
 		GetString(Speed),
@@ -346,9 +466,13 @@ namespace Properties
 		GetString(Fullscreen),
 		GetString(MouseCapture),
 		GetString(VerticalSync),
-		GetString(WindowTitle)
+		GetString(WindowTitle),
+		GetString(Children),
+		GetString(GameObject),
+		GetString(ID),
+		GetString(Parent),
+		GetString(World)
 	};
-
 
 	// A few overloaded static functions to convert other values to PropertyID enum
 	// Note: converting from string here is very slow, and would be better implemented
@@ -399,9 +523,27 @@ class Config
 	friend class DebugUIScript;
 	friend class DeferredRenderer;
 	friend class ErrorHandler;
+	friend class LuaScript;
 	friend class RendererFrontend;
 	friend class Window;
 public:
+	struct ComponentVariables
+	{
+		ComponentVariables()
+		{
+			camera_component_name = " (Camera Component)";
+			light_component_name = " (Light Component)";
+			lua_component_name = " (Lua Component)";
+			model_component_name = " (Model Component)";
+			shader_component_name = " (Shader Component)";
+		}
+
+		std::string camera_component_name;
+		std::string light_component_name;
+		std::string lua_component_name;
+		std::string model_component_name;
+		std::string shader_component_name;
+	};
 	struct ConfigFileVariables
 	{
 		ConfigFileVariables()
@@ -423,8 +565,10 @@ public:
 			change_ctrl_oneoff_notify_list_reserv = 64;
 			change_ctrl_subject_list_reserv = 8192;
 			delta_time_divider = 1000;
+			glsl_version = 430;
 			gl_context_major_version = 3;
 			gl_context_minor_version = 3;
+			object_directory_init_pool_size = 1000;
 			smoothing_tick_samples = 100;
 			running = true;
 		}
@@ -435,8 +579,10 @@ public:
 		int change_ctrl_oneoff_notify_list_reserv;
 		int change_ctrl_subject_list_reserv;
 		int delta_time_divider;
+		int glsl_version;
 		int gl_context_major_version;
 		int gl_context_minor_version;
+		int object_directory_init_pool_size;
 		int smoothing_tick_samples;
 		bool running;
 	};
@@ -653,6 +799,16 @@ public:
 		float z_far;
 		float z_near;
 	};
+	struct GUIVariables
+	{
+		GUIVariables()
+		{
+			gui_render = true;
+			gui_dark_style = true;
+		}
+		bool gui_render;
+		bool gui_dark_style;
+	};
 	struct InputVariables
 	{
 		InputVariables()
@@ -666,7 +822,7 @@ public:
 			debug_1_key = 58;
 			debug_2_key = 59;
 			down_editor_key = 89;
-			down_key = 89;
+			down_key = 6;
 			escape_key = 41;
 			forward_editor_key = 96;
 			forward_key = 26;
@@ -683,14 +839,14 @@ public:
 			save_editor_key = 22;
 			sprint_key = 225;
 			up_editor_key = 75;
-			up_key = 95;
+			up_key = 44;
 			vsync_key = 68;
 			mouse_filter = false;
 			mouse_warp_mode = false;
-			mouse_jaw = 0.022f;
-			mouse_pitch = 0.022f;
+			mouse_jaw = 0.005f;
+			mouse_pitch = 0.005f;
 			mouse_pitch_clip = 1.2f;
-			mouse_sensitivity = 3.0f;
+			mouse_sensitivity = 1.0f;
 		}
 
 		int back_key;
@@ -759,12 +915,14 @@ public:
 	{
 		ObjectPoolVariables()
 		{
+			object_pool_size = 50;
 			model_object_pool_size = 20;
 			point_light_pool_size = 50;
 			shader_object_pool_size = 10;
 			spot_light_pool_size = 25;
 		}
 
+		int object_pool_size;
 		int model_object_pool_size;
 		int point_light_pool_size;
 		int shader_object_pool_size;
@@ -778,6 +936,7 @@ public:
 			map_path = "Data\\Maps\\";
 			model_path = "Data\\Models\\";
 			object_path = "Data\\Objects\\";
+			script_path = "Data\\Scripts\\";
 			shader_path = "Data\\Shaders\\";
 			sound_path = "Data\\Sounds\\";
 			texture_path = "Data\\Materials\\";
@@ -787,6 +946,7 @@ public:
 		std::string map_path;
 		std::string model_path;
 		std::string object_path;
+		std::string script_path;
 		std::string shader_path;
 		std::string sound_path;
 		std::string texture_path;
@@ -919,6 +1079,21 @@ public:
 		int shader_pool_size;
 		bool depth_test;
 		bool face_culling;
+	};
+	struct ScriptVariables
+	{
+		ScriptVariables()
+		{
+			iniFunctionName = "init";
+			updateFunctionName = "update";
+			createObjectFunctionName = "create";
+			userTypeTableName = "Types";
+		}
+
+		std::string iniFunctionName;
+		std::string updateFunctionName;
+		std::string createObjectFunctionName;
+		std::string userTypeTableName;
 	};
 	struct ShaderVariables
 	{
@@ -1184,16 +1359,19 @@ public:
 		bool window_in_focus;
 	};
 
+	const inline static ComponentVariables	&componentVar()		{ return m_componentVar;	}
 	const inline static ConfigFileVariables	&configFileVar()	{ return m_configFileVar;	}
 	const inline static EngineVariables		&engineVar()		{ return m_engineVar;		}
 	const inline static FramebfrVariables	&getFramebfrVar()	{ return m_framebfrVar;		}
 	const inline static GameplayVariables	&gameplayVar()		{ return m_gameplayVar;		}
 	const inline static GraphicsVariables	&graphicsVar()		{ return m_graphicsVar;		}
+	const inline static GUIVariables		&GUIVar()			{ return m_GUIVar;			}
 	const inline static InputVariables		&inputVar()			{ return m_inputVar;		}
 	const inline static ModelVariables		&modelVar()			{ return m_modelVar;		}
 	const inline static ObjectPoolVariables &objectPoolVar()	{ return m_objPoolVar;		}
 	const inline static PathsVariables		&filepathVar()		{ return m_filepathVar;		}
 	const inline static RendererVariables	&rendererVar()		{ return m_rendererVar;		}
+	const inline static ScriptVariables		&scriptVar()		{ return m_scriptVar;		}
 	const inline static ShaderVariables		&shaderVar()		{ return m_shaderVar;		}
 	const inline static TextureVariables	&textureVar()		{ return m_textureVar;		}
 	const inline static WindowVariables		&windowVar()		{ return m_windowVar;		}
@@ -1297,16 +1475,19 @@ private:
 		size_t m_mapKey;
 	};
 
+	static ComponentVariables	m_componentVar;
 	static ConfigFileVariables	m_configFileVar;
 	static EngineVariables		m_engineVar;
 	static FramebfrVariables	m_framebfrVar;
 	static GameplayVariables	m_gameplayVar;
 	static GraphicsVariables	m_graphicsVar;
+	static GUIVariables			m_GUIVar;
 	static InputVariables		m_inputVar;
 	static ModelVariables		m_modelVar;
 	static ObjectPoolVariables	m_objPoolVar;
 	static PathsVariables		m_filepathVar;
 	static RendererVariables	m_rendererVar;
+	static ScriptVariables		m_scriptVar;
 	static ShaderVariables		m_shaderVar;
 	static TextureVariables		m_textureVar;
 	static WindowVariables		m_windowVar;
@@ -1318,15 +1499,18 @@ private:
 
 	static void setVariable(std::string p_name, std::string p_variable);
 
+	inline static ComponentVariables	&setComponentVar()	{ return m_componentVar;	}
 	inline static ConfigFileVariables	&setConfigFileVar()	{ return m_configFileVar;	}
 	inline static EngineVariables		&setEngineVar()		{ return m_engineVar;		}
 	inline static FramebfrVariables		&setFramebfrVar()	{ return m_framebfrVar;		}
 	inline static GameplayVariables		&setGameplayVar()	{ return m_gameplayVar;		}
 	inline static GraphicsVariables		&setGraphicsVar()	{ return m_graphicsVar;		}
+	inline static GUIVariables			&setGUIVar()		{ return m_GUIVar;			}
 	inline static InputVariables		&setInputVar()		{ return m_inputVar;		}
 	inline static ModelVariables		&setModelVar()		{ return m_modelVar;		}
 	inline static PathsVariables		&setFilepathVar()	{ return m_filepathVar;		}
 	inline static RendererVariables		&setRendererVar()	{ return m_rendererVar;		}
+	inline static ScriptVariables		&setScriptVar()		{ return m_scriptVar;		}
 	inline static ShaderVariables		&setShaderVar()		{ return m_shaderVar;		}
 	inline static TextureVariables		&setTextureVar()	{ return m_textureVar;		}
 	inline static WindowVariables		&setWindowVar()		{ return m_windowVar;		}

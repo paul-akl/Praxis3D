@@ -84,7 +84,7 @@ public:
 		glBindTexture(GL_TEXTURE_2D, m_lenseFlareStarburst.getHandle());
 
 		// Perform various visual effects in the post process shader
-		m_renderer.queueForDrawing(m_lenseFlareShader->getShaderHandle(), m_lenseFlareShader->getUniformUpdater(), p_sceneObjects.m_camera->getBaseObjectData().m_modelMat);
+		m_renderer.queueForDrawing(m_lenseFlareShader->getShaderHandle(), m_lenseFlareShader->getUniformUpdater(), p_sceneObjects.m_camera.m_viewData.m_transformMat);
 		m_renderer.passScreenSpaceDrawCommandsToBackend();
 		
 		p_renderPassData.swapColorInputOutputMaps();

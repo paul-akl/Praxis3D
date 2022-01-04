@@ -24,8 +24,11 @@ public:
 
 	UniversalObject *getObject(std::string p_name);
 	
-	void createObjectLink(SystemObject *p_subject, SystemObject *p_observer);
-	void createObjectLink(UniversalObject *p_subject, SystemObject *p_observer);
+	// Creates a link between the subject and the observer, so that the observer can be notified of any data changes within the subject
+	void createObjectLink(ObservedSubject *p_subject, SystemObject *p_observer);
+	
+	// Removes the link between the subject and the observer, so that the observer will no longer be notified of any data changes within the subject
+	void removeObjectLink(ObservedSubject *p_subject, SystemObject *p_observer);
 
 	// Sends a one-off notification about a change, without requiring the object linking
 	void sendChange(SystemObject *p_subject, SystemObject *p_observer, BitMask p_changedBits)

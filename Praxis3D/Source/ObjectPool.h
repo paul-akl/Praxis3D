@@ -1,3 +1,5 @@
+#pragma once
+
 #include "ErrorCodes.h"
 
 // Generic object pool (used to optimize data locality). Simplistic design intended
@@ -15,7 +17,7 @@ public:
 	public:
 		const inline bool allocated() const { return m_allocated; }
 
-		const inline size_t getIndex() const {return m_index; }
+		const inline size_t getIndex() const { return m_index; }
 
 		// Returns the raw object stored in the wrapper
 		inline T_Object *getObject() { return m_object; }
@@ -115,6 +117,41 @@ public:
 		return nullptr;
 	}
 
+	// Finds an unused object, marks it for usage and returns it; returns nullptr if pool is full
+	// Argument 'p_returnErrorCode' is used to give feedback if the operation was successful.
+	// This might be faster for bigger objects, than using add(), as instead of 
+	// using a copy operator, it just returns the object, so the caller can initialize the object themselves
+	// Also useful if the caller needs to store the object index after creating it (used for removal)
+	inline Object *newObject(ErrorCode &p_returnErrorCode)
+	{
+		if(m_firstAvailable != nullptr)
+		{
+			Object *newObject = m_firstAvailable;
+			m_firstAvailable = newObject->getNext();
+
+			// Mark the object as allocated
+			newObject->m_allocated = true;
+
+			// Make this object the last one added
+			m_lastAddedObject = newObject;
+
+			// Increment the total number of allocated objects
+			m_numAllocatedObjects++;
+
+			// Set the return error to indicate successful operation
+			p_returnErrorCode = ErrorCode::Success;
+
+			// Return the newly allocated object
+			return newObject;
+		}
+
+		// Set the return error to indicate that the object pool was full
+		p_returnErrorCode = ErrorCode::ObjectPool_full;
+
+		// If this point is reached, object couldn't be allocated, so return a null pointer instead
+		return nullptr;
+	}
+
 	// Finds an unused object, uses copy constructor to initialize it; returns an error code if pool is full
 	inline ErrorCode addOld(T_Object &&p_object)
 	{
@@ -137,7 +174,7 @@ public:
 			// Increment the total number of allocated objects
 			m_numAllocatedObjects++;
 
-			//memcpy(newObject->m_object, &p_object, sizeof(T_Object));
+			memcpy(newObject->m_object, &p_object, sizeof(T_Object));
 		}
 		else
 			returnError = ErrorCode::ObjectPool_full;
@@ -184,7 +221,7 @@ public:
 			// If the object is allocated
 			if(m_objectPool[p_index].m_allocated == true)
 			{
-				// Set is as a new first available and deallocate it
+				// Set it as a new first available and deallocate it
 				m_objectPool[p_index].setNext(m_firstAvailable);
 				m_firstAvailable = &m_objectPool[p_index];
 				m_objectPool[p_index].m_allocated = false;

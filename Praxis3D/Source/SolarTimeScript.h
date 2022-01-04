@@ -134,22 +134,22 @@ public:
 		calcSunPosition();
 
 		// Transform angle values into radian
-		m_azimuthAngle = Math::toRadian(m_azimuthAngle);
-		m_zenithAngle = Math::toRadian(m_zenithAngle);
-		m_elevationAngle = Math::toRadian(m_elevationAngle);
+		m_azimuthAngle = glm::radians(m_azimuthAngle);
+		m_zenithAngle = glm::radians(m_zenithAngle);
+		m_elevationAngle = glm::radians(m_elevationAngle);
 		
 		/*
-		m_sunDirection = Math::Vec3f(
+		m_sunDirection = glm::vec3(
 			cos(m_azimuthAngle) * sin(m_zenithAngle),
 			cos(m_zenithAngle),
 			sin(m_azimuthAngle) * sin(m_zenithAngle));
 
-		m_sunDirection = Math::Vec3f(
+		m_sunDirection = glm::vec3(
 			sin(m_azimuthAngle) * sin(altitude),
 			cos(m_azimuthAngle) * sin(altitude),
 			sin(altitude));
 
-		m_sunDirection = Math::Vec3f(
+		m_sunDirection = glm::vec3(
 			sin(m_zenithAngle) * cos(m_azimuthAngle),
 			sin(m_zenithAngle) * sin(m_azimuthAngle),
 			cos(m_zenithAngle));
@@ -184,35 +184,35 @@ public:
 		m_sunDirection.z = static_cast<float>(cos(m_azimuthAngle) * cos(m_elevationAngle));
 		
 		// Normalize sun direction
-		m_sunDirection.normalize();
+		m_sunDirection = glm::normalize(m_sunDirection);
 
 		// Calculate sun position in the sky
 		m_sunPosition = (-m_sunDirection * m_offsetPosition) + m_originPosition;
 
 		// Notify observers of the changes
-		postChanges(Systems::Changes::Spacial::Position | Systems::Changes::Spacial::Rotation);
+		postChanges(Systems::Changes::Spatial::LocalPosition | Systems::Changes::Spatial::LocalRotation);
 	}
 
-	virtual BitMask getDesiredSystemChanges() { return Systems::Changes::Spacial::All; }
-	virtual BitMask getPotentialSystemChanges() { return Systems::Changes::Spacial::All; }
+	virtual BitMask getDesiredSystemChanges() { return Systems::Changes::Spatial::All; }
+	virtual BitMask getPotentialSystemChanges() { return Systems::Changes::Spatial::All; }
 
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
-		if(p_changeType & Systems::Changes::Spacial::Position)
-			m_originPosition = p_subject->getVec3(this, Systems::Changes::Spacial::Position);
+		if(p_changeType & Systems::Changes::Spatial::LocalPosition)
+			m_originPosition = p_subject->getVec3(this, Systems::Changes::Spatial::LocalPosition);
 
-		if(p_changeType & Systems::Changes::Spacial::Rotation)
-			m_sunDirection = p_subject->getVec3(this, Systems::Changes::Spacial::Rotation);
+		if(p_changeType & Systems::Changes::Spatial::LocalRotation)
+			m_sunDirection = p_subject->getVec3(this, Systems::Changes::Spatial::LocalRotation);
 	}
 
-	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
+	const virtual glm::vec3 &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		switch(p_changedBits)
 		{
-		case Systems::Changes::Spacial::Position:
+		case Systems::Changes::Spatial::LocalPosition:
 			return m_sunPosition;
 			break;
-		case Systems::Changes::Spacial::Rotation:
+		case Systems::Changes::Spatial::LocalRotation:
 			return m_sunDirection;
 			break;
 		}
@@ -256,7 +256,7 @@ public:
 	const inline void setTimeZone(const int p_timeZone)						{ m_timeZone = p_timeZone;				}
 	const inline void setTimeMultiplier(const float p_timeMultiplier)		{ m_timeMultiplier = p_timeMultiplier;	}
 	const inline void setOffsetPosition(const float p_offSetPosition)		{ m_offsetPosition = p_offSetPosition;	}
-	const inline void setOriginPosition(const Math::Vec3f p_originPosition) { m_originPosition = p_originPosition;	}
+	const inline void setOriginPosition(const glm::vec3 p_originPosition) { m_originPosition = p_originPosition;	}
 
 	// Setters for the key binds:
 	inline void setForwardKey(Scancode p_key)
@@ -267,7 +267,7 @@ public:
 	inline void setForwardKey(std::string &p_string)
 	{
 		m_forwardKey.unbindAll();
-		m_forwardKey.bind(p_string);
+		m_forwardKey.bindByKeyName(p_string);
 	}
 	
 	// PSA Sun position algorithm
@@ -425,7 +425,7 @@ private:
 			m_zenithAngle,
 			m_elevationAngle;
 
-	Math::Vec3f	m_originPosition,
+	glm::vec3	m_originPosition,
 				m_sunPosition,
 				m_sunDirection;
 };

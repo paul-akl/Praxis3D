@@ -131,7 +131,7 @@ public:
 
 					// Get the current data from the selected object
 					m_sceneLoader->getChangeController()->sendChange(m_selectedObject, this, 
-																	 Systems::Changes::Spacial::Position | 
+																	 Systems::Changes::Spatial::LocalPosition |
 																	 Systems::Changes::Generic::Name |
 																	 Systems::Changes::Graphics::Lighting);
 
@@ -192,8 +192,8 @@ public:
 
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
-		if(p_changeType & Systems::Changes::Spacial::Position)
-			m_objectPosition = p_subject->getVec3(this, Systems::Changes::Spacial::Position);
+		//if(p_changeType & Systems::Changes::Spacial::Position)
+		//	m_objectPosition = p_subject->getVec3(this, Systems::Changes::Spacial::Position);
 
 		if(p_changeType & Systems::Changes::Generic::Name)
 			m_objectName = p_subject->getString(this, Systems::Changes::Generic::Name);
@@ -206,14 +206,14 @@ public:
 		printf("Selected object: %s\n", m_objectName.c_str());
 	}
 
-	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
+	const virtual glm::vec3 &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
-		switch(p_changedBits)
-		{
-		case Systems::Changes::Spacial::Position:
-			return m_objectPosition;
-			break;
-		}
+		//switch(p_changedBits)
+		//{
+		//case Systems::Changes::Spacial::Position:
+		//	return m_objectPosition;
+		//	break;
+		//}
 
 		return ObservedSubject::getVec3(p_observer, p_changedBits);
 	}
@@ -247,7 +247,7 @@ public:
 	inline void setForwardKey(std::string &p_string)
 	{
 		m_forwardKey.unbindAll();
-		m_forwardKey.bind(p_string);
+		m_forwardKey.bindByKeyName(p_string);
 	}
 
 	inline void setBackwardKey(Scancode p_key)
@@ -258,7 +258,7 @@ public:
 	inline void setBackwardKey(std::string &p_string)
 	{
 		m_backwardKey.unbindAll();
-		m_backwardKey.bind(p_string);
+		m_backwardKey.bindByKeyName(p_string);
 	}
 
 	inline void setUpKey(Scancode p_key)
@@ -269,7 +269,7 @@ public:
 	inline void setUpKey(std::string &p_string)
 	{
 		m_upKey.unbindAll();
-		m_upKey.bind(p_string);
+		m_upKey.bindByKeyName(p_string);
 	}
 
 	inline void setDownKey(Scancode p_key)
@@ -280,7 +280,7 @@ public:
 	inline void setDownKey(std::string &p_string)
 	{
 		m_downKey.unbindAll();
-		m_downKey.bind(p_string);
+		m_downKey.bindByKeyName(p_string);
 	}
 
 	inline void setLeftKey(Scancode p_key)
@@ -291,7 +291,7 @@ public:
 	inline void setLeftKey(std::string &p_string)
 	{
 		m_leftKey.unbindAll();
-		m_leftKey.bind(p_string);
+		m_leftKey.bindByKeyName(p_string);
 	}
 
 	inline void setRightKey(Scancode p_key)
@@ -302,7 +302,7 @@ public:
 	inline void setRightKey(std::string &p_string)
 	{
 		m_rightKey.unbindAll();
-		m_rightKey.bind(p_string);
+		m_rightKey.bindByKeyName(p_string);
 	}
 
 	inline void setNextKey(Scancode p_key)
@@ -313,7 +313,7 @@ public:
 	inline void setNextKey(std::string &p_string)
 	{
 		m_nextKey.unbindAll();
-		m_nextKey.bind(p_string);
+		m_nextKey.bindByKeyName(p_string);
 	}
 
 	inline void setPreviousKey(Scancode p_key)
@@ -324,7 +324,7 @@ public:
 	inline void setPreviousKey(std::string &p_string)
 	{
 		m_previousKey.unbindAll();
-		m_previousKey.bind(p_string);
+		m_previousKey.bindByKeyName(p_string);
 	}
 
 	inline void setFasterMovementKey(Scancode p_key)
@@ -335,7 +335,7 @@ public:
 	inline void setFasterMovementKey(std::string &p_string)
 	{
 		m_fasterMovementKey.unbindAll();
-		m_fasterMovementKey.bind(p_string);
+		m_fasterMovementKey.bindByKeyName(p_string);
 	}
 
 	inline void setCenterKey(Scancode p_key)
@@ -346,7 +346,7 @@ public:
 	inline void setCenterKey(std::string &p_string)
 	{
 		m_centerKey.unbindAll();
-		m_centerKey.bind(p_string);
+		m_centerKey.bindByKeyName(p_string);
 	}
 
 	inline void setSaveKey(Scancode p_key)
@@ -357,7 +357,7 @@ public:
 	inline void setSaveKey(std::string &p_string)
 	{
 		m_saveKey.unbindAll();
-		m_saveKey.bind(p_string);
+		m_saveKey.bindByKeyName(p_string);
 	}
 
 	inline void setModifierKey(Scancode p_key)
@@ -368,7 +368,7 @@ public:
 	inline void setModifierKey(std::string &p_string)
 	{
 		m_modifierKey.unbindAll();
-		m_modifierKey.bind(p_string);
+		m_modifierKey.bindByKeyName(p_string);
 	}
 
 private:
@@ -389,7 +389,7 @@ private:
 	SystemObject *m_selectedObject;
 
 	std::string m_objectName;
-	Math::Vec3f m_objectPosition;
+	glm::vec3 m_objectPosition;
 
 	size_t m_objectIndex;
 	float m_movementSpeed;

@@ -26,27 +26,37 @@ namespace Properties
 // A version of the "AddVariable" macro, with 3 of the 5 parameters predefined
 #define AddVariablePredef(STRUCT, VAR) AddVariable(VEC_PREDEF, HASH_PREDEF, VEC_PREDEF.size() + OFFSET_PREDEF, STRUCT, VAR)
 
+Config::ComponentVariables	Config::m_componentVar;
 Config::ConfigFileVariables	Config::m_configFileVar;
 Config::EngineVariables		Config::m_engineVar;
 Config::FramebfrVariables	Config::m_framebfrVar;
 Config::GameplayVariables	Config::m_gameplayVar;
 Config::GraphicsVariables	Config::m_graphicsVar;
+Config::GUIVariables		Config::m_GUIVar;
 Config::InputVariables		Config::m_inputVar;
 Config::ModelVariables		Config::m_modelVar;
 Config::ObjectPoolVariables	Config::m_objPoolVar;
 Config::PathsVariables		Config::m_filepathVar;
 Config::RendererVariables	Config::m_rendererVar;
+Config::ScriptVariables		Config::m_scriptVar;
 Config::ShaderVariables		Config::m_shaderVar;
 Config::TextureVariables	Config::m_textureVar;
 Config::WindowVariables		Config::m_windowVar;
 
 std::vector<Config::Variable> Config::m_variables;
-std::unordered_map<std::string, size_t> Config::m_hashTable;
+std::unordered_map<std::string, std::size_t> Config::m_hashTable;
 
 void Config::init()
 {
 	// Add variables and their names to internal containers, so they could be checked / names matched later.
 	// Note: not all the variables are assigned to containers, as some are not meant to be loaded from config file.
+
+	// Component Variables
+	AddVariablePredef(m_componentVar, camera_component_name);
+	AddVariablePredef(m_componentVar, light_component_name);
+	AddVariablePredef(m_componentVar, lua_component_name);
+	AddVariablePredef(m_componentVar, model_component_name);
+	AddVariablePredef(m_componentVar, shader_component_name);
 
 	// Engine variables
 	AddVariablePredef(m_engineVar, change_ctrl_cml_notify_list_reserv);
@@ -55,8 +65,10 @@ void Config::init()
 	AddVariablePredef(m_engineVar, change_ctrl_oneoff_notify_list_reserv);
 	AddVariablePredef(m_engineVar, change_ctrl_subject_list_reserv);
 	AddVariablePredef(m_engineVar, delta_time_divider);
+	AddVariablePredef(m_engineVar, glsl_version);
 	AddVariablePredef(m_engineVar, gl_context_major_version);
 	AddVariablePredef(m_engineVar, gl_context_minor_version);
+	AddVariablePredef(m_engineVar, object_directory_init_pool_size);
 	AddVariablePredef(m_engineVar, smoothing_tick_samples);
 
 	// Frame-buffer variables
@@ -144,7 +156,11 @@ void Config::init()
 	AddVariablePredef(m_graphicsVar, texture_tiling_factor);
 	AddVariablePredef(m_graphicsVar, z_far);
 	AddVariablePredef(m_graphicsVar, z_near);
-	
+
+	// GUI variables
+	AddVariablePredef(m_GUIVar, gui_render);
+	AddVariablePredef(m_GUIVar, gui_dark_style);
+
 	// Input variables
 	AddVariablePredef(m_inputVar, back_key);
 	AddVariablePredef(m_inputVar, backward_editor_key);
@@ -195,6 +211,7 @@ void Config::init()
 	AddVariablePredef(m_modelVar, optimizeGraph);
 
 	// Object pool variables
+	AddVariablePredef(m_objPoolVar, object_pool_size);
 	AddVariablePredef(m_objPoolVar, model_object_pool_size);
 	AddVariablePredef(m_objPoolVar, point_light_pool_size);
 	AddVariablePredef(m_objPoolVar, shader_object_pool_size);
@@ -205,6 +222,7 @@ void Config::init()
 	AddVariablePredef(m_filepathVar, map_path);
 	AddVariablePredef(m_filepathVar, model_path);
 	AddVariablePredef(m_filepathVar, object_path);
+	AddVariablePredef(m_filepathVar, script_path);
 	AddVariablePredef(m_filepathVar, shader_path);
 	AddVariablePredef(m_filepathVar, sound_path);
 	AddVariablePredef(m_filepathVar, texture_path);
@@ -271,6 +289,12 @@ void Config::init()
 	AddVariablePredef(m_rendererVar, shader_pool_size);
 	AddVariablePredef(m_rendererVar, depth_test);
 	AddVariablePredef(m_rendererVar, face_culling);
+
+	// Script variables
+	AddVariablePredef(m_scriptVar, iniFunctionName);
+	AddVariablePredef(m_scriptVar, updateFunctionName);
+	AddVariablePredef(m_scriptVar, createObjectFunctionName);
+	AddVariablePredef(m_scriptVar, userTypeTableName);
 
 	// Shader variables
 	AddVariablePredef(m_shaderVar, atmScatProjMatUniform);
@@ -402,7 +426,7 @@ ErrorCode Config::loadFromFile(const std::string &p_filename)
 			configFile >> singleWord;
 
 			// Match the word in the hash table
-			auto &tableEntry = m_hashTable.find(singleWord);
+			auto tableEntry = m_hashTable.find(singleWord);
 
 			// If match was found
 			if(tableEntry != m_hashTable.end())
@@ -453,7 +477,7 @@ ErrorCode Config::saveToFile(const std::string &p_filename)
 void Config::setVariable(std::string p_name, std::string p_variable)
 {
 	// Match the name in the hash table
-	auto &tableEntry = m_hashTable.find(p_name);
+	auto tableEntry = m_hashTable.find(p_name);
 
 	// If match was found
 	if(tableEntry != m_hashTable.end())

@@ -51,9 +51,9 @@ private:
 		virtual int getInt() = 0;
 		virtual float getFloat() = 0;
 		virtual double getDouble() = 0;
-		virtual Math::Vec2f getVec2f() = 0;
-		virtual Math::Vec3f getVec3f() = 0;
-		virtual Math::Vec4f getVec4f() = 0;
+		virtual glm::vec2 getVec2f() = 0;
+		virtual glm::vec3 getVec3f() = 0;
+		virtual glm::vec4 getVec4f() = 0;
 
 	protected:
 		virtual void setParameter(std::string p_value) = 0;
@@ -86,17 +86,17 @@ private:
 		{
 			return m_value ? 0.0 : 1.0;
 		}
-		inline Math::Vec2f getVec2f()
+		inline glm::vec2 getVec2f()
 		{
-			return m_value ? Math::Vec2f(0.0) : Math::Vec2f(1.0);
+			return m_value ? glm::vec2(0.0) : glm::vec2(1.0);
 		}
-		inline Math::Vec3f getVec3f()
+		inline glm::vec3 getVec3f()
 		{
-			return m_value ? Math::Vec3f(0.0) : Math::Vec3f(1.0);
+			return m_value ? glm::vec3(0.0) : glm::vec3(1.0);
 		}
-		inline Math::Vec4f getVec4f()
+		inline glm::vec4 getVec4f()
 		{
-			return m_value ? Math::Vec4f(0.0) : Math::Vec4f(1.0);
+			return m_value ? glm::vec4(0.0) : glm::vec4(1.0);
 		}
 
 	private:
@@ -135,17 +135,17 @@ private:
 		{
 			return (double) m_value;
 		}
-		inline Math::Vec2f getVec2f()
+		inline glm::vec2 getVec2f()
 		{
-			return Math::Vec2f((float) m_value);
+			return glm::vec2((float) m_value);
 		}
-		inline Math::Vec3f getVec3f()
+		inline glm::vec3 getVec3f()
 		{
-			return Math::Vec3f((float) m_value);
+			return glm::vec3((float) m_value);
 		}
-		inline Math::Vec4f getVec4f()
+		inline glm::vec4 getVec4f()
 		{
-			return Math::Vec4f((float) m_value);
+			return glm::vec4((float) m_value);
 		}
 
 	private:
@@ -184,17 +184,17 @@ private:
 		{
 			return (double) m_value;
 		}
-		inline Math::Vec2f getVec2f()
+		inline glm::vec2 getVec2f()
 		{
-			return Math::Vec2f(m_value);
+			return glm::vec2(m_value);
 		}
-		inline Math::Vec3f getVec3f()
+		inline glm::vec3 getVec3f()
 		{
-			return Math::Vec3f(m_value);
+			return glm::vec3(m_value);
 		}
-		inline Math::Vec4f getVec4f()
+		inline glm::vec4 getVec4f()
 		{
-			return Math::Vec4f(m_value);
+			return glm::vec4(m_value);
 		}
 
 	private:
@@ -233,17 +233,17 @@ private:
 		{
 			return m_value;
 		}
-		inline Math::Vec2f getVec2f()
+		inline glm::vec2 getVec2f()
 		{
-			return Math::Vec2f((float) m_value);
+			return glm::vec2((float) m_value);
 		}
-		inline Math::Vec3f getVec3f()
+		inline glm::vec3 getVec3f()
 		{
-			return Math::Vec3f((float) m_value);
+			return glm::vec3((float) m_value);
 		}
-		inline Math::Vec4f getVec4f()
+		inline glm::vec4 getVec4f()
 		{
-			return Math::Vec4f((float) m_value);
+			return glm::vec4((float) m_value);
 		}
 
 	private:
@@ -282,17 +282,17 @@ private:
 		{
 			return std::atof(m_value.c_str());
 		}
-		inline Math::Vec2f getVec2f()
+		inline glm::vec2 getVec2f()
 		{
-			return Math::Vec2f((float) std::atof(m_value.c_str()));
+			return glm::vec2((float) std::atof(m_value.c_str()));
 		}
-		inline Math::Vec3f getVec3f()
+		inline glm::vec3 getVec3f()
 		{
-			return Math::Vec3f((float) std::atof(m_value.c_str()));
+			return glm::vec3((float) std::atof(m_value.c_str()));
 		}
-		inline Math::Vec4f getVec4f()
+		inline glm::vec4 getVec4f()
 		{
-			return Math::Vec4f((float) std::atof(m_value.c_str()));
+			return glm::vec4((float) std::atof(m_value.c_str()));
 		}
 
 	private:
@@ -331,17 +331,17 @@ private:
 		{
 			return (float) m_value.x;
 		}
-		inline Math::Vec2f getVec2f()
+		inline glm::vec2 getVec2f()
 		{
 			return m_value;
 		}
-		inline Math::Vec3f getVec3f()
+		inline glm::vec3 getVec3f()
 		{
-			return Math::Vec3f(m_value, 0.0f);
+			return glm::vec3(m_value, 0.0f);
 		}
-		inline Math::Vec4f getVec4f()
+		inline glm::vec4 getVec4f()
 		{
-			return Math::Vec4f(m_value, 0.0f, 0.0f);
+			return glm::vec4(m_value, 0.0f, 0.0f);
 		}
 
 	private:
@@ -354,10 +354,10 @@ private:
 			for(; index < p_value.size(); index++)
 				yString += p_value[index];
 
-			m_value = Math::Vec2f((float) std::atof(xString.c_str()), (float) std::atof(yString.c_str()));
+			m_value = glm::vec2((float) std::atof(xString.c_str()), (float) std::atof(yString.c_str()));
 		}
 
-		Math::Vec2f m_value;
+		glm::vec2 m_value;
 	};
 	class Vec3fValue : public BaseValue
 	{
@@ -387,17 +387,17 @@ private:
 		{
 			return (float) m_value.x;
 		}
-		inline Math::Vec2f getVec2f()
+		inline glm::vec2 getVec2f()
 		{
-			return Math::Vec2f(m_value);
+			return glm::vec2(m_value);
 		}
-		inline Math::Vec3f getVec3f()
+		inline glm::vec3 getVec3f()
 		{
 			return m_value;
 		}
-		inline Math::Vec4f getVec4f()
+		inline glm::vec4 getVec4f()
 		{
-			return Math::Vec4f(m_value, 0.0f);
+			return glm::vec4(m_value, 0.0f);
 		}
 
 	private:
@@ -412,12 +412,12 @@ private:
 			for(; index < p_value.size(); index++)
 				zString += p_value[index];
 
-			m_value = Math::Vec3f((float) std::atof(xString.c_str()),
+			m_value = glm::vec3((float) std::atof(xString.c_str()),
 								  (float) std::atof(yString.c_str()),
 								  (float) std::atof(zString.c_str()));
 		}
 
-		Math::Vec3f m_value;
+		glm::vec3 m_value;
 	};
 	class Vec4fValue : public BaseValue
 	{
@@ -447,15 +447,15 @@ private:
 		{
 			return (float) m_value.x;
 		}
-		inline Math::Vec2f getVec2f()
+		inline glm::vec2 getVec2f()
 		{
-			return Math::Vec2f(m_value);
+			return glm::vec2(m_value);
 		}
-		inline Math::Vec3f getVec3f()
+		inline glm::vec3 getVec3f()
 		{
-			return Math::Vec3f(m_value);
+			return glm::vec3(m_value);
 		}
-		inline Math::Vec4f getVec4f()
+		inline glm::vec4 getVec4f()
 		{
 			return m_value;
 		}
@@ -473,13 +473,13 @@ private:
 				zString += p_value[index];	index++;
 			for(; index < p_value.size(); index++)
 				wString += p_value[index];
-			m_value = Math::Vec4f((float) std::atof(xString.c_str()),
+			m_value = glm::vec4((float) std::atof(xString.c_str()),
 								  (float) std::atof(yString.c_str()),
 								  (float) std::atof(zString.c_str()),
 								  (float) std::atof(wString.c_str()));
 		}
 
-		Math::Vec4f m_value;
+		glm::vec4 m_value;
 	};
 	class NullValue : public BaseValue
 	{
@@ -491,9 +491,9 @@ private:
 		inline int getInt() { return 0; }
 		inline float getFloat() { return 0.0f; }
 		inline double getDouble() { return 0.0; }
-		inline Math::Vec2f getVec2f() { return Math::Vec2f(); }
-		inline Math::Vec3f getVec3f() { return Math::Vec3f(); }
-		inline Math::Vec4f getVec4f() { return Math::Vec4f(); }
+		inline glm::vec2 getVec2f() { return glm::vec2(); }
+		inline glm::vec3 getVec3f() { return glm::vec3(); }
+		inline glm::vec4 getVec4f() { return glm::vec4(); }
 
 	protected:
 		inline void setParameter(std::string p_value) { }

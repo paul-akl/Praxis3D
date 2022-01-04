@@ -29,10 +29,10 @@ public:
 		if(m_needsUpdate)
 		{
 			// Update model matrix
-			m_baseObjectData.m_modelMat.identity();
-			m_baseObjectData.m_modelMat.translate(m_baseObjectData.m_position);
-			m_baseObjectData.m_modelMat.rotate(m_baseObjectData.m_rotation);
-			m_baseObjectData.m_modelMat.scale(m_baseObjectData.m_scale);
+			//m_baseObjectData.m_modelMat.identity();
+			//m_baseObjectData.m_modelMat.translate(m_baseObjectData.m_position);
+			//m_baseObjectData.m_modelMat.rotate(m_baseObjectData.m_rotation);
+			//m_baseObjectData.m_modelMat.scale(m_baseObjectData.m_scale);
 
 			// Mark as updated
 			m_needsUpdate = false;
@@ -41,7 +41,7 @@ public:
 
 	virtual ErrorCode loadToVideoMemory()
 	{
-		ErrorCode error;
+		//ErrorCode error;
 
 		// Load shader, check if it loaded successfully
 		//if(!ErrHandlerLoc::get().ifSuccessful(m_shader->loadToVideoMemory(), error))
@@ -54,8 +54,8 @@ public:
 		//}
 
 		// Load all other data by calling parent class; log an error on failure
-		if(!ErrHandlerLoc::get().ifSuccessful(ModelObject::loadToVideoMemory(), error))
-			ErrHandlerLoc::get().log(error);
+		//if(!ErrHandlerLoc::get().ifSuccessful(ModelObject::loadToVideoMemory(), error))
+		//	ErrHandlerLoc::get().log(error);
 
 		return ErrorCode::Success;
 	}

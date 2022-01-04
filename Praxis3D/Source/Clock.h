@@ -98,7 +98,7 @@ public:
 			// Divide ticks per second by 1000 (to get MS instead of seconds) and cast to double
 			m_frequency = double(ticksPerSec.QuadPart) / 1000.0;
 
-			m_tickSamples = 100;// Config::engineVar().smoothing_tick_samples;
+			m_tickSamples = Config::engineVar().smoothing_tick_samples;
 
 			m_tickList = new float[m_tickSamples]();
 

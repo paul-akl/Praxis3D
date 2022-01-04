@@ -5,7 +5,7 @@
 #include "ShaderGraphicsObjects.h"
 
 
-LoadableGraphicsObject::LoadableGraphicsObject(ModelObject *p_modelObject, size_t p_index) :
+LoadableGraphicsObjectOLD::LoadableGraphicsObjectOLD(ModelObject *p_modelObject, size_t p_index) :
 	m_objectType(LoadableObjectType::LoadableObj_ModelObj), m_index(p_index), m_activateAfterLoading(true), m_baseGraphicsObject(p_modelObject)
 {
 	m_objectData.m_modelObject = p_modelObject;
@@ -14,7 +14,7 @@ LoadableGraphicsObject::LoadableGraphicsObject(ModelObject *p_modelObject, size_
 	m_objectID = p_modelObject->getObjectID();
 }
 
-LoadableGraphicsObject::LoadableGraphicsObject(EnvironmentMapObject *p_envMapStatic, size_t p_index) :
+LoadableGraphicsObjectOLD::LoadableGraphicsObjectOLD(EnvironmentMapObject *p_envMapStatic, size_t p_index) :
 	m_objectType(LoadableObjectType::LoadableObj_StaticEnvMap), m_index(p_index), m_activateAfterLoading(true), m_baseGraphicsObject(p_envMapStatic)
 {
 	m_objectData.m_envMapStatic = p_envMapStatic;
@@ -23,7 +23,7 @@ LoadableGraphicsObject::LoadableGraphicsObject(EnvironmentMapObject *p_envMapSta
 	m_objectID = p_envMapStatic->getObjectID();
 }
 
-LoadableGraphicsObject::LoadableGraphicsObject(ShaderModelGraphicsObject *p_shaderModelObject, size_t p_index) :
+LoadableGraphicsObjectOLD::LoadableGraphicsObjectOLD(ShaderModelGraphicsObject *p_shaderModelObject, size_t p_index) :
 	m_objectType(LoadableObjectType::LoadableObj_ShaderObj), m_index(p_index), m_activateAfterLoading(true), m_baseGraphicsObject(p_shaderModelObject)
 {
 	m_objectData.m_shaderModelObject = p_shaderModelObject;
@@ -32,7 +32,7 @@ LoadableGraphicsObject::LoadableGraphicsObject(ShaderModelGraphicsObject *p_shad
 	m_objectID = p_shaderModelObject->getObjectID();
 }
 
-void LoadableGraphicsObject::LoadToMemory()
+void LoadableGraphicsObjectOLD::LoadToMemory()
 {
 	switch(m_objectType)
 	{

@@ -6,9 +6,15 @@
 
 #include "ClockLocator.h"
 #include "Engine.h"
+#include "GUIHandlerLocator.h"
+#include "GUISystem.h"
 #include "ObjectDirectory.h"
+#include "PhysicsSystem.h"
+#include "RendererSystem.h"
+#include "ScriptSystem.h"
 #include "TaskManagerLocator.h"
 #include "WindowLocator.h"
+#include "WorldSystem.h"
 
 int Engine::m_instances = 0;
 
@@ -26,6 +32,11 @@ Engine::~Engine()
 	delete m_taskManager;
 	delete m_errorHandler;
 	delete m_clock;
+
+	// Delete all created systems
+	for(int i = 0; i < Systems::NumberOfSystems; i++)
+		if(m_systems[i]->getSystemType() != Systems::Null)
+			delete m_systems[i];
 }
 
 // Some of the initialization sequences are order sensitive. Do not change the order of calls.
@@ -38,6 +49,71 @@ ErrorCode Engine::init()
 		return ErrorCode::Failure;
 	}
 
+	// Initialize all services and their locators
+	auto servicesError = initServices();
+	if(servicesError != ErrorCode::Success)
+		return servicesError;
+
+	// Initialize all engine systems
+	auto systemsError = initSystems();
+	if(systemsError != ErrorCode::Success)
+		return systemsError;
+
+	//  ___________________________________
+	// |								   |
+	// |	ENGINE STATE INITIALIZATION	   |
+	// |___________________________________|
+	// Initialize the play state, return failure if it wasn't successful
+	if(m_playstate.init(m_taskManager, m_systems) == ErrorCode::Success)
+		m_currentState = &m_playstate;
+	else
+		return ErrorCode::Failure;
+	
+	// If this point is reached, all initializations passed, mark the engine as initialized
+	m_initialized = true;
+
+	return ErrorCode::Success;
+}
+
+void Engine::run()
+{
+	// Make sure the engine is initialized before entering the main loop
+	if(!m_initialized)
+		return;
+
+	// Infinite main loop
+	while(true)
+	{
+		// Update the clock
+		m_clock->update();
+
+		// Handle window and input events
+		m_window->handleEvents();
+
+		// If engine is still running
+		if(Config::engineVar().running == true)
+		{
+			// Call update on the current engine state
+			m_currentState->update(*this);
+
+			// Swap buffers. If v-sync is enabled, this call should halt for appropriate time
+			m_window->swapBuffers();
+		}
+		else
+		{
+			// If engine is not running anymore, break the loop
+			break;
+		}
+	}
+
+	// Call shutdown before returning
+	shutdown();
+}
+
+ErrorCode Engine::initServices()
+{
+	ErrorCode returnError = ErrorCode::Success;
+
 	//  ___________________________________
 	// |								   |
 	// |  SERVICE LOCATORS INITIALIZATION  |
@@ -45,6 +121,7 @@ ErrorCode Engine::init()
 	// Initialize all locators before providing them with real instances
 	ErrHandlerLoc::init();
 	ClockLocator::init();
+	GUIHandlerLocator::init();
 	TaskManagerLocator::init();
 	WindowLocator::init();
 
@@ -55,7 +132,7 @@ ErrorCode Engine::init()
 	// Create and initialize error handler
 	m_errorHandler = new ErrorHandler();
 	ErrorCode errHandlerError = m_errorHandler->init();
-	
+
 	// If error handler was initialized successfully, pass it to the locator, if not, log an error
 	if(errHandlerError == ErrorCode::Success)
 	{
@@ -71,7 +148,7 @@ ErrorCode Engine::init()
 	// Initialize configuration variables
 	Config::init();
 	Config::loadFromFile(Config::configFileVar().config_file);
-	
+
 	//  ___________________________________
 	// |								   |
 	// |	  CLOCK INITIALIZATION		   |
@@ -121,7 +198,7 @@ ErrorCode Engine::init()
 
 	// It falsely gives error 1280, putting a call here clears the error, so it won't trigger anything
 	glGetError();
-		
+
 	// If GLEW failed to initialize, return failure, as the engine would not be able to continue
 	if(glewError != GLEW_OK)
 	{
@@ -147,7 +224,6 @@ ErrorCode Engine::init()
 	else
 		ErrHandlerLoc::get().log(taskMgrError, ErrorSource::Source_Engine);
 
-
 	//  ___________________________________
 	// |								   |
 	// |	  LOADERS INITIALIZATION	   |
@@ -158,7 +234,7 @@ ErrorCode Engine::init()
 	loaderError = Loaders::model().init();
 	if(loaderError != ErrorCode::Success)
 		ErrHandlerLoc::get().log(loaderError, ErrorSource::Source_Engine);
-	
+
 	// Initialize shader loader
 	loaderError = Loaders::shader().init();
 	if(loaderError != ErrorCode::Success)
@@ -181,65 +257,117 @@ ErrorCode Engine::init()
 
 	//  ___________________________________
 	// |								   |
-	// |	ENGINE STATE INITIALIZATION	   |
+	// |  OBJECT DIRECTORY INITIALIZATION  |
 	// |___________________________________|
-	// Initialize the play state, return failure if it wasn't successful
-	if(m_playstate.init(m_taskManager) == ErrorCode::Success)
-		m_currentState = &m_playstate;
-	else
-		return ErrorCode::Failure;
-	
-	// If this point is reached, all initializations passed, mark the engine as initialized
-	m_initialized = true;
-
-	return ErrorCode::Success;
-}
-
-void Engine::run()
-{
-	// Make sure the engine is initialized before entering the main loop
-	if(!m_initialized)
-		return;
-
-	// Infinite main loop
-	while(true)
+	// Initialize the object directory, return failure if it wasn't successful
+	ErrorCode objectDirectoryError = ObjectDirectory::init();
+	if(objectDirectoryError != ErrorCode::Success)
 	{
-		// Update the clock
-		m_clock->update();
-
-		// Handle window and input events
-		m_window->handleEvents();
-
-		// If engine is still running
-		if(Config::engineVar().running == true)
-		{
-			// Call update on the current engine state
-			m_currentState->update(*this);
-
-			// Swap buffers. If v-sync is enabled, this call should halt for appropriate time
-			m_window->swapBuffers();
-		}
-		else
-		{
-			// If engine is not running anymore, break the loop
-			break;
-		}
+		ErrHandlerLoc::get().log(objectDirectoryError, ErrorSource::Source_ObjectDirectory);
+		return objectDirectoryError;
 	}
 
-	// Call shutdown before returning
-	shutdown();
+	//  ___________________________________
+	// |								   |
+	// |	GUI HANDLER INITIALIZATION	   |
+	// |___________________________________|
+	// Initialize GUI handler. Still continue if there's an error, the GUI would just be missing.
+	// The error handler will be responsible for outputting error and asking user if they want to continue in this case.
+	m_GUIHandler = new GUIHandler();
+	ErrorCode guiError = m_GUIHandler->init();
+
+	// Check if gui handler was initialized successfully
+	// If so, register it in GUI Handler locator and Window system
+	// and enable GUI in Window system
+	if(guiError == ErrorCode::Success)
+	{
+		GUIHandlerLocator::provide(m_GUIHandler);
+		m_window->registerGUIHandler(m_GUIHandler);
+		m_window->setEnableGUI(true);
+	}
+	else
+		ErrHandlerLoc::get().log(guiError, ErrorSource::Source_Engine);
+
+	return returnError;
+}
+
+ErrorCode Engine::initSystems()
+{
+	ErrorCode returnError = ErrorCode::Success;
+
+	//  __________________________________
+	// |								  |
+	// |  RENDERER SYSTEM INITIALIZATION  |
+	// |__________________________________|
+	// Create graphics system and check if it was successful (if not, assign a null system in it's place)
+	m_systems[Systems::Graphics] = new RendererSystem();
+	if(m_systems[Systems::Graphics]->init() != ErrorCode::Success)
+	{
+		delete m_systems[Systems::Graphics];
+		m_systems[Systems::Graphics] = &g_nullSystemBase;
+	}
+
+	//  ___________________________________
+	// |								   |
+	// |	 GUI SYSTEM INITIALIZATION	   |
+	// |___________________________________|
+	// Create GUI system and check if it was successful (if not, assign a null system in it's place)
+	m_systems[Systems::GUI] = new GUISystem();
+	if(m_systems[Systems::GUI]->init() != ErrorCode::Success)
+	{
+		delete m_systems[Systems::GUI];
+		m_systems[Systems::GUI] = &g_nullSystemBase;
+	}
+
+	//  ___________________________________
+	// |								   |
+	// |   PHYSICS SYSTEM INITIALIZATION   |
+	// |___________________________________|
+	// Create scripting system and check if it was successful (if not, assign a null system in it's place)
+	m_systems[Systems::Physics] = new PhysicsSystem();
+	if(m_systems[Systems::Physics]->init() != ErrorCode::Success)
+	{
+		delete m_systems[Systems::Physics];
+		m_systems[Systems::Physics] = &g_nullSystemBase;
+	}
+
+	//  ___________________________________
+	// |								   |
+	// |  SCRIPTING SYSTEM INITIALIZATION  |
+	// |___________________________________|
+	// Create scripting system and check if it was successful (if not, assign a null system in it's place)
+	m_systems[Systems::Script] = new ScriptSystem();
+	if(m_systems[Systems::Script]->init() != ErrorCode::Success)
+	{
+		delete m_systems[Systems::Script];
+		m_systems[Systems::Script] = &g_nullSystemBase;
+	}
+
+	//  ___________________________________
+	// |								   |
+	// |	WORLD SYSTEM INITIALIZATION	   |
+	// |___________________________________|
+	// Create scripting system and check if it was successful (if not, assign a null system in it's place)
+	m_systems[Systems::World] = new WorldSystem();
+	if(m_systems[Systems::World]->init() != ErrorCode::Success)
+	{
+		delete m_systems[Systems::World];
+		m_systems[Systems::World] = &g_nullSystemBase;
+	}
+
+	return returnError;
 }
 
 void Engine::shutdown()
 {
+	// Shutdown engine states
+	m_playstate.shutdown();
+
 	// Cancel all the tasks in background threads
 	m_taskManager->cancelBackgroundThreads();
 
 	// Make sure they are canceled, by waiting for them
 	m_taskManager->waitForBackgroundThreads();
-
-	// Shutdown engine states
-	//m_playstate.shutdown();
 
 	// Shutdown the task manager
 	m_taskManager->shutdown();

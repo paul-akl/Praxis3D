@@ -1,0 +1,270 @@
+{
+	"LoadInBackground": "0",
+	"Systems": 
+	{
+		"Graphics": 
+		{
+			"Scene": 
+			{
+				"ModelPoolSize": "30",
+				"ShaderPoolSize": "10",
+				"PointLightPoolSize": "20",
+				"SpotLightPoolSize": "20"
+			},
+			"Objects": 
+			[
+				{
+					"Type": "Camera",
+					"Name": "Camera 1"
+				},
+				{
+					"Type": "DirectionalLight",
+					"Name": "DirectionalLight 1",
+					"Color": "1.0f, 1.0f, 1.0f",
+					"Direction": "0.006461f, -0.707092f, -0.707092f",
+					"Intensity": "10.0f"
+				},
+                {
+                    "AlphaThreshold": "0.0f",
+                    "HeightScale": "0.0f",
+                    "Lighting": "1",
+                    "Materials": {
+                        "Diffuse": [
+                            {
+                                "Filename": "Drywall_AlbedoSmoothness.tif",
+                                "Index": "0"
+                            },
+                            {
+                                "Filename": "Drywall_Albedo.tif",
+                                "Index": "1"
+                            }
+                        ],
+                        "Emissive": [],
+                        "Normal": [
+                            {
+                                "Filename": "DrywallPainted_Normal.tif",
+                                "Index": "0"
+                            },
+                            {
+                                "Filename": "Drywall_Normal.tif",
+                                "Index": "1"
+                            }
+                        ],
+                        "RMHAO": []
+                    },
+                    "Models": {
+                        "Filename": "Workshop_Set.obj"
+                    },
+                    "Name": "drywall_panel",
+                    "OffsetPosition": "0.0f, 0.0f, 0.0f",
+                    "OffsetRotation": "0.0f, 0.0f, 0.0f",
+                    "Position": "0.0f, 0.0f, 0.0f",
+                    "Rotation": "0.0f, 0.0f, 0.0f",
+                    "Scale": "1.0f, 1.0f, 1.0f",
+                    "TextureTilingFactor": "1.0f",
+                    "Type": "ModelObject"
+                },
+				{
+					"Type": "ModelObject",
+					"Name": "Terrain 1",
+					"Position": "0.0f, 50.0f, 0.0f",
+					"Rotation": "270.0f, 0.0f, 0.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "25.0f, 25.0f, 6.0f",
+					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "Workshop_Set.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						[
+							{
+								"Filename": "ground_FreshTilledDirt_2k_alb.tga",
+								"Index": "0"
+							}
+						],
+						"Normal": 
+						[
+							{
+								"Filename": "ground_FreshTilledDirt_2k_nY+.tga",
+								"Index": "0"
+							}
+						],
+						"Emissive": 
+						{
+						},
+						"RMHAO": 
+						[
+							{
+								"Filename": "Ground_SmoothRocks_RMHAO.tga",
+								"Index": "0"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Terrain2",
+					"Position": "-570.0f, 0.0f, 0.0f",
+					"Rotation": "0.0f, 0.0f, 0.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "5.0f, 5.0f, 5.0f",
+					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
+					"TextureTilingFactor": "20.0f",
+					"Models": 
+					{
+						"Filename": "plane.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						[
+							{
+								"Filename": "Metal_CleanPaintedWithChips_2k_alb.tga",
+								"Index": "0"
+							}
+						],
+						"Normal": 
+						[
+							{
+								"Filename": "Metal_CleanPaintedWithChips_2k_n.tga",
+								"Index": "0"
+							}
+						],
+						"Emissive": 
+						{
+						},
+						"RMHAO": 
+						[
+							{
+								"Filename": "Metal_CleanPaintedWithChips_RMHAO3.tga",
+								"Index": "0"
+							}
+						]
+					}
+				},
+				{
+					"Type": "ModelObject",
+					"Name": "Cube 1",
+					"Position": "15.0f, 5.0f, 0.0f",
+					"Rotation": "0.0f, 0.0f, 0.0f",
+					"OffsetPosition": "0.0f, 0.0f, 0.0f",
+					"OffsetRotation": "0.0f, 0.0f, 0.0f",
+					"Scale": "4.0f, 4.0f, 4.0f",
+					"AlphaThreshold": "0.0f",
+					"HeightScale": "0.0f",
+					"Lighting": "1",
+					"TextureTilingFactor": "1.0f",
+					"Models": 
+					{
+						"Filename": "cube.obj"
+					},
+					"Materials": 
+					{
+						"Diffuse": 
+						[
+							{
+								"Filename": "Ground_SmoothRocks_2k_alb.tga",
+								"Index": "1"
+							}
+						],
+						"Normal": 
+						[
+							{
+								"Filename": "Ground_SmoothRocks_2k_n.tga",
+								"Index": "1"
+							}
+						],
+						"Emissive": 
+						{
+						},
+						"RMHAO": 
+						[
+							{
+								"Filename": "Ground_SmoothRocks_RMHAO.tga",
+								"Index": "1"
+							}
+						]
+					}
+				}
+			]
+		},
+		"Scripting": 
+		{
+			"Scene": 
+			{
+			},
+			"Objects": 
+			[
+				{
+					"Type": "FreeCamera",
+					"Name": "Free Camera 1",
+					"Position": "-90.6949f, 7.47164f, 11.0953f",
+					"Angle": "26.727f, -0.14598f",
+					"Speed": "2.0f",
+					"SprintSpeed": "500.0f",
+					"LowerLimit": "0.0f",
+					"UpperLimit": "500000.0f",
+					"Keybindings": 
+					{
+						"ForwardKey": "26",
+						"BackwardKey": "22",
+						"LeftStrafeKey": "4",
+						"RightStrafeKey": "7",
+						"SprintKey": "225"
+					}
+				},
+				{
+					"Type": "DebugUIScript",
+					"Name": "Debug UI Script 1",
+					"Keybindings": 
+					{
+						"DebugCaptureMouseKey": "67",
+						"DebugFullscreenKey": "66",
+						"DebugVertSyncKey": "68",
+						"CloseKey": "41"
+					}
+				},
+				{
+					"Type": "SolarTimeScript",
+					"Name": "Solar Time Script 1",
+					"Hours": "17",
+					"Minutes": "0",
+					"Seconds": "0.0f",
+					"Year": "2018",
+					"Month": "5",
+					"Day": "14",
+					"TimeZone": "3",
+					"Latitude": "54.7f",
+					"Longitude": "25.3f",
+					"TimeMultiplier": "150.0f",
+					"OffsetPosition": "25.0f"
+				}
+			]
+		}
+	},
+	"ObjectLinks": 
+	[
+		{
+			"Subject": "Free Camera 1",
+			"Observer": "Camera 1"
+		},
+		{
+			"Subject": "Free Camera 1",
+			"Observer": "Skybox 1"
+		},
+		{
+			"Subject": "Solar Time Script 1",
+			"Observer": "DirectionalLight 1"
+		}
+	]
+}

@@ -33,7 +33,7 @@ public:
 		std::vector<Scancode>().swap(m_scancodes);
 	}
 
-	void bind(std::string &p_keyName);
+	void bindByKeyName(std::string p_keyName);
 	void bind(Scancode p_scancode);
 	void unbind(Scancode p_scancode);
 	void unbindAll();

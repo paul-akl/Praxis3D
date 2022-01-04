@@ -114,7 +114,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniformMatrix4fv(m_uniformHandle, 1, GL_TRUE, &p_uniformData.m_frameData.m_atmScatProjMatrix.m[0]);
+		glUniformMatrix4fv(m_uniformHandle, 1, GL_TRUE, &p_uniformData.m_frameData.m_atmScatProjMatrix[0][0]);
 	}
 };
 class ModelMatUniform : public BaseUniform
@@ -124,7 +124,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &p_uniformData.m_objectData.m_modelMat.m[0]);
+		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &p_uniformData.m_objectData.m_modelMat[0][0]);
 	}
 };
 class ViewMatUniform : public BaseUniform
@@ -134,7 +134,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &p_uniformData.m_frameData.m_viewMatrix.m[0]);
+		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &p_uniformData.m_frameData.m_viewMatrix[0][0]);
 	}
 };
 class ProjectionMatUniform : public BaseUniform
@@ -144,7 +144,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &p_uniformData.m_frameData.m_projMatrix.m[0]);
+		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &p_uniformData.m_frameData.m_projMatrix[0][0]);
 	}
 };
 class ViewProjectionMatUniform : public BaseUniform
@@ -154,7 +154,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &p_uniformData.m_frameData.m_viewProjMatrix.m[0]);
+		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &p_uniformData.m_frameData.m_viewProjMatrix[0][0]);
 	}
 };
 class ModelViewMatUniform : public BaseUniform
@@ -166,8 +166,8 @@ public:
 	{
 		// TODO
 		// Quick hack, for convenience when testing, should not be used, because it's slow
-		Math::Mat4f modelViewMat = p_uniformData.m_frameData.m_viewMatrix * p_uniformData.m_objectData.m_modelMat;
-		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &modelViewMat.m[0]);
+		glm::mat4 modelViewMat = p_uniformData.m_frameData.m_viewMatrix * p_uniformData.m_objectData.m_modelMat;
+		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &modelViewMat[0][0]);
 	}
 };
 class ModelViewProjectionMatUniform : public BaseUniform
@@ -179,8 +179,8 @@ public:
 	{
 		// TODO
 		// Quick hack, for convenience when testing, should not be used, because it's slow
-		Math::Mat4f MVP = p_uniformData.m_frameData.m_projMatrix * p_uniformData.m_frameData.m_viewMatrix * p_uniformData.m_objectData.m_modelMat;
-		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &MVP.m[0]);
+		glm::mat4 MVP = p_uniformData.m_frameData.m_projMatrix * p_uniformData.m_frameData.m_viewMatrix * p_uniformData.m_objectData.m_modelMat;
+		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &MVP[0][0]);
 		//glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &p_uniformData.m_objectData.m_modelViewProjMatrix.m[0]);
 	}
 };
@@ -193,7 +193,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &p_uniformData.m_frameData.m_transposeViewMatrix.m[0]);
+		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &p_uniformData.m_frameData.m_transposeViewMatrix[0][0]);
 	}
 };
 

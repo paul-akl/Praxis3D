@@ -43,13 +43,13 @@ public:
 		if(m_needsUpdate)
 		{
 			// Update model matrix
-			m_baseObjectData.m_modelMat.identity();
-			m_baseObjectData.m_modelMat.translate(m_baseObjectData.m_position);
+			//m_baseObjectData.m_modelMat.identity();
+			//m_baseObjectData.m_modelMat.translate(m_baseObjectData.m_position);
 			//m_baseObjectData.m_modelMat.rotate(m_baseObjectData.m_rotation);
-			m_baseObjectData.m_modelMat.rotate(Math::Vec3f(0.0f, m_baseObjectData.m_rotation.y, 0.0f));
-			m_baseObjectData.m_modelMat.rotate(Math::Vec3f(m_baseObjectData.m_rotation.x, 0.0f, 0.0f));
-			m_baseObjectData.m_modelMat.rotate(Math::Vec3f(0.0f, 0.0f, -m_baseObjectData.m_rotation.z));
-			m_baseObjectData.m_modelMat.scale(m_baseObjectData.m_scale);
+			//m_baseObjectData.m_modelMat.rotate(glm::vec3(0.0f, m_baseObjectData.m_rotation.y, 0.0f));
+			//m_baseObjectData.m_modelMat.rotate(glm::vec3(m_baseObjectData.m_rotation.x, 0.0f, 0.0f));
+			//m_baseObjectData.m_modelMat.rotate(glm::vec3(0.0f, 0.0f, -m_baseObjectData.m_rotation.z));
+			//m_baseObjectData.m_modelMat.scale(m_baseObjectData.m_scale);
 
 			// Mark as updated
 			m_needsUpdate = false;
@@ -128,39 +128,20 @@ public:
 		setLoadedToMemory(true);
 	}
 
-	// Loads model and materials from memory to video memory; should only be called by renderer thread
-	ErrorCode loadToVideoMemory()
-	{
-		// Error code used for checking the success of loading; it is not returned
-		ErrorCode error = ErrorCode::Success;
-
-		// Load the model to video memory; log an error if it occurs
-		//if(!ErrHandlerLoc::get().ifSuccessful(m_objectData.m_model.loadToVideoMemory(), error))
-		//	ErrHandlerLoc::get().log(error);
-
-		// Iterate over all materials and load them to video memory; log an error if loading failed
-		for(decltype(m_objectData.m_numMaterials) i = 0; i < m_objectData.m_numMaterials; i++)
-			for(int matType = 0; matType < MaterialType_NumOfTypes; matType++)
-				if(!ErrHandlerLoc::get().ifSuccessful(m_objectData.m_materials[matType][i].loadToVideoMemory(), error))
-					ErrHandlerLoc::get().log(error);
-
-		return ErrorCode::Success;
-	}
-
 	// Exports all the data of the object as a PropertySet
 	PropertySet exportObject()
 	{
 		// Create the root property set
 		PropertySet propertySet(Properties::ArrayEntry);
-
+		assert(true);
 		// Add variables
 		propertySet.addProperty(Properties::Type, Properties::ModelObject);
 		propertySet.addProperty(Properties::Name, m_name);
-		propertySet.addProperty(Properties::Position, m_baseObjectData.m_position);
-		propertySet.addProperty(Properties::Rotation, m_baseObjectData.m_rotation);
+		//propertySet.addProperty(Properties::Position, m_baseObjectData.m_position);
+		//propertySet.addProperty(Properties::Rotation, m_baseObjectData.m_rotation);
 		propertySet.addProperty(Properties::OffsetPosition, m_baseObjectData.m_offsetPosition);
 		propertySet.addProperty(Properties::OffsetRotation, m_baseObjectData.m_offsetRotation);
-		propertySet.addProperty(Properties::Scale, m_baseObjectData.m_scale);
+		//propertySet.addProperty(Properties::Scale, m_baseObjectData.m_scale);
 		propertySet.addProperty(Properties::AlphaThreshold, m_baseObjectData.m_alphaThreshold);
 		propertySet.addProperty(Properties::HeightScale, m_baseObjectData.m_heightScale);
 		propertySet.addProperty(Properties::Lighting, m_affectedByLighting);

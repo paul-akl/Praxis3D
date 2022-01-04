@@ -55,7 +55,7 @@ public:
 		// Bind the geometry framebuffer to be used
 		m_renderer.m_backend.getGeometryBuffer()->bindFramebufferForWriting(GeometryBuffer::FramebufferGeometry);
 
-		// Bind all the geometry buffer textures to be drawned to
+		// Bind all the geometry buffer textures to be drawn to
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferPosition);
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferDiffuse);
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferNormal);
@@ -70,20 +70,22 @@ public:
 		auto &geomUniformUpdater = m_shaderGeometry->getUniformUpdater();
 
 		// Iterate over all objects to be rendered with geometry shader
-		for(decltype(p_sceneObjects.m_modelObjects.size()) objIndex = 0, numObjects = p_sceneObjects.m_modelObjects.size(); objIndex < numObjects; objIndex++)
+		for(decltype(p_sceneObjects.m_modelData.size()) objIndex = 0, numObjects = p_sceneObjects.m_modelData.size(); objIndex < numObjects; objIndex++)
 		{
-			m_renderer.queueForDrawing(*p_sceneObjects.m_modelObjects[objIndex],
+			m_renderer.queueForDrawing(p_sceneObjects.m_modelData[objIndex].m_modelData,
 								geomShaderHandle, 
-								geomUniformUpdater, 
+								geomUniformUpdater,
+								p_sceneObjects.m_modelData[objIndex].m_modelMatrix,
 								m_renderer.m_viewProjMatrix);
 		}
 
 		// Iterate over all objects to be rendered with a custom shader
-		for(decltype(p_sceneObjects.m_customShaderObjects.size()) objIndex = 0, numObjects = p_sceneObjects.m_customShaderObjects.size(); objIndex < numObjects; objIndex++)
+		for(decltype(p_sceneObjects.m_modelDataWithShaders.size()) objIndex = 0, numObjects = p_sceneObjects.m_modelDataWithShaders.size(); objIndex < numObjects; objIndex++)
 		{
-			m_renderer.queueForDrawing(*p_sceneObjects.m_customShaderObjects[objIndex],
-				p_sceneObjects.m_customShaderObjects[objIndex]->m_shader->getShaderHandle(),
-				p_sceneObjects.m_customShaderObjects[objIndex]->m_shader->getUniformUpdater(),
+			m_renderer.queueForDrawing(p_sceneObjects.m_modelDataWithShaders[objIndex].m_modelData,
+				p_sceneObjects.m_modelDataWithShaders[objIndex].m_shader->getShaderHandle(),
+				p_sceneObjects.m_modelDataWithShaders[objIndex].m_shader->getUniformUpdater(),
+				p_sceneObjects.m_modelDataWithShaders[objIndex].m_modelMatrix,
 				m_renderer.m_viewProjMatrix);
 		}
 

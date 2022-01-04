@@ -19,6 +19,7 @@ public:
 		m_lensFlareParam.m_haloRadius = Config::graphicsVar().lens_flare_halo_radius;
 		m_lensFlareParam.m_haloThickness = Config::graphicsVar().lens_flare_halo_thickness;
 		m_lensFlareParam.m_haloThreshold = Config::graphicsVar().lens_flare_halo_threshold;
+		//TODO: dynamic aspect ratio
 		m_lensFlareParam.m_haloAspectRatio = 1600.0f / 900.0f;// Config::graphicsVar().lens_flare_aspect_ratio;
 	}
 
@@ -98,8 +99,8 @@ public:
 		glBindTexture(GL_TEXTURE_2D, m_lensFlareGhostGradient.getHandle());
 
 		// Perform various visual effects in the post process shader
-		m_renderer.queueForDrawing(m_lenseFlareShader->getShaderHandle(), m_lenseFlareShader->getUniformUpdater(), p_sceneObjects.m_camera->getBaseObjectData().m_modelMat);
-		m_renderer.passScreenSpaceDrawCommandsToBackend();
+		//m_renderer.queueForDrawing(m_lenseFlareShader->getShaderHandle(), m_lenseFlareShader->getUniformUpdater(), p_sceneObjects.m_camera.m_viewData.m_transformMat);
+		//m_renderer.passScreenSpaceDrawCommandsToBackend();
 
 		p_renderPassData.setBlurInputMap(GeometryBuffer::GBufferDiffuse);
 		p_renderPassData.setBlurOutputMap(GeometryBuffer::GBufferDiffuse);

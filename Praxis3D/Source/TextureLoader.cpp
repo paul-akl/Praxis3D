@@ -77,7 +77,7 @@ TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string &p_file
 	SpinWait::Lock lock(m_mutex);
 
 	// If the filename is empty, or the file itself doesn't exist, return a default texture instead
-	if(p_filename.empty() || !Filesystem::exists(Config::PathsVariables().texture_path + p_filename))
+	if(p_filename.empty() || !Filesystem::exists(Config::filepathVar().texture_path + p_filename))
 	{
 		// If the filename wasn't empty, log an error
 		if(!p_filename.empty())
@@ -188,7 +188,7 @@ TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string &p_file
 	return Texture2DHandle(returnTexture);
 }
 
-TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string & p_filename)
+TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string &p_filename)
 {	
 	Texture2D *returnTexture;
 

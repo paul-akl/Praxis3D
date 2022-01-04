@@ -2,6 +2,8 @@
 
 #include <GL\glew.h>
 
+typedef unsigned int UpdateCount;
+
 enum BindCommandType : unsigned int
 {
 	BindCommandType_Texture,
@@ -25,6 +27,7 @@ enum RenderPassType : unsigned int
 	RenderPassType_LenseFlare,
 	RenderPassType_LenseFlareComposite,
 	RenderPassType_Final,
+	RenderPassType_GUI,
 	RenderPassType_NumOfTypes
 };
 

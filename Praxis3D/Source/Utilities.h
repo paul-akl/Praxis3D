@@ -21,6 +21,12 @@ namespace Utilities
 		stringstream_ret << p_value;
 		return stringstream_ret.str();
 	}
+	static std::string toString(const unsigned __int64 p_value)
+	{
+		std::stringstream stringstream_ret;
+		stringstream_ret << p_value;
+		return stringstream_ret.str();
+	}
 	static std::string toString(const double p_value)
 	{
 		std::stringstream stringstream_ret;
@@ -200,7 +206,7 @@ namespace Utilities
 	}
 
 	// Template std::pair comparator, only compares the first element
-	template <class T1, class T2, class Pred = std::less<T2>>
+	template<class T1, class T2, class Pred = std::less<T2>>
 	struct sort_pair_first 
 	{
 		bool operator()(const std::pair<T1, T2>&left, const std::pair<T1, T2>&right) 
@@ -211,7 +217,7 @@ namespace Utilities
 	};
 
 	// Template std::pair comparator, only compares the second element
-	template <class T1, class T2, class Pred = std::less<T2>>
+	template<class T1, class T2, class Pred = std::less<T2>>
 	struct sort_pair_second 
 	{
 		bool operator()(const std::pair<T1, T2>&left, const std::pair<T1, T2>&right) 
@@ -239,5 +245,19 @@ namespace Utilities
 			return static_cast<Scancode>((int)p_value);
 		else
 			return Scancode::Key_Invalid;
+	}
+
+	// Calculates value with a "1" bit at the given bit position (i.e. bit-shifting "1" by the given number of places)
+	template<class T>
+	T getBitmask(T p_bitShiftPosition)
+	{
+		return ((T)1 << p_bitShiftPosition);
+	}
+
+	// Calculates value with a "1" bit at the given bit position (i.e. bit-shifting "1" by the given number of places)
+	template<class T>
+	T getBitmask(int p_bitShiftPosition)
+	{
+		return ((T)1 << p_bitShiftPosition);
 	}
 }

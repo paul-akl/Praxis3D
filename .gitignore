@@ -1,6 +1,6 @@
 Praxis3D/x64/Debug 64bit/Praxis3D.vcxproj.FileListAbsolute.txt
 
-\.vs/
+\.vs/Praxis3D/v16/ipch/
 VC/
 
 *.dae
@@ -20,3 +20,13 @@ VC/
 *.idb
 *.res
 *.recipe
+*.tiff
+*.db
+*.db-shm
+*.db-wal
+*.opendb
+*.obj
+*.log
+*.pdb
+Builds/x64/Debug/Praxis3D.exp
+Builds/x64/Debug/Praxis3D.lib

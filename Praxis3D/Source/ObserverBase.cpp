@@ -1,14 +1,5 @@
 #include "ObserverBase.h"
 
-const Math::Vec3f ObservedSubject::m_nullVec3 = Math::Vec3f(1.0f);
-const Math::Vec4f ObservedSubject::m_nullVec4 = Math::Vec4f(1.0f);
-const Math::Mat4f ObservedSubject::m_nullMat4 = Math::Mat4f();
-const bool ObservedSubject::m_nullBool = false;
-const int ObservedSubject::m_nullInt = 0;
-const float ObservedSubject::m_nullFloat = 0.0f;
-const double ObservedSubject::m_nullDouble = 0.0;
-const std::string ObservedSubject::m_nullString;
-
 ObservedSubject::ObservedSubject()
 {
 
@@ -19,9 +10,9 @@ ObservedSubject::~ObservedSubject()
 }
 
 // Attach an observer for this subject
-ErrorCode ObservedSubject::attach(Observer *p_observer, unsigned int p_interestedBits, unsigned int p_ID, unsigned int p_shiftBits)
+ErrorCode ObservedSubject::attach(Observer *p_observer, BitMask p_interestedBits, SystemObjectID p_ID, unsigned int p_shiftBits)
 {
-	// If the concurency is enabled, lock the current subject and wait for it to be free
+	// If the concurrency is enabled, lock the current subject and wait for it to be free
 	#if ENABLE_CONCURRENT_SUBJECT_OPERATIONS
 		SpinWait::Lock lock(m_observerListMutex);
 	#endif
@@ -42,7 +33,7 @@ ErrorCode ObservedSubject::detach(Observer *p_observer)
 {
 	ErrorCode returnError = ErrorCode::Failure;
 
-	// If the concurency is enabled, lock the current subject and wait for it to be free
+	// If the concurrency is enabled, lock the current subject and wait for it to be free
 	#if ENABLE_CONCURRENT_SUBJECT_OPERATIONS 
 		SpinWait::Lock lock(m_observerListMutex); 
 	#endif
@@ -61,11 +52,11 @@ ErrorCode ObservedSubject::detach(Observer *p_observer)
 	return returnError;
 }
 
-ErrorCode ObservedSubject::updateInterestBits(Observer *p_observer, unsigned int p_interestedBits)
+ErrorCode ObservedSubject::updateInterestBits(Observer *p_observer, BitMask p_interestedBits)
 {
 	ErrorCode returnError = ErrorCode::Failure;
 
-	// If the concurency is enabled, lock the current subject and wait for it to be free
+	// If the concurrency is enabled, lock the current subject and wait for it to be free
 	#if ENABLE_CONCURRENT_SUBJECT_OPERATIONS
 		SpinWait::Lock lock(m_observerListMutex);
 	#endif
@@ -94,7 +85,7 @@ ErrorCode ObservedSubject::updateInterestBits(Observer *p_observer, unsigned int
 
 	return returnError;
 }
-BitMask ObservedSubject::getID(Observer *p_observer) const
+SystemObjectID ObservedSubject::getID(Observer *p_observer) const
 {
 	// Iterate through all the observers
 	for(ObserverDataList::const_iterator it = m_observerList.begin(); it != m_observerList.end(); it++)
@@ -113,7 +104,7 @@ BitMask ObservedSubject::getID(Observer *p_observer) const
 // NOTE: If concurrent operations are enabled, the implementation of postChanges would need to be changed.
 void ObservedSubject::postChanges(BitMask p_changedBits)
 {
-	// If the concurency is enabled, lock the current subject and wait for it to be free
+	// If the concurrency is enabled, lock the current subject and wait for it to be free
 	#if ENABLE_CONCURRENT_SUBJECT_OPERATIONS
 		SpinWait::Lock lock(m_observerListMutex);
 	#endif
@@ -121,7 +112,7 @@ void ObservedSubject::postChanges(BitMask p_changedBits)
 	// Send the changes to all observers
 	for(ObserverDataList::iterator it = m_observerList.begin(); it != m_observerList.end(); it++)
 	{
-		BitMask changedInterestedBits = getBitsToPost(*it, p_changedBits);
+		const BitMask changedInterestedBits = getBitsToPost(*it, p_changedBits);
 
 		// Check if there are any changes to the data we are interested in
 		if(changedInterestedBits)
@@ -138,7 +129,7 @@ void ObservedSubject::preDestruct()
 	// Thus if it ever gets called concurrently, locking must be added.
 	for(ObserverDataList::iterator it = m_observerList.begin(); it != m_observerList.end(); it++)
 	{
-		it->m_observer->changeOccurred(this, 0);
+		//it->m_observer->changeOccurred(this, 0);
 	}
 
 	m_observerList.clear();
@@ -146,9 +137,9 @@ void ObservedSubject::preDestruct()
 
 namespace Interface
 {
-	inline BitMask getBitsToPost(ObservedSubject::ObserverData &p_observer, BitMask p_changedBits)
+	inline BitMask getBitsToPost(const ObservedSubject::ObserverData &p_observer, BitMask p_changedBits)
 	{
-		BitMask changedInterestedBits = p_observer.m_interestedBits & p_changedBits;
+		const BitMask changedInterestedBits = p_observer.m_interestedBits & p_changedBits;
 
 		return changedInterestedBits;
 	}

@@ -19,11 +19,11 @@ ErrorCode Model::loadToMemory()
 	// If the model is not currently already being loaded in another thread
 	if(!m_isBeingLoaded)
 	{
-		// Lock calls from other treads
-		SpinWait::Lock lock(m_mutex);
-
 		// Make sure another thread doesn't start another instance of loading
 		m_isBeingLoaded = true;
+
+		// Lock calls from other treads
+		SpinWait::Lock lock(m_mutex);
 
 		// To not cause crashes from outside code, since meshes will be modified when loading
 		//m_currentNumMeshes = 0;
@@ -207,41 +207,41 @@ ErrorCode Model::loadMeshes(const aiScene &p_assimpScene)
 				if(verticeIndex == tangentIndex)
 				{
 					// Get vertex positions of the polygon
-					const Math::Vec3f &v0 = m_positions[verticeIndex - 2];
-					const Math::Vec3f &v1 = m_positions[verticeIndex - 1];
-					const Math::Vec3f &v2 = m_positions[verticeIndex - 0];
+					const glm::vec3 &v0 = m_positions[verticeIndex - 2];
+					const glm::vec3 &v1 = m_positions[verticeIndex - 1];
+					const glm::vec3 &v2 = m_positions[verticeIndex - 0];
 
 					// Get texture coordinates of the polygon
-					const Math::Vec2f &uv0 = m_texCoords[verticeIndex - 2];
-					const Math::Vec2f &uv1 = m_texCoords[verticeIndex - 1];
-					const Math::Vec2f &uv2 = m_texCoords[verticeIndex - 0];
+					const glm::vec2 &uv0 = m_texCoords[verticeIndex - 2];
+					const glm::vec2 &uv1 = m_texCoords[verticeIndex - 1];
+					const glm::vec2 &uv2 = m_texCoords[verticeIndex - 0];
 
 					// Get normals of the polygon
-					const Math::Vec3f &n0 = m_normals[verticeIndex - 2];
-					const Math::Vec3f &n1 = m_normals[verticeIndex - 1];
-					const Math::Vec3f &n2 = m_normals[verticeIndex - 0];
+					const glm::vec3 &n0 = m_normals[verticeIndex - 2];
+					const glm::vec3 &n1 = m_normals[verticeIndex - 1];
+					const glm::vec3 &n2 = m_normals[verticeIndex - 0];
 
 					// Calculate position difference
-					Math::Vec3f deltaPos1 = v1 - v0;
-					Math::Vec3f deltaPos2 = v2 - v0;
+					glm::vec3 deltaPos1 = v1 - v0;
+					glm::vec3 deltaPos2 = v2 - v0;
 
 					// Calculate texture coordinate difference
-					Math::Vec2f deltaUV1 = uv1 - uv0;
-					Math::Vec2f deltaUV2 = uv2 - uv0;
+					glm::vec2 deltaUV1 = uv1 - uv0;
+					glm::vec2 deltaUV2 = uv2 - uv0;
 
 					// Calculate tangent and bitangent
 					float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
-					Math::Vec3f tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
-					Math::Vec3f bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
+					glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
+					glm::vec3 bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
 
 					// Orthogonalize using Gram–Schmidt process, to make tangents and bitangents smooth based on normal
-					m_tangents[verticeIndex - 2] = Math::normalize(tangent - n0 * Math::dot(n0, tangent));
-					m_tangents[verticeIndex - 1] = Math::normalize(tangent - n1 * Math::dot(n1, tangent));
-					m_tangents[verticeIndex - 0] = Math::normalize(tangent - n2 * Math::dot(n2, tangent));
+					m_tangents[verticeIndex - 2] = glm::normalize(tangent - n0 * glm::dot(n0, tangent));
+					m_tangents[verticeIndex - 1] = glm::normalize(tangent - n1 * glm::dot(n1, tangent));
+					m_tangents[verticeIndex - 0] = glm::normalize(tangent - n2 * glm::dot(n2, tangent));
 
-					m_bitangents[verticeIndex - 2] = Math::normalize(bitangent - n0 * Math::dot(n0, bitangent));
-					m_bitangents[verticeIndex - 1] = Math::normalize(bitangent - n1 * Math::dot(n1, bitangent));
-					m_bitangents[verticeIndex - 0] = Math::normalize(bitangent - n2 * Math::dot(n2, bitangent));
+					m_bitangents[verticeIndex - 2] = glm::normalize(bitangent - n0 * glm::dot(n0, bitangent));
+					m_bitangents[verticeIndex - 1] = glm::normalize(bitangent - n1 * glm::dot(n1, bitangent));
+					m_bitangents[verticeIndex - 0] = glm::normalize(bitangent - n2 * glm::dot(n2, bitangent));
 
 					tangentIndex += 3;
 				}

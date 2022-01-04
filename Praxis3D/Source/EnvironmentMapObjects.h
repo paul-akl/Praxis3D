@@ -43,7 +43,7 @@ public:
 	{
 		// Create the root property set
 		PropertySet propertySet(Properties::ArrayEntry);
-
+		/*
 		// Add variables
 		propertySet.addProperty(Properties::Type, Properties::EnvironmentMapObject);
 		propertySet.addProperty(Properties::Position, m_baseObjectData.m_position);
@@ -54,7 +54,7 @@ public:
 			auto &materialEntry = propertySet.addPropertySet(Properties::ArrayEntry);
 			materialEntry.addProperty(Properties::Filename, m_cubemap.getFaceFilename(face));
 		}
-
+		*/
 		return propertySet;
 	}
 
@@ -65,14 +65,14 @@ public:
 
 	// Setters
 	inline void setCubemap(const TextureLoaderCubemap::TextureCubemapHandle &p_cubemap) { m_cubemap = p_cubemap; }
-	inline void setPosition(const Math::Vec3f &p_position) { m_baseObjectData.m_position = p_position; }
+	inline void setPosition(const glm::vec3 &p_position) { m_baseObjectData.m_position = p_position; }
 
 	// Getters
 	const inline unsigned int getCubemapHandle() const { return m_cubemap.getHandle(); }
 
 	BitMask getSystemType() { return Systems::Graphics; }
 
-	virtual BitMask getDesiredSystemChanges() { return Systems::Changes::Spacial::All; }
+	virtual BitMask getDesiredSystemChanges() { return Systems::Changes::Spatial::All; }
 	virtual BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
 	
 protected:

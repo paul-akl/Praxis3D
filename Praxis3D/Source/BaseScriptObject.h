@@ -11,11 +11,11 @@ public:
 
 	}
 	
-	BitMask getSystemType() final { return Systems::Scripting; }
+	BitMask getSystemType() final { return Systems::Script; }
 
 	virtual BitMask getDesiredSystemChanges() { return Systems::Changes::None; }
 
-	virtual BitMask getPotentialSystemChanges() { return Systems::Changes::Spacial::All; }
+	virtual BitMask getPotentialSystemChanges() { return Systems::Changes::Spatial::All; }
 
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
 

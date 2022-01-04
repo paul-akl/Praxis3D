@@ -1,4 +1,6 @@
 
+#define TBB_SUPPRESS_DEPRECATED_MESSAGES 1
+
 #include <tbb\tbb.h>
 
 #include "SpinWait.h"

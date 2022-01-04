@@ -1,5 +1,6 @@
 #pragma once
 
+#include <assert.h>
 #include "GraphicsDataSets.h"
 #include "System.h"
 
@@ -45,26 +46,26 @@ public:
 
 	BitMask getSystemType() { return Systems::Graphics; }
 
-	BitMask getDesiredSystemChanges()	{ return Systems::Changes::Spacial::Rotation; }
-	BitMask getPotentialSystemChanges() { return Systems::Changes::Spacial::Rotation; }
+	BitMask getDesiredSystemChanges()	{ return Systems::Changes::Spatial::LocalRotation; }
+	BitMask getPotentialSystemChanges() { return Systems::Changes::Spatial::LocalRotation; }
 
 	// Processes any spacial changes
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
-		if(p_changeType & Systems::Changes::Spacial::Rotation)
+		if(p_changeType & Systems::Changes::Spatial::LocalRotation)
 		{
 			m_lightDataSet.m_direction =
-				p_subject->getVec3(this, Systems::Changes::Spacial::Rotation);
+				p_subject->getVec3(this, Systems::Changes::Spatial::LocalRotation);
 
 			postChanges(p_changeType);
 		}
 	}
 
-	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
+	const virtual glm::vec3 &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		switch(p_changedBits)
 		{
-		case Systems::Changes::Spacial::Rotation:
+		case Systems::Changes::Spatial::LocalRotation:
 			return m_lightDataSet.m_direction;
 			break;
 		}
@@ -78,8 +79,8 @@ public:
 
 	// Setters
 	inline void setActive(bool p_flag)							{ m_active = p_flag;						}
-	inline void setColor(const Math::Vec3f &p_color)			{ m_lightDataSet.m_color = p_color;			}
-	inline void setDirection(const Math::Vec3f &p_direction)	{ m_lightDataSet.m_direction = p_direction; }
+	inline void setColor(const glm::vec3 &p_color)			{ m_lightDataSet.m_color = p_color;			}
+	inline void setDirection(const glm::vec3 &p_direction)	{ m_lightDataSet.m_direction = p_direction; }
 	inline void setIntensity(const float p_intensity)			{ m_lightDataSet.m_intensity = p_intensity; }
 
 private:
@@ -122,33 +123,33 @@ public:
 		propertySet.addProperty(Properties::Color, m_lightDataSet.m_color);
 		propertySet.addProperty(Properties::Intensity, m_lightDataSet.m_intensity);
 		propertySet.addProperty(Properties::OffsetPosition, m_offsetPosition);
-		propertySet.addProperty(Properties::Position, m_lightDataSet.m_position);
+		propertySet.addProperty(Properties::LocalPosition, m_lightDataSet.m_position);
 
 		return propertySet;
 	}
 
 	BitMask getSystemType() { return Systems::Graphics; }
 
-	BitMask getDesiredSystemChanges() { return Systems::Changes::Spacial::Position; }
-	BitMask getPotentialSystemChanges() { return Systems::Changes::Spacial::Position; }
+	BitMask getDesiredSystemChanges() { return Systems::Changes::Spatial::LocalPosition | Systems::Changes::Spatial::WorldPosition; }
+	BitMask getPotentialSystemChanges() { return Systems::Changes::Spatial::LocalPosition | Systems::Changes::Spatial::WorldPosition; }
 
 	// Processes any spacial changes
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
-		if(p_changeType & Systems::Changes::Spacial::Position)
+		if(p_changeType & Systems::Changes::Spatial::LocalPosition)
 		{
 			m_lightDataSet.m_position =
-				p_subject->getVec3(this, Systems::Changes::Spacial::Position) + m_offsetPosition;
+				p_subject->getVec3(this, Systems::Changes::Spatial::LocalPosition) + m_offsetPosition;
 
 			postChanges(p_changeType);
 		}
 	}
 
-	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
+	const virtual glm::vec3 &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		switch(p_changedBits)
 		{
-		case Systems::Changes::Spacial::Position:
+		case Systems::Changes::Spatial::LocalPosition:
 			return m_lightDataSet.m_position;
 			break;
 		}
@@ -159,20 +160,20 @@ public:
 	// Getters
 	const inline bool active() const { return m_active; }
 	const inline PointLightDataSet &getLightDataSet() const { return m_lightDataSet; }
-	const inline Math::Vec3f &getOffsetPosition() const { return m_offsetPosition; }
+	const inline glm::vec3 &getOffsetPosition() const { return m_offsetPosition; }
 
 	// Setters
 	inline void setActive(bool p_flag)								{ m_active = p_flag;							}
-	inline void setColor(const Math::Vec3f &p_color)				{ m_lightDataSet.m_color = p_color;				}
-	inline void setPosition(const Math::Vec3f &p_position)			{ m_lightDataSet.m_position = p_position;		}
-	inline void setAttenuation(const Math::Vec3f &p_attenuation)	{ m_lightDataSet.m_attenuation = p_attenuation;	}
-	inline void setOffsetPosition(const Math::Vec3f &p_position)	{ m_offsetPosition = p_position;				}
+	inline void setColor(const glm::vec3 &p_color)				{ m_lightDataSet.m_color = p_color;				}
+	inline void setPosition(const glm::vec3 &p_position)			{ m_lightDataSet.m_position = p_position;		}
+	inline void setAttenuation(const glm::vec3 &p_attenuation)	{ m_lightDataSet.m_attenuation = p_attenuation;	}
+	inline void setOffsetPosition(const glm::vec3 &p_position)	{ m_offsetPosition = p_position;				}
 	inline void setIntensity(const float p_intensity)				{ m_lightDataSet.m_intensity = p_intensity;		}
 	
 private:
 	PointLightDataSet m_lightDataSet;
 
-	Math::Vec3f m_offsetPosition;
+	glm::vec3 m_offsetPosition;
 
 	bool m_active;
 };
@@ -209,49 +210,49 @@ public:
 		propertySet.addProperty(Properties::Name, m_name);
 		propertySet.addProperty(Properties::Attenuation, m_lightDataSet.m_attenuation);
 		// Make sure to revert the cutoff angle back to degrees
-		propertySet.addProperty(Properties::CutoffAngle, Math::toDegree(acosf(m_lightDataSet.m_cutoffAngle)));
+		//propertySet.addProperty(Properties::CutoffAngle, Math::toDegree(acosf(m_lightDataSet.m_cutoffAngle)));
 		propertySet.addProperty(Properties::Color, m_lightDataSet.m_color);
 		propertySet.addProperty(Properties::Direction, m_lightDataSet.m_direction);
 		propertySet.addProperty(Properties::Intensity, m_lightDataSet.m_intensity);
 		propertySet.addProperty(Properties::OffsetPosition, m_offsetPosition);
 		propertySet.addProperty(Properties::OffsetRotation, m_offsetRotation);
-		propertySet.addProperty(Properties::Position, m_lightDataSet.m_position);
+		propertySet.addProperty(Properties::LocalPosition, m_lightDataSet.m_position);
 
 		return propertySet;
 	}
 
 	BitMask getSystemType() { return Systems::Graphics; }
 
-	BitMask getDesiredSystemChanges() { return Systems::Changes::Spacial::All; }
-	BitMask getPotentialSystemChanges() { return Systems::Changes::Spacial::All; }
+	BitMask getDesiredSystemChanges() { return Systems::Changes::Spatial::All; }
+	BitMask getPotentialSystemChanges() { return Systems::Changes::Spatial::All; }
 
 	// Processes any spacial changes
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
 		BitMask relevantChanges = 0;
-		if(p_changeType & Systems::Changes::Spacial::Position)
+		if(p_changeType & Systems::Changes::Spatial::LocalPosition)
 		{
 			m_lightDataSet.m_position =
-				p_subject->getVec3(this, Systems::Changes::Spacial::Position) + m_offsetPosition;
+				p_subject->getVec3(this, Systems::Changes::Spatial::LocalPosition) + m_offsetPosition;
 
-			relevantChanges |= Systems::Changes::Spacial::Position;
+			relevantChanges |= Systems::Changes::Spatial::LocalPosition;
 		}
 
-		if(p_changeType & Systems::Changes::Spacial::Rotation)
+		if(p_changeType & Systems::Changes::Spatial::LocalRotation)
 		{
 			m_lightDataSet.m_direction =
-				p_subject->getVec3(this, Systems::Changes::Spacial::Rotation) + m_offsetRotation;
+				p_subject->getVec3(this, Systems::Changes::Spatial::LocalRotation) + m_offsetRotation;
 
-			relevantChanges |= Systems::Changes::Spacial::Rotation;
+			relevantChanges |= Systems::Changes::Spatial::LocalRotation;
 		}
 
 		if(relevantChanges)
 			postChanges(relevantChanges);
 	}
 
-	const virtual Math::Vec3f &getVec3(const Observer *p_observer, BitMask p_changedBits) const
+	const virtual glm::vec3 &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
-		switch(p_changedBits)
+		/*switch(p_changedBits)
 		{
 		case Systems::Changes::Spacial::Position:
 			return m_lightDataSet.m_position;
@@ -259,32 +260,32 @@ public:
 		case Systems::Changes::Spacial::Rotation:
 			return m_lightDataSet.m_direction;
 			break;
-		}
-
+		}*/
+		assert(true);
 		return ObservedSubject::getVec3(p_observer, p_changedBits);
 	}
 
 	// Getters
 	const inline bool active() const { return m_active; }
 	const inline SpotLightDataSet &getLightDataSet() const { return m_lightDataSet; }
-	const inline Math::Vec3f &getOffsetPosition() const { return m_offsetPosition; }
-	const inline Math::Vec3f &getOffsetRotation() const { return m_offsetRotation; }
+	const inline glm::vec3 &getOffsetPosition() const { return m_offsetPosition; }
+	const inline glm::vec3 &getOffsetRotation() const { return m_offsetRotation; }
 
 	// Setters
 	inline void setActive(bool p_flag)								{ m_active = p_flag;							}
-	inline void setColor(const Math::Vec3f &p_color)				{ m_lightDataSet.m_color = p_color;				}
-	inline void setPosition(const Math::Vec3f &p_position)			{ m_lightDataSet.m_position = p_position;		}
-	inline void setDirection(const Math::Vec3f &p_direction)		{ m_lightDataSet.m_direction = p_direction;		}
-	inline void setAttenuation(const Math::Vec3f &p_attenuation)	{ m_lightDataSet.m_attenuation = p_attenuation; }
-	inline void setOffsetPosition(const Math::Vec3f &p_position)	{ m_offsetPosition = p_position;				}
-	inline void setOffsetRotation(const Math::Vec3f &p_rotation)	{ m_offsetRotation = p_rotation;				}
+	inline void setColor(const glm::vec3 &p_color)				{ m_lightDataSet.m_color = p_color;				}
+	inline void setPosition(const glm::vec3 &p_position)			{ m_lightDataSet.m_position = p_position;		}
+	inline void setDirection(const glm::vec3 &p_direction)		{ m_lightDataSet.m_direction = p_direction;		}
+	inline void setAttenuation(const glm::vec3 &p_attenuation)	{ m_lightDataSet.m_attenuation = p_attenuation; }
+	inline void setOffsetPosition(const glm::vec3 &p_position)	{ m_offsetPosition = p_position;				}
+	inline void setOffsetRotation(const glm::vec3 &p_rotation)	{ m_offsetRotation = p_rotation;				}
 	inline void setCutoffAngle(const float p_cutoffAngle)			{ m_lightDataSet.m_cutoffAngle = p_cutoffAngle; }
 	inline void setIntensity(const float p_intensity)				{ m_lightDataSet.m_intensity = p_intensity;		}
 
 private:
 	SpotLightDataSet m_lightDataSet;
 
-	Math::Vec3f m_offsetPosition,
+	glm::vec3 m_offsetPosition,
 				m_offsetRotation;
 
 	bool m_active;

@@ -131,11 +131,11 @@ class DeferredRendererState : public RendererState
 public:
 	~DeferredRendererState() { }
 
-	const virtual Math::Vec3f getFogColor()				const { return Math::Vec3f(Config::graphicsVar().fog_color_x, Config::graphicsVar().fog_color_y, Config::graphicsVar().fog_color_z); }
+	const virtual glm::vec3 getFogColor()				const { return glm::vec3(Config::graphicsVar().fog_color_x, Config::graphicsVar().fog_color_y, Config::graphicsVar().fog_color_z); }
 	const virtual float getFogDensity()					const { return Config::graphicsVar().fog_density; }
 
-	const virtual Math::Vec3f &getDirLightColor()		const { return m_deferredRenderer->m_directionalLight.m_color;		}
-	const virtual Math::Vec3f &getDirLightDirection()	const { return m_deferredRenderer->m_directionalLight.m_direction;	}
+	const virtual glm::vec3 &getDirLightColor()		const { return m_deferredRenderer->m_directionalLight.m_color;		}
+	const virtual glm::vec3 &getDirLightDirection()	const { return m_deferredRenderer->m_directionalLight.m_direction;	}
 	const virtual float getDirLightintensity()			const { return m_deferredRenderer->m_directionalLight.m_intensity;	}
 	const virtual unsigned int getNumPointLights()		const { return (unsigned int)m_deferredRenderer->m_numPointLights;	}
 	const virtual unsigned int getNumSpotLights()		const { return (unsigned int)m_deferredRenderer->m_numSpotLights;	}

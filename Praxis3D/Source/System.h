@@ -1,5 +1,8 @@
 #pragma once
 
+// uncomment to disable assert()
+// #define NDEBUG
+#include <assert.h>
 #include <string>
 
 #include "Config.h"
@@ -10,6 +13,16 @@ class SceneLoader;
 class SystemObject;
 class SystemScene;
 class SystemTask;
+
+class ImportExportObject
+{
+public:
+	// Imports all the data of the object from a PropertySet
+	virtual ErrorCode importObject(const PropertySet &p_properties) { return ErrorCode::Success; }
+
+	// Exports all the data of the object as a PropertySet (for example, used for saving to map file)
+	virtual PropertySet exportObject() { return PropertySet(Properties::Null); }
+};
 
 class SystemBase
 {
@@ -23,7 +36,7 @@ public:
 	virtual ErrorCode setup(const PropertySet &p_properties) = 0;
 
 	virtual Systems::TypeID getSystemType() = 0;
-	virtual std::string getName() = 0;
+	virtual std::string getName() { return m_systemName; }
 
 	// Passes scene loader as argument so that scenes could have access to other system scenes 
 	// that are register with this scene loader
@@ -34,6 +47,7 @@ public:
 	virtual void loadInBackground() = 0;
 	
 protected:
+	std::string m_systemName;
 	bool m_initialized;
 };
 
@@ -75,34 +89,36 @@ protected:
 	SceneLoader *m_sceneLoader;
 };
 
-class SystemObject : public ObservedSubject, public Observer
+class SystemObject : public ObservedSubject, public Observer, public ImportExportObject
 {
 	friend SystemBase;
 	friend SystemScene;
 public:
 	SystemObject();
 	SystemObject(SystemScene *p_systemScene, const std::string &p_name, Properties::PropertyID p_objectType);
+	~SystemObject();
 
-	virtual ErrorCode init() = 0;
+	virtual ErrorCode init() { return ErrorCode::Success; };
 
-	virtual void loadToMemory() = 0;
+	virtual void loadToMemory() { };
 
 	virtual BitMask getSystemType() = 0;
 
-	virtual void update(const float p_deltaTime) = 0;
+	virtual void update(const float p_deltaTime) { };
 
 	virtual BitMask getDesiredSystemChanges() = 0;
 
-	// Exports all the data of the object as a PropertySet (for example, used for saving to map file)
-	virtual PropertySet exportObject() { return PropertySet(Properties::Null); }
+	// Is the object active (i.e. should be drawn, updated, etc...)
+	const inline bool isObjectActive() const { return m_active; }
 
 	// Getters
-	inline size_t getObjectID() const					{ return m_ID;			}
-	inline void *getParent() const						{ return m_parent;		}
-	inline bool isInitialized() const					{ return m_initialized; }
-	const inline std::string &getName() const			{ return m_name;		}
-	inline SystemScene *getSystemScene() const			{ return m_systemScene; }
-	inline Properties::PropertyID getObjectType() const { return m_objectType;	}
+	inline std::size_t getObjectID() const				{ return m_objectID;		}
+	inline void *getParent() const						{ return m_parent;			}
+	inline bool isInitialized() const					{ return m_initialized;		}
+	inline bool isUpdateNeeded() const					{ return m_updateNeeded;	}
+	const inline std::string &getName() const			{ return m_name;			}
+	inline SystemScene *getSystemScene() const			{ return m_systemScene;		}
+	inline Properties::PropertyID getObjectType() const { return m_objectType;		}
 	const virtual std::string &getString(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		switch(p_changedBits)
@@ -119,6 +135,7 @@ public:
 	inline void setName(std::string p_name)								 { m_name = p_name;					}
 	inline void setSystemScene(SystemScene *p_systemScene)				 { m_systemScene = p_systemScene;	}
 	inline void setObjectType(const Properties::PropertyID p_objectType) { m_objectType = p_objectType;		}
+	inline void setActive(const bool p_isActive)						 { m_active = p_isActive;			}
 
 	// Bool operator; returns true if the system object is not null (i.e. valid derived object)
 	// Implemented to allow requested objects to be checked if valid and ability to return 
@@ -126,19 +143,26 @@ public:
 	virtual operator bool() const { return false; }
 
 	// Comparator operator; uses object ID to determine if the object is the same
-	bool operator==(const SystemObject& p_systemObject) const { return m_ID == p_systemObject.m_ID ? true : false; }
+	bool operator==(const SystemObject &p_systemObject) const { return m_objectID == p_systemObject.m_objectID ? true : false; }
 
 protected:
+	inline void setUpdateNeeded(bool p_updateNeeded) { m_updateNeeded = p_updateNeeded; }
+
+	// Sets the 'update needed' flag to false
+	inline void updatePerformed() { setUpdateNeeded(false); }
+
 	Properties::PropertyID m_objectType;
 
 	void *m_parent;
 	bool m_initialized;
+	bool m_active;
+	bool m_updateNeeded;
 
 	std::string m_name;
 	SystemScene *m_systemScene;
 
 private:
-	size_t m_ID;
+	std::size_t m_objectID;
 };
 
 class SystemTask

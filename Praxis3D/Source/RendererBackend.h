@@ -742,7 +742,7 @@ protected:
 				// Check for linking errors. If an error has occurred, get the error message and throw an exception
 				glGetProgramiv(p_command.m_handle, GL_LINK_STATUS, &shaderLinkingResult);
 
-				// If shader loading was successfull
+				// If shader loading was successful
 				if(shaderLinkingResult)
 				{
 

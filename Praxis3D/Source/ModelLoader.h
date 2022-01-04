@@ -84,6 +84,7 @@ public:
 
 	Model(LoaderBase<ModelLoader, Model> *p_loaderBase, std::string p_filename, size_t p_uniqueID, unsigned int p_handle) : UniqueObject(p_loaderBase, p_uniqueID, p_filename), m_handle(p_handle)
 	{
+		m_loadedToVideoMemory = false;
 		m_isBeingLoaded = false;
 
 		m_currentNumMeshes = 0;
@@ -112,21 +113,8 @@ public:
 	ErrorCode loadTextures(aiTexture **p_assimpTextures, size_t p_numTextures);
 
 	inline MaterialArrays &getMaterialArrays() { return m_materials; }
+
 	// Returns an array of pointers to buffer data
-	/*const inline void **getData()
-	{
-		void **data = nullptr;
-		//const void *data[ModelBuffer_Index + 1];
-
-		data[ModelBuffer_Position]		= &m_positions[0];
-		data[ModelBuffer_Normal]		= &m_normals[0];
-		data[ModelBuffer_TexCoord]		= &m_texCoords[0];
-		data[ModelBuffer_Tangents]		= &m_tangents[0];
-		data[ModelBuffer_Bitangents]	= &m_bitangents[0];
-		data[ModelBuffer_Index]			= &m_indices[0];
-
-		return (const void**)data;
-	}*/
 	const inline void **getData()
 	{
 		const void **data = new const void*[ModelBuffer_Index + 1];
@@ -149,11 +137,11 @@ public:
 	std::vector<Mesh> m_meshPool;
 	
 	std::vector<unsigned int> m_indices;
-	std::vector<Math::Vec3f> m_positions;
-	std::vector<Math::Vec3f> m_normals;
-	std::vector<Math::Vec2f> m_texCoords;
-	std::vector<Math::Vec3f> m_tangents;
-	std::vector<Math::Vec3f> m_bitangents;
+	std::vector<glm::vec3> m_positions;
+	std::vector<glm::vec3> m_normals;
+	std::vector<glm::vec2> m_texCoords;
+	std::vector<glm::vec3> m_tangents;
+	std::vector<glm::vec3> m_bitangents;
 	
 	MaterialArrays m_materials;
 
@@ -182,7 +170,7 @@ public:
 
 	// Wrapper class for a model, to provide data needed for rendering, without exposing the
 	// private variables. Two ways of iterating over data: using subscription operator, or checking
-	// nextMeshPresent with calling operator++ in between and using getters to retrieve data.
+	// nextMeshPresent with calling operator++ in-between and using getters to retrieve data.
 	class MeshIterator
 	{
 		friend class ModelHandle;
@@ -237,8 +225,9 @@ public:
 		{
 			ErrorCode returnError = ErrorCode::Success;
 
-			// If it's not loaded to memory already, call load
-			if(!m_model->isLoadedToMemory())
+			//TODO: wait for the object to load, if it is currently being loaded
+			// If it's not loaded to memory already and is not currently being loaded, call load
+			if(!m_model->isLoadedToMemory() && !m_model->isBeingLoaded())
 			{
 				returnError = m_model->loadToMemory();
 
@@ -264,16 +253,20 @@ public:
 		const inline Model::Mesh &operator[] (size_t p_index) const { return m_model->m_meshPool[p_index]; }
 		
 		// Getters
-		inline Model::MaterialArrays &getMaterialArrays() const		{ return m_model->getMaterialArrays();	}
-		inline const std::vector<Model::Mesh> getMeshArray() const	{ return m_model->m_meshPool;			}
-		inline size_t getNumMeshes() const							{ return m_model->m_numMeshes;			}
-		inline MeshIterator getMeshIterator() const					{ return MeshIterator(*m_model);		}
-		inline const size_t getMeshSize() const						{ return m_model->m_numMeshes;			}
-		inline unsigned int getHandle() const						{ return m_model->m_handle;				}
-		inline std::string getFilename() const						{ return m_model->m_filename;			}
-		
+		inline Model::MaterialArrays &getMaterialArrays() const		{ return m_model->getMaterialArrays();		}
+		inline const std::vector<Model::Mesh> &getMeshArray() const	{ return m_model->m_meshPool;				}
+		inline size_t getNumMeshes() const							{ return m_model->m_numMeshes;				}
+		inline MeshIterator getMeshIterator() const					{ return MeshIterator(*m_model);			}
+		inline const size_t getMeshSize() const						{ return m_model->m_numMeshes;				}
+		inline unsigned int getHandle() const						{ return m_model->m_handle;					}
+		inline std::string getFilename() const						{ return m_model->m_filename;				}
+		inline const bool isLoadedToMemory() const					{ return m_model->isLoadedToMemory();		}
+		inline const bool isLoadedToVideoMemory() const				{ return m_model->isLoadedToVideoMemory();	}
+
 	private:
 		ModelHandle(Model &p_model) : m_model(&p_model) { m_model->incRefCounter(); }
+
+		void setLoadedToVideoMemory(bool p_loaded) { m_model->m_loadedToVideoMemory = p_loaded; }
 
 		Model *m_model;
 	};

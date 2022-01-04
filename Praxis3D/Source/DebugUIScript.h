@@ -96,7 +96,7 @@ public:
 		if(m_mouseCaptureCommand.isActivated())
 		{
 			// Toggle the mouse capture mode
-			WindowLocator().get().setMouseCapture(!Config::windowVar().mouse_captured);
+			WindowLocator::get().setMouseCapture(!Config::windowVar().mouse_captured);
 
 			// Deactivate the key command so this piece of code is not triggered again if the key wasn't released
 			m_mouseCaptureCommand.deactivate();
@@ -105,7 +105,7 @@ public:
 		if(m_vertSyncCommand.isActivated())
 		{
 			// Toggle the vertical synchronization
-			WindowLocator().get().setVerticalSync(!Config::windowVar().vertical_sync);
+			WindowLocator::get().setVerticalSync(!Config::windowVar().vertical_sync);
 
 			// Deactivate the key command so this piece of code is not triggered again if the key wasn't released
 			m_vertSyncCommand.deactivate();
@@ -131,7 +131,7 @@ public:
 	inline void setMouseCaptureKey(std::string &p_string)
 	{
 		m_mouseCaptureCommand.unbindAll();
-		m_mouseCaptureCommand.bind(p_string);
+		m_mouseCaptureCommand.bindByKeyName(p_string);
 	}
 
 	inline void setFullscreenKey(Scancode p_key)
@@ -142,7 +142,7 @@ public:
 	inline void setFullscreenKey(std::string &p_string)
 	{
 		m_fullscreenCommand.unbindAll();
-		m_fullscreenCommand.bind(p_string);
+		m_fullscreenCommand.bindByKeyName(p_string);
 	}
 
 	inline void setVerticalSyncKey(Scancode p_key)
@@ -153,7 +153,7 @@ public:
 	inline void setVerticalSyncKey(std::string &p_string)
 	{
 		m_vertSyncCommand.unbindAll();
-		m_vertSyncCommand.bind(p_string);
+		m_vertSyncCommand.bindByKeyName(p_string);
 	}
 
 	inline void setCloseWindowKey(Scancode p_key)
@@ -164,7 +164,7 @@ public:
 	inline void setCloseWindowKey(std::string &p_string)
 	{
 		m_closeWindowCommand.unbindAll();
-		m_closeWindowCommand.bind(p_string);
+		m_closeWindowCommand.bindByKeyName(p_string);
 	}
 	
 protected:

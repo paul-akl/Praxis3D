@@ -2,7 +2,7 @@
 #include "KeyCommand.h"
 #include "WindowLocator.h"
 
-void KeyCommand::bind(std::string &p_keyName)
+void KeyCommand::bindByKeyName(std::string p_keyName)
 {
 	// Get the scancode by the key name, and call bind
 	bind(WindowLocator::get().getScancode(p_keyName));

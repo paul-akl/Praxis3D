@@ -88,7 +88,6 @@ ShaderLoader::ShaderProgram *ShaderLoader::load(const PropertySet &p_properties)
 
 		if(numberOfShaders > 0)
 		{
-
 			// If program name was not specified, combine all shader names into one program name
 			if(programName.empty())
 			{

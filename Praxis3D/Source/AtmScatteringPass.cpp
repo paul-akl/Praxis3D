@@ -120,7 +120,7 @@ void AtmScatteringPass::InitModel()
 		whitePointB /= whitePointAvg;
 	}
 
-	m_atmScatteringParam.m_whitePoint = Math::Vec3f((float)whitePointR, (float)whitePointG, (float)whitePointB);
+	m_atmScatteringParam.m_whitePoint = glm::vec3((float)whitePointR, (float)whitePointG, (float)whitePointB);
 
 	/*
 	<p>Then, it creates and compiles the vertex and fragment shaders used to render

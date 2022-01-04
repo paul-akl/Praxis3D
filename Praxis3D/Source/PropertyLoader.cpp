@@ -354,7 +354,7 @@ void PropertyLoader::loadProperty(PropertySet &p_propertySet, const Properties::
 		for(; index < size; index++)
 			wString += p_string[index];
 
-		p_propertySet.addProperty(p_propID, Math::Vec4f(std::stof(xString), std::stof(yString), 
+		p_propertySet.addProperty(p_propID, glm::vec4(std::stof(xString), std::stof(yString), 
 														std::stof(zString), std::stof(wString)) );
 		return;
 	}
@@ -376,7 +376,7 @@ void PropertyLoader::loadProperty(PropertySet &p_propertySet, const Properties::
 		for(; index < size; index++)
 			zString += p_string[index];
 
-		p_propertySet.addProperty(p_propID, Math::Vec3f(std::stof(xString), std::stof(yString), std::stof(zString)));
+		p_propertySet.addProperty(p_propID, glm::vec3(std::stof(xString), std::stof(yString), std::stof(zString)));
 		return;
 	}
 
@@ -395,7 +395,7 @@ void PropertyLoader::loadProperty(PropertySet &p_propertySet, const Properties::
 		for(; index < size; index++)
 			yString += p_string[index];
 
-		p_propertySet.addProperty(p_propID, Math::Vec2f(std::stof(xString), std::stof(yString)));
+		p_propertySet.addProperty(p_propID, glm::vec2(std::stof(xString), std::stof(yString)));
 		return;
 	}
 

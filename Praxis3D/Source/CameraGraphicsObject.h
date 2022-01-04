@@ -17,13 +17,13 @@ public:
 		: BaseGraphicsObject(p_systemScene, p_name, Properties::Camera)
 	{
 		// Assign camera position
-		m_baseObjectData.m_position = Math::Vec3f(0.0f, 0.0f, 0.0f);
+		m_baseObjectData.m_position = glm::vec3(0.0f, 0.0f, 0.0f);
 
 		// Assign the target vector
-		m_baseObjectData.m_rotation = Math::Vec3f(1.0f, 1.0f, 1.0f);
+		m_baseObjectData.m_rotation = glm::vec3(1.0f, 1.0f, 1.0f);
 
 		// Assign the up vector
-		m_baseObjectData.m_scale = Math::Vec3f(0.0f, 1.0f, 0.0f);
+		m_baseObjectData.m_scale = glm::vec3(0.0f, 1.0f, 0.0f);
 	}
 	virtual ~CameraObject() { }
 
@@ -58,5 +58,5 @@ public:
 	//virtual BitMask getDesiredSystemChanges() { return Systems::Changes::Spacial::ModelMatrix; }
 	
 protected:
-	Math::Vec2f m_cameraAngle;
+	glm::vec2 m_cameraAngle;
 };

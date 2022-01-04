@@ -61,7 +61,7 @@ void TaskScheduler::execute(float p_deltaTime)
 	if(m_multithreadingEnabled)
 	{
 		// Create temp containers to hold current tasks (to execute in this time-step)
-		SystemTask *tasksToExecute[Systems::Types::Max];
+		SystemTask *tasksToExecute[Systems::TypeID::NumberOfSystems];
 		unsigned int numTasksToExecute = 0;
 
 		// Iterate over all the system scenes and get their tasks
