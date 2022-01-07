@@ -267,7 +267,7 @@ public:
 	inline void setForwardKey(std::string &p_string)
 	{
 		m_forwardKey.unbindAll();
-		m_forwardKey.bindByKeyName(p_string);
+		m_forwardKey.bind(p_string);
 	}
 	
 	// PSA Sun position algorithm

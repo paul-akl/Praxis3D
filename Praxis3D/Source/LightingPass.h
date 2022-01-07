@@ -94,7 +94,7 @@ public:
 		m_renderer.passUpdateCommandsToBackend();
 
 		// Queue the screen space triangle, using lighting shader, to be drawn
-		m_renderer.queueForDrawing(m_shaderLightPass->getShaderHandle(), m_shaderLightPass->getUniformUpdater(), p_sceneObjects.m_camera.m_viewData.m_transformMat);
+		m_renderer.queueForDrawing(m_shaderLightPass->getShaderHandle(), m_shaderLightPass->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat);
 
 		// Pass the draw command so it is executed
 		m_renderer.passScreenSpaceDrawCommandsToBackend();

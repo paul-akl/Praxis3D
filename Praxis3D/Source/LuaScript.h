@@ -4,9 +4,12 @@
 
 #include "EnumFactory.h"
 #include "ErrorHandlerLocator.h"
+#include "GUIDataManager.h"
+#include "GUIHandler.h"
 #include "SpatialDataManager.h"
 #include "WindowLocator.h"
 
+#include <functional>
 #include <sol/sol.hpp>
 
 namespace LuaDefinitions
@@ -42,13 +45,15 @@ namespace LuaDefinitions
 class LuaScript
 {
 public:
-	LuaScript(SpatialDataManager &p_spatialData) : m_spatialData(p_spatialData)
+	LuaScript(SpatialDataManager &p_spatialData, GUIDataManager &p_GUIData) : m_spatialData(p_spatialData), m_GUIData(p_GUIData)
 	{ 
 		m_keyCommands.reserve(10);
+		m_currentChanges = Systems::Changes::None;
 	}
-	LuaScript(SpatialDataManager &p_spatialData, std::string &p_scriptFilename) : m_spatialData(p_spatialData), m_luaScriptFilename(p_scriptFilename)
+	LuaScript(SpatialDataManager &p_spatialData, GUIDataManager &p_GUIData, std::string &p_scriptFilename) : m_spatialData(p_spatialData), m_GUIData(p_GUIData), m_luaScriptFilename(p_scriptFilename)
 	{
 		m_keyCommands.reserve(10);
+		m_currentChanges = Systems::Changes::None;
 	}
 	~LuaScript() 
 	{
@@ -88,55 +93,101 @@ public:
 
 	inline void update(const float p_deltaTime)
 	{
+		// Clear changes from the last update
+		clearChanges();
+
+		// Clear all the GUI functors from the last update
+		m_GUIData.clearFunctors();
+
+		// Call update function in the lua script
 		m_luaUpdate(p_deltaTime);
+
+		// Add spatial changes to the current changes, because they are tracked separately
+		m_currentChanges += m_spatialData.getCurrentChanges();
+
+		// Add GUI changes to the current changes, because they are tracked separately
+		m_currentChanges += m_GUIData.getCurrentChanges();
 	}
 
+	// Clears the currently registered changes. They are also cleared at the beginning of each update call
+	inline void clearChanges() { m_currentChanges = Systems::Changes::None; }
+
+	// Set the filename of the script that should be loaded
 	inline void setScriptFilename(std::string &p_filename) { m_luaScriptFilename = p_filename; }
 
+	// Get sequences of function calls so that they can be passed to other objects and executed later
+	// They are also cleared at the beginning of each update call, so a copy must be made if there are intentions to store them for later
+	inline const Functors &getFunctors() { return m_GUIData.getGUIData().m_functors; }
+
+	// Get changes since the last update (or the last clearChanges call)
+	inline BitMask getChanges() const { return m_currentChanges; }
+	inline BitMask getChangesAndClear() 
+	{ 
+		return m_currentChanges; 
+		clearChanges();
+	}
+
 private:
+	// Sets lua tables with various definitions and values
 	void setDefinitions()
 	{
-		//m_userTypes[sol::update_if_empty]["TEST"] = 25;
-		//m_luaState[sol::update_if_empty]["UserTypes"]["TEST"] = 25;
-		//m_userTypes.create_with("TEST", 25);
-		//m_luaState.create_table_with("TEST", 25);
-		//m_luaState[sol::update_if_empty]["TEST"] = 25;
-
 		// Create a table for user types that are supported by Lua scripts
-		m_userTypes = m_luaState[Config::scriptVar().userTypeTableName].get_or_create<sol::table>();
+		m_userTypesTable = m_luaState[Config::scriptVar().userTypeTableName].get_or_create<sol::table>();
 
 		// Add each object type to the user type table
 		for(int i = 0; i < LuaDefinitions::UserTypes::NumOfTypes; i++)
-			m_userTypes[sol::update_if_empty][GetString(static_cast<LuaDefinitions::UserTypes>(i))] = i;
+			m_userTypesTable[sol::update_if_empty][GetString(static_cast<LuaDefinitions::UserTypes>(i))] = i;
+
+		// Create a table for different types of changes
+		m_changeTypesTable = m_luaState["Changes"].get_or_create<sol::table>();
+
+		// Create entries for GUI changes
+		m_changeTypesTable[sol::update_if_empty]["GUI"]["Sequence"] = Int64Packer(Systems::Changes::GUI::Sequence);
 	}
+	// Binds functions, so that they can be called from the lua script
 	void setFunctions()
 	{
-		//m_luaState.set_function("toRadianF", sol::resolve<float(const float)>(&Math::toRadian));
-
+		// Math functions
 		m_luaState.set_function("toRadianF", sol::resolve<float(const float)>(&glm::radians));
 		m_luaState.set_function("toRadianVec3", sol::resolve<glm::vec3(const glm::vec3 &)>(&glm::radians));
 		m_luaState.set_function("toRadianVec4", sol::resolve<glm::vec4(const glm::vec4 &)>(&glm::radians));
-
 		m_luaState.set_function("toDegreesF", sol::resolve<float(const float)>(&glm::degrees));
 		m_luaState.set_function("toDegreesVec3", sol::resolve<glm::vec3(const glm::vec3 &)>(&glm::degrees));
 		m_luaState.set_function("toDegreesVec4", sol::resolve<glm::vec4(const glm::vec4 &)>(&glm::degrees));
-
 		m_luaState.set_function("angleAxisQuat", sol::resolve<glm::quat(const float &, const glm::vec3 &)>(&glm::angleAxis));
 
+		// Input / Window functions
 		m_luaState.set_function("getMouseInfo", []() -> const Window::MouseInfo { return WindowLocator::get().getMouseInfo(); });
 		m_luaState.set_function("mouseCaptured", []() -> const bool { return Config::windowVar().mouse_captured; });
-
 		m_luaState.set_function("setFullscreen", [](const bool p_v1) -> const void { WindowLocator::get().setFullscreen(p_v1); });
 		m_luaState.set_function("setMouseCapture", [](const bool p_v1) -> const void { WindowLocator::get().setMouseCapture(p_v1); });
 		m_luaState.set_function("setVerticalSync", [](const bool p_v1) -> const void { WindowLocator::get().setVerticalSync(p_v1); });
 		m_luaState.set_function("setWindowTitle", [](const std::string &p_v1) -> const void { WindowLocator::get().setWindowTitle(p_v1); });
 
+		// Engine functions
 		m_luaState.set_function("setEngineRunning", [](const bool p_v1) -> const void {Config::m_engineVar.running = p_v1; });
 
+		// GUI functions
+		auto GUITable = m_luaState.create_table("GUI");
+		GUITable.set_function("Begin", [this](const std::string &p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::Begin(p_v1.c_str()); }); });
+		GUITable.set_function("End", [this]() -> const void { m_GUIData.addFunctor([=] { ImGui::End(); }); });
+		GUITable.set_function("SameLine", [this]() -> const void { m_GUIData.addFunctor([=] { ImGui::SameLine(); }); });
+		GUITable.set_function("Text", sol::overload([this](const std::string &p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::Text(p_v1.c_str()); }); },
+			[this](const std::string &p_v1, const float p_v2) -> const void { m_GUIData.addFunctor([=] { ImGui::Text(p_v1.c_str(), p_v2); }); },
+			[this](const std::string &p_v1, const float p_v2, const float p_v3) -> const void { m_GUIData.addFunctor([=] { ImGui::Text(p_v1.c_str(), p_v2, p_v3); }); }));
+		GUITable.set_function("Checkbox", [this](const std::string &p_v1, bool *p_v2) -> const void { m_GUIData.addFunctor([=] { ImGui::Checkbox(p_v1.c_str(), p_v2); }); });
+		GUITable.set_function("SliderFloat", [this](const std::string &p_v1, float *p_v2, const float p_v3, const float p_v4) -> const void { m_GUIData.addFunctor([=] { ImGui::SliderFloat(p_v1.c_str(), p_v2, p_v3, p_v4); }); });
+		GUITable.set_function("ColorEdit3", [this](const std::string &p_v1, const float p_v2, const float p_v3, const float p_v4) -> const void { m_GUIData.addFunctor([=] { float color[3] = { p_v2, p_v3, p_v4 }; ImGui::ColorEdit3(p_v1.c_str(), color); }); });
+		GUITable.set_function("Button", [this](const std::string &p_v1, bool *p_v2) -> const void { m_GUIData.addFunctor([=] { ImGui::Checkbox(p_v1.c_str(), p_v2); }); });
+
+		// LuaScript callbacks
+		m_luaState.set_function("postChanges", &LuaScript::registerChange, this);
 		m_luaState.set_function(Config::scriptVar().createObjectFunctionName, &LuaScript::createObjectInLua, this);
 	}
+	// Defines usertypes, so that they can be used in the lua script
 	void setUsertypes()
 	{
+		// Config variables
 		m_luaState.new_usertype<Config::EngineVariables>("EngineVariables",
 			"change_ctrl_cml_notify_list_reserv", &Config::EngineVariables::change_ctrl_cml_notify_list_reserv,
 			"change_ctrl_grain_size", &Config::EngineVariables::change_ctrl_grain_size,
@@ -205,6 +256,9 @@ private:
 			"resizable", &Config::WindowVariables::resizable,
 			"vertical_sync", &Config::WindowVariables::vertical_sync,
 			"window_in_focus", &Config::WindowVariables::window_in_focus);
+
+		// Math types
+		m_luaState.new_usertype<Int64Packer>("Int64");
 
 		m_luaState.new_usertype<glm::vec3>("Vec3",
 			sol::constructors<glm::vec3(), glm::vec3(float), glm::vec3(float, float, float), glm::vec3(glm::vec4)>(),
@@ -311,6 +365,7 @@ private:
 			"setParentTransform", &SpatialDataManager::setParentTransform,
 			"setWorldTransform", &SpatialDataManager::setWorldTransform);
 
+		// Input types
 		m_luaState.new_usertype<Window::MouseInfo>("MouseInfo",
 			"m_movementCurrentFrameX", &Window::MouseInfo::m_movementCurrentFrameX,
 			"m_movementCurrentFrameY", &Window::MouseInfo::m_movementCurrentFrameY,
@@ -325,12 +380,14 @@ private:
 			"activate", &KeyCommand::activate,
 			"deactivate", &KeyCommand::deactivate,
 			"isActivated", &KeyCommand::isActivated,
-			"bind", &KeyCommand::bind,
-			"bindByKeyName", &KeyCommand::bindByKeyName,
+			"bind", sol::resolve<void(const Scancode)>(&KeyCommand::bind),
+			"bindByName", sol::resolve<void(const std::string&)>(&KeyCommand::bind),
 			"unbind", &KeyCommand::unbind,
 			"unbindAll", &KeyCommand::unbindAll);
 	}
 
+	// Creates and assigns objects to be used in the lua script
+	// Should only be called from the lua script
 	void createObjectInLua(const unsigned int p_objectType, const std::string p_variableName)
 	{
 		// Check if the object type is in a valid range and if the variable name isn't empty
@@ -397,32 +454,37 @@ private:
 		}
 	}
 
-	void recordBoolChange(const bool p_change, const unsigned int p_changeType)
+	// Registers a change in some data
+	// Should only be called from the lua script
+	void registerChange(const Int64Packer &p_packer)
 	{
-
-	}
-	void recordIntChange(const int p_change, const unsigned int p_changeType)
-	{
-
-	}
-	void recordFloatChange(const float p_change, const unsigned int p_changeType)
-	{
-
-	}
-	void recordVec3fChange(const glm::vec3 p_change, const unsigned int p_changeType)
-	{
-
+		m_currentChanges += p_packer.get();
 	}
 
-	SpatialDataManager &m_spatialData;
-
-	std::vector<KeyCommand*> m_keyCommands;
-
+	// Lua state for the loaded script
 	sol::state m_luaState;
 	std::string m_luaScriptFilename;
 
+	// Function binds that call functions inside the lua script
 	sol::function m_luaInit;
 	sol::function m_luaUpdate;
 
-	sol::table m_userTypes;
+	// Tables for variable definitions
+	sol::table m_userTypesTable;
+	sol::table m_changeTypesTable;
+
+	// Contains all spatial data
+	SpatialDataManager &m_spatialData;
+
+	// Contains all GUI data
+	GUIDataManager &m_GUIData;
+
+	// Keeps all created key commands, so they can be unbound and deleted when cleaning up
+	std::vector<KeyCommand*> m_keyCommands;
+
+	// Contains sequences of function calls that can be passed to other SystemObjects
+	//Functors m_functors;
+
+	// Stores the changes made to the data since the last update
+	BitMask m_currentChanges;
 };

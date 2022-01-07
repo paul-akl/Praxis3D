@@ -84,6 +84,9 @@ public:
 	}
 	inline void bindCommand(const Scancode p_scancode, KeyCommand *p_command)
 	{
+		// Block calls from other threads
+		SpinWait::Lock lock(m_spinMutex);
+
 		// Bind the command by directly accessing the array
 		m_binds[p_scancode].bind(p_command);
 	}
@@ -532,4 +535,7 @@ private:
 
 	// Ties scancodes and their names together, so we could match a key by it's name
 	std::unordered_map<std::string, Scancode> m_scancodeNames;
+
+	// Mutex used for multithreaded calls
+	SpinWait m_spinMutex;
 };

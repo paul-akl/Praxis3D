@@ -22,30 +22,23 @@ class RendererSystem;
 // Used to store processed objects, so they can be sent to the renderer
 struct SceneObjects
 {
-	SceneObjects() : m_staticSkybox(nullptr), m_directionalLight(nullptr) { }
+	SceneObjects() : /*m_staticSkybox(nullptr),*/ m_directionalLight(nullptr) { }
 
+	// Camera
 	CameraData m_camera;
-	EnvironmentMapObject *m_staticSkybox;
+	//EnvironmentMapObject *m_staticSkybox;
 
+	// Lights
 	const DirectionalLightDataSet *m_directionalLight;
 	std::vector<PointLightDataSet> m_pointLights;
 	std::vector<SpotLightDataSet> m_spotLights;
 
+	// Models
 	std::vector<ModelAndSpatialData> m_modelData;
 	std::vector<ModelShaderSpatialData> m_modelDataWithShaders;
 
+	// Objects that need to be loaded to VRAM
 	std::vector<LoadableObjectsContainer> m_loadToVideoMemory;
-
-	//std::vector<const RenderableMeshData> m_meshObjects;
-	//std::vector<RenderableObjectData*> m_modelObjects;
-	//std::vector<RenderableObjectData*> m_tessellatedObjects;
-	//std::vector<RenderableObjectData*> m_customShaderObjects;
-	//std::vector<RenderableObjectData*> m_postLightingObjects;
-
-	//std::vector<RenderableObjectData*> m_objectsToLoad;
-
-	//EnvironmentMapObject *m_staticSkyboxToLoad;
-
 };
 
 class RendererScene : public SystemScene
@@ -76,8 +69,8 @@ public:
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType);
 
-	BitMask getDesiredSystemChanges();
-	BitMask getPotentialSystemChanges();
+	BitMask getDesiredSystemChanges() { return Systems::Changes::Generic::All; }
+	BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
 
 	// Getters
 	SystemTask *getSystemTask() { return m_renderTask; }

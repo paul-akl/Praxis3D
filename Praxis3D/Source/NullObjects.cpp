@@ -1,4 +1,6 @@
 
+#include "CommonDefinitions.h"
+#include "GUIDataManager.h"
 #include "NullObjects.h"
 #include "Math.h"
 #include "ObserverBase.h"
@@ -25,3 +27,5 @@ const std::string			NullObjects::NullString;
 const SpatialData			NullObjects::NullSpacialData;
 const SpatialTransformData	NullObjects::NullSpacialTransformData;
 const SpatialDataManager	NullObjects::NullSpatialDataManager = SpatialDataManager(nullObserver);
+const GUIDataManager		NullObjects::NullGUIDataManager = GUIDataManager(nullObserver);
+const Functors				NullObjects::NullFunctors;

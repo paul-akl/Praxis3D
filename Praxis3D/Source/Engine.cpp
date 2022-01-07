@@ -24,6 +24,15 @@ Engine::Engine()
 {
 	m_instances++;
 	m_initialized = false;
+	m_errorHandler = nullptr;
+	m_GUIHandler = nullptr;
+	m_window = nullptr;
+	m_clock = nullptr;
+	m_taskManager = nullptr;
+	m_scheduler = nullptr;
+	m_changeCtrlScene = nullptr;
+	m_sceneChangeController = nullptr;
+	m_objectChangeController = nullptr;
 }
 
 Engine::~Engine()

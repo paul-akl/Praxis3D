@@ -1,8 +1,10 @@
 #pragma once
 
 #include <GL\glew.h>
+#include <functional>
 
 typedef unsigned int UpdateCount;
+typedef std::vector<std::function<void()>> Functors;
 
 enum BindCommandType : unsigned int
 {

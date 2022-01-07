@@ -9,7 +9,7 @@ public:
 	BloomCompositePass(RendererFrontend &p_renderer) :
 		RenderPass(p_renderer)
 	{
-
+		m_bloomCompositeShader = nullptr;
 	}
 
 	~BloomCompositePass() { }
@@ -52,7 +52,7 @@ public:
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
 
 		// Perform various visual effects in the post process shader
-		m_renderer.queueForDrawing(m_bloomCompositeShader->getShaderHandle(), m_bloomCompositeShader->getUniformUpdater(), p_sceneObjects.m_camera.m_viewData.m_transformMat);
+		m_renderer.queueForDrawing(m_bloomCompositeShader->getShaderHandle(), m_bloomCompositeShader->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat);
 		m_renderer.passScreenSpaceDrawCommandsToBackend();
 
 		p_renderPassData.swapColorInputOutputMaps();

@@ -155,7 +155,7 @@ public:
 			//m_renderer.passUpdateCommandsToBackend();
 
 			// Perform various visual effects in the post process shader
-			m_renderer.queueForDrawing(m_skyShader->getShaderHandle(), m_skyShader->getUniformUpdater(), p_sceneObjects.m_camera.m_viewData.m_transformMat);
+			m_renderer.queueForDrawing(m_skyShader->getShaderHandle(), m_skyShader->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat);
 			
 		}
 		else
@@ -199,7 +199,7 @@ public:
 			//m_renderer.passUpdateCommandsToBackend();
 
 			// Perform various visual effects in the post process shader
-			m_renderer.queueForDrawing(m_groundShader->getShaderHandle(), m_groundShader->getUniformUpdater(), p_sceneObjects.m_camera.m_viewData.m_transformMat);
+			m_renderer.queueForDrawing(m_groundShader->getShaderHandle(), m_groundShader->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat);
 		
 		}
 		

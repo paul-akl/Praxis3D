@@ -51,6 +51,8 @@
 		"Source_GeometryPass"						: "Geometry Rendering Pass",
 		"Source_GraphicsObject"					: "Graphics Object",
 		"Source_GUI"										: "GUI",
+		"Source_GUIObject"							: "GUI Object",
+		"Source_GUISequenceComponent"		: "GUI Sequence Component",
 		"Source_HdrMappingPass"					: "HDR Mapping Rendering Pass",
 		"Source_LensFlareCompositePass"	: "Lens Flare Effect Composite Rendering Pass",
 		"Source_LensFlarePass"					: "Lens Flare Effect Rendering Pass",

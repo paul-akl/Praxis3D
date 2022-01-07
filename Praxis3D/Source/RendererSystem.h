@@ -30,11 +30,8 @@ public:
 
 	RendererFrontend &getRenderer() { return m_renderer; }
 
-	void registerGUIHanlder(GUIHandler *p_guiHandler) { m_guiHandler = p_guiHandler; }
-
 protected:
 	RendererFrontend m_renderer;
 	RendererScene *m_rendererScene;
-	GUIHandler *m_guiHandler;
 };
 

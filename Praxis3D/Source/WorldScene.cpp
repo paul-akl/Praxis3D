@@ -176,7 +176,16 @@ SystemObject *WorldScene::createObject(const PropertySet &p_properties)
 		{
 			auto graphicsObject = m_sceneLoader->getSystemScene(Systems::Graphics)->createObject(p_properties);
 			if(graphicsObject != nullptr && graphicsObject->getSystemType() != Systems::Null)
-				newGameObject->addComponent(static_cast<GraphicsObject*>(graphicsObject));
+				newGameObject->addComponent(static_cast<GraphicsObject *>(graphicsObject));
+		}
+
+		// Add a GUIObject as a component if the Rendering property is present
+		auto &guiProperty = p_properties.getPropertySetByID(Properties::GUI);
+		if(guiProperty)
+		{
+			auto guiProperty = m_sceneLoader->getSystemScene(Systems::GUI)->createObject(p_properties);
+			if(guiProperty != nullptr && guiProperty->getSystemType() != Systems::Null)
+				newGameObject->addComponent(static_cast<GUIObject *>(guiProperty));
 		}
 
 		// Add a ScriptObject as a component if the Script property is present

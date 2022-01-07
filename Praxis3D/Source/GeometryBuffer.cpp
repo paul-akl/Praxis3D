@@ -18,6 +18,8 @@ GeometryBuffer::GeometryBuffer(unsigned int p_bufferWidth, unsigned int p_buffer
 
 		m_GBTextures[i] = 0;
 		m_internalFormats[i] = 0;
+		m_textureFormats[i] = 0;
+		m_textureTypes[i] = 0;
 	}
 }
 

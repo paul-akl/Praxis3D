@@ -37,7 +37,26 @@
 			}
 		},
 		{
+			"Name": "GUI",
 			"ID": "1",
+			"Parent": "0",
+			"GUI":
+			{
+				"Sequence":
+				{
+
+				}
+			},
+			"Script":
+			{
+				"Lua":
+				{
+					"Filename": "GUI_test.lua"
+				}
+			}
+		},
+		{
+			"ID": "2",
 			"LocalPosition": "0.0f, 0.5f, 0.0f",
 			"LocalRotation": "0.0f, 45.0f, 0.0f",
 			"LocalScale": "1.0f, 1.0f, 1.0f",
@@ -90,7 +109,7 @@
 			}
 		},
 		{
-			"ID": "2",
+			"ID": "3",
 			"LocalPosition": "0.0f, 5.0f, 0.0f",
 			"LocalRotation": "0.0f, 45.0f, 0.0f",
 			"LocalScale": "2.0f, 2.0f, 2.0f",
@@ -138,7 +157,7 @@
 			}
 		},
 		{
-			"ID": "3",
+			"ID": "4",
 			"LocalPosition": "15.0f, 5.0f, 0.0f",
 			"LocalRotation": "0.0f, 45.0f, 0.0f",
 			"LocalScale": "4.0f, 4.0f, 4.0f",

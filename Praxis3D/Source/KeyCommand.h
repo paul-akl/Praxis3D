@@ -15,8 +15,8 @@ public:
 	inline void deactivate() { m_active = false; }
 	const inline bool isActivated() const { return m_active; }
 
-	inline void addScancode(Scancode p_scancode) { m_scancodes.push_back(p_scancode); }
-	inline void removeScancode(Scancode p_scancode)
+	inline void addScancode(const Scancode p_scancode) { m_scancodes.push_back(p_scancode); }
+	inline void removeScancode(const Scancode p_scancode)
 	{
 		for(decltype(m_scancodes.size()) i = 0, size = m_scancodes.size(); i < size; i++)
 		{
@@ -33,9 +33,9 @@ public:
 		std::vector<Scancode>().swap(m_scancodes);
 	}
 
-	void bindByKeyName(std::string p_keyName);
-	void bind(Scancode p_scancode);
-	void unbind(Scancode p_scancode);
+	void bind(const std::string &p_keyName);
+	void bind(const Scancode p_scancode);
+	void unbind(const Scancode p_scancode);
 	void unbindAll();
 
 	inline size_t getNumBindings() const { return m_scancodes.size(); }

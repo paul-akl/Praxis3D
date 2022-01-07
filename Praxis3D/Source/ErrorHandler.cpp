@@ -71,6 +71,8 @@ ErrorHandler::ErrorHandler()
     m_errHashmap[GetString(Source_GeometryPass)]				= NumberOfErrorCodes + Source_GeometryPass;
     m_errHashmap[GetString(Source_GraphicsObject)]				= NumberOfErrorCodes + Source_GraphicsObject;
     m_errHashmap[GetString(Source_GUI)]							= NumberOfErrorCodes + Source_GUI;
+	m_errHashmap[GetString(Source_GUIObject)]					= NumberOfErrorCodes + Source_GUIObject;
+	m_errHashmap[GetString(Source_GUISequenceComponent)]		= NumberOfErrorCodes + Source_GUISequenceComponent;
     m_errHashmap[GetString(Source_HdrMappingPass)]				= NumberOfErrorCodes + Source_HdrMappingPass;
     m_errHashmap[GetString(Source_LensFlareCompositePass)]		= NumberOfErrorCodes + Source_LensFlareCompositePass;
     m_errHashmap[GetString(Source_LensFlarePass)]				= NumberOfErrorCodes + Source_LensFlarePass;

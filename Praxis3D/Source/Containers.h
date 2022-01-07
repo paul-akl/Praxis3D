@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CommonDefinitions.h"
 #include "Math.h"
 
 // Stores all spatial data (position, rotation, scale)
@@ -28,7 +29,7 @@ struct SpatialData
 							m_rotationQuat * p_data.m_rotationQuat);
 	}
 
-	// Set all data to default
+	// Set all the data to default
 	void clear()
 	{
 		m_position = glm::vec3(0.0f);
@@ -61,7 +62,7 @@ struct SpatialTransformData
 		return SpatialTransformData(m_spatialData + p_data.m_spatialData, m_transformMat * p_data.m_transformMat);
 	}
 
-	// Set all data to default
+	// Set all the data to default
 	void clear()
 	{
 		m_spatialData.clear();
@@ -70,4 +71,37 @@ struct SpatialTransformData
 
 	SpatialData m_spatialData;
 	glm::mat4 m_transformMat;
+};
+
+struct GUIData
+{
+	GUIData()
+	{
+		clear();
+	}	
+
+	// Set all the data to default
+	void clear()
+	{
+		m_functors.clear();
+	}
+
+	Functors m_functors;
+};
+
+// Packs a single unsigned 64bit int into two unsigned 32bit ints
+struct Int64Packer
+{
+	Int64Packer() : x(0), y(0) { }
+	Int64Packer(unsigned __int64 p_int) { set(p_int); }
+
+	inline void set(const unsigned __int64 p_int)
+	{
+		x = (unsigned __int32)(p_int >> 32);
+		y = (unsigned __int32)p_int;
+	}
+
+	inline unsigned __int64 get() const { return ((unsigned __int64)x) << 32 | y; }
+
+	unsigned __int32 x, y;
 };

@@ -29,10 +29,10 @@ public:
 
 	void loadInBackground();
 
+	ErrorCode preload();
+
 	// Exports all the data of the scene (including all objects within) as a PropertySet
 	virtual PropertySet exportObject();
-	
-	ErrorCode preload();
 
 	SystemObject *createObject(const PropertySet &p_properties);
 	ErrorCode destroyObject(SystemObject *p_systemObject);

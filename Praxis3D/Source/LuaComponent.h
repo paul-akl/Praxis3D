@@ -12,7 +12,7 @@ class LuaComponent : public SystemObject, public SpatialDataManagerObject, publi
 {
 	friend class ScriptScene;
 public:
-	LuaComponent(SystemScene *p_systemScene, std::string p_name, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::LuaComponent), m_luaSpatialData(*this), m_luaScript(m_luaSpatialData)
+	LuaComponent(SystemScene *p_systemScene, std::string p_name, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::LuaComponent), m_luaSpatialData(*this), m_GUIData(*this), m_luaScript(m_luaSpatialData, m_GUIData)
 	{
 		m_luaScriptLoaded = false;
 		m_luaSpatialData.setTrackLocalChanges(true);
@@ -42,30 +42,21 @@ public:
 
 	void update(const float p_deltaTime)
 	{
-		// Get the current spatial data
-		m_luaSpatialData.setSpatialData(*m_spatialData);
-
+		// Perform updates only the if the script is loaded
 		if(m_luaScriptLoaded)
+		{
+			// Get the current spatial data
+			m_luaSpatialData.setSpatialData(*m_spatialData);
+
+			// Update the lua script
 			m_luaScript.update(p_deltaTime);
 
-		//m_luaSpatialData.update();
+			// Get the changes from the lua script
+			auto changes = m_luaScript.getChanges();
 
-		auto changes = m_luaSpatialData.getCurrentChangesAndReset();
-
-		//changes &= Systems::Changes::Spatial::AllLocal;
-
-		//if(CheckBitmask(changes, Systems::Changes::Spatial::LocalPosition))
-		//	std::cout << "Position changes occurred" << std::endl;
-
-		//if(CheckBitmask(changes, Systems::Changes::Spatial::LocalTransform))
-		//	std::cout << "Transform changes occurred" << std::endl;
-
-		//if(CheckBitmask(changes, Systems::Changes::Spatial::LocalRotation))
-		//	std::cout << "Rotation changes occurred" << std::endl;
-
-		postChanges(changes);
-
-		//std::cout << m_spatialData->getWorldTransform()[3].x << " : " << m_spatialData->getWorldTransform()[3].y << " : " << m_spatialData->getWorldTransform()[3].z << std::endl;
+			// Post the new changes
+			postChanges(changes);
+		}
 	}
 
 	ErrorCode importObject(const PropertySet &p_properties) final override
@@ -135,37 +126,44 @@ public:
 	BitMask getDesiredSystemChanges() final override { return Systems::Changes::None; }
 	BitMask getPotentialSystemChanges() final override { return Systems::Changes::All; }
 
-	const inline glm::quat &getQuaternion(const Observer *p_observer, BitMask p_changedBits) const
+	const glm::quat &getQuaternion(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		return m_luaSpatialData.getQuaternion(p_observer, p_changedBits);
 	}
-	const inline glm::vec3 &getVec3(const Observer *p_observer, BitMask p_changedBits) const
+	const glm::vec3 &getVec3(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		if(CheckBitmask(p_changedBits, Systems::Changes::Type::Spatial))
 			return m_luaSpatialData.getVec3(p_observer, p_changedBits);
 
 		return NullObjects::NullVec3f;
 	}
-	const inline glm::mat4 &getMat4(const Observer *p_observer, BitMask p_changedBits) const
+	const glm::mat4 &getMat4(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		if(CheckBitmask(p_changedBits, Systems::Changes::Type::Spatial))
 			return m_luaSpatialData.getMat4(p_observer, p_changedBits);
 
 		return NullObjects::NullMat4f;
 	}
-	const inline SpatialData &getSpatialData(const Observer *p_observer, BitMask p_changedBits) const
+	const SpatialData &getSpatialData(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		if(CheckBitmask(p_changedBits, Systems::Changes::Type::Spatial))
 			return m_luaSpatialData.getSpatialData(p_observer, p_changedBits);
 
 		return NullObjects::NullSpacialData;
 	}
-	const inline SpatialTransformData &getSpatialTransformData(const Observer *p_observer, BitMask p_changedBits) const
+	const SpatialTransformData &getSpatialTransformData(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		if(CheckBitmask(p_changedBits, Systems::Changes::Type::Spatial))
 			return m_luaSpatialData.getSpatialTransformData(p_observer, p_changedBits);
 
 		return NullObjects::NullSpacialTransformData;
+	}
+	const Functors &getFunctors(const Observer *p_observer, BitMask p_changedBits) const
+	{
+		if(CheckBitmask(p_changedBits, Systems::Changes::Type::GUI))
+				return m_GUIData.getFunctors(p_observer, p_changedBits);
+
+		return NullObjects::NullFunctors;
 	}
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
@@ -186,4 +184,5 @@ private:
 	bool m_luaScriptLoaded;
 
 	SpatialDataManager m_luaSpatialData;
+	GUIDataManager m_GUIData;
 };

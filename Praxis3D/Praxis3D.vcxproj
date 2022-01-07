@@ -109,7 +109,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
@@ -148,6 +148,7 @@
     <ClCompile Include="Source\ErrorHandler.cpp" />
     <ClCompile Include="Source\ErrorHandlerLocator.cpp" />
     <ClCompile Include="Source\GeometryBuffer.cpp" />
+    <ClCompile Include="Source\GUIHandler.cpp" />
     <ClCompile Include="Source\GUIHandlerLocator.cpp" />
     <ClCompile Include="Source\GUIScene.cpp" />
     <ClCompile Include="Source\GUITask.cpp" />
@@ -246,10 +247,14 @@
     <ClInclude Include="Source\GeometryPass.h" />
     <ClInclude Include="Source\GraphicsDataSets.h" />
     <ClInclude Include="Source\GraphicsObject.h" />
+    <ClInclude Include="Source\GUICommandBuffer.h" />
+    <ClInclude Include="Source\GUIDataManager.h" />
     <ClInclude Include="Source\GUIHandler.h" />
     <ClInclude Include="Source\GUIHandlerLocator.h" />
+    <ClInclude Include="Source\GUIObject.h" />
     <ClInclude Include="Source\GUIPass.h" />
     <ClInclude Include="Source\GUIScene.h" />
+    <ClInclude Include="Source\GUISequenceComponent.h" />
     <ClInclude Include="Source\GUISystem.h" />
     <ClInclude Include="Source\GUITask.h" />
     <ClInclude Include="Source\HdrMappingPass.h" />

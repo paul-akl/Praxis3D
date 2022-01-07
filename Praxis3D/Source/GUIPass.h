@@ -31,7 +31,7 @@ public:
 
 	void update(RenderPassData &p_renderPassData, const SceneObjects &p_sceneObjects, const float p_deltaTime)
 	{
-		GUIHandlerLocator::get().beginFrame();
+		// Render the GUI
 		GUIHandlerLocator::get().render();
 	}
 

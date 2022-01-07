@@ -10,6 +10,7 @@ public:
 	GUISystem()
 	{
 		m_GUIScene = nullptr;
+		//m_guiHandler = nullptr;
 		m_systemName = GetString(Systems::GUI);
 	}
 	~GUISystem() { }
@@ -63,6 +64,14 @@ public:
 
 	SystemScene* getScene() { return m_GUIScene; }
 
+	// Set the GUI Handler, so it can be used to draw GUI to the framebuffer at the end of the frame
+	//inline void setGUIHanlder(GUIHandler *p_guiHandler) { m_guiHandler = p_guiHandler; }
+
+	// Get the GUI Handler; returns nullptr if the GUI Handler is not set
+	//inline GUIHandler *getGUIHanlder() { return m_guiHandler; }
+
 protected:
 	GUIScene* m_GUIScene;
+
+	//GUIHandler *m_guiHandler;
 };

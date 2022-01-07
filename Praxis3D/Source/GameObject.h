@@ -2,6 +2,8 @@
 
 #include "Containers.h"
 #include "GraphicsObject.h"
+#include "GUIDataManager.h"
+#include "GUIObject.h"
 #include "ObjectRegister.h"
 #include "SceneLoader.h"
 #include "ScriptObject.h"
@@ -18,6 +20,7 @@ public:
 	{
 		m_parent = nullptr;
 		m_graphicsComponent = nullptr;
+		m_GUIComponent = nullptr;
 		m_scriptComponent = nullptr;
 		m_componentsFlag = 0;
 	}
@@ -55,7 +58,7 @@ public:
 	}
 
 	// Get the data change types that this object is interested in
-	BitMask getDesiredSystemChanges() override { return Systems::Changes::Spatial::All; }
+	BitMask getDesiredSystemChanges() override { return Systems::Changes::All; }
 
 	// Get the data change types that this object might modify
 	BitMask getPotentialSystemChanges() override { return Systems::Changes::Spatial::All; }
@@ -64,9 +67,34 @@ public:
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) override 
 	{
 		//assert(p_subject == nullptr);
+		BitMask newChanges = Systems::Changes::None;
 
 		// Process the spatial changes and record the world-space changes to be passed to the children objects
-		BitMask newChanges = m_spatialData.changeOccurred(*p_subject, p_changeType);
+		if(CheckBitmask(p_changeType, Systems::Changes::Type::Spatial))
+		{
+			newChanges = m_spatialData.changeOccurred(*p_subject, p_changeType & Systems::Changes::Spatial::All);
+		}
+
+		// Process the graphics changes
+		if(CheckBitmask(p_changeType, Systems::Changes::Type::Graphics))
+		{
+			if(graphicsComponentPresent())
+				m_graphicsComponent->changeOccurred(p_subject, p_changeType & Systems::Changes::Graphics::All);
+		}
+
+		// Process the GUI changes
+		if(CheckBitmask(p_changeType, Systems::Changes::Type::GUI))
+		{
+			if(GUIComponentPresent())
+				m_GUIComponent->changeOccurred(p_subject, p_changeType & Systems::Changes::GUI::All);
+		}
+
+		// Process the script changes
+		if(CheckBitmask(p_changeType, Systems::Changes::Type::Script))
+		{
+			if(scriptComponentPresent())
+				m_scriptComponent->changeOccurred(p_subject, p_changeType & Systems::Changes::Script::All);
+		}
 
 		//if(CheckBitmask(p_changeType, Systems::Changes::Type::Spatial))
 		//	newChanges |= m_spatialData.changeOccurred(*p_subject, p_changeType);
@@ -77,41 +105,6 @@ public:
 		// Post the world-space changes
 		if(newChanges != Systems::Changes::None)
 			postChanges(newChanges);
-
-		/*if(p_changeType & Systems::Changes::Spatial::LocalRotation)
-		{
-			const auto &newLocalRotation = p_subject->getVec3(this, Systems::Changes::Spatial::LocalRotation);
-
-			// If the world rotation isn't being changed, adjust it accordingly, so it has the latest rotation
-			if(!(p_changeType & Systems::Changes::Spatial::WorldRotation))
-			{
-				m_spatialData.m_worldRotationEuler -= m_spatialData.m_localRotationEuler;
-				m_spatialData.m_worldRotationEuler += newLocalRotation;
-				newChanges = newChanges | Systems::Changes::Spatial::WorldRotation;
-			}
-
-			m_spatialData.m_localRotationEuler = newLocalRotation;
-		}
-
-		if(p_changeType & Systems::Changes::Spatial::WorldRotation)
-		{
-			m_spatialData.m_worldRotationEuler = p_subject->getVec3(this, Systems::Changes::Spatial::WorldRotation) + m_spatialData.m_localRotationEuler;
-		}
-
-		if(p_changeType & Systems::Changes::Spatial::WorldPosition)
-		{
-			m_spatialData.m_worldMat.setPosition(p_subject->getVec3(this, Systems::Changes::Spatial::WorldPosition) + m_spatialData.m_localMat.getPosition());
-		}
-
-		if(p_changeType & Systems::Changes::Spatial::WorldScale)
-		{
-			m_spatialData.m_worldMat.setScale(p_subject->getVec3(this, Systems::Changes::Spatial::WorldScale) * m_spatialData.m_localMat.getScale());
-		}
-
-		if(p_changeType & Systems::Changes::Spatial::WorldModelMatrix)
-		{
-			m_spatialData.m_worldMat = p_subject->getMat4(this, Systems::Changes::Spatial::WorldModelMatrix);
-		}*/
 	}
 
 	// Set the parent of this object. The object can have only one parent, thus if the parent was set already, it will be overridden
@@ -163,7 +156,21 @@ public:
 
 		// Set the graphics component as an observer of this game object
 		m_sceneLoader.getChangeController()->createObjectLink(this, m_graphicsComponent);
-	}	
+	}
+	void addComponent(GUIObject *p_component)
+	{
+		// Remove the old component if it exists
+		removeComponent(Systems::TypeID::GUI);
+
+		// Assign the new graphics component
+		m_GUIComponent = p_component;
+
+		// Set the flag for the graphics component, so it is known from the flag that there is one currently present
+		m_componentsFlag |= Systems::GameObjectComponents::GUI;
+
+		// Set the graphics component as an observer of this game object
+		m_sceneLoader.getChangeController()->createObjectLink(this, m_GUIComponent);
+	}
 	void addComponent(ScriptObject *p_component)
 	{
 		// Remove the old component if it exists
@@ -225,6 +232,9 @@ public:
 			}
 		}
 	}
+	inline const bool graphicsComponentPresent()	const { return (m_graphicsComponent == nullptr) ? false : true; }
+	inline const bool GUIComponentPresent()			const { return (m_GUIComponent == nullptr) ? false : true; }
+	inline const bool scriptComponentPresent()		const { return (m_scriptComponent == nullptr) ? false : true; }
 
 	const SpatialDataManager &getSpatialDataChangeManager() const { return m_spatialData; }
 	const glm::quat &getQuaternion(const Observer *p_observer, BitMask p_changedBits)						const override { return m_spatialData.getQuaternion(p_observer, p_changedBits); }
@@ -256,6 +266,7 @@ private:
 
 	//Components
 	GraphicsObject *m_graphicsComponent;
+	GUIObject *m_GUIComponent;
 	ScriptObject *m_scriptComponent;
 
 	// Stores a separate flag for each component currently present

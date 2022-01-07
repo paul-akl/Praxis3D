@@ -303,19 +303,19 @@ void Window::handleSDLEvent(const SDL_Event &p_SDLEvent)
 		switch(p_SDLEvent.button.button)
 		{
 		case(SDL_BUTTON_LEFT) :
-			m_binds[MouseBindingIndex::Mouse_left_index].activate();
+			m_binds[Scancode::Mouse_left].activate();
 			break;
 		case(SDL_BUTTON_RIGHT) :
-			m_binds[MouseBindingIndex::Mouse_right_index].activate();
+			m_binds[Scancode::Mouse_right].activate();
 			break;
 		case(SDL_BUTTON_MIDDLE) :
-			m_binds[MouseBindingIndex::Mouse_middle_index].activate();
+			m_binds[Scancode::Mouse_middle].activate();
 			break;
 		case(SDL_BUTTON_X1) :
-			m_binds[MouseBindingIndex::Mouse_x1_index].activate();
+			m_binds[Scancode::Mouse_x1].activate();
 			break;
 		case(SDL_BUTTON_X2) :
-			m_binds[MouseBindingIndex::Mouse_x2_index].activate();
+			m_binds[Scancode::Mouse_x2].activate();
 			break;
 		}
 		break;
@@ -326,19 +326,19 @@ void Window::handleSDLEvent(const SDL_Event &p_SDLEvent)
 		switch(p_SDLEvent.button.button)
 		{
 		case(SDL_BUTTON_LEFT) :
-			m_binds[MouseBindingIndex::Mouse_left_index].deactivate();
+			m_binds[Scancode::Mouse_left].deactivate();
 			break;
 		case(SDL_BUTTON_RIGHT) :
-			m_binds[MouseBindingIndex::Mouse_right_index].deactivate();
+			m_binds[Scancode::Mouse_right].deactivate();
 			break;
 		case(SDL_BUTTON_MIDDLE) :
-			m_binds[MouseBindingIndex::Mouse_middle_index].deactivate();
+			m_binds[Scancode::Mouse_middle].deactivate();
 			break;
 		case(SDL_BUTTON_X1) :
-			m_binds[MouseBindingIndex::Mouse_x1_index].deactivate();
+			m_binds[Scancode::Mouse_x1].deactivate();
 			break;
 		case(SDL_BUTTON_X2) :
-			m_binds[MouseBindingIndex::Mouse_x2_index].deactivate();
+			m_binds[Scancode::Mouse_x2].deactivate();
 			break;
 		}
 		break;

@@ -375,6 +375,9 @@
     <ClCompile Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl.cpp">
       <Filter>iImgui\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\GUIHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ErrorCodes.h">
@@ -760,6 +763,18 @@
     </ClInclude>
     <ClInclude Include="Source\GUIPass.h">
       <Filter>Renderer\Render Passes\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GUICommandBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GUIObject.h">
+      <Filter>GUI\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GUISequenceComponent.h">
+      <Filter>GUI\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GUIDataManager.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

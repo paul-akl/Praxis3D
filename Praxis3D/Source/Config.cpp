@@ -160,6 +160,7 @@ void Config::init()
 	// GUI variables
 	AddVariablePredef(m_GUIVar, gui_render);
 	AddVariablePredef(m_GUIVar, gui_dark_style);
+	AddVariablePredef(m_GUIVar, gui_sequence_array_reserve_size);
 
 	// Input variables
 	AddVariablePredef(m_inputVar, back_key);

@@ -9,6 +9,7 @@ class GUIHandlerLocator
 {
 	friend class Engine;
 	friend class GUIPass;
+	friend class GUIScene;
 private:
 
 	// Get the services

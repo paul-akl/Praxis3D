@@ -98,6 +98,8 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_GeometryPass,) \
     Code(Source_GraphicsObject,) \
     Code(Source_GUI,) \
+    Code(Source_GUIObject,) \
+    Code(Source_GUISequenceComponent,) \
     Code(Source_HdrMappingPass,) \
     Code(Source_LensFlareCompositePass,) \
     Code(Source_LensFlarePass,) \
@@ -134,7 +136,7 @@ DECLARE_ENUM(ErrorSource, ERROR_SOURCE)
 struct ErrorMessage
 {
 	ErrorMessage() : m_errorCode(Success), m_errorSource(Source_Unknown) { }
-	ErrorMessage(const ErrorCode p_errorCode) : m_errorCode(p_errorCode) { }
+	ErrorMessage(const ErrorCode p_errorCode) : m_errorCode(p_errorCode), m_errorSource(ErrorSource::Source_Unknown) { }
 	ErrorMessage(const ErrorCode p_errorCode, const ErrorSource p_errorsource)
 		: m_errorCode(p_errorCode), m_errorSource(p_errorsource) { }
 	ErrorMessage(const ErrorCode p_errorCode, const ErrorSource p_errorsource, const std::string &p_errorMessage)

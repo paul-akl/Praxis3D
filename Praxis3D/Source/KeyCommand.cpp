@@ -2,13 +2,13 @@
 #include "KeyCommand.h"
 #include "WindowLocator.h"
 
-void KeyCommand::bindByKeyName(std::string p_keyName)
+void KeyCommand::bind(const std::string &p_keyName)
 {
 	// Get the scancode by the key name, and call bind
 	bind(WindowLocator::get().getScancode(p_keyName));
 }
 
-void KeyCommand::bind(Scancode p_scancode)
+void KeyCommand::bind(const Scancode p_scancode)
 {
 	// If the scancode is valid, bind this key command to it
 	if(p_scancode != Scancode::Key_Invalid)
@@ -17,7 +17,7 @@ void KeyCommand::bind(Scancode p_scancode)
 	}
 }
 
-void KeyCommand::unbind(Scancode p_scancode)
+void KeyCommand::unbind(const Scancode p_scancode)
 {
 	// Iterate over all scancodes, if they match, unbind the command and remove the scancode
 	for(decltype(m_scancodes.size()) i = 0, size = m_scancodes.size(); i < size; i++)

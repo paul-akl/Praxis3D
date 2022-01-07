@@ -205,7 +205,7 @@ public:
 	inline void setForwardKey(std::string &p_string)
 	{
 		m_forwardKey.unbindAll();
-		m_forwardKey.bindByKeyName(p_string);
+		m_forwardKey.bind(p_string);
 	}
 
 	inline void setBackwardKey(Scancode p_key)
@@ -216,7 +216,7 @@ public:
 	inline void setBackwardKey(std::string &p_string)
 	{
 		m_backwardKey.unbindAll();
-		m_backwardKey.bindByKeyName(p_string);
+		m_backwardKey.bind(p_string);
 	}
 
 	inline void setStrafeLeftKey(Scancode p_key)
@@ -227,7 +227,7 @@ public:
 	inline void setStrafeLeftKey(std::string &p_string)
 	{
 		m_strafeLeftKey.unbindAll();
-		m_strafeLeftKey.bindByKeyName(p_string);
+		m_strafeLeftKey.bind(p_string);
 	}
 
 	inline void setStrafeRightKey(Scancode p_key)
@@ -238,7 +238,7 @@ public:
 	inline void setStrafeRightKey(std::string &p_string)
 	{
 		m_strafeRightKey.unbindAll();
-		m_strafeRightKey.bindByKeyName(p_string);
+		m_strafeRightKey.bind(p_string);
 	}
 
 	inline void setSprintKey(Scancode p_key)
@@ -249,7 +249,7 @@ public:
 	inline void setSprintKey(std::string &p_string)
 	{
 		m_sprintKey.unbindAll();
-		m_sprintKey.bindByKeyName(p_string);
+		m_sprintKey.bind(p_string);
 	}
 
 	inline void setLowerLimit(const float p_limit)

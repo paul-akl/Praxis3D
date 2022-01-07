@@ -226,7 +226,7 @@ PropertySet RendererScene::exportObject()
 void RendererScene::update(const float p_deltaTime)
 {
 	// Clear variables
-	m_sceneObjects.m_staticSkybox = nullptr;
+	//m_sceneObjects.m_staticSkybox = nullptr;
 	//m_sceneObjects.m_directionalLight = nullptr;
 	m_sceneObjects.m_directionalLight = &m_directionalLight->getLightDataSet();
 
@@ -388,7 +388,7 @@ void RendererScene::update(const float p_deltaTime)
 					// Check if the graphics object contains a camera component
 					if(graphicsObject->cameraComponentPresent())
 					{
-						m_sceneObjects.m_camera.m_viewData.m_transformMat = graphicsObject->getSpatialDataManagerReference().getWorldTransform();
+						m_sceneObjects.m_camera.m_spatialData.m_transformMat = graphicsObject->getSpatialDataManagerReference().getWorldTransform();
 
 						/*glm::vec3 m_positionVec(0.0f, 0.0f, 0.0f);
 						glm::vec3 m_targetVec(0.0f, 0.0f, 0.0f);
@@ -404,18 +404,18 @@ void RendererScene::update(const float p_deltaTime)
 
 						// Calculate camera's position based on the pressed movement keys
 						m_upVector = Math::cross(m_horizontalVec, m_targetVec);
-						m_sceneObjects.m_camera.m_viewData.m_transformMat.initCamera(m_positionVec, m_targetVec + m_positionVec, m_upVector);
+						m_sceneObjects.m_camera.m_spatialData.m_transformMat.initCamera(m_positionVec, m_targetVec + m_positionVec, m_upVector);
 
 						// Set the target vector variable, so it can be retrieved later by listeners
 						m_targetVec = glm::vec3(0.0f);
 						m_targetVec.y = m_verticalAngle;
 						m_targetVec.z = m_horizontalAngle;
 
-						m_sceneObjects.m_camera.m_viewData.m_spatialData.m_position = m_positionVec;
-						m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler = m_targetVec;*/
+						m_sceneObjects.m_camera.m_spatialData.m_spatialData.m_position = m_positionVec;
+						m_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationEuler = m_targetVec;*/
 
-						//m_sceneObjects.m_camera.m_viewData.m_transformMat.initCamera(m_positionVec, m_targetVec + m_positionVec, m_upVector);
-						//m_sceneObjects.m_camera.m_viewData.m_transformMat.initCamera(m_positionVec, m_targetVec + m_positionVec, m_upVector);
+						//m_sceneObjects.m_camera.m_spatialData.m_transformMat.initCamera(m_positionVec, m_targetVec + m_positionVec, m_upVector);
+						//m_sceneObjects.m_camera.m_spatialData.m_transformMat.initCamera(m_positionVec, m_targetVec + m_positionVec, m_upVector);
 					}
 				}
 			}
@@ -581,19 +581,19 @@ void RendererScene::update(const float p_deltaTime)
 
 
 	// Update camera spatial data
-	calculateCamera(m_sceneObjects.m_camera.m_viewData);
+	calculateCamera(m_sceneObjects.m_camera.m_spatialData);
 
 	//std::cout << GetString(static_cast<Properties::PropertyID>(10)) << std::endl;
 	
 
 	//m_sceneObjects.m_camera.m_spatialData.m_rotationEuler = Math::toRadian(p_viewData.m_spatialData.m_rotationEuler);
-	/*m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.y = 0.5f;
-	m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.z = 3.14f;
+	/*m_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationEuler.y = 0.5f;
+	m_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationEuler.z = 3.14f;
 
-	//const glm::vec3 upVector = Math::cross(m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.z, m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.y);
-	//const glm::vec3 targetVector(0.0f, m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.y, m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler.z);
+	//const glm::vec3 upVector = Math::cross(m_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationEuler.z, m_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationEuler.y);
+	//const glm::vec3 targetVector(0.0f, m_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationEuler.y, m_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationEuler.z);
 
-	//m_sceneObjects.m_camera.m_viewData.m_transformMat.initCamera(m_sceneObjects.m_camera.m_viewData.m_spatialData.m_position, targetVector + m_sceneObjects.m_camera.m_viewData.m_spatialData.m_position, upVector);
+	//m_sceneObjects.m_camera.m_spatialData.m_transformMat.initCamera(m_sceneObjects.m_camera.m_spatialData.m_spatialData.m_position, targetVector + m_sceneObjects.m_camera.m_spatialData.m_spatialData.m_position, upVector);
 
 	glm::vec3 m_positionVec(0.0f, 0.0f, 0.0f);
 	glm::vec3 m_targetVec(0.0f, 0.0f, 0.0f);
@@ -609,19 +609,19 @@ void RendererScene::update(const float p_deltaTime)
 
 	// Calculate camera's position based on the pressed movement keys
 	m_upVector = Math::cross(m_horizontalVec, m_targetVec);
-	m_sceneObjects.m_camera.m_viewData.m_transformMat.initCamera(m_positionVec, m_targetVec + m_positionVec, m_upVector);
+	m_sceneObjects.m_camera.m_spatialData.m_transformMat.initCamera(m_positionVec, m_targetVec + m_positionVec, m_upVector);
 
 	// Set the target vector variable, so it can be retrieved later by listeners
 	m_targetVec = glm::vec3(0.0f);
 	m_targetVec.y = m_verticalAngle;
 	m_targetVec.z = m_horizontalAngle;
 
-	m_sceneObjects.m_camera.m_viewData.m_spatialData.m_position = m_positionVec;
-	m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler = m_targetVec;
+	m_sceneObjects.m_camera.m_spatialData.m_spatialData.m_position = m_positionVec;
+	m_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationEuler = m_targetVec;
 
-	m_sceneObjects.m_camera.m_viewData.m_spatialData.m_rotationEuler = glm::vec3(0.0f);
+	m_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationEuler = glm::vec3(0.0f);
 
-	m_sceneObjects.m_camera.m_viewData.m_transformMat = Math::createTransformMat(
+	m_sceneObjects.m_camera.m_spatialData.m_transformMat = Math::createTransformMat(
 		glm::vec3(0.0f),
 		glm::vec3(0.0f, 0.0f, 45.0f),
 		glm::vec3(1.0f));
@@ -652,9 +652,9 @@ void RendererScene::update(const float p_deltaTime)
 	mat.m[9] = sinY * sinR + cosR * cosY * sinP;
 	mat.m[10] = cosP * cosY;
 
-	m_sceneObjects.m_camera.m_viewData.m_transformMat = mat * glm::mat4();*/
+	m_sceneObjects.m_camera.m_spatialData.m_transformMat = mat * glm::mat4();*/
 
-	m_sceneObjects.m_staticSkybox = m_skybox;
+	//m_sceneObjects.m_staticSkybox = m_skybox;
 }
 
 SystemObject *RendererScene::createObject(const PropertySet &p_properties)
@@ -679,7 +679,7 @@ SystemObject *RendererScene::createObject(const PropertySet &p_properties)
 
 				// If the name property is missing, generate a unique name based on the object's index in the pool
 				if(nameProperty)
-					name = nameProperty.getString();
+					name = nameProperty.getString() + " (" + GetString(Properties::GraphicsObject) + ")";
 				else
 					name = GetString(Properties::GraphicsObject) + Utilities::toString(graphicsObjectFromPool->getIndex());
 				
@@ -738,15 +738,6 @@ ErrorCode RendererScene::destroyObject(SystemObject *p_systemObject)
 void RendererScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 {
 	//std::cout << "change occurred" << std::endl;
-}
-
-BitMask RendererScene::getDesiredSystemChanges()
-{
-	return Systems::Changes::Generic::All;
-}
-BitMask RendererScene::getPotentialSystemChanges()
-{
-	return Systems::Changes::None;
 }
 
 MaterialData RendererScene::loadMaterialData(PropertySet &p_materialProperty, Model::MaterialArrays &p_materialArraysFromModel, MaterialType p_materialType, std::size_t p_meshIndex)

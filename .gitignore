@@ -30,3 +30,5 @@ VC/
 *.pdb
 Builds/x64/Debug/Praxis3D.exp
 Builds/x64/Debug/Praxis3D.lib
+*.sarif
+Praxis3D/x64/Debug/CodeAnalysisResultManifest.txt

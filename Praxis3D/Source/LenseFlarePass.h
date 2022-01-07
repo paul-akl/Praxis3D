@@ -19,8 +19,19 @@ public:
 		m_lensFlareParam.m_haloRadius = Config::graphicsVar().lens_flare_halo_radius;
 		m_lensFlareParam.m_haloThickness = Config::graphicsVar().lens_flare_halo_thickness;
 		m_lensFlareParam.m_haloThreshold = Config::graphicsVar().lens_flare_halo_threshold;
-		//TODO: dynamic aspect ratio
-		m_lensFlareParam.m_haloAspectRatio = 1600.0f / 900.0f;// Config::graphicsVar().lens_flare_aspect_ratio;
+
+		if(Config::windowVar().fullscreen)
+		{
+			m_currentScreenRes.x = Config::windowVar().window_size_fullscreen_x;
+			m_currentScreenRes.y = Config::windowVar().window_size_fullscreen_y;
+		}
+		else
+		{
+			m_currentScreenRes.x = Config::windowVar().window_size_windowed_x;
+			m_currentScreenRes.y = Config::windowVar().window_size_windowed_y;
+		}
+
+		m_lenseFlareShader = nullptr;
 	}
 
 	~LenseFlarePass() { }
@@ -82,7 +93,23 @@ public:
 	void update(RenderPassData &p_renderPassData, const SceneObjects &p_sceneObjects, const float p_deltaTime)
 	{
 		glDisable(GL_DEPTH_TEST);
-		
+
+		// Calculate the apsect ratio for the halo
+
+
+		if(m_currentScreenRes.x != Config::graphicsVar().current_resolution_x || m_currentScreenRes.y != Config::graphicsVar().current_resolution_y)
+		{
+			m_currentScreenRes.x = Config::graphicsVar().current_resolution_x;
+			m_currentScreenRes.y = Config::graphicsVar().current_resolution_y;
+
+			// Set lens flare parameters buffer size and data
+			m_lensFlareParamBuffer.m_size = sizeof(LensFlareParameters);
+			m_lensFlareParamBuffer.m_data = (void *)(&m_lensFlareParam);
+
+			// Queue lens flare parameters buffer to be created
+			m_renderer.queueForLoading(m_lensFlareParamBuffer);
+		}
+
 		// Set the output buffer
 		m_diffuseAndOutputBuffers[1] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(p_renderPassData.getColorOutputMap());
 
@@ -99,7 +126,7 @@ public:
 		glBindTexture(GL_TEXTURE_2D, m_lensFlareGhostGradient.getHandle());
 
 		// Perform various visual effects in the post process shader
-		//m_renderer.queueForDrawing(m_lenseFlareShader->getShaderHandle(), m_lenseFlareShader->getUniformUpdater(), p_sceneObjects.m_camera.m_viewData.m_transformMat);
+		//m_renderer.queueForDrawing(m_lenseFlareShader->getShaderHandle(), m_lenseFlareShader->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat);
 		//m_renderer.passScreenSpaceDrawCommandsToBackend();
 
 		p_renderPassData.setBlurInputMap(GeometryBuffer::GBufferDiffuse);
@@ -120,4 +147,6 @@ private:
 	LensFlareParameters m_lensFlareParam;
 
 	TextureLoader2D::Texture2DHandle m_lensFlareGhostGradient;
+
+	glm::ivec2 m_currentScreenRes;
 };

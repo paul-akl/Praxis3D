@@ -94,7 +94,7 @@ struct ShaderData
 // Contains data of a camera, needed for view transformation
 struct CameraData
 {
-	SpatialTransformData m_viewData;
+	SpatialTransformData m_spatialData;
 };
 
 // All graphics objects contain an instance of this struct, which holds the necessary spacial and other data
@@ -249,8 +249,12 @@ struct RenderableMeshData
 
 struct DirectionalLightDataSet
 {
-	DirectionalLightDataSet(glm::vec3 p_color = glm::vec3(1.0f), glm::vec3 p_direction = glm::vec3(0.0f, 1.0f, 0.0f),
-							float p_intensity = 1.0f) : m_color(p_color), m_direction(p_direction), m_intensity(p_intensity) { }
+	DirectionalLightDataSet(glm::vec3 p_color = glm::vec3(1.0f), 
+		glm::vec3 p_direction = glm::vec3(0.0f, 1.0f, 0.0f),
+		float p_intensity = 1.0f) :
+		m_color(p_color), 
+		m_direction(p_direction), 
+		m_intensity(p_intensity) { }
 
 	void clear()
 	{
@@ -265,9 +269,14 @@ struct DirectionalLightDataSet
 
 struct PointLightDataSet
 {
-	PointLightDataSet(glm::vec3 p_color = glm::vec3(1.0f), glm::vec3 p_position = glm::vec3(0.0f), 
-					  glm::vec3 p_attenuation = glm::vec3(0.0f, 0.0f, 1.0f), float p_intensity = 1.0f)
-					: m_color(p_color), m_position(p_position), m_attenuation(p_attenuation), m_intensity(p_intensity) { }
+	PointLightDataSet(glm::vec3 p_color = glm::vec3(1.0f), 
+		glm::vec3 p_position = glm::vec3(0.0f), 
+		glm::vec3 p_attenuation = glm::vec3(0.0f, 0.0f, 1.0f), 
+		float p_intensity = 1.0f) : 
+		m_color(p_color), 
+		m_position(p_position), 
+		m_attenuation(p_attenuation), 
+		m_intensity(p_intensity) { }
 
 	glm::vec3 m_color;
 	float m_padding1;	// Unused variable, declared for padding
@@ -279,10 +288,18 @@ struct PointLightDataSet
 
 struct SpotLightDataSet
 {
-	SpotLightDataSet(glm::vec3 p_color = glm::vec3(1.0f), glm::vec3 p_position = glm::vec3(0.0f),
-					 glm::vec3 p_direction = glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3 p_attenuation = glm::vec3(0.0f, 0.0f, 1.0f),
-					 float p_intensity = 1.0f)
-		: m_color(p_color), m_position(p_position), m_direction(p_direction), m_attenuation(p_attenuation), m_intensity(p_intensity) { }
+	SpotLightDataSet(glm::vec3 p_color = glm::vec3(1.0f), 
+		glm::vec3 p_position = glm::vec3(0.0f),
+		glm::vec3 p_direction = glm::vec3(0.0f, 1.0f, 0.0f), 
+		glm::vec3 p_attenuation = glm::vec3(0.0f, 0.0f, 1.0f),
+		float p_intensity = 1.0f,
+		float p_cutoffAngle = 1.0f) : 
+		m_color(p_color), 
+		m_position(p_position), 
+		m_direction(p_direction),
+		m_attenuation(p_attenuation), 
+		m_intensity(p_intensity),
+		m_cutoffAngle(p_cutoffAngle) { }
 	
 	glm::vec3 m_color;
 	float m_padding1;	// Unused variable, declared for padding

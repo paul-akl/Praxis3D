@@ -13,11 +13,14 @@ ScriptScene::ScriptScene(ScriptSystem *p_system, SceneLoader *p_sceneLoader) : S
 
 ScriptScene::~ScriptScene()
 {
+	if(m_scriptingTask != nullptr)
+		delete m_scriptingTask;
 }
 
 ErrorCode ScriptScene::init()
 {
 	m_scriptingTask = new ScriptTask(this);
+
 	return ErrorCode::Success;
 }
 
@@ -67,11 +70,27 @@ void ScriptScene::update(const float p_deltaTime)
 
 void ScriptScene::loadInBackground()
 {
-	//// Iterate over script objects and start loading them in background
-	//for(decltype(m_scriptObjects.size()) i = 0, size = m_scriptObjects.size(); i < size; i++)
-	//{
-	//	TaskManagerLocator::get().startBackgroundThread(std::bind(&BaseScriptObject::loadToMemory, m_scriptObjects[i]));
-	//}
+	// Iterate over script objects and start loading them in background
+	for(decltype(m_scriptObjects.getPoolSize()) i = 0, size = m_scriptObjects.getPoolSize(); i < size; i++)
+	{
+		// TODO: load in background implementation
+		//TaskManagerLocator::get().startBackgroundThread(std::bind(&ScriptObject::loadToMemory, m_scriptObjects[i]));
+	}
+}
+
+ErrorCode ScriptScene::preload()
+{	
+	// Load every script object. It still works in parallel, however,
+	// it returns only when all objects have finished loading (simulating sequential call)
+	TaskManagerLocator::get().parallelFor(size_t(0), m_scriptObjects.getPoolSize(), size_t(1), [=](size_t i)
+	{
+		if(m_scriptObjects[i].allocated())
+		{
+			m_scriptObjects[i].getObject()->loadToMemory();
+		}
+	});
+
+	return ErrorCode::Success;
 }
 
 PropertySet ScriptScene::exportObject()
@@ -90,21 +109,6 @@ PropertySet ScriptScene::exportObject()
 	//	objects.addPropertySet(m_scriptObjects[i]->exportObject());
 
 	return propertySet;
-}
-
-ErrorCode ScriptScene::preload()
-{	
-	// Load every script object. It still works in parallel, however,
-	// it returns only when all objects have finished loading (simulating sequential call)
-	TaskManagerLocator::get().parallelFor(size_t(0), m_scriptObjects.getPoolSize(), size_t(1), [=](size_t i)
-	{
-		if(m_scriptObjects[i].allocated())
-		{
-			m_scriptObjects[i].getObject()->loadToMemory();
-		}
-	});
-
-	return ErrorCode::Success;
 }
 
 SystemObject *ScriptScene::createObject(const PropertySet &p_properties)
@@ -129,9 +133,9 @@ SystemObject *ScriptScene::createObject(const PropertySet &p_properties)
 
 				// If the name property is missing, generate a unique name based on the object's index in the pool
 				if(nameProperty)
-					name = nameProperty.getString();
+					name = nameProperty.getString() + " (" + GetString(Properties::ScriptObject) + ")";
 				else
-					name = GetString(Properties::GraphicsObject) + Utilities::toString(scriptObjectFromPool->getIndex());
+					name = GetString(Properties::ScriptObject) + Utilities::toString(scriptObjectFromPool->getIndex());
 
 				// Construct the GraphicsObject
 				scriptObjectFromPool->construct(this, name);

@@ -17,6 +17,7 @@ public:
 		: SystemObject(p_systemScene, p_name, Properties::ScriptObject)
 	{
 		m_luaComponent = nullptr;
+		m_componentsFlag = 0;
 	}
 	~ScriptObject()
 	{
@@ -145,7 +146,7 @@ public:
 
 	// Assign a pointer to a const SpatialDataChangeManager, so the object can use it for its spatial data
 	// Also assigns the pointer to every component that needs it
-	virtual void setSpatialDataManagerReference(const SpatialDataManager &p_spatialData)
+	void setSpatialDataManagerReference(const SpatialDataManager &p_spatialData)
 	{
 		SpatialDataManagerObject::setSpatialDataManagerReference(p_spatialData);
 
@@ -156,14 +157,14 @@ public:
 	// System type is Graphics
 	BitMask getSystemType() { return Systems::Script; }
 
-	virtual BitMask getDesiredSystemChanges() { return Systems::Changes::Graphics::All; }
-	virtual BitMask getPotentialSystemChanges() { return Systems::Changes::Graphics::All; }
+	BitMask getDesiredSystemChanges() { return Systems::Changes::Graphics::All; }
+	BitMask getPotentialSystemChanges() { return Systems::Changes::Graphics::All; }
 
 	inline LuaComponent *getLuaComponent() { return m_luaComponent; }
 
 	inline const bool luaComponentPresent()	const { return (m_luaComponent == nullptr) ? false : true; }
 
-	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
+	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
 		// Track what data has been modified
 		BitMask newChanges = Systems::Changes::None;

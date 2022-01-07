@@ -52,7 +52,8 @@ namespace Systems
 	{
 		static constexpr BitMask None		= (BitMask)1 << 0;
 		static constexpr BitMask Graphics	= (BitMask)1 << 1;
-		static constexpr BitMask Script		= (BitMask)1 << 2;
+		static constexpr BitMask GUI		= (BitMask)1 << 2;
+		static constexpr BitMask Script		= (BitMask)1 << 3;
 	}
 	namespace GraphicsObjectComponents
 	{
@@ -61,6 +62,11 @@ namespace Systems
 		static constexpr BitMask Lighting	= (BitMask)1 << 2;
 		static constexpr BitMask Model		= (BitMask)1 << 3;
 		static constexpr BitMask Shader		= (BitMask)1 << 4;
+	}
+	namespace GUIObjectComponents
+	{
+		static constexpr BitMask None		= (BitMask)1 << 0;
+		static constexpr BitMask Sequence	= (BitMask)1 << 1;
 	}
 	namespace ScriptObjectComponents
 	{
@@ -97,10 +103,11 @@ namespace Systems
 		{
 			static constexpr BitMask Generic	= (BitMask)1 << 63;
 			static constexpr BitMask Spatial	= (BitMask)1 << 62;
-			static constexpr BitMask Graphics	= (BitMask)1 << 61;
-			static constexpr BitMask Physics	= (BitMask)1 << 60;
-			static constexpr BitMask Audio		= (BitMask)1 << 59;
-			static constexpr BitMask Script		= (BitMask)1 << 58;
+			static constexpr BitMask Audio		= (BitMask)1 << 61;
+			static constexpr BitMask Graphics	= (BitMask)1 << 60;
+			static constexpr BitMask GUI		= (BitMask)1 << 59;
+			static constexpr BitMask Physics	= (BitMask)1 << 58;
+			static constexpr BitMask Script		= (BitMask)1 << 57;
 		}
 
 		namespace Generic
@@ -131,6 +138,10 @@ namespace Systems
 			static constexpr BitMask AllWorld				= AllWorldNoTransform | WorldTransform;
 			static constexpr BitMask All					= AllLocal | AllWorld;
 		}
+		namespace Audio
+		{
+
+		}
 		namespace Graphics
 		{
 			static constexpr BitMask Lighting				= Changes::Type::Graphics + Changes::Common::Shared21;
@@ -149,20 +160,21 @@ namespace Systems
 
 			static constexpr BitMask All					= AllCamera | AllLighting;
 		}
-		namespace Physics
+		namespace GUI
 		{
-
+			static constexpr BitMask Sequence				= Changes::Type::GUI + Changes::Common::Shared1;
+			static constexpr BitMask Placholder				= Changes::Type::GUI + Changes::Common::Shared2;
+			static constexpr BitMask All					= Sequence | Placholder;
 		}
-		namespace Audio
+		namespace Physics
 		{
 
 		}
 		namespace Script
 		{
-
+			static constexpr BitMask Placholder				= Changes::Type::GUI + Changes::Common::Shared1;
+			static constexpr BitMask All					= Placholder;
 		}
-
-		//static constexpr BitMask Link = (BitMask)1 << 29;
 
 		static constexpr BitMask None = 0;
 		static constexpr BitMask All = static_cast<BitMask>(-1);
@@ -253,6 +265,11 @@ namespace Properties
 	Code(TextureTilingFactor,) \
 	Code(TextureScale,) \
 	Code(VertexShader,) \
+	/* GUI */ \
+	Code(GUI,) \
+	Code(GUIObject,) \
+	Code(GUISequenceComponent,) \
+	Code(Sequence,) \
 	/* Key binds */ \
 	Code(BackwardKey,) \
 	Code(CenterKey,) \
@@ -407,6 +424,10 @@ namespace Properties
 		GetString(TextureTilingFactor),
 		GetString(TextureScale),
 		GetString(VertexShader),
+		GetString(GUI),
+		GetString(GUIObject),
+		GetString(GUISequenceComponent),
+		GetString(Sequence),
 		GetString(BackwardKey),
 		GetString(CenterKey),
 		GetString(CloseKey),
@@ -805,9 +826,11 @@ public:
 		{
 			gui_render = true;
 			gui_dark_style = true;
+			gui_sequence_array_reserve_size = 50;
 		}
 		bool gui_render;
 		bool gui_dark_style;
+		int gui_sequence_array_reserve_size;
 	};
 	struct InputVariables
 	{

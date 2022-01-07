@@ -2,6 +2,7 @@
 
 #include "CommonDefinitions.h"
 #include "GraphicsDataSets.h"
+#include "GUIDataManager.h"
 #include "NullObjects.h"
 #include "SpatialDataManager.h"
 
@@ -67,6 +68,46 @@ public:
 
 protected:
 	const SpatialData *m_spatialData;
+};
+
+class GUIDataManagerObject
+{
+public:
+	GUIDataManagerObject() : m_GUIData(&NullObjects::NullGUIDataManager)
+	{
+		m_updateCount = 0;
+	}
+	~GUIDataManagerObject() { }
+
+	// Assign a pointer to a const GUIDataManager, so the object can use it for its GUI data
+	virtual void setGUIDataManagerReference(const GUIDataManager &p_GUIData) { m_GUIData = &p_GUIData; }
+
+	const GUIDataManager &getGUIDataManagerReference() { return *m_GUIData; }
+
+	// Replaces the pointer to the GUIDataManager with an empty one, so that this object cannot use the GUI data from the current pointer anymore
+	void removeGUIDataManagerReference() { m_GUIData = &NullObjects::NullGUIDataManager; }
+
+protected:
+	// Returns true if the GUIDataManager data has changed since the last check; resets the update counter, so the function will not return true until the GUI data changes again
+	inline bool hasSpatialDataUpdated()
+	{
+		auto GUIDataUpdateCount = m_GUIData->getUpdateCount();
+
+		if(GUIDataUpdateCount != m_updateCount)
+		{
+			m_updateCount = GUIDataUpdateCount;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	const GUIDataManager *m_GUIData;
+
+private:
+	UpdateCount m_updateCount;
 };
 
 // Contains flags denoting whether the object has been loaded to memory and video memory

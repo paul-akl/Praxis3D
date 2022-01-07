@@ -12,6 +12,7 @@ function init ()
 	create(Types.KeyCommand, 'rightKey')
 	create(Types.KeyCommand, 'upKey')
 	create(Types.KeyCommand, 'downKey')
+	create(Types.KeyCommand, 'mouseLeftKey')
 	
 	-- Bind keys to their corresponding buttons on the keyboard
 	forwardKey:bind(inputVariables.forward_key)
@@ -20,6 +21,7 @@ function init ()
 	rightKey:bind(inputVariables.right_strafe_key)
 	upKey:bind(inputVariables.up_key)
 	downKey:bind(inputVariables.down_key)
+	mouseLeftKey:bindByName('Mouse_left')
 	
 	-- Get the camera movement speed
 	movementSpeedF = gameplayVariables.camera_freelook_speed
@@ -44,7 +46,7 @@ function update (p_deltaTime)
 		
 	-- Rotate the camera matrix by the view angles
 	-- Perform rotations only if the mouse is captured inside the game window
-	if mouseCaptured() then
+	if mouseCaptured() or mouseLeftKey:isActivated() then
 		-- Rotate camera up/down based on the X direction (left/right) of the view matrix (camera's inverse matrix)
 		localTransformMat4 = localTransformMat4:rotate(toRadianF(verticalAngleF), localTransformInverseMat4:getRotXVec3())
 		-- Rotate camera left/right on a fixed Y direction (up/down) to not introduce any roll

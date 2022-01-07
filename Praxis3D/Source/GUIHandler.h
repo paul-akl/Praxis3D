@@ -15,11 +15,16 @@ class GUIHandlerBase
 	friend class GUISystem;
 	friend class GUITask;
 public:
-	GUIHandlerBase() : m_initialized(false) { }
+	GUIHandlerBase() : m_initialized(false), m_frameReady(false) { }
 
+	// Let the GUI process an SDL even so it can be registered
 	virtual void processSDLEvent(const SDL_Event &p_SDLEvent) { }
 
+	// Has the GUI Handle been initialized
 	const inline bool isInitialized() const { return m_initialized; }
+
+	// Is the GUI frame ready to be rendered
+	const inline bool isFrameReady() const { return m_frameReady; }
 
 protected:
 	virtual ErrorCode init() { return ErrorCode::Success; }
@@ -29,6 +34,7 @@ protected:
 	virtual void endFrame() { }
 
 	bool m_initialized;
+	std::atomic_bool m_frameReady;
 };
 
 class GUIHandlerNull : public GUIHandlerBase
@@ -51,7 +57,8 @@ class GUIHandler : public GUIHandlerBase
 public:
 	GUIHandler() : GUIHandlerBase()
 	{
-		m_showDemoWindow = true;
+		m_showDemoWindow = false;
+		m_window1Open = false;
 		m_io = nullptr;
 	}
 	~GUIHandler() 
@@ -112,27 +119,20 @@ protected:
 
 	void beginFrame() 
 	{
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplSDL2_NewFrame();
-		ImGui::NewFrame();
+		//ImGui_ImplOpenGL3_NewFrame();
+		//ImGui_ImplSDL2_NewFrame();
+		//ImGui::NewFrame();
 	}
 
-	void render() 
-	{
-		ImGui::ShowDemoWindow(&m_showDemoWindow);
-		ImGui::Render();
-		//glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-		//glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-		//glClear(GL_COLOR_BUFFER_BIT);
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-	}
+	void render();
 
 	void endFrame() 
 	{
-
+		m_frameReady = true;
 	}
 
 private:
 	bool m_showDemoWindow;
+	bool m_window1Open;
 	ImGuiIO *m_io;
 };

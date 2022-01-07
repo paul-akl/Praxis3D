@@ -27,16 +27,7 @@ public:
 		m_localTransformUpToDate = true;
 		m_worldTransformUpToDate = true;
 
-		//worldSpaceNeedsUpdate = false;
-		//localTransformNeedsUpdate = false;
-		//parentTransformNeedsUpdate = false;
-		//worldTransformNeedsUpdate = false;
-
-		//localEulerUpToDate = true;
-		//localQuaternionUpToDate = true;
-
-		//worldEulerUpToDate = true;
-		//worldQuaternionUpToDate = true;
+		m_changes = Systems::Changes::None;
 	}
 	~SpatialDataManager()
 	{

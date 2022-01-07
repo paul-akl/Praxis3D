@@ -61,18 +61,18 @@ public:
 
 	const static SystemObjectID g_invalidID = static_cast<unsigned int>(-1);
 
-	const virtual glm::quat				&getQuaternion(const Observer *p_observer, BitMask p_changedBits)	const { return NullObjects::NullQuaterion;	}
-	const virtual glm::vec3				&getVec3(const Observer *p_observer, BitMask p_changedBits)			const { return NullObjects::NullVec3f;		}
-	const virtual glm::vec4				&getVec4(const Observer *p_observer, BitMask p_changedBits)			const { return NullObjects::NullVec4f;		}
-	const virtual glm::mat4				&getMat4(const Observer *p_observer, BitMask p_changedBits)			const { return NullObjects::NullMat4f;		}
-
-	const virtual bool					getBool(const Observer *p_observer, BitMask p_changedBits) const					{ return NullObjects::NullBool;					}
-	const virtual int					getInt(const Observer *p_observer, BitMask p_changedBits) const						{ return NullObjects::NullInt;					}
-	const virtual float					getFloat(const Observer *p_observer, BitMask p_changedBits) const					{ return NullObjects::NullFloat;				}
-	const virtual double				&getDouble(const Observer *p_observer, BitMask p_changedBits) const					{ return NullObjects::NullDouble;				}
-	const virtual std::string			&getString(const Observer *p_observer, BitMask p_changedBits) const					{ return NullObjects::NullString;				}
-	const virtual SpatialData			&getSpatialData(const Observer *p_observer, BitMask p_changedBits) const			{ return NullObjects::NullSpacialData;			}
-	const virtual SpatialTransformData	&getSpatialTransformData(const Observer *p_observer, BitMask p_changedBits) const	{ return NullObjects::NullSpacialTransformData;	}
+	const virtual glm::quat				&getQuaternion(const Observer *p_observer, BitMask p_changedBits)			const { return NullObjects::NullQuaterion;				}
+	const virtual glm::vec3				&getVec3(const Observer *p_observer, BitMask p_changedBits)					const { return NullObjects::NullVec3f;					}
+	const virtual glm::vec4				&getVec4(const Observer *p_observer, BitMask p_changedBits)					const { return NullObjects::NullVec4f;					}
+	const virtual glm::mat4				&getMat4(const Observer *p_observer, BitMask p_changedBits)					const { return NullObjects::NullMat4f;					}
+	const virtual bool					getBool(const Observer *p_observer, BitMask p_changedBits)					const { return NullObjects::NullBool;					}
+	const virtual int					getInt(const Observer *p_observer, BitMask p_changedBits)					const { return NullObjects::NullInt;					}
+	const virtual float					getFloat(const Observer *p_observer, BitMask p_changedBits)					const { return NullObjects::NullFloat;					}
+	const virtual double				&getDouble(const Observer *p_observer, BitMask p_changedBits)				const { return NullObjects::NullDouble;					}
+	const virtual std::string			&getString(const Observer *p_observer, BitMask p_changedBits)				const { return NullObjects::NullString;					}
+	const virtual SpatialData			&getSpatialData(const Observer *p_observer, BitMask p_changedBits)			const { return NullObjects::NullSpacialData;			}
+	const virtual SpatialTransformData	&getSpatialTransformData(const Observer *p_observer, BitMask p_changedBits) const { return NullObjects::NullSpacialTransformData;	}
+	const virtual Functors				&getFunctors(const Observer *p_observer, BitMask p_changedBits)				const { return NullObjects::NullFunctors;				}
 
 	// Stores observer information required for postChanges messages
 	struct ObserverData
