@@ -510,7 +510,7 @@ namespace Properties
 	static Properties::PropertyID toPropertyID(const float p_value)
 	{
 		// If the passed value is within enum range, static cast it to ID, if not, return null ID
-		if(p_value > Properties::PropertyID::Null && p_value < Properties::PropertyID::NumberOfPropertyIDs)
+		if((int)p_value > Properties::PropertyID::Null && (int)p_value < Properties::PropertyID::NumberOfPropertyIDs)
 			return static_cast<Properties::PropertyID>((int)p_value);
 		else
 			return Properties::PropertyID::Null;

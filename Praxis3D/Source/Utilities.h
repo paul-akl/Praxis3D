@@ -241,7 +241,7 @@ namespace Utilities
 	static Scancode toScancode(const float p_value)
 	{
 		// If the passed value is within enum range, static cast it to a scancode, if not, return invalid scancode
-		if(p_value > Scancode::Key_Invalid && p_value < Scancode::NumberOfScancodes)
+		if((int)p_value > Scancode::Key_Invalid && (int)p_value < Scancode::NumberOfScancodes)
 			return static_cast<Scancode>((int)p_value);
 		else
 			return Scancode::Key_Invalid;
