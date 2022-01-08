@@ -198,6 +198,8 @@ namespace Properties
 	Code(Scene,) \
 	Code(Systems,) \
 	Code(Type,) \
+	Code(Value,) \
+	Code(Variables,) \
 	/* Geometry */ \
 	Code(OffsetPosition,) \
 	Code(OffsetRotation,) \
@@ -359,6 +361,8 @@ namespace Properties
 		GetString(Scene),
 		GetString(Systems),
 		GetString(Type),
+		GetString(Value),
+		GetString(Variables),
 		GetString(OffsetPosition),
 		GetString(OffsetRotation),
 		GetString(LocalPosition),

@@ -15,13 +15,15 @@
 namespace LuaDefinitions
 {
 #define LUA_USER_TYPES(Code) \
-    Code(MouseInfo,) \
-    Code(KeyCommand,) \
+	Code(Test, ) \
+	Code(Conditional, ) \
 	Code(EngineVariables, ) \
 	Code(GameplayVariables,) \
 	Code(InputVariables,) \
-	Code(WindowVariables,) \
+    Code(KeyCommand,) \
+    Code(MouseInfo,) \
 	Code(SpatialDataManager,) \
+	Code(WindowVariables,) \
 	Code(NumOfTypes, )
 	DECLARE_ENUM(UserTypes, LUA_USER_TYPES)
 
@@ -42,17 +44,32 @@ namespace LuaDefinitions
 	DECLARE_ENUM(SpatialChanges, LUA_SPATIAL_CHANGES)
 }
 
+struct Conditional
+{
+	Conditional() { m_flag = false; }
+
+	inline bool isChecked() const { return m_flag; }
+
+	inline void check() { m_flag = true; }
+	inline void uncheck() { m_flag = false; }
+	inline void set(const bool p_flag) { m_flag = p_flag; }
+
+	bool m_flag;
+};
+
 class LuaScript
 {
 public:
 	LuaScript(SpatialDataManager &p_spatialData, GUIDataManager &p_GUIData) : m_spatialData(p_spatialData), m_GUIData(p_GUIData)
 	{ 
 		m_keyCommands.reserve(10);
+		m_conditionals.reserve(10);
 		m_currentChanges = Systems::Changes::None;
 	}
 	LuaScript(SpatialDataManager &p_spatialData, GUIDataManager &p_GUIData, std::string &p_scriptFilename) : m_spatialData(p_spatialData), m_GUIData(p_GUIData), m_luaScriptFilename(p_scriptFilename)
 	{
 		m_keyCommands.reserve(10);
+		m_conditionals.reserve(10);
 		m_currentChanges = Systems::Changes::None;
 	}
 	~LuaScript() 
@@ -65,6 +82,12 @@ public:
 				m_keyCommands[i]->unbindAll();
 				delete m_keyCommands[i];
 			}
+		}
+
+		// Delete all created conditionals
+		for(decltype(m_conditionals.size()) i = 0; i < m_conditionals.size(); i++)
+		{
+			delete m_conditionals[i];
 		}
 	}
 
@@ -115,6 +138,22 @@ public:
 	// Set the filename of the script that should be loaded
 	inline void setScriptFilename(std::string &p_filename) { m_luaScriptFilename = p_filename; }
 
+	// Set the variables so they can be accessed from inside the lua script
+	inline void setVariables(const PropertySet &p_properties)
+	{
+		if(p_properties && p_properties.getPropertyID() == Properties::Variables)
+		{
+			// Loop over each variable entry in the node
+			for(decltype(p_properties.getNumPropertySets()) iVariable = 0, numVariables = p_properties.getNumPropertySets(); iVariable < numVariables; iVariable++)
+			{
+				// Add the variable
+				m_variables.emplace_back(
+					p_properties.getPropertySet(iVariable).getPropertyByID(Properties::Name).getString(),
+					p_properties.getPropertySet(iVariable).getPropertyByID(Properties::Value));
+			}
+		}
+	}
+
 	// Get sequences of function calls so that they can be passed to other objects and executed later
 	// They are also cleared at the beginning of each update call, so a copy must be made if there are intentions to store them for later
 	inline const Functors &getFunctors() { return m_GUIData.getGUIData().m_functors; }
@@ -143,6 +182,44 @@ private:
 
 		// Create entries for GUI changes
 		m_changeTypesTable[sol::update_if_empty]["GUI"]["Sequence"] = Int64Packer(Systems::Changes::GUI::Sequence);
+
+		// Iterate over variables array and set each variable depending on its type
+		for(decltype(m_variables.size()) i = 0, size = m_variables.size(); i < size; i++)
+		{
+			switch(m_variables[i].second.getVariableType())
+			{
+			case Property::Type_bool:
+				m_luaState.set(m_variables[i].first, m_variables[i].second.getBool());
+				break;
+			case Property::Type_int:
+				m_luaState.set(m_variables[i].first, m_variables[i].second.getInt());
+				break;
+			case Property::Type_float:
+				m_luaState.set(m_variables[i].first, m_variables[i].second.getFloat());
+				break;
+			case Property::Type_double:
+				m_luaState.set(m_variables[i].first, m_variables[i].second.getDouble());
+				break;
+			case Property::Type_vec2i:
+				m_luaState.set(m_variables[i].first, m_variables[i].second.getVec2i());
+				break;
+			case Property::Type_vec2f:
+				m_luaState.set(m_variables[i].first, m_variables[i].second.getVec2f());
+				break;
+			case Property::Type_vec3f:
+				m_luaState.set(m_variables[i].first, m_variables[i].second.getVec3f());
+				break;
+			case Property::Type_vec4f:
+				m_luaState.set(m_variables[i].first, m_variables[i].second.getVec4f());
+				break;
+			case Property::Type_string:
+				m_luaState.set(m_variables[i].first, m_variables[i].second.getString());
+				break;
+			case Property::Type_propertyID:
+				m_luaState.set(m_variables[i].first, GetString(m_variables[i].second.getID()));
+				break;
+			}
+		}
 	}
 	// Binds functions, so that they can be called from the lua script
 	void setFunctions()
@@ -170,15 +247,26 @@ private:
 		// GUI functions
 		auto GUITable = m_luaState.create_table("GUI");
 		GUITable.set_function("Begin", [this](const std::string &p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::Begin(p_v1.c_str()); }); });
+		GUITable.set_function("BeginChild", [this](const std::string &p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::BeginChild(p_v1.c_str()); }); });
+		GUITable.set_function("BeginMenu", [this](const std::string &p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::BeginMenu(p_v1.c_str()); }); });
+		GUITable.set_function("Button", [this](const std::string &p_v1, Conditional *p_v2) -> void { m_GUIData.addFunctor([=] { p_v2->m_flag = ImGui::Button(p_v1.c_str()); }); });
+		GUITable.set_function("Checkbox", [this](const std::string &p_v1, Conditional *p_v2) -> void { m_GUIData.addFunctor([=] { ImGui::Checkbox(p_v1.c_str(), &p_v2->m_flag); }); });
+		GUITable.set_function("ColorEdit3", [this](const std::string &p_v1, glm::vec3 *p_v2) -> void { m_GUIData.addFunctor([=] { ImGui::ColorEdit3(p_v1.c_str(), &(p_v2->x)); }); });
+		GUITable.set_function("ColorEdit4", [this](const std::string &p_v1, glm::vec4 *p_v2) -> void { m_GUIData.addFunctor([=] { ImGui::ColorEdit4(p_v1.c_str(), &(p_v2->x)); }); });
 		GUITable.set_function("End", [this]() -> const void { m_GUIData.addFunctor([=] { ImGui::End(); }); });
+		GUITable.set_function("EndChild", [this]() -> const void { m_GUIData.addFunctor([=] { ImGui::EndChild(); }); });
+		GUITable.set_function("EndMenu", [this]() -> const void { m_GUIData.addFunctor([=] { ImGui::EndMenu(); }); });
+		GUITable.set_function("EndMenuBar", [this]() -> const void { m_GUIData.addFunctor([=] { ImGui::EndMenuBar(); }); });
+		GUITable.set_function("MenuItem", [this](const std::string &p_v1, const std::string &p_v2, Conditional *p_v3) -> void { m_GUIData.addFunctor([=] { p_v3->m_flag = ImGui::MenuItem(p_v1.c_str(), p_v2.c_str()); }); });
+		GUITable.set_function("PlotLines", [this](const std::string &p_v1, const float *p_v2, int p_v3) -> const void { m_GUIData.addFunctor([=] { ImGui::PlotLines(p_v1.c_str(), p_v2, p_v3); }); });
+		GUITable.set_function("SliderFloat", [this](const std::string &p_v1, float *p_v2, const float p_v3, const float p_v4) -> const void { m_GUIData.addFunctor([=] { ImGui::SliderFloat(p_v1.c_str(), p_v2, p_v3, p_v4); }); });
 		GUITable.set_function("SameLine", [this]() -> const void { m_GUIData.addFunctor([=] { ImGui::SameLine(); }); });
 		GUITable.set_function("Text", sol::overload([this](const std::string &p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::Text(p_v1.c_str()); }); },
 			[this](const std::string &p_v1, const float p_v2) -> const void { m_GUIData.addFunctor([=] { ImGui::Text(p_v1.c_str(), p_v2); }); },
 			[this](const std::string &p_v1, const float p_v2, const float p_v3) -> const void { m_GUIData.addFunctor([=] { ImGui::Text(p_v1.c_str(), p_v2, p_v3); }); }));
-		GUITable.set_function("Checkbox", [this](const std::string &p_v1, bool *p_v2) -> const void { m_GUIData.addFunctor([=] { ImGui::Checkbox(p_v1.c_str(), p_v2); }); });
-		GUITable.set_function("SliderFloat", [this](const std::string &p_v1, float *p_v2, const float p_v3, const float p_v4) -> const void { m_GUIData.addFunctor([=] { ImGui::SliderFloat(p_v1.c_str(), p_v2, p_v3, p_v4); }); });
-		GUITable.set_function("ColorEdit3", [this](const std::string &p_v1, const float p_v2, const float p_v3, const float p_v4) -> const void { m_GUIData.addFunctor([=] { float color[3] = { p_v2, p_v3, p_v4 }; ImGui::ColorEdit3(p_v1.c_str(), color); }); });
-		GUITable.set_function("Button", [this](const std::string &p_v1, bool *p_v2) -> const void { m_GUIData.addFunctor([=] { ImGui::Checkbox(p_v1.c_str(), p_v2); }); });
+		GUITable.set_function("TextColored", sol::overload([this](const glm::vec4 p_v1, const std::string &p_v2) -> const void { m_GUIData.addFunctor([=] { ImGui::TextColored(ImVec4(p_v1.x, p_v1.y, p_v1.z, p_v1.w), p_v2.c_str()); }); },
+			[this](const glm::vec4 p_v1, const std::string &p_v2, const float p_v3) -> const void { m_GUIData.addFunctor([=] { ImGui::TextColored(ImVec4(p_v1.x, p_v1.y, p_v1.z, p_v1.w), p_v2.c_str(), p_v3); }); },
+			[this](const glm::vec4 p_v1, const std::string &p_v2, const float p_v3, const float p_v4) -> const void { m_GUIData.addFunctor([=] { ImGui::TextColored(ImVec4(p_v1.x, p_v1.y, p_v1.z, p_v1.w), p_v2.c_str(), p_v3, p_v4); }); }));
 
 		// LuaScript callbacks
 		m_luaState.set_function("postChanges", &LuaScript::registerChange, this);
@@ -384,6 +472,13 @@ private:
 			"bindByName", sol::resolve<void(const std::string&)>(&KeyCommand::bind),
 			"unbind", &KeyCommand::unbind,
 			"unbindAll", &KeyCommand::unbindAll);
+
+		// Misc types
+		m_luaState.new_usertype<Conditional>("Conditional",
+			"isChecked", &Conditional::isChecked,
+			"check", &Conditional::check,
+			"uncheck", &Conditional::uncheck,
+			"set", &Conditional::set);
 	}
 
 	// Creates and assigns objects to be used in the lua script
@@ -395,25 +490,19 @@ private:
 		{
 			switch(p_objectType)
 			{
-			case LuaDefinitions::MouseInfo:
-
-				// Set the given variable name in Lua to point to the MouseInfo object
-				m_luaState.set(p_variableName, WindowLocator::get().getMouseInfo());
-
-				break;
-			case LuaDefinitions::KeyCommand:
+			case LuaDefinitions::Conditional:
 			{
-				// Create new key command
-				KeyCommand *keyCommand = new KeyCommand();
+				// Create a new Conditional
+				Conditional *newConditional = new Conditional();
 
-				// Set the given variable name in Lua to point to the created key command
-				m_luaState.set(p_variableName, keyCommand);
+				// Set the given variable name in Lua to point to the created Conditional
+				m_luaState.set(p_variableName, newConditional);
 
-				// Add key command pointer to an array so it is not lost
-				m_keyCommands.push_back(keyCommand);
+				// Add the conditional pointer to an array so it is not lost
+				m_conditionals.push_back(newConditional);
 			}
 				break;
-				
+
 			case LuaDefinitions::EngineVariables:
 
 				// Set the given variable name in Lua to point to the EngineVariables object
@@ -435,10 +524,23 @@ private:
 
 				break;
 
-			case LuaDefinitions::WindowVariables:
+			case LuaDefinitions::KeyCommand:
+			{
+				// Create new key command
+				KeyCommand *keyCommand = new KeyCommand();
 
-				// Set the given variable name in Lua to point to the WindowVariables object
-				m_luaState.set(p_variableName, Config::windowVar());
+				// Set the given variable name in Lua to point to the created key command
+				m_luaState.set(p_variableName, keyCommand);
+
+				// Add key command pointer to an array so it is not lost
+				m_keyCommands.push_back(keyCommand);
+			}
+				break;
+
+			case LuaDefinitions::MouseInfo:
+
+				// Set the given variable name in Lua to point to the MouseInfo object
+				m_luaState.set(p_variableName, WindowLocator::get().getMouseInfo());
 
 				break;
 
@@ -446,6 +548,13 @@ private:
 
 				// Set the given variable name in Lua to point to the Spatial Data Manager object
 				m_luaState.set(p_variableName, &m_spatialData);
+
+				break;
+
+			case LuaDefinitions::WindowVariables:
+
+				// Set the given variable name in Lua to point to the WindowVariables object
+				m_luaState.set(p_variableName, Config::windowVar());
 
 				break;
 			default:
@@ -473,6 +582,9 @@ private:
 	sol::table m_userTypesTable;
 	sol::table m_changeTypesTable;
 
+	// An array of variable names and their value, that get additionally defined in the lua script
+	std::vector<std::pair<std::string, Property>> m_variables;
+
 	// Contains all spatial data
 	SpatialDataManager &m_spatialData;
 
@@ -481,6 +593,9 @@ private:
 
 	// Keeps all created key commands, so they can be unbound and deleted when cleaning up
 	std::vector<KeyCommand*> m_keyCommands;
+
+	// Keeps all created conditional objects, so they can be deleted when cleaning up
+	std::vector<Conditional*> m_conditionals;
 
 	// Contains sequences of function calls that can be passed to other SystemObjects
 	//Functors m_functors;

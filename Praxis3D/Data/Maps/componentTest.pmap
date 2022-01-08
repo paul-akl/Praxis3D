@@ -211,7 +211,18 @@
 			{
 				"Lua":
 				{
-					"Filename": "Camera_free.lua"
+					"Filename": "Camera_free.lua",
+					"Variables":
+					[
+						{
+							"Name": "cameraSpeed",
+							"Value": "10.0f"
+						},
+						{
+							"Name": "cameraSpeedMultiplier",
+							"Value": "2.0f"
+						}
+					]
 				}
 			}
 		},

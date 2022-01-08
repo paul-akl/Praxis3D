@@ -111,7 +111,16 @@ public:
 
 		// If the change type is GUI, send the change to the GUI Data Manager
 		if(CheckBitmask(p_changeType, Systems::Changes::Type::GUI))
+		{
 			m_GUIData.changeOccurred(p_subject, p_changeType);
+
+			// If GUI Sequence has been changed, and GUISequenceComponent is present, 
+			// notify the component about the change separately, as it has to make a copy of the sequence for later use
+			// (the Functors sequence in GUIDataManager only stores a pointer to it and not a copy)
+			if(CheckBitmask(p_changeType, Systems::Changes::GUI::Sequence))
+				if(GUISequenceComponentPresent())
+					m_GUISequenceComponent->changeOccurred(p_subject, Systems::Changes::GUI::Sequence);
+		}
 
 		// If any data has been updated, post the changes to listeners
 		if(newChanges != Systems::Changes::None)

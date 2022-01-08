@@ -24,7 +24,11 @@ function init ()
 	mouseLeftKey:bindByName('Mouse_left')
 	
 	-- Get the camera movement speed
-	movementSpeedF = gameplayVariables.camera_freelook_speed
+	if cameraSpeed then 
+		movementSpeedF = cameraSpeed
+	else
+		movementSpeedF = gameplayVariables.camera_freelook_speed
+	end
 	
 	print('Camera_free.lua script initialized.')
 end

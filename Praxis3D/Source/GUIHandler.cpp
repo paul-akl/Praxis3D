@@ -17,11 +17,19 @@ void GUIHandler::render()
 	//ImGui::Text("Hello, world");
 	//ImGui::End();
 
-	//ImGui::Render();
 	//glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 	//glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
 	//glClear(GL_COLOR_BUFFER_BIT);
-	//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-	m_frameReady = false;
+	// Create draw data from GUI elements
+	ImGui::Render();
+
+	// Render the draw data to a framebuffer
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+	// Prepare OpenGL states for a new frame here, since the "render" method can only be called from the rendering thread
+	ImGui_ImplOpenGL3_NewFrame();
+
+	// Frame is no longer ready to be rendered
+	m_frameReady.clear();
 }

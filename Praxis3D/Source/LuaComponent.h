@@ -69,6 +69,7 @@ public:
 			if(p_properties.getPropertyID() == Properties::Lua)
 			{
 				auto const &luaFilenameProperty = p_properties.getPropertyByID(Properties::Filename);
+				auto const &luaVariablesProperty = p_properties.getPropertySetByID(Properties::Variables);
 
 				if(luaFilenameProperty)
 				{
@@ -79,6 +80,9 @@ public:
 						if(Filesystem::exists(luaFilename))
 						{
 							m_luaScript.setScriptFilename(luaFilename);
+
+							if(luaVariablesProperty)
+								m_luaScript.setVariables(luaVariablesProperty);
 
 							importError = ErrorCode::Success;
 							ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_LuaComponent, m_name + " - Script loaded");

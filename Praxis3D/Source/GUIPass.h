@@ -26,11 +26,17 @@ public:
 		else
 			ErrHandlerLoc::get().log(ErrorCode::Initialize_failure, ErrorSource::Source_FinalPass);
 
+		GUIHandlerLocator::get().initRendering();
+
 		return returnError;
 	}
 
 	void update(RenderPassData &p_renderPassData, const SceneObjects &p_sceneObjects, const float p_deltaTime)
 	{
+		// If the GUI frame is not ready yet, wait for it to become ready
+		if(!GUIHandlerLocator::get().getFrameReadyFlag().test())
+			GUIHandlerLocator::get().getFrameReadyFlag().wait(false);
+
 		// Render the GUI
 		GUIHandlerLocator::get().render();
 	}

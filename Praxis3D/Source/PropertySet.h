@@ -17,6 +17,21 @@ class Property
 {
 	friend class PropertySet;
 public:
+	enum PropertyVariableType : unsigned int
+	{
+		Type_null,
+		Type_bool,
+		Type_int,
+		Type_float,
+		Type_double,
+		Type_vec2i,
+		Type_vec2f,
+		Type_vec3f,
+		Type_vec4f,
+		Type_string,
+		Type_propertyID
+	};
+
 	// Type can be determined by overloaded constructor call
 	Property() : m_propertyID(Properties::Null), m_variableType(Type_null) { }
 	Property(const Properties::PropertyID p_propertyID) : m_propertyID(p_propertyID), m_variableType(Type_null) { }
@@ -475,6 +490,9 @@ public:
 			return Properties::Null;
 	}
 
+	// Get the type of the native value stored inside the Property
+	const inline PropertyVariableType getVariableType() const { return m_variableType; }
+
 	// Returns the property ID of Property class, NOT the property ID stored in enum (as property value)
 	const inline Properties::PropertyID getPropertyID() const				{ return m_propertyID;			}
 	const inline void setPropertyID(Properties::PropertyID &p_propertyID)	{ m_propertyID = p_propertyID;	}
@@ -534,25 +552,12 @@ public:
 	inline explicit operator bool() const { return m_propertyID != Properties::Null; }
 
 	// Returns true if the native variable type of the property is string (meaning the string that was retrieved from the property is
-	const inline bool isVariableTypeString() const { return (m_variableType == VariableType::Type_string); }
+	const inline bool isVariableTypeString() const { return (m_variableType == PropertyVariableType::Type_string); }
 
 	// Converts the property to text (used for saving properties to text files)
 	const inline std::string toString() { return "\"" + std::string(GetString(m_propertyID)) + "\": \"" + getString() + "\""; }
 private:
-	enum VariableType
-	{
-		Type_null,
-		Type_bool,
-		Type_int,
-		Type_float,
-		Type_double,
-		Type_vec2i,
-		Type_vec2f,
-		Type_vec3f,
-		Type_vec4f,
-		Type_string,
-		Type_propertyID
-	} m_variableType;
+	PropertyVariableType m_variableType;
 	union VariableUnion
 	{
 		VariableUnion() { }
