@@ -68,7 +68,7 @@
     <OutDir>$(SolutionDir)\Builds\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)Dependencies\include\;$(SolutionDir)Dependencies\include\Lua\;$(SolutionDir)Dependencies\include\imgui\;$(SolutionDir)Dependencies\include\sdl\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Dependencies\include\;$(SolutionDir)Dependencies\include\Lua\;$(SolutionDir)Dependencies\include\imgui\;$(SolutionDir)Dependencies\include\sdl\;$(SolutionDir)Dependencies\include\bullet3\;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Dependencies\$(Platform)\$(Configuration)\lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)Builds\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
@@ -118,11 +118,12 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalOptions>/bigobj /MP24 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/bigobj /MP8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>opengl32.lib;assimp.lib;SDL2.lib;SDL2main.lib;glew32.lib;FreeImage.lib;tbb.lib;luajit.lib;lua51.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
+      <AdditionalOptions>/VERBOSE:UNUSEDLIBS %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -221,6 +222,7 @@
     <ClInclude Include="Source\ChangeController.h" />
     <ClInclude Include="Source\Clock.h" />
     <ClInclude Include="Source\ClockLocator.h" />
+    <ClInclude Include="Source\CollisionShapeComponent.h" />
     <ClInclude Include="Source\CommandBuffer.h" />
     <ClInclude Include="Source\CommonDefinitions.h" />
     <ClInclude Include="Source\Config.h" />
@@ -279,6 +281,9 @@
     <ClInclude Include="Source\ObjectDirectory.h" />
     <ClInclude Include="Source\ObjectPool.h" />
     <ClInclude Include="Source\ObserverBase.h" />
+    <ClInclude Include="Source\PhysicsDataManager.h" />
+    <ClInclude Include="Source\PhysicsMotionState.h" />
+    <ClInclude Include="Source\PhysicsObject.h" />
     <ClInclude Include="Source\PhysicsScene.h" />
     <ClInclude Include="Source\PhysicsSystem.h" />
     <ClInclude Include="Source\PhysicsTask.h" />
@@ -295,6 +300,7 @@
     <ClInclude Include="Source\RenderPassBase.h" />
     <ClInclude Include="Source\RenderTask.h" />
     <ClInclude Include="Source\RenderTaskBase.h" />
+    <ClInclude Include="Source\RigidBodyComponent.h" />
     <ClInclude Include="Source\Scancodes.h" />
     <ClInclude Include="Source\SceneLoader.h" />
     <ClInclude Include="Source\ScriptObject.h" />

@@ -58,5 +58,4 @@ function update (p_deltaTime)
 		-- Deactivate the button, so it's not triggered the next frame, unless pressed again
 		vsyncKey:deactivate()
 	end	
-	
 end

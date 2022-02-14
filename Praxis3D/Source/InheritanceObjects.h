@@ -4,11 +4,13 @@
 #include "GraphicsDataSets.h"
 #include "GUIDataManager.h"
 #include "NullObjects.h"
+#include "PhysicsDataManager.h"
 #include "SpatialDataManager.h"
 
-// Contains a pointer to a const SpatialDataManager
-// Used for objects that do not have their own SpatialDataManager, but uses another objects SpatialDataManager to get spatial data
+// Contains a const pointer to a SpatialDataManager
+// Used for objects that do not have their own SpatialDataManager, but uses another objects SpatialDataManager to get spatial values
 // Always has a valid pointer to SpatialDataManager (assigns a static empty SpatialDataManager upon construction) and only accepts valid references to SpatialDataManager (UNLESS THE DATA THAT THE POINTER IS ADDRESSING IS DELETED!)
+// Intended to be used for components, so they can get specific data from their parent object, instead of the component having a copy of the data
 class SpatialDataManagerObject
 {
 public:
@@ -49,9 +51,10 @@ private:
 	UpdateCount m_updateCount;
 };
 
-// Contains a pointer to a const SpatialData struct
-// Used for objects that do not have their own SpatialData, but uses another objects SpatialData to get required data
+// Contains a const pointer to a SpatialData struct
+// Used for objects that do not have their own SpatialData, but uses another objects SpatialData to get required values
 // Always has a valid pointer to SpatialData (assigns a static empty SpatialData upon construction) and only accepts valid references to SpatialData (UNLESS THE DATA THAT THE POINTER IS ADDRESSING IS DELETED!)
+// Intended to be used for components, so they can get specific data from their parent object, instead of the component having a copy of the data
 class SpatialDataObject
 {
 public:
@@ -70,6 +73,10 @@ protected:
 	const SpatialData *m_spatialData;
 };
 
+// Contains a const pointer to a GUIDataManager
+// Used for objects that do not have their own GUIDataManager, but uses another objects GUIDataManager to get required values
+// Always has a valid pointer to GUIDataManager (assigns a static empty GUIDataManager upon construction) and only accepts valid references to GUIDataManager (UNLESS THE DATA THAT THE POINTER IS ADDRESSING IS DELETED!)
+// Intended to be used for components, so they can get specific data from their parent object, instead of the component having a copy of the data
 class GUIDataManagerObject
 {
 public:
@@ -89,7 +96,7 @@ public:
 
 protected:
 	// Returns true if the GUIDataManager data has changed since the last check; resets the update counter, so the function will not return true until the GUI data changes again
-	inline bool hasSpatialDataUpdated()
+	inline bool hasGUIDataUpdated()
 	{
 		auto GUIDataUpdateCount = m_GUIData->getUpdateCount();
 
@@ -105,6 +112,50 @@ protected:
 	}
 
 	const GUIDataManager *m_GUIData;
+
+private:
+	UpdateCount m_updateCount;
+};
+
+// Contains a const pointer to a PhysicsDataManager
+// Used for objects that do not have their own PhysicsDataManager, but uses another objects PhysicsDataManager to get required values
+// Always has a valid pointer to PhysicsDataManager (assigns a static empty GUIDataManager upon construction) and only accepts valid references to PhysicsDataManager (UNLESS THE DATA THAT THE POINTER IS ADDRESSING IS DELETED!)
+// Intended to be used for components, so they can get specific data from their parent object, instead of the component having a copy of the data
+class PhysicsDataManagerObject
+{
+public:
+	PhysicsDataManagerObject() : m_physicsData(&NullObjects::NullPhysicsDataManager)
+	{
+		m_updateCount = 0;
+	}
+	~PhysicsDataManagerObject() { }
+
+	// Assign a pointer to a const PhysicsDataManager, so the object can use it for its physics data
+	virtual void setPhysicsDataManagerReference(const PhysicsDataManager &p_physicsData) { m_physicsData = &p_physicsData; }
+
+	const PhysicsDataManager &getPhysicsDataManagerReference() { return *m_physicsData; }
+
+	// Replaces the pointer to the PhysicsDataManager with an empty one, so that this object cannot use the physics data from the current pointer anymore
+	void removeGUIDataManagerReference() { m_physicsData = &NullObjects::NullPhysicsDataManager; }
+
+protected:
+	// Returns true if the GUIDataManager data has changed since the last check; resets the update counter, so the function will not return true until the GUI data changes again
+	inline bool hasPhysicsDataUpdated()
+	{
+		auto physicsDataUpdateCount = m_physicsData->getUpdateCount();
+
+		if(physicsDataUpdateCount != m_updateCount)
+		{
+			m_updateCount = physicsDataUpdateCount;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	const PhysicsDataManager *m_physicsData;
 
 private:
 	UpdateCount m_updateCount;

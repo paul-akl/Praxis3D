@@ -53,7 +53,8 @@ namespace Systems
 		static constexpr BitMask None		= (BitMask)1 << 0;
 		static constexpr BitMask Graphics	= (BitMask)1 << 1;
 		static constexpr BitMask GUI		= (BitMask)1 << 2;
-		static constexpr BitMask Script		= (BitMask)1 << 3;
+		static constexpr BitMask Physics	= (BitMask)1 << 3;
+		static constexpr BitMask Script		= (BitMask)1 << 4;
 	}
 	namespace GraphicsObjectComponents
 	{
@@ -68,10 +69,16 @@ namespace Systems
 		static constexpr BitMask None		= (BitMask)1 << 0;
 		static constexpr BitMask Sequence	= (BitMask)1 << 1;
 	}
+	namespace PhysicsObjectComponents
+	{
+		static constexpr BitMask None		= (BitMask)1 << 0;
+		static constexpr BitMask RigidBody	= (BitMask)1 << 1;
+		static constexpr BitMask SoftBody	= (BitMask)1 << 2;
+	}
 	namespace ScriptObjectComponents
 	{
-		static constexpr BitMask None = (BitMask)1 << 0;
-		static constexpr BitMask Lua = (BitMask)1 << 1;
+		static constexpr BitMask None		= (BitMask)1 << 0;
+		static constexpr BitMask Lua		= (BitMask)1 << 1;
 	}
 	namespace Changes
 	{
@@ -168,7 +175,9 @@ namespace Systems
 		}
 		namespace Physics
 		{
-
+			static constexpr BitMask Placholder1			= Changes::Type::Physics + Changes::Common::Shared1;
+			static constexpr BitMask Placholder2			= Changes::Type::Physics + Changes::Common::Shared2;
+			static constexpr BitMask All = Placholder1 | Placholder2;
 		}
 		namespace Script
 		{
@@ -295,6 +304,22 @@ namespace Properties
 	Code(ObjectLinks,) \
 	Code(Observer,) \
 	Code(Subject,) \
+	/* Physics */ \
+	Code(Box,) \
+	Code(Capsule,) \
+	Code(CollisionShape,) \
+	Code(CollisionShapeComponent,) \
+	Code(Cone,) \
+	Code(ConvexHull,) \
+	Code(Cylinder,) \
+	Code(Gravity,) \
+	Code(Mass,) \
+	Code(Physics,) \
+	Code(PhysicsObject,) \
+	Code(RigidBody,) \
+	Code(RigidBodyComponent,) \
+	Code(Size,) \
+	Code(Sphere,) \
 	/* Script */ \
 	Code(Angle,) \
 	Code(Axis,) \
@@ -453,6 +478,23 @@ namespace Properties
 		GetString(ObjectLinks),
 		GetString(Observer),
 		GetString(Subject),
+		// Physics
+		GetString(Box),
+		GetString(Capsule),
+		GetString(CollisionShape),
+		GetString(CollisionShapeComponent),
+		GetString(Cone),
+		GetString(ConvexHull),
+		GetString(Cylinder),
+		GetString(Gravity),
+		GetString(Mass),
+		GetString(Physics),
+		GetString(PhysicsObject),
+		GetString(RigidBody),
+		GetString(RigidBodyComponent),
+		GetString(Size),
+		GetString(Sphere),
+		// Script
 		GetString(Angle),
 		GetString(Axis),
 		GetString(Azimuth),

@@ -4,6 +4,7 @@
 #include "NullObjects.h"
 #include "Math.h"
 #include "ObserverBase.h"
+#include "PhysicsDataManager.h"
 #include "SpatialDataManager.h"
 
 // An empty observer class, used only to construct the SpatialDataManager
@@ -28,4 +29,5 @@ const SpatialData			NullObjects::NullSpacialData;
 const SpatialTransformData	NullObjects::NullSpacialTransformData;
 const SpatialDataManager	NullObjects::NullSpatialDataManager = SpatialDataManager(nullObserver);
 const GUIDataManager		NullObjects::NullGUIDataManager = GUIDataManager(nullObserver);
+const PhysicsDataManager	NullObjects::NullPhysicsDataManager = PhysicsDataManager(nullObserver);
 const Functors				NullObjects::NullFunctors;

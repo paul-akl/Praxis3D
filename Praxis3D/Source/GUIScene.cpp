@@ -73,7 +73,7 @@ void GUIScene::update(const float p_deltaTime)
 
 ErrorCode GUIScene::preload()
 {
-	// Load every script object. It still works in parallel, however,
+	// Load every GUI object. It still works in parallel, however,
 	// it returns only when all objects have finished loading (simulating sequential call)
 	TaskManagerLocator::get().parallelFor(size_t(0), m_GUIObjects.getPoolSize(), size_t(1), [=](size_t i)
 		{
@@ -120,8 +120,6 @@ SystemObject* GUIScene::createObject(const PropertySet& p_properties)
 				GUIObjectFromPool->construct(this, name);
 				auto newGUIObject = GUIObjectFromPool->getObject();
 
-				//graphicsObject->importObject(renderingProperty);
-
 				// Start importing the newly created object in a background thread
 				newGUIObject->importObject(GUIProperty);
 
@@ -143,7 +141,7 @@ ErrorCode GUIScene::destroyObject(SystemObject* p_systemObject)
 	// Check if object is valid and belongs to the GUI system
 	if(p_systemObject != nullptr && p_systemObject->getSystemType() == Systems::GUI)
 	{
-		// Cast the system object to graphics object, as it belongs to the renderer scene
+		// Cast the system object to GUI object, as it belongs to the renderer scene
 		GUIObject *objectToDestroy = static_cast<GUIObject *>(p_systemObject);
 
 		// Try to destroy the object; return success if it succeeds

@@ -101,6 +101,3 @@ private:
 
 	ObjectRegisterConcurrent<GameObject*> m_objectRegister;
 };
-// UniqueID.h
-// UIDRegister.h
-// UniqueIDRegister.h

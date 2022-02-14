@@ -73,6 +73,7 @@ struct SpatialTransformData
 	glm::mat4 m_transformMat;
 };
 
+// Stores all GUI data
 struct GUIData
 {
 	GUIData()
@@ -87,6 +88,21 @@ struct GUIData
 	}
 
 	Functors m_functors;
+};
+
+// Stores all physics data
+struct PhysicsData
+{
+	PhysicsData()
+	{
+		clear();
+	}
+
+	// Set all the data to default
+	void clear()
+	{
+
+	}
 };
 
 // Packs a single unsigned 64bit int into two unsigned 32bit ints

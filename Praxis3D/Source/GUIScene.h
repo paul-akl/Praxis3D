@@ -40,17 +40,17 @@ private:
 	// Removes an object from a pool, by iterating checking each pool for matched index; returns true if the object was found and removed
 	inline bool removeObjectFromPool(GUIObject &p_object)
 	{
-		// Go over each graphics object
+		// Go over each GUI object
 		for(decltype(m_GUIObjects.getPoolSize()) i = 0, numAllocObjecs = 0, totalNumAllocObjs = m_GUIObjects.getNumAllocated(),
 			size = m_GUIObjects.getPoolSize(); i < size && numAllocObjecs < totalNumAllocObjs; i++)
 		{
-			// Check if the script object is allocated inside the pool container
+			// Check if the GUI object is allocated inside the pool container
 			if(m_GUIObjects[i].allocated())
 			{
 				// Increment the number of allocated objects (early bail mechanism)
 				numAllocObjecs++;
 
-				// If the object matches with the one we are looking for, remove it from the script object pool
+				// If the object matches with the one we are looking for, remove it from the GUI object pool
 				if(*m_GUIObjects[i].getObject() == p_object)
 				{
 					m_GUIObjects.remove(m_GUIObjects[i].getIndex());
@@ -61,6 +61,7 @@ private:
 
 		return false;
 	}
+
 	GUITask *m_GUITask;
 
 	// Object pools

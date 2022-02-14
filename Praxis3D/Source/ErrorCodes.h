@@ -88,6 +88,7 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_BloomPass,) \
     Code(Source_BlurPass,) \
     Code(Source_CameraComponent,) \
+    Code(Source_CallisionShapeComponent,) \
     Code(Source_Config,) \
     Code(Source_ConfigLoader,) \
     Code(Source_Engine,) \
@@ -110,6 +111,7 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_ModelComponent,) \
     Code(Source_ModelLoader,) \
     Code(Source_ObjectDirectory,) \
+    Code(Source_PhysicsObject,) \
     Code(Source_PlayerObject,) \
     Code(Source_PostProcessPass,) \
     Code(Source_PropertyLoader,) \
@@ -117,6 +119,7 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_Renderer,) \
     Code(Source_RendererScene,) \
     Code(Source_RendererSystem,) \
+    Code(Source_RigidBodyComponent,) \
     Code(Source_SceneLoader,) \
     Code(Source_Script,) \
     Code(Source_ScriptObject,) \

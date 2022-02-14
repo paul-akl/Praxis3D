@@ -9,6 +9,7 @@ struct SpatialData;
 struct SpatialTransformData;
 class SpatialDataManager;
 class GUIDataManager;
+class PhysicsDataManager;
 
 namespace NullObjects
 {
@@ -25,5 +26,6 @@ namespace NullObjects
 	const extern SpatialTransformData	NullSpacialTransformData;
 	const extern SpatialDataManager		NullSpatialDataManager;
 	const extern GUIDataManager			NullGUIDataManager;
+	const extern PhysicsDataManager		NullPhysicsDataManager;
 	const extern Functors				NullFunctors;
 }

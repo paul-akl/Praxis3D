@@ -5,6 +5,7 @@
 #include "GUIDataManager.h"
 #include "GUIObject.h"
 #include "ObjectRegister.h"
+#include "PhysicsObject.h"
 #include "SceneLoader.h"
 #include "ScriptObject.h"
 #include "SpatialDataManager.h"
@@ -21,6 +22,7 @@ public:
 		m_parent = nullptr;
 		m_graphicsComponent = nullptr;
 		m_GUIComponent = nullptr;
+		m_physicsComponent = nullptr;
 		m_scriptComponent = nullptr;
 		m_componentsFlag = 0;
 	}
@@ -39,20 +41,20 @@ public:
 	
 	void update(const float p_deltaTime)
 	{
+		// Update spatial data
 		m_spatialData.update();
+
+		// Get any changes of the spatial data
 		BitMask newChanges = m_spatialData.getCurrentChangesAndReset();
 
 		// If update is needed
 		if(m_updateNeeded)
 		{
-		
-			//.m_transformMat = Math::createTransformMat(m_localSpace.m_transformMat.getPosition(), m_localSpace.m_rotationEuler, m_localSpace.m_transformMat.getScale());
-			//m_worldSpace.m_transformMat = Math::createTransformMat(m_worldSpace.m_transformMat.getPosition(), m_worldSpace.m_rotationEuler, m_worldSpace.m_transformMat.getScale());
-
 			// Mark as updated
 			m_updateNeeded = false;
 		}
 
+		// Post changes to listeners, if anything has changed
 		if(newChanges != Systems::Changes::None)
 			postChanges(newChanges);
 	}
@@ -89,18 +91,19 @@ public:
 				m_GUIComponent->changeOccurred(p_subject, p_changeType & Systems::Changes::GUI::All);
 		}
 
+		// Process the physics changes
+		if(CheckBitmask(p_changeType, Systems::Changes::Type::Physics))
+		{
+			if(physicsComponentPresent())
+				m_physicsComponent->changeOccurred(p_subject, p_changeType & Systems::Changes::Physics::All);
+		}
+
 		// Process the script changes
 		if(CheckBitmask(p_changeType, Systems::Changes::Type::Script))
 		{
 			if(scriptComponentPresent())
 				m_scriptComponent->changeOccurred(p_subject, p_changeType & Systems::Changes::Script::All);
 		}
-
-		//if(CheckBitmask(p_changeType, Systems::Changes::Type::Spatial))
-		//	newChanges |= m_spatialData.changeOccurred(*p_subject, p_changeType);
-		
-		//if(CheckBitmask(p_changeType, Systems::Changes::Type::Graphics) && CheckBitmask(m_componentsFlag, Systems::GameObjectComponents::Graphics))
-		//	m_graphicsComponent->changeOccurred(p_subject, p_changeType);
 
 		// Post the world-space changes
 		if(newChanges != Systems::Changes::None)
@@ -155,7 +158,7 @@ public:
 		m_componentsFlag |= Systems::GameObjectComponents::Graphics;
 
 		// Set the graphics component as an observer of this game object
-		m_sceneLoader.getChangeController()->createObjectLink(this, m_graphicsComponent);
+		//m_sceneLoader.getChangeController()->createObjectLink(this, m_graphicsComponent);
 	}
 	void addComponent(GUIObject *p_component)
 	{
@@ -169,7 +172,29 @@ public:
 		m_componentsFlag |= Systems::GameObjectComponents::GUI;
 
 		// Set the graphics component as an observer of this game object
-		m_sceneLoader.getChangeController()->createObjectLink(this, m_GUIComponent);
+		//m_sceneLoader.getChangeController()->createObjectLink(this, m_GUIComponent);
+	}
+	void addComponent(PhysicsObject *p_component)
+	{
+		// Remove the old component if it exists
+		removeComponent(Systems::TypeID::Physics);
+
+		// Assign the new script component
+		m_physicsComponent = p_component;
+
+		// Share the GameObjects spatial data with the component
+		m_physicsComponent->setSpatialDataManagerReference(m_spatialData);
+
+		// Send the local transform to the physics component
+		//m_physicsComponent->changeOccurred(this, Systems::Changes::Spatial::LocalTransform);
+
+		// Set the flag for the script component, so it is known from the flag that there is one currently present
+		m_componentsFlag |= Systems::GameObjectComponents::Physics;
+
+		m_sceneLoader.getChangeController()->createObjectLink(m_physicsComponent, this);
+
+		// Set the script component as an observer of this game object
+		//m_sceneLoader.getChangeController()->createObjectLink(this, m_scriptComponent);
 	}
 	void addComponent(ScriptObject *p_component)
 	{
@@ -188,7 +213,7 @@ public:
 		m_sceneLoader.getChangeController()->createObjectLink(m_scriptComponent->getLuaComponent(), this);
 
 		// Set the script component as an observer of this game object
-		m_sceneLoader.getChangeController()->createObjectLink(this, m_scriptComponent);
+		//m_sceneLoader.getChangeController()->createObjectLink(this, m_scriptComponent);
 	}
 	void removeComponent(Systems::TypeID p_componentType) 
 	{
@@ -212,6 +237,42 @@ public:
 				}
 				break;
 			}
+
+			case Systems::TypeID::GUI:
+			{
+				// First check if the component exists
+				if(m_GUIComponent != nullptr)
+				{
+					unlinkComponent(m_GUIComponent);
+
+					// Assign the component pointer as nullptr to denote that it has been removed
+					m_GUIComponent = nullptr;
+
+					// Remove the bit corresponding to GUI component from the componentsFlag bitmask
+					m_componentsFlag &= ~Systems::GameObjectComponents::GUI;
+				}
+				break;
+			}
+
+			case Systems::TypeID::Physics:
+			{
+				// First check if the component exists
+				if(m_physicsComponent != nullptr)
+				{
+					unlinkComponent(m_physicsComponent);
+
+					// Stop sharing the spatial data with the component
+					m_physicsComponent->removeSpatialDataManagerReference();
+
+					// Assign the component pointer as nullptr to denote that it has been removed
+					m_physicsComponent = nullptr;
+
+					// Remove the bit corresponding to physics component from the componentsFlag bitmask
+					m_componentsFlag &= ~Systems::GameObjectComponents::Physics;
+				}
+				break;
+			}
+
 			case Systems::TypeID::Script:
 			{
 				// First check if the component exists
@@ -234,6 +295,7 @@ public:
 	}
 	inline const bool graphicsComponentPresent()	const { return (m_graphicsComponent == nullptr) ? false : true; }
 	inline const bool GUIComponentPresent()			const { return (m_GUIComponent == nullptr) ? false : true; }
+	inline const bool physicsComponentPresent()		const { return (m_physicsComponent == nullptr) ? false : true; }
 	inline const bool scriptComponentPresent()		const { return (m_scriptComponent == nullptr) ? false : true; }
 
 	const SpatialDataManager &getSpatialDataChangeManager() const { return m_spatialData; }
@@ -255,6 +317,7 @@ private:
 		{
 			// Remove the component from the observers
 			m_sceneLoader.getChangeController()->removeObjectLink(this, p_component);
+			m_sceneLoader.getChangeController()->removeObjectLink(p_component, this);
 		}
 	}
 
@@ -267,6 +330,7 @@ private:
 	//Components
 	GraphicsObject *m_graphicsComponent;
 	GUIObject *m_GUIComponent;
+	PhysicsObject *m_physicsComponent;
 	ScriptObject *m_scriptComponent;
 
 	// Stores a separate flag for each component currently present

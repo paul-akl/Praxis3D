@@ -297,7 +297,7 @@ public:
 		SDL_ShowCursor(p_show ? SDL_ENABLE : SDL_DISABLE);
 	}
 
-	// Sets relative mouse mode (cursor is becomes hidden and clipped inside the window)
+	// Sets relative mouse mode (cursor becomes hidden and clipped inside the window)
 	void setMouseRelativeMode(const bool p_relativeMode)
 	{
 		// SDL implementation of bool is "0" or "1", so we need to "convert" the regular bool

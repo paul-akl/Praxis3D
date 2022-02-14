@@ -12,7 +12,9 @@ function init ()
 	create(Types.KeyCommand, 'rightKey')
 	create(Types.KeyCommand, 'upKey')
 	create(Types.KeyCommand, 'downKey')
+	create(Types.KeyCommand, 'sprintKey')
 	create(Types.KeyCommand, 'mouseLeftKey')
+	create(Types.KeyCommand, 'mouseRightKey')
 	
 	-- Bind keys to their corresponding buttons on the keyboard
 	forwardKey:bind(inputVariables.forward_key)
@@ -21,13 +23,22 @@ function init ()
 	rightKey:bind(inputVariables.right_strafe_key)
 	upKey:bind(inputVariables.up_key)
 	downKey:bind(inputVariables.down_key)
+	sprintKey:bind(inputVariables.sprint_key)
 	mouseLeftKey:bindByName('Mouse_left')
+	mouseRightKey:bindByName('Mouse_right')
 	
 	-- Get the camera movement speed
 	if cameraSpeed then 
 		movementSpeedF = cameraSpeed
 	else
 		movementSpeedF = gameplayVariables.camera_freelook_speed
+	end
+	
+	-- Get the camera movement speed multiplier
+	if cameraSpeedMultiplier then 
+		movementSpeedMultF = cameraSpeedMultiplier
+	else
+		movementSpeedMultF = 1.0
 	end
 	
 	print('Camera_free.lua script initialized.')
@@ -47,10 +58,10 @@ function update (p_deltaTime)
 	-- Calculate new view angles based on mouse movement
 	horizontalAngleF = mouseData.m_movementX * inputVariables.mouse_jaw * inputVariables.mouse_sensitivity
 	verticalAngleF = mouseData.m_movementY * inputVariables.mouse_pitch * inputVariables.mouse_sensitivity
-		
+	
 	-- Rotate the camera matrix by the view angles
 	-- Perform rotations only if the mouse is captured inside the game window
-	if mouseCaptured() or mouseLeftKey:isActivated() then
+	if mouseCaptured() or mouseRightKey:isActivated() then
 		-- Rotate camera up/down based on the X direction (left/right) of the view matrix (camera's inverse matrix)
 		localTransformMat4 = localTransformMat4:rotate(toRadianF(verticalAngleF), localTransformInverseMat4:getRotXVec3())
 		-- Rotate camera left/right on a fixed Y direction (up/down) to not introduce any roll
@@ -69,29 +80,36 @@ function update (p_deltaTime)
 	upDirectionVec3 = localTransformInverseMat4:getRotYVec3()
 	upDirectionVec3 = upDirectionVec3:normalize()
 	
+	-- Increase movement speed if the sprint key is pressed
+	if sprintKey:isActivated() then
+		finalMovementSpeedF = movementSpeedF * movementSpeedMultF
+	else
+		finalMovementSpeedF = movementSpeedF
+	end
+	
 	-- Adjust camera position based on key presses and view direction
 	-- Forwards / backwards - Z direction
 	if forwardKey:isActivated() then
-		positionVec3 = positionVec3 - forwardDirectionVec3:mulF(movementSpeedF * p_deltaTime)
+		positionVec3 = positionVec3 - forwardDirectionVec3:mulF(finalMovementSpeedF * p_deltaTime)
 	end	
 	if backwardKey:isActivated() then
-		positionVec3 = positionVec3 + forwardDirectionVec3:mulF(movementSpeedF * p_deltaTime)
+		positionVec3 = positionVec3 + forwardDirectionVec3:mulF(finalMovementSpeedF * p_deltaTime)
 	end
 	
 	-- Left / right - X direction
 	if rightKey:isActivated() then
-		positionVec3 = positionVec3 + rightDirectionVec3:mulF(movementSpeedF * p_deltaTime)
+		positionVec3 = positionVec3 + rightDirectionVec3:mulF(finalMovementSpeedF * p_deltaTime)
 	end	
 	if leftKey:isActivated() then
-		positionVec3 = positionVec3 - rightDirectionVec3:mulF(movementSpeedF * p_deltaTime)
+		positionVec3 = positionVec3 - rightDirectionVec3:mulF(finalMovementSpeedF * p_deltaTime)
 	end	
 	
 	-- Up / down - Y direction
 	if upKey:isActivated() then
-		positionVec3 = positionVec3 + upDirectionVec3:mulF(movementSpeedF * p_deltaTime)
+		positionVec3 = positionVec3 + upDirectionVec3:mulF(finalMovementSpeedF * p_deltaTime)
 	end	
 	if downKey:isActivated() then
-		positionVec3 = positionVec3 - upDirectionVec3:mulF(movementSpeedF * p_deltaTime)
+		positionVec3 = positionVec3 - upDirectionVec3:mulF(finalMovementSpeedF * p_deltaTime)
 	end
 	
 	-- Set the new position of the camera, and keep the W variable the same

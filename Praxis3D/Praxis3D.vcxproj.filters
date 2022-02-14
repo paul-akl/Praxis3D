@@ -172,6 +172,9 @@
     <Filter Include="iImgui\Source Files">
       <UniqueIdentifier>{62cfc7e5-8f92-4ff5-bcc3-0319fec10b3c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Daa Managers">
+      <UniqueIdentifier>{1d4c199c-6fd9-492b-9c8d-23af455d408f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -698,9 +701,6 @@
     <ClInclude Include="Source\GameLogicObject.h">
       <Filter>Scripting\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\SpatialDataManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\InheritanceObjects.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -773,8 +773,26 @@
     <ClInclude Include="Source\GUISequenceComponent.h">
       <Filter>GUI\Objects\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\SpatialDataManager.h">
+      <Filter>Daa Managers</Filter>
+    </ClInclude>
     <ClInclude Include="Source\GUIDataManager.h">
-      <Filter>Header Files</Filter>
+      <Filter>Daa Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PhysicsDataManager.h">
+      <Filter>Daa Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PhysicsObject.h">
+      <Filter>Physics\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PhysicsMotionState.h">
+      <Filter>Physics\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RigidBodyComponent.h">
+      <Filter>Physics\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\CollisionShapeComponent.h">
+      <Filter>Physics\Objects\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

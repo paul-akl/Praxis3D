@@ -61,6 +61,7 @@ ErrorHandler::ErrorHandler()
     m_errHashmap[GetString(Source_BloomPass)]					= NumberOfErrorCodes + Source_BloomPass;
 	m_errHashmap[GetString(Source_BlurPass)]					= NumberOfErrorCodes + Source_BlurPass;
 	m_errHashmap[GetString(Source_CameraComponent)]				= NumberOfErrorCodes + Source_CameraComponent;
+	m_errHashmap[GetString(Source_CallisionShapeComponent)]		= NumberOfErrorCodes + Source_CallisionShapeComponent;
     m_errHashmap[GetString(Source_Config)]						= NumberOfErrorCodes + Source_Config;
     m_errHashmap[GetString(Source_ConfigLoader)]				= NumberOfErrorCodes + Source_ConfigLoader;
     m_errHashmap[GetString(Source_Engine)]						= NumberOfErrorCodes + Source_Engine;
@@ -80,9 +81,10 @@ ErrorHandler::ErrorHandler()
     m_errHashmap[GetString(Source_LightObject)]					= NumberOfErrorCodes + Source_LightObject;
 	m_errHashmap[GetString(Source_LightingPass)]				= NumberOfErrorCodes + Source_LightingPass;
 	m_errHashmap[GetString(Source_LuaComponent)]				= NumberOfErrorCodes + Source_LuaComponent;
-	m_errHashmap[GetString(Source_ObjectDirectory)]				= NumberOfErrorCodes + Source_ObjectDirectory;
 	m_errHashmap[GetString(Source_ModelComponent)]				= NumberOfErrorCodes + Source_ModelComponent;
     m_errHashmap[GetString(Source_ModelLoader)]					= NumberOfErrorCodes + Source_ModelLoader;
+	m_errHashmap[GetString(Source_ObjectDirectory)]				= NumberOfErrorCodes + Source_ObjectDirectory;
+	m_errHashmap[GetString(Source_PhysicsObject)]				= NumberOfErrorCodes + Source_PhysicsObject;
     m_errHashmap[GetString(Source_PlayerObject)]				= NumberOfErrorCodes + Source_PlayerObject;
     m_errHashmap[GetString(Source_PostProcessPass)]				= NumberOfErrorCodes + Source_PostProcessPass;
     m_errHashmap[GetString(Source_PropertyLoader)]				= NumberOfErrorCodes + Source_PropertyLoader;
@@ -90,6 +92,7 @@ ErrorHandler::ErrorHandler()
     m_errHashmap[GetString(Source_Renderer)]					= NumberOfErrorCodes + Source_Renderer;
 	m_errHashmap[GetString(Source_RendererScene)]				= NumberOfErrorCodes + Source_RendererScene;
 	m_errHashmap[GetString(Source_RendererSystem)]				= NumberOfErrorCodes + Source_RendererSystem;
+	m_errHashmap[GetString(Source_RigidBodyComponent)]			= NumberOfErrorCodes + Source_RigidBodyComponent;
     m_errHashmap[GetString(Source_SceneLoader)]					= NumberOfErrorCodes + Source_SceneLoader;
     m_errHashmap[GetString(Source_Script)]						= NumberOfErrorCodes + Source_Script;
     m_errHashmap[GetString(Source_ScriptObject)]				= NumberOfErrorCodes + Source_ScriptObject;

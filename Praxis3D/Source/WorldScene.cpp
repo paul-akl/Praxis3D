@@ -188,6 +188,15 @@ SystemObject *WorldScene::createObject(const PropertySet &p_properties)
 				newGameObject->addComponent(static_cast<GUIObject *>(guiProperty));
 		}
 
+		// Add a PhysicsObject as a component if the Script property is present
+		auto &physicsProperty = p_properties.getPropertySetByID(Properties::Physics);
+		if(physicsProperty)
+		{
+			auto physicsObject = m_sceneLoader->getSystemScene(Systems::Physics)->createObject(p_properties);
+			if(physicsObject != nullptr && physicsObject->getSystemType() != Systems::Null)
+				newGameObject->addComponent(static_cast<PhysicsObject *>(physicsObject));
+		}
+
 		// Add a ScriptObject as a component if the Script property is present
 		auto &scripting = p_properties.getPropertySetByID(Properties::Script);
 		if(scripting)

@@ -1,8 +1,9 @@
 #pragma once
 
+#include "ErrorHandlerLocator.h"
 #include "NullSystemObjects.h"
 #include "PropertySet.h"
-#include "RendererScene.h"
+#include "Universal.h"
 
 // Loads and links various objects by requesting them from registered scenes.
 // Uses property sets to send data to scenes (about specific objects).
