@@ -1,5 +1,6 @@
 #pragma once
 
+#include "EntityViewDefinitions.h"
 #include "GameObject.h"
 #include "ObjectPool.h"
 #include "ObjectRegister.h"
@@ -26,6 +27,8 @@ public:
 	// Exports all the data of the scene (including all objects within) as a PropertySet (for example, used for saving to map file)
 	PropertySet exportObject() { return PropertySet(); }
 
+	EntityID createEntity(const PropertySet &p_properties);
+
 	SystemObject *createObject(const PropertySet &p_properties);
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
@@ -35,6 +38,22 @@ public:
 	Systems::TypeID getSystemType() { return Systems::TypeID::World; };
 	BitMask getDesiredSystemChanges() { return Systems::Changes::Generic::CreateObject || Systems::Changes::Generic::DeleteObject; }
 	BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
+
+	// Adds a component with the given parameters and returns a reference to it
+	template <class T_Component, class... T_Args>
+	T_Component &addComponent(EntityID p_entity, T_Args&&... p_args)
+	{
+		return m_entityRegistry.emplace_or_replace<T_Component>(p_entity, std::forward<T_Args>(p_args)...);
+	}
+
+	// Removes a component from the given entity
+	template <class T_Component>
+	void removeComponent(EntityID p_entity)
+	{
+		m_entityRegistry.remove<T_Component>(p_entity);
+	}
+
+	inline entt::basic_registry<EntityID> &getEntityRegistry() { return m_entityRegistry; }
 
 private:
 	struct GameObjectAndParent
@@ -92,6 +111,17 @@ private:
 
 		return false;
 	}
+
+	inline EntityID addEntity()
+	{
+		return m_entityRegistry.create();
+	}
+	inline EntityID addEntity(EntityID p_entityID)
+	{
+		return m_entityRegistry.create(p_entityID);
+	}
+
+	entt::basic_registry<EntityID> m_entityRegistry;
 
 	std::vector<GameObjectAndParent> m_unassignedParents;
 	std::vector<GameObjectAndChildren> m_unassignedChildren;

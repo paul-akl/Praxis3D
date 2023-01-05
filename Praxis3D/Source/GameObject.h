@@ -17,7 +17,7 @@ class GameObject : public SystemObject
 {
 	friend class WorldScene;
 public:
-	GameObject(SystemScene *p_systemScene, std::string p_name, SceneLoader &p_sceneLoader, ObjectID p_gmaeObjectID = 0) : SystemObject(p_systemScene, p_name, Properties::GameObject), m_sceneLoader(p_sceneLoader), m_GameObjectID(p_gmaeObjectID), m_spatialData(*this)
+	GameObject(SystemScene *p_systemScene, std::string p_name, SceneLoader &p_sceneLoader, EntityID p_gmaeObjectID = 0) : SystemObject(p_systemScene, p_name, Properties::GameObject), m_sceneLoader(p_sceneLoader), m_GameObjectID(p_gmaeObjectID), m_spatialData(*this)
 	{
 		m_parent = nullptr;
 		m_graphicsComponent = nullptr;
@@ -122,7 +122,7 @@ public:
 		// Add the child to the children array
 		m_children.push_back(&p_child); 
 	}
-	void removeChild(const std::size_t p_id)
+	void removeChild(const EntityID p_id)
 	{
 		// Loop over every child
 		for(decltype(m_children.size()) size = m_children.size(), i = 0; i < size; i++)
@@ -340,5 +340,5 @@ private:
 	SpatialDataManager m_spatialData;
 
 	// ID of a GameObject; separate from m_objectID of a SystemObject
-	ObjectID m_GameObjectID;
+	EntityID m_GameObjectID;
 };

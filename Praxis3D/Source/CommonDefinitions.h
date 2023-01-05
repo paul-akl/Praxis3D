@@ -3,8 +3,11 @@
 #include <GL\glew.h>
 #include <functional>
 
+typedef std::uint32_t EntityID;
 typedef unsigned int UpdateCount;
 typedef std::vector<std::function<void()>> Functors;
+
+constexpr EntityID NULL_ENTITY_ID = std::numeric_limits<EntityID>::max();
 
 enum BindCommandType : unsigned int
 {

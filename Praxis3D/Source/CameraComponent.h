@@ -3,11 +3,11 @@
 #include "GraphicsDataSets.h"
 #include "InheritanceObjects.h"
 
-class CameraComponent : public SystemObject, public SpatialDataManagerObject, public LoadableGraphicsObject
+class CameraComponent : public SystemObject, public LoadableGraphicsObject
 {
 	friend class RendererScene;
 public:
-	CameraComponent(SystemScene *p_systemScene, std::string p_name, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::CameraComponent)
+	CameraComponent(SystemScene *p_systemScene, std::string p_name, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::CameraComponent, p_entityID)
 	{
 
 	}
@@ -41,7 +41,7 @@ public:
 			//{
 				//importError = ErrorCode::Success;
 			//}
-			if(p_properties.getPropertyID() == Properties::Camera)
+			if(p_properties.getPropertyID() == Properties::CameraComponent)
 			{
 				importError = ErrorCode::Success;
 				ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_CameraComponent, m_name + " - Camera loaded");

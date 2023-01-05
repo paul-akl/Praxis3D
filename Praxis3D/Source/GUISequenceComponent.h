@@ -5,11 +5,11 @@
 #include "InheritanceObjects.h"
 #include "System.h"
 
-class GUISequenceComponent : public SystemObject, public GUIDataManagerObject, public LoadableGraphicsObject
+class GUISequenceComponent : public SystemObject
 {
 	friend class ScriptScene;
 public:
-	GUISequenceComponent(SystemScene *p_systemScene, std::string p_name, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::GUISequenceComponent)
+	GUISequenceComponent(SystemScene *p_systemScene, std::string p_name, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::GUISequenceComponent, p_entityID)//, m_GUIData(*this)
 	{
 		m_staticSequence = false;
 	}
@@ -41,7 +41,7 @@ public:
 		ErrorCode importError = ErrorCode::Failure;
 
 		// Check if PropertySet isn't empty and the component hasn't been loaded already
-		if(p_properties && !isLoadedToMemory())
+		if(p_properties)// && !isLoadedToMemory())
 		{
 			if(p_properties.getPropertyID() == Properties::Sequence)
 			{
@@ -82,8 +82,8 @@ public:
 
 			if(importError == ErrorCode::Success)
 			{
-				setLoadedToMemory(true);
-				setLoadedToVideoMemory(true);
+				//setLoadedToMemory(true);
+				//setLoadedToVideoMemory(true);
 				setActive(true);
 			}
 		}
@@ -99,16 +99,16 @@ public:
 		return propertySet;
 	}
 
-	// System type is Graphics
+	// System type is GUI
 	BitMask getSystemType() final override { return Systems::GUI; }
 
-	BitMask getDesiredSystemChanges() final override { return Systems::Changes::None; }
-	BitMask getPotentialSystemChanges() final override { return Systems::Changes::GUI::All; }
+	BitMask getDesiredSystemChanges() final override { return Systems::Changes::GUI::All; }
+	BitMask getPotentialSystemChanges() final override { return Systems::Changes::None; }
 
 	const Functors &getFunctors(const Observer *p_observer, BitMask p_changedBits)
 	{
 		if(CheckBitmask(p_changedBits, Systems::Changes::Type::GUI))
-				return m_guiSequence;
+			return m_guiSequence;
 	}
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) 
@@ -118,6 +118,8 @@ public:
 	}
 
 private:
+	// GUI data
+	//GUIDataManager m_GUIData;
 	Functors m_guiSequence;
 
 	bool m_staticSequence;

@@ -74,6 +74,7 @@ public:
 	// Exports all the data of the scene (including all objects within) as a PropertySet (for example, used for saving to map file)
 	virtual PropertySet exportObject() { return PropertySet(Properties::Null); }
 
+	virtual SystemObject *createComponent(const EntityID &p_entityID, const std::string &p_entityName, const PropertySet &p_properties);
 	virtual SystemObject *createObject(const PropertySet &p_properties) = 0;
 	virtual ErrorCode destroyObject(SystemObject *p_systemObject) = 0;
 
@@ -95,7 +96,7 @@ class SystemObject : public ObservedSubject, public Observer, public ImportExpor
 	friend SystemScene;
 public:
 	SystemObject();
-	SystemObject(SystemScene *p_systemScene, const std::string &p_name, Properties::PropertyID p_objectType);
+	SystemObject(SystemScene *p_systemScene, const std::string &p_name, Properties::PropertyID p_objectType, EntityID p_entityID = NULL_ENTITY_ID);
 	~SystemObject();
 
 	virtual ErrorCode init() { return ErrorCode::Success; };
@@ -112,13 +113,15 @@ public:
 	const inline bool isObjectActive() const { return m_active; }
 
 	// Getters
-	inline std::size_t getObjectID() const				{ return m_objectID;		}
-	inline void *getParent() const						{ return m_parent;			}
-	inline bool isInitialized() const					{ return m_initialized;		}
-	inline bool isUpdateNeeded() const					{ return m_updateNeeded;	}
-	const inline std::string &getName() const			{ return m_name;			}
-	inline SystemScene *getSystemScene() const			{ return m_systemScene;		}
-	inline Properties::PropertyID getObjectType() const { return m_objectType;		}
+	inline EntityID getEntityID() const					{ return m_entityID;					 }
+	const inline bool isEntityIDValid() const			{ return (m_entityID != NULL_ENTITY_ID); }
+	inline std::size_t getObjectID() const				{ return m_objectID;					 }
+	inline void *getParent() const						{ return m_parent;						 }
+	inline bool isInitialized() const					{ return m_initialized;					 }
+	inline bool isUpdateNeeded() const					{ return m_updateNeeded;				 }
+	const inline std::string &getName() const			{ return m_name;						 }
+	inline SystemScene *getSystemScene() const			{ return m_systemScene;					 }
+	inline Properties::PropertyID getObjectType() const { return m_objectType;					 }
 	const virtual std::string &getString(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		switch(p_changedBits)
@@ -131,6 +134,7 @@ public:
 	}
 
 	// Setters
+	inline void setEntityID(const EntityID p_entityID)					 { m_entityID = p_entityID;			}
 	inline void setParent(void *p_parent)								 { m_parent = p_parent;				}
 	inline void setName(std::string p_name)								 { m_name = p_name;					}
 	inline void setSystemScene(SystemScene *p_systemScene)				 { m_systemScene = p_systemScene;	}
@@ -163,6 +167,7 @@ protected:
 
 private:
 	std::size_t m_objectID;
+	EntityID m_entityID;
 };
 
 class SystemTask

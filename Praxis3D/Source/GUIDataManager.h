@@ -7,7 +7,7 @@
 class GUIDataManager
 {
 public:
-	GUIDataManager(const Observer &p_parent) : m_parent(p_parent)
+	GUIDataManager(const Observer &p_parent) : m_parent(&p_parent)
 	{
 		m_updateCount = 0;
 		m_changes = Systems::Changes::None;
@@ -30,7 +30,7 @@ public:
 		if(CheckBitmask(p_changeType, Systems::Changes::GUI::Sequence))
 		{
 			// Update functors
-			m_GUIData.m_functors = p_subject->getFunctors(&m_parent, Systems::Changes::GUI::Sequence);
+			m_GUIData.m_functors = p_subject->getFunctors(m_parent, Systems::Changes::GUI::Sequence);
 			m_changes |= Systems::Changes::GUI::Sequence;
 		}
 
@@ -80,8 +80,8 @@ private:
 	// GUI data
 	GUIData m_GUIData;
 
-	// A reference to the parent (which is the observer of all the received changes); required to retrieve the changed data from the observed subject
-	const Observer &m_parent;
+	// A pointer to the parent (which is the observer of all the received changes); required to retrieve the changed data from the observed subject
+	const Observer *m_parent;
 
 	// Used for update tracking; each time data is change, update count is incremented
 	UpdateCount m_updateCount;

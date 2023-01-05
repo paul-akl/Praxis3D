@@ -1,6 +1,10 @@
 #pragma once
 
 #include <iostream>
+
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <Windows.h>
 
 #include "Config.h"

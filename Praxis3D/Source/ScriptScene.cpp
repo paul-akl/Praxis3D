@@ -5,6 +5,7 @@
 #include "ScriptSystem.h"
 #include "ScriptScene.h"
 #include "TaskManagerLocator.h"
+#include "WorldScene.h"
 
 ScriptScene::ScriptScene(ScriptSystem *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader)
 {
@@ -47,23 +48,43 @@ ErrorCode ScriptScene::setup(const PropertySet &p_properties)
 
 void ScriptScene::update(const float p_deltaTime)
 {
-	for(decltype(m_scriptObjects.getPoolSize()) i = 0, numAllocObjecs = 0, totalNumAllocObjs = m_scriptObjects.getNumAllocated(),
-		size = m_scriptObjects.getPoolSize(); i < size && numAllocObjecs < totalNumAllocObjs; i++)
+	// Get the world scene required for getting components
+	WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
+
+	//	 ____________________________
+	//	|							 |
+	//	| LUA AND SPATIAL COMPONENTS |
+	//	|____________________________|
+	//
+	auto luaAndSpatialView = worldScene->getEntityRegistry().view<LuaComponent, SpatialComponent>();	
+	for(auto entity : luaAndSpatialView)
 	{
-		// Check if the script object is allocated inside the pool container
-		if(m_scriptObjects[i].allocated())
+		LuaComponent &luaComponent = luaAndSpatialView.get<LuaComponent>(entity);
+		SpatialComponent &spatialComponent = luaAndSpatialView.get<SpatialComponent>(entity);
+
+		// Check if the script object is enabled
+		if(luaComponent.isObjectActive())
 		{
-			auto *scriptObject = m_scriptObjects[i].getObject();
+			// Update the object
+			luaComponent.update(p_deltaTime, spatialComponent);
+		}
+	}
 
-			// Increment the number of allocated objects (early bail mechanism)
-			numAllocObjecs++;
+	//	 ____________________________
+	//	|							 |
+	//	|		LUA COMPONENTS		 |
+	//	|____________________________|
+	//
+	auto luaOnlyView = worldScene->getEntityRegistry().view<LuaComponent>(entt::exclude<SpatialComponent>);
+	for(auto entity : luaOnlyView)
+	{
+		LuaComponent &luaComponent = luaOnlyView.get<LuaComponent>(entity);
 
-			// Check if the script object is enabled
-			if(scriptObject->isObjectActive())
-			{
-				// Update the object
-				scriptObject->update(p_deltaTime);
-			}
+		// Check if the script object is enabled
+		if(luaComponent.isObjectActive())
+		{
+			// Update the object
+			luaComponent.update(p_deltaTime);
 		}
 	}
 }
@@ -80,17 +101,29 @@ void ScriptScene::loadInBackground()
 
 ErrorCode ScriptScene::preload()
 {	
-	// Load every script object. It still works in parallel, however,
-	// it returns only when all objects have finished loading (simulating sequential call)
-	TaskManagerLocator::get().parallelFor(size_t(0), m_scriptObjects.getPoolSize(), size_t(1), [=](size_t i)
+	// Get the world scene required for getting components
+	WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
+
+	auto LuaComponentView = worldScene->getEntityRegistry().view<LuaComponent>();
+
+	for(auto entity : LuaComponentView)
 	{
-		if(m_scriptObjects[i].allocated())
-		{
-			m_scriptObjects[i].getObject()->loadToMemory();
-		}
-	});
+		LuaComponentView.get<LuaComponent>(entity).loadToMemory();
+	}
 
 	return ErrorCode::Success;
+
+	// Load every script object. It still works in parallel, however,
+	// it returns only when all objects have finished loading (simulating sequential call)
+	//TaskManagerLocator::get().parallelFor(size_t(0), m_scriptObjects.getPoolSize(), size_t(1), [=](size_t i)
+	//{
+	//	if(m_scriptObjects[i].allocated())
+	//	{
+	//		m_scriptObjects[i].getObject()->loadToMemory();
+	//	}
+	//});
+
+	//return ErrorCode::Success;
 }
 
 PropertySet ScriptScene::exportObject()
@@ -109,6 +142,52 @@ PropertySet ScriptScene::exportObject()
 	//	objects.addPropertySet(m_scriptObjects[i]->exportObject());
 
 	return propertySet;
+}
+
+SystemObject *ScriptScene::createComponent(const EntityID &p_entityID, const std::string &p_entityName, const PropertySet &p_properties)
+{
+	// If valid type was not specified, or object creation failed, return a null object instead
+	SystemObject *returnObject = g_nullSystemBase.getScene()->createObject(p_properties);
+
+	// Check if property set node is present
+	if(p_properties)
+	{
+		// Get the world scene required for attaching components to the entity
+		WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+		switch(p_properties.getPropertyID())
+		{
+		case Properties::PropertyID::LuaComponent:
+		{
+			auto &component = worldScene->addComponent<LuaComponent>(p_entityID, this, p_entityName + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::LuaComponent));
+
+			// Try to initialize the lua component
+			auto componentInitError = component.init();
+			if(componentInitError == ErrorCode::Success)
+			{
+				// Try to import the component
+				auto const &componentImportError = component.importObject(p_properties);
+
+				// Remove the component if it failed to import
+				if(componentImportError != ErrorCode::Success)
+				{
+					ErrHandlerLoc().get().log(componentImportError, ErrorSource::Source_LuaComponent, component.getName());
+					worldScene->removeComponent<LuaComponent>(p_entityID);
+				}
+				else
+					returnObject = &component;
+			}
+			else // Remove the component if it failed to initialize
+			{
+				ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_LuaComponent, component.getName());
+				worldScene->removeComponent<LuaComponent>(p_entityID);
+			}
+		}
+		break;
+		}
+	}
+
+	return returnObject;
 }
 
 SystemObject *ScriptScene::createObject(const PropertySet &p_properties)

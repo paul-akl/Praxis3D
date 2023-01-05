@@ -8,8 +8,8 @@ class ShaderComponent : public SystemObject, public LoadableGraphicsObject
 {
 	friend class RendererScene;
 public:
-	ShaderComponent(SystemScene *p_systemScene, std::string p_name, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::Shaders) { }
-	ShaderComponent(SystemScene *p_systemScene, std::string p_name, ShaderLoader::ShaderProgram &p_shader, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::Shaders), m_shaderData(new ShaderData(p_shader)) { }
+	ShaderComponent(SystemScene *p_systemScene, std::string p_name, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::Shaders, p_entityID), m_shaderData(nullptr) { }
+	ShaderComponent(SystemScene *p_systemScene, std::string p_name, ShaderLoader::ShaderProgram &p_shader, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::Shaders, p_entityID), m_shaderData(new ShaderData(p_shader)) { }
 	~ShaderComponent() 
 	{ 
 		delete m_shaderData;
@@ -102,6 +102,8 @@ public:
 				setLoadedToVideoMemory(true);
 		}
 	}
+
+	const inline ShaderData *getShaderData() const { return m_shaderData; }
 
 private:
 	ShaderData *m_shaderData;

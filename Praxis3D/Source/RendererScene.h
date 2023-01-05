@@ -4,7 +4,10 @@
 // Upon updating, processes all the objects (for example, frustum culling, matrix updates, etc),
 // and creates arrays of objects to be rendered. From here, they should be sent to the renderer.
 
+#include <list>
+
 #include "CameraGraphicsObject.h"
+#include "EntityViewDefinitions.h"
 #include "EnvironmentMapObjects.h"
 #include "GraphicsDataSets.h"
 #include "GraphicsObject.h"
@@ -19,10 +22,36 @@
 
 class RendererSystem;
 
+struct LoadableComponentContainer
+{
+	LoadableComponentContainer(ModelComponent &p_model)
+	{
+		m_componentType = ComponentType::ComponentType_Model;
+		m_entityID = p_model.getEntityID();
+	}
+	LoadableComponentContainer(ShaderComponent &p_shader)
+	{
+		m_componentType = ComponentType::ComponentType_Shader;
+		m_entityID = p_shader.getEntityID();
+	}
+
+	enum ComponentType
+	{
+		ComponentType_Model,
+		ComponentType_Shader
+	};
+
+	ComponentType m_componentType;
+	EntityID m_entityID;
+};
+
 // Used to store processed objects, so they can be sent to the renderer
 struct SceneObjects
 {
 	SceneObjects() : /*m_staticSkybox(nullptr),*/ m_directionalLight(nullptr) { }
+
+	ModelSpatialView m_models;
+	ModelShaderSpatialView m_modelsWithShaders;
 
 	// Camera
 	CameraData m_camera;
@@ -64,6 +93,7 @@ public:
 	// Processes all the objects and puts them in the separate vectors
 	void update(const float p_deltaTime);
 	
+	SystemObject *createComponent(const EntityID &p_entityID, const std::string &p_entityName, const PropertySet &p_properties);
 	SystemObject *createObject(const PropertySet &p_properties);
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
@@ -196,7 +226,9 @@ private:
 	//ObjectPool<PointLightObject> m_pointLightPool;
 	//ObjectPool<SpotLightObject> m_spotLightPool;
 	//ObjectPool<EnvironmentMapObject> m_envMapPool;
-	
+
+	std::list<LoadableComponentContainer> m_componentsLoadingToMemory;
+
 	//NEW
 	ObjectPool<GraphicsObject> m_graphicsObjPool;
 	std::vector<GraphicsObject*> m_objectsLoadingToMemory;

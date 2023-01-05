@@ -47,32 +47,32 @@ public:
 			if(!isLoadedToMemory())
 			{
 				// Check if there is a property set for sequence and load the GUI sequence component if there is
-				auto const &sequenceComponentProperty = p_properties.getPropertySetByID(Properties::Sequence);
-				if(sequenceComponentProperty)
-				{
-					// Create the GUI sequence component
-					addComponent(new GUISequenceComponent(m_systemScene, m_name + Config::componentVar().lua_component_name));
+				//auto const &sequenceComponentProperty = p_properties.getPropertySetByID(Properties::Sequence);
+				//if(sequenceComponentProperty)
+				//{
+				//	// Create the GUI sequence component
+				//	addComponent(new GUISequenceComponent(m_systemScene, m_name + Config::componentVar().lua_component_name));
 
-					// Try to initialize the lua component
-					auto componentInitError = m_GUISequenceComponent->init();
-					if(componentInitError == ErrorCode::Success)
-					{
-						// Try to import the component
-						auto const &componentImportError = m_GUISequenceComponent->importObject(sequenceComponentProperty);
+				//	// Try to initialize the lua component
+				//	auto componentInitError = m_GUISequenceComponent->init();
+				//	if(componentInitError == ErrorCode::Success)
+				//	{
+				//		// Try to import the component
+				//		auto const &componentImportError = m_GUISequenceComponent->importObject(sequenceComponentProperty);
 
-						// Remove the component if it failed to import
-						if(componentImportError != ErrorCode::Success)
-						{
-							removeComponent(GUIComponentType::GUIComponentType_Sequence);
-							ErrHandlerLoc().get().log(componentImportError, ErrorSource::Source_GUISequenceComponent, m_name);
-						}
-					}
-					else // Remove the component if it failed to initialize
-					{
-						removeComponent(GUIComponentType::GUIComponentType_Sequence);
-						ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_GUISequenceComponent, m_name);
-					}
-				}
+				//		// Remove the component if it failed to import
+				//		if(componentImportError != ErrorCode::Success)
+				//		{
+				//			removeComponent(GUIComponentType::GUIComponentType_Sequence);
+				//			ErrHandlerLoc().get().log(componentImportError, ErrorSource::Source_GUISequenceComponent, m_name);
+				//		}
+				//	}
+				//	else // Remove the component if it failed to initialize
+				//	{
+				//		removeComponent(GUIComponentType::GUIComponentType_Sequence);
+				//		ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_GUISequenceComponent, m_name);
+				//	}
+				//}
 			}
 		}
 		else
@@ -136,7 +136,7 @@ public:
 		m_GUISequenceComponent = p_component;
 
 		// Share the GUIObjects GUI data with the component
-		p_component->setGUIDataManagerReference(m_GUIData);
+		//p_component->setGUIDataManagerReference(m_GUIData);
 
 		// Set the flag for the GUI sequence component, so it is known from the flag that there is one currently present
 		m_componentsFlag |= Systems::GUIObjectComponents::Sequence;

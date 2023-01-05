@@ -162,6 +162,7 @@ public:
 // an empty default model, if the loading failed.
 class ModelLoader : public LoaderBase<ModelLoader, Model>
 {
+	friend class Model;
 private:
 	Model *m_defaultModel;
 
@@ -277,4 +278,5 @@ public:
 	ErrorCode init();
 
 	virtual ModelHandle load(std::string p_filename, bool p_startBackgroundLoading = true);
+
 };

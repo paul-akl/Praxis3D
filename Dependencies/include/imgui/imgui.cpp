@@ -820,6 +820,9 @@ CODE
 #define NOMINMAX
 #endif
 #ifndef __MINGW32__
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <Windows.h>        // _wfopen, OpenClipboard
 #else
 #include <windows.h>

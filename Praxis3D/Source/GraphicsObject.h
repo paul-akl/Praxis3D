@@ -70,7 +70,7 @@ public:
 				if(camera)
 				{
 					// Create the camera component
-					addComponent(new CameraComponent(m_systemScene, m_name + Config::componentVar().camera_component_name));
+					//addComponent(new CameraComponent(m_systemScene, m_name + Config::componentVar().camera_component_name));
 
 					// Try to initialize the camera component
 					auto componentInitError = m_cameraComponent->init();
@@ -98,7 +98,7 @@ public:
 				if(lighting)
 				{
 					// Create the light component
-					addComponent(new LightComponent(m_systemScene, m_name + Config::componentVar().light_component_name));
+					//addComponent(new LightComponent(m_systemScene, m_name + Config::componentVar().light_component_name));
 
 					// Try to initialize the light component
 					auto componentInitError = m_lightComponent->init();
@@ -126,7 +126,7 @@ public:
 				if(models)
 				{
 					// Create the model component
-					addComponent(new ModelComponent(m_systemScene, m_name + Config::componentVar().model_component_name));
+					//addComponent(new ModelComponent(m_systemScene, m_name + Config::componentVar().model_component_name));
 
 					// Try to initialize the model component
 					auto componentInitError = m_modelComponent->init();
@@ -144,7 +144,7 @@ public:
 					}
 					else // Remove the component if it failed to initialize
 					{
-						removeComponent(GraphicsComponentType::GraphicsComponentType_Camera);
+						removeComponent(GraphicsComponentType::GraphicsComponentType_Model);
 						ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_ModelComponent, m_name);
 					}
 				}
@@ -154,7 +154,7 @@ public:
 				if(shaders)
 				{
 					// Create the shader component
-					addComponent(new ShaderComponent(m_systemScene, m_name + Config::componentVar().shader_component_name));
+					//addComponent(new ShaderComponent(m_systemScene, m_name + Config::componentVar().shader_component_name));
 
 					// Try to initialize the shader component
 					auto componentInitError = m_shaderComponent->init();
@@ -172,7 +172,7 @@ public:
 					}
 					else // Remove the component if it failed to initialize
 					{
-						removeComponent(GraphicsComponentType::GraphicsComponentType_Camera);
+						removeComponent(GraphicsComponentType::GraphicsComponentType_Shader);
 						ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_ShaderComponent, m_name);
 					}
 				}
@@ -253,8 +253,8 @@ public:
 	{
 		SpatialDataManagerObject::setSpatialDataManagerReference(p_spatialData);
 
-		if(lightComponentPresent())
-			m_lightComponent->setSpatialDataManagerReference(*m_spatialData);
+		//if(lightComponentPresent())
+		//	m_lightComponent->setSpatialDataManagerReference(*m_spatialData);
 	}
 
 	// System type is Graphics
@@ -339,7 +339,7 @@ public:
 		m_cameraComponent = p_component;
 
 		// Share the GraphicsObjects spatial data with the component
-		m_cameraComponent->setSpatialDataManagerReference(*m_spatialData);
+		//m_cameraComponent->setSpatialDataManagerReference(*m_spatialData);
 
 		// Set the flag for the camera component, so it is known from the flag that there is one currently present
 		m_componentsFlag |= Systems::GraphicsObjectComponents::Camera;
@@ -351,7 +351,7 @@ public:
 		m_lightComponent = p_component;
 
 		// Share the GraphicsObjects spatial data with the component
-		m_lightComponent->setSpatialDataManagerReference(*m_spatialData);
+		//m_lightComponent->setSpatialDataManagerReference(*m_spatialData);
 
 		// Set the flag for the lighting component, so it is known from the flag that there is one currently present
 		m_componentsFlag |= Systems::GraphicsObjectComponents::Lighting;

@@ -573,7 +573,6 @@ private:
 	// Lua state for the loaded script
 	sol::state m_luaState;
 	std::string m_luaScriptFilename;
-
 	// Function binds that call functions inside the lua script
 	sol::function m_luaInit;
 	sol::function m_luaUpdate;

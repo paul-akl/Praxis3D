@@ -193,3 +193,16 @@ protected:
 	bool	m_loadedToMemory,
 			m_loadedToVideoMemory;
 };
+
+// Functionality for tracking an index of a double buffer
+class DoubleBufferObject
+{
+public:
+	DoubleBufferObject() : m_bufferIndex(0) { }
+	~DoubleBufferObject() { }
+
+	void swapBuffers() { m_bufferIndex = !m_bufferIndex; }
+
+protected:
+	std::size_t m_bufferIndex;
+};

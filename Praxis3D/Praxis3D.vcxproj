@@ -98,6 +98,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -117,7 +118,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>false</ConformanceMode>
       <AdditionalOptions>/bigobj /MP8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -235,6 +236,7 @@
     <ClInclude Include="Source\Engine.h" />
     <ClInclude Include="Source\EngineDefinitions.h" />
     <ClInclude Include="Source\EngineState.h" />
+    <ClInclude Include="Source\EntityViewDefinitions.h" />
     <ClInclude Include="Source\EnumFactory.h" />
     <ClInclude Include="Source\EnvironmentMapObjects.h" />
     <ClInclude Include="Source\ErrorCodes.h" />
@@ -245,6 +247,7 @@
     <ClInclude Include="Source\Framebuffer.h" />
     <ClInclude Include="Source\GameLogicObject.h" />
     <ClInclude Include="Source\GameObject.h" />
+    <ClInclude Include="Source\GameObjectComponent.h" />
     <ClInclude Include="Source\GeometryBuffer.h" />
     <ClInclude Include="Source\GeometryPass.h" />
     <ClInclude Include="Source\GraphicsDataSets.h" />
@@ -315,6 +318,7 @@
     <ClInclude Include="Source\ShaderUniformUpdater.h" />
     <ClInclude Include="Source\SkyPass.h" />
     <ClInclude Include="Source\SolarTimeScript.h" />
+    <ClInclude Include="Source\SpatialComponent.h" />
     <ClInclude Include="Source\SpatialDataManager.h" />
     <ClInclude Include="Source\SpinWait.h" />
     <ClInclude Include="Source\SunScript.h" />

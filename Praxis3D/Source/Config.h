@@ -196,6 +196,7 @@ namespace Properties
 	Code(Null, = 0) \
 	/* General */ \
 	Code(ArrayEntry,) \
+	Code(Components,) \
 	Code(Default,) \
 	Code(Filename,) \
 	Code(Index,) \
@@ -242,11 +243,13 @@ namespace Properties
 	Code(Height,) \
 	Code(HeightScale,) \
 	Code(Intensity,) \
+	Code(LightComponent,) \
 	Code(Lighting,) \
 	Code(Materials,) \
 	Code(Metalness,) \
 	Code(Meshes,) \
 	Code(Models,) \
+	Code(ModelComponent,) \
 	Code(ModelObject,) \
 	Code(ModelPoolSize,) \
 	Code(NegativeX,) \
@@ -265,6 +268,7 @@ namespace Properties
 	Code(RMHAO,) \
 	Code(Roughness,) \
 	Code(Shaders,) \
+	Code(ShaderComponent,) \
 	Code(ShaderPoolSize,) \
 	Code(ShaderGraphicsObject,) \
 	Code(ShaderModelObject,) \
@@ -366,6 +370,7 @@ namespace Properties
 	Code(GameObject,) \
 	Code(ID,) \
 	Code(Parent,) \
+	Code(SpatialComponent,) \
 	Code(World,) \
 	/* End of property IDs */ \
 	Code(NumberOfPropertyIDs,) 
@@ -375,6 +380,7 @@ namespace Properties
 	{
 		GetString(Null),
 		GetString(ArrayEntry),
+		GetString(Components),
 		GetString(Default),
 		GetString(Filename),
 		GetString(Index),
@@ -419,11 +425,13 @@ namespace Properties
 		GetString(Height),
 		GetString(HeightScale),
 		GetString(Intensity),
+		GetString(LightComponent),
 		GetString(Lighting),
 		GetString(Materials),
 		GetString(Metalness),
 		GetString(Meshes),
 		GetString(Models),
+		GetString(ModelComponent),
 		GetString(ModelObject),
 		GetString(ModelPoolSize),
 		GetString(NegativeX),
@@ -442,6 +450,7 @@ namespace Properties
 		GetString(RMHAO),
 		GetString(Roughness),
 		GetString(Shaders),
+		GetString(ShaderComponent),
 		GetString(ShaderPoolSize),
 		GetString(ShaderGraphicsObject),
 		GetString(ShaderModelObject),
@@ -534,10 +543,12 @@ namespace Properties
 		GetString(MouseCapture),
 		GetString(VerticalSync),
 		GetString(WindowTitle),
+		// World
 		GetString(Children),
 		GetString(GameObject),
 		GetString(ID),
 		GetString(Parent),
+		GetString(SpatialComponent),
 		GetString(World)
 	};
 
@@ -599,6 +610,7 @@ public:
 		ComponentVariables()
 		{
 			camera_component_name = " (Camera Component)";
+			component_name_separator = " - ";
 			light_component_name = " (Light Component)";
 			lua_component_name = " (Lua Component)";
 			model_component_name = " (Model Component)";
@@ -606,6 +618,7 @@ public:
 		}
 
 		std::string camera_component_name;
+		std::string component_name_separator;
 		std::string light_component_name;
 		std::string lua_component_name;
 		std::string model_component_name;

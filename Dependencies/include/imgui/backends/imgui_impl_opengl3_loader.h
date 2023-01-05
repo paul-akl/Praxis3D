@@ -90,6 +90,9 @@ extern "C" {
 ** used to make the header, and the header can be found at
 **   https://github.com/KhronosGroup/OpenGL-Registry
 */
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #if defined(_WIN32) && !defined(APIENTRY) && !defined(__CYGWIN__) && !defined(__SCITECH_SNAP__)
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
@@ -572,6 +575,9 @@ extern "C" {
 #if defined(_WIN32)
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
 #endif
 #include <windows.h>
 

@@ -6,7 +6,7 @@
 #include "ObserverBase.h"
 #include "System.h"
 
-class LightComponent : public SystemObject, public SpatialDataManagerObject, public LoadableGraphicsObject
+class LightComponent : public SystemObject, public LoadableGraphicsObject
 {
 	friend class RendererScene;
 public:
@@ -18,21 +18,21 @@ public:
 		LightComponentType_spot
 	};
 
-	LightComponent(SystemScene *p_systemScene, std::string p_name, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::Lighting)
+	LightComponent(SystemScene *p_systemScene, std::string p_name, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::Lighting, p_entityID)
 	{
 		m_lightComponentType = LightComponentType::LightComponentType_null;
 	}
-	LightComponent(SystemScene *p_systemScene, std::string p_name, DirectionalLightDataSet &p_lightDataSet, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::DirectionalLight)
+	LightComponent(SystemScene *p_systemScene, std::string p_name, DirectionalLightDataSet &p_lightDataSet, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::DirectionalLight, p_entityID)
 	{
 		m_lightComponentType = LightComponentType::LightComponentType_directional;
 		m_lightComponent.m_directional = p_lightDataSet;
 	}
-	LightComponent(SystemScene *p_systemScene, std::string p_name, PointLightDataSet &p_lightDataSet, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::PointLight)
+	LightComponent(SystemScene *p_systemScene, std::string p_name, PointLightDataSet &p_lightDataSet, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::PointLight, p_entityID)
 	{
 		m_lightComponentType = LightComponentType::LightComponentType_point;
 		m_lightComponent.m_point = p_lightDataSet;
 	}
-	LightComponent(SystemScene *p_systemScene, std::string p_name, SpotLightDataSet &p_lightDataSet, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::SpotLight)
+	LightComponent(SystemScene *p_systemScene, std::string p_name, SpotLightDataSet &p_lightDataSet, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::SpotLight, p_entityID)
 	{
 		m_lightComponentType = LightComponentType::LightComponentType_spot;
 		m_lightComponent.m_spot = p_lightDataSet;
@@ -66,7 +66,7 @@ public:
 		ErrorCode importError = ErrorCode::Failure;
 
 		// Check if light node is present and the component hasn't been loaded already
-		if(p_properties && !isLoadedToMemory())
+		if(p_properties && !isLoadedToMemory()) 
 		{	
 			// Get the light type
 			auto const &type = p_properties.getPropertyByID(Properties::Type).getID();
@@ -80,7 +80,6 @@ public:
 
 				m_lightComponent.m_directional.m_color = p_properties.getPropertyByID(Properties::Color).getVec3f();
 				m_lightComponent.m_directional.m_intensity = p_properties.getPropertyByID(Properties::Intensity).getFloat();
-				m_lightComponent.m_directional.m_direction = glm::vec3(m_spatialData->getWorldTransform()[2]);
 				setLoadedToMemory(true);
 				importError = ErrorCode::Success;
 
@@ -93,7 +92,6 @@ public:
 
 				m_lightComponent.m_point.m_color = p_properties.getPropertyByID(Properties::Color).getVec3f();
 				m_lightComponent.m_point.m_intensity = p_properties.getPropertyByID(Properties::Intensity).getFloat();
-				m_lightComponent.m_point.m_position = glm::vec3(m_spatialData->getWorldTransform()[3]);
 				setLoadedToMemory(true);
 				importError = ErrorCode::Success;
 
@@ -107,8 +105,6 @@ public:
 				m_lightComponent.m_spot.m_color = p_properties.getPropertyByID(Properties::Color).getVec3f();
 				m_lightComponent.m_spot.m_cutoffAngle = p_properties.getPropertyByID(Properties::CutoffAngle).getFloat();
 				m_lightComponent.m_spot.m_intensity = p_properties.getPropertyByID(Properties::Intensity).getFloat();
-				m_lightComponent.m_spot.m_direction = glm::vec3(m_spatialData->getWorldTransform()[2]);
-				m_lightComponent.m_spot.m_position = glm::vec3(m_spatialData->getWorldTransform()[3]);
 				setLoadedToMemory(true);
 				importError = ErrorCode::Success;
 
@@ -172,8 +168,8 @@ public:
 
 	void loadToMemory() 
 	{
-		updatePosition(glm::vec3(m_spatialData->getWorldTransform()[3]));
-		updateRotation(glm::vec3(m_spatialData->getWorldTransform()[2]));
+		//updatePosition(glm::vec3(m_spatialData->getWorldTransform()[3]));
+		//updateRotation(glm::vec3(m_spatialData->getWorldTransform()[2]));
 	}
 
 	// System type is Graphics
@@ -182,11 +178,11 @@ public:
 	void update(const float p_deltaTime)
 	{
 		// If the spatial data has changed, update the spatial data in light datasets
-		if(hasSpatialDataUpdated())
-		{
-			updatePosition(glm::vec3(m_spatialData->getWorldTransform()[3]));
-			updateRotation(glm::vec3(m_spatialData->getWorldTransform()[2]));
-		}
+		//if(hasSpatialDataUpdated())
+		//{
+		//	updatePosition(glm::vec3(m_spatialData->getWorldTransform()[3]));
+		//	updateRotation(glm::vec3(m_spatialData->getWorldTransform()[2]));
+		//}
 
 		if(isUpdateNeeded())
 		{
@@ -256,12 +252,19 @@ public:
 
 	inline const LightComponentType getLightType() const { return m_lightComponentType; }
 
+	// Get the directional light data set. Unsafe - does not perform a check whether the light type is correct
+	inline DirectionalLightDataSet *getDirectionalLight() { return &m_lightComponent.m_directional; }
+	// Get the point light data set. Unsafe - does not perform a check whether the light type is correct
+	inline PointLightDataSet *getPointLight() { return &m_lightComponent.m_point; }
+	// Get the spot light data set. Unsafe - does not perform a check whether the light type is correct
+	inline SpotLightDataSet *getSpotLight() { return &m_lightComponent.m_spot; }
+
 	// Get the directional light data set. If the type of light is not directional, returns a null pointer
-	DirectionalLightDataSet *getDirectionalLight() { return (m_lightComponentType == LightComponentType::LightComponentType_directional) ? &m_lightComponent.m_directional : nullptr; }
+	inline DirectionalLightDataSet *getDirectionalLightSafe() { return (m_lightComponentType == LightComponentType::LightComponentType_directional) ? &m_lightComponent.m_directional : nullptr; }
 	// Get the point light data set. If the type of light is not point, returns a null pointer
-	PointLightDataSet *getPointLight() { return (m_lightComponentType == LightComponentType::LightComponentType_point) ? &m_lightComponent.m_point : nullptr; }
+	inline PointLightDataSet *getPointLightSafe() { return (m_lightComponentType == LightComponentType::LightComponentType_point) ? &m_lightComponent.m_point : nullptr; }
 	// Get the spot light data set. If the type of light is not spot, returns a null pointer
-	SpotLightDataSet *getSpotLight() { return (m_lightComponentType == LightComponentType::LightComponentType_spot) ? &m_lightComponent.m_spot : nullptr; }
+	inline SpotLightDataSet *getSpotLightSafe() { return (m_lightComponentType == LightComponentType::LightComponentType_spot) ? &m_lightComponent.m_spot : nullptr; }
 
 private:
 	// Union object that hold any one of the three light types

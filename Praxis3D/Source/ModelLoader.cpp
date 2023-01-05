@@ -116,8 +116,7 @@ void Model::loadFromFile()
 	// If data restructuring was successful, set loaded to memory flag
 	if(error == ErrorCode::Success)
 		setLoadedToMemory(true);
-	// If data restructuring failed, log an error
-	else
+	else // If data restructuring failed, log an error
 		ErrHandlerLoc::get().log(error, ErrorSource::Source_ModelLoader);
 }
 ErrorCode Model::loadFromScene(const aiScene &p_assimpScene)

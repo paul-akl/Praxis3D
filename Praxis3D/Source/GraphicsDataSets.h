@@ -27,7 +27,7 @@ struct MaterialData
 struct MeshData
 {
 	MeshData(const Model::Mesh &p_mesh, MaterialData p_materials[MaterialType::MaterialType_NumOfTypes], const float p_heightScale, const float p_alphaThreshold) : 
-		m_mesh(p_mesh), 
+		m_mesh(&p_mesh), 
 		m_heightScale(p_heightScale),
 		m_alphaThreshold(p_alphaThreshold) 
 	{
@@ -40,7 +40,7 @@ struct MeshData
 	float m_alphaThreshold;
 
 	// Handle to a mesh
-	const Model::Mesh &m_mesh;
+	const Model::Mesh *m_mesh;
 
 	// An array of materials of each type
 	MaterialData m_materials[MaterialType::MaterialType_NumOfTypes];

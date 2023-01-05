@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include "Clock.h"
 #include "Config.h"
 #include "ErrorCodes.h"

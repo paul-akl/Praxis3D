@@ -47,7 +47,7 @@ public:
 		{
 			if(!isLoadedToMemory())
 			{
-				// Check if there is a property set for camera and load the camera component if there is
+				// Check if there is a property set for lua component and load the lua component if there is
 				auto const &luaComponentProperty = p_properties.getPropertySetByID(Properties::Lua);
 				if(luaComponentProperty)
 				{

@@ -1,6 +1,10 @@
 
+#include "WorldScene.h"
 #include "RendererScene.h"
 #include "RendererSystem.h"
+#include "SceneLoader.h"
+#include "SpatialComponent.h"
+#include "WorldScene.h"
 
 RendererScene::RendererScene(RendererSystem *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader)
 {
@@ -18,6 +22,9 @@ ErrorCode RendererScene::init()
 {
 	ErrorCode returnError = ErrorCode::Success;
 	
+	if(!entt::basic_component_traits::in_place_delete)
+		ErrHandlerLoc().get().log(ErrorType::Error, ErrorSource::Source_WorldScene, "entt::basic_component_traits::in_place_delete is switched off, disabling pointer stability upon component deletion");
+		
 	// Create a default camera, in case it is not created upon loading a scene
 	m_camera = new CameraObject(this, "Default Camera");
 
@@ -55,6 +62,8 @@ ErrorCode RendererScene::setup(const PropertySet &p_properties)
 
 ErrorCode RendererScene::preload()
 {
+
+
 	// Implementation note: use number of allocated objects as an early bail - this method is most
 	// likely called after populating pools, which means objects are lined at the start of the pools)
 
@@ -134,6 +143,35 @@ ErrorCode RendererScene::preload()
 	TaskManagerLocator::get().parallelFor(size_t(0), m_objectsLoadingToMemory.size(), size_t(1), [=](size_t i)
 		{
 			m_objectsLoadingToMemory[i]->loadToMemory();
+		});
+
+	// Get the entity registry 
+	auto &entityRegistry = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World))->getEntityRegistry();
+
+	std::vector<SystemObject*> componentsToLoad;
+	for(auto &component : m_componentsLoadingToMemory)
+	{
+		switch(component.m_componentType)
+		{
+			case LoadableComponentContainer::ComponentType_Model:
+			{
+				componentsToLoad.push_back(&entityRegistry.get<ModelComponent>(component.m_entityID));
+			}
+			break;
+
+			case LoadableComponentContainer::ComponentType_Shader:
+			{
+				componentsToLoad.push_back(&entityRegistry.get<ShaderComponent>(component.m_entityID));
+			}
+			break;
+		}
+	}	
+	
+	// Load every object to memory. It still works in parallel, however,
+	// it returns only when all objects have finished loading (simulating sequential call)
+	TaskManagerLocator::get().parallelFor(size_t(0), componentsToLoad.size(), size_t(1), [=](size_t i)
+		{
+			componentsToLoad[i]->loadToMemory();
 		});
 
 	return ErrorCode::Success;
@@ -225,6 +263,210 @@ PropertySet RendererScene::exportObject()
 
 void RendererScene::update(const float p_deltaTime)
 {
+	// Clear variables from previous frame
+	m_sceneObjects.m_directionalLight = &m_directionalLight->getLightDataSet();
+
+	// Clear arrays from previous frame
+	m_sceneObjects.m_pointLights.clear();
+	m_sceneObjects.m_spotLights.clear();
+	m_sceneObjects.m_loadToVideoMemory.clear();
+
+	// Get the world scene required for attaching components to the entity
+	WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
+
+	// Get the entity registry 
+	auto &entityRegistry = worldScene->getEntityRegistry();
+
+	//	 _______________________________
+	//	|							    |
+	//	| CURRENTLY LOADING COMPONENTS	|
+	//	|_______________________________|
+	//
+	bool componentHasBeenLoaded = false;
+	decltype(Config::rendererVar().objects_loaded_per_frame) objectsThatCanBeLoadedThisFrame = Config::rendererVar().objects_loaded_per_frame;
+	auto it = m_componentsLoadingToMemory.begin();
+	while(it != m_componentsLoadingToMemory.end() && objectsThatCanBeLoadedThisFrame != 0)
+	{
+		switch(it->m_componentType)
+		{
+			case LoadableComponentContainer::ComponentType_Model:
+			{
+				ModelComponent &modelComponent = entityRegistry.get<ModelComponent>(it->m_entityID);
+
+				// Perform a check that marks an object if it is loaded to memory
+				modelComponent.performCheckIsLoadedToMemory();
+
+				// If the object has loaded to memory already, add to load queue
+				if(modelComponent.isLoadedToMemory())
+				{
+					componentHasBeenLoaded = true;
+
+					// Make the component active, so it is processed in the renderer
+					modelComponent.setActive(true);
+
+					// Get all loadable objects from the model component
+					auto loadableObjectsFromModel = modelComponent.getLoadableObjects();
+
+					// Iterate over all loadable objects from the model component, and if any of them are not loaded to video memory already, add them to the to-load list
+					for(decltype(loadableObjectsFromModel.size()) size = loadableObjectsFromModel.size(), i = 0; i < size; i++)
+						if(!loadableObjectsFromModel[i].isLoadedToVideoMemory())
+							m_sceneObjects.m_loadToVideoMemory.emplace_back(loadableObjectsFromModel[i]);
+				}
+			}
+			break;
+
+			case LoadableComponentContainer::ComponentType_Shader:
+			{
+				ShaderComponent &shaderComponent = entityRegistry.get<ShaderComponent>(it->m_entityID);
+
+				// Perform a check that marks an object if it is loaded to memory
+				shaderComponent.performCheckIsLoadedToMemory();
+
+				// If the object has loaded to memory already, add to load queue
+				if(shaderComponent.isLoadedToMemory())
+				{
+					componentHasBeenLoaded = true;
+
+					// Make the component active, so it is processed in the renderer
+					shaderComponent.setActive(true);
+
+					// Get all loadable objects from the shader component
+					auto loadableObjectsFromShader = shaderComponent.getLoadableObjects();
+
+					// Iterate over all loadable objects from the model component, and if any of them are not loaded to video memory already, add them to the to-load list
+					for(decltype(loadableObjectsFromShader.size()) size = loadableObjectsFromShader.size(), i = 0; i < size; i++)
+						if(!loadableObjectsFromShader[i].isLoadedToVideoMemory())
+							m_sceneObjects.m_loadToVideoMemory.emplace_back(loadableObjectsFromShader[i]);
+				}
+			}
+			break;
+		}
+
+		// If the component has been loaded, remove it from the list; otherwise just increment the iterator to continue to the next element
+		if(componentHasBeenLoaded)
+		{
+			// Remove the element from the list since it has been loaded to memory
+			it = m_componentsLoadingToMemory.erase(it);
+
+			// Decrement the count of the allowed number of objects that can be loaded per frame
+			objectsThatCanBeLoadedThisFrame--;
+
+			componentHasBeenLoaded = false;
+		}
+		else
+		{
+			// Increment iterator since no elements have been removed
+			++it;
+		}
+	}
+
+	//	 ___________________________
+	//	|							|
+	//	|	  COMPONENT UPDATES		|
+	//	|___________________________|
+	//
+	auto modelView = worldScene->getEntityRegistry().view<ModelComponent>();
+	for(auto entity : modelView)
+	{
+		auto &component = modelView.get<ModelComponent>(entity);
+
+		if(!component.isLoadedToVideoMemory())
+			component.performCheckIsLoadedToVideoMemory();
+	}
+
+	auto shaderView = worldScene->getEntityRegistry().view<ShaderComponent>();
+	for(auto entity : shaderView)
+	{
+		auto &component = shaderView.get<ShaderComponent>(entity);
+
+		if(!component.isLoadedToVideoMemory())
+			component.performCheckIsLoadedToVideoMemory();
+	}
+
+	//	 ___________________________
+	//	|							|
+	//	|	  MODEL COMPONENTS		|
+	//	|___________________________|
+	//
+	m_sceneObjects.m_models = worldScene->getEntityRegistry().view<ModelComponent, SpatialComponent>(entt::exclude<ShaderComponent>);
+	m_sceneObjects.m_modelsWithShaders = worldScene->getEntityRegistry().view<ModelComponent, ShaderComponent, SpatialComponent>();
+
+	//	 ___________________________
+	//	|							|
+	//	|	  LIGHT COMPONENTS		|
+	//	|___________________________|
+	//
+	auto lightsView = worldScene->getEntityRegistry().view<LightComponent, SpatialComponent>();
+	for(auto entity : lightsView)
+	{
+		auto &lightComponent = lightsView.get<LightComponent>(entity);
+		auto &spatialComponent = lightsView.get<SpatialComponent>(entity);
+
+		// Check if the light is enabled
+		if(lightComponent.isObjectActive())
+		{
+			// Add the light data to the corresponding array, based on the light type
+			switch(lightComponent.getLightType())
+			{
+			case LightComponent::LightComponentType_point:
+			{
+				// Update position of the light data set
+				PointLightDataSet *lightDataSet = lightComponent.getPointLight();
+				lightDataSet->m_position = spatialComponent.getSpatialDataChangeManager().getWorldTransform()[3];
+
+				m_sceneObjects.m_pointLights.push_back(*lightDataSet);
+			}
+				break;
+			case LightComponent::LightComponentType_spot:
+			{
+				// Update position and rotation of the light data set
+				SpotLightDataSet *lightDataSet = lightComponent.getSpotLight();
+				lightDataSet->m_position = spatialComponent.getSpatialDataChangeManager().getWorldTransform()[3];
+				lightDataSet->m_direction = spatialComponent.getSpatialDataChangeManager().getWorldTransform()[2];
+
+				m_sceneObjects.m_spotLights.push_back(*lightDataSet);
+			}
+				break;
+			case LightComponent::LightComponentType_directional:
+			{
+
+				DirectionalLightDataSet *lightDataSet = lightComponent.getDirectionalLight();
+				lightDataSet->m_direction = spatialComponent.getSpatialDataChangeManager().getWorldTransform()[2];
+
+				m_sceneObjects.m_directionalLight = lightComponent.getDirectionalLight();
+			}
+				break;
+			}
+		}
+	}
+
+	//	 ___________________________
+	//	|							|
+	//	|	  CAMERA COMPONENTS		|
+	//	|___________________________|
+	//
+	auto cameraView = worldScene->getEntityRegistry().view<CameraComponent, SpatialComponent>();
+	for(auto entity : cameraView)
+	{
+		auto &cameraComponent = cameraView.get<CameraComponent>(entity);
+		auto &spatialComponent = cameraView.get<SpatialComponent>(entity);
+
+		m_sceneObjects.m_camera.m_spatialData.m_transformMat = spatialComponent.getSpatialDataChangeManager().getWorldTransform();
+
+		break;
+	}
+
+
+
+	// Update camera spatial data
+	calculateCamera(m_sceneObjects.m_camera.m_spatialData);
+
+	return;
+
+	//m_sceneObjects.m_camera.m_spatialData.m_transformMat.initCamera(m_sceneObjects.m_camera.m_spatialData.m_spatialData.m_position, targetVector + m_sceneObjects.m_camera.m_spatialData.m_spatialData.m_position, upVector);
+
+
+
 	// Clear variables
 	//m_sceneObjects.m_staticSkybox = nullptr;
 	//m_sceneObjects.m_directionalLight = nullptr;
@@ -279,7 +521,7 @@ void RendererScene::update(const float p_deltaTime)
 			//if(m_objectsBeingLoaded[i].isActivatedAfterLoading())
 			//{
 				// Make object active, so it is passed to the renderer for drawing
-				m_objectsLoadingToMemory[i]->setActive(true);
+			m_objectsLoadingToMemory[i]->setActive(true);
 
 			if(m_objectsLoadingToMemory[i]->modelComponentPresent())
 			{
@@ -657,6 +899,155 @@ void RendererScene::update(const float p_deltaTime)
 	//m_sceneObjects.m_staticSkybox = m_skybox;
 }
 
+SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const std::string &p_entityName, const PropertySet &p_properties)
+{
+	// If valid type was not specified, or object creation failed, return a null object instead
+	SystemObject *returnObject = g_nullSystemBase.getScene()->createObject(p_properties);
+
+	// Check if property set node is present
+	if(p_properties)
+	{
+		// Get the world scene required for attaching components to the entity
+		WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
+
+		switch(p_properties.getPropertyID())
+		{
+			case Properties::PropertyID::CameraComponent:
+			{
+				//auto &component = worldScene->addComponent<CameraComponent>(p_entityID, this, p_entityName + Config::componentVar().camera_component_name);
+				auto &component = worldScene->addComponent<CameraComponent>(p_entityID, this, p_entityName + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::CameraComponent), p_entityID);
+
+				// Try to initialize the camera component
+				auto componentInitError = component.init();
+				if(componentInitError == ErrorCode::Success)
+				{
+					// Try to import the component
+					auto const &componentImportError = component.importObject(p_properties);
+
+					// Remove the component if it failed to import
+					if(componentImportError != ErrorCode::Success)
+					{
+						worldScene->removeComponent<CameraComponent>(p_entityID);
+						ErrHandlerLoc().get().log(componentImportError, ErrorSource::Source_CameraComponent, p_entityName);
+					}
+					else
+						returnObject = &component;
+				}
+				else // Remove the component if it failed to initialize
+				{
+					worldScene->removeComponent<CameraComponent>(p_entityID);
+					ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_CameraComponent, p_entityName);
+				}
+
+			}
+			break;
+
+			case Properties::PropertyID::LightComponent:
+			{
+				auto &component = worldScene->addComponent<LightComponent>(p_entityID, this, p_entityName + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::LightComponent), p_entityID);
+
+				// Try to initialize the light component
+				auto componentInitError = component.init();
+				if(componentInitError == ErrorCode::Success)
+				{
+					// Try to import the component
+					auto const &componentImportError = component.importObject(p_properties);
+
+					// Remove the component if it failed to import
+					if(componentImportError != ErrorCode::Success)
+					{
+						worldScene->removeComponent<LightComponent>(p_entityID);
+						ErrHandlerLoc().get().log(componentImportError, ErrorSource::Source_LightComponent, p_entityName);
+					}
+					else
+						returnObject = &component;
+				}
+				else // Remove the component if it failed to initialize
+				{
+					worldScene->removeComponent<LightComponent>(p_entityID);
+					ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_LightComponent, p_entityName);
+				}
+			}
+			break;
+
+			case Properties::PropertyID::ModelComponent:
+			{
+				// Create the model component
+				auto &component = worldScene->addComponent<ModelComponent>(p_entityID, this, p_entityName + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::ModelComponent), p_entityID);
+
+				// Try to initialize the model component
+				auto componentInitError = component.init();
+				if(componentInitError == ErrorCode::Success)
+				{
+					// Try to import the component
+					auto const &componentImportError = component.importObject(p_properties);
+
+					// Remove the component if it failed to import
+					if(componentImportError != ErrorCode::Success)
+					{
+						worldScene->removeComponent<ModelComponent>(p_entityID);
+						ErrHandlerLoc().get().log(componentImportError, ErrorSource::Source_ModelComponent, p_entityName);
+					}
+					else
+					{
+						returnObject = &component;
+
+						// Add the component to an array signifying that it is currently being loaded to memory
+						m_componentsLoadingToMemory.emplace_back(component);
+					}
+				}
+				else // Remove the component if it failed to initialize
+				{
+					worldScene->removeComponent<ModelComponent>(p_entityID);
+					ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_ModelComponent, p_entityName);
+				}
+			}
+			break;
+
+			case Properties::PropertyID::ShaderComponent:
+			{
+				// Check if there is a property set for shaders and load the shader component if there is
+				auto const &shaders = p_properties.getPropertySetByID(Properties::Shaders);
+				if(shaders)
+				{
+					// Create the shader component
+					auto &component = worldScene->addComponent<ShaderComponent>(p_entityID, this, p_entityName + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::ShaderComponent), p_entityID);
+
+					// Try to initialize the shader component
+					auto componentInitError = component.init();
+					if(componentInitError == ErrorCode::Success)
+					{
+						// Try to import the component
+						auto const &componentImportError = component.importObject(shaders);
+
+						// Remove the component if it failed to import
+						if(componentImportError != ErrorCode::Success)
+						{
+							worldScene->removeComponent<ShaderComponent>(p_entityID);
+							ErrHandlerLoc().get().log(componentImportError, ErrorSource::Source_ShaderComponent, p_entityName);
+						}
+						else
+						{
+							returnObject = &component;
+
+							// Add the component to an array signifying that it is currently being loaded to memory
+							m_componentsLoadingToMemory.emplace_back(component);
+						}
+					}
+					else // Remove the component if it failed to initialize
+					{
+						worldScene->removeComponent<ShaderComponent>(p_entityID);
+						ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_ShaderComponent, p_entityName);
+					}
+				}
+			}
+			break;
+		}
+	}
+	
+	return returnObject;
+}
+
 SystemObject *RendererScene::createObject(const PropertySet &p_properties)
 {
 	// Check if property set node is present
@@ -818,7 +1209,7 @@ ModelComponent *RendererScene::loadModelComponent(const PropertySet &p_propertie
 	if(p_properties)
 	{
 		// Create the model component
-		newComponent = new ModelComponent(this, "");
+		newComponent = new ModelComponent(this, "", 0);
 
 		// Loop over each model entry in the node
 		for(decltype(p_properties.getNumProperties()) iModel = 0, numModels = p_properties.getNumProperties(); iModel < numModels; iModel++)
@@ -960,7 +1351,7 @@ ShaderComponent *RendererScene::loadShaderComponent(const PropertySet &p_propert
 			{
 				// Load the shader to memory and assign it to the new shader component
 				shaderProgram->loadToMemory();
-				newComponent = new ShaderComponent(this, "", *shaderProgram);
+				newComponent = new ShaderComponent(this, "", *shaderProgram, 0);
 			}
 		}
 	}
@@ -1014,7 +1405,7 @@ LightComponent *RendererScene::loadLightComponent(const PropertySet &p_propertie
 				dirLightDataSet.m_intensity = intensity;
 
 				// Create the component of the directional light type
-				newComponent = new LightComponent(this, "", dirLightDataSet);
+				newComponent = new LightComponent(this, "", dirLightDataSet, 0);
 			}
 			break;
 		case Properties::PointLight:
@@ -1025,7 +1416,7 @@ LightComponent *RendererScene::loadLightComponent(const PropertySet &p_propertie
 				pointLightDataSet.m_intensity = intensity;
 
 				// Create the component of the point light type
-				newComponent = new LightComponent(this, "",pointLightDataSet);
+				newComponent = new LightComponent(this, "",pointLightDataSet, 0);
 			}
 			break;
 		case Properties::SpotLight:
@@ -1037,7 +1428,7 @@ LightComponent *RendererScene::loadLightComponent(const PropertySet &p_propertie
 				spotLightDataSet.m_intensity = intensity;
 
 				// Create the component of the spot light type
-				newComponent = new LightComponent(this, "", spotLightDataSet);
+				newComponent = new LightComponent(this, "", spotLightDataSet, 0);
 			}
 			break;
 		}

@@ -53,6 +53,7 @@ void Config::init()
 
 	// Component Variables
 	AddVariablePredef(m_componentVar, camera_component_name);
+	AddVariablePredef(m_componentVar, component_name_separator);
 	AddVariablePredef(m_componentVar, light_component_name);
 	AddVariablePredef(m_componentVar, lua_component_name);
 	AddVariablePredef(m_componentVar, model_component_name);
@@ -408,6 +409,11 @@ void Config::init()
 	AddVariablePredef(m_windowVar, mouse_release_on_lost_focus);
 	AddVariablePredef(m_windowVar, resizable);
 	AddVariablePredef(m_windowVar, vertical_sync);
+
+	for(int i = Properties::Null; i < Properties::NumberOfPropertyIDs; i++)
+	{
+		//Properties::PropertyNames[i] = GetString(static_cast<Properties::PropertyID>(i));
+	}
 }
 ErrorCode Config::loadFromFile(const std::string &p_filename)
 {

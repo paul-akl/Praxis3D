@@ -1,3 +1,5 @@
+
+#include "WorldScene.h"
 #include "GUIHandlerLocator.h"
 #include "GUIScene.h"
 #include "NullSystemObjects.h"
@@ -44,26 +46,27 @@ ErrorCode GUIScene::setup(const PropertySet& p_properties)
 
 void GUIScene::update(const float p_deltaTime)
 {
+	// Get the world scene required for getting components
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
 	// Set the beginning of the GUI frame
 	GUIHandlerLocator::get().beginFrame();
 
-	for(decltype(m_GUIObjects.getPoolSize()) i = 0, numAllocObjecs = 0, totalNumAllocObjs = m_GUIObjects.getNumAllocated(),
-		size = m_GUIObjects.getPoolSize(); i < size && numAllocObjecs < totalNumAllocObjs; i++)
+	//	 ____________________________
+	//	|							 |
+	//	|	GUI SEQUENCE COMPONENTS	 |
+	//	|____________________________|
+	//
+	auto sequenceView = worldScene->getEntityRegistry().view<GUISequenceComponent>();
+	for(auto entity : sequenceView)
 	{
-		// Check if the GUI object is allocated inside the pool container
-		if(m_GUIObjects[i].allocated())
+		GUISequenceComponent &sequenceComponent = sequenceView.get<GUISequenceComponent>(entity);
+
+		// Check if the script object is enabled
+		if(sequenceComponent.isObjectActive())
 		{
-			auto *currentGUIObject = m_GUIObjects[i].getObject();
-
-			// Increment the number of allocated objects (early bail mechanism)
-			numAllocObjecs++;
-
-			// Check if the GUI object is enabled
-			if(currentGUIObject->isObjectActive())
-			{
-				// Update the object
-				currentGUIObject->update(p_deltaTime);
-			}
+			// Update the object
+			sequenceComponent.update(p_deltaTime);
 		}
 	}
 
@@ -88,6 +91,52 @@ ErrorCode GUIScene::preload()
 
 void GUIScene::loadInBackground()
 {
+}
+
+SystemObject *GUIScene::createComponent(const EntityID &p_entityID, const std::string &p_entityName, const PropertySet &p_properties)
+{	
+	// If valid type was not specified, or object creation failed, return a null object instead
+	SystemObject *returnObject = g_nullSystemBase.getScene()->createObject(p_properties);
+
+	// Check if property set node is present
+	if(p_properties)
+	{
+		// Get the world scene required for attaching components to the entity
+		WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
+
+		switch(p_properties.getPropertyID())
+		{
+			case Properties::PropertyID::Sequence:
+			{
+				auto &component = worldScene->addComponent<GUISequenceComponent>(p_entityID, this, p_entityName + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::Sequence), p_entityID);
+
+				// Try to initialize the component
+				auto componentInitError = component.init();
+				if(componentInitError == ErrorCode::Success)
+				{
+					// Try to import the component
+					auto const &componentImportError = component.importObject(p_properties);
+
+					// Remove the component if it failed to import
+					if(componentImportError != ErrorCode::Success)
+					{
+						ErrHandlerLoc().get().log(componentImportError, ErrorSource::Source_GUISequenceComponent, component.getName());
+						worldScene->removeComponent<GUISequenceComponent>(p_entityID);
+					}
+					else
+						returnObject = &component;
+				}
+				else // Remove the component if it failed to initialize
+				{
+					ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_GUISequenceComponent, component.getName());
+					worldScene->removeComponent<GUISequenceComponent>(p_entityID);
+				}
+			}
+			break;
+		}
+	}
+
+	return returnObject;
 }
 
 SystemObject* GUIScene::createObject(const PropertySet& p_properties)

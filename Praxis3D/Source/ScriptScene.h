@@ -34,6 +34,7 @@ public:
 	// Exports all the data of the scene (including all objects within) as a PropertySet
 	virtual PropertySet exportObject();
 
+	SystemObject *createComponent(const EntityID &p_entityID, const std::string &p_entityName, const PropertySet &p_properties);
 	SystemObject *createObject(const PropertySet &p_properties);
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 

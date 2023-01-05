@@ -26,6 +26,7 @@ public:
 	// Exports all the data of the scene (including all objects within) as a PropertySet (for example, used for saving to map file)
 	PropertySet exportObject() { return PropertySet(); }
 
+	SystemObject *createComponent(const EntityID &p_entityID, const std::string &p_entityName, const PropertySet &p_properties);
 	SystemObject *createObject(const PropertySet& p_properties);
 	ErrorCode destroyObject(SystemObject* p_systemObject);
 

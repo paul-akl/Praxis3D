@@ -7,6 +7,10 @@
 
 #include <lmerr.h>
 #include <tchar.h>
+
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 
 class TaskManager;

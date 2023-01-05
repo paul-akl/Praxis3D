@@ -172,7 +172,7 @@
     <Filter Include="iImgui\Source Files">
       <UniqueIdentifier>{62cfc7e5-8f92-4ff5-bcc3-0319fec10b3c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Daa Managers">
+    <Filter Include="Data Managers">
       <UniqueIdentifier>{1d4c199c-6fd9-492b-9c8d-23af455d408f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -774,13 +774,13 @@
       <Filter>GUI\Objects\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\SpatialDataManager.h">
-      <Filter>Daa Managers</Filter>
+      <Filter>Data Managers</Filter>
     </ClInclude>
     <ClInclude Include="Source\GUIDataManager.h">
-      <Filter>Daa Managers</Filter>
+      <Filter>Data Managers</Filter>
     </ClInclude>
     <ClInclude Include="Source\PhysicsDataManager.h">
-      <Filter>Daa Managers</Filter>
+      <Filter>Data Managers</Filter>
     </ClInclude>
     <ClInclude Include="Source\PhysicsObject.h">
       <Filter>Physics\Objects\Header Files</Filter>
@@ -793,6 +793,15 @@
     </ClInclude>
     <ClInclude Include="Source\CollisionShapeComponent.h">
       <Filter>Physics\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\SpatialComponent.h">
+      <Filter>World\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GameObjectComponent.h">
+      <Filter>World\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\EntityViewDefinitions.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

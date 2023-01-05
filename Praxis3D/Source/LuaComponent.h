@@ -6,18 +6,23 @@
 #include "Filesystem.h"
 #include "InheritanceObjects.h"
 #include "LuaScript.h"
+#include "SpatialComponent.h"
 #include "System.h"
 
 class LuaComponent : public SystemObject, public SpatialDataManagerObject, public LoadableGraphicsObject
 {
 	friend class ScriptScene;
 public:
-	LuaComponent(SystemScene *p_systemScene, std::string p_name, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::LuaComponent), m_luaSpatialData(*this), m_GUIData(*this), m_luaScript(m_luaSpatialData, m_GUIData)
+	LuaComponent(SystemScene *p_systemScene, std::string p_name, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::LuaComponent), m_luaSpatialData(*this), m_GUIData(*this)
 	{
+		m_luaScript = new LuaScript(m_luaSpatialData, m_GUIData);
 		m_luaScriptLoaded = false;
 		m_luaSpatialData.setTrackLocalChanges(true);
 	}
-	~LuaComponent() { }
+	~LuaComponent() 
+	{
+		delete m_luaScript;
+	}
 
 	ErrorCode init() final override
 	{
@@ -30,7 +35,7 @@ public:
 
 	void loadToMemory()
 	{
-		auto luaError = m_luaScript.init();
+		auto luaError = m_luaScript->init();
 
 		if(luaError != ErrorCode::Success)
 			ErrHandlerLoc().get().log(luaError, ErrorSource::Source_LuaComponent, m_name);
@@ -45,18 +50,23 @@ public:
 		// Perform updates only the if the script is loaded
 		if(m_luaScriptLoaded)
 		{
-			// Get the current spatial data
-			m_luaSpatialData.setSpatialData(*m_spatialData);
-
 			// Update the lua script
-			m_luaScript.update(p_deltaTime);
+			m_luaScript->update(p_deltaTime);
 
 			// Get the changes from the lua script
-			auto changes = m_luaScript.getChanges();
+			auto changes = m_luaScript->getChanges();
 
 			// Post the new changes
 			postChanges(changes);
 		}
+	}
+
+	inline void update(const float p_deltaTime, const SpatialComponent &p_spatialComponent)
+	{
+		// Get the current spatial data
+		m_luaSpatialData.setSpatialData(p_spatialComponent.getSpatialDataChangeManager());
+
+		update(p_deltaTime);
 	}
 
 	ErrorCode importObject(const PropertySet &p_properties) final override
@@ -66,7 +76,7 @@ public:
 		// Check if PropertySet isn't empty and the component hasn't been loaded already
 		if(p_properties && !isLoadedToMemory())
 		{
-			if(p_properties.getPropertyID() == Properties::Lua)
+			if(p_properties.getPropertyID() == Properties::LuaComponent)
 			{
 				auto const &luaFilenameProperty = p_properties.getPropertyByID(Properties::Filename);
 				auto const &luaVariablesProperty = p_properties.getPropertySetByID(Properties::Variables);
@@ -79,10 +89,10 @@ public:
 						luaFilename = Config::filepathVar().script_path + luaFilename;
 						if(Filesystem::exists(luaFilename))
 						{
-							m_luaScript.setScriptFilename(luaFilename);
+							m_luaScript->setScriptFilename(luaFilename);
 
 							if(luaVariablesProperty)
-								m_luaScript.setVariables(luaVariablesProperty);
+								m_luaScript->setVariables(luaVariablesProperty);
 
 							importError = ErrorCode::Success;
 							ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_LuaComponent, m_name + " - Script loaded");
@@ -184,7 +194,7 @@ public:
 	}
 
 private:
-	LuaScript m_luaScript;
+	LuaScript *m_luaScript;
 	bool m_luaScriptLoaded;
 
 	SpatialDataManager m_luaSpatialData;

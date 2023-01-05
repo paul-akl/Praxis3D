@@ -229,6 +229,7 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 	glm::mat4 translate = glm::mat4(1.0f);
 	//translate = glm::translate(translate, -p_sceneObjects.m_camera.m_spatialData.m_spatialData.m_position);
 	translate = glm::translate(translate, -glm::vec3(p_sceneObjects.m_camera.m_spatialData.m_transformMat[3]));
+	//translate = glm::translate(translate, -glm::vec3(1.0f, 10.0f, 1.0f));
 
 	m_frameData.m_viewMatrix = rotate * translate;
 

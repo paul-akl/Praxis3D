@@ -4,9 +4,6 @@
 		{
 			"Name": "root",
 			"ID": "0",
-			"LocalPosition": "0.0f, 0.0f, 0.0f",
-			"LocalRotation": "0.0f, 0.0f, 0.0f",
-			"LocalScale": "1.0f, 1.0f, 1.0f",
 			"Children":
 			[
 				{
@@ -28,9 +25,18 @@
 					"ID": "6"
 				}
 			],
+			"World":
+			{
+				"SpatialComponent":
+				{
+					"LocalPosition": "0.0f, 0.0f, 0.0f",
+					"LocalRotation": "0.0f, 0.0f, 0.0f",
+					"LocalScale": "1.0f, 1.0f, 1.0f"
+				}
+			},
 			"Script":
 			{
-				"Lua":
+				"LuaComponent":
 				{
 					"Filename": "Window_controls.lua"
 				}
@@ -49,7 +55,7 @@
 			},
 			"Script":
 			{
-				"Lua":
+				"LuaComponent":
 				{
 					"Filename": "GUI_test.lua"
 				}
@@ -57,11 +63,17 @@
 		},
 		{
 			"ID": "2",
-			"LocalPosition": "0.0f, 0.5f, 0.0f",
-			"LocalRotation": "0.0f, 45.0f, 0.0f",
-			"LocalScale": "1.0f, 1.0f, 1.0f",
 			"Name": "Terrain 1",
 			"Parent": "0",
+			"World":
+			{
+				"SpatialComponent":
+				{
+					"LocalPosition": "0.0f, 0.5f, 0.0f",
+					"LocalRotation": "0.0f, 45.0f, 0.0f",
+					"LocalScale": "1.0f, 1.0f, 1.0f"
+				}
+			},
 			"Physics":
 			{
 				"RigidBody":
@@ -76,43 +88,46 @@
 			},
 			"Rendering":
 			{
-				"Models":
-				[
-					{
-						"Filename": "plane.obj",
-						"Meshes":
-						[
-							{
-								"Index": "0",
-								"AlphaThreshold": "0.0f",
-								"HeightScale": "0.0f",
-								"Materials":
+				"ModelComponent":
+				{
+					"Models":
+					[
+						{
+							"Filename": "plane.obj",
+							"Meshes":
+							[
 								{
-									"Diffuse":
+									"Index": "0",
+									"AlphaThreshold": "0.0f",
+									"HeightScale": "0.0f",
+									"Materials":
 									{
-										"Filename": "Metal_CleanPaintedWithChips_2k_alb.tga",
-										"TextureScale": "1.0f, 1.0f"
-									},
-									"Normal":
-									{
-										"Filename": "Metal_CleanPaintedWithChips_2k_n.tga",
-										"TextureScale": "1.0f, 1.0f"
-									},
-									"Emissive":
-									{
-										"Filename": "default_emissive.png",
-										"TextureScale": "1.0f, 1.0f"
-									},
-									"RMHAO":
-									{
-										"Filename": "Metal_CleanPaintedWithChips_RMHAO.tga",
-										"TextureScale": "1.0f, 1.0f"
+										"Diffuse":
+										{
+											"Filename": "Metal_CleanPaintedWithChips_2k_alb.tga",
+											"TextureScale": "1.0f, 1.0f"
+										},
+										"Normal":
+										{
+											"Filename": "Metal_CleanPaintedWithChips_2k_n.tga",
+											"TextureScale": "1.0f, 1.0f"
+										},
+										"Emissive":
+										{
+											"Filename": "default_emissive.png",
+											"TextureScale": "1.0f, 1.0f"
+										},
+										"RMHAO":
+										{
+											"Filename": "Metal_CleanPaintedWithChips_RMHAO.tga",
+											"TextureScale": "1.0f, 1.0f"
+										}
 									}
 								}
-							}
-						]
-					}
-				]
+							]
+						}
+					]
+				}
 //				"Shaders":
 //				{
 //					"FragmentShader": "geometryPassInf.frag",
@@ -122,106 +137,130 @@
 		},
 		{
 			"ID": "3",
-			"LocalPosition": "0.0f, 5.0f, 0.0f",
-			"LocalRotation": "0.0f, 45.0f, 0.0f",
-			"LocalScale": "2.0f, 2.0f, 2.0f",
 			"Name": "Cube 1",
 			"Parent": "0",
+			"World":
+			{
+				"SpatialComponent":
+				{
+					"LocalPosition": "0.0f, 5.0f, 0.0f",
+					"LocalRotation": "0.0f, 45.0f, 0.0f",
+					"LocalScale": "2.0f, 2.0f, 2.0f"
+				}
+			},
 			"Rendering":
 			{
-				"Models":
-				[
-					{
-						"Filename": "cube.obj",
-						"Meshes":
-						[
-							{
-								"Index": "0",
-								"AlphaThreshold": "0.0f",
-								"HeightScale": "0.0f",
-								"Materials":
+				"ModelComponent":
+				{
+					"Models":
+					[
+						{
+							"Filename": "cube.obj",
+							"Meshes":
+							[
 								{
-									"Diffuse":
+									"Index": "0",
+									"AlphaThreshold": "0.0f",
+									"HeightScale": "0.0f",
+									"Materials":
 									{
-										"Filename": "Metal_CleanPaintedWithChips_2k_alb.tga",
-										"TextureScale": "2.0f, 2.0f"
-									},
-									"Normal":
-									{
-										"Filename": "Metal_CleanPaintedWithChips_2k_n.tga",
-										"TextureScale": "1.0f, 1.0f"
-									},
-									"Emissive":
-									{
-										"Filename": "default_emissive.png",
-										"TextureScale": "1.0f, 1.0f"
-									},
-									"RMHAO":
-									{
-										"Filename": "Metal_CleanPaintedWithChips_RMHAO3.tga",
-										"TextureScale": "1.0f, 1.0f"
+										"Diffuse":
+										{
+											"Filename": "Metal_CleanPaintedWithChips_2k_alb.tga",
+											"TextureScale": "2.0f, 2.0f"
+										},
+										"Normal":
+										{
+											"Filename": "Metal_CleanPaintedWithChips_2k_n.tga",
+											"TextureScale": "1.0f, 1.0f"
+										},
+										"Emissive":
+										{
+											"Filename": "default_emissive.png",
+											"TextureScale": "1.0f, 1.0f"
+										},
+										"RMHAO":
+										{
+											"Filename": "Metal_CleanPaintedWithChips_RMHAO3.tga",
+											"TextureScale": "1.0f, 1.0f"
+										}
 									}
 								}
-							}
-						]
-					}
-				]
+							]
+						}
+					]
+				}
 			}
 		},
 		{
 			"ID": "4",
-			"LocalPosition": "15.0f, 5.0f, 0.0f",
-			"LocalRotation": "0.0f, 45.0f, 0.0f",
-			"LocalScale": "4.0f, 4.0f, 4.0f",
 			"Name": "Sphere 1",
 			"Parent": "0",
+			"World":
+			{
+				"SpatialComponent":
+				{
+					"LocalPosition": "15.0f, 5.0f, 0.0f",
+					"LocalRotation": "0.0f, 45.0f, 0.0f",
+					"LocalScale": "4.0f, 4.0f, 4.0f"
+				}
+			},
 			"Rendering":
 			{
-				"Models":
-				[
-					{
-						"Filename": "sphereNew4.3DS",
-						"Meshes":
-						[
-							{
-								"Index": "0",
-								"AlphaThreshold": "0.0f",
-								"HeightScale": "0.0f",
-								"Materials":
+				"ModelComponent":
+				{
+					"Models":
+					[
+						{
+							"Filename": "sphereNew4.3DS",
+							"Meshes":
+							[
 								{
-									"Diffuse":
+									"Index": "0",
+									"AlphaThreshold": "0.0f",
+									"HeightScale": "0.0f",
+									"Materials":
 									{
-										"Filename": "test_albedo.png",
-										"TextureScale": "1.0f, 1.0f"
-									},
-									"RMHAO":
-									{
-										"Filename": "test2_RM.png",
-										"TextureScale": "1.0f, 1.0f"
+										"Diffuse":
+										{
+											"Filename": "test_albedo.png",
+											"TextureScale": "1.0f, 1.0f"
+										},
+										"RMHAO":
+										{
+											"Filename": "test2_RM.png",
+											"TextureScale": "1.0f, 1.0f"
+										}
 									}
 								}
-							}
-						]
-					}
-				]
+							]
+						}
+					]
+				}
 			}
 		},
 		{
 			"ID": "10",
 			"Name": "Camera 1",
 			"Parent": "0",
-			"LocalPosition": "0.0f, 1.5f, 3.0f",
-			"LocalRotation": "30.0f, 0.0f, 0.0f",
+			"World":
+			{
+				"SpatialComponent":
+				{
+					"LocalPosition": "0.0f, 10.5f, 3.0f",
+					"LocalRotation": "30.0f, 0.0f, 0.0f"
+				}
+			},
 			"Rendering":
 			{
-				"Camera":
+				"CameraComponent":
 				{
 
 				}
 			},
 			"Script":
 			{
-				"Lua":
+				"LuaComponent":
 				{
 					"Filename": "Camera_free.lua",
 					"Variables":
@@ -242,10 +281,16 @@
 			"ID": "11",
 			"Name": "Directional Light 1",
 			"Parent": "0",
-			"LocalRotation": "-45.0f, 45.0f, 0.0f",
+			"World":
+			{
+				"SpatialComponent":
+				{
+					"LocalRotation": "-45.0f, 45.0f, 0.0f"
+				}
+			},
 			"Rendering":
 			{
-				"Lighting":
+				"LightComponent":
 				{
 					"Type": "DirectionalLight",
 					"Color": "1.0f, 0.0f, 0.0f",
@@ -257,10 +302,16 @@
 			"ID": "12",
 			"Name": "PointLight 1",
 			"Parent": "0",
-			"LocalPosition": "20.0f, 2.0f, 20.0f",
+			"World":
+			{
+				"SpatialComponent":
+				{
+					"LocalPosition": "20.0f, 2.0f, 20.0f"
+				}
+			},
 			"Rendering":
 			{
-				"Lighting":
+				"LightComponent":
 				{
 					"Type": "PointLight",
 					"Color": "1.0f, 1.0f, 1.0f",
@@ -272,10 +323,16 @@
 			"ID": "13",
 			"Name": "PointLight 2",
 			"Parent": "0",
-			"LocalPosition": "-20.0f, 2.0f, 20.0f",
+			"World":
+			{
+				"SpatialComponent":
+				{
+					"LocalPosition": "-20.0f, 2.0f, 20.0f"
+				}
+			},
 			"Rendering":
 			{
-				"Lighting":
+				"LightComponent":
 				{
 					"Type": "PointLight",
 					"Color": "1.0f, 1.0f, 1.0f",
@@ -287,10 +344,16 @@
 			"ID": "14",
 			"Name": "PointLight 3",
 			"Parent": "0",
-			"LocalPosition": "20.0f, 2.0f, -20.0f",
+			"World":
+			{
+				"SpatialComponent":
+				{
+					"LocalPosition": "20.0f, 2.0f, -20.0f"
+				}
+			},
 			"Rendering":
 			{
-				"Lighting":
+				"LightComponent":
 				{
 					"Type": "PointLight",
 					"Color": "1.0f, 1.0f, 1.0f",
@@ -302,10 +365,16 @@
 			"ID": "15",
 			"Name": "PointLight 4",
 			"Parent": "0",
-			"LocalPosition": "-20.0f, 2.0f, -20.0f",
+			"World":
+			{
+				"SpatialComponent":
+				{
+					"LocalPosition": "-20.0f, 2.0f, -20.0f"
+				}
+			},
 			"Rendering":
 			{
-				"Lighting":
+				"LightComponent":
 				{
 					"Type": "PointLight",
 					"Color": "1.0f, 1.0f, 1.0f",

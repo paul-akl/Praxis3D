@@ -8,7 +8,7 @@ class ModelComponent : public SystemObject, public LoadableGraphicsObject
 {
 	friend class RendererScene;
 public:
-	ModelComponent(SystemScene *p_systemScene, std::string p_name, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::Models)
+	ModelComponent(SystemScene *p_systemScene, std::string p_name, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::Models, p_entityID)
 	{
 		m_materialsFromProperties = nullptr;
 		m_modelsProperties = nullptr;
@@ -27,7 +27,7 @@ public:
 				m_modelData.emplace_back(Loaders::model().load(m_modelsProperties->m_modelNames[modelIndex], false));
 				auto &newModelData = m_modelData.back();
 
-				// Load the model to memory, to be able to access all of its meshes
+				// Load the model to memory, to be able to access all of its meshes 
 				auto modelLoadError = newModelData.m_model.loadToMemory();
 
 				if(modelLoadError == ErrorCode::Success)
@@ -121,146 +121,190 @@ public:
 		// Check if models node is present and the component hasn't been loaded already
 		if(p_properties && !isLoadedToMemory())
 		{
-			importError = ErrorCode::Success;
+			auto &modelsProperty = p_properties.getPropertySetByID(Properties::Models);
 
-			if(m_modelsProperties != nullptr)
-				delete m_modelsProperties;
-
-			m_modelsProperties = new ModelsProperties();
-
-			// Loop over each model entry in the node
-			for(decltype(p_properties.getNumPropertySets()) iModel = 0, numModels = p_properties.getNumPropertySets(); iModel < numModels; iModel++)
+			if(modelsProperty)
 			{
-				// Get model filename
-				auto modelName = p_properties.getPropertySet(iModel).getPropertyByID(Properties::Filename).getString();
+				importError = ErrorCode::Success;
 
-				// Add a new model data entry, and get a reference to it
-				//m_modelData.emplace_back(Loaders::model().load(modelName, false));
-				m_modelsProperties->m_modelNames.push_back(modelName);
-				//auto &newModelData = m_modelData.back();
+				if(m_modelsProperties != nullptr)
+					delete m_modelsProperties;
 
-				// Load the model to memory, to be able to access all of its meshes
-				//auto modelLoadError = newModelData.m_model.loadToMemory();
+				m_modelsProperties = new ModelsProperties();
 
-				//if(modelLoadError == ErrorCode::Success)
-				//{
-					// Set the component as not being empty anymore, since a model has been loaded successfully
-					//setEmpty(false);
-
-					// Get the meshes array
-					//const std::vector<Model::Mesh> &meshesInModelArray = newModelData.m_model.getMeshArray();
-
-					// Get the meshes array
-				auto &meshesProperty = p_properties.getPropertySet(iModel).getPropertySetByID(Properties::Meshes);
-
-				// Check if the meshes array node is present;
-				// If it is present, only add the meshes included in the meshes node
-				// If it is not present, add all the meshes included in the model
-				if(meshesProperty)
+				// Loop over each model entry in the node
+				for(decltype(modelsProperty.getNumPropertySets()) iModel = 0, numModels = modelsProperty.getNumPropertySets(); iModel < numModels; iModel++)
 				{
-					if (meshesProperty.getNumPropertySets() > 0)
+					// Get model filename
+					auto modelName = modelsProperty.getPropertySet(iModel).getPropertyByID(Properties::Filename).getString();
+
+					// Add a new model data entry, and get a reference to it
+					//m_modelData.emplace_back(Loaders::model().load(modelName, false));
+					m_modelsProperties->m_modelNames.push_back(modelName);
+					//auto &newModelData = m_modelData.back();
+
+					// Load the model to memory, to be able to access all of its meshes
+					//auto modelLoadError = newModelData.m_model.loadToMemory();
+
+					//if(modelLoadError == ErrorCode::Success)
+					//{
+						// Set the component as not being empty anymore, since a model has been loaded successfully
+						//setEmpty(false);
+
+						// Get the meshes array
+						//const std::vector<Model::Mesh> &meshesInModelArray = newModelData.m_model.getMeshArray();
+
+						// Get the meshes array
+					auto &meshesProperty = modelsProperty.getPropertySet(iModel).getPropertySetByID(Properties::Meshes);
+
+					// Check if the meshes array node is present;
+					// If it is present, only add the meshes included in the meshes node
+					// If it is not present, add all the meshes included in the model
+					if(meshesProperty)
 					{
-						m_materialsFromProperties = new MeshMaterialsProperties();
-
-						// Loop over each mesh entry in the model node
-						for (decltype(meshesProperty.getNumPropertySets()) iMesh = 0, numMeshes = meshesProperty.getNumPropertySets(); iMesh < numMeshes; iMesh++)
+						if(meshesProperty.getNumPropertySets() > 0)
 						{
-							// Try to get the mesh index property node and check if it is present
-							auto& meshIndexProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::Index);
-							if(meshIndexProperty)
+							m_materialsFromProperties = new MeshMaterialsProperties();
+
+							// Loop over each mesh entry in the model node
+							for(decltype(meshesProperty.getNumPropertySets()) iMesh = 0, numMeshes = meshesProperty.getNumPropertySets(); iMesh < numMeshes; iMesh++)
 							{
-								// Get the mesh index, check if it is valid and within the range of mesh array that was loaded from the model
-								const int meshDataIndex = meshIndexProperty.getInt();
-
-								// Make sure the meshMaterials vector can fit the given mesh index
-								if(meshDataIndex >= m_materialsFromProperties->m_meshMaterials.size())
+								// Try to get the mesh index property node and check if it is present
+								auto &meshIndexProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::Index);
+								if(meshIndexProperty)
 								{
-									m_materialsFromProperties->resize(meshDataIndex + 1);
-									m_materialsFromProperties->m_present[meshDataIndex] = true;
-								}
+									// Get the mesh index, check if it is valid and within the range of mesh array that was loaded from the model
+									const int meshDataIndex = meshIndexProperty.getInt();
 
-								// Get material alpha threshold value, if it is present
-								auto alphaThresholdProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::AlphaThreshold);
-								if(alphaThresholdProperty)
-									m_materialsFromProperties->m_alphaThreshold[meshDataIndex] = alphaThresholdProperty.getFloat();
-
-								// Get material height scale value, if it is present
-								auto heightScaleProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::HeightScale);
-								if(heightScaleProperty)
-									m_materialsFromProperties->m_heightScale[meshDataIndex] = heightScaleProperty.getFloat();
-
-								// Get material properties
-								auto materialsProperty = meshesProperty.getPropertySet(iMesh).getPropertySetByID(Properties::Materials);
-
-								// Define material data and material properties
-								MaterialData materials[MaterialType::MaterialType_NumOfTypes];
-								PropertySet materialProperties[MaterialType::MaterialType_NumOfTypes] =
-								{
-									materialsProperty.getPropertySetByID(Properties::Diffuse),
-									materialsProperty.getPropertySetByID(Properties::Normal),
-									materialsProperty.getPropertySetByID(Properties::Emissive),
-									materialsProperty.getPropertySetByID(Properties::RMHAO)
-								};
-
-								// Go over each material type
-								for(unsigned int iMatType = 0; iMatType < MaterialType::MaterialType_NumOfTypes; iMatType++)
-								{
-									// Check if an entry for the current material type was present within the properties
-									if(materialProperties[iMatType])
+									// Make sure the meshMaterials vector can fit the given mesh index
+									if(meshDataIndex >= m_materialsFromProperties->m_meshMaterials.size())
 									{
-										// Get texture filename property, check if it is valid
-										auto filenameProperty = materialProperties[iMatType].getPropertyByID(Properties::Filename);
-										if(filenameProperty.isVariableTypeString())
-										{
-											// Get texture filename string, check if it is valid
-											m_materialsFromProperties->m_meshMaterials[meshDataIndex][iMatType] = filenameProperty.getString();
-										}
+										m_materialsFromProperties->resize(meshDataIndex + 1);
+										m_materialsFromProperties->m_present[meshDataIndex] = true;
+									}
 
-										// Get texture scale property, check if it is valid
-										auto scaleProperty = materialProperties[iMatType].getPropertyByID(Properties::TextureScale);
-										if(scaleProperty)
-											m_materialsFromProperties->m_meshMaterialsScale[meshDataIndex][iMatType] = scaleProperty.getVec2f();
+									// Get material alpha threshold value, if it is present
+									auto alphaThresholdProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::AlphaThreshold);
+									if(alphaThresholdProperty)
+										m_materialsFromProperties->m_alphaThreshold[meshDataIndex] = alphaThresholdProperty.getFloat();
+
+									// Get material height scale value, if it is present
+									auto heightScaleProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::HeightScale);
+									if(heightScaleProperty)
+										m_materialsFromProperties->m_heightScale[meshDataIndex] = heightScaleProperty.getFloat();
+
+									// Get material properties
+									auto materialsProperty = meshesProperty.getPropertySet(iMesh).getPropertySetByID(Properties::Materials);
+
+									// Define material data and material properties
+									MaterialData materials[MaterialType::MaterialType_NumOfTypes];
+									PropertySet materialProperties[MaterialType::MaterialType_NumOfTypes] =
+									{
+										materialsProperty.getPropertySetByID(Properties::Diffuse),
+										materialsProperty.getPropertySetByID(Properties::Normal),
+										materialsProperty.getPropertySetByID(Properties::Emissive),
+										materialsProperty.getPropertySetByID(Properties::RMHAO)
+									};
+
+									// Go over each material type
+									for(unsigned int iMatType = 0; iMatType < MaterialType::MaterialType_NumOfTypes; iMatType++)
+									{
+										// Check if an entry for the current material type was present within the properties
+										if(materialProperties[iMatType])
+										{
+											// Get texture filename property, check if it is valid
+											auto filenameProperty = materialProperties[iMatType].getPropertyByID(Properties::Filename);
+											if(filenameProperty.isVariableTypeString())
+											{
+												// Get texture filename string, check if it is valid
+												m_materialsFromProperties->m_meshMaterials[meshDataIndex][iMatType] = filenameProperty.getString();
+											}
+
+											// Get texture scale property, check if it is valid
+											auto scaleProperty = materialProperties[iMatType].getPropertyByID(Properties::TextureScale);
+											if(scaleProperty)
+												m_materialsFromProperties->m_meshMaterialsScale[meshDataIndex][iMatType] = scaleProperty.getVec2f();
+										}
 									}
 								}
 							}
 						}
-					}
 
-					/*/ Loop over each mesh entry in the model node
-					for(decltype(meshesProperty.getNumPropertySets()) iMesh = 0, numMeshes = meshesProperty.getNumPropertySets(); iMesh < numMeshes; iMesh++)
-					{
-						// Try to get the mesh index property node and check if it is present
-						auto &meshIndexProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::Index);
-						if(meshIndexProperty)
+						/*/ Loop over each mesh entry in the model node
+						for(decltype(meshesProperty.getNumPropertySets()) iMesh = 0, numMeshes = meshesProperty.getNumPropertySets(); iMesh < numMeshes; iMesh++)
 						{
-							// Get the mesh index, check if it is valid and within the range of mesh array that was loaded from the model
-							const int meshDataIndex = meshIndexProperty.getInt();
-							if(meshDataIndex >= 0 && meshDataIndex < meshesInModelArray.size())
+							// Try to get the mesh index property node and check if it is present
+							auto &meshIndexProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::Index);
+							if(meshIndexProperty)
 							{
-								// Get material properties
-								auto materialsProperty = meshesProperty.getPropertySet(iMesh).getPropertySetByID(Properties::Materials);
-
-								// Define material data and material properties
-								MaterialData materials[MaterialType::MaterialType_NumOfTypes];
-								PropertySet materialProperties[MaterialType::MaterialType_NumOfTypes] =
+								// Get the mesh index, check if it is valid and within the range of mesh array that was loaded from the model
+								const int meshDataIndex = meshIndexProperty.getInt();
+								if(meshDataIndex >= 0 && meshDataIndex < meshesInModelArray.size())
 								{
-									materialsProperty.getPropertySetByID(Properties::Diffuse),
-									materialsProperty.getPropertySetByID(Properties::Normal),
-									materialsProperty.getPropertySetByID(Properties::Emissive),
-									materialsProperty.getPropertySetByID(Properties::RMHAO)
-								};
+									// Get material properties
+									auto materialsProperty = meshesProperty.getPropertySet(iMesh).getPropertySetByID(Properties::Materials);
 
+									// Define material data and material properties
+									MaterialData materials[MaterialType::MaterialType_NumOfTypes];
+									PropertySet materialProperties[MaterialType::MaterialType_NumOfTypes] =
+									{
+										materialsProperty.getPropertySetByID(Properties::Diffuse),
+										materialsProperty.getPropertySetByID(Properties::Normal),
+										materialsProperty.getPropertySetByID(Properties::Emissive),
+										materialsProperty.getPropertySetByID(Properties::RMHAO)
+									};
+
+									// Go over each material type
+									for(unsigned int iMatType = 0; iMatType < MaterialType::MaterialType_NumOfTypes; iMatType++)
+									{
+										// Check if an entry for the current material type was present within the properties
+										if(materialProperties[iMatType])
+										{
+											// Load the material data
+											materials[iMatType] = loadMaterialData(materialProperties[iMatType], newModelData.m_model.getMaterialArrays(), static_cast<MaterialType>(iMatType), meshDataIndex);
+										}
+									}
+
+									newModelData.m_meshes.push_back(MeshData(meshesInModelArray[iMesh], materials));
+
+									ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_ModelComponent, m_name + " - Model \'" + modelName + "\' imported");
+								}
+							}
+						}*/
+					}
+					/*else
+					{
+						// Get the material arrays that were loaded from the model file
+						auto &materialArrayFromModel = newModelData.m_model.getMaterialArrays();
+
+						// Iterate over every mesh in the model
+						for(decltype(meshesInModelArray.size()) iMesh = 0, numMeshes = meshesInModelArray.size(); iMesh < numMeshes; iMesh++)
+						{
+							// Define material data and material properties
+							MaterialData materials[MaterialType::MaterialType_NumOfTypes];
+
+							// Go over each mesh in the model
+							//if(iMesh > materialArrayFromModel.m_numMaterials)
+							{
 								// Go over each material type
 								for(unsigned int iMatType = 0; iMatType < MaterialType::MaterialType_NumOfTypes; iMatType++)
 								{
-									// Check if an entry for the current material type was present within the properties
-									if(materialProperties[iMatType])
+									// Get the texture filename and load it to memory
+									auto textureFromModel = Loaders::texture2D().load(materialArrayFromModel.m_materials[iMatType][iMesh].m_filename, static_cast<MaterialType>(iMatType), false);
+									auto materialLoadError = textureFromModel.loadToMemory();
+
+									// Check if the texture was loaded successfully
+									if(materialLoadError == ErrorCode::Success)
 									{
-										// Load the material data
-										materials[iMatType] = loadMaterialData(materialProperties[iMatType], newModelData.m_model.getMaterialArrays(), static_cast<MaterialType>(iMatType), meshDataIndex);
+										materials[MaterialType::MaterialType_Diffuse].m_texture = textureFromModel;
+									}
+									else
+									{
+										ErrHandlerLoc::get().log(materialLoadError, ErrorSource::Source_Renderer);
 									}
 								}
 
+								// Add the data for this mesh. Include materials loaded from the model itself, if they were present, otherwise, include default textures instead
 								newModelData.m_meshes.push_back(MeshData(meshesInModelArray[iMesh], materials));
 
 								ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_ModelComponent, m_name + " - Model \'" + modelName + "\' imported");
@@ -268,45 +312,6 @@ public:
 						}
 					}*/
 				}
-				/*else
-				{
-					// Get the material arrays that were loaded from the model file
-					auto &materialArrayFromModel = newModelData.m_model.getMaterialArrays();
-
-					// Iterate over every mesh in the model
-					for(decltype(meshesInModelArray.size()) iMesh = 0, numMeshes = meshesInModelArray.size(); iMesh < numMeshes; iMesh++)
-					{
-						// Define material data and material properties
-						MaterialData materials[MaterialType::MaterialType_NumOfTypes];
-
-						// Go over each mesh in the model
-						//if(iMesh > materialArrayFromModel.m_numMaterials)
-						{
-							// Go over each material type
-							for(unsigned int iMatType = 0; iMatType < MaterialType::MaterialType_NumOfTypes; iMatType++)
-							{
-								// Get the texture filename and load it to memory
-								auto textureFromModel = Loaders::texture2D().load(materialArrayFromModel.m_materials[iMatType][iMesh].m_filename, static_cast<MaterialType>(iMatType), false);
-								auto materialLoadError = textureFromModel.loadToMemory();
-
-								// Check if the texture was loaded successfully
-								if(materialLoadError == ErrorCode::Success)
-								{
-									materials[MaterialType::MaterialType_Diffuse].m_texture = textureFromModel;
-								}
-								else
-								{
-									ErrHandlerLoc::get().log(materialLoadError, ErrorSource::Source_Renderer);
-								}
-							}
-
-							// Add the data for this mesh. Include materials loaded from the model itself, if they were present, otherwise, include default textures instead
-							newModelData.m_meshes.push_back(MeshData(meshesInModelArray[iMesh], materials));
-
-							ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_ModelComponent, m_name + " - Model \'" + modelName + "\' imported");
-						}
-					}
-				}*/
 			}
 
 			if(p_properties.getNumPropertySets() == 0)
@@ -362,6 +367,8 @@ public:
 
 		setLoadedToVideoMemory(true);
 	}
+
+	const inline std::vector<ModelData> &getModelData() const { return m_modelData; }
 
 private:
 	struct MeshMaterialsProperties

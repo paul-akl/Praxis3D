@@ -136,6 +136,9 @@ public:
 		});
 	}
 
+	// Returns false if there are any objects in the LoadToVideoMemory queue
+	//const inline bool isLoadToVideoMemoryQueueEmpty() const { return m_objectLoadToVideoMemoryQueue.empty(); }
+
 protected:
 	// Queue and object to be removed from memory
 	inline void queueUnload(UniqueObject &p_object)
@@ -143,6 +146,12 @@ protected:
 		m_objectUnloadQueue.push(&p_object);
 		m_queueIsEmpty = false;
 	}
+
+	// Put an object into a queue for loading it into video memory
+	//inline void queueLoadToVideoMemory(TObject &p_object)
+	//{
+	//	m_objectLoadToVideoMemoryQueue.push(&p_object);
+	//}
 
 	// Swap the object with the last element of vector and pop_back
 	inline void removeObject(UniqueObject &p_object)
@@ -173,4 +182,5 @@ private:
 	bool m_queueIsEmpty;
 	
 	std::queue<UniqueObject*> m_objectUnloadQueue;
+	//std::queue<TObject*> m_objectLoadToVideoMemoryQueue;
 };
