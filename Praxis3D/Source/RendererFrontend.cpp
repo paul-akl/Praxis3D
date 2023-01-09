@@ -1,6 +1,7 @@
 
 #include "AtmScatteringPass.h"
 #include "BloomCompositePass.h"
+#include "BloomPass.h"
 #include "BlurPass.h"
 #include "GeometryPass.h"
 #include "GUIPass.h"
@@ -14,19 +15,20 @@
 #include "RendererFrontend.h"
 #include "SkyPass.h"
 
-RendererFrontend::RendererFrontend()
+RendererFrontend::RendererFrontend() : m_renderPassData(nullptr)
 {
 	// Set up the order of the rendering passes
 	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Geometry);
 	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_AtmScattering);
 	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Lighting);
 	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_AtmScattering);
-	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_HdrMapping);
-	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Blur);
-	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_BloomComposite);
-	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_LenseFlare);
-	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Blur);
-	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_LenseFlareComposite);
+	//m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_HdrMapping);
+	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Bloom);
+	//m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Blur);
+	//m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_BloomComposite);
+	//m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_LenseFlare);
+	//m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Blur);
+	//m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_LenseFlareComposite);
 	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Final);
 	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_GUI);
 
@@ -58,6 +60,10 @@ RendererFrontend::RendererFrontend()
 		case RenderPassType_Blur:
 			if(m_initializedRenderingPasses[RenderPassType_Blur] == nullptr)
 				m_initializedRenderingPasses[RenderPassType_Blur] = new BlurPass(*this);
+			break;
+		case RenderPassType_Bloom:
+			if(m_initializedRenderingPasses[RenderPassType_Bloom] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_Bloom] = new BloomPass(*this);
 			break;
 		case RenderPassType_BloomComposite:
 			if(m_initializedRenderingPasses[RenderPassType_BloomComposite] == nullptr)

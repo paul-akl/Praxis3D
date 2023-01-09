@@ -95,8 +95,6 @@ public:
 		glDisable(GL_DEPTH_TEST);
 
 		// Calculate the apsect ratio for the halo
-
-
 		if(m_currentScreenRes.x != Config::graphicsVar().current_resolution_x || m_currentScreenRes.y != Config::graphicsVar().current_resolution_y)
 		{
 			m_currentScreenRes.x = Config::graphicsVar().current_resolution_x;
@@ -126,8 +124,8 @@ public:
 		glBindTexture(GL_TEXTURE_2D, m_lensFlareGhostGradient.getHandle());
 
 		// Perform various visual effects in the post process shader
-		//m_renderer.queueForDrawing(m_lenseFlareShader->getShaderHandle(), m_lenseFlareShader->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat);
-		//m_renderer.passScreenSpaceDrawCommandsToBackend();
+		m_renderer.queueForDrawing(m_lenseFlareShader->getShaderHandle(), m_lenseFlareShader->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat);
+		m_renderer.passScreenSpaceDrawCommandsToBackend();
 
 		p_renderPassData.setBlurInputMap(GeometryBuffer::GBufferDiffuse);
 		p_renderPassData.setBlurOutputMap(GeometryBuffer::GBufferDiffuse);

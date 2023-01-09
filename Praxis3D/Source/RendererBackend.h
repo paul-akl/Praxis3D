@@ -107,6 +107,31 @@ public:
 		const unsigned int m_shaderHandle;
 	};
 
+	// A command to execute a compute shader
+	struct ComputeDispatchCommand
+	{
+		ComputeDispatchCommand(const unsigned int p_numOfGroupsX, 
+							   const unsigned int p_numOfGroupsY, 
+							   const unsigned int p_numOfGroupsZ, 
+							   const MemoryBarrierType p_memoryBarrier, 
+							   const ShaderUniformUpdater &p_uniformUpdater,
+							   const UniformObjectData &p_uniformObjectData,
+							   const unsigned int p_shaderHandle) :
+			m_numOfGroups{ p_numOfGroupsX, p_numOfGroupsY, p_numOfGroupsZ },
+			m_memoryBarrier(p_memoryBarrier),
+			m_uniformUpdater(p_uniformUpdater),
+			m_uniformObjectData(p_uniformObjectData),
+			m_shaderHandle(p_shaderHandle) { }
+
+		const unsigned int m_numOfGroups[3];
+		const MemoryBarrierType m_memoryBarrier;
+
+		const ShaderUniformUpdater &m_uniformUpdater;
+		const UniformObjectData m_uniformObjectData;
+
+		const unsigned int m_shaderHandle;
+	};
+
 	// Used for binding textures and framebuffers for reading and writing
 	struct BindCommand
 	{
@@ -362,6 +387,7 @@ public:
 
 	typedef std::vector<LoadCommand> LoadCommands;
 	typedef std::vector<BufferUpdateCommand> BufferUpdateCommands;
+	typedef std::vector<ComputeDispatchCommand> ComputeDispatchCommands;
 
 	RendererBackend();
 	~RendererBackend();
@@ -381,6 +407,7 @@ public:
 	void processLoading(LoadCommands &p_loadCommands, const UniformFrameData &p_frameData);
 	void processDrawing(const DrawCommands &p_drawCommands, const UniformFrameData &p_frameData);
 	void processDrawing(const ScreenSpaceDrawCommands &p_screenSpaceDrawCommands, const UniformFrameData &p_frameData);
+	void processDrawing(const ComputeDispatchCommands &p_computeDispatchCommands, const UniformFrameData &p_frameData);
 
 	inline GeometryBuffer *getGeometryBuffer() { return m_gbuffer; }
 
@@ -602,6 +629,7 @@ protected:
 		{
 			unsigned int shaderHandles[ShaderType_NumOfTypes] = {};
 			unsigned int shaderTypes[ShaderType_NumOfTypes] = {
+				GL_COMPUTE_SHADER,
 				GL_FRAGMENT_SHADER,
 				GL_GEOMETRY_SHADER,
 				GL_VERTEX_SHADER,
@@ -646,8 +674,14 @@ protected:
 			}
 			else
 			{
+				unsigned int numOfShaders = ShaderType::ShaderType_NumOfTypes;
+
+				// If a compute shader exists, then load ONLY the compute shader
+				if(!p_command.m_objectData.m_shaderData.m_source[ShaderType::ShaderType_Compute].empty())
+					numOfShaders = 1;
+
 				// Create individual shaders
-				for(unsigned int i = 0; i < ShaderType_NumOfTypes; i++)
+				for(unsigned int i = 0; i < numOfShaders; i++)
 				{
 					if(!p_command.m_objectData.m_shaderData.m_source[i].empty())
 					{

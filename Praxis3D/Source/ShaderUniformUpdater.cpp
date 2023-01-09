@@ -137,6 +137,11 @@ ErrorCode ShaderUniformUpdater::generatePerFrameList()
 	uniformList.push_back(new EmissiveMultiplierUniform(m_shaderHandle));
 	uniformList.push_back(new LODParallaxMappingUniform(m_shaderHandle));
 
+	// Bloom
+	uniformList.push_back(new BloomDirtIntensityUniform(m_shaderHandle));
+	uniformList.push_back(new BloomIntensityUniform(m_shaderHandle));
+	uniformList.push_back(new BloomTresholdUniform(m_shaderHandle));
+
 	// Go through each uniform and check if it is valid
 	// If it is, add it to the update list, if not, delete it
 	for(decltype(uniformList.size()) i = 0, size = uniformList.size(); i < size; i++)
@@ -168,6 +173,8 @@ ErrorCode ShaderUniformUpdater::generatePerModelList()
 	uniformList.push_back(new AlphaThresholdUniform(m_shaderHandle));
 	uniformList.push_back(new EmissiveThresholdUniform(m_shaderHandle));
 	uniformList.push_back(new HeightScaleUniform(m_shaderHandle));
+	uniformList.push_back(new MipLevelUniform(m_shaderHandle));
+	uniformList.push_back(new TexelSizeUniform(m_shaderHandle));
 	uniformList.push_back(new TextureTilingFactorUniform(m_shaderHandle));
 
 	// Test uniforms, used for debugging, etc

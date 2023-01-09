@@ -59,6 +59,11 @@ ShaderLoader::ShaderProgram *ShaderLoader::load(const PropertySet &p_properties)
 				programName = p_properties[i].getString();
 				break;
 
+			case Properties::ComputeShader:
+				shaderFilename[ShaderType_Compute] = p_properties[i].getString();
+				numberOfShaders++;
+				break;
+
 			case Properties::FragmentShader:
 				shaderFilename[ShaderType_Fragment] = p_properties[i].getString();
 				numberOfShaders++;
@@ -128,6 +133,9 @@ ShaderLoader::ShaderProgram *ShaderLoader::load(const PropertySet &p_properties)
 				if(!shaderFilename[shaderType].empty())
 					newProgram->addShader(static_cast<ShaderType>(shaderType), shaderFilename[shaderType]);
 
+			// If there is a compute shader source code loaded, mark the shader program as compute only
+			if(!newProgram->m_shaderSource[ShaderType::ShaderType_Compute].empty())
+				newProgram->m_computeShader = true;
 
 			// Create a uniform updater for the new shader
 			newProgram->m_uniformUpdater = new ShaderUniformUpdater(*newProgram);

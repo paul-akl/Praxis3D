@@ -107,12 +107,12 @@ ErrorCode GeometryBuffer::init()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, Config::FramebfrVariables().gl_buffers_wrap_t_method);
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GBufferIntermediate, GL_TEXTURE_2D, m_intermediateBuffer, 0);
 
-		// Create the final buffer, that gets renderred to the screen
+		// Create the final buffer, that gets rendered to the screen
 		glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
 		glTexImage2D(GL_TEXTURE_2D, 0, Config::FramebfrVariables().gl_final_buffer_internal_format, m_bufferWidth, m_bufferHeight, 0, 
 					 Config::FramebfrVariables().gl_final_buffer_texture_format, Config::FramebfrVariables().gl_final_buffer_texture_type, NULL);
-		// If eye adaption (HDR) is enabled, buffer should use a different min_filter (to support mipmapping)
-		if(Config::graphicsVar().eye_adaption)
+		// If HDR bloom is enabled, buffer should use a different min_filter (to support mipmapping)
+		if(Config::graphicsVar().bloom_enabled)
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Config::FramebfrVariables().gl_final_buffer_min_filter_HDR);
 		else
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Config::FramebfrVariables().gl_final_buffer_min_filter);
@@ -120,7 +120,10 @@ ErrorCode GeometryBuffer::init()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, Config::FramebfrVariables().gl_buffers_wrap_s_method);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, Config::FramebfrVariables().gl_buffers_wrap_t_method);
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GBufferFinal, GL_TEXTURE_2D, m_finalBuffer, 0);
-		
+		// If HDR bloom is enabled, create mip maps for the final buffer
+		if(Config::graphicsVar().bloom_enabled)
+			generateMipmap(GeometryBuffer::GBufferFinal);
+
 		// Check for errors and return an error in case of one
 		m_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		if(m_status != GL_FRAMEBUFFER_COMPLETE)

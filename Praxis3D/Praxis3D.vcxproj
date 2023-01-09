@@ -115,7 +115,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ConformanceMode>false</ConformanceMode>
@@ -216,6 +216,7 @@
     <ClInclude Include="Source\BaseGraphicsObjects.h" />
     <ClInclude Include="Source\BaseScriptObject.h" />
     <ClInclude Include="Source\BloomCompositePass.h" />
+    <ClInclude Include="Source\BloomPass.h" />
     <ClInclude Include="Source\BlurPass.h" />
     <ClInclude Include="Source\CameraComponent.h" />
     <ClInclude Include="Source\CameraGraphicsObject.h" />

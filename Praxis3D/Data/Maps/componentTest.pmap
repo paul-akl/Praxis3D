@@ -105,22 +105,22 @@
 										"Diffuse":
 										{
 											"Filename": "Metal_CleanPaintedWithChips_2k_alb.tga",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "100.0f, 100.0f"
 										},
 										"Normal":
 										{
 											"Filename": "Metal_CleanPaintedWithChips_2k_n.tga",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "100.0f, 100.0f"
 										},
 										"Emissive":
 										{
 											"Filename": "default_emissive.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "100.0f, 100.0f"
 										},
 										"RMHAO":
 										{
-											"Filename": "Metal_CleanPaintedWithChips_RMHAO.tga",
-											"TextureScale": "1.0f, 1.0f"
+											"Filename": "Metal_CleanPaintedWithChips_RMHAO3.tga",
+											"TextureScale": "100.0f, 100.0f"
 										}
 									}
 								}
@@ -223,6 +223,53 @@
 									{
 										"Diffuse":
 										{
+											"Filename": "test_albedoGold.png",
+											"TextureScale": "1.0f, 1.0f"
+										},
+										"RMHAO":
+										{
+											"Filename": "test1_RM.png",
+											"TextureScale": "1.0f, 1.0f"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		},
+		{
+			"ID": "5",
+			"Name": "Sphere 2",
+			"Parent": "0",
+			"World":
+			{
+				"SpatialComponent":
+				{
+					"LocalPosition": "10.0f, 5.0f, 5.0f",
+					"LocalRotation": "0.0f, 45.0f, 0.0f",
+					"LocalScale": "4.0f, 4.0f, 4.0f"
+				}
+			},
+			"Rendering":
+			{
+				"ModelComponent":
+				{
+					"Models":
+					[
+						{
+							"Filename": "sphereNew4.3DS",
+							"Meshes":
+							[
+								{
+									"Index": "0",
+									"AlphaThreshold": "0.0f",
+									"HeightScale": "0.0f",
+									"Materials":
+									{
+										"Diffuse":
+										{
 											"Filename": "test_albedo.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
@@ -294,7 +341,7 @@
 				{
 					"Type": "DirectionalLight",
 					"Color": "1.0f, 0.0f, 0.0f",
-					"Intensity": "0.2f"
+					"Intensity": "20.0f"
 				}
 			}
 		},
@@ -378,7 +425,7 @@
 				{
 					"Type": "PointLight",
 					"Color": "1.0f, 1.0f, 1.0f",
-					"Intensity": "10.0f"
+					"Intensity": "100.0f"
 				}
 			}
 		}

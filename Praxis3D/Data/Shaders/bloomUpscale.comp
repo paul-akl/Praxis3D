@@ -1,0 +1,90 @@
+#version 460
+
+#define GROUP_SIZE         8
+#define GROUP_THREAD_COUNT (GROUP_SIZE * GROUP_SIZE)
+#define FILTER_SIZE        3
+#define FILTER_RADIUS      (FILTER_SIZE / 2)
+#define TILE_SIZE          (GROUP_SIZE + 2 * FILTER_RADIUS)
+#define TILE_PIXEL_COUNT   (TILE_SIZE * TILE_SIZE)
+
+layout(binding = 0)			 uniform sampler2D inputColorMap;
+layout(rgba16f, binding = 0) uniform image2D   outputColorMap;
+
+layout(binding = 1)			 uniform sampler2D lensDirtTexture;
+
+uniform int mipLevel;
+uniform vec2 texelSize;
+uniform float bloomIntensity;
+uniform float bloomDirtIntensity;
+
+// Local Data Storage buffers
+shared float sharedBufferR[TILE_PIXEL_COUNT];
+shared float sharedBufferG[TILE_PIXEL_COUNT];
+shared float sharedBufferB[TILE_PIXEL_COUNT];
+
+void storeLDS(int p_idx, vec4 p_color)
+{
+    sharedBufferR[p_idx] = p_color.r;
+    sharedBufferG[p_idx] = p_color.g;
+    sharedBufferB[p_idx] = p_color.b;
+}
+
+vec4 loadLDS(uint p_idx)
+{
+    return vec4(sharedBufferR[p_idx], sharedBufferG[p_idx], sharedBufferB[p_idx], 1.0);
+}
+
+layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
+
+void main()
+{
+	ivec2 texCoord = ivec2(gl_GlobalInvocationID.xy);
+    vec2  baseIndex = ivec2(gl_WorkGroupID) * GROUP_SIZE - FILTER_RADIUS;
+
+    // The first (TILE_PIXEL_COUNT - GROUP_THREAD_COUNT) threads load at most 2 texel values
+    for (int i = int(gl_LocalInvocationIndex); i < TILE_PIXEL_COUNT; i += GROUP_THREAD_COUNT)
+    {
+        vec2 uv        = (baseIndex + 0.5) * texelSize;
+        vec2 uv_offset = vec2(i % TILE_SIZE, i / TILE_SIZE) * texelSize;
+        
+        vec4 color = textureLod(inputColorMap, (uv + uv_offset), mipLevel);
+        storeLDS(i, color);
+    }
+
+    memoryBarrierShared();
+    barrier();
+
+    // Based on [Jimenez14] http://goo.gl/eomGso
+    // Define the center texel index
+    uint centerIndex = (gl_LocalInvocationID.x + FILTER_RADIUS) + (gl_LocalInvocationID.y + FILTER_RADIUS) * TILE_SIZE;
+
+	// Get the surrounding texels colors
+    vec4 s;
+    s =  loadLDS(centerIndex - TILE_SIZE - 1);
+    s += loadLDS(centerIndex - TILE_SIZE    ) * 2.0;
+    s += loadLDS(centerIndex - TILE_SIZE + 1);
+	
+    s += loadLDS(centerIndex - 1) * 2.0;
+    s += loadLDS(centerIndex    ) * 4.0;
+    s += loadLDS(centerIndex + 1) * 2.0;
+	
+    s += loadLDS(centerIndex + TILE_SIZE - 1);
+    s += loadLDS(centerIndex + TILE_SIZE    ) * 2.0;
+    s += loadLDS(centerIndex + TILE_SIZE + 1);
+
+	// Average out the bloom color
+    vec4 bloom = s * (1.0 / 16.0);
+
+	// Get the original pixel color and add bloom to it
+	vec4 finalColor = imageLoad(outputColorMap, texCoord);
+	finalColor += bloom * bloomIntensity;
+
+	// At the last upscaling run, apply the lens dirt texture
+    if (mipLevel == 1)
+    {
+        vec2  uv  = (vec2(texCoord) + vec2(0.5, 0.5)) * texelSize;
+        finalColor += texture(lensDirtTexture, uv) * bloomDirtIntensity * bloom * bloomIntensity;
+    }
+
+	imageStore(outputColorMap, texCoord, finalColor);
+}

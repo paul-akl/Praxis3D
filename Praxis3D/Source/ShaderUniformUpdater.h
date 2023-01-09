@@ -22,6 +22,7 @@ public:
 		m_numTextureUpdates = 0;
 		m_numUniformBlockUpdates = 0;
 		m_numSSBBBlockUpdates = 0;
+		m_shaderHandle = 0;
 	}
 	~ShaderUniformUpdater()
 	{

@@ -18,8 +18,15 @@ enum CommandType : unsigned int
 {
 	CommandType_Draw,
 	CommandType_ScreenSpaceDraw,
+	CommandType_Compute,
 	CommandType_Bind,
 	CommandType_Load
+};
+enum MemoryBarrierType : unsigned int
+{
+	MemoryBarrierType_All,
+	MemoryBarrierType_ImageAccessBarrier,
+	MemoryBarrierType_AccessAndFetchBarrier
 };
 enum RenderPassType : unsigned int
 {
@@ -28,6 +35,7 @@ enum RenderPassType : unsigned int
 	RenderPassType_AtmScattering,
 	RenderPassType_HdrMapping,
 	RenderPassType_Blur,
+	RenderPassType_Bloom,
 	RenderPassType_BloomComposite,
 	RenderPassType_LenseFlare,
 	RenderPassType_LenseFlareComposite,
@@ -121,6 +129,7 @@ enum ShaderType : unsigned int
 {
 	// WARNING: do not change the order - enum entries are order-sensitive
 
+	ShaderType_Compute,
 	ShaderType_Fragment,
 	ShaderType_Geometry,
 	ShaderType_Vertex,

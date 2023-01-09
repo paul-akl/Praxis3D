@@ -13,10 +13,10 @@ public:
 
 	ErrorCode init()
 	{
-		ErrorCode returnError;
+		ErrorCode returnError = ErrorCode::Failure;
 
-		m_name = "Final Rendering Pass";
-		
+		m_name = "Final Pass";
+
 		// Create a property-set used to load geometry shader
 		PropertySet finalShaderProperties(Properties::Shaders);
 		finalShaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().final_pass_vert_shader);
@@ -57,13 +57,13 @@ public:
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferFinal, GeometryBuffer::GBufferFinal);
 
 #else
-
 		// Bind final framebuffer
 		//m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferFinal, GeometryBuffer::GBufferFinal);
 
+		glDepthFunc(GL_LEQUAL);
 		glDisable(GL_DEPTH_TEST);
 		
-		if(Config::graphicsVar().eye_adaption)
+		if(Config::graphicsVar().bloom_enabled)
 		{
 			// Generate mipmaps for the final buffer, for use in tone mapping
 			//m_renderer.m_backend.getGeometryBuffer()->generateMipmap(GeometryBuffer::GBufferFinal);
@@ -72,6 +72,7 @@ public:
 		// Bind final texture for reading so it can be accessed in the shaders
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferEmissive, GeometryBuffer::GBufferEmissive);
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GeometryBuffer::GBufferInputTexture);
+		//m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferFinal, GeometryBuffer::GBufferInputTexture);
 		//m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferNormal, GeometryBuffer::GBufferInputTexture);
 
 		// Set the default framebuffer to be drawn to
@@ -85,5 +86,5 @@ public:
 	}
 
 private:
-	ShaderLoader::ShaderProgram	*m_shaderFinalPass;
+	ShaderLoader::ShaderProgram *m_shaderFinalPass;
 };

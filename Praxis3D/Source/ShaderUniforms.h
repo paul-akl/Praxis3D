@@ -432,6 +432,94 @@ public:
 private:
 	float parallaxLOD;
 };
+class TexelSizeUniform : public BaseUniform
+{
+public:
+	TexelSizeUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().texelSize, p_shaderHandle)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniform2f(m_uniformHandle, p_uniformData.m_frameData.m_texelSize.x, p_uniformData.m_frameData.m_texelSize.y);
+	}
+};
+class MipLevelUniform : public BaseUniform
+{
+public:
+	MipLevelUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().mipLevel, p_shaderHandle)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniform1i(m_uniformHandle, p_uniformData.m_frameData.m_mipLevel);
+	}
+};
+
+class BloomTresholdUniform : public BaseUniform
+{
+public:
+	BloomTresholdUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().bloomTreshold, p_shaderHandle)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		// Check if the same value is not already assigned (a small optimization)
+		if(m_bloomTreshold != p_uniformData.m_frameData.m_bloomTreshold)
+		{
+			m_bloomTreshold = p_uniformData.m_frameData.m_bloomTreshold;
+
+			glUniform4f(m_uniformHandle, m_bloomTreshold.x, m_bloomTreshold.y, m_bloomTreshold.z, m_bloomTreshold.w);
+		}
+	}
+
+private:
+	glm::vec4 m_bloomTreshold;
+};
+class BloomDirtIntensityUniform : public BaseUniform
+{
+public:
+	BloomDirtIntensityUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().bloomDirtIntensity, p_shaderHandle), m_bloomDirtIntensity(0.0f)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		// Check if the same value is not already assigned (a small optimization)
+		if(m_bloomDirtIntensity != Config::graphicsVar().bloom_dirt_intensity)
+		{
+			m_bloomDirtIntensity = Config::graphicsVar().bloom_dirt_intensity;
+
+			glUniform1f(m_uniformHandle, m_bloomDirtIntensity);
+		}
+	}
+
+private:
+	float m_bloomDirtIntensity;
+};
+class BloomIntensityUniform : public BaseUniform
+{
+public:
+	BloomIntensityUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().bloomIntensity, p_shaderHandle), m_bloomIntensity(0.0f)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		// Check if the same value is not already assigned (a small optimization)
+		if(m_bloomIntensity != Config::graphicsVar().bloom_intensity)
+		{
+			m_bloomIntensity = Config::graphicsVar().bloom_intensity;
+
+			glUniform1f(m_uniformHandle, m_bloomIntensity);
+		}
+	}
+
+private:
+	float m_bloomIntensity;
+};
 
 class DirLightColorUniform : public BaseUniform
 {

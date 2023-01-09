@@ -58,8 +58,8 @@ void main(void)
 	vec3 fragmentColor = texture(inputColorMap, texCoord).xyz;
 	
 	// Adjust the fragment brightness based on average
-	fragmentColor = brightnessMapping(fragmentColor, avgBrightness);
-	emissiveColor = brightnessMapping(emissiveColor, avgBrightness);
+	//fragmentColor = brightnessMapping(fragmentColor, avgBrightness);
+	//emissiveColor = brightnessMapping(emissiveColor, avgBrightness);
 	
 	// Calculate luminance of the fragment after HDR mapping
 	float luminance = max(0.0, calcLuma(fragmentColor) - 1.0);

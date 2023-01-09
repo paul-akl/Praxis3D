@@ -9,6 +9,8 @@ struct UniformFrameData
 		m_dirLightIntensity = 0.0f;
 		m_numPointLights = 0;
 		m_numSpotLights = 0;
+		m_deltaTime = 0.0f;
+		m_mipLevel = 1;
 	}
 
 	// Framebuffer size (can be different from the window size)
@@ -38,6 +40,13 @@ struct UniformFrameData
 	// Current number of lights in the light buffers
 	unsigned int m_numPointLights,
 				 m_numSpotLights;
+
+	// Bloom pass data
+	glm::vec4 m_bloomTreshold;
+
+	// Misc
+	glm::vec2 m_texelSize;
+	int m_mipLevel;
 };
 
 struct UniformObjectData

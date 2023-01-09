@@ -140,3 +140,48 @@ void RendererBackend::processDrawing(const ScreenSpaceDrawCommands &p_screenSpac
 	}
 }
 
+void RendererBackend::processDrawing(const ComputeDispatchCommands &p_computeDispatchCommands, const UniformFrameData &p_frameData)
+{
+	for(decltype(p_computeDispatchCommands.size()) i = 0, size = p_computeDispatchCommands.size(); i < size; i++)
+	{
+		// Get uniform data
+		const UniformObjectData &uniformObjectData = p_computeDispatchCommands[i].m_uniformObjectData;
+
+		// Get various handles
+		const auto shaderHandle = p_computeDispatchCommands[i].m_shaderHandle;
+		const auto &uniformUpdater = p_computeDispatchCommands[i].m_uniformUpdater;
+
+		// Bind the shader
+		bindShader(shaderHandle);
+
+		// Update shader uniforms
+		textureUniformUpdate(shaderHandle, uniformUpdater, uniformObjectData, p_frameData);
+		frameUniformUpdate(shaderHandle, uniformUpdater, uniformObjectData, p_frameData);
+		modelUniformUpdate(shaderHandle, uniformUpdater, uniformObjectData, p_frameData);
+		meshUniformUpdate(shaderHandle, uniformUpdater, uniformObjectData, p_frameData);
+
+		// Launch compute work groups
+		glDispatchCompute(p_computeDispatchCommands[i].m_numOfGroups[0], p_computeDispatchCommands[i].m_numOfGroups[1], p_computeDispatchCommands[i].m_numOfGroups[2]);
+
+		// Determine the memory barrier type
+		GLbitfield memoryBarrierBit = 0;
+		switch(p_computeDispatchCommands[i].m_memoryBarrier)
+		{
+			case MemoryBarrierType::MemoryBarrierType_All:
+				memoryBarrierBit = GL_ALL_BARRIER_BITS;
+				break;
+
+			case MemoryBarrierType::MemoryBarrierType_ImageAccessBarrier:
+				memoryBarrierBit = GL_SHADER_IMAGE_ACCESS_BARRIER_BIT;
+				break;
+
+			case MemoryBarrierType::MemoryBarrierType_AccessAndFetchBarrier:
+				memoryBarrierBit = GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT;
+				break;
+		}
+
+		// Define the memory barrier for the data in the compute shader
+		glMemoryBarrier(memoryBarrierBit);
+	}
+}
+

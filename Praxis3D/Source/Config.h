@@ -229,6 +229,7 @@ namespace Properties
 	Code(CameraComponent,) \
 	Code(Color,) \
 	Code(CombinedTexture,) \
+	Code(ComputeShader,) \
 	Code(CutoffAngle,) \
 	Code(Diffuse,) \
 	Code(Direction,) \
@@ -411,6 +412,7 @@ namespace Properties
 		GetString(CameraComponent),
 		GetString(Color),
 		GetString(CombinedTexture),
+		GetString(ComputeShader),
 		GetString(CutoffAngle),
 		GetString(Diffuse),
 		GetString(Direction),
@@ -694,8 +696,8 @@ public:
 			gl_blur_buffer_texture_format = GL_RGBA;
 			gl_blur_buffer_texture_type = GL_FLOAT;
 
-			gl_final_buffer_internal_format = GL_RGB16F;
-			gl_final_buffer_texture_format = GL_RGB;
+			gl_final_buffer_internal_format = GL_RGBA16F;
+			gl_final_buffer_texture_format = GL_RGBA;
 			gl_final_buffer_texture_type = GL_FLOAT;
 
 			gl_depth_buffer_internal_format = GL_DEPTH_COMPONENT32F;
@@ -712,7 +714,7 @@ public:
 			gl_blur_buffer_wrap_s_method = GL_CLAMP_TO_EDGE;
 			gl_blur_buffer_wrap_t_method = GL_CLAMP_TO_EDGE;
 
-			gl_final_buffer_min_filter_HDR = GL_NEAREST_MIPMAP_NEAREST;
+			gl_final_buffer_min_filter_HDR = GL_LINEAR_MIPMAP_NEAREST;
 			gl_final_buffer_min_filter = GL_NEAREST;
 			gl_final_buffer_mag_filter = GL_NEAREST;
 			gl_final_buffer_s_method = GL_CLAMP_TO_EDGE;
@@ -782,11 +784,14 @@ public:
 	{
 		GraphicsVariables()
 		{
+			bloom_enabled = true;
 			double_buffering = true;
-			eye_adaption = true;
+			eye_adaption = false;
 			multisampling = true;
 			alpha_size = 8;
 			bloom_blur_passes = 5;
+			bloom_downscale_limit = 10;
+			bloom_mipmap_limit = 16;
 			current_resolution_x = 0;
 			current_resolution_y = 0;
 			dir_shadow_res_x = 2048;
@@ -800,6 +805,10 @@ public:
 			rendering_res_x = 1600;
 			rendering_res_y = 900;
 			alpha_threshold = 0.0f;
+			bloom_intensity = 1.0f;
+			bloom_knee = 0.1f;
+			bloom_threshold = 1.5f;
+			bloom_dirt_intensity = 1.0f;
 			emissive_multiplier = 10.0f;
 			emissive_threshold = 0.01f;
 			eye_adaption_rate = 0.25f;
@@ -831,11 +840,14 @@ public:
 			z_near = 0.1f;
 		}
 
+		bool bloom_enabled;
 		bool double_buffering;
 		bool eye_adaption;
 		bool multisampling;
 		int alpha_size;
 		int bloom_blur_passes;
+		int bloom_downscale_limit;
+		int bloom_mipmap_limit;
 		int current_resolution_x;
 		int current_resolution_y;
 		int dir_shadow_res_x;
@@ -849,6 +861,10 @@ public:
 		int rendering_res_x;
 		int rendering_res_y;
 		float alpha_threshold;
+		float bloom_intensity;
+		float bloom_knee;
+		float bloom_threshold;
+		float bloom_dirt_intensity;
 		float emissive_multiplier;
 		float emissive_threshold;
 		float eye_adaption_rate;
@@ -1065,6 +1081,8 @@ public:
 			hdr_mapping_pass_vert_shader = "hdrMappingPass.vert";
 			bloom_composite_pass_vert_shader = "bloomCompositePass.vert";
 			bloom_composite_pass_frag_shader = "bloomCompositePass.frag";
+			bloom_downscale_comp_shader = "bloomDownscale.comp";
+			bloom_upscale_comp_shader = "bloomUpscale.comp";
 			blur_pass_vert_shader = "blurPass.vert";
 			blur_pass_frag_shader = "blurPass.frag";
 			lense_flare_comp_pass_vert_shader = "lenseFlareCompositePass.vert";
@@ -1079,7 +1097,7 @@ public:
 			postProcess_pass_frag_shader = "postProcessPass.frag";
 			reflection_pass_vert_shader = "reflectionPass.vert";
 			reflection_pass_frag_shader = "reflectionPass.frag";
-			lens_flare_dirt_texture = "p3d_lensFlareDirt.png";
+			lens_flare_dirt_texture = "DirtMaskTexture.png";
 			lens_flare_ghost_gradient_texture = "p3d_lensFlareGhostColorGradient.png";
 			lens_flare_starburst_texture = "p3d_lensFlareStarburst.png";
 			dir_light_quad_offset_x = 0.0f;
@@ -1128,6 +1146,8 @@ public:
 		std::string hdr_mapping_pass_vert_shader;
 		std::string bloom_composite_pass_vert_shader;
 		std::string bloom_composite_pass_frag_shader;
+		std::string bloom_downscale_comp_shader;
+		std::string bloom_upscale_comp_shader;
 		std::string blur_pass_vert_shader;
 		std::string blur_pass_frag_shader;
 		std::string lense_flare_comp_pass_vert_shader;
@@ -1201,6 +1221,8 @@ public:
 			heightScaleUniform = "heightScale";
 			textureTilingFactorUniform = "textureTilingFactor";
 			LODParallaxUniform = "parallaxMappingLOD";
+			texelSize = "texelSize";
+			mipLevel = "mipLevel";
 
 			dirLightColor = "directionalLight.m_color";
 			dirLightDirection = "directionalLight.m_direction";
@@ -1247,6 +1269,10 @@ public:
 			atmSingleMieScatTextureUniform = "atmSingleMieTexture";
 			atmTransmittanceTextureUniform = "atmTransmitTexture";
 
+			bloomTreshold = "bloomTreshold";
+			bloomIntensity = "bloomIntensity";
+			bloomDirtIntensity = "bloomDirtIntensity";
+
 			lensFlareDirtTextureUniform = "lensDirtTexture";
 			lensFlareGhostGradientTextureUniform = "ghostGradientTexture";
 			lensFlareStarburstTextureUniform = "lenseStarburstTexture";
@@ -1290,6 +1316,8 @@ public:
 		std::string heightScaleUniform;
 		std::string textureTilingFactorUniform;
 		std::string LODParallaxUniform;
+		std::string texelSize;
+		std::string mipLevel;
 
 		std::string dirLightColor;
 		std::string dirLightDirection;
@@ -1336,6 +1364,10 @@ public:
 		std::string atmSingleMieScatTextureUniform;
 		std::string atmTransmittanceTextureUniform;
 		
+		std::string bloomTreshold;
+		std::string bloomIntensity;
+		std::string bloomDirtIntensity;
+
 		std::string lensFlareDirtTextureUniform;
 		std::string lensFlareGhostGradientTextureUniform;
 		std::string lensFlareStarburstTextureUniform;

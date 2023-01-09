@@ -5,6 +5,7 @@
 
 class GeometryBuffer : public Framebuffer
 {
+	friend class BloomPass;
 public:
 	enum GBufferFramebufferType : unsigned int
 	{
@@ -19,8 +20,8 @@ public:
 		GBufferNormal,
 		GBufferEmissive,
 		GBufferMatProperties,
-		GBufferNumTextures,
-		GBufferFinal = GBufferNumTextures,
+		GBufferFinal,
+		GBufferNumTextures = GBufferFinal,
 		GBufferIntermediate,
 		GBufferTotalNumTextures,
 		GBufferInputTexture = GBufferTotalNumTextures,
@@ -98,7 +99,20 @@ public:
 	{
 		glDrawBuffers((GLsizei)p_buffers.size(), p_buffers.data());
 	}
-	
+
+	inline void bindBufferToImageUnitForReading(const GBufferTextureType p_buffer, const int p_imageUnitIndex = 0, const int p_mipLevel = 0)
+	{
+		bindBufferToImageUnit(p_buffer, p_imageUnitIndex, p_mipLevel, GL_READ_ONLY);
+	}
+	inline void bindBufferToImageUnitForWriting(const GBufferTextureType p_buffer, const int p_imageUnitIndex = 0, const int p_mipLevel = 0)
+	{
+		bindBufferToImageUnit(p_buffer, p_imageUnitIndex, p_mipLevel, GL_WRITE_ONLY);
+	}
+	inline void bindBufferToImageUnitForReadWrite(const GBufferTextureType p_buffer, const int p_imageUnitIndex = 0, const int p_mipLevel = 0)
+	{
+		bindBufferToImageUnit(p_buffer, p_imageUnitIndex, p_mipLevel, GL_READ_WRITE);
+	}
+
 	// Framebuffer binding functions
 	inline void bindFramebufferForReading(GBufferFramebufferType p_framebufferType)
 	{
@@ -144,6 +158,31 @@ public:
 	}
 
 protected:
+	inline void bindBufferToImageUnit(const GBufferTextureType p_buffer, const int p_imageUnitIndex, const int p_mipLevel, const GLenum p_access)
+	{
+		switch(p_buffer)
+		{
+		case GeometryBuffer::GBufferPosition:
+			glBindImageTexture(p_imageUnitIndex, m_GBTextures[p_buffer], p_mipLevel, GL_FALSE, 0, p_access, Config::FramebfrVariables().gl_position_buffer_internal_format);
+		case GeometryBuffer::GBufferDiffuse:
+			glBindImageTexture(p_imageUnitIndex, m_GBTextures[p_buffer], p_mipLevel, GL_FALSE, 0, p_access, Config::FramebfrVariables().gl_diffuse_buffer_internal_format);
+		case GeometryBuffer::GBufferNormal:
+			glBindImageTexture(p_imageUnitIndex, m_GBTextures[p_buffer], p_mipLevel, GL_FALSE, 0, p_access, Config::FramebfrVariables().gl_normal_buffer_internal_format);
+		case GeometryBuffer::GBufferEmissive:
+			glBindImageTexture(p_imageUnitIndex, m_GBTextures[p_buffer], p_mipLevel, GL_FALSE, 0, p_access, Config::FramebfrVariables().gl_emissive_buffer_internal_format);
+			break;
+		case GeometryBuffer::GBufferMatProperties:
+			glBindImageTexture(p_imageUnitIndex, m_GBTextures[p_buffer], p_mipLevel, GL_FALSE, 0, p_access, Config::FramebfrVariables().gl_mat_properties_buffer_internal_format);
+			break;
+		case GeometryBuffer::GBufferFinal:
+			glBindTextureUnit(0, m_finalBuffer);
+			glBindImageTexture(p_imageUnitIndex, m_finalBuffer, p_mipLevel, GL_FALSE, 0, p_access, Config::FramebfrVariables().gl_final_buffer_internal_format);
+			break;
+		case GeometryBuffer::GBufferIntermediate:
+			glBindImageTexture(p_imageUnitIndex, m_intermediateBuffer, p_mipLevel, GL_FALSE, 0, p_access, Config::FramebfrVariables().gl_blur_buffer_internal_format);
+			break;
+		}
+	}
 
 	GLuint  m_GBTextures[GBufferNumTextures],	// Geometry pass textures
 			m_intermediateBuffer,				// Intermediate buffer between vertical and horizontal blur passes

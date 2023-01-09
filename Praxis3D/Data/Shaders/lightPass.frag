@@ -284,5 +284,6 @@ void main(void)
 	}
 	
 	colorBuffer = vec4(finalLightColor + emissiveColor, 1.0);
+	//colorBuffer = vec4(0.0, 1.0, 0.0, 1.0);
 	//colorBuffer = vec4(diffuseColor + emissiveColor, 1.0);
 }

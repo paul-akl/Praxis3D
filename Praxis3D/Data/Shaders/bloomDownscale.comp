@@ -1,0 +1,124 @@
+#version 460
+
+#define GROUP_SIZE         8
+#define GROUP_THREAD_COUNT (GROUP_SIZE * GROUP_SIZE)
+#define FILTER_SIZE        3
+#define FILTER_RADIUS      (FILTER_SIZE / 2)
+#define TILE_SIZE          (GROUP_SIZE + 2 * FILTER_RADIUS)
+#define TILE_PIXEL_COUNT   (TILE_SIZE * TILE_SIZE)
+
+layout(binding = 0)			 uniform sampler2D inputColorMap;
+layout(rgba16f, binding = 0) uniform writeonly image2D outputColorMap;
+
+uniform vec4  bloomTreshold; // x -> threshold, yzw -> (threshold - knee, 2.0 * knee, 0.25 * knee)
+uniform vec2  texelSize;
+uniform int   mipLevel;
+
+const float epsilon = 1.0e-4;
+
+// Curve = (threshold - knee, knee * 2.0, knee * 0.25)
+vec4 calculateQuadraticThreshold(vec4 p_color, float p_threshold, vec3 p_curve)
+{
+	// Pixel brightness
+    float brightness = max(p_color.r, max(p_color.g, p_color.b));
+
+    // Under-threshold part: quadratic curve
+    float quadCurve = clamp(brightness - p_curve.x, 0.0, p_curve.y);
+    quadCurve = p_curve.z * quadCurve * quadCurve;
+
+    // Combine and apply the brightness response curve
+    p_color *= max(quadCurve, brightness - p_threshold) / max(brightness, epsilon);
+
+    return p_color;
+}
+
+// Calculate Luma of the the color
+float calculateLuma(vec3 p_color)
+{
+    return dot(p_color, vec3(0.2126729, 0.7151522, 0.0721750));
+}
+
+// [Karis2013] proposed reducing the dynamic range before averaging
+vec4 calculateKarisAverage(vec4 p_color)
+{
+    return p_color / (1.0 + calculateLuma(p_color.rgb));
+}
+
+// Local Data Storage buffers
+shared float sharedBufferR[TILE_PIXEL_COUNT];
+shared float sharedBufferG[TILE_PIXEL_COUNT];
+shared float sharedBufferB[TILE_PIXEL_COUNT];
+
+void storeLDS(int p_idx, vec4 p_color)
+{
+    sharedBufferR[p_idx] = p_color.r;
+    sharedBufferG[p_idx] = p_color.g;
+    sharedBufferB[p_idx] = p_color.b;
+}
+
+vec4 loadLDS(uint p_idx)
+{
+    return vec4(sharedBufferR[p_idx], sharedBufferG[p_idx], sharedBufferB[p_idx], 1.0);
+}
+
+layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
+
+void main()
+{
+	ivec2 texCoord = ivec2(gl_GlobalInvocationID);
+    ivec2 baseIndex = ivec2(gl_WorkGroupID) * GROUP_SIZE - FILTER_RADIUS;
+
+    // The first (TILE_PIXEL_COUNT - GROUP_THREAD_COUNT) threads load at most 2 texel values
+    for (int i = int(gl_LocalInvocationIndex); i < TILE_PIXEL_COUNT; i += GROUP_THREAD_COUNT)
+    {
+        vec2 uv        = (vec2(baseIndex) + 0.5) * texelSize;
+        vec2 uv_offset = vec2(i % TILE_SIZE, i / TILE_SIZE) * texelSize;
+        
+        vec4 color = textureLod(inputColorMap, uv + uv_offset, mipLevel);
+        storeLDS(i, color);
+    }
+
+    memoryBarrierShared();
+    barrier();
+
+    // Based on [Jimenez14] http://goo.gl/eomGso
+    // Define the center texel index
+    uint centerIndex = (gl_LocalInvocationID.x + FILTER_RADIUS) + (gl_LocalInvocationID.y + FILTER_RADIUS) * TILE_SIZE;
+
+	// Get the surrounding texels colors
+    vec4 A = loadLDS(centerIndex - TILE_SIZE - 1);
+    vec4 B = loadLDS(centerIndex - TILE_SIZE    );
+    vec4 C = loadLDS(centerIndex - TILE_SIZE + 1);
+    vec4 F = loadLDS(centerIndex - 1            );
+    vec4 G = loadLDS(centerIndex                );
+    vec4 H = loadLDS(centerIndex + 1            );
+    vec4 K = loadLDS(centerIndex + TILE_SIZE - 1);
+    vec4 L = loadLDS(centerIndex + TILE_SIZE    );
+    vec4 M = loadLDS(centerIndex + TILE_SIZE + 1);
+
+	// Combine the texel colors
+    vec4 D = (A + B + G + F) * 0.25;
+    vec4 E = (B + C + H + G) * 0.25;
+    vec4 I = (F + G + L + K) * 0.25;
+    vec4 J = (G + H + M + L) * 0.25;
+
+	// Calculate texel weights
+    vec2 div = (1.0 / 4.0) * vec2(0.5, 0.125);
+
+	// Sum and average out the colors based on the weights
+    vec4 c =  calculateKarisAverage((D + E + I + J) * div.x);
+         c += calculateKarisAverage((A + B + G + F) * div.y);
+         c += calculateKarisAverage((B + C + H + G) * div.y);
+         c += calculateKarisAverage((F + G + L + K) * div.y);
+         c += calculateKarisAverage((G + H + M + L) * div.y);
+
+	// Use threshold for the full sized image
+	if(mipLevel == 0)
+    {
+        c = calculateQuadraticThreshold(c, bloomTreshold.x, bloomTreshold.yzw);
+    }
+
+	imageStore(outputColorMap, texCoord, c);
+	//imageStore(outputColorMap, pixel_coords, textureLod(inputColorMap, pixel_coords, mipLevel));
+	//imageStore(outputColorMap, pixel_coords, vec4(0.0, 1.0, 0.0, 1.0));
+}

@@ -25,12 +25,13 @@ public:
 		enum ShaderType : unsigned int
 		{
 			ShaderNull = 0,
+			ShaderCompute,
 			ShaderFragment,
 			ShaderGeometry,
 			ShaderVertex,
 			ShaderTessControl,
 			ShaderTessEvaluation,
-			ShaderNumOfTypes = 5
+			ShaderNumOfTypes = 6
 		};
 
 	public:
@@ -243,6 +244,7 @@ public:
 			m_combinedFilename = p_filename;
 			m_filenameHash = p_filenameHashkey > 0 ? p_filenameHashkey : Utilities::getHashKey(p_filename);
 			m_tessellated = false;
+			m_computeShader = false;
 			m_defaultShader = false;
 			m_loadedToMemory = false;
 			m_loadedToVideoMemory = false;
@@ -256,7 +258,8 @@ public:
 		bool	m_defaultShader, 
 				m_loadedToMemory,
 				m_loadedToVideoMemory,
-				m_tessellated;
+				m_tessellated,
+				m_computeShader;
 
 		std::string m_combinedFilename;
 		std::string m_shaderFilename[ShaderType_NumOfTypes];

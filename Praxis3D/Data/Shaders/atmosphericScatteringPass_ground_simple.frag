@@ -511,6 +511,7 @@ vec3 GetSkyRadianceToPoint(
 	// assuming the viewer is in space (or NaN if the view ray does not intersect
 	// the atmosphere).
 	vec3 view_ray = normalize(p_point - p_cameraPos);
+	view_ray = vec3(isnan(view_ray.x) ? 0.0000001 : view_ray.x, isnan(view_ray.y) ? 0.0000001 : view_ray.y, isnan(view_ray.z) ? 0.0000001 : view_ray.z);
 	float r = length(p_cameraPos);
 	float rmu = dot(p_cameraPos, view_ray);
 	float distance_to_top_atmosphere_boundary = -rmu -sqrt(rmu * rmu - r * r + p_atmospherePar.top_radius * p_atmospherePar.top_radius);

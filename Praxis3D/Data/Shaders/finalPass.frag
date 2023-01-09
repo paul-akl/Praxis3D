@@ -65,11 +65,13 @@ vec2 calcTexCoord(void)
 
 void main(void)
 {
+	float exposure = 0.5;
+	
 	// Calculate screen-space texture coordinates, for buffer access
 	vec2 texCoord = calcTexCoord();
 	
 	// Perform gamma correction on the color from the final framebuffer
-	vec3 fragmentColor = texture(inputColorMap, texCoord).xyz;
+	vec3 fragmentColor = texture(inputColorMap, texCoord).xyz * exposure;
 	
 	// Add emissive color (which is generated in a blur pass)
 	//fragmentColor += texture(emissiveMap, texCoord).xyz;
@@ -94,4 +96,8 @@ void main(void)
 	
 	// Write the color to the framebuffer
 	outputColor = vec4(fragmentColor, 1.0);
+	//outputColor = vec4(texture(inputColorMap, texCoord).xyz, 1.0);
+	//outputColor = vec4(1.0, 0.0, 1.0, 1.0);
+	//outputColor = vec4(texture(emissiveMap, texCoord).xyz, 1.0);
+	
 }

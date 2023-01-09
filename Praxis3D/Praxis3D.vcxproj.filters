@@ -803,6 +803,9 @@
     <ClInclude Include="Source\EntityViewDefinitions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\BloomPass.h">
+      <Filter>Renderer\Render Passes\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\config.ini" />

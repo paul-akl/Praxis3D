@@ -12,6 +12,7 @@ class RendererFrontend
 {
 	friend class AtmScatteringPass;
 	friend class BloomCompositePass;
+	friend class BloomPass;
 	friend class BlurPass;
 	friend class GeometryPass;
 	friend class GUIPass;
@@ -125,6 +126,24 @@ protected:
 				objectData,
 				p_shaderHandle)
 			);
+	}	
+	inline void queueForDrawing(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_viewProjMatrix, const unsigned int p_numOfGroupsX, const unsigned int p_numOfGroupsY, const unsigned int p_numOfGroupsZ, const MemoryBarrierType p_memoryBarrier)
+	{
+		// Assign the object data that is later passed to the shaders
+		const UniformObjectData objectData(p_viewProjMatrix,
+										   p_viewProjMatrix,
+										   Config::graphicsVar().height_scale,
+										   Config::graphicsVar().alpha_threshold,
+										   Config::graphicsVar().emissive_threshold,
+										   Config::graphicsVar().texture_tiling_factor);
+
+		m_computeDispatchCommands.emplace_back(p_numOfGroupsX,
+											   p_numOfGroupsY,
+											   p_numOfGroupsZ, 
+											   p_memoryBarrier,
+											   p_uniformUpdater,
+											   objectData,
+											   p_shaderHandle);
 	}
 
 	inline void queueForLoading(ShaderLoader::ShaderProgram &p_shader)
@@ -238,6 +257,14 @@ protected:
 
 		// Clear draw commands
 		m_screenSpaceDrawCommands.clear();
+	}	
+	inline void passComputeDispatchCommandsToBackend()
+	{
+		// Pass the queued compute shader dispatch commands to the backend to be sent to GPU
+		m_backend.processDrawing(m_computeDispatchCommands, m_frameData);
+
+		// Clear compute dispatch commands
+		m_computeDispatchCommands.clear();
 	}
 	inline void passUpdateCommandsToBackend()
 	{
@@ -284,8 +311,9 @@ protected:
 	RendererBackend::LoadCommands m_loadCommands;
 	RendererBackend::BufferUpdateCommands m_bufferUpdateCommands;
 	RendererBackend::ScreenSpaceDrawCommands m_screenSpaceDrawCommands;
+	RendererBackend::ComputeDispatchCommands m_computeDispatchCommands;
 
-	// Holds info used between rendering passses
+	// Holds info used between rendering passes
 	RenderPassData *m_renderPassData;
 
 	// View - projection matrix
@@ -296,5 +324,5 @@ protected:
 
 	std::vector<RenderPassType> m_renderingPassesTypes;
 	RenderPass *m_initializedRenderingPasses[RenderPassType::RenderPassType_NumOfTypes];
-	bool m_renderPassBeingUsed[RenderPassType::RenderPassType_NumOfTypes];
+	//bool m_renderPassBeingUsed[RenderPassType::RenderPassType_NumOfTypes];
 };
