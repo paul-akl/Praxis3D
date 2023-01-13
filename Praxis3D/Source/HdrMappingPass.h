@@ -8,7 +8,7 @@ class HdrMappingPass : public RenderPass
 public:
 	HdrMappingPass(RendererFrontend &p_renderer) :
 		RenderPass(p_renderer),
-		m_HDRSSBuffer(BufferType_ShaderStorage, BufferUsageHint_DynamicCopy) 
+		m_HDRSSBuffer(BufferType_ShaderStorage, BufferBindTarget_Uniform, BufferUsageHint_DynamicCopy) 
 	{
 		m_hdrMappingShader = nullptr;
 	}

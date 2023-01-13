@@ -72,8 +72,9 @@ public:
 		// Bind final texture for reading so it can be accessed in the shaders
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferEmissive, GeometryBuffer::GBufferEmissive);
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GeometryBuffer::GBufferInputTexture);
-		//m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferFinal, GeometryBuffer::GBufferInputTexture);
-		//m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferNormal, GeometryBuffer::GBufferInputTexture);
+
+		//glActiveTexture(GL_TEXTURE0 + GeometryBuffer::GBufferInputTexture);
+		//glBindTexture(GL_TEXTURE_2D, p_renderPassData.m_luminanceAverageTextureHandle_DELETE_THIS_AFTER_DEBUG);
 
 		// Set the default framebuffer to be drawn to
 		m_renderer.m_backend.getGeometryBuffer()->bindFramebufferForWriting(GeometryBuffer::FramebufferDefault);

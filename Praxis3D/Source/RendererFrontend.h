@@ -20,6 +20,7 @@ class RendererFrontend
 	friend class LenseFlareCompositePass;
 	friend class LenseFlarePass;
 	friend class LightingPass;
+	friend class LuminancePass;
 	friend class PostProcessPass;
 	friend class FinalPass;
 	friend class ReflectionPass;
@@ -28,7 +29,7 @@ public:
 	// A handle for a uniform or shader storage buffer
 	struct ShaderBuffer
 	{
-		ShaderBuffer(BufferType p_bufferType, BufferUsageHint p_usageHint) : m_bufferType(p_bufferType), m_bufferUsage(p_usageHint)
+		ShaderBuffer(const BufferType p_bufferType, const BufferBindTarget p_bufferBindTarget, const BufferUsageHint p_usageHint) : m_bufferType(p_bufferType), m_bufferBindTarget(p_bufferBindTarget), m_bufferUsage(p_usageHint)
 		{
 			m_data = 0;
 			m_size = 0;
@@ -46,6 +47,7 @@ public:
 		void *m_data;
 
 		const BufferType m_bufferType;
+		const BufferBindTarget m_bufferBindTarget;
 		const BufferUsageHint m_bufferUsage;
 	};
 
@@ -173,6 +175,9 @@ protected:
 		m_loadCommands.emplace_back(p_texture.getFilename(),
 									p_texture.getHandleRef(),
 									p_texture.getTextureFormat(),
+									p_texture.getTextureDataFormat(),
+									p_texture.getTextureDataType(),
+									p_texture.getEnableMipmap(),
 									p_texture.getMipmapLevel(),
 									p_texture.getTextureWidth(),
 									p_texture.getTextureHeight(),
@@ -216,6 +221,7 @@ protected:
 	{
 		m_loadCommands.emplace_back(p_shaderBuffer.m_handle,
 			p_shaderBuffer.m_bufferType,
+			p_shaderBuffer.m_bufferBindTarget,
 			p_shaderBuffer.m_bufferUsage,
 			p_shaderBuffer.m_bindingIndex,
 			p_shaderBuffer.m_size,

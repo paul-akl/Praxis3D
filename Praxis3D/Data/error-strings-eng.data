@@ -61,6 +61,7 @@
 		"Source_LightObject"							: "Light Object",
 		"Source_LightingPass"							: "Lighting Rendering Pass",
 		"Source_LuaComponent"							: "Lua Component",
+		"Source_LuminancePass"						: "Luminance Pass",
 		"Source_ModelComponent"						: "Model Component",
 		"Source_ModelLoader"							: "Model Loader",
 		"Source_ObjectDirectory"					: "Object Directory",

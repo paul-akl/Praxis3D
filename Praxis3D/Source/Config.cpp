@@ -128,6 +128,9 @@ void Config::init()
 	AddVariablePredef(m_graphicsVar, max_num_spot_lights);
 	AddVariablePredef(m_graphicsVar, multisample_buffers);
 	AddVariablePredef(m_graphicsVar, multisample_samples);
+	AddVariablePredef(m_graphicsVar, rendering_res_x);
+	AddVariablePredef(m_graphicsVar, rendering_res_y);
+	AddVariablePredef(m_graphicsVar, tonemap_method);
 	AddVariablePredef(m_graphicsVar, alpha_threshold);
 	AddVariablePredef(m_graphicsVar, emissive_multiplier);
 	AddVariablePredef(m_graphicsVar, emissive_threshold);
@@ -153,6 +156,9 @@ void Config::init()
 	AddVariablePredef(m_graphicsVar, light_color_r);
 	AddVariablePredef(m_graphicsVar, light_color_g);
 	AddVariablePredef(m_graphicsVar, light_color_b);
+	AddVariablePredef(m_graphicsVar, LOD_prallax_mapping);
+	AddVariablePredef(m_graphicsVar, luminance_range_min);
+	AddVariablePredef(m_graphicsVar, luminance_range_max);
 	AddVariablePredef(m_graphicsVar, height_scale);
 	AddVariablePredef(m_graphicsVar, texture_tiling_factor);
 	AddVariablePredef(m_graphicsVar, z_far);
@@ -255,7 +261,15 @@ void Config::init()
 	AddVariablePredef(m_rendererVar, gaussian_blur_horizontal_frag_shader);
 	AddVariablePredef(m_rendererVar, gaussian_blur_horizontal_vert_shader);
 	AddVariablePredef(m_rendererVar, hdr_mapping_pass_frag_shader); 
-	AddVariablePredef(m_rendererVar, hdr_mapping_pass_vert_shader); 
+	AddVariablePredef(m_rendererVar, hdr_mapping_pass_vert_shader);
+	AddVariablePredef(m_rendererVar, luminance_average_comp_shader);
+	AddVariablePredef(m_rendererVar, luminance_histogram_comp_shader);
+	AddVariablePredef(m_rendererVar, tonemapping_vert_shader);
+	AddVariablePredef(m_rendererVar, tonemapping_frag_shader);
+	AddVariablePredef(m_rendererVar, bloom_composite_pass_vert_shader);
+	AddVariablePredef(m_rendererVar, bloom_composite_pass_frag_shader);
+	AddVariablePredef(m_rendererVar, bloom_downscale_comp_shader);
+	AddVariablePredef(m_rendererVar, bloom_upscale_comp_shader);
 	AddVariablePredef(m_rendererVar, bloom_composite_pass_vert_shader); 
 	AddVariablePredef(m_rendererVar, bloom_composite_pass_frag_shader);
 	AddVariablePredef(m_rendererVar, blur_pass_vert_shader);
@@ -308,6 +322,7 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, modelViewProjectionMatUniform);
 	AddVariablePredef(m_shaderVar, transposeViewMatUniform);
 	AddVariablePredef(m_shaderVar, screenSizeUniform);
+	AddVariablePredef(m_shaderVar, screenNumOfPixelsUniform);
 	AddVariablePredef(m_shaderVar, deltaTimeMSUniform);
 	AddVariablePredef(m_shaderVar, deltaTimeSUniform);
 	AddVariablePredef(m_shaderVar, elapsedTimeUniform);
@@ -319,6 +334,10 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, heightScaleUniform);
 	AddVariablePredef(m_shaderVar, combinedTextureUniform);
 	AddVariablePredef(m_shaderVar, textureTilingFactorUniform);
+	AddVariablePredef(m_shaderVar, LODParallaxUniform);
+	AddVariablePredef(m_shaderVar, texelSize);
+	AddVariablePredef(m_shaderVar, numOfTexels);
+	AddVariablePredef(m_shaderVar, mipLevel);
 	AddVariablePredef(m_shaderVar, dirLightColor);
 	AddVariablePredef(m_shaderVar, dirLightDirection);
 	AddVariablePredef(m_shaderVar, dirLightIntensity);
@@ -353,10 +372,18 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, glossTextureUniform);
 	AddVariablePredef(m_shaderVar, heightTextureUniform);
 	AddVariablePredef(m_shaderVar, combinedTextureUniform);
+	AddVariablePredef(m_shaderVar, averageLuminanceTexture);
 	AddVariablePredef(m_shaderVar, atmIrradianceTextureUniform);
 	AddVariablePredef(m_shaderVar, atmScatteringTextureUniform);
 	AddVariablePredef(m_shaderVar, atmSingleMieScatTextureUniform);
 	AddVariablePredef(m_shaderVar, atmTransmittanceTextureUniform);
+	AddVariablePredef(m_shaderVar, bloomTreshold);
+	AddVariablePredef(m_shaderVar, bloomIntensity);
+	AddVariablePredef(m_shaderVar, bloomDirtIntensity);
+	AddVariablePredef(m_shaderVar, inverseLogLuminanceRange);
+	AddVariablePredef(m_shaderVar, logLuminanceRange);
+	AddVariablePredef(m_shaderVar, minLogLuminance);
+	AddVariablePredef(m_shaderVar, tonemapMethod);
 	AddVariablePredef(m_shaderVar, lensFlareDirtTextureUniform);
 	AddVariablePredef(m_shaderVar, lensFlareGhostGradientTextureUniform);
 	AddVariablePredef(m_shaderVar, lensFlareStarburstTextureUniform);
@@ -391,6 +418,8 @@ void Config::init()
 	AddVariablePredef(m_textureVar, gl_texture_anisotropy);
 	AddVariablePredef(m_textureVar, gl_texture_magnification);
 	AddVariablePredef(m_textureVar, gl_texture_minification);
+	AddVariablePredef(m_textureVar, gl_texture_magnification_mipmap);
+	AddVariablePredef(m_textureVar, gl_texture_minification_mipmap);
 	AddVariablePredef(m_textureVar, number_of_mipmaps);
 	AddVariablePredef(m_textureVar, generate_mipmaps);
 

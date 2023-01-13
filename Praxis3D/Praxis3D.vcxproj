@@ -276,6 +276,7 @@
     <ClInclude Include="Source\Loaders.h" />
     <ClInclude Include="Source\LuaComponent.h" />
     <ClInclude Include="Source\LuaScript.h" />
+    <ClInclude Include="Source\LuminancePass.h" />
     <ClInclude Include="Source\Math.h" />
     <ClInclude Include="Source\ModelComponent.h" />
     <ClInclude Include="Source\ModelLoader.h" />

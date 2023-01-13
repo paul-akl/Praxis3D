@@ -133,6 +133,9 @@ public:
 			RendererBackend::LoadCommand(p_texture.getFilename(),
 										 p_texture.getHandleRef(),
 										 p_texture.getTextureFormat(),
+										 p_texture.getTextureDataFormat(),
+										 p_texture.getTextureDataType(),
+										 p_texture.getEnableMipmap(),
 										 p_texture.getMipmapLevel(),
 										 p_texture.getTextureWidth(),
 										 p_texture.getTextureHeight(),
@@ -153,19 +156,19 @@ public:
 				queueForLoading(p_objectData.m_materials[matType][i]);
 	}
 
-	inline void queueForUpdate(RendererFrontend::ShaderBuffer &p_lightBuffer)
+	inline void queueForUpdate(RendererFrontend::ShaderBuffer &p_shaderBuffer)
 	{
-		// Calculate the sort key
+		/*/ Calculate the sort key
 		RendererBackend::DrawCommands::value_type::first_type sortKey = 0;
 
 		m_commands.emplace_back(std::make_pair(
 			sortKey,
-			RendererBackend::LoadCommand(p_lightBuffer.m_handle,
-										 p_lightBuffer.m_bufferType,
-										 p_lightBuffer.m_bufferUsage,
-										 p_lightBuffer.m_bindingIndex,
-										 p_lightBuffer.m_size,
-										 (void*)0)));
+			RendererBackend::LoadCommand(p_shaderBuffer.m_handle,
+										 p_shaderBuffer.m_bufferType,
+										 p_shaderBuffer.m_bufferUsage,
+										 p_shaderBuffer.m_bindingIndex,
+										 p_shaderBuffer.m_size,
+										 (void*)0)));*/
 	}
 
 	Commands &getCommands()	{ return m_commands; }

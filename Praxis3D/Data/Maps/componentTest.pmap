@@ -71,7 +71,7 @@
 				{
 					"LocalPosition": "0.0f, 0.5f, 0.0f",
 					"LocalRotation": "0.0f, 45.0f, 0.0f",
-					"LocalScale": "1.0f, 1.0f, 1.0f"
+					"LocalScale": "10.0f, 10.0f, 10.0f"
 				}
 			},
 			"Physics":
@@ -341,7 +341,7 @@
 				{
 					"Type": "DirectionalLight",
 					"Color": "1.0f, 0.0f, 0.0f",
-					"Intensity": "20.0f"
+					"Intensity": "10.0f"
 				}
 			}
 		},

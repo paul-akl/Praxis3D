@@ -26,7 +26,8 @@ enum MemoryBarrierType : unsigned int
 {
 	MemoryBarrierType_All,
 	MemoryBarrierType_ImageAccessBarrier,
-	MemoryBarrierType_AccessAndFetchBarrier
+	MemoryBarrierType_AccessAndFetchBarrier,
+	MemoryBarrierType_ShaderStorageBarrier
 };
 enum RenderPassType : unsigned int
 {
@@ -39,6 +40,7 @@ enum RenderPassType : unsigned int
 	RenderPassType_BloomComposite,
 	RenderPassType_LenseFlare,
 	RenderPassType_LenseFlareComposite,
+	RenderPassType_Luminance,
 	RenderPassType_Final,
 	RenderPassType_GUI,
 	RenderPassType_NumOfTypes
@@ -50,6 +52,13 @@ enum BufferType : unsigned int
 	BufferType_Array			= GL_ARRAY_BUFFER,
 	BufferType_ElementArray		= GL_ELEMENT_ARRAY_BUFFER,
 	BufferType_ShaderStorage	= GL_SHADER_STORAGE_BUFFER
+}; 
+enum BufferBindTarget : unsigned int
+{
+	BufferBindTarget_Uniform			= GL_UNIFORM_BUFFER,
+	BufferBindTarget_AtomicCounter		= GL_ATOMIC_COUNTER_BUFFER,
+	BufferBindTarget_TransformFeedback	= GL_TRANSFORM_FEEDBACK_BUFFER,
+	BufferBindTarget_ShaderStorage		= GL_SHADER_STORAGE_BUFFER
 };
 enum BufferUpdateType : unsigned int
 {
@@ -125,6 +134,10 @@ enum LensFlareTextureType : unsigned int
 	LensFlareTextureType_LenseDirt,
 	LensFlareTextureType_Starburst
 };
+enum LuminanceTextureType : unsigned int
+{
+	LensFlareTextureType_AverageLuminance = MaterialType_NumOfTypes_Extended
+};
 enum ShaderType : unsigned int
 {
 	// WARNING: do not change the order - enum entries are order-sensitive
@@ -149,6 +162,35 @@ enum TextureFormat : int
 	TextureFormat_Alpha = GL_ALPHA,
 	TextureFormat_RGB	= GL_RGB,
 	TextureFormat_RGBA	= GL_RGBA
+};
+enum TextureDataType : int
+{
+	TextureDataType_Float			= GL_FLOAT,
+	TextureDataType_Int				= GL_INT,
+	TextureDataType_UnsignedByte	= GL_UNSIGNED_BYTE
+};
+enum TextureDataFormat : int
+{
+	TextureDataFormat_R8		= GL_R8,
+	TextureDataFormat_R16		= GL_R16,
+	TextureDataFormat_R16F		= GL_R16F,
+	TextureDataFormat_R32F		= GL_R32F,
+	TextureDataFormat_RG8		= GL_RG8,
+	TextureDataFormat_RG16		= GL_RG16,
+	TextureDataFormat_RG16F		= GL_RG16F,
+	TextureDataFormat_RG32F		= GL_RG32F,
+	TextureDataFormat_RGB8		= GL_RGB8,
+	TextureDataFormat_RGB16		= GL_RGB16,
+	TextureDataFormat_RGB16F	= GL_RGB16F,
+	TextureDataFormat_RGB32F	= GL_RGB32F,
+	TextureDataFormat_RGBA8		= GL_RGBA8,
+	TextureDataFormat_RGBA16	= GL_RGBA16,
+	TextureDataFormat_RGBA16F	= GL_RGBA16F,
+	TextureDataFormat_RGBA32F	= GL_RGBA32F,
+	TextureDataFormat_R16I		= GL_R16I,
+	TextureDataFormat_R32I		= GL_R32I,
+	TextureDataFormat_R16UI		= GL_R16UI,
+	TextureDataFormat_R32UI		= GL_R32UI
 };
 enum UniformBufferBinding : unsigned int
 {

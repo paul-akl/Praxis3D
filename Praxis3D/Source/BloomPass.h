@@ -75,12 +75,15 @@ public:
 		unsigned int height = p_height / 2;
 		unsigned int mipLevels = 1;
 
-		for(unsigned int i = 0; i < Config::graphicsVar().bloom_mipmap_limit; i++)
+		unsigned int mipmapLimit = (unsigned int)Config::graphicsVar().bloom_mipmap_limit;
+		unsigned int downscaleLimit = (unsigned int)Config::graphicsVar().bloom_downscale_limit;
+
+		for(unsigned int i = 0; i < mipmapLimit; i++)
 		{
 			width = width / 2;
 			height = height / 2;
 
-			if(width < Config::graphicsVar().bloom_downscale_limit || height < Config::graphicsVar().bloom_downscale_limit) break;
+			if(width < downscaleLimit || height < downscaleLimit) break;
 
 			mipLevels++;
 		}
@@ -113,8 +116,11 @@ public:
 			// Bind the corresponding mipmap level of the image buffer
 			m_renderer.m_backend.getGeometryBuffer()->bindBufferToImageUnitForWriting(GeometryBuffer::GBufferFinal, 0, i + 1);
 
+			const unsigned int groupX = (unsigned int)glm::ceil(mipmapSize.x / 8.0);
+			const unsigned int groupY = (unsigned int)glm::ceil(mipmapSize.y / 8.0);
+
 			// Dispatch the compute shader
-			m_renderer.queueForDrawing(m_bloomDownscaleShader->getShaderHandle(), m_bloomDownscaleShader->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat, glm::ceil(float(mipmapSize.x) / 8), glm::ceil(float(mipmapSize.y) / 8), 1, MemoryBarrierType::MemoryBarrierType_AccessAndFetchBarrier);
+			m_renderer.queueForDrawing(m_bloomDownscaleShader->getShaderHandle(), m_bloomDownscaleShader->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat, groupX, groupY, 1, MemoryBarrierType::MemoryBarrierType_AccessAndFetchBarrier);
 			m_renderer.passComputeDispatchCommandsToBackend();
 			
 			// Half the mipmap size as we go up the mipmap levels
@@ -131,8 +137,8 @@ public:
 		for(unsigned int i = mipmapLevels - 1; i >= 1; i--)
 		{
 			// Recalculate the mipmap size as we go down the mipmap levels
-			mipmapSize.x = glm::max(1.0, glm::floor(float(imageWidth) / glm::pow(2.0, i - 1)));
-			mipmapSize.y = glm::max(1.0, glm::floor(float(imageHeight) / glm::pow(2.0, i - 1)));
+			mipmapSize.x = (unsigned int)glm::max(1.0, glm::floor(imageWidth / glm::pow(2u, i - 1.0)));
+			mipmapSize.y = (unsigned int)glm::max(1.0, glm::floor(imageHeight / glm::pow(2u, i - 1.0)));
 
 			// Assign the texel size and mipmap level so it can be sent to the shader
 			m_renderer.m_frameData.m_texelSize = 1.0f / glm::vec2(mipmapSize);
@@ -141,8 +147,11 @@ public:
 			// Bind the corresponding mipmap level of the image buffer
 			m_renderer.m_backend.getGeometryBuffer()->bindBufferToImageUnitForWriting(GeometryBuffer::GBufferFinal, 0, i - 1);
 
+			const unsigned int groupX = (unsigned int)glm::ceil(mipmapSize.x / 8.0);
+			const unsigned int groupY = (unsigned int)glm::ceil(mipmapSize.y / 8.0);
+
 			// Dispatch the compute shader
-			m_renderer.queueForDrawing(m_bloomUpscaleShader->getShaderHandle(), m_bloomUpscaleShader->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat, glm::ceil(float(mipmapSize.x) / 8), glm::ceil(float(mipmapSize.y) / 8), 1, MemoryBarrierType::MemoryBarrierType_AccessAndFetchBarrier);
+			m_renderer.queueForDrawing(m_bloomUpscaleShader->getShaderHandle(), m_bloomUpscaleShader->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat, groupX, groupY, 1, MemoryBarrierType::MemoryBarrierType_AccessAndFetchBarrier);
 			m_renderer.passComputeDispatchCommandsToBackend();
 		}
 	}

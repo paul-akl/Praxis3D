@@ -108,6 +108,7 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_LightObject,) \
     Code(Source_LightingPass,) \
     Code(Source_LuaComponent,) \
+    Code(Source_LuminancePass,) \
     Code(Source_ModelComponent,) \
     Code(Source_ModelLoader,) \
     Code(Source_ObjectDirectory,) \

@@ -148,6 +148,7 @@ TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string &p_file
 	// Return the new texture
 	return Texture2DHandle(returnTexture);
 }
+
 TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string &p_filename, unsigned int p_textureHandle)
 {
 	Texture2D *returnTexture;
@@ -230,6 +231,43 @@ TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string &p_file
 	return Texture2DHandle(returnTexture);
 }
 
+TextureLoader2D::Texture2DHandle TextureLoader2D::create(const std::string &p_name, const unsigned int p_width, const unsigned int p_height, const TextureFormat p_textureFormat, const TextureDataFormat p_textureDataFormat, const TextureDataType p_textureDataType, const bool p_createMipmap, const void *p_data)
+{
+	Texture2D *returnTexture;
+
+	// Make sure calls from other threads are locked, while current call is in progress
+	// This is needed to as the object that is being requested might be currently loading /
+	// being added to the pool. Mutex prevents duplicates being loaded, and same data being changed.
+	SpinWait::Lock lock(m_mutex);
+
+	// Go through the texture pool and check if the texture hasn't been already loaded (to avoid duplicates)
+	for(decltype(m_objectPool.size()) size = m_objectPool.size(), i = 0; i < size; i++)
+	{
+		if(*m_objectPool[i] == p_name)
+			return Texture2DHandle(m_objectPool[i]);
+	}
+
+	// Texture wasn't loaded before, so create a new one
+	// Assign default handle (as a placeholder to be used before the texture is loaded from HDD)
+	returnTexture = new Texture2D(this, p_name, m_objectPool.size(), m_default2DTexture->m_handle);
+
+	returnTexture->m_textureWidth = p_width;
+	returnTexture->m_textureHeight = p_height;
+	returnTexture->m_textureFormat = p_textureFormat;
+	returnTexture->m_textureDataFormat = p_textureDataFormat;
+	returnTexture->m_textureDataType = p_textureDataType;
+	returnTexture->m_enableMipmap = p_createMipmap;
+	returnTexture->m_pixelData = (unsigned char*)p_data;
+
+	returnTexture->setLoadedToMemory(true);
+
+	// Add the new texture to the list
+	m_objectPool.push_back(returnTexture);
+
+	// Return the new texture
+	return Texture2DHandle(returnTexture);
+}
+
 TextureLoaderCubemap::TextureLoaderCubemap()
 {
 	std::string defaultFilenames[CubemapFace_NumOfFaces];
@@ -268,7 +306,7 @@ ErrorCode TextureLoaderCubemap::init()
 	return ErrorCode::Success;
 }
 
-TextureLoaderCubemap::TextureCubemapHandle TextureLoaderCubemap::load(const std::string & p_filenamePosX, const std::string & p_filenameNegX, const std::string & p_filenamePosY, const std::string & p_filenameNegY, const std::string & p_filenamePosZ, const std::string & p_filenameNegZ, bool p_startBackgroundLoading)
+TextureLoaderCubemap::TextureCubemapHandle TextureLoaderCubemap::load(const std::string &p_filenamePosX, const std::string &p_filenameNegX, const std::string &p_filenamePosY, const std::string &p_filenameNegY, const std::string &p_filenamePosZ, const std::string &p_filenameNegZ, bool p_startBackgroundLoading)
 {
 	std::string filenames[CubemapFace_NumOfFaces];
 
@@ -330,7 +368,7 @@ TextureLoaderCubemap::TextureCubemapHandle TextureLoaderCubemap::load(const std:
 	return TextureCubemapHandle(returnTexture);
 }
 
-TextureLoaderCubemap::TextureCubemapHandle TextureLoaderCubemap::load(const std::string & p_filename, unsigned int p_textureHandle)
+TextureLoaderCubemap::TextureCubemapHandle TextureLoaderCubemap::load(const std::string &p_filename, unsigned int p_textureHandle)
 {
 	TextureCubemap *returnTexture;
 

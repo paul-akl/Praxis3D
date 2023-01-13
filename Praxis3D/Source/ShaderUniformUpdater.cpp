@@ -80,6 +80,9 @@ ErrorCode ShaderUniformUpdater::generateTextureUpdateList()
 	uniformList.push_back(new LensFlareDirtTextureUniform(m_shaderHandle));
 	uniformList.push_back(new LensFlareGhostGradientTextureUniform(m_shaderHandle));
 	uniformList.push_back(new LensFlareStarburstTextureUniform(m_shaderHandle));
+
+	// Luminance pass textures
+	uniformList.push_back(new AverageLuminanceTextureUniform(m_shaderHandle));
 	
 	// Go through each uniform and check if it is valid
 	// If it is, add it to the update list, if not, delete it
@@ -124,8 +127,9 @@ ErrorCode ShaderUniformUpdater::generatePerFrameList()
 	uniformList.push_back(new NumPointLightsUniform(m_shaderHandle));
 	uniformList.push_back(new NumSpotLightsUniform(m_shaderHandle));
 
-	// Screen size uniform
+	// Screen size uniforms
 	uniformList.push_back(new ScreenSizeUniform(m_shaderHandle));
+	uniformList.push_back(new ScreenNumOfPixelsUniform(m_shaderHandle));
 
 	// Misc
 	uniformList.push_back(new DeltaTimeMSUniform(m_shaderHandle));
@@ -141,6 +145,12 @@ ErrorCode ShaderUniformUpdater::generatePerFrameList()
 	uniformList.push_back(new BloomDirtIntensityUniform(m_shaderHandle));
 	uniformList.push_back(new BloomIntensityUniform(m_shaderHandle));
 	uniformList.push_back(new BloomTresholdUniform(m_shaderHandle));
+
+	// Luminance
+	uniformList.push_back(new InverseLogLuminanceRangeUniform(m_shaderHandle));
+	uniformList.push_back(new LogLuminanceRangeUniform(m_shaderHandle));
+	uniformList.push_back(new MinLogLuminanceUniform(m_shaderHandle));
+	uniformList.push_back(new TonemapMethodUniform(m_shaderHandle));
 
 	// Go through each uniform and check if it is valid
 	// If it is, add it to the update list, if not, delete it
@@ -175,6 +185,7 @@ ErrorCode ShaderUniformUpdater::generatePerModelList()
 	uniformList.push_back(new HeightScaleUniform(m_shaderHandle));
 	uniformList.push_back(new MipLevelUniform(m_shaderHandle));
 	uniformList.push_back(new TexelSizeUniform(m_shaderHandle));
+	uniformList.push_back(new NumOFTexelsUniform(m_shaderHandle));
 	uniformList.push_back(new TextureTilingFactorUniform(m_shaderHandle));
 
 	// Test uniforms, used for debugging, etc

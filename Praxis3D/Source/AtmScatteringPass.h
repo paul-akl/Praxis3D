@@ -17,7 +17,7 @@ public:
 		m_useWhiteBalance(true),
 		kSunAngularRadius(0.00935 / 2.0),
 		kLengthUnitInMeters(1000.0),
-		m_atmParamBuffer(BufferType_Uniform, BufferUsageHint_DynamicDraw)
+		m_atmParamBuffer(BufferType_Uniform, BufferBindTarget_Uniform, BufferUsageHint_DynamicDraw)
 	{
 		kSunSolidAngle = PI * kSunAngularRadius * kSunAngularRadius;
 

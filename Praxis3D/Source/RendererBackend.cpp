@@ -178,6 +178,10 @@ void RendererBackend::processDrawing(const ComputeDispatchCommands &p_computeDis
 			case MemoryBarrierType::MemoryBarrierType_AccessAndFetchBarrier:
 				memoryBarrierBit = GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT;
 				break;
+
+			case MemoryBarrierType::MemoryBarrierType_ShaderStorageBarrier:
+				memoryBarrierBit = GL_SHADER_STORAGE_BARRIER_BIT;
+				break;
 		}
 
 		// Define the memory barrier for the data in the compute shader

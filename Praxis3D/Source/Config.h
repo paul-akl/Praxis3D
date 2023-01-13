@@ -804,6 +804,7 @@ public:
 			multisample_samples = 1;
 			rendering_res_x = 1600;
 			rendering_res_y = 900;
+			tonemap_method = 6;
 			alpha_threshold = 0.0f;
 			bloom_intensity = 1.0f;
 			bloom_knee = 0.1f;
@@ -834,6 +835,8 @@ public:
 			light_color_g = 1.0f;
 			light_color_b = 1.0f;
 			LOD_prallax_mapping = 100.0f;
+			luminance_range_min = 0.004f;
+			luminance_range_max = 11.3f;
 			height_scale = 0.0f;
 			texture_tiling_factor = 1.0f;
 			z_far = 8000.0f;
@@ -860,6 +863,7 @@ public:
 		int multisample_samples;
 		int rendering_res_x;
 		int rendering_res_y;
+		int tonemap_method;
 		float alpha_threshold;
 		float bloom_intensity;
 		float bloom_knee;
@@ -890,6 +894,8 @@ public:
 		float light_color_g;
 		float light_color_b;
 		float LOD_prallax_mapping;
+		float luminance_range_min;
+		float luminance_range_max;
 		float height_scale;
 		float texture_tiling_factor;
 		float z_far;
@@ -1079,6 +1085,10 @@ public:
 			gaussian_blur_horizontal_vert_shader = "gaussianBlurHorizontal.vert";
 			hdr_mapping_pass_frag_shader = "hdrMappingPass.frag";
 			hdr_mapping_pass_vert_shader = "hdrMappingPass.vert";
+			luminance_average_comp_shader = "luminanceAverage.comp";
+			luminance_histogram_comp_shader = "luminanceHistogram.comp";
+			tonemapping_vert_shader = "tonemapping.vert";
+			tonemapping_frag_shader = "tonemapping.frag";
 			bloom_composite_pass_vert_shader = "bloomCompositePass.vert";
 			bloom_composite_pass_frag_shader = "bloomCompositePass.frag";
 			bloom_downscale_comp_shader = "bloomDownscale.comp";
@@ -1144,6 +1154,10 @@ public:
 		std::string gaussian_blur_horizontal_vert_shader;
 		std::string hdr_mapping_pass_frag_shader;
 		std::string hdr_mapping_pass_vert_shader;
+		std::string luminance_average_comp_shader;
+		std::string luminance_histogram_comp_shader;
+		std::string tonemapping_vert_shader;
+		std::string tonemapping_frag_shader;
 		std::string bloom_composite_pass_vert_shader;
 		std::string bloom_composite_pass_frag_shader;
 		std::string bloom_downscale_comp_shader;
@@ -1210,6 +1224,7 @@ public:
 			modelViewProjectionMatUniform = "MVP";
 			transposeViewMatUniform = "transposeViewMat";
 			screenSizeUniform = "screenSize";
+			screenNumOfPixelsUniform = "screenNumOfPixels";
 			deltaTimeMSUniform = "deltaTimeMS";
 			deltaTimeSUniform = "deltaTimeS";
 			elapsedTimeUniform = "elapsedTime";
@@ -1222,6 +1237,7 @@ public:
 			textureTilingFactorUniform = "textureTilingFactor";
 			LODParallaxUniform = "parallaxMappingLOD";
 			texelSize = "texelSize";
+			numOfTexels = "numOfTexels";
 			mipLevel = "mipLevel";
 
 			dirLightColor = "directionalLight.m_color";
@@ -1263,6 +1279,7 @@ public:
 			glossTextureUniform = "glossTexture";
 			heightTextureUniform = "heightTexture";
 			combinedTextureUniform = "combinedTexture";
+			averageLuminanceTexture = "averageLuminanceTexture";
 
 			atmIrradianceTextureUniform = "atmIrradianceTexture";
 			atmScatteringTextureUniform = "atmScatteringTexture";
@@ -1272,6 +1289,11 @@ public:
 			bloomTreshold = "bloomTreshold";
 			bloomIntensity = "bloomIntensity";
 			bloomDirtIntensity = "bloomDirtIntensity";
+
+			inverseLogLuminanceRange = "inverseLogLuminanceRange";
+			logLuminanceRange = "logLuminanceRange";
+			minLogLuminance = "minLogLuminance";
+			tonemapMethod = "tonemapMethod";
 
 			lensFlareDirtTextureUniform = "lensDirtTexture";
 			lensFlareGhostGradientTextureUniform = "ghostGradientTexture";
@@ -1305,6 +1327,7 @@ public:
 		std::string modelViewProjectionMatUniform;
 		std::string transposeViewMatUniform;
 		std::string screenSizeUniform;
+		std::string screenNumOfPixelsUniform;
 		std::string deltaTimeMSUniform;
 		std::string deltaTimeSUniform;
 		std::string elapsedTimeUniform;
@@ -1317,6 +1340,7 @@ public:
 		std::string textureTilingFactorUniform;
 		std::string LODParallaxUniform;
 		std::string texelSize;
+		std::string numOfTexels;
 		std::string mipLevel;
 
 		std::string dirLightColor;
@@ -1358,6 +1382,7 @@ public:
 		std::string glossTextureUniform;
 		std::string heightTextureUniform;
 		std::string combinedTextureUniform;
+		std::string averageLuminanceTexture;
 
 		std::string atmIrradianceTextureUniform;
 		std::string atmScatteringTextureUniform;
@@ -1367,6 +1392,11 @@ public:
 		std::string bloomTreshold;
 		std::string bloomIntensity;
 		std::string bloomDirtIntensity;
+
+		std::string inverseLogLuminanceRange;
+		std::string logLuminanceRange;
+		std::string minLogLuminance;
+		std::string tonemapMethod;
 
 		std::string lensFlareDirtTextureUniform;
 		std::string lensFlareGhostGradientTextureUniform;
@@ -1410,7 +1440,9 @@ public:
 			RMHAO_texture_format = GL_RGBA;
 			gl_texture_anisotropy = 16;
 			gl_texture_magnification = GL_LINEAR;
-			gl_texture_minification = GL_LINEAR_MIPMAP_LINEAR;
+			gl_texture_minification = GL_LINEAR;
+			gl_texture_magnification_mipmap = GL_LINEAR;
+			gl_texture_minification_mipmap = GL_LINEAR_MIPMAP_LINEAR;
 			number_of_mipmaps = 50;
 			generate_mipmaps = true;
 		}
@@ -1432,6 +1464,8 @@ public:
 		int gl_texture_anisotropy;
 		int gl_texture_magnification;
 		int gl_texture_minification;
+		int gl_texture_magnification_mipmap;
+		int gl_texture_minification_mipmap;
 		int number_of_mipmaps;
 		bool generate_mipmaps;
 	};

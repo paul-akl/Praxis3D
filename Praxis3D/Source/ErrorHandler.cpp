@@ -53,8 +53,14 @@ ErrorHandler::ErrorHandler()
 	AssignErrorType(Invalid_object_id, Error);
 	AssignErrorType(Duplicate_object_id, Error);
 	
+	for(unsigned int i = 0; i < Source_NumberOfErrorSources; i++)
+	{
+		ErrorSource errorSource = static_cast<ErrorSource>(i);
+		m_errHashmap[GetString(errorSource)] = NumberOfErrorCodes + errorSource;
+	}
+
 	// Add error sources to the hash map, and offset them by number of error codes, because they share the same hash map	
-    m_errHashmap[GetString(Source_Unknown)]						= NumberOfErrorCodes + Source_Unknown;
+   /* m_errHashmap[GetString(Source_Unknown)] = NumberOfErrorCodes + Source_Unknown;
     m_errHashmap[GetString(Source_General)]						= NumberOfErrorCodes + Source_General;
     m_errHashmap[GetString(Source_AtmScatteringPass)]			= NumberOfErrorCodes + Source_AtmScatteringPass;
     m_errHashmap[GetString(Source_BloomCompositePass)]			= NumberOfErrorCodes + Source_BloomCompositePass;
@@ -81,6 +87,7 @@ ErrorHandler::ErrorHandler()
     m_errHashmap[GetString(Source_LightObject)]					= NumberOfErrorCodes + Source_LightObject;
 	m_errHashmap[GetString(Source_LightingPass)]				= NumberOfErrorCodes + Source_LightingPass;
 	m_errHashmap[GetString(Source_LuaComponent)]				= NumberOfErrorCodes + Source_LuaComponent;
+	m_errHashmap[GetString(Source_LuminancePass)]				= NumberOfErrorCodes + Source_LuminancePass;
 	m_errHashmap[GetString(Source_ModelComponent)]				= NumberOfErrorCodes + Source_ModelComponent;
     m_errHashmap[GetString(Source_ModelLoader)]					= NumberOfErrorCodes + Source_ModelLoader;
 	m_errHashmap[GetString(Source_ObjectDirectory)]				= NumberOfErrorCodes + Source_ObjectDirectory;
@@ -104,7 +111,7 @@ ErrorHandler::ErrorHandler()
     m_errHashmap[GetString(Source_Window)]						= NumberOfErrorCodes + Source_Window;
 	m_errHashmap[GetString(Source_World)]						= NumberOfErrorCodes + Source_World;
 	m_errHashmap[GetString(Source_WorldScene)]					= NumberOfErrorCodes + Source_WorldScene;
-	m_errHashmap[GetString(Source_WorldSystem)]					= NumberOfErrorCodes + Source_WorldSystem;
+	m_errHashmap[GetString(Source_WorldSystem)]					= NumberOfErrorCodes + Source_WorldSystem;*/
 
 	// Add error types to the hash map, and offset them by number of error codes and error sources, because they share the same hash map
 	m_errHashmap[GetString(Info)]		= NumberOfErrorCodes + Source_NumberOfErrorSources + Info;

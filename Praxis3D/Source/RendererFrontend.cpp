@@ -8,6 +8,7 @@
 #include "LenseFlareCompositePass.h"
 #include "LenseFlarePass.h"
 #include "LightingPass.h"
+#include "LuminancePass.h"
 #include "FinalPass.h"
 #include "HdrMappingPass.h"
 #include "PostProcessPass.h"
@@ -24,6 +25,7 @@ RendererFrontend::RendererFrontend() : m_renderPassData(nullptr)
 	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_AtmScattering);
 	//m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_HdrMapping);
 	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Bloom);
+	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Luminance);
 	//m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Blur);
 	//m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_BloomComposite);
 	//m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_LenseFlare);
@@ -76,6 +78,10 @@ RendererFrontend::RendererFrontend() : m_renderPassData(nullptr)
 		case RenderPassType_LenseFlareComposite:
 			if(m_initializedRenderingPasses[RenderPassType_LenseFlareComposite] == nullptr)
 				m_initializedRenderingPasses[RenderPassType_LenseFlareComposite] = new LenseFlareCompositePass(*this);
+			break;
+		case RenderPassType_Luminance:
+			if(m_initializedRenderingPasses[RenderPassType_Luminance] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_Luminance] = new LuminancePass(*this);
 			break;
 		case RenderPassType_Final:
 			if(m_initializedRenderingPasses[RenderPassType_Final] == nullptr)

@@ -204,10 +204,34 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform2i(m_uniformHandle, 
-					p_uniformData.m_frameData.m_screenSize.x, 
-					p_uniformData.m_frameData.m_screenSize.y);
+		if(m_screenSize != p_uniformData.m_frameData.m_screenSize)
+		{
+			m_screenSize = p_uniformData.m_frameData.m_screenSize;
+
+			glUniform2i(m_uniformHandle, m_screenSize.x, m_screenSize.y);
+		}
 	}
+
+private:
+	glm::ivec2 m_screenSize;
+}; 
+class ScreenNumOfPixelsUniform : public BaseUniform
+{
+public:
+	ScreenNumOfPixelsUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().screenNumOfPixelsUniform, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		if(m_screenSize != p_uniformData.m_frameData.m_screenSize)
+		{
+			m_screenSize = p_uniformData.m_frameData.m_screenSize;
+
+			glUniform1ui(m_uniformHandle, (unsigned int)(m_screenSize.x * m_screenSize.y));
+		}
+	}
+
+private:
+	glm::ivec2 m_screenSize;
 };
 class DeltaTimeMSUniform : public BaseUniform
 {
@@ -441,8 +465,34 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform2f(m_uniformHandle, p_uniformData.m_frameData.m_texelSize.x, p_uniformData.m_frameData.m_texelSize.y);
+		if(m_texelSize != p_uniformData.m_frameData.m_texelSize)
+		{
+			m_texelSize = p_uniformData.m_frameData.m_texelSize;
+
+			glUniform2f(m_uniformHandle, m_texelSize.x, m_texelSize.y);
+		}
 	}
+private:
+	glm::vec2 m_texelSize;
+};
+class NumOFTexelsUniform : public BaseUniform
+{
+public:
+	NumOFTexelsUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().numOfTexels, p_shaderHandle)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		if(m_texelSize != p_uniformData.m_frameData.m_texelSize)
+		{
+			m_texelSize = p_uniformData.m_frameData.m_texelSize;
+
+			glUniform1ui(m_uniformHandle, (unsigned int)(m_texelSize.x * m_texelSize.y));
+		}
+	}
+private:
+	glm::vec2 m_texelSize;
 };
 class MipLevelUniform : public BaseUniform
 {
@@ -934,6 +984,109 @@ public:
 	{
 		glUniform1i(m_uniformHandle, LensFlareTextureType::LensFlareTextureType_Starburst);
 	}
+}; 
+
+class AverageLuminanceTextureUniform : public BaseUniform
+{
+public:
+	AverageLuminanceTextureUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().averageLuminanceTexture, p_shaderHandle)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniform1i(m_uniformHandle, LuminanceTextureType::LensFlareTextureType_AverageLuminance);
+	}
+};
+class InverseLogLuminanceRangeUniform : public BaseUniform
+{
+public:
+	InverseLogLuminanceRangeUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().inverseLogLuminanceRange, p_shaderHandle), m_minLuminanceRange(0.0f), m_maxLuminanceRange(0.0f)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		if(m_minLuminanceRange != Config::graphicsVar().luminance_range_min || m_maxLuminanceRange != Config::graphicsVar().luminance_range_max)
+		{
+			m_minLuminanceRange = Config::graphicsVar().luminance_range_min;
+			m_maxLuminanceRange = Config::graphicsVar().luminance_range_max;
+
+			float minLogLuminance = glm::log2(m_minLuminanceRange);
+			float maxLogLuminance = glm::log2(m_maxLuminanceRange);
+			float inverseLogRangeLuminance = 1.0f / (maxLogLuminance - minLogLuminance);
+
+			glUniform1f(m_uniformHandle, inverseLogRangeLuminance);
+		}
+	}
+private:
+	float	m_minLuminanceRange,
+			m_maxLuminanceRange;
+};
+class LogLuminanceRangeUniform : public BaseUniform
+{
+public:
+	LogLuminanceRangeUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().logLuminanceRange, p_shaderHandle), m_minLuminanceRange(0.0f), m_maxLuminanceRange(0.0f)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		if(m_minLuminanceRange != Config::graphicsVar().luminance_range_min || m_maxLuminanceRange != Config::graphicsVar().luminance_range_max)
+		{
+			m_minLuminanceRange = Config::graphicsVar().luminance_range_min;
+			m_maxLuminanceRange = Config::graphicsVar().luminance_range_max;
+
+			float minLogLuminance = glm::log2(m_minLuminanceRange);
+			float maxLogLuminance = glm::log2(m_maxLuminanceRange);
+
+			glUniform1f(m_uniformHandle, maxLogLuminance - minLogLuminance);
+		}
+	}
+private:
+	float	m_minLuminanceRange,
+			m_maxLuminanceRange;
+};
+class MinLogLuminanceUniform : public BaseUniform
+{
+public:
+	MinLogLuminanceUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().minLogLuminance, p_shaderHandle), m_minLuminanceRange(0.0f)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		if(m_minLuminanceRange != Config::graphicsVar().luminance_range_min)
+		{
+			m_minLuminanceRange = Config::graphicsVar().luminance_range_min;
+
+			float minLogLuminance = glm::log2(m_minLuminanceRange);
+
+			glUniform1f(m_uniformHandle, minLogLuminance);
+		}
+	}
+private:
+	float m_minLuminanceRange;
+};
+class TonemapMethodUniform : public BaseUniform
+{
+public:
+	TonemapMethodUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().tonemapMethod, p_shaderHandle), m_tonemapMethod(-1)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		if(m_tonemapMethod != Config::graphicsVar().tonemap_method)
+		{
+			m_tonemapMethod = Config::graphicsVar().tonemap_method;
+
+			glUniform1i(m_uniformHandle, m_tonemapMethod);
+		}
+	}
+
+private:
+	int m_tonemapMethod;
 };
 
 class DynamicEnvironmentMapUniform : public BaseUniform

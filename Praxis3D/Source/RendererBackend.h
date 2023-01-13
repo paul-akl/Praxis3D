@@ -184,13 +184,14 @@ public:
 	{
 		LoadCommand(unsigned int &p_handle,
 					const BufferType p_bufferType,
+					const BufferBindTarget p_bufferBindTarget,
 					const BufferUsageHint p_bufferUsage,
 					const unsigned int p_bindingIndex,
 					const int64_t p_size,
 					const void *p_data) :
 			m_handle(p_handle),
 			m_objectType(LoadObject_Buffer),
-			m_objectData(p_bufferType, p_bufferUsage, p_bindingIndex, p_size, p_data) { }
+			m_objectData(p_bufferType, p_bufferBindTarget, p_bufferUsage, p_bindingIndex, p_size, p_data) { }
 
 		LoadCommand(const std::string &p_name, 
 					unsigned int &p_handle,
@@ -214,13 +215,16 @@ public:
 		LoadCommand(const std::string &p_name, 
 					unsigned int &p_handle,
 					const TextureFormat p_texFormat,
+					const TextureDataFormat p_texDataFormat,
+					const TextureDataType p_texDataType,
+					const bool p_enableMipmap,
 					const int p_mipmapLevel,
 					const unsigned int p_textureWidth,
 					const unsigned int p_textureHeight,
 					const void *p_data) :
 			m_handle(p_handle),
 			m_objectType(LoadObject_Texture2D),
-			m_objectData(p_name, p_texFormat, p_mipmapLevel, p_textureWidth, p_textureHeight, p_data) { }
+			m_objectData(p_name, p_texFormat, p_texDataFormat, p_texDataType, p_enableMipmap, p_mipmapLevel, p_textureWidth, p_textureHeight, p_data) { }
 
 		LoadCommand(unsigned int &p_handle,
 					const TextureFormat p_texFormat,
@@ -236,17 +240,20 @@ public:
 		struct BufferLoadData
 		{
 			BufferLoadData(const BufferType p_bufferType,
+						   const BufferBindTarget p_bufferBindTarget,
 						   const BufferUsageHint p_bufferUsage,
 						   const unsigned int p_bindingIndex,
 						   const int64_t p_size,
 						   const void *p_data) :
 				m_bufferType(p_bufferType),
+				m_bufferBindTarget(p_bufferBindTarget),
 				m_bufferUsage(p_bufferUsage),
 				m_bindingIndex(p_bindingIndex),
 				m_size(p_size),
 				m_data(p_data) { }
 
 			const BufferType m_bufferType;
+			const BufferBindTarget m_bufferBindTarget;
 			const BufferUsageHint m_bufferUsage;
 			const unsigned int m_bindingIndex;
 			const int64_t m_size;
@@ -293,12 +300,18 @@ public:
 		{
 			Texture2DLoadData(const std::string &p_name,
 							  const TextureFormat p_texFormat,
+							  const TextureDataFormat p_texDataFormat,
+							  const TextureDataType p_texDataType,
+							  const bool p_enableMipmap,
 							  const int p_mipmapLevel,
 							  const unsigned int p_textureWidth,
 							  const unsigned int p_textureHeight,
 							  const void *p_data) :
 				m_name(p_name),
 				m_texFormat(p_texFormat),
+				m_texDataFormat(p_texDataFormat),
+				m_texDataType(p_texDataType),
+				m_enableMipmap(p_enableMipmap),
 				m_mipmapLevel(p_mipmapLevel),
 				m_textureWidth(p_textureWidth),
 				m_textureHeight(p_textureHeight),
@@ -306,9 +319,12 @@ public:
 
 			const std::string &m_name;
 			const TextureFormat m_texFormat;
+			const TextureDataFormat m_texDataFormat;
+			const TextureDataType m_texDataType;
+			const bool m_enableMipmap;
+			const int m_mipmapLevel;
 			const unsigned int m_textureWidth;
 			const unsigned int m_textureHeight;
-			const int m_mipmapLevel;
 			const void *m_data;
 		};
 		struct CubemapLoadData
@@ -334,11 +350,12 @@ public:
 		union ObjectData
 		{
 			ObjectData(const BufferType p_bufferType,
+					   const BufferBindTarget p_bufferBindTarget,
 					   const BufferUsageHint p_bufferUsage,
 					   const unsigned int p_bindingIndex,
 					   const int64_t p_size,
 					   const void *p_data) :
-				m_bufferData(p_bufferType, p_bufferUsage, p_bindingIndex, p_size, p_data) { }
+				m_bufferData(p_bufferType, p_bufferBindTarget, p_bufferUsage, p_bindingIndex, p_size, p_data) { }
 
 			ObjectData(const std::string &p_name, 
 					   unsigned int(&p_buffers)[ModelBuffer_NumAllTypes],
@@ -355,11 +372,14 @@ public:
 
 			ObjectData(const std::string &p_name, 
 					   const TextureFormat p_texFormat,
+					   const TextureDataFormat p_texDataFormat,
+					   const TextureDataType p_texDataType,
+					   const bool p_enableMipmap,
 					   const int p_mipmapLevel,
 					   const unsigned int p_textureWidth,
 					   const unsigned int p_textureHeight,
 					   const void *p_data) :
-				m_tex2DData(p_name, p_texFormat, p_mipmapLevel, p_textureWidth, p_textureHeight, p_data) { }
+				m_tex2DData(p_name, p_texFormat, p_texDataFormat, p_texDataType, p_enableMipmap, p_mipmapLevel, p_textureWidth, p_textureHeight, p_data) { }
 
 			ObjectData(const TextureFormat p_texFormat,
 					   const int p_mipmapLevel,
@@ -619,7 +639,7 @@ protected:
 						 p_command.m_objectData.m_bufferData.m_bufferUsage);
 
 			// Bind the buffer to the binding index so it can be accessed in a shader
-			glBindBufferBase(p_command.m_objectData.m_bufferData.m_bufferType, 
+			glBindBufferBase(p_command.m_objectData.m_bufferData.m_bufferBindTarget, 
 							 p_command.m_objectData.m_bufferData.m_bindingIndex,
 							 p_command.m_handle);
 		}
@@ -844,22 +864,31 @@ protected:
 			glBindTexture(GL_TEXTURE_2D, p_command.m_handle);
 			glTexImage2D(GL_TEXTURE_2D,
 						 p_command.m_objectData.m_tex2DData.m_mipmapLevel,
-						 p_command.m_objectData.m_tex2DData.m_texFormat,
+						 p_command.m_objectData.m_tex2DData.m_texDataFormat,
 						 p_command.m_objectData.m_tex2DData.m_textureWidth, 
 						 p_command.m_objectData.m_tex2DData.m_textureHeight,
 						 0, 
 						 p_command.m_objectData.m_tex2DData.m_texFormat,
-						 GL_UNSIGNED_BYTE, 
+						 p_command.m_objectData.m_tex2DData.m_texDataType,
 						 p_command.m_objectData.m_tex2DData.m_data);
 
-			// Generate  mipmaps if they are enabled
-			if(Config::textureVar().generate_mipmaps)
+			// Generate mipmaps if they are enabled, and set texture filtering to use mipmaps
+			if(p_command.m_objectData.m_tex2DData.m_enableMipmap)
+			{
 				glGenerateMipmap(GL_TEXTURE_2D);
+				// Texture filtering mode, when image is minimized
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Config::textureVar().gl_texture_minification_mipmap);
+				// Texture filtering mode, when image is magnified
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, Config::textureVar().gl_texture_magnification_mipmap);
+			}
+			else
+			{
+				// Texture filtering mode, when image is minimized
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Config::textureVar().gl_texture_minification);
+				// Texture filtering mode, when image is magnified
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, Config::textureVar().gl_texture_magnification);
+			}
 
-			// Texture filtering mode, when image is minimized
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Config::textureVar().gl_texture_minification);
-			// Texture filtering mode, when image is magnified
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, Config::textureVar().gl_texture_magnification);
 			// Texture anisotropic filtering
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, Config::textureVar().gl_texture_anisotropy);
 		}

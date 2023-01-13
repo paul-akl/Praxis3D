@@ -7,8 +7,9 @@ class LightingPass : public RenderPass
 public:
 	LightingPass(RendererFrontend &p_renderer) : 
 		RenderPass(p_renderer), 
-		m_pointLightBuffer(BufferType_Uniform, BufferUsageHint_DynamicDraw),
-		m_spotLightBuffer(BufferType_Uniform, BufferUsageHint_DynamicDraw) { }
+		m_pointLightBuffer(BufferType_Uniform, BufferBindTarget_Uniform, BufferUsageHint_DynamicDraw),
+		m_spotLightBuffer(BufferType_Uniform, BufferBindTarget_Uniform, BufferUsageHint_DynamicDraw),
+		m_shaderLightPass(nullptr) { }
 
 	~LightingPass() { }
 

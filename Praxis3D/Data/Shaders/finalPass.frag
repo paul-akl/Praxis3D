@@ -2,7 +2,7 @@
 
 //#define ENABLE_SIMPLE_TONE_MAPPING
 //#define ENABLE_REINHARD_TONE_MAPPING
-#define ENABLE_FILMIC_TONE_MAPPING
+//#define ENABLE_FILMIC_TONE_MAPPING
 
 out vec4 outputColor;
 
@@ -71,11 +71,11 @@ void main(void)
 	vec2 texCoord = calcTexCoord();
 	
 	// Perform gamma correction on the color from the final framebuffer
-	vec3 fragmentColor = texture(inputColorMap, texCoord).xyz * exposure;
+	vec3 fragmentColor = texture(inputColorMap, texCoord).xyz;
 	
 	// Add emissive color (which is generated in a blur pass)
 	//fragmentColor += texture(emissiveMap, texCoord).xyz;
-		
+	
 	#ifdef ENABLE_TONE_MAPPING
 	// Perform simple tonemapping on the final color
 	fragmentColor = simpleToneMapping(fragmentColor);
@@ -92,12 +92,8 @@ void main(void)
 	#endif
 	
 	// Perform gamma correction as the last step of the fragment color
-	fragmentColor = gammaCorrection(fragmentColor, gamma);
+	//fragmentColor = gammaCorrection(fragmentColor, gamma);
 	
 	// Write the color to the framebuffer
-	outputColor = vec4(fragmentColor, 1.0);
-	//outputColor = vec4(texture(inputColorMap, texCoord).xyz, 1.0);
-	//outputColor = vec4(1.0, 0.0, 1.0, 1.0);
-	//outputColor = vec4(texture(emissiveMap, texCoord).xyz, 1.0);
-	
+	outputColor = vec4(fragmentColor, 1.0);	
 }

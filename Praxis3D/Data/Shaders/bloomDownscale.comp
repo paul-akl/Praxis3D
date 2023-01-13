@@ -35,7 +35,9 @@ vec4 calculateQuadraticThreshold(vec4 p_color, float p_threshold, vec3 p_curve)
 // Calculate Luma of the the color
 float calculateLuma(vec3 p_color)
 {
-    return dot(p_color, vec3(0.2126729, 0.7151522, 0.0721750));
+	// Taken from RTR vol 4 pg. 278
+	return dot(p_color, vec3(0.2125, 0.7154, 0.0721));
+    //return dot(p_color, vec3(0.2126729, 0.7151522, 0.0721750));
 }
 
 // [Karis2013] proposed reducing the dynamic range before averaging
@@ -49,20 +51,19 @@ shared float sharedBufferR[TILE_PIXEL_COUNT];
 shared float sharedBufferG[TILE_PIXEL_COUNT];
 shared float sharedBufferB[TILE_PIXEL_COUNT];
 
-void storeLDS(int p_idx, vec4 p_color)
+void storeLDS(int p_index, vec4 p_color)
 {
-    sharedBufferR[p_idx] = p_color.r;
-    sharedBufferG[p_idx] = p_color.g;
-    sharedBufferB[p_idx] = p_color.b;
+    sharedBufferR[p_index] = p_color.r;
+    sharedBufferG[p_index] = p_color.g;
+    sharedBufferB[p_index] = p_color.b;
 }
 
-vec4 loadLDS(uint p_idx)
+vec4 loadLDS(uint p_index)
 {
-    return vec4(sharedBufferR[p_idx], sharedBufferG[p_idx], sharedBufferB[p_idx], 1.0);
+    return vec4(sharedBufferR[p_index], sharedBufferG[p_index], sharedBufferB[p_index], 1.0);
 }
 
 layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
-
 void main()
 {
 	ivec2 texCoord = ivec2(gl_GlobalInvocationID);
@@ -106,19 +107,17 @@ void main()
     vec2 div = (1.0 / 4.0) * vec2(0.5, 0.125);
 
 	// Sum and average out the colors based on the weights
-    vec4 c =  calculateKarisAverage((D + E + I + J) * div.x);
-         c += calculateKarisAverage((A + B + G + F) * div.y);
-         c += calculateKarisAverage((B + C + H + G) * div.y);
-         c += calculateKarisAverage((F + G + L + K) * div.y);
-         c += calculateKarisAverage((G + H + M + L) * div.y);
+    vec4 finalColor =  calculateKarisAverage((D + E + I + J) * div.x);
+         finalColor += calculateKarisAverage((A + B + G + F) * div.y);
+         finalColor += calculateKarisAverage((B + C + H + G) * div.y);
+         finalColor += calculateKarisAverage((F + G + L + K) * div.y);
+         finalColor += calculateKarisAverage((G + H + M + L) * div.y);
 
 	// Use threshold for the full sized image
 	if(mipLevel == 0)
     {
-        c = calculateQuadraticThreshold(c, bloomTreshold.x, bloomTreshold.yzw);
+        finalColor = calculateQuadraticThreshold(finalColor, bloomTreshold.x, bloomTreshold.yzw);
     }
 
-	imageStore(outputColorMap, texCoord, c);
-	//imageStore(outputColorMap, pixel_coords, textureLod(inputColorMap, pixel_coords, mipLevel));
-	//imageStore(outputColorMap, pixel_coords, vec4(0.0, 1.0, 0.0, 1.0));
+	imageStore(outputColorMap, texCoord, finalColor);
 }

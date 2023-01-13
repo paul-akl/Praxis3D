@@ -50,12 +50,16 @@ class Texture2D : public LoaderBase<TextureLoader2D, Texture2D>::UniqueObject
 protected:
 	Texture2D(LoaderBase<TextureLoader2D, Texture2D> *p_loaderBase, std::string p_filename, size_t p_uniqueID, unsigned int p_handle) : UniqueObject(p_loaderBase, p_uniqueID, p_filename), m_handle(p_handle)
 	{
+		m_size = 0;
+		m_enableMipmap = Config::textureVar().generate_mipmaps;
 		m_mipmapLevel = 0;
 		m_textureWidth = 0;
 		m_textureHeight = 0;
 		m_pixelData = nullptr;
 		m_bitmap = nullptr;
-		m_textureFormat = TextureFormat_RGBA;
+		m_textureFormat = TextureFormat::TextureFormat_RGBA;
+		m_textureDataFormat = TextureDataFormat::TextureDataFormat_RGBA8;
+		m_textureDataType = TextureDataType::TextureDataType_UnsignedByte;
 	}
 
 	// Loads pixel data (using the filename) from HDD to RAM, re-factors it
@@ -87,11 +91,13 @@ protected:
 				if(samplesPerPixel == 3)
 				{
 					m_textureFormat = TextureFormat_RGB;
+					m_textureDataFormat = TextureDataFormat_RGB8;
 					m_bitmap = FreeImage_ConvertTo24Bits(m_bitmap);
 				}
 				else
 				{
 					m_textureFormat = TextureFormat_RGBA;
+					m_textureDataFormat = TextureDataFormat_RGBA8;
 					m_bitmap = FreeImage_ConvertTo32Bits(m_bitmap);
 				}
 
@@ -193,6 +199,9 @@ protected:
 
 protected:
 	TextureFormat m_textureFormat;
+	TextureDataFormat m_textureDataFormat;
+	TextureDataType m_textureDataType;
+	bool m_enableMipmap;
 	int m_mipmapLevel;
 
 	FIBITMAP* m_bitmap;
@@ -261,6 +270,9 @@ public:
 		inline int getMipmapLevel() const { return m_textureData->m_mipmapLevel; }
 		inline std::string getFilename() const { return m_textureData->m_filename; }
 		inline TextureFormat getTextureFormat() const { return m_textureData->m_textureFormat; }
+		inline TextureDataFormat getTextureDataFormat() const { return m_textureData->m_textureDataFormat; }
+		inline TextureDataType getTextureDataType() const { return m_textureData->m_textureDataType; }
+		inline bool getEnableMipmap() const { return m_textureData->m_enableMipmap; }
 
 		inline const bool isLoadedToVideoMemory() { return m_textureData->isLoadedToVideoMemory(); }
 
@@ -289,7 +301,8 @@ public:
 	Texture2DHandle load(const std::string &p_filename, MaterialType p_materialType, bool p_startBackgroundLoading = true);
 	Texture2DHandle load(const std::string &p_filename, unsigned int p_textureHandle);
 	Texture2DHandle load(const std::string &p_filename);
-	
+	Texture2DHandle create(const std::string &p_name, const unsigned int p_width, const unsigned int p_height, const TextureFormat p_textureFormat, const TextureDataFormat p_textureDataFormat, const TextureDataType p_textureDataType, const bool p_createMipmap = false, const void *p_data = NULL);
+
 	Texture2DHandle getDefaultTexture(MaterialType p_materialType = MaterialType::MaterialType_Diffuse)
 	{
 		Texture2D *returnTexture = m_default2DTexture;
