@@ -17,6 +17,8 @@ public:
 	{
 		ErrorCode returnCode = ErrorCode::Success;
 
+		ErrHandlerLoc::get().log(ErrorCode::Initialize_success, ErrorSource::Source_WorldSystem);
+
 		return returnCode;
 	}
 

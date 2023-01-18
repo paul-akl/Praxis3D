@@ -56,7 +56,14 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
 	Code(AssimpScene_failed,) \
 	/* Object pool errors */ \
 	Code(ObjectPool_full,) \
+	/* Physics system errors */ \
+	Code(Collision_invalid,) \
+	Code(Collision_missing,) \
+	Code(Kinematic_has_mass,) \
 	/* Property loader errors */ \
+	Code(Property_missing_size,) \
+	Code(Property_missing_radius,) \
+	Code(Property_missing_type,) \
 	Code(Property_no_filename,) \
 	/* Shader loader errors */ \
 	Code(Shader_attach_failed,) \
@@ -64,6 +71,8 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
 	Code(Shader_creation_failed,) \
 	Code(Shader_link_failed,) \
 	Code(Shader_loading_failed,) \
+	/* Scene loader errors */ \
+	Code(GameObjects_missing,) \
 	/* Texture loader errors */ \
 	Code(Texture_not_found,) \
 	Code(Texture_empty,) \
@@ -112,6 +121,7 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_ModelComponent,) \
     Code(Source_ModelLoader,) \
     Code(Source_ObjectDirectory,) \
+    Code(Source_Physics,) \
     Code(Source_PhysicsObject,) \
     Code(Source_PlayerObject,) \
     Code(Source_PostProcessPass,) \

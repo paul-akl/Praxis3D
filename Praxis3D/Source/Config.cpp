@@ -230,6 +230,7 @@ void Config::init()
 	AddVariablePredef(m_filepathVar, map_path);
 	AddVariablePredef(m_filepathVar, model_path);
 	AddVariablePredef(m_filepathVar, object_path);
+	AddVariablePredef(m_filepathVar, prefab_path);
 	AddVariablePredef(m_filepathVar, script_path);
 	AddVariablePredef(m_filepathVar, shader_path);
 	AddVariablePredef(m_filepathVar, sound_path);

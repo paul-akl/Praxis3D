@@ -18,6 +18,8 @@ public:
 	{
 		ErrorCode returnCode = ErrorCode::Success;
 
+		ErrHandlerLoc::get().log(ErrorCode::Initialize_success, ErrorSource::Source_Physics);
+
 		return returnCode;
 	}
 
@@ -50,11 +52,6 @@ public:
 			if(sceneError != ErrorCode::Success)
 			{
 				ErrHandlerLoc::get().log(sceneError);
-			}
-			else
-			{
-				// Check for errors
-				GLenum glError = glGetError();
 			}
 		}
 

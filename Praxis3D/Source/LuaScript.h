@@ -124,12 +124,6 @@ public:
 
 		// Call update function in the lua script
 		m_luaUpdate(p_deltaTime);
-
-		// Add spatial changes to the current changes, because they are tracked separately
-		m_currentChanges += m_spatialData.getCurrentChanges();
-
-		// Add GUI changes to the current changes, because they are tracked separately
-		m_currentChanges += m_GUIData.getCurrentChanges();
 	}
 
 	// Clears the currently registered changes. They are also cleared at the beginning of each update call
@@ -165,6 +159,8 @@ public:
 		return m_currentChanges; 
 		clearChanges();
 	}
+
+	const inline std::string &getLuaScriptFilename() const { return m_luaScriptFilename; }
 
 private:
 	// Sets lua tables with various definitions and values
@@ -441,6 +437,7 @@ private:
 			"m_spatialData", &SpatialTransformData::m_spatialData);
 
 		m_luaState.new_usertype<SpatialDataManager>("SpatialDataManager",
+			"update", &SpatialDataManager::update,
 			"getLocalSpaceData", &SpatialDataManager::getLocalSpaceData,
 			"getLocalTransform", &SpatialDataManager::getLocalTransform,
 			"getParemtTransform", &SpatialDataManager::getParemtTransform,
@@ -573,6 +570,7 @@ private:
 	// Lua state for the loaded script
 	sol::state m_luaState;
 	std::string m_luaScriptFilename;
+
 	// Function binds that call functions inside the lua script
 	sol::function m_luaInit;
 	sol::function m_luaUpdate;

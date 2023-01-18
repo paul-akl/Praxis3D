@@ -71,19 +71,19 @@
 				{
 					"LocalPosition": "0.0f, 0.5f, 0.0f",
 					"LocalRotation": "0.0f, 45.0f, 0.0f",
-					"LocalScale": "10.0f, 10.0f, 10.0f"
+					"LocalScale": "1.0f, 1.0f, 1.0f"
 				}
 			},
 			"Physics":
 			{
-				"RigidBody":
+				"RigidBodyComponent":
 				{
 					"CollisionShape":
 					{
 						"Type": "Box",
-						"Size": "50.0f, 50.0f, 50.0f"
+						"Size": "100.01f, 0.25f, 100.01f"
 					},
-					"Mass": "10.0f"
+					"Mass": "0.0f"
 				}
 			},
 			"Rendering":
@@ -128,11 +128,6 @@
 						}
 					]
 				}
-//				"Shaders":
-//				{
-//					"FragmentShader": "geometryPassInf.frag",
-//					"VertexShader": "geometryPassInf.vert"
-//				}
 			}
 		},
 		{
@@ -143,8 +138,8 @@
 			{
 				"SpatialComponent":
 				{
-					"LocalPosition": "0.0f, 5.0f, 0.0f",
-					"LocalRotation": "0.0f, 45.0f, 0.0f",
+					"LocalPosition": "0.0f, 30.0f, 0.0f",
+					"LocalRotation": "0.0f, 40.0f, 0.0f",
 					"LocalScale": "2.0f, 2.0f, 2.0f"
 				}
 			},
@@ -189,6 +184,98 @@
 							]
 						}
 					]
+				}
+			},
+			"Physics":
+			{
+				"RigidBodyComponent":
+				{
+					"Mass": "10.0f",
+					"Restitution": "0.5f",
+					"Friction": "0.5f",
+					"CollisionShape":
+					{
+						"Type": "Box",
+						"Size": "2.0f, 2.0f, 2.0f"
+					}
+				}
+			}
+		},
+		{
+			"ID": "33",
+			"Name": "Cube 2",
+			"Parent": "0",
+			"World":
+			{
+				"SpatialComponent":
+				{
+					"LocalPosition": "3.0f, 3.0f, 0.0f",
+					"LocalRotation": "0.0f, 0.0f, 0.0f",
+					"LocalScale": "2.0f, 2.0f, 2.0f"
+				}
+			},
+			"Rendering":
+			{
+				"ModelComponent":
+				{
+					"Models":
+					[
+						{
+							"Filename": "cube.obj",
+							"Meshes":
+							[
+								{
+									"Index": "0",
+									"AlphaThreshold": "0.0f",
+									"HeightScale": "0.0f",
+									"Materials":
+									{
+										"Diffuse":
+										{
+											"Filename": "Metal_CleanPaintedWithChips_2k_alb.tga",
+											"TextureScale": "2.0f, 2.0f"
+										},
+										"Normal":
+										{
+											"Filename": "Metal_CleanPaintedWithChips_2k_n.tga",
+											"TextureScale": "1.0f, 1.0f"
+										},
+										"Emissive":
+										{
+											"Filename": "default_emissive.png",
+											"TextureScale": "1.0f, 1.0f"
+										},
+										"RMHAO":
+										{
+											"Filename": "Metal_CleanPaintedWithChips_RMHAO3.tga",
+											"TextureScale": "1.0f, 1.0f"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			"Physics":
+			{
+				"RigidBodyComponent":
+				{
+					"Mass": "0.0f",
+					"Kinematic": "true",
+					"Restitution": "0.1f",
+					"CollisionShape":
+					{
+						"Type": "Box",
+						"Size": "2.0f"
+					}
+				}
+			},
+			"Script":
+			{
+				"LuaComponent":
+				{
+					"Filename": "Kinematic_test.lua"
 				}
 			}
 		},
@@ -332,7 +419,7 @@
 			{
 				"SpatialComponent":
 				{
-					"LocalRotation": "-45.0f, 45.0f, 0.0f"
+					"LocalRotation": "-60.0f, 0.0f, 0.0f"
 				}
 			},
 			"Rendering":

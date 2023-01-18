@@ -19,6 +19,7 @@ constexpr NullObserver nullObserver;
 const glm::quat				NullObjects::NullQuaterion = glm::quat();
 const glm::vec3				NullObjects::NullVec3f = glm::vec3(1.0f);
 const glm::vec4				NullObjects::NullVec4f = glm::vec4(1.0f);
+const glm::mat3				NullObjects::NullMat3f = glm::mat3();
 const glm::mat4				NullObjects::NullMat4f = glm::mat4();
 const bool					NullObjects::NullBool = false;
 const int					NullObjects::NullInt = 0;

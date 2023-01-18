@@ -31,10 +31,35 @@ public:
 	}
 
 	// Get the world transform in the form of btTransform
-	void getWorldTransform(btTransform &p_worldTrans) const { p_worldTrans = m_centerOfMassWorldTrans; }
+	void getWorldTransform(btTransform &p_worldTrans) const 
+	{ 
+		p_worldTrans = m_centerOfMassWorldTrans; 
+	}
 
 	// Get the world transform in the form of glm::mat4
 	const inline glm::mat4 &getWorldTransform() const { return m_graphicsWorldTrans; }
+
+	const glm::vec3 getPosition()		const { return Math::toGlmVec3(m_centerOfMassWorldTrans.getOrigin());	}
+	const glm::quat getRotation()		const { return Math::toGlmQuat(m_centerOfMassWorldTrans.getRotation()); }
+
+	void setPosition(const glm::vec3 &p_position)
+	{
+		m_centerOfMassWorldTrans.setOrigin(Math::toBtVector3(p_position));
+		m_graphicsWorldTransUpToDate = false;
+		m_motionStateDirty = true;
+	}	
+	void setPosition(const glm::mat4 &p_worldTrans)
+	{
+		m_centerOfMassWorldTrans.setOrigin(Math::toBtVector3(p_worldTrans[3]));
+		m_graphicsWorldTransUpToDate = false;
+		m_motionStateDirty = true;
+	}
+	void setRotation(const glm::quat &p_rotation)
+	{
+		m_centerOfMassWorldTrans.setRotation(Math::toBtQuaternion(p_rotation));
+		m_graphicsWorldTransUpToDate = false;
+		m_motionStateDirty = true;
+	}
 
 	//Bullet only calls the update of world transform for active objects
 	void setWorldTransform(const btTransform &p_worldTrans) 
@@ -45,8 +70,11 @@ public:
 	}
 	void setWorldTransform(const glm::mat4 &p_worldTrans)
 	{
+		//setPosition(glm::vec3(p_worldTrans[3][0], p_worldTrans[3][1], p_worldTrans[3][2]));
+		auto test = p_worldTrans[0];
 		m_graphicsWorldTrans = p_worldTrans;
 		m_centerOfMassWorldTrans = Math::toBtTransform(p_worldTrans);
+		m_graphicsWorldTransUpToDate = true;
 		m_motionStateDirty = true;
 	}
 

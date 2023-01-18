@@ -56,6 +56,12 @@ public:
 			// Get the changes from the lua script
 			auto changes = m_luaScript->getChanges();
 
+			// Add spatial changes to the current changes, because they are tracked separately
+			changes += m_luaSpatialData.getCurrentChangesAndReset();
+
+			// Add GUI changes to the current changes, because they are tracked separately
+			changes += m_GUIData.getCurrentChangesAndReset();
+
 			// Post the new changes
 			postChanges(changes);
 		}

@@ -5,6 +5,7 @@
 
 class RigidBodyComponent : public SystemObject, public LoadableGraphicsObject
 {
+	friend class PhysicsScene;
 public:
 	enum CollisionShapeType : unsigned int
 	{
@@ -17,9 +18,13 @@ public:
 		CollisionShapeType_Sphere
 	};
 
-	RigidBodyComponent(SystemScene *p_systemScene, std::string p_name, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::RigidBodyComponent)
+	RigidBodyComponent(SystemScene *p_systemScene, std::string p_name, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::RigidBodyComponent, p_entityID)
 	{
 		m_collisionShapeType = CollisionShapeType::CollisionShapeType_Null;
+		m_collisionShape.m_boxShape = nullptr;
+		m_constructionInfo = nullptr;
+		m_rigidBody = nullptr;
+		m_kinematic = false;
 	}
 	~RigidBodyComponent()
 	{
@@ -48,6 +53,15 @@ public:
 
 	void update(const float p_deltaTime)
 	{
+		if(m_motionState.getMotionStateDirtyFlagAndReset())
+		{
+			m_motionState.updateMotionStateTrans();
+
+			postChanges(Systems::Changes::Spatial::LocalTransformNoScale);
+		}
+
+		//std::cout << m_motionState.getWorldTransform()[3].x << " : " << m_motionState.getWorldTransform()[3].y << " : " << m_motionState.getWorldTransform()[3].z << std::endl;
+
 		/*/ Perform updates only the if the script is loaded
 		if(m_luaScriptLoaded)
 		{
@@ -72,21 +86,8 @@ public:
 		// Check if PropertySet isn't empty and the component hasn't been loaded already
 		if(p_properties && !isLoadedToMemory())
 		{
-			if(p_properties.getPropertyID() == Properties::RigidBody)
+			if(p_properties.getPropertyID() == Properties::RigidBodyComponent)
 			{
-				// -----------------------------
-				// Load individual property data
-				// -----------------------------
-				for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
-				{
-					switch(p_properties[i].getPropertyID())
-					{
-					case Properties::Mass:
-
-					break;
-					}
-				}
-
 				// --------------------
 				// Load collision shape
 				// --------------------
@@ -109,7 +110,7 @@ public:
 							if(sizeProperty)
 								boxHalfExtents = Math::toBtVector3(sizeProperty.getVec3f());
 							else
-								ErrHandlerLoc().get().log(ErrorType::Warning, ErrorSource::Source_CallisionShapeComponent, m_name + " - Missing \'" + GetString(Properties::Size) + "\' property");
+								ErrHandlerLoc().get().log(ErrorCode::Property_missing_size, m_name, ErrorSource::Source_RigidBodyComponent);
 
 							m_collisionShape.m_boxShape = new btBoxShape(boxHalfExtents);
 							m_collisionShapeType = CollisionShapeType::CollisionShapeType_Box;
@@ -126,7 +127,7 @@ public:
 							if(radiusProperty)
 								radius = radiusProperty.getFloat();
 							else
-								ErrHandlerLoc().get().log(ErrorType::Warning, ErrorSource::Source_CallisionShapeComponent, m_name + " - Missing \'" + GetString(Properties::Radius) + "\' property");
+								ErrHandlerLoc().get().log(ErrorCode::Property_missing_radius, m_name, ErrorSource::Source_RigidBodyComponent);
 
 							m_collisionShape.m_sphereShape = new btSphereShape(radius);
 							m_collisionShapeType = CollisionShapeType::CollisionShapeType_Sphere;
@@ -137,22 +138,72 @@ public:
 							
 							// If this is reached, the collision shape type was not valid
 							importError = ErrorCode::Failure;
-							ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_CallisionShapeComponent, m_name + " - Invalid collision type");
+							ErrHandlerLoc().get().log(ErrorCode::Collision_invalid, m_name, ErrorSource::Source_RigidBodyComponent);
 							break;
 						}
 
 						// Success on the loaded collision shape
 						importError = ErrorCode::Success;
-						ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_CallisionShapeComponent, m_name + " - Collision shape loaded");
+						ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_RigidBodyComponent, m_name + " - Collision shape loaded");
 
 					}
 					else
 					{
 						// Missing the Type property entirely
 						importError = ErrorCode::Failure;
-						ErrHandlerLoc().get().log(ErrorType::Warning, ErrorSource::Source_CallisionShapeComponent, m_name + " - Missing \'" + GetString(Properties::Type) + "\' property");
+						ErrHandlerLoc().get().log(ErrorCode::Property_missing_type, m_name, ErrorSource::Source_RigidBodyComponent);
 					}
 				}
+
+				// Continue only if collision shape was created
+				if(m_collisionShapeType != CollisionShapeType::CollisionShapeType_Null)
+				{
+					// Create the struct that holds all the required information for constructing a rigid body
+					m_constructionInfo = new btRigidBody::btRigidBodyConstructionInfo(0.0f, &m_motionState, getCollisionShape());
+
+					// -----------------------------
+					// Load individual property data
+					// -----------------------------
+					for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
+					{
+						switch(p_properties[i].getPropertyID())
+						{
+						case Properties::Friction:
+							m_constructionInfo->m_friction = p_properties[i].getFloat();
+							break;
+						case Properties::Kinematic:
+							m_kinematic = p_properties[i].getBool();
+							break;
+						case Properties::Mass:
+							m_constructionInfo->m_mass = p_properties[i].getFloat();
+							break;
+						case Properties::Restitution:
+							m_constructionInfo->m_restitution = p_properties[i].getFloat();
+							break;
+						}
+					}
+
+					// If mass is not zero, rigid body is dynamic; in that case, calculate the local inertia 
+					if(m_constructionInfo->m_mass != 0.0f)
+					{
+						// Kinematic objects must have a mass of zero
+						if(m_kinematic)
+						{
+							m_constructionInfo->m_mass = 0.0f;
+							ErrHandlerLoc().get().log(ErrorCode::Kinematic_has_mass, m_name, ErrorSource::Source_RigidBodyComponent);
+						}
+						else
+							getCollisionShape()->calculateLocalInertia(m_constructionInfo->m_mass, m_constructionInfo->m_localInertia);
+					}
+				}
+				else
+				{
+					// Missing the collision shape
+					importError = ErrorCode::Failure;
+					ErrHandlerLoc().get().log(ErrorCode::Collision_missing, m_name, ErrorSource::Source_RigidBodyComponent);
+				}
+
+
 			}
 
 			if(importError == ErrorCode::Success)
@@ -176,8 +227,8 @@ public:
 	// System type is Physics
 	BitMask getSystemType() final override { return Systems::Physics; }
 
-	BitMask getDesiredSystemChanges() final override { return Systems::Changes::None; }
-	BitMask getPotentialSystemChanges() final override { return Systems::Changes::All; }
+	BitMask getDesiredSystemChanges() final override { return Systems::Changes::Spatial::AllLocal; }
+	BitMask getPotentialSystemChanges() final override { return Systems::Changes::Spatial::AllLocal; }
 
 	const inline CollisionShapeType getCollisionShapeType() const { return m_collisionShapeType; }
 	inline btCollisionShape *getCollisionShape()
@@ -215,7 +266,49 @@ public:
 	inline btCylinderShape *getCollisionShapeCylinder()     { return m_collisionShapeType == CollisionShapeType::CollisionShapeType_Cylinder   ? m_collisionShape.m_cylinderShape   : nullptr; }
 	inline btSphereShape *getCollisionShapeSphere()         { return m_collisionShapeType == CollisionShapeType::CollisionShapeType_Sphere     ? m_collisionShape.m_sphereShape     : nullptr; }
 
-	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
+	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
+	{
+		// Track what data has been modified
+		BitMask newChanges = Systems::Changes::None;
+
+		// Consider ignoring LocalTransform change, as Bullet can only accept a transform matrix that does not have scale applied to it. LocalTransform however includes scaling.
+		// To avoid scaled transform, only the position is retrieved from the LocalTransform, and the rotation is retrieved by getting a LocalRotation quaternion.
+		// This might cause a problem of getting an out-of-date rotation, as it is not certain if the LocalRotation quaternion has been updated.
+		if(CheckBitmask(p_changeType, Systems::Changes::Spatial::LocalTransform))
+		{
+			m_motionState.setPosition(p_subject->getMat4(this, Systems::Changes::Spatial::LocalTransform));
+			m_motionState.setRotation(p_subject->getQuaternion(this, Systems::Changes::Spatial::LocalRotation));
+
+			newChanges |= Systems::Changes::Spatial::LocalTransformNoScale;
+		}
+
+		if(CheckBitmask(p_changeType, Systems::Changes::Spatial::LocalTransformNoScale))
+		{
+			m_motionState.setWorldTransform(p_subject->getMat4(this, Systems::Changes::Spatial::LocalTransformNoScale));
+
+			newChanges |= Systems::Changes::Spatial::LocalTransformNoScale;
+		}
+		
+		if(CheckBitmask(p_changeType, Systems::Changes::Spatial::LocalPosition))
+		{
+			m_motionState.setPosition(p_subject->getVec3(this, Systems::Changes::Spatial::LocalPosition));
+
+			newChanges |= Systems::Changes::Spatial::LocalPosition;
+		}
+
+		if(CheckBitmask(p_changeType, Systems::Changes::Spatial::LocalRotation))
+		{
+			m_motionState.setRotation(p_subject->getQuaternion(this, Systems::Changes::Spatial::LocalRotation));
+
+			newChanges |= Systems::Changes::Spatial::LocalRotation;
+		}
+
+		postChanges(newChanges);
+	}
+
+	const glm::mat4 &getMat4(const Observer *p_observer, BitMask p_changedBits)								const override { return m_motionState.getWorldTransform(); }
+	const glm::quat &getQuaternion(const Observer *p_observer, BitMask p_changedBits)						const override { return m_motionState.getRotation(); }
+	const glm::vec3 &getVec3(const Observer *p_observer, BitMask p_changedBits)								const override { return m_motionState.getPosition(); }
 
 private:
 	union
@@ -230,4 +323,11 @@ private:
 
 	CollisionShapeType m_collisionShapeType;
 
+	btRigidBody *m_rigidBody; 
+	
+	btRigidBody::btRigidBodyConstructionInfo *m_constructionInfo;
+
+	PhysicsMotionState m_motionState;
+
+	bool m_kinematic;
 };

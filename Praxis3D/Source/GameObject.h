@@ -307,7 +307,7 @@ public:
 
 private:
 	// Set the ID of the object. The ID must be unique
-	void setGameObjectID(std::size_t p_id) { m_GameObjectID = p_id; }
+	void setGameObjectID(EntityID p_id) { m_GameObjectID = p_id; }
 
 	// Unlinks the given component, so that it is removed from observers/listeners
 	void unlinkComponent(SystemObject *p_component)

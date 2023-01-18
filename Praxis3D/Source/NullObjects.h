@@ -16,6 +16,7 @@ namespace NullObjects
 	const extern glm::quat				NullQuaterion;
 	const extern glm::vec3				NullVec3f;
 	const extern glm::vec4				NullVec4f;
+	const extern glm::mat3				NullMat3f;
 	const extern glm::mat4				NullMat4f;
 	const extern bool					NullBool;
 	const extern int					NullInt;

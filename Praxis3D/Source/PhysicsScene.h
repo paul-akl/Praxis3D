@@ -1,5 +1,6 @@
 #pragma once
 
+// TODO: add release and debug libs based on compile configuration
 #pragma comment(lib, "bullet/Bullet2FileLoader_Debug.lib")
 #pragma comment(lib, "bullet/Bullet3Collision_Debug.lib")
 #pragma comment(lib, "bullet/Bullet3Common_Debug.lib")
@@ -55,6 +56,7 @@ public:
 	// Exports all the data of the scene (including all objects within) as a PropertySet (for example, used for saving to map file)
 	PropertySet exportObject() { return PropertySet(); }
 
+	SystemObject *createComponent(const EntityID &p_entityID, const std::string &p_entityName, const PropertySet &p_properties);
 	SystemObject *createObject(const PropertySet &p_properties);
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
@@ -69,7 +71,7 @@ private:
 	// Removes an object from a pool, by iterating checking each pool for matched index; returns true if the object was found and removed
 	inline bool removeObjectFromPool(PhysicsObject &p_object)
 	{
-		// Go over each physics object
+		/*/ Go over each physics object
 		for(decltype(m_physicsObjects.getPoolSize()) i = 0, numAllocObjecs = 0, totalNumAllocObjs = m_physicsObjects.getNumAllocated(),
 			size = m_physicsObjects.getPoolSize(); i < size && numAllocObjecs < totalNumAllocObjs; i++)
 		{
@@ -86,7 +88,7 @@ private:
 					return true;
 				}
 			}
-		}
+		}*/
 
 		return false;
 	}
@@ -97,9 +99,6 @@ private:
 	}
 
 	PhysicsTask *m_physicsTask;
-
-	// Object pools
-	ObjectPool<PhysicsObject> m_physicsObjects;
 
 	// Collision configuration
 	btDefaultCollisionConfiguration *m_collisionConfiguration;

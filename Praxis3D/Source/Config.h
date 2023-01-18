@@ -133,16 +133,18 @@ namespace Systems
 			static constexpr BitMask LocalRotation			= Changes::Type::Spatial + Changes::Common::Shared2;
 			static constexpr BitMask LocalScale				= Changes::Type::Spatial + Changes::Common::Shared3;
 			static constexpr BitMask LocalTransform			= Changes::Type::Spatial + Changes::Common::Shared4;
+			static constexpr BitMask LocalTransformNoScale	= Changes::Type::Spatial + Changes::Common::Shared5;
 
-			static constexpr BitMask WorldPosition			= Changes::Type::Spatial + Changes::Common::Shared5;
-			static constexpr BitMask WorldRotation			= Changes::Type::Spatial + Changes::Common::Shared6;
-			static constexpr BitMask WorldScale				= Changes::Type::Spatial + Changes::Common::Shared7;
-			static constexpr BitMask WorldTransform			= Changes::Type::Spatial + Changes::Common::Shared8;
+			static constexpr BitMask WorldPosition			= Changes::Type::Spatial + Changes::Common::Shared6;
+			static constexpr BitMask WorldRotation			= Changes::Type::Spatial + Changes::Common::Shared7;
+			static constexpr BitMask WorldScale				= Changes::Type::Spatial + Changes::Common::Shared8;
+			static constexpr BitMask WorldTransform			= Changes::Type::Spatial + Changes::Common::Shared9;
+			static constexpr BitMask WorldTransformNoScale	= Changes::Type::Spatial + Changes::Common::Shared10;
 
 			static constexpr BitMask AllLocalNoTransform	= LocalPosition | LocalRotation | LocalScale;
 			static constexpr BitMask AllWorldNoTransform	= WorldPosition | WorldRotation | WorldScale;
-			static constexpr BitMask AllLocal				= AllLocalNoTransform | LocalTransform;
-			static constexpr BitMask AllWorld				= AllWorldNoTransform | WorldTransform;
+			static constexpr BitMask AllLocal				= AllLocalNoTransform | LocalTransform | LocalTransformNoScale;
+			static constexpr BitMask AllWorld				= AllWorldNoTransform | WorldTransform | WorldTransformNoScale;
 			static constexpr BitMask All					= AllLocal | AllWorld;
 		}
 		namespace Audio
@@ -317,10 +319,13 @@ namespace Properties
 	Code(Cone,) \
 	Code(ConvexHull,) \
 	Code(Cylinder,) \
+	Code(Friction,) \
 	Code(Gravity,) \
+	Code(Kinematic,) \
 	Code(Mass,) \
 	Code(Physics,) \
 	Code(PhysicsObject,) \
+	Code(Restitution,) \
 	Code(RigidBody,) \
 	Code(RigidBodyComponent,) \
 	Code(Size,) \
@@ -377,182 +382,8 @@ namespace Properties
 	Code(NumberOfPropertyIDs,) 
 	DECLARE_ENUM(PropertyID, PROPERTYID)
 
-	const static std::string PropertyNames[PropertyID::NumberOfPropertyIDs] =
-	{
-		GetString(Null),
-		GetString(ArrayEntry),
-		GetString(Components),
-		GetString(Default),
-		GetString(Filename),
-		GetString(Index),
-		GetString(Keybindings),
-		GetString(LoadInBackground),
-		GetString(Name),
-		GetString(Objects),
-		GetString(ObjectPoolSize),
-		GetString(Scene),
-		GetString(Systems),
-		GetString(Type),
-		GetString(Value),
-		GetString(Variables),
-		GetString(OffsetPosition),
-		GetString(OffsetRotation),
-		GetString(LocalPosition),
-		GetString(LocalRotation),
-		GetString(LocalRotationQuaternion),
-		GetString(LocalScale),
-		GetString(WorldPosition),
-		GetString(WorldRotation),
-		GetString(WorldRotationQuaternion),
-		GetString(WorldScale),
-		GetString(AlphaThreshold),
-		GetString(AmbientOcclusion),
-		GetString(Attenuation),
-		GetString(Camera),
-		GetString(CameraComponent),
-		GetString(Color),
-		GetString(CombinedTexture),
-		GetString(ComputeShader),
-		GetString(CutoffAngle),
-		GetString(Diffuse),
-		GetString(Direction),
-		GetString(DirectionalLight),
-		GetString(Emissive),
-		GetString(EnvironmentMapDynamic),
-		GetString(EnvironmentMapObject),
-		GetString(FragmentShader),
-		GetString(GeometryShader),
-		GetString(Graphics),
-		GetString(GraphicsObject),
-		GetString(Height),
-		GetString(HeightScale),
-		GetString(Intensity),
-		GetString(LightComponent),
-		GetString(Lighting),
-		GetString(Materials),
-		GetString(Metalness),
-		GetString(Meshes),
-		GetString(Models),
-		GetString(ModelComponent),
-		GetString(ModelObject),
-		GetString(ModelPoolSize),
-		GetString(NegativeX),
-		GetString(NegativeY),
-		GetString(NegativeZ),
-		GetString(Normal),
-		GetString(ParallaxHeightScale),
-		GetString(PointLight),
-		GetString(PointLightPoolSize),
-		GetString(PositiveX),
-		GetString(PositiveY),
-		GetString(PositiveZ),
-		GetString(PostProcess),
-		GetString(Renderer),
-		GetString(Rendering),
-		GetString(RMHAO),
-		GetString(Roughness),
-		GetString(Shaders),
-		GetString(ShaderComponent),
-		GetString(ShaderPoolSize),
-		GetString(ShaderGraphicsObject),
-		GetString(ShaderModelObject),
-		GetString(SpotLight),
-		GetString(SpotLightPoolSize),
-		GetString(Static),
-		GetString(TessControlShader),
-		GetString(TessEvaluationShader),
-		GetString(TextureTilingFactor),
-		GetString(TextureScale),
-		GetString(VertexShader),
-		GetString(GUI),
-		GetString(GUIObject),
-		GetString(GUISequenceComponent),
-		GetString(Sequence),
-		GetString(BackwardKey),
-		GetString(CenterKey),
-		GetString(CloseKey),
-		GetString(DebugCaptureMouseKey),
-		GetString(DebugFullscreenKey),
-		GetString(DebugVertSyncKey),
-		GetString(DownKey),
-		GetString(ForwardKey),
-		GetString(LeftKey),
-		GetString(LeftStrafeKey),
-		GetString(ModifierKey),
-		GetString(NextKey),
-		GetString(PreviousKey),
-		GetString(RightKey),
-		GetString(RightStrafeKey),
-		GetString(SaveKey),
-		GetString(SprintKey),
-		GetString(UpKey),
-		GetString(ObjectLinks),
-		GetString(Observer),
-		GetString(Subject),
-		// Physics
-		GetString(Box),
-		GetString(Capsule),
-		GetString(CollisionShape),
-		GetString(CollisionShapeComponent),
-		GetString(Cone),
-		GetString(ConvexHull),
-		GetString(Cylinder),
-		GetString(Gravity),
-		GetString(Mass),
-		GetString(Physics),
-		GetString(PhysicsObject),
-		GetString(RigidBody),
-		GetString(RigidBodyComponent),
-		GetString(Size),
-		GetString(Sphere),
-		// Script
-		GetString(Angle),
-		GetString(Axis),
-		GetString(Azimuth),
-		GetString(BaseUIScript),
-		GetString(Day),
-		GetString(DayOfYear),
-		GetString(DebugMoveScript),
-		GetString(DebugRotateScript),
-		GetString(DebugUIScript),
-		GetString(FreeCamera),
-		GetString(Latitude),
-		GetString(Longitude),
-		GetString(LowerLimit),
-		GetString(Lua),
-		GetString(LuaComponent),
-		GetString(InputScript),
-		GetString(Hours),
-		GetString(KeyCode),
-		GetString(KeyName),
-		GetString(Minutes),
-		GetString(Month),
-		GetString(Radius),
-		GetString(Script),
-		GetString(ScriptObject),
-		GetString(Seconds),
-		GetString(SolarTimeScript),
-		GetString(Speed),
-		GetString(SprintSpeed),
-		GetString(SunScript),
-		GetString(TimeMultiplier),
-		GetString(TimeZone),
-		GetString(Year),
-		GetString(UpperLimit),
-		GetString(WorldEditScript),
-		GetString(Zenith),
-		GetString(Fullscreen),
-		GetString(MouseCapture),
-		GetString(VerticalSync),
-		GetString(WindowTitle),
-		// World
-		GetString(Children),
-		GetString(GameObject),
-		GetString(ID),
-		GetString(Parent),
-		GetString(SpatialComponent),
-		GetString(World)
-	};
+	// Declare a string array of all PropertyID names, that is used for matching strings to PropertyIDs
+	DECLARE_NAME_ARRAY(PropertyID, PROPERTYID)
 
 	// A few overloaded static functions to convert other values to PropertyID enum
 	// Note: converting from string here is very slow, and would be better implemented
@@ -587,7 +418,7 @@ namespace Properties
 
 		// Iterate over all PropertyIDs and compare the string to property name
 		for(int i = 0; i < Properties::PropertyID::NumberOfPropertyIDs; i++)
-			if(Properties::PropertyNames[i] == p_value)
+			if(Properties::PropertyIDNames[i] == p_value)
 				return static_cast<Properties::PropertyID>(i);
 
 		// If this point is reached, no match was found, return null ID
@@ -714,9 +545,9 @@ public:
 			gl_blur_buffer_wrap_s_method = GL_CLAMP_TO_EDGE;
 			gl_blur_buffer_wrap_t_method = GL_CLAMP_TO_EDGE;
 
-			gl_final_buffer_min_filter_HDR = GL_LINEAR_MIPMAP_NEAREST;
-			gl_final_buffer_min_filter = GL_NEAREST;
-			gl_final_buffer_mag_filter = GL_NEAREST;
+			gl_final_buffer_min_filter_HDR = GL_LINEAR_MIPMAP_LINEAR;
+			gl_final_buffer_min_filter = GL_LINEAR;
+			gl_final_buffer_mag_filter = GL_LINEAR;
 			gl_final_buffer_s_method = GL_CLAMP_TO_EDGE;
 			gl_final_buffer_t_method = GL_CLAMP_TO_EDGE;
 		}
@@ -942,7 +773,7 @@ public:
 			right_strafe_key = 7;
 			save_editor_key = 22;
 			sprint_key = 225;
-			up_editor_key = 75;
+			up_editor_key = 95;
 			up_key = 44;
 			vsync_key = 68;
 			mouse_filter = false;
@@ -1040,6 +871,7 @@ public:
 			map_path = "Data\\Maps\\";
 			model_path = "Data\\Models\\";
 			object_path = "Data\\Objects\\";
+			prefab_path = "Data\\Prefabs\\";
 			script_path = "Data\\Scripts\\";
 			shader_path = "Data\\Shaders\\";
 			sound_path = "Data\\Sounds\\";
@@ -1050,6 +882,7 @@ public:
 		std::string map_path;
 		std::string model_path;
 		std::string object_path;
+		std::string prefab_path;
 		std::string script_path;
 		std::string shader_path;
 		std::string sound_path;

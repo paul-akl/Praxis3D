@@ -38,7 +38,7 @@ struct SpatialData
 		m_rotationQuat = glm::quat();
 	}
 
-	glm::vec3 m_position,
+	glm::vec3	m_position,
 				m_rotationEuler,
 				m_scale;
 	glm::quat m_rotationQuat;

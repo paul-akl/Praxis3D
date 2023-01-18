@@ -140,16 +140,18 @@ SystemObject *WorldScene::createObject(const PropertySet &p_properties)
 		}
 	}
 
+	SpatialComponent *spatialComponent = nullptr;
+
 	// Add WORLD components
 	auto &worldProperty = p_properties.getPropertySetByID(Properties::World);
 	if(worldProperty)
 	{
-		// Add SPACIAL COMPONENT
+		// Add SPATIAL COMPONENT
 		auto &spatialComponentProperty = worldProperty.getPropertySetByID(Properties::SpatialComponent);
 		if(spatialComponentProperty)
 		{
 			//auto spatial = m_entityRegistry.emplace<SpatialComponent>(newEntity, this, name);
-			SpatialComponent &newSpatialComponent = addComponent<SpatialComponent>(newEntity, this, name + Config::componentVar().component_name_separator + GetString(Properties::SpatialComponent));
+			SpatialComponent &newSpatialComponent = addComponent<SpatialComponent>(newEntity, this, name + Config::componentVar().component_name_separator + GetString(Properties::SpatialComponent), newEntity);
 
 			// Load property data
 			for(decltype(spatialComponentProperty.getNumProperties()) i = 0, size = spatialComponentProperty.getNumProperties(); i < size; i++)
@@ -173,6 +175,8 @@ SystemObject *WorldScene::createObject(const PropertySet &p_properties)
 
 			// Perform a spatial data update, so that all the transform matrices are calculated
 			newSpatialComponent.m_spatialData.update();
+
+			spatialComponent = &newSpatialComponent;
 		}
 	}
 
@@ -229,18 +233,54 @@ SystemObject *WorldScene::createObject(const PropertySet &p_properties)
 			{
 				auto *component = scene->createComponent(newEntity, name, sceneProperty.getPropertySet(i));
 
-				auto *spatialComponent = m_entityRegistry.try_get<SpatialComponent>(newEntity);
-				if(spatialComponent != nullptr)
-					m_sceneLoader->getChangeController()->createObjectLink(component, spatialComponent);
+				//auto *spatialComponent = m_entityRegistry.try_get<SpatialComponent>(newEntity);
+				//if(spatialComponent != nullptr)
+				//	m_sceneLoader->getChangeController()->createObjectLink(component, spatialComponent);
 
 				// Create subject-observer object links between scripting components (subject) and GUI components (observers)
-				for(decltype(guiComponents.size()) size = guiComponents.size(), i = 0; i < size; i++)
-					m_sceneLoader->getChangeController()->createObjectLink(component, guiComponents[i]);
+				//for(decltype(guiComponents.size()) size = guiComponents.size(), i = 0; i < size; i++)
+				//	m_sceneLoader->getChangeController()->createObjectLink(component, guiComponents[i]);
 
 				scriptingComponents.push_back(component);
 			}
 		}
 	}
+
+	// Link subjects and observers of different components
+
+	if(spatialComponent != nullptr)
+	{
+		// Link PHYSICS -> SPATIAL
+		for(decltype(physicsComponents.size()) i = 0, size = physicsComponents.size(); i < size; i++)
+		{
+			m_sceneLoader->getChangeController()->createObjectLink(physicsComponents[i], spatialComponent);
+		}
+	}
+
+	// Link SCRIPTING
+	for(decltype(scriptingComponents.size()) scriptingIndex = 0, scriptingSize = scriptingComponents.size(); scriptingIndex < scriptingSize; scriptingIndex++)
+	{
+		// If there are no physics components, link to spatial directly. If there are physics components, link to physics components instead
+		if(physicsComponents.empty())
+		{
+			// Link SCRIPTING -> SPATIAL
+			if(spatialComponent != nullptr)
+				m_sceneLoader->getChangeController()->createObjectLink(scriptingComponents[scriptingIndex], spatialComponent);
+		}
+		else
+		{
+			// Link SCRIPTING -> PHYSICS
+			for(decltype(physicsComponents.size()) physicsIndex = 0, physicsSize = physicsComponents.size(); physicsIndex < physicsSize; physicsIndex++)
+				m_sceneLoader->getChangeController()->createObjectLink(scriptingComponents[scriptingIndex], physicsComponents[physicsIndex]);
+		}
+			
+		// Link SCRIPTING -> GUI
+		for(decltype(guiComponents.size()) guiIndex = 0, guiSize = guiComponents.size(); guiIndex < guiSize; guiIndex++)
+		{
+			m_sceneLoader->getChangeController()->createObjectLink(scriptingComponents[scriptingIndex], guiComponents[guiIndex]);
+		}
+	}
+
 
 	return newGameObject;
 

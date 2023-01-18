@@ -271,7 +271,7 @@ void RendererScene::update(const float p_deltaTime)
 	m_sceneObjects.m_spotLights.clear();
 	m_sceneObjects.m_loadToVideoMemory.clear();
 
-	// Get the world scene required for attaching components to the entity
+	// Get the world scene required for getting the entity registry
 	WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
 
 	// Get the entity registry 
@@ -914,7 +914,6 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const s
 		{
 			case Properties::PropertyID::CameraComponent:
 			{
-				//auto &component = worldScene->addComponent<CameraComponent>(p_entityID, this, p_entityName + Config::componentVar().camera_component_name);
 				auto &component = worldScene->addComponent<CameraComponent>(p_entityID, this, p_entityName + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::CameraComponent), p_entityID);
 
 				// Try to initialize the camera component

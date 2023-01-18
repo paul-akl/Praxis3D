@@ -9,8 +9,8 @@ class SpatialComponent : public SystemObject
 {
 	friend class WorldScene;
 public:
-	SpatialComponent(SystemScene *p_systemScene, const std::string &p_name)
-		: SystemObject(p_systemScene, p_name, Properties::SpatialComponent), m_spatialData(*this) //m_spatialData{*this, *this}
+	SpatialComponent(SystemScene *p_systemScene, const std::string &p_name, EntityID p_entityID)
+		: SystemObject(p_systemScene, p_name, Properties::SpatialComponent, p_entityID), m_spatialData(*this) //m_spatialData{*this, *this}
 	{
 	}
 	~SpatialComponent()
@@ -62,7 +62,13 @@ public:
 		BitMask newChanges = Systems::Changes::None;
 
 		// Process the spatial changes and record the world-space changes
-		newChanges = m_spatialData.changeOccurred(*p_subject, p_changeType & Systems::Changes::Spatial::All);
+		/*newChanges = */m_spatialData.changeOccurred(*p_subject, p_changeType & Systems::Changes::Spatial::All);
+
+		// Update spatial data
+		m_spatialData.update();
+
+		// Get any changes of the spatial data
+		newChanges = m_spatialData.getCurrentChangesAndReset();
 
 		// If any data has been updated, post the changes to listeners
 		if(newChanges != Systems::Changes::None)

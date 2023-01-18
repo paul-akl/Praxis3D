@@ -182,6 +182,13 @@ public:
 						setLocalTransform(p_subject.getMat4(&m_parent, Systems::Changes::Spatial::LocalTransform));
 						localOrWorldTransformChanged = true;
 					}
+
+					if(CheckBitmask(p_changeType, Systems::Changes::Spatial::LocalTransformNoScale))
+					{
+						// Scale the local transform before assigning it
+						setLocalTransform(glm::scale(p_subject.getMat4(&m_parent, Systems::Changes::Spatial::LocalTransform), m_localSpace.m_spatialData.m_scale));
+						localOrWorldTransformChanged = true;
+					}
 				}
 			}
 
@@ -195,7 +202,7 @@ public:
 			{
 				if(CheckBitmask(p_changeType, Systems::Changes::Spatial::WorldTransform))
 				{
-					setWorldTransform(p_subject.getMat4(&m_parent, Systems::Changes::Spatial::WorldTransform));
+					setParentTransform(p_subject.getMat4(&m_parent, Systems::Changes::Spatial::WorldTransform));
 					localOrWorldTransformChanged = true;
 				}
 			}
@@ -257,6 +264,12 @@ public:
 		case Systems::Changes::Spatial::LocalTransform:
 			return m_localSpace.m_transformMat;
 
+		// Construct a local transform matrix without scaling it
+		case Systems::Changes::Spatial::LocalTransformNoScale:
+			return Math::createTransformMat(
+				m_localSpace.m_spatialData.m_position,
+				m_localSpace.m_spatialData.m_rotationQuat);
+		
 		case Systems::Changes::Spatial::WorldTransform:
 			return m_worldTransform;
 		}

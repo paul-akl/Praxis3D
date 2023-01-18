@@ -33,7 +33,17 @@
 
 namespace Math
 {
-	const glm::mat4 createTransformMat(const glm::vec3 &p_position, const glm::vec3 &p_rotation, const glm::vec3 &p_scale);
+	const glm::mat4 createTransformMat(const glm::vec3 &p_position, const glm::vec3 &p_rotation, const glm::vec3 &p_scale);	
+	const inline glm::mat4 createTransformMat(const glm::vec3 &p_position, const glm::quat &p_rotation)
+	{
+		glm::mat4 returnMatrix(1.0f);
+
+		returnMatrix = glm::translate(returnMatrix, p_position);
+
+		returnMatrix *= glm::toMat4(p_rotation);
+
+		return returnMatrix;
+	}
 	const inline glm::mat4 createTransformMat(const glm::vec3 &p_position, const glm::quat &p_rotation, const glm::vec3 &p_scale)
 	{
 		glm::mat4 returnMatrix(1.0f);
@@ -74,6 +84,8 @@ namespace Math
 	}
 
 	const inline btVector3 toBtVector3(const glm::vec3 p_vec) { return btVector3(p_vec.x, p_vec.y, p_vec.z); }
+
+	const inline btVector3 toBtVector3(const glm::vec4 p_vec) { return btVector3(p_vec.x, p_vec.y, p_vec.z); }
 
 	const inline glm::vec3 toGlmVec3(const btVector3 &p_vec) { return glm::vec3(p_vec.getX(), p_vec.getY(), p_vec.getZ()); }
 

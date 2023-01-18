@@ -64,6 +64,7 @@ public:
 	const virtual glm::quat				&getQuaternion(const Observer *p_observer, BitMask p_changedBits)			const { return NullObjects::NullQuaterion;				}
 	const virtual glm::vec3				&getVec3(const Observer *p_observer, BitMask p_changedBits)					const { return NullObjects::NullVec3f;					}
 	const virtual glm::vec4				&getVec4(const Observer *p_observer, BitMask p_changedBits)					const { return NullObjects::NullVec4f;					}
+	const virtual glm::mat3				&getMat3(const Observer *p_observer, BitMask p_changedBits)					const { return NullObjects::NullMat3f;					}
 	const virtual glm::mat4				&getMat4(const Observer *p_observer, BitMask p_changedBits)					const { return NullObjects::NullMat4f;					}
 	const virtual bool					getBool(const Observer *p_observer, BitMask p_changedBits)					const { return NullObjects::NullBool;					}
 	const virtual int					getInt(const Observer *p_observer, BitMask p_changedBits)					const { return NullObjects::NullInt;					}

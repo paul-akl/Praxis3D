@@ -66,7 +66,7 @@ void ScriptScene::update(const float p_deltaTime)
 		if(luaComponent.isObjectActive())
 		{
 			// Update the object
-			luaComponent.update(p_deltaTime, spatialComponent);
+  			luaComponent.update(p_deltaTime, spatialComponent);
 		}
 	}
 

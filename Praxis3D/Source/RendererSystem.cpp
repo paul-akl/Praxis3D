@@ -24,7 +24,7 @@ ErrorCode RendererSystem::init()
 	// Check if the renderer initialization was successful
 	if(returnCode == ErrorCode::Success)
 	{
-		ErrHandlerLoc::get().log(ErrorType::Info, ErrorSource::Source_Renderer, "Renderer has been initialized");
+		ErrHandlerLoc::get().log(ErrorCode::Initialize_success, ErrorSource::Source_RendererSystem);
 	}
 
 	return returnCode;

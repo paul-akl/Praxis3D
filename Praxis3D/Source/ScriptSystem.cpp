@@ -19,7 +19,7 @@ ErrorCode ScriptSystem::init()
 {
 	ErrorCode returnCode = ErrorCode::Success;
 	
-	ErrHandlerLoc::get().log(ErrorType::Info, ErrorSource::Source_Script, "Script system has been initialized");
+	ErrHandlerLoc::get().log(ErrorCode::Initialize_success, ErrorSource::Source_Script);
 	
 	return returnCode;
 }

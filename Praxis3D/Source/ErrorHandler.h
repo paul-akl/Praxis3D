@@ -24,6 +24,7 @@ public:
 	virtual void log(ErrorCode p_errorCode, ErrorSource p_errorSource) = 0;
 	virtual void log(ErrorType p_errorType, ErrorSource p_errorSource, std::string p_error) = 0;
 	virtual void log(ErrorCode p_errorCode, ErrorSource p_errorSource, std::string p_error) = 0;
+	virtual void log(const ErrorCode p_errorCode, const std::string &p_objectName, const ErrorSource p_errorSource) = 0;
 
 	// This should be used when trying to pass an error code and an error string as a return. So instead of logging
 	// the error immediately, it is cached and then can be retrieved later (presumably from higher scope / parent, etc).
@@ -48,6 +49,7 @@ public:
 	void log(ErrorCode p_errorCode, ErrorSource p_errorSource);
 	void log(ErrorType p_errorType, ErrorSource p_errorSource, std::string p_error);
 	void log(ErrorCode p_errorCode, ErrorSource p_errorSource, std::string p_error);
+	void log(const ErrorCode p_errorCode, const std::string &p_objectName, const ErrorSource p_errorSource);
 
 	// Note: Unusable at the time - needs to be updated to be thread safe (using TLS for example)
 	//inline ErrorCode cacheError(ErrorCode p_errorCode, std::string p_error) { m_cachedError.cache(p_errorCode, p_error); return ErrorCode::CachedError; }
@@ -110,7 +112,6 @@ private:
 	};
 	
 	ErrorData m_errorData[ErrorCode::NumberOfErrorCodes];
-	ErrorType m_errorTypes[NumberOfErrorCodes];
 
 	std::string m_errorTypeStrings[NumberOfErrorTypes];
 	std::string m_errorSources[Source_NumberOfErrorSources];
@@ -136,6 +137,7 @@ public:
 	void log(ErrorCode p_errorCode, ErrorSource p_errorSource) { printf("Error: %i.\n", p_errorCode); }
 	void log(ErrorType p_errorType, ErrorSource p_errorSource, std::string p_error) { printf("Error: %s.\n", p_error.c_str()); }
 	void log(ErrorCode p_errorCode, ErrorSource p_errorSource, std::string p_error) { printf("Error: %i.\n", p_errorCode); }
+	void log(const ErrorCode p_errorCode, const std::string &p_objectName, const ErrorSource p_errorSource) { printf("Error: %s: %i.\n", p_objectName.c_str(), p_errorCode); }
 
 	bool ifSuccessful(ErrorCode p_errorCode, ErrorCode &p_returnCode) { p_returnCode = p_errorCode; return p_errorCode == ErrorCode::Success; }
 	//ErrorCode cacheError(ErrorCode p_errorCode, std::string p_error) { return ErrorCode::Undefined; }
