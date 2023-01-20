@@ -39,8 +39,16 @@ public:
 	// Get the world transform in the form of glm::mat4
 	const inline glm::mat4 &getWorldTransform() const { return m_graphicsWorldTrans; }
 
-	const glm::vec3 getPosition()		const { return Math::toGlmVec3(m_centerOfMassWorldTrans.getOrigin());	}
-	const glm::quat getRotation()		const { return Math::toGlmQuat(m_centerOfMassWorldTrans.getRotation()); }
+	const glm::vec3 &getPosition() const
+	{ 
+		m_tempPosition = Math::toGlmVec3(m_centerOfMassWorldTrans.getOrigin());
+		return m_tempPosition;
+	}
+	const glm::quat &getRotation() const
+	{ 
+		m_tempRotation = Math::toGlmQuat(m_centerOfMassWorldTrans.getRotation());
+		return m_tempRotation;
+	}
 
 	void setPosition(const glm::vec3 &p_position)
 	{
@@ -96,6 +104,9 @@ public:
 	const inline void resetMotionStateDirtyFlag() { m_motionStateDirty = false; }
 
 private:
+	// Mutable spatial data used in const getters required by on observer
+	mutable glm::vec3 m_tempPosition;
+	mutable glm::quat m_tempRotation;
 
 	btTransform m_centerOfMassWorldTrans;
 	glm::mat4 m_graphicsWorldTrans;

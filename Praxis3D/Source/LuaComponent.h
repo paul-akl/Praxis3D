@@ -13,6 +13,17 @@ class LuaComponent : public SystemObject, public SpatialDataManagerObject, publi
 {
 	friend class ScriptScene;
 public:
+	struct LuaComponentConstructionInfo : public SystemObject::SystemObjectConstructionInfo
+	{
+		LuaComponentConstructionInfo()
+		{
+
+		}
+
+		std::string m_luaScriptFilename;
+		std::vector<std::pair<std::string, Property>> m_variables;
+	};
+
 	LuaComponent(SystemScene *p_systemScene, std::string p_name, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::LuaComponent), m_luaSpatialData(*this), m_GUIData(*this)
 	{
 		m_luaScript = new LuaScript(m_luaSpatialData, m_GUIData);
@@ -26,7 +37,7 @@ public:
 
 	ErrorCode init() final override
 	{
-		// Mark the object as loaded, because there is nothing to be specifically loaded, at least for now
+		// Mark the object as loaded, because there is nothing to be specifically load, at least for now
 		//setLoadedToMemory(true);
 		//setLoadedToVideoMemory(true);
 
@@ -42,7 +53,8 @@ public:
 		else
 			m_luaScriptLoaded = true;
 
-		setActive(true);
+		setLoadedToMemory(true);
+		setActive(m_setActiveAfterLoading);
 	}
 
 	void update(const float p_deltaTime)

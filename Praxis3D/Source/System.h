@@ -13,6 +13,7 @@ class SceneLoader;
 class SystemObject;
 class SystemScene;
 class SystemTask;
+struct ComponentsConstructionInfo;
 
 class ImportExportObject
 {
@@ -56,7 +57,7 @@ class SystemScene : public ObservedSubject, public Observer
 	friend SystemBase;
 public:
 	SystemScene(SystemBase *p_system, SceneLoader *p_sceneLoader)
-		: m_initialized(false), m_system(p_system), m_sceneLoader(p_sceneLoader){ }
+		: m_initialized(false), m_system(p_system), m_sceneLoader(p_sceneLoader) { }
 	//~SystemScene();
 
 	SystemBase *getSystem() { return m_system; }
@@ -72,11 +73,11 @@ public:
 	virtual void loadInBackground() = 0;
 
 	// Exports all the data of the scene (including all objects within) as a PropertySet (for example, used for saving to map file)
-	virtual PropertySet exportObject() { return PropertySet(Properties::Null); }
+	//virtual PropertySet exportObject() { return PropertySet(Properties::Null); }
 
-	virtual SystemObject *createComponent(const EntityID &p_entityID, const std::string &p_entityName, const PropertySet &p_properties);
-	virtual SystemObject *createObject(const PropertySet &p_properties) = 0;
+	virtual std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo);
 	virtual ErrorCode destroyObject(SystemObject *p_systemObject) = 0;
+	virtual SystemObject *getNullObject();
 
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
 
@@ -95,6 +96,18 @@ class SystemObject : public ObservedSubject, public Observer, public ImportExpor
 	friend SystemBase;
 	friend SystemScene;
 public:
+	struct SystemObjectConstructionInfo
+	{
+		SystemObjectConstructionInfo()
+		{
+			m_active = true;
+			m_name = "null";
+		}
+
+		bool m_active;
+		std::string m_name;
+	};
+
 	SystemObject();
 	SystemObject(SystemScene *p_systemScene, const std::string &p_name, Properties::PropertyID p_objectType, EntityID p_entityID = NULL_ENTITY_ID);
 	~SystemObject();

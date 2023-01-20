@@ -227,6 +227,7 @@
     <ClInclude Include="Source\CollisionShapeComponent.h" />
     <ClInclude Include="Source\CommandBuffer.h" />
     <ClInclude Include="Source\CommonDefinitions.h" />
+    <ClInclude Include="Source\ComponentConstructorInfo.h" />
     <ClInclude Include="Source\Config.h" />
     <ClInclude Include="Source\ConfigLoader.h" />
     <ClInclude Include="Source\Containers.h" />

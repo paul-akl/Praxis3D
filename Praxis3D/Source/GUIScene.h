@@ -6,6 +6,23 @@
 #include "System.h"
 
 class GUISystem;
+struct ComponentsConstructionInfo;
+
+struct GUIComponentsConstructionInfo
+{
+	GUIComponentsConstructionInfo()
+	{
+		m_guiSequenceConstructionInfo = nullptr;
+	}
+
+	void deleteConstructionInfo()
+	{
+		if(m_guiSequenceConstructionInfo != nullptr)
+			delete m_guiSequenceConstructionInfo;
+	}
+
+	GUISequenceComponent::GUISequenceComponentConstructionInfo *m_guiSequenceConstructionInfo;
+};
 
 class GUIScene : public SystemScene
 {
@@ -23,11 +40,18 @@ public:
 
 	void loadInBackground();
 
-	// Exports all the data of the scene (including all objects within) as a PropertySet (for example, used for saving to map file)
-	PropertySet exportObject() { return PropertySet(); }
+	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo);
+	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const GUIComponentsConstructionInfo &p_constructionInfo)
+	{
+		std::vector<SystemObject *> components;
 
-	SystemObject *createComponent(const EntityID &p_entityID, const std::string &p_entityName, const PropertySet &p_properties);
-	SystemObject *createObject(const PropertySet& p_properties);
+		if(p_constructionInfo.m_guiSequenceConstructionInfo != nullptr)
+			components.push_back(createComponent(p_entityID, *p_constructionInfo.m_guiSequenceConstructionInfo));
+
+		return components;
+	}
+
+	SystemObject *createComponent(const EntityID p_entityID, const GUISequenceComponent::GUISequenceComponentConstructionInfo &p_constructionInfo);
 	ErrorCode destroyObject(SystemObject* p_systemObject);
 
 	void changeOccurred(ObservedSubject* p_subject, BitMask p_changeType) { }

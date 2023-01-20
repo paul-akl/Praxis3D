@@ -5,6 +5,13 @@
 #include "PropertySet.h"
 #include "Universal.h"
 
+struct ComponentsConstructionInfo;
+struct GraphicsComponentsConstructionInfo;
+struct GUIComponentsConstructionInfo;
+struct PhysicsComponentsConstructionInfo;
+struct ScriptComponentsConstructionInfo;
+struct WorldComponentsConstructionInfo;
+
 // Loads and links various objects by requesting them from registered scenes.
 // Uses property sets to send data to scenes (about specific objects).
 class SceneLoader
@@ -13,6 +20,7 @@ public:
 	SceneLoader()
 	{
 		m_changeController = nullptr;
+		m_loadInBackground = false;
 
 		for(int i = 0; i < Systems::NumberOfSystems; i++)
 			m_systemScenes[i] = g_nullSystemBase.createScene(this);
@@ -43,6 +51,13 @@ public:
 	ErrorCode saveToFile(const std::string p_filename = "");
 
 private:
+	void importFromProperties(ComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties);
+	void importFromProperties(GraphicsComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name);
+	void importFromProperties(GUIComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name);
+	void importFromProperties(PhysicsComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name);
+	void importFromProperties(ScriptComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name);
+	void importFromProperties(WorldComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name);
+
 	SystemScene *m_systemScenes[Systems::NumberOfSystems];
 
 	std::vector<std::pair<const std::string&, SystemObject*>> m_createdObjects[Systems::NumberOfSystems];

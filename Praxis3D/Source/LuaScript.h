@@ -133,6 +133,12 @@ public:
 	inline void setScriptFilename(std::string &p_filename) { m_luaScriptFilename = p_filename; }
 
 	// Set the variables so they can be accessed from inside the lua script
+	inline void setVariables(const std::vector<std::pair<std::string, Property>> &p_variables)
+	{
+		m_variables = p_variables;
+	}
+
+	// Set the variables so they can be accessed from inside the lua script
 	inline void setVariables(const PropertySet &p_properties)
 	{
 		if(p_properties && p_properties.getPropertyID() == Properties::Variables)

@@ -8,6 +8,77 @@ class ModelComponent : public SystemObject, public LoadableGraphicsObject
 {
 	friend class RendererScene;
 public:
+	struct MeshMaterialsProperties
+	{
+		MeshMaterialsProperties()
+		{
+			m_numOfMeshes = 0;
+		}
+
+		void resize(const std::size_t p_size)
+		{
+			if(p_size > m_numOfMeshes)
+			{
+				m_numOfMeshes = p_size;
+
+
+				// Resize mesh materials
+				if(p_size > m_meshMaterials.size())
+				{
+					std::vector<std::string> emptyStrings(MaterialType::MaterialType_NumOfTypes);
+					m_meshMaterials.resize(p_size, emptyStrings);
+					//m_meshMaterials.emplace_back(emptyStrings);
+				}
+
+				// Resize mesh materials scale and initialize each element to 1.0f
+				const auto oldSize = m_meshMaterialsScale.size();
+				if(p_size > oldSize)
+				{
+					std::vector<glm::vec2> emptyVec2(MaterialType::MaterialType_NumOfTypes, glm::vec2(1.0f, 1.0f));
+					m_meshMaterialsScale.resize(p_size, emptyVec2);
+
+					//for(size_t i = oldSize; i < p_size; i++)
+					//	for(unsigned int iMatType = 0; iMatType < MaterialType::MaterialType_NumOfTypes; iMatType++)
+					//		m_meshMaterialsScale[i][iMatType] = glm::vec2(1.0f, 1.0f);
+				}
+
+				// Resize mesh material alpha threshold and initialize each element to 0.0f
+				if(p_size > m_alphaThreshold.size())
+					m_alphaThreshold.resize(p_size, 0.0f);
+
+				// Resize mesh material height scale and initialize each element to 1.0f
+				if(p_size > m_heightScale.size())
+					m_heightScale.resize(p_size, 1.0f);
+
+				// Resize the "mesh is present" array and initialize each element to false
+				if(p_size > m_present.size())
+					m_present.resize(p_size, false);
+			}
+		}
+
+		std::size_t m_numOfMeshes;
+		std::vector<std::vector<std::string>> m_meshMaterials;
+		std::vector< std::vector<glm::vec2>> m_meshMaterialsScale;
+		std::vector<float> m_alphaThreshold;
+		std::vector<float> m_heightScale;
+		std::vector<bool> m_present;
+	};
+	struct ModelsProperties
+	{
+		std::vector<std::string> m_modelNames;
+	};
+
+	struct ModelComponentConstructionInfo : public SystemObject::SystemObjectConstructionInfo
+	{
+		ModelComponentConstructionInfo()
+		{
+
+		}
+
+		ModelsProperties m_modelsProperties;
+		MeshMaterialsProperties m_materialsFromProperties;
+	};
+
 	ModelComponent(SystemScene *p_systemScene, std::string p_name, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::Models, p_entityID)
 	{
 		m_materialsFromProperties = nullptr;
@@ -91,6 +162,9 @@ public:
 				}
 			}
 		}
+
+		// Set the component as loaded, because the load function was called
+		setLoadedToMemory(true);
 
 		if(m_materialsFromProperties != nullptr)
 		{
@@ -318,9 +392,6 @@ public:
 				ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_ModelComponent, m_name + " - missing model data");
 		}
 		
-		// Set the component as loaded, because the load function was called
-		setLoadedToMemory(true);
-
 		return importError;
 	}
 
@@ -371,66 +442,6 @@ public:
 	const inline std::vector<ModelData> &getModelData() const { return m_modelData; }
 
 private:
-	struct MeshMaterialsProperties
-	{
-		MeshMaterialsProperties()
-		{
-			m_numOfMeshes = 0;
-		}
-
-		void resize(const std::size_t p_size)
-		{
-			if(p_size > m_numOfMeshes)
-			{
-				m_numOfMeshes = p_size;
-
-
-				// Resize mesh materials
-				if(p_size > m_meshMaterials.size())
-				{
-					std::vector<std::string> emptyStrings(MaterialType::MaterialType_NumOfTypes);
-					m_meshMaterials.resize(p_size, emptyStrings);
-					//m_meshMaterials.emplace_back(emptyStrings);
-				}
-
-				// Resize mesh materials scale and initialize each element to 1.0f
-				const auto oldSize = m_meshMaterialsScale.size();
-				if(p_size > oldSize)
-				{
-					std::vector<glm::vec2> emptyVec2(MaterialType::MaterialType_NumOfTypes, glm::vec2(1.0f, 1.0f));
-					m_meshMaterialsScale.resize(p_size, emptyVec2);
-
-					//for(size_t i = oldSize; i < p_size; i++)
-					//	for(unsigned int iMatType = 0; iMatType < MaterialType::MaterialType_NumOfTypes; iMatType++)
-					//		m_meshMaterialsScale[i][iMatType] = glm::vec2(1.0f, 1.0f);
-				}
-
-				// Resize mesh material alpha threshold and initialize each element to 0.0f
-				if(p_size > m_alphaThreshold.size())
-					m_alphaThreshold.resize(p_size, 0.0f);
-
-				// Resize mesh material height scale and initialize each element to 1.0f
-				if(p_size > m_heightScale.size())
-					m_heightScale.resize(p_size, 1.0f);
-
-				// Resize the "mesh is present" array and initialize each element to false
-				if(p_size > m_present.size())
-					m_present.resize(p_size, false);
-			}
-		}
-
-		std::size_t m_numOfMeshes;
-		std::vector<std::vector<std::string>> m_meshMaterials;
-		std::vector< std::vector<glm::vec2>> m_meshMaterialsScale;
-		std::vector<float> m_alphaThreshold;
-		std::vector<float> m_heightScale;
-		std::vector<bool> m_present;
-	};
-	struct ModelsProperties
-	{
-		std::vector<std::string> m_modelNames;
-	};
-
 	inline MaterialData loadMaterialData(PropertySet &p_materialProperty, Model::MaterialArrays &p_materialArraysFromModel, MaterialType p_materialType, std::size_t p_meshIndex)
 	{
 		// Declare the material data that is to be returned and a flag showing whether the material data was loaded successfully

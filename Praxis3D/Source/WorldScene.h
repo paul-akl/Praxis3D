@@ -8,6 +8,23 @@
 #include "WorldTask.h"
 
 class WorldSystem;
+struct ComponentsConstructionInfo;
+
+struct WorldComponentsConstructionInfo
+{
+	WorldComponentsConstructionInfo()
+	{
+		m_spatialConstructionInfo = nullptr;
+	}
+
+	void deleteConstructionInfo()
+	{
+		if(m_spatialConstructionInfo != nullptr)
+			delete m_spatialConstructionInfo;
+	}
+
+	SpatialComponent::SpatialComponentConstructionInfo *m_spatialConstructionInfo;
+};
 
 class WorldScene : public SystemScene
 {
@@ -24,13 +41,33 @@ public:
 
 	void loadInBackground() { }
 
-	// Exports all the data of the scene (including all objects within) as a PropertySet (for example, used for saving to map file)
-	PropertySet exportObject() { return PropertySet(); }
+	EntityID createEntity(const ComponentsConstructionInfo &p_constructionInfo);
 
-	EntityID createEntity(const PropertySet &p_properties);
-
-	SystemObject *createObject(const PropertySet &p_properties);
+	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo);
+	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const WorldComponentsConstructionInfo &p_constructionInfo);
 	ErrorCode destroyObject(SystemObject *p_systemObject);
+
+	SystemObject *createComponent(const EntityID p_entityID, const SpatialComponent::SpatialComponentConstructionInfo &p_constructionInfo)
+	{
+		SpatialComponent *spatialComponent = nullptr;
+
+		//auto spatial = m_entityRegistry.emplace<SpatialComponent>(newEntity, this, name);
+		spatialComponent = &addComponent<SpatialComponent>(p_entityID, this, p_constructionInfo.m_name, p_entityID);
+
+		spatialComponent->m_spatialData.setLocalPosition(p_constructionInfo.m_localPosition);
+		spatialComponent->m_spatialData.setLocalScale(p_constructionInfo.m_localScale);
+
+		// If the rotation quaternion is empty, use the Euler angle rotation
+		if(p_constructionInfo.m_localRotationQuaternion == glm::quat())
+			spatialComponent->m_spatialData.setLocalRotation(p_constructionInfo.m_localRotationEuler);
+		else
+			spatialComponent->m_spatialData.setLocalRotation(p_constructionInfo.m_localRotationQuaternion);
+
+		// Perform a spatial data update, so that all the transform matrices are calculated
+		spatialComponent->m_spatialData.update();
+
+		return spatialComponent;
+	}
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
 

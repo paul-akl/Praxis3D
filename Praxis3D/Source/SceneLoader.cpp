@@ -2,12 +2,15 @@
 #include <utility>
 #include <vector>
 
+#include "ComponentConstructorInfo.h"
 #include "PropertyLoader.h"
 #include "SceneLoader.h"
 
 ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 {
 	ErrorCode returnError = ErrorCode::Success;
+
+	EntitiesConstructionInfo constructionInfo;
 
 	// Load properties from file
 	PropertyLoader loadedProperties(Config::filepathVar().map_path + p_filename);
@@ -49,12 +52,25 @@ ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 
 		if(gameObjects)
 		{
+			constructionInfo.resize(gameObjects.getNumPropertySets());
+
 			// Iterate over all game object
 			for(decltype(gameObjects.getNumPropertySets()) objIndex = 0, objSize = gameObjects.getNumPropertySets(); objIndex < objSize; objIndex++)
 			{
 				// Create each game object by passing its PropertySet
-				m_systemScenes[Systems::World]->createObject(gameObjects.getPropertySetUnsafe(objIndex));
+				//m_systemScenes[Systems::World]->createObject(gameObjects.getPropertySetUnsafe(objIndex));
+
+				importFromProperties(constructionInfo[objIndex], gameObjects.getPropertySetUnsafe(objIndex));
 			}
+
+			WorldScene *worldScene = static_cast<WorldScene*>(m_systemScenes[Systems::World]);
+
+			for(decltype(constructionInfo.size()) i = 0, size = constructionInfo.size(); i < size; i++)
+			{
+				worldScene->createEntity(constructionInfo[i]);
+			}
+
+			std::cout << "TEST" << std::endl;
 		}
 		else
 		{
@@ -142,8 +158,8 @@ ErrorCode SceneLoader::saveToFile(const std::string p_filename)
 		auto &systems = propertySet.addPropertySet(Properties::Systems);
 
 		// Add each system's properties
-		for(size_t i = 0; i < Systems::NumberOfSystems; i++)
-			systems.addPropertySet(m_systemScenes[i]->exportObject());
+		//for(size_t i = 0; i < Systems::NumberOfSystems; i++)
+		//	systems.addPropertySet(m_systemScenes[i]->exportObject());
 
 		// Add root property set for object links
 		auto &objLinksPropertySet = propertySet.addPropertySet(Properties::ObjectLinks);
@@ -171,4 +187,490 @@ ErrorCode SceneLoader::saveToFile(const std::string p_filename)
 
 	// TODO ERROR empty filename
 	return ErrorCode::Failure;
+}
+
+void SceneLoader::importFromProperties(ComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties)
+{
+	// Get the object name and ID
+	std::string name = p_properties.getPropertyByID(Properties::Name).getString();
+	EntityID desiredEntityID = (EntityID)p_properties.getPropertyByID(Properties::ID).getInt();
+
+	// If the name property is missing, generate a unique name based on the entity ID
+	if(name.empty())
+		name = GetString(Properties::GameObject) + Utilities::toString(desiredEntityID);
+
+	p_constructionInfo.m_name = name;
+	p_constructionInfo.m_id = desiredEntityID;
+
+	// Load property data
+	for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
+	{
+		switch(p_properties[i].getPropertyID())
+		{
+			case Properties::Parent:
+			{
+				// Get the entity ID if the parent object
+				p_constructionInfo.m_parent = (EntityID)p_properties[i].getInt();
+			}
+			break;
+		}
+	}
+
+	{
+		auto &sceneProperty = p_properties.getPropertySetByID(Properties::Rendering);
+		if(sceneProperty)
+		{
+			for(decltype(sceneProperty.getNumPropertySets()) i = 0, size = sceneProperty.getNumPropertySets(); i < size; i++)
+			{
+				importFromProperties(p_constructionInfo.m_graphicsComponents, sceneProperty.getPropertySet(i), name);
+			}
+		}
+	}
+
+	{
+		auto &sceneProperty = p_properties.getPropertySetByID(Properties::GUI);
+		if(sceneProperty)
+		{
+			for(decltype(sceneProperty.getNumPropertySets()) i = 0, size = sceneProperty.getNumPropertySets(); i < size; i++)
+			{
+				importFromProperties(p_constructionInfo.m_guiComponents, sceneProperty.getPropertySet(i), name);
+			}
+		}
+	}
+
+	{
+		auto &sceneProperty = p_properties.getPropertySetByID(Properties::Physics);
+		if(sceneProperty)
+		{
+			for(decltype(sceneProperty.getNumPropertySets()) i = 0, size = sceneProperty.getNumPropertySets(); i < size; i++)
+			{
+				importFromProperties(p_constructionInfo.m_physicsComponents, sceneProperty.getPropertySet(i), name);
+			}
+		}
+	}
+
+	{
+		auto &sceneProperty = p_properties.getPropertySetByID(Properties::Script);
+		if(sceneProperty)
+		{
+			for(decltype(sceneProperty.getNumPropertySets()) i = 0, size = sceneProperty.getNumPropertySets(); i < size; i++)
+			{
+				importFromProperties(p_constructionInfo.m_scriptComponents, sceneProperty.getPropertySet(i), name);
+			}
+		}
+	}
+
+	{
+		auto &sceneProperty = p_properties.getPropertySetByID(Properties::World);
+		if(sceneProperty)
+		{
+			for(decltype(sceneProperty.getNumPropertySets()) i = 0, size = sceneProperty.getNumPropertySets(); i < size; i++)
+			{
+				importFromProperties(p_constructionInfo.m_worldComponents, sceneProperty.getPropertySet(i), name);
+			}
+		}
+	}
+}
+
+void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name)
+{
+	// Check if property set node is present
+	if(p_properties)
+	{
+		switch(p_properties.getPropertyID())
+		{
+			case Properties::PropertyID::CameraComponent:
+			{
+				if(p_constructionInfo.m_cameraConstructionInfo == nullptr)
+					p_constructionInfo.m_cameraConstructionInfo = new CameraComponent::CameraComponentConstructionInfo();
+
+				p_constructionInfo.m_cameraConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::CameraComponent);
+			}
+			break;
+
+			case Properties::PropertyID::LightComponent:
+			{
+				if(p_constructionInfo.m_lightConstructionInfo == nullptr)
+					p_constructionInfo.m_lightConstructionInfo = new LightComponent::LightComponentConstructionInfo();
+
+				p_constructionInfo.m_lightConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::LightComponent);
+
+				// Get the light type
+				auto const &type = p_properties.getPropertyByID(Properties::Type).getID();
+
+				// Load values based on the type of light
+				switch(type)
+				{
+				case Properties::DirectionalLight:
+
+					p_constructionInfo.m_lightConstructionInfo->m_lightComponentType = LightComponent::LightComponentType::LightComponentType_directional;
+
+					p_constructionInfo.m_lightConstructionInfo->m_color = p_properties.getPropertyByID(Properties::Color).getVec3f();
+					p_constructionInfo.m_lightConstructionInfo->m_intensity = p_properties.getPropertyByID(Properties::Intensity).getFloat();
+
+					break;
+
+				case Properties::PointLight:
+
+					p_constructionInfo.m_lightConstructionInfo->m_lightComponentType = LightComponent::LightComponentType::LightComponentType_point;
+
+					p_constructionInfo.m_lightConstructionInfo->m_color = p_properties.getPropertyByID(Properties::Color).getVec3f();
+					p_constructionInfo.m_lightConstructionInfo->m_intensity = p_properties.getPropertyByID(Properties::Intensity).getFloat();
+
+					break;
+
+				case Properties::SpotLight:
+
+					p_constructionInfo.m_lightConstructionInfo->m_lightComponentType = LightComponent::LightComponentType::LightComponentType_spot;
+
+					p_constructionInfo.m_lightConstructionInfo->m_color = p_properties.getPropertyByID(Properties::Color).getVec3f();
+					p_constructionInfo.m_lightConstructionInfo->m_cutoffAngle = p_properties.getPropertyByID(Properties::CutoffAngle).getFloat();
+					p_constructionInfo.m_lightConstructionInfo->m_intensity = p_properties.getPropertyByID(Properties::Intensity).getFloat();
+
+					break;
+
+				default:
+
+					ErrHandlerLoc().get().log(ErrorType::Warning, ErrorSource::Source_LightComponent, p_name + " - missing \'Type\' identifier");
+					delete p_constructionInfo.m_lightConstructionInfo;
+					p_constructionInfo.m_lightConstructionInfo = nullptr;
+
+					break;
+				}
+			}
+			break;
+
+			case Properties::PropertyID::ModelComponent:
+			{
+				if(p_constructionInfo.m_modelConstructionInfo == nullptr)
+					p_constructionInfo.m_modelConstructionInfo = new ModelComponent::ModelComponentConstructionInfo();
+
+				p_constructionInfo.m_modelConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::ModelComponent);
+
+				auto &modelsProperty = p_properties.getPropertySetByID(Properties::Models);
+
+				if(modelsProperty)
+				{
+					// Loop over each model entry in the node
+					for(decltype(modelsProperty.getNumPropertySets()) iModel = 0, numModels = modelsProperty.getNumPropertySets(); iModel < numModels; iModel++)
+					{
+						// Get model filename
+						auto modelName = modelsProperty.getPropertySet(iModel).getPropertyByID(Properties::Filename).getString();
+
+						// Add a new model data entry, and get a reference to it
+						p_constructionInfo.m_modelConstructionInfo->m_modelsProperties.m_modelNames.push_back(modelName);
+
+						auto &meshesProperty = modelsProperty.getPropertySet(iModel).getPropertySetByID(Properties::Meshes);
+
+						// Check if the meshes array node is present;
+						// If it is present, only add the meshes included in the meshes node
+						// If it is not present, add all the meshes included in the model
+						if(meshesProperty)
+						{
+							if(meshesProperty.getNumPropertySets() > 0)
+							{
+								// Loop over each mesh entry in the model node
+								for(decltype(meshesProperty.getNumPropertySets()) iMesh = 0, numMeshes = meshesProperty.getNumPropertySets(); iMesh < numMeshes; iMesh++)
+								{
+									// Try to get the mesh index property node and check if it is present
+									auto &meshIndexProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::Index);
+									if(meshIndexProperty)
+									{
+										// Get the mesh index, check if it is valid and within the range of mesh array that was loaded from the model
+										const int meshDataIndex = meshIndexProperty.getInt();
+
+										// Make sure the meshMaterials vector can fit the given mesh index
+										if(meshDataIndex >= p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_meshMaterials.size())
+										{
+											p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.resize(meshDataIndex + 1);
+											p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_present[meshDataIndex] = true;
+										}
+
+										// Get material alpha threshold value, if it is present
+										auto alphaThresholdProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::AlphaThreshold);
+										if(alphaThresholdProperty)
+											p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_alphaThreshold[meshDataIndex] = alphaThresholdProperty.getFloat();
+
+										// Get material height scale value, if it is present
+										auto heightScaleProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::HeightScale);
+										if(heightScaleProperty)
+											p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_heightScale[meshDataIndex] = heightScaleProperty.getFloat();
+
+										// Get material properties
+										auto materialsProperty = meshesProperty.getPropertySet(iMesh).getPropertySetByID(Properties::Materials);
+
+										// Define material data and material properties
+										MaterialData materials[MaterialType::MaterialType_NumOfTypes];
+										PropertySet materialProperties[MaterialType::MaterialType_NumOfTypes] =
+										{
+											materialsProperty.getPropertySetByID(Properties::Diffuse),
+											materialsProperty.getPropertySetByID(Properties::Normal),
+											materialsProperty.getPropertySetByID(Properties::Emissive),
+											materialsProperty.getPropertySetByID(Properties::RMHAO)
+										};
+
+										// Go over each material type
+										for(unsigned int iMatType = 0; iMatType < MaterialType::MaterialType_NumOfTypes; iMatType++)
+										{
+											// Check if an entry for the current material type was present within the properties
+											if(materialProperties[iMatType])
+											{
+												// Get texture filename property, check if it is valid
+												auto filenameProperty = materialProperties[iMatType].getPropertyByID(Properties::Filename);
+												if(filenameProperty.isVariableTypeString())
+												{
+													// Get texture filename string, check if it is valid
+													p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_meshMaterials[meshDataIndex][iMatType] = filenameProperty.getString();
+												}
+
+												// Get texture scale property, check if it is valid
+												auto scaleProperty = materialProperties[iMatType].getPropertyByID(Properties::TextureScale);
+												if(scaleProperty)
+													p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_meshMaterialsScale[meshDataIndex][iMatType] = scaleProperty.getVec2f();
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+				if(p_properties.getNumPropertySets() == 0)
+					ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_ModelComponent, p_name + " - missing model data");
+			}
+			break;
+
+			case Properties::PropertyID::ShaderComponent:
+			{
+				if(p_constructionInfo.m_shaderConstructionInfo == nullptr)
+					p_constructionInfo.m_shaderConstructionInfo = new ShaderComponent::ShaderComponentConstructionInfo();
+
+				p_constructionInfo.m_shaderConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::ShaderComponent);
+
+				// Get nodes for different shader types
+				auto geometryShaderNode = p_properties.getPropertyByID(Properties::GeometryShader);
+				auto vertexShaderNode = p_properties.getPropertyByID(Properties::VertexShader);
+				auto fragmentShaderNode = p_properties.getPropertyByID(Properties::FragmentShader);
+
+				if(geometryShaderNode)
+					p_constructionInfo.m_shaderConstructionInfo->m_geometryShaderFilename = geometryShaderNode.getString();
+
+				if(vertexShaderNode)
+					p_constructionInfo.m_shaderConstructionInfo->m_vetexShaderFilename = vertexShaderNode.getString();
+
+				if(fragmentShaderNode)
+					p_constructionInfo.m_shaderConstructionInfo->m_fragmentShaderFilename = fragmentShaderNode.getString();
+			}
+			break;
+		}
+	}
+}
+
+void SceneLoader::importFromProperties(GUIComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name)
+{
+	// Check if property set node is present
+	if(p_properties)
+	{
+		switch(p_properties.getPropertyID())
+		{
+			case Properties::PropertyID::Sequence:
+			{
+				if(p_constructionInfo.m_guiSequenceConstructionInfo == nullptr)
+					p_constructionInfo.m_guiSequenceConstructionInfo = new GUISequenceComponent::GUISequenceComponentConstructionInfo();
+
+				p_constructionInfo.m_guiSequenceConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::GUISequenceComponent);
+
+			}
+			break;
+		}
+	}
+}
+
+void SceneLoader::importFromProperties(PhysicsComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name)
+{
+	// Check if property set node is present
+	if(p_properties)
+	{
+		switch(p_properties.getPropertyID())
+		{
+		case Properties::PropertyID::RigidBodyComponent:
+		{
+			if(p_constructionInfo.m_rigidBodyConstructionInfo == nullptr)
+				p_constructionInfo.m_rigidBodyConstructionInfo = new RigidBodyComponent::RigidBodyComponentConstructionInfo();
+
+			p_constructionInfo.m_rigidBodyConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::RigidBodyComponent);
+
+			// --------------------
+			// Load collision shape
+			// --------------------
+			auto const &collisionShapeProperty = p_properties.getPropertySetByID(Properties::CollisionShape);
+			if(collisionShapeProperty)
+			{
+				// Get the type of the collision shape and load the data based on it
+				auto const &typeProperty = collisionShapeProperty.getPropertyByID(Properties::Type);
+				if(typeProperty)
+				{
+					switch(typeProperty.getID())
+					{
+					case Properties::Box:
+					{
+						// Get the size property
+						auto const &sizeProperty = collisionShapeProperty.getPropertyByID(Properties::Size);
+
+						// If the size was not given, leave it to a default 0.5f all around (so it gets to the final 1.0/1.0/1.0 dimension)
+						if(sizeProperty)
+							p_constructionInfo.m_rigidBodyConstructionInfo->m_collisionShapeSize = sizeProperty.getVec3f();
+						else
+							ErrHandlerLoc().get().log(ErrorCode::Property_missing_size, p_name, ErrorSource::Source_RigidBodyComponent);
+
+						p_constructionInfo.m_rigidBodyConstructionInfo->m_collisionShapeType = RigidBodyComponent::CollisionShapeType::CollisionShapeType_Box;
+					}
+					break;
+
+					case Properties::Sphere:
+					{
+						// Get the size property
+						auto const &radiusProperty = collisionShapeProperty.getPropertyByID(Properties::Radius);
+
+						// If the size was not given, leave it to a default radius of 0.5f (which makes the sphere diameter equal to 1.0)
+						if(radiusProperty)
+							p_constructionInfo.m_rigidBodyConstructionInfo->m_collisionShapeSize.x = radiusProperty.getFloat();
+						else
+							ErrHandlerLoc().get().log(ErrorCode::Property_missing_radius, p_name, ErrorSource::Source_RigidBodyComponent);
+
+						p_constructionInfo.m_rigidBodyConstructionInfo->m_collisionShapeType = RigidBodyComponent::CollisionShapeType::CollisionShapeType_Sphere;
+					}
+					break;
+
+					default:
+
+						// If this is reached, the collision shape type was not valid
+						ErrHandlerLoc().get().log(ErrorCode::Collision_invalid, p_name, ErrorSource::Source_RigidBodyComponent);
+						break;
+					}
+				}
+				else
+				{
+					// Missing the Type property entirely
+					ErrHandlerLoc().get().log(ErrorCode::Property_missing_type, p_name, ErrorSource::Source_RigidBodyComponent);
+				}
+			}
+
+			// -----------------------------
+			// Load individual property data
+			// -----------------------------
+			for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
+			{
+				switch(p_properties[i].getPropertyID())
+				{
+				case Properties::Friction:
+					p_constructionInfo.m_rigidBodyConstructionInfo->m_friction = p_properties[i].getFloat();
+					break;
+				case Properties::Kinematic:
+					p_constructionInfo.m_rigidBodyConstructionInfo->m_kinematic = p_properties[i].getBool();
+					break;
+				case Properties::Mass:
+					p_constructionInfo.m_rigidBodyConstructionInfo->m_mass = p_properties[i].getFloat();
+					break;
+				case Properties::Restitution:
+					p_constructionInfo.m_rigidBodyConstructionInfo->m_restitution = p_properties[i].getFloat();
+					break;
+				}
+			}
+		}
+
+		break;
+		}
+	}
+}
+
+void SceneLoader::importFromProperties(ScriptComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name)
+{
+	// Check if property set node is present
+	if(p_properties)
+	{
+		switch(p_properties.getPropertyID())
+		{
+			case Properties::PropertyID::LuaComponent:
+			{
+				if(p_constructionInfo.m_luaConstructionInfo == nullptr)
+					p_constructionInfo.m_luaConstructionInfo = new LuaComponent::LuaComponentConstructionInfo();
+
+				p_constructionInfo.m_luaConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::LuaComponent);
+
+				auto const &luaFilenameProperty = p_properties.getPropertyByID(Properties::Filename);
+				auto const &luaVariablesProperty = p_properties.getPropertySetByID(Properties::Variables);
+
+				if(luaFilenameProperty)
+				{
+					std::string luaFilename = luaFilenameProperty.getString();
+					if(!luaFilename.empty())
+					{
+						p_constructionInfo.m_luaConstructionInfo->m_luaScriptFilename = luaFilename;
+
+						if(luaVariablesProperty)
+						{
+							// Loop over each variable entry in the node
+							for(decltype(luaVariablesProperty.getNumPropertySets()) iVariable = 0, numVariables = luaVariablesProperty.getNumPropertySets(); iVariable < numVariables; iVariable++)
+							{
+								// Add the variable
+								p_constructionInfo.m_luaConstructionInfo->m_variables.emplace_back(
+									luaVariablesProperty.getPropertySet(iVariable).getPropertyByID(Properties::Name).getString(),
+									luaVariablesProperty.getPropertySet(iVariable).getPropertyByID(Properties::Value));
+							}
+						}
+					}
+					else
+					{
+						ErrHandlerLoc().get().log(ErrorCode::Property_no_filename, p_name, ErrorSource::Source_SceneLoader);
+					}
+				}
+				else
+				{
+					ErrHandlerLoc().get().log(ErrorCode::Property_no_filename, p_name, ErrorSource::Source_SceneLoader);
+				}
+			}
+			break;
+		}
+	}
+}
+
+void SceneLoader::importFromProperties(WorldComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name)
+{
+	// Check if property set node is present
+	if(p_properties)
+	{
+		switch(p_properties.getPropertyID())
+		{
+			case Properties::PropertyID::SpatialComponent:
+			{
+				if(p_constructionInfo.m_spatialConstructionInfo == nullptr)
+					p_constructionInfo.m_spatialConstructionInfo = new SpatialComponent::SpatialComponentConstructionInfo();
+
+				p_constructionInfo.m_spatialConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::SpatialComponent);
+
+				// Load property data
+				for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
+				{
+					switch(p_properties[i].getPropertyID())
+					{
+					case Properties::LocalPosition:
+						p_constructionInfo.m_spatialConstructionInfo->m_localPosition = p_properties[i].getVec3f();
+						break;
+					case Properties::LocalRotation:
+						p_constructionInfo.m_spatialConstructionInfo->m_localRotationEuler = p_properties[i].getVec3f();
+						break;
+					case Properties::LocalRotationQuaternion:
+						p_constructionInfo.m_spatialConstructionInfo->m_localRotationQuaternion = glm::quat(p_properties[i].getVec4f());
+						break;
+					case Properties::LocalScale:
+						p_constructionInfo.m_spatialConstructionInfo->m_localScale = p_properties[i].getVec3f();
+						break;
+					}
+				}
+			}
+			break;
+		}
+	}
 }

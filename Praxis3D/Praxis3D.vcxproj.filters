@@ -809,6 +809,9 @@
     <ClInclude Include="Source\LuminancePass.h">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\ComponentConstructorInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\config.ini" />

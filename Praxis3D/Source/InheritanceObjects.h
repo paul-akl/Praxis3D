@@ -170,11 +170,13 @@ public:
 	{
 		m_loadedToMemory = false;
 		m_loadedToVideoMemory = false;
+		m_setActiveAfterLoading = true;
 	}	
-	LoadableGraphicsObject(bool p_loadedToMemory, bool p_loadedToVideoMemory)
+	LoadableGraphicsObject(bool p_loadedToMemory, bool p_loadedToVideoMemory, bool p_setActiveAfterLoading = true)
 	{
 		m_loadedToMemory = p_loadedToMemory;
 		m_loadedToVideoMemory = p_loadedToVideoMemory;
+		m_setActiveAfterLoading = p_setActiveAfterLoading;
 	}
 	~LoadableGraphicsObject() { }
 
@@ -191,7 +193,8 @@ public:
 
 protected:
 	bool	m_loadedToMemory,
-			m_loadedToVideoMemory;
+			m_loadedToVideoMemory,
+			m_setActiveAfterLoading;
 };
 
 // Functionality for tracking an index of a double buffer

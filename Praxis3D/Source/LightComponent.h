@@ -18,6 +18,26 @@ public:
 		LightComponentType_spot
 	};
 
+	struct LightComponentConstructionInfo : public SystemObject::SystemObjectConstructionInfo
+	{
+		LightComponentConstructionInfo()
+		{
+			m_color = glm::vec3(1.0f);
+			m_intensity = 1.0f;
+			m_cutoffAngle = 1.0f;
+			m_lightComponentType = LightComponentType::LightComponentType_null;
+		}
+
+		glm::vec3 m_color;
+		glm::vec3 m_direction;
+		glm::vec3 m_position;
+
+		float m_intensity;
+		float m_cutoffAngle;
+
+		LightComponentType m_lightComponentType;
+	};
+
 	LightComponent(SystemScene *p_systemScene, std::string p_name, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::Lighting, p_entityID)
 	{
 		m_lightComponentType = LightComponentType::LightComponentType_null;
@@ -267,16 +287,6 @@ public:
 	inline SpotLightDataSet *getSpotLightSafe() { return (m_lightComponentType == LightComponentType::LightComponentType_spot) ? &m_lightComponent.m_spot : nullptr; }
 
 private:
-	// Union object that hold any one of the three light types
-	union m_lightComponent
-	{
-		m_lightComponent() { }
-		~m_lightComponent() { }
-
-		DirectionalLightDataSet m_directional;
-		PointLightDataSet m_point;
-		SpotLightDataSet m_spot;
-	} m_lightComponent;
 
 	inline void updateColor(const glm::vec3 &p_color)
 	{
@@ -362,6 +372,17 @@ private:
 			break;
 		}
 	}
+
+	// Union object that hold any one of the three light types
+	union m_lightComponent
+	{
+		m_lightComponent() { }
+		~m_lightComponent() { }
+
+		DirectionalLightDataSet m_directional;
+		PointLightDataSet m_point;
+		SpotLightDataSet m_spot;
+	} m_lightComponent;
 
 	LightComponentType m_lightComponentType;
 };

@@ -24,6 +24,11 @@ SystemObject *NullSystemScene::createObject(const PropertySet &p_properties)
 	return &m_nullSystemObject;
 }
 
+SystemObject *NullSystemScene::getNullObject()
+{
+	return &m_nullSystemObject;
+}
+
 SystemTask *NullSystemScene::getSystemTask()
 {
 	return &m_nullSystemTask;

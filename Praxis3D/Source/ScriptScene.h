@@ -14,6 +14,23 @@
 #include "WorldEditObject.h"
 
 class ScriptSystem;
+struct ComponentsConstructionInfo;
+
+struct ScriptComponentsConstructionInfo
+{
+	ScriptComponentsConstructionInfo()
+	{
+		m_luaConstructionInfo = nullptr;
+	}
+
+	void deleteConstructionInfo()
+	{
+		if(m_luaConstructionInfo != nullptr)
+			delete m_luaConstructionInfo;
+	}
+
+	LuaComponent::LuaComponentConstructionInfo *m_luaConstructionInfo;
+};
 
 class ScriptScene : public SystemScene
 {
@@ -31,11 +48,18 @@ public:
 
 	ErrorCode preload();
 
-	// Exports all the data of the scene (including all objects within) as a PropertySet
-	virtual PropertySet exportObject();
+	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo);
+	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ScriptComponentsConstructionInfo &p_constructionInfo)
+	{
+		std::vector<SystemObject*> components;
 
-	SystemObject *createComponent(const EntityID &p_entityID, const std::string &p_entityName, const PropertySet &p_properties);
-	SystemObject *createObject(const PropertySet &p_properties);
+		if(p_constructionInfo.m_luaConstructionInfo != nullptr)
+			components.push_back(createComponent(p_entityID, *p_constructionInfo.m_luaConstructionInfo));
+
+		return components;
+	}
+
+	SystemObject *createComponent(const EntityID &p_entityID, const LuaComponent::LuaComponentConstructionInfo &p_constructionInfo);
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType);

@@ -9,6 +9,19 @@ class SpatialComponent : public SystemObject
 {
 	friend class WorldScene;
 public:
+	struct SpatialComponentConstructionInfo : public SystemObject::SystemObjectConstructionInfo
+	{
+		SpatialComponentConstructionInfo()
+		{
+			m_localScale = glm::vec3(1.0f);
+		}
+
+		glm::vec3 m_localPosition;
+		glm::vec3 m_localRotationEuler;
+		glm::quat m_localRotationQuaternion;
+		glm::vec3 m_localScale;
+	};
+
 	SpatialComponent(SystemScene *p_systemScene, const std::string &p_name, EntityID p_entityID)
 		: SystemObject(p_systemScene, p_name, Properties::SpatialComponent, p_entityID), m_spatialData(*this) //m_spatialData{*this, *this}
 	{

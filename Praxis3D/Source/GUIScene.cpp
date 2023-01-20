@@ -1,5 +1,6 @@
 
 #include "WorldScene.h"
+#include "ComponentConstructorInfo.h"
 #include "GUIHandlerLocator.h"
 #include "GUIScene.h"
 #include "NullSystemObjects.h"
@@ -93,96 +94,37 @@ void GUIScene::loadInBackground()
 {
 }
 
-SystemObject *GUIScene::createComponent(const EntityID &p_entityID, const std::string &p_entityName, const PropertySet &p_properties)
+std::vector<SystemObject*> GUIScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo)
+{
+	return createComponents(p_entityID, p_constructionInfo.m_guiComponents);
+}
+
+SystemObject *GUIScene::createComponent(const EntityID p_entityID, const GUISequenceComponent::GUISequenceComponentConstructionInfo &p_constructionInfo)
 {	
 	// If valid type was not specified, or object creation failed, return a null object instead
-	SystemObject *returnObject = g_nullSystemBase.getScene()->createObject(p_properties);
+	SystemObject *returnObject = g_nullSystemBase.getScene()->getNullObject();
 
-	// Check if property set node is present
-	if(p_properties)
+	// Get the world scene required for attaching components to the entity
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	auto &component = worldScene->addComponent<GUISequenceComponent>(p_entityID, this, p_constructionInfo.m_name, p_entityID);
+
+	// Try to initialize the component
+	auto componentInitError = component.init();
+	if(componentInitError == ErrorCode::Success)
 	{
-		// Get the world scene required for attaching components to the entity
-		WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
+		component.m_objectType = Properties::PropertyID::GUISequenceComponent;
+		component.setActive(p_constructionInfo.m_active);
 
-		switch(p_properties.getPropertyID())
-		{
-			case Properties::PropertyID::Sequence:
-			{
-				auto &component = worldScene->addComponent<GUISequenceComponent>(p_entityID, this, p_entityName + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::Sequence), p_entityID);
-
-				// Try to initialize the component
-				auto componentInitError = component.init();
-				if(componentInitError == ErrorCode::Success)
-				{
-					// Try to import the component
-					auto const &componentImportError = component.importObject(p_properties);
-
-					// Remove the component if it failed to import
-					if(componentImportError != ErrorCode::Success)
-					{
-						ErrHandlerLoc().get().log(componentImportError, ErrorSource::Source_GUISequenceComponent, component.getName());
-						worldScene->removeComponent<GUISequenceComponent>(p_entityID);
-					}
-					else
-						returnObject = &component;
-				}
-				else // Remove the component if it failed to initialize
-				{
-					ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_GUISequenceComponent, component.getName());
-					worldScene->removeComponent<GUISequenceComponent>(p_entityID);
-				}
-			}
-			break;
-		}
+		returnObject = &component;
+	}
+	else // Remove the component if it failed to initialize
+	{
+		ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_GUISequenceComponent, component.getName());
+		worldScene->removeComponent<GUISequenceComponent>(p_entityID);
 	}
 
 	return returnObject;
-}
-
-SystemObject* GUIScene::createObject(const PropertySet& p_properties)
-{
-	// Check if property set node is present
-	if(p_properties)
-	{
-		// Check if the GUI property is present
-		auto &GUIProperty = p_properties.getPropertySetByID(Properties::GUI);
-		if(GUIProperty)
-		{
-			// Get the object name
-			auto &nameProperty = p_properties.getPropertyByID(Properties::Name);
-
-			// Find a place for the new object in the pool
-			auto GUIObjectFromPool = m_GUIObjects.newObject();
-
-			// Check if the pool wasn't full
-			if(GUIObjectFromPool != nullptr)
-			{
-				std::string name;
-
-				// If the name property is missing, generate a unique name based on the object's index in the pool
-				if(nameProperty)
-					name = nameProperty.getString() + " (" + GetString(Properties::GUIObject) + ")";
-				else
-					name = GetString(Properties::GUIObject) + Utilities::toString(GUIObjectFromPool->getIndex());
-
-				// Construct the GUIObject
-				GUIObjectFromPool->construct(this, name);
-				auto newGUIObject = GUIObjectFromPool->getObject();
-
-				// Start importing the newly created object in a background thread
-				newGUIObject->importObject(GUIProperty);
-
-				return newGUIObject;
-			}
-			else
-			{
-				ErrHandlerLoc::get().log(ErrorCode::ObjectPool_full, ErrorSource::Source_GUIObject, "Failed to add GUIObject - \'" + nameProperty.getString() + "\'");
-			}
-		}
-	}
-
-	// If valid type was not specified, or object creation failed, return a null object instead
-	return g_nullSystemBase.getScene()->createObject(p_properties);
 }
 
 ErrorCode GUIScene::destroyObject(SystemObject* p_systemObject)

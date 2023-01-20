@@ -1,3 +1,4 @@
+#include "ComponentConstructorInfo.h"
 #include "NullSystemObjects.h"
 #include "PhysicsScene.h"
 #include "TaskManagerLocator.h"
@@ -139,139 +140,119 @@ void PhysicsScene::loadInBackground()
 {
 }
 
-SystemObject *PhysicsScene::createComponent(const EntityID &p_entityID, const std::string &p_entityName, const PropertySet &p_properties)
-{	
+std::vector<SystemObject*> PhysicsScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo)
+{
+	return createComponents(p_entityID, p_constructionInfo.m_physicsComponents);
+}
+
+SystemObject *PhysicsScene::createComponent(const EntityID &p_entityID, const RigidBodyComponent::RigidBodyComponentConstructionInfo &p_constructionInfo)
+{
 	// If valid type was not specified, or object creation failed, return a null object instead
-	SystemObject *returnObject = g_nullSystemBase.getScene()->createObject(p_properties);
+	SystemObject *returnObject = g_nullSystemBase.getScene()->getNullObject();
 
-	// Check if property set node is present
-	if(p_properties)
+	// Get the world scene required for attaching components to the entity
+	WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
+
+	auto &component = worldScene->addComponent<RigidBodyComponent>(p_entityID, this, p_constructionInfo.m_name, p_entityID);
+
+	// Try to initialize the camera component
+	auto componentInitError = component.init();
+	if(componentInitError == ErrorCode::Success)
 	{
-		// Get the world scene required for attaching components to the entity
-		WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+		component.m_collisionShapeType = p_constructionInfo.m_collisionShapeType;
+		component.m_kinematic = p_constructionInfo.m_kinematic;
+		component.m_objectType = Properties::PropertyID::RigidBodyComponent;
+		component.setActive(p_constructionInfo.m_active);
+		component.setLoadedToMemory(true);
+		component.setLoadedToVideoMemory(true);
 
-		switch(p_properties.getPropertyID())
+		if(component.m_collisionShapeType != RigidBodyComponent::CollisionShapeType::CollisionShapeType_Null)
 		{
-		case Properties::PropertyID::RigidBodyComponent:
+			switch(component.m_collisionShapeType)
 			{
-				auto &component = worldScene->addComponent<RigidBodyComponent>(p_entityID, this, p_entityName + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::RigidBodyComponent), p_entityID);
-
-				// Try to initialize the camera component
-				auto componentInitError = component.init();
-				if(componentInitError == ErrorCode::Success)
+				case RigidBodyComponent::CollisionShapeType::CollisionShapeType_Box:
 				{
-					// Try to import the component
-					auto const &componentImportError = component.importObject(p_properties);
-
-					// Create the rigid body inside the dynamics world, if it was imported successfully
-					if(componentImportError == ErrorCode::Success)
-					{
-						//btCollisionShape *collisionShape = component.getCollisionShape();
-
-
-						//btVector3 localInertia(0, 0, 0);
-						// If mass is not zero, rigid body is dynamic; in that case, calculate local inertia 
-						//if(component.m_mass != 0.0f)
-						//	collisionShape->calculateLocalInertia(component.m_mass, localInertia);
-
-						// Set the body origin in space to the position in Spatial Component, if the Spatial Component is present
-						auto *spatialComponent = worldScene->getEntityRegistry().try_get<SpatialComponent>(p_entityID);
-						if(spatialComponent != nullptr)
-						{
-							btTransform groundTransform;
-							groundTransform.setIdentity();
-							groundTransform.setOrigin(Math::toBtVector3(spatialComponent->getSpatialDataChangeManager().getLocalSpaceData().m_spatialData.m_position));
-							groundTransform.setRotation(Math::toBtQuaternion(spatialComponent->getSpatialDataChangeManager().getLocalSpaceData().m_spatialData.m_rotationQuat));
-							//groundTransform.setFromOpenGLMatrix(&spatialComponent->getSpatialDataChangeManager().getLocalSpaceData().m_transformMat[0][0]);
-							component.m_motionState.setWorldTransform(groundTransform);
-
-							component.m_motionState.updateMotionStateTrans();
-						}
-						
-						// Set the required information for the rigid body constructor and create the rigid body
-						//btRigidBody::btRigidBodyConstructionInfo rigidBodyConstructor(component.m_mass, &component.m_motionState, collisionShape, localInertia);
-
-						// Add the collision shape
-						m_collisionShapes.push_back(component.getCollisionShape());
-
-						// Create the rigid body by passing the rigid body construction info
-						component.m_rigidBody = new btRigidBody(*component.m_constructionInfo);
-
-						if(component.m_kinematic)
-						{
-							component.m_rigidBody->setCollisionFlags(component.m_rigidBody->getCollisionFlags() | btCollisionObject::CollisionFlags::CF_KINEMATIC_OBJECT);
-							component.m_rigidBody->setActivationState(DISABLE_DEACTIVATION);						
-						}
-
-						// Add the rigid body to the dynamics world, essentially loading it into the physics system
-						m_dynamicsWorld->addRigidBody(component.m_rigidBody);
-
-						returnObject = &component;
-					}
-					else // Remove the component if it failed to import
-					{
-						worldScene->removeComponent<RigidBodyComponent>(p_entityID);
-						ErrHandlerLoc().get().log(componentImportError, ErrorSource::Source_RigidBodyComponent, p_entityName);
-					}
+					btVector3 boxHalfExtents = Math::toBtVector3(p_constructionInfo.m_collisionShapeSize);
+					component.m_collisionShape.m_boxShape = new btBoxShape(boxHalfExtents);
 				}
-				else // Remove the component if it failed to initialize
+				break;
+
+				case RigidBodyComponent::CollisionShapeType::CollisionShapeType_Sphere:
 				{
-					worldScene->removeComponent<RigidBodyComponent>(p_entityID);
-					ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_RigidBodyComponent, p_entityName);
+					float radius = p_constructionInfo.m_collisionShapeSize.x;
+					component.m_collisionShape.m_sphereShape = new btSphereShape(radius);
 				}
+				break;
 			}
-			break;
+
+			// Success on the loaded collision shape
+			ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_RigidBodyComponent, component.getName() + " - Collision shape loaded");
+
+			// Create the struct that holds all the required information for constructing a rigid body
+			component.m_constructionInfo = new btRigidBody::btRigidBodyConstructionInfo(p_constructionInfo.m_mass, &component.m_motionState, component.getCollisionShape());
+
+			component.m_constructionInfo->m_friction = p_constructionInfo.m_friction;
+			component.m_constructionInfo->m_restitution = p_constructionInfo.m_restitution;
+
+			// If mass is not zero, rigid body is dynamic; in that case, calculate the local inertia 
+			if(component.m_constructionInfo->m_mass != 0.0f)
+			{
+				// Kinematic objects must have a mass of zero
+				if(component.m_kinematic)
+				{
+					component.m_constructionInfo->m_mass = 0.0f;
+					ErrHandlerLoc().get().log(ErrorCode::Kinematic_has_mass, component.getName(), ErrorSource::Source_RigidBodyComponent);
+				}
+				else
+					component.getCollisionShape()->calculateLocalInertia(component.m_constructionInfo->m_mass, component.m_constructionInfo->m_localInertia);
+			}
+
+			// Set the body origin in space to the position in Spatial Component, if the Spatial Component is present
+			auto *spatialComponent = worldScene->getEntityRegistry().try_get<SpatialComponent>(p_entityID);
+			if(spatialComponent != nullptr)
+			{
+				btTransform groundTransform;
+				groundTransform.setIdentity();
+				groundTransform.setOrigin(Math::toBtVector3(spatialComponent->getSpatialDataChangeManager().getLocalSpaceData().m_spatialData.m_position));
+				groundTransform.setRotation(Math::toBtQuaternion(spatialComponent->getSpatialDataChangeManager().getLocalSpaceData().m_spatialData.m_rotationQuat));
+				//groundTransform.setFromOpenGLMatrix(&spatialComponent->getSpatialDataChangeManager().getLocalSpaceData().m_transformMat[0][0]);
+				component.m_motionState.setWorldTransform(groundTransform);
+
+				component.m_motionState.updateMotionStateTrans();
+			}
+
+			// Add the collision shape
+			m_collisionShapes.push_back(component.getCollisionShape());
+
+			// Create the rigid body by passing the rigid body construction info
+			component.m_rigidBody = new btRigidBody(*component.m_constructionInfo);
+
+			if(component.m_kinematic)
+			{
+				component.m_rigidBody->setCollisionFlags(component.m_rigidBody->getCollisionFlags() | btCollisionObject::CollisionFlags::CF_KINEMATIC_OBJECT);
+				component.m_rigidBody->setActivationState(DISABLE_DEACTIVATION);
+			}
+
+			// Add the rigid body to the dynamics world, essentially loading it into the physics system
+			m_dynamicsWorld->addRigidBody(component.m_rigidBody);
+
+			returnObject = &component;
 
 		}
+		else // Remove the component if it didn't have a collision shape
+		{
+			// Missing the collision shape
+			worldScene->removeComponent<RigidBodyComponent>(p_entityID);
+			ErrHandlerLoc().get().log(ErrorCode::Collision_missing, component.getName(), ErrorSource::Source_RigidBodyComponent);
+		}
+	}
+	else // Remove the component if it failed to initialize
+	{
+		worldScene->removeComponent<RigidBodyComponent>(p_entityID);
+		ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_RigidBodyComponent, component.getName());
 	}
 
 	return returnObject;
-}
-
-SystemObject *PhysicsScene::createObject(const PropertySet &p_properties)
-{	
-	/*/ Check if property set node is present
-	if(p_properties)
-	{
-		// Check if the Physics property is present
-		auto &physicsProperty = p_properties.getPropertySetByID(Properties::Physics);
-		if(physicsProperty)
-		{
-			// Get the object name
-			auto &nameProperty = p_properties.getPropertyByID(Properties::Name);
-
-			// Find a place for the new object in the pool
-			auto physicsObjectFromPool = m_physicsObjects.newObject();
-
-			// Check if the pool wasn't full
-			if(physicsObjectFromPool != nullptr)
-			{
-				std::string name;
-
-				// If the name property is missing, generate a unique name based on the object's index in the pool
-				if(nameProperty)
-					name = nameProperty.getString() + " (" + GetString(Properties::PhysicsObject) + ")";
-				else
-					name = GetString(Properties::PhysicsObject) + Utilities::toString(physicsObjectFromPool->getIndex());
-
-				// Construct the PhysicsObject
-				physicsObjectFromPool->construct(this, name);
-				auto newGUIObject = physicsObjectFromPool->getObject();
-
-				// Start importing the newly created object in a background thread
-				newGUIObject->importObject(physicsProperty);
-
-				return newGUIObject;
-			}
-			else
-			{
-				ErrHandlerLoc::get().log(ErrorCode::ObjectPool_full, ErrorSource::Source_GUIObject, "Failed to add PhysicsObject - \'" + nameProperty.getString() + "\'");
-			}
-		}
-	}*/
-
-	// If valid type was not specified, or object creation failed, return a null object instead
-	return g_nullSystemBase.getScene()->createObject(p_properties);
 }
 
 ErrorCode PhysicsScene::destroyObject(SystemObject *p_systemObject)

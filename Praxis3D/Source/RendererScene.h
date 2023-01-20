@@ -22,6 +22,39 @@
 
 class RendererSystem;
 
+struct GraphicsComponentsConstructionInfo
+{
+	GraphicsComponentsConstructionInfo()
+	{
+		m_cameraConstructionInfo = nullptr;
+		m_lightConstructionInfo = nullptr;
+		m_modelConstructionInfo = nullptr;
+		m_shaderConstructionInfo = nullptr;
+	}
+
+	void deleteConstructionInfo()
+	{
+		if(m_cameraConstructionInfo != nullptr)
+			delete m_cameraConstructionInfo;
+
+		if(m_lightConstructionInfo != nullptr)
+			delete m_lightConstructionInfo;
+
+		if(m_modelConstructionInfo != nullptr)
+			delete m_modelConstructionInfo;
+
+		if(m_shaderConstructionInfo != nullptr)
+			delete m_shaderConstructionInfo;
+
+		//GraphicsComponentsConstructionInfo();
+	}
+
+	CameraComponent::CameraComponentConstructionInfo *m_cameraConstructionInfo;
+	LightComponent::LightComponentConstructionInfo *m_lightConstructionInfo;
+	ModelComponent::ModelComponentConstructionInfo *m_modelConstructionInfo;
+	ShaderComponent::ShaderComponentConstructionInfo *m_shaderConstructionInfo;
+};
+
 struct LoadableComponentContainer
 {
 	LoadableComponentContainer(ModelComponent &p_model)
@@ -87,14 +120,34 @@ public:
 	// Starts loading all the created objects in background threads
 	void loadInBackground();
 
-	// Exports all the data of the scene (including all objects within) as a PropertySet
-	virtual PropertySet exportObject();
-
 	// Processes all the objects and puts them in the separate vectors
 	void update(const float p_deltaTime);
-	
-	SystemObject *createComponent(const EntityID &p_entityID, const std::string &p_entityName, const PropertySet &p_properties);
-	SystemObject *createObject(const PropertySet &p_properties);
+
+	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo);
+	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const GraphicsComponentsConstructionInfo &p_constructionInfo)
+	{
+		std::vector<SystemObject *> components;
+
+		if(p_constructionInfo.m_cameraConstructionInfo != nullptr)
+			components.push_back(createComponent(p_entityID, *p_constructionInfo.m_cameraConstructionInfo));
+
+		if(p_constructionInfo.m_lightConstructionInfo != nullptr)
+			components.push_back(createComponent(p_entityID, *p_constructionInfo.m_lightConstructionInfo));
+
+		if(p_constructionInfo.m_modelConstructionInfo != nullptr)
+			components.push_back(createComponent(p_entityID, *p_constructionInfo.m_modelConstructionInfo));
+
+		if(p_constructionInfo.m_shaderConstructionInfo != nullptr)
+			components.push_back(createComponent(p_entityID, *p_constructionInfo.m_shaderConstructionInfo));
+
+		return components;
+	}
+
+	SystemObject *createComponent(const EntityID &p_entityID, const CameraComponent::CameraComponentConstructionInfo &p_constructionInfo);
+	SystemObject *createComponent(const EntityID &p_entityID, const LightComponent::LightComponentConstructionInfo &p_constructionInfo);
+	SystemObject *createComponent(const EntityID &p_entityID, const ModelComponent::ModelComponentConstructionInfo &p_constructionInfo);
+	SystemObject *createComponent(const EntityID &p_entityID, const ShaderComponent::ShaderComponentConstructionInfo &p_constructionInfo);
+
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType);
@@ -108,61 +161,6 @@ public:
 	inline SceneObjects &getSceneObjects() { return m_sceneObjects; }
 	
 private:
-	// Removes an object from a pool, by iterating checking each pool for matched index; returns true if the object was found and removed
-	inline bool removeObjectFromPool(GraphicsObject &p_object)
-	{
-		// Go over each graphics object
-		for(decltype(m_graphicsObjPool.getPoolSize()) i = 0, numAllocObjecs = 0, totalNumAllocObjs = m_graphicsObjPool.getNumAllocated(),
-			size = m_graphicsObjPool.getPoolSize(); i < size && numAllocObjecs < totalNumAllocObjs; i++)
-		{
-			// Check if the graphics object is allocated inside the pool container
-			if(m_graphicsObjPool[i].allocated())
-			{
-				// Increment the number of allocated objects (early bail mechanism)
-				numAllocObjecs++;
-
-				// If the object matches with the one we are looking for, remove it from the graphics object pool
-				if(*m_graphicsObjPool[i].getObject() == p_object)
-				{
-					m_graphicsObjPool.remove(m_graphicsObjPool[i].getIndex());
-					return true;
-				}
-			}
-		}
-
-		return false;
-	}
-	
-	/*/ Checks if an object is allocated in an object pool
-	inline bool checkIfAllocated(const LoadableGraphicsObject &p_object)
-	{
-		// Remove object from the pool determined by object's type
-		switch(p_object.getObjectType())
-		{
-		case Properties::ModelObject:
-			
-			// Get a pool object by it's index and check if it's allocated
-			return m_modelObjPool.getObject(p_object.getIndex())->allocated();
-			
-			break;
-		}
-	}*/
-
-	// Finds a match in the currently being loaded object array; returns null pointer if no match is found
-	inline LoadableGraphicsObject *getCurrentlyLoadingObject(SystemObject &p_loadableObject)
-	{
-		// Iterate over currently loading objects
-		for(decltype(m_objectsLoadingToMemory.size()) i = 0, size = m_objectsLoadingToMemory.size(); i < size;)
-		{
-			// Compare pointers, if match is found, return the object
-			if(*m_objectsLoadingToMemory[i] == p_loadableObject)
-				return m_objectsLoadingToMemory[i];
-		}
-
-		// If this point is reached - object wasn't found, return a null pointer
-		return nullptr;
-	}
-
 	inline void calculateCamera(SpatialTransformData &p_viewData)
 	{
 		/*p_viewData.m_spatialData.m_rotationEuler = Math::toRadian(p_viewData.m_spatialData.m_rotationEuler);
@@ -207,39 +205,9 @@ private:
 
 	MaterialData loadMaterialData(PropertySet &p_materialProperty, Model::MaterialArrays &p_materialArraysFromModel, MaterialType p_materialType, std::size_t p_meshIndex);
 
-	// Object component creators (factories)
-	ModelComponent *loadModelComponent(const PropertySet &p_properties);
-	ShaderComponent *loadShaderComponent(const PropertySet &p_properties);
-	LightComponent *loadLightComponent(const PropertySet &p_properties);
-
-	ModelObject *loadModelObject(const PropertySet &p_properties);
-	CameraObject *loadCameraObject(const PropertySet &p_properties);
-	EnvironmentMapObject *loadEnvironmentMap(const PropertySet &p_properties);
-	DirectionalLightObject *loadDirectionalLight(const PropertySet &p_properties);
-	PointLightObject *loadPointLight(const PropertySet &p_properties);
-	SpotLightObject *loadSpotLight(const PropertySet &p_properties);
-		
-	// Object pools
-	// OLD
-	//ObjectPool<ModelObject> m_modelObjPool;
-	//ObjectPool<ModelObject> m_shaderObjPool;
-	//ObjectPool<PointLightObject> m_pointLightPool;
-	//ObjectPool<SpotLightObject> m_spotLightPool;
-	//ObjectPool<EnvironmentMapObject> m_envMapPool;
-
+	// Stores objects that are currently being loaded to memory in a background thread
 	std::list<LoadableComponentContainer> m_componentsLoadingToMemory;
-
-	//NEW
-	ObjectPool<GraphicsObject> m_graphicsObjPool;
-	std::vector<GraphicsObject*> m_objectsLoadingToMemory;
-	std::vector<GraphicsObject*> m_objectsToDestroy;
-
-	ObjectPool<LightComponent> m_lightComponents;
-	std::vector<ModelComponentData> m_modelComponents;
-
-	// Stores objects that are currently being loaded to memory in background thread
-	//std::vector<LoadableGraphicsObject> m_objectsBeingLoaded;
-	
+		
 	EnvironmentMapObject *m_skybox;
 
 	// Only one camera present at a time

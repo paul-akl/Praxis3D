@@ -7,8 +7,18 @@
 
 class GUISequenceComponent : public SystemObject
 {
-	friend class ScriptScene;
+	friend class GUIScene;
 public:
+	struct GUISequenceComponentConstructionInfo : public SystemObject::SystemObjectConstructionInfo
+	{
+		GUISequenceComponentConstructionInfo()
+		{
+			m_staticSequence = false;
+		}
+
+		bool m_staticSequence;
+	};
+
 	GUISequenceComponent(SystemScene *p_systemScene, std::string p_name, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::GUISequenceComponent, p_entityID)//, m_GUIData(*this)
 	{
 		m_staticSequence = false;

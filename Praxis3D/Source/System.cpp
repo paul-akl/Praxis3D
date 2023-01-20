@@ -1,3 +1,4 @@
+#include "ComponentConstructorInfo.h"
 #include "NullSystemObjects.h"
 #include "ObjectDirectory.h"
 #include "System.h"
@@ -20,7 +21,12 @@ SystemObject::~SystemObject()
 	ObjectDirectory::unregisterObject(*this);
 }
 
-SystemObject *SystemScene::createComponent(const EntityID &p_entityID, const std::string &p_entityName, const PropertySet &p_properties)
+std::vector<SystemObject*> SystemScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo)
 {
-	return g_nullSystemBase.getScene()->createObject(p_properties); 
+	return std::vector<SystemObject*>();
+}
+
+SystemObject *SystemScene::getNullObject()
+{
+	return g_nullSystemBase.getScene()->getNullObject();
 }

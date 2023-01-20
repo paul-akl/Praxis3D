@@ -240,7 +240,7 @@ UniversalObject::~UniversalObject()
 
 SystemObject *UniversalObject::extend(SystemScene *p_systemScene, PropertySet &p_properties)
 {
-	// TODO ASSERT ERROR
+	/*/ TODO ASSERT ERROR
 	_ASSERT(p_systemScene != nullptr);
 	_ASSERT(m_objectExtensions.find(p_systemScene->getSystemType()) == m_objectExtensions.end());
 
@@ -249,7 +249,8 @@ SystemObject *UniversalObject::extend(SystemScene *p_systemScene, PropertySet &p
 
 	extend(systemObject);
 
-	return systemObject;
+	return systemObject;*/
+	return nullptr;
 }
 
 bool UniversalObject::extend(SystemObject *p_systemObject)

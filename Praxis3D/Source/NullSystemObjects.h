@@ -51,6 +51,7 @@ public:
 
 	SystemObject *createObject(const PropertySet &p_properties);
 	ErrorCode destroyObject(SystemObject *p_systemObject) { return ErrorCode::Success; }
+	virtual SystemObject *getNullObject();
 
 	SystemTask *getSystemTask();
 	BitMask getDesiredSystemChanges() { return Systems::Changes::None; };

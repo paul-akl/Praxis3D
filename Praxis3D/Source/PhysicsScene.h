@@ -36,6 +36,23 @@
 #include "PhysicsTask.h"
 
 class PhysicsSystem;
+struct ComponentsConstructionInfo;
+
+struct PhysicsComponentsConstructionInfo
+{
+	PhysicsComponentsConstructionInfo()
+	{
+		m_rigidBodyConstructionInfo = nullptr;
+	}
+
+	void deleteConstructionInfo()
+	{
+		if(m_rigidBodyConstructionInfo != nullptr)
+			delete m_rigidBodyConstructionInfo;
+	}
+
+	RigidBodyComponent::RigidBodyComponentConstructionInfo *m_rigidBodyConstructionInfo;
+};
 
 class PhysicsScene : public SystemScene
 {
@@ -53,11 +70,18 @@ public:
 
 	void loadInBackground();
 
-	// Exports all the data of the scene (including all objects within) as a PropertySet (for example, used for saving to map file)
-	PropertySet exportObject() { return PropertySet(); }
+	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo);
+	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const PhysicsComponentsConstructionInfo &p_constructionInfo)
+	{
+		std::vector<SystemObject*> components;
 
-	SystemObject *createComponent(const EntityID &p_entityID, const std::string &p_entityName, const PropertySet &p_properties);
-	SystemObject *createObject(const PropertySet &p_properties);
+		if(p_constructionInfo.m_rigidBodyConstructionInfo != nullptr)
+			components.push_back(createComponent(p_entityID, *p_constructionInfo.m_rigidBodyConstructionInfo));
+
+		return components;
+	}
+
+	SystemObject *createComponent(const EntityID &p_entityID, const RigidBodyComponent::RigidBodyComponentConstructionInfo &p_constructionInfo);
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }

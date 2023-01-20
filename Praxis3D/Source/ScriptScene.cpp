@@ -1,6 +1,7 @@
 
 #include <functional>
 
+#include "ComponentConstructorInfo.h"
 #include "NullSystemObjects.h"
 #include "ScriptSystem.h"
 #include "ScriptScene.h"
@@ -112,169 +113,64 @@ ErrorCode ScriptScene::preload()
 	}
 
 	return ErrorCode::Success;
-
-	// Load every script object. It still works in parallel, however,
-	// it returns only when all objects have finished loading (simulating sequential call)
-	//TaskManagerLocator::get().parallelFor(size_t(0), m_scriptObjects.getPoolSize(), size_t(1), [=](size_t i)
-	//{
-	//	if(m_scriptObjects[i].allocated())
-	//	{
-	//		m_scriptObjects[i].getObject()->loadToMemory();
-	//	}
-	//});
-
-	//return ErrorCode::Success;
 }
 
-PropertySet ScriptScene::exportObject()
+std::vector<SystemObject*> ScriptScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo)
 {
-	//// Create the root property set
-	PropertySet propertySet(Properties::Script);
-
-	//// Add root property set for scene values
-	//auto &scene = propertySet.addPropertySet(Properties::Scene);
-
-	//// Add root property set for all the objects
-	//auto &objects = propertySet.addPropertySet(Properties::Objects);
-
-	//// Add script object property sets
-	//for(decltype(m_scriptObjects.size()) i = 0, size = m_scriptObjects.size(); i < size; i++)
-	//	objects.addPropertySet(m_scriptObjects[i]->exportObject());
-
-	return propertySet;
+	return createComponents(p_entityID, p_constructionInfo.m_scriptComponents);
 }
 
-SystemObject *ScriptScene::createComponent(const EntityID &p_entityID, const std::string &p_entityName, const PropertySet &p_properties)
-{
+SystemObject *ScriptScene::createComponent(const EntityID &p_entityID, const LuaComponent::LuaComponentConstructionInfo &p_constructionInfo)
+{	
 	// If valid type was not specified, or object creation failed, return a null object instead
-	SystemObject *returnObject = g_nullSystemBase.getScene()->createObject(p_properties);
+	SystemObject *returnObject = g_nullSystemBase.getScene()->getNullObject();
 
-	// Check if property set node is present
-	if(p_properties)
+	// Get the world scene required for attaching components to the entity
+	WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
+
+	auto &component = worldScene->addComponent<LuaComponent>(p_entityID, this, p_constructionInfo.m_name, p_entityID);
+
+	// Try to initialize the lua component
+	auto componentInitError = component.init();
+	if(componentInitError == ErrorCode::Success)
 	{
-		// Get the world scene required for attaching components to the entity
-		WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
-
-		switch(p_properties.getPropertyID())
+		if(!p_constructionInfo.m_luaScriptFilename.empty())
 		{
-		case Properties::PropertyID::LuaComponent:
-		{
-			auto &component = worldScene->addComponent<LuaComponent>(p_entityID, this, p_entityName + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::LuaComponent));
-
-			// Try to initialize the lua component
-			auto componentInitError = component.init();
-			if(componentInitError == ErrorCode::Success)
+			std::string luaFilename = Config::filepathVar().script_path + p_constructionInfo.m_luaScriptFilename;
+			if(Filesystem::exists(luaFilename))
 			{
-				// Try to import the component
-				auto const &componentImportError = component.importObject(p_properties);
+				component.m_luaScript->setScriptFilename(luaFilename);
 
-				// Remove the component if it failed to import
-				if(componentImportError != ErrorCode::Success)
-				{
-					ErrHandlerLoc().get().log(componentImportError, ErrorSource::Source_LuaComponent, component.getName());
-					worldScene->removeComponent<LuaComponent>(p_entityID);
-				}
-				else
-					returnObject = &component;
-			}
-			else // Remove the component if it failed to initialize
-			{
-				ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_LuaComponent, component.getName());
-				worldScene->removeComponent<LuaComponent>(p_entityID);
-			}
-		}
-		break;
-		}
-	}
+				if(!p_constructionInfo.m_variables.empty())
+					component.m_luaScript->setVariables(p_constructionInfo.m_variables);
 
-	return returnObject;
-}
+				component.m_objectType = Properties::PropertyID::LuaComponent;
+				component.m_setActiveAfterLoading = p_constructionInfo.m_active;
+				component.setActive(false);
+				component.setLoadedToMemory(false);
 
-SystemObject *ScriptScene::createObject(const PropertySet &p_properties)
-{
-	// Check if property set node is present
-	if(p_properties)
-	{
-		// Check if the rendering property is present
-		auto &scriptProperty = p_properties.getPropertySetByID(Properties::Script);
-		if(scriptProperty)
-		{
-			// Get the object name
-			auto &nameProperty = p_properties.getPropertyByID(Properties::Name);
-
-			// Find a place for the new object in the pool
-			auto scriptObjectFromPool = m_scriptObjects.newObject();
-
-			// Check if the pool wasn't full
-			if(scriptObjectFromPool != nullptr)
-			{
-				std::string name;
-
-				// If the name property is missing, generate a unique name based on the object's index in the pool
-				if(nameProperty)
-					name = nameProperty.getString() + " (" + GetString(Properties::ScriptObject) + ")";
-				else
-					name = GetString(Properties::ScriptObject) + Utilities::toString(scriptObjectFromPool->getIndex());
-
-				// Construct the GraphicsObject
-				scriptObjectFromPool->construct(this, name);
-				auto scriptObject = scriptObjectFromPool->getObject();
-
-				//graphicsObject->importObject(renderingProperty);
-
-				// Start importing the newly created object in a background thread
-				//TaskManagerLocator::get().startBackgroundThread(std::bind(&ScriptObject::importObject, scriptObject, scriptProperty));
-				scriptObject->importObject(scriptProperty);
-
-				return scriptObject;
+				returnObject = &component;
+				//ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_LuaComponent, component.getName() + " - Script loaded");
 			}
 			else
 			{
-				ErrHandlerLoc::get().log(ErrorCode::ObjectPool_full, ErrorSource::Source_Script, "Failed to add ScriptObject - \'" + nameProperty.getString() + "\'");
+				ErrHandlerLoc().get().log(ErrorCode::File_not_found, component.getName(), ErrorSource::Source_LuaComponent);
+				worldScene->removeComponent<LuaComponent>(p_entityID);
 			}
 		}
+		else
+		{
+			ErrHandlerLoc().get().log(ErrorCode::Property_no_filename, component.getName(), ErrorSource::Source_LuaComponent);
+			worldScene->removeComponent<LuaComponent>(p_entityID);
+		}
 	}
-
-	// If valid type was not specified, or object creation failed, return a null object instead
-	return g_nullSystemBase.getScene()->createObject(p_properties);
-
-	/*/  Get certain object properties
-	auto const &type = p_properties.getPropertyByID(Properties::Type).getID();
-
-	SystemObject *newObject = nullptr;
-
-	// Create the object by it's type
-	switch(type)
+	else // Remove the component if it failed to initialize
 	{
-	case Properties::FreeCamera:
-		newObject = loadFreeCamera(p_properties);
-		break;
-	case Properties::DebugUIScript:
-		newObject = loadDebugUI(p_properties);
-		break;
-	case Properties::DebugMoveScript:
-		newObject = loadDebugMove(p_properties);
-		break;
-	case Properties::DebugRotateScript:
-		newObject = loadDebugRotate(p_properties);
-		break;
-	case Properties::SolarTimeScript:
-		newObject = loadSolarTime(p_properties);
-		break;
-	case Properties::SunScript:
-		newObject = loadSun(p_properties);
-		break;
-	case Properties::WorldEditScript:
-		newObject = loadWorldEdit(p_properties);
-		break;
+		ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_LuaComponent, component.getName());
+		worldScene->removeComponent<LuaComponent>(p_entityID);
 	}
 
-	// If the object creation was successful, return the new object
-	if(newObject != nullptr)
-		return newObject;
-
-	// If valid type was not specified, or object creation failed, return a null object instead
-	return g_nullSystemBase.getScene()->createObject(p_properties);*/
+	return returnObject;
 }
 
 ErrorCode ScriptScene::destroyObject(SystemObject *p_systemObject)
