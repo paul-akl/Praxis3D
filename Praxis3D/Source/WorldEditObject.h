@@ -78,7 +78,7 @@ public:
 
 	virtual void update(const float p_deltaTime)
 	{
-		// Check status of next/previous keys. If they have been pressed,
+		/*/ Check status of next/previous keys. If they have been pressed,
 		// mark the selected object to be updated and set the appropriate next/previous object flag
 		if(m_nextKey.isActivated())
 		{
@@ -185,7 +185,7 @@ public:
 			// If an object is selected, update its data
 			//if(m_selectedObject != nullptr)
 			//	m_sceneLoader->getChangeController()->sendChange(this, m_selectedObject, Systems::Changes::Spacial::Position);
-		}
+		}*/
 	}
 
 	virtual BitMask getPotentialSystemChanges() { return Systems::Changes::All; }

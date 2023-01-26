@@ -23,6 +23,12 @@ struct ScriptComponentsConstructionInfo
 		m_luaConstructionInfo = nullptr;
 	}
 
+	// Perform a complete copy, instantiating (with new) every member variable pointer, instead of just assigning the pointer to the same memory
+	void completeCopy(const ScriptComponentsConstructionInfo &p_other)
+	{
+		Utilities::performCopy<LuaComponent::LuaComponentConstructionInfo>(&m_luaConstructionInfo, &p_other.m_luaConstructionInfo);
+	}
+
 	void deleteConstructionInfo()
 	{
 		if(m_luaConstructionInfo != nullptr)
@@ -48,18 +54,18 @@ public:
 
 	ErrorCode preload();
 
-	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo);
-	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ScriptComponentsConstructionInfo &p_constructionInfo)
+	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
+	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ScriptComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true)
 	{
 		std::vector<SystemObject*> components;
 
 		if(p_constructionInfo.m_luaConstructionInfo != nullptr)
-			components.push_back(createComponent(p_entityID, *p_constructionInfo.m_luaConstructionInfo));
+			components.push_back(createComponent(p_entityID, *p_constructionInfo.m_luaConstructionInfo, p_startLoading));
 
 		return components;
 	}
 
-	SystemObject *createComponent(const EntityID &p_entityID, const LuaComponent::LuaComponentConstructionInfo &p_constructionInfo);
+	SystemObject *createComponent(const EntityID &p_entityID, const LuaComponent::LuaComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType);

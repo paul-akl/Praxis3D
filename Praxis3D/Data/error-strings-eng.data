@@ -7,6 +7,7 @@
 		"Initialize_success"				: "Has been initialized",
 		"Initialize_failure"				: "Failed to initialized",
 		"File_not_found"						: "File missing",
+		"Filename_empty"						: "Filename is empty",
 		"Destroy_obj_not_found"			: "Destruction: object not found",
 		"Glew_failed"								: "OpenGL Extension Wrangler Library has failed to initialize",
 		"Ifstream_failed"						: "Unable to read input file stream",

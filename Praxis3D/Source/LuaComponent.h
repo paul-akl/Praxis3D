@@ -26,7 +26,7 @@ public:
 
 	LuaComponent(SystemScene *p_systemScene, std::string p_name, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::LuaComponent), m_luaSpatialData(*this), m_GUIData(*this)
 	{
-		m_luaScript = new LuaScript(m_luaSpatialData, m_GUIData);
+		m_luaScript = new LuaScript(m_systemScene, m_luaSpatialData, m_GUIData);
 		m_luaScriptLoaded = false;
 		m_luaSpatialData.setTrackLocalChanges(true);
 	}

@@ -17,6 +17,12 @@ struct WorldComponentsConstructionInfo
 		m_spatialConstructionInfo = nullptr;
 	}
 
+	// Perform a complete copy, instantiating (with new) every member variable pointer, instead of just assigning the pointer to the same memory
+	void completeCopy(const WorldComponentsConstructionInfo &p_other)
+	{
+		Utilities::performCopy<SpatialComponent::SpatialComponentConstructionInfo>(&m_spatialConstructionInfo, &p_other.m_spatialConstructionInfo);
+	}
+
 	void deleteConstructionInfo()
 	{
 		if(m_spatialConstructionInfo != nullptr)
@@ -41,13 +47,13 @@ public:
 
 	void loadInBackground() { }
 
-	EntityID createEntity(const ComponentsConstructionInfo &p_constructionInfo);
+	EntityID createEntity(const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 
-	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo);
-	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const WorldComponentsConstructionInfo &p_constructionInfo);
+	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
+	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const WorldComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
-	SystemObject *createComponent(const EntityID p_entityID, const SpatialComponent::SpatialComponentConstructionInfo &p_constructionInfo)
+	SystemObject *createComponent(const EntityID p_entityID, const SpatialComponent::SpatialComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true)
 	{
 		SpatialComponent *spatialComponent = nullptr;
 

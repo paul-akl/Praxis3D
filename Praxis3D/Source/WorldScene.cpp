@@ -88,18 +88,24 @@ void WorldScene::update(const float p_deltaTime)
 
 }
 
-EntityID WorldScene::createEntity(const ComponentsConstructionInfo &p_constructionInfo)
+EntityID WorldScene::createEntity(const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
-	// Add entity to the registry and assign its entity ID
-	EntityID newEntity = addEntity(p_constructionInfo.m_id);
+	EntityID newEntity = 0;
 
-	// Log an error if the desired ID couldn't be assigned
-	if(p_constructionInfo.m_id != newEntity)
-		ErrHandlerLoc::get().log(ErrorCode::Duplicate_object_id, ErrorSource::Source_WorldScene, p_constructionInfo.m_name + " - Entity ID \'" + Utilities::toString(p_constructionInfo.m_id) + "\' is already taken. Replaced with: \'" + Utilities::toString(newEntity) + "\'");
+	if(p_constructionInfo.m_id != NULL_ENTITY_ID)
+	{
+		// Add entity to the registry and assign its entity ID
+		newEntity = addEntity(p_constructionInfo.m_id);
 
+		// Log an error if the desired ID couldn't be assigned
+		if(p_constructionInfo.m_id != newEntity)
+			ErrHandlerLoc::get().log(ErrorCode::Duplicate_object_id, ErrorSource::Source_WorldScene, p_constructionInfo.m_name + " - Entity ID \'" + Utilities::toString(p_constructionInfo.m_id) + "\' is already taken. Replaced with: \'" + Utilities::toString(newEntity) + "\'");
+	}
+	else // Do not request a specific entity ID if the requested ID is null
+		newEntity = addEntity();
 
 	// Add WORLD components
-	std::vector<SystemObject*> worldComponents = createComponents(newEntity, p_constructionInfo.m_worldComponents);
+	std::vector<SystemObject*> worldComponents = createComponents(newEntity, p_constructionInfo.m_worldComponents, p_startLoading);
 
 	SystemObject *spatialComponent = nullptr;
 
@@ -112,16 +118,16 @@ EntityID WorldScene::createEntity(const ComponentsConstructionInfo &p_constructi
 		}
 
 	// Add RENDERING components
-	std::vector<SystemObject*> renderingComponents = m_sceneLoader->getSystemScene(Systems::Graphics)->createComponents(newEntity, p_constructionInfo);
+	std::vector<SystemObject*> renderingComponents = m_sceneLoader->getSystemScene(Systems::Graphics)->createComponents(newEntity, p_constructionInfo, p_startLoading);
 
 	// Add GUI components
-	std::vector<SystemObject*> guiComponents = m_sceneLoader->getSystemScene(Systems::GUI)->createComponents(newEntity, p_constructionInfo);
+	std::vector<SystemObject*> guiComponents = m_sceneLoader->getSystemScene(Systems::GUI)->createComponents(newEntity, p_constructionInfo, p_startLoading);
 
 	// Add PHYSICS components
-	std::vector<SystemObject*> physicsComponents = m_sceneLoader->getSystemScene(Systems::Physics)->createComponents(newEntity, p_constructionInfo);
+	std::vector<SystemObject*> physicsComponents = m_sceneLoader->getSystemScene(Systems::Physics)->createComponents(newEntity, p_constructionInfo, p_startLoading);
 
 	// Add SCRIPTING components
-	std::vector<SystemObject*> scriptingComponents = m_sceneLoader->getSystemScene(Systems::Script)->createComponents(newEntity, p_constructionInfo);
+	std::vector<SystemObject*> scriptingComponents = m_sceneLoader->getSystemScene(Systems::Script)->createComponents(newEntity, p_constructionInfo, p_startLoading);
 
 	// Link subjects and observers of different components
 
@@ -161,17 +167,17 @@ EntityID WorldScene::createEntity(const ComponentsConstructionInfo &p_constructi
 	return newEntity;
 }
 
-std::vector<SystemObject*> WorldScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo)
+std::vector<SystemObject*> WorldScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
-	return createComponents(p_entityID, p_constructionInfo.m_worldComponents);
+	return createComponents(p_entityID, p_constructionInfo.m_worldComponents, p_startLoading);
 }
 
-std::vector<SystemObject*> WorldScene::createComponents(const EntityID p_entityID, const WorldComponentsConstructionInfo &p_constructionInfo)
+std::vector<SystemObject*> WorldScene::createComponents(const EntityID p_entityID, const WorldComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	std::vector<SystemObject*> components;
 
 	if(p_constructionInfo.m_spatialConstructionInfo != nullptr)
-		components.push_back(createComponent(p_entityID, *p_constructionInfo.m_spatialConstructionInfo));
+		components.push_back(createComponent(p_entityID, *p_constructionInfo.m_spatialConstructionInfo, p_startLoading));
 
 	return components;
 }

@@ -330,6 +330,7 @@ namespace Properties
 	Code(RigidBodyComponent,) \
 	Code(Size,) \
 	Code(Sphere,) \
+	Code(Velocity,) \
 	/* Script */ \
 	Code(Angle,) \
 	Code(Axis,) \
@@ -376,6 +377,7 @@ namespace Properties
 	Code(GameObject,) \
 	Code(ID,) \
 	Code(Parent,) \
+	Code(Prefab,) \
 	Code(SpatialComponent,) \
 	Code(World,) \
 	/* End of property IDs */ \
@@ -484,6 +486,7 @@ public:
 			object_directory_init_pool_size = 1000;
 			smoothing_tick_samples = 100;
 			running = true;
+			loadingState = true;
 		}
 
 		int change_ctrl_cml_notify_list_reserv;
@@ -498,6 +501,7 @@ public:
 		int object_directory_init_pool_size;
 		int smoothing_tick_samples;
 		bool running;
+		bool loadingState;
 	};
 	struct FramebfrVariables
 	{

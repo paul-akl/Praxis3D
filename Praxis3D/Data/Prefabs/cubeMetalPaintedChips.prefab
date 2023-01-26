@@ -1,0 +1,70 @@
+{
+	"Name": "Cube",
+	"Parent": "0",
+	"World":
+	{
+		"SpatialComponent":
+		{
+			"LocalPosition": "0.0f, 0.0f, 0.0f",
+			"LocalRotation": "0.0f, 0.0f, 0.0f",
+			"LocalScale": "2.0f, 2.0f, 2.0f"
+		}
+	},
+	"Rendering":
+	{
+		"ModelComponent":
+		{
+			"Models":
+			[
+				{
+					"Filename": "cube.obj",
+					"Meshes":
+					[
+						{
+							"Index": "0",
+							"AlphaThreshold": "0.0f",
+							"HeightScale": "0.0f",
+							"Materials":
+							{
+								"Diffuse":
+								{
+									"Filename": "Metal_CleanPaintedWithChips_2k_alb.tga",
+									"TextureScale": "2.0f, 2.0f"
+								},
+								"Normal":
+								{
+									"Filename": "Metal_CleanPaintedWithChips_2k_n.tga",
+									"TextureScale": "2.0f, 2.0f"
+								},
+								"Emissive":
+								{
+									"Filename": "default_emissive.png",
+									"TextureScale": "1.0f, 1.0f"
+								},
+								"RMHAO":
+								{
+									"Filename": "Metal_CleanPaintedWithChips_RMHAO3.tga",
+									"TextureScale": "2.0f, 2.0f"
+								}
+							}
+						}
+					]
+				}
+			]
+		}
+	},
+	"Physics":
+	{
+		"RigidBodyComponent":
+		{
+			"Mass": "10.0f",
+			"Restitution": "0.5f",
+			"Friction": "0.5f",
+			"CollisionShape":
+			{
+				"Type": "Box",
+				"Size": "2.0f, 2.0f, 2.0f"
+			}
+		}
+	}
+}

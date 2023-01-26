@@ -27,6 +27,7 @@ ErrorHandler::ErrorHandler()
 	AssignErrorType(Initialize_success, Info);
 	AssignErrorType(Initialize_failure, Info);
 	AssignErrorType(File_not_found, Warning);
+	AssignErrorType(Filename_empty, Warning);
 	AssignErrorType(Destroy_obj_not_found, Warning);
 	AssignErrorType(Glew_failed, FatalError);
 	AssignErrorType(Ifstream_failed, Warning);
@@ -56,8 +57,8 @@ ErrorHandler::ErrorHandler()
 	AssignErrorType(SDL_video_init_failed, FatalError);
 	AssignErrorType(SDL_vsync_failed, Warning);
 	AssignErrorType(Window_creation_failed, FatalError);
-	AssignErrorType(Invalid_object_id, Error);
-	AssignErrorType(Duplicate_object_id, Error);
+	AssignErrorType(Invalid_object_id, Warning);
+	AssignErrorType(Duplicate_object_id, Warning);
 
 	// Add error sources to the hash map, and offset them by number of error codes, because they share the same hash map
 	for(unsigned int i = 0; i < Source_NumberOfErrorSources; i++)

@@ -17,15 +17,8 @@ struct WorldComponentsConstructionInfo;
 class SceneLoader
 {
 public:
-	SceneLoader()
-	{
-		m_changeController = nullptr;
-		m_loadInBackground = false;
-
-		for(int i = 0; i < Systems::NumberOfSystems; i++)
-			m_systemScenes[i] = g_nullSystemBase.createScene(this);
-	}
-	~SceneLoader() { }
+	SceneLoader();
+	~SceneLoader();
 
 	inline void registerSystemScene(SystemScene *p_scene)
 	{
@@ -39,18 +32,16 @@ public:
 			m_changeController = p_changeCtrl;
 	}
 
-	// Returns an array of created objects, sorted by the system type
-	const inline std::vector<std::pair<const std::string&, SystemObject*>> &getCreatedObjects(Systems::TypeID p_systemType)
-	{
-		return m_createdObjects[p_systemType];
-	}
 	inline SystemScene *getSystemScene(Systems::TypeID p_systemType) const { return m_systemScenes[p_systemType]; }
 	inline UniversalScene *getChangeController() const { return m_changeController; }
 
 	ErrorCode loadFromFile(const std::string &p_filename);
 	ErrorCode saveToFile(const std::string p_filename = "");
 
+	ErrorCode importPrefab(ComponentsConstructionInfo &p_constructionInfo, const std::string &p_filename, const bool p_forceReload = false);
+
 private:
+	ErrorCode importFromFile(ComponentsConstructionInfo &p_constructionInfo, const std::string &p_filename);
 	void importFromProperties(ComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties);
 	void importFromProperties(GraphicsComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name);
 	void importFromProperties(GUIComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name);
@@ -58,13 +49,22 @@ private:
 	void importFromProperties(ScriptComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name);
 	void importFromProperties(WorldComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name);
 
+	// Mutex used to block calls from other threads while import operation is in progress
+	SpinWait m_mutex;
+
+	// Contains all the prefabs that have already been imported before. Saves the time of importing them again, upon requesting
+	std::map<std::string, ComponentsConstructionInfo> m_prefabs;
+
+	// All of the engine's system scenes
 	SystemScene *m_systemScenes[Systems::NumberOfSystems];
 
-	std::vector<std::pair<const std::string&, SystemObject*>> m_createdObjects[Systems::NumberOfSystems];
-
+	// Change controller, used for storing and distributing messages between subjects and observers
 	UniversalScene *m_changeController;
 
+	// Should the imported objects be called to start loading in the background
 	bool m_loadInBackground;
+
+	// Holds the last loaded scene filename, used for exporting the scene back to file
 	std::string m_filename;
 };
 

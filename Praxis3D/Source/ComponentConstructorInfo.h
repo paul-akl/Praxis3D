@@ -13,7 +13,41 @@ struct ComponentsConstructionInfo
 	{
 		m_name = "null";
 		m_id = NULL_ENTITY_ID;
-		m_parent = NULL_ENTITY_ID;
+		m_parent = 0;
+	}
+
+	ComponentsConstructionInfo(ComponentsConstructionInfo &p_other)
+	{
+		completeCopy(p_other);
+	}
+
+	ComponentsConstructionInfo &operator=(const ComponentsConstructionInfo &p_other)
+	{
+		m_name = p_other.m_name;
+		m_id = p_other.m_id;
+		m_parent = p_other.m_parent;
+
+		m_graphicsComponents = p_other.m_graphicsComponents;
+		m_guiComponents = p_other.m_guiComponents;
+		m_physicsComponents = p_other.m_physicsComponents;
+		m_scriptComponents = p_other.m_scriptComponents;
+		m_worldComponents = p_other.m_worldComponents;
+
+		return *this;
+	}
+
+	// Perform a complete copy, instantiating (with new) every member variable pointer, instead of just assigning the pointer to the same memory
+	void completeCopy(const ComponentsConstructionInfo &p_other)
+	{
+		m_name = p_other.m_name;
+		m_id = p_other.m_id;
+		m_parent = p_other.m_parent;
+
+		m_graphicsComponents.completeCopy(p_other.m_graphicsComponents);
+		m_guiComponents.completeCopy(p_other.m_guiComponents);
+		m_physicsComponents.completeCopy(p_other.m_physicsComponents);
+		m_scriptComponents.completeCopy(p_other.m_scriptComponents);
+		m_worldComponents.completeCopy(p_other.m_worldComponents);
 	}
 
 	void deleteConstructionInfo()

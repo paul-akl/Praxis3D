@@ -1,0 +1,60 @@
+{
+	"Name": "Cube",
+	"Rendering":
+	{
+		"ModelComponent":
+		{
+			"Models":
+			[
+				{
+					"Filename": "cube.obj",
+					"Meshes":
+					[
+						{
+							"Index": "0",
+							"AlphaThreshold": "0.0f",
+							"HeightScale": "0.0f",
+							"Materials":
+							{
+								"Diffuse":
+								{
+									"Filename": "badlands-boulders_albedo.png",
+									"TextureScale": "2.0f, 2.0f"
+								},
+								"Normal":
+								{
+									"Filename": "badlands-boulders_normal-ogl.png",
+									"TextureScale": "2.0f, 2.0f"
+								},
+								"Emissive":
+								{
+									"Filename": "default_emissive.png",
+									"TextureScale": "1.0f, 1.0f"
+								},
+								"RMHAO":
+								{
+									"Filename": "badlands-boulders_RMHAO.png",
+									"TextureScale": "2.0f, 2.0f"
+								}
+							}
+						}
+					]
+				}
+			]
+		}
+	},
+	"Physics":
+	{
+		"RigidBodyComponent":
+		{
+			"Mass": "10.0f",
+			"Restitution": "0.5f",
+			"Friction": "0.5f",
+			"CollisionShape":
+			{
+				"Type": "Box",
+				"Size": "1.0f, 1.0f, 1.0f"
+			}
+		}
+	}
+}

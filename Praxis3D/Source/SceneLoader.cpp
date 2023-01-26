@@ -6,6 +6,19 @@
 #include "PropertyLoader.h"
 #include "SceneLoader.h"
 
+SceneLoader::SceneLoader()
+{
+	m_changeController = nullptr;
+	m_loadInBackground = false;
+
+	for(int i = 0; i < Systems::NumberOfSystems; i++)
+		m_systemScenes[i] = g_nullSystemBase.createScene(this);
+}
+
+SceneLoader::~SceneLoader()
+{
+}
+
 ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 {
 	ErrorCode returnError = ErrorCode::Success;
@@ -23,7 +36,6 @@ ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 	}
 	else
 	{
-
 		std::vector<std::pair<const std::string &, SystemObject *>> createdObjects;
 
 		// Get systems property set
@@ -67,10 +79,8 @@ ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 
 			for(decltype(constructionInfo.size()) i = 0, size = constructionInfo.size(); i < size; i++)
 			{
-				worldScene->createEntity(constructionInfo[i]);
+				worldScene->createEntity(constructionInfo[i], false);
 			}
-
-			std::cout << "TEST" << std::endl;
 		}
 		else
 		{
@@ -189,6 +199,79 @@ ErrorCode SceneLoader::saveToFile(const std::string p_filename)
 	return ErrorCode::Failure;
 }
 
+ErrorCode SceneLoader::importPrefab(ComponentsConstructionInfo &p_constructionInfo, const std::string &p_filename, const bool p_forceReload)
+{
+	ErrorCode returnError = ErrorCode::Success;
+
+	// Check if the given filename isn't empty
+	if(!p_filename.empty())
+	{
+		// Search for the given prefab (it might have been loaded before, already)
+		auto prefabIterator = m_prefabs.find(p_filename);
+
+		// If the prefab was already imported and exists in the map, use it
+		if(prefabIterator != m_prefabs.end())
+		{
+			if(p_forceReload)
+				returnError = importFromFile(p_constructionInfo, Config::filepathVar().prefab_path + p_filename);
+			else
+				p_constructionInfo.completeCopy(prefabIterator->second);
+		}
+		else // If the prefab doesn't exist in the map, import it
+		{
+			// Make sure calls from other threads are locked, while current call is in progress
+			// This is needed as the prefab that is being requested might be currently being imported
+			// Mutex prevents duplicate prefabs being loaded, and same data being changed.
+			SpinWait::Lock lock(m_mutex);
+
+			// Search for the prefab again, as it might have been imported from another thread call before mutex lock was released
+			auto prefabIteratorNew = m_prefabs.find(p_filename);
+			if(prefabIteratorNew != m_prefabs.end())
+			{
+				if(p_forceReload)
+					returnError = importFromFile(p_constructionInfo, Config::filepathVar().prefab_path + p_filename);
+				else
+					p_constructionInfo.completeCopy(prefabIterator->second);
+			}
+			else
+			{
+				// Load properties from file
+				PropertyLoader loadedProperties(Config::filepathVar().prefab_path + p_filename);
+				returnError = loadedProperties.loadFromFile();
+
+				if(returnError == ErrorCode::Success)
+				{
+					// Insert a new prefab into the map
+					ComponentsConstructionInfo &constructionInfo = m_prefabs.try_emplace(p_filename).first->second;
+
+					// Populate the newly imported prefab
+					importFromProperties(constructionInfo, loadedProperties.getPropertySet());
+
+					p_constructionInfo.completeCopy(constructionInfo);
+				}
+			}
+		}
+	}
+	else
+		returnError = ErrorCode::Filename_empty;
+
+	return returnError;
+}
+
+ErrorCode SceneLoader::importFromFile(ComponentsConstructionInfo &p_constructionInfo, const std::string &p_filename)
+{
+	ErrorCode returnError = ErrorCode::Success;
+
+	// Load properties from file
+	PropertyLoader loadedProperties(p_filename);
+	returnError = loadedProperties.loadFromFile();
+
+	if(returnError == ErrorCode::Success)
+		importFromProperties(p_constructionInfo, loadedProperties.getPropertySet());
+
+	return returnError;
+}
+
 void SceneLoader::importFromProperties(ComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties)
 {
 	// Get the object name and ID
@@ -211,6 +294,12 @@ void SceneLoader::importFromProperties(ComponentsConstructionInfo &p_constructio
 			{
 				// Get the entity ID if the parent object
 				p_constructionInfo.m_parent = (EntityID)p_properties[i].getInt();
+			}
+			break;
+
+			case Properties::Prefab:
+			{
+				importPrefab(p_constructionInfo, p_properties[i].getString());
 			}
 			break;
 		}
@@ -575,6 +664,9 @@ void SceneLoader::importFromProperties(PhysicsComponentsConstructionInfo &p_cons
 					break;
 				case Properties::Restitution:
 					p_constructionInfo.m_rigidBodyConstructionInfo->m_restitution = p_properties[i].getFloat();
+					break;
+				case Properties::Velocity:
+					p_constructionInfo.m_rigidBodyConstructionInfo->m_linearVelocity = p_properties[i].getVec3f();
 					break;
 				}
 			}

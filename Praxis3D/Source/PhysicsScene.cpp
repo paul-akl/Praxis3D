@@ -140,12 +140,12 @@ void PhysicsScene::loadInBackground()
 {
 }
 
-std::vector<SystemObject*> PhysicsScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo)
+std::vector<SystemObject*> PhysicsScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
-	return createComponents(p_entityID, p_constructionInfo.m_physicsComponents);
+	return createComponents(p_entityID, p_constructionInfo.m_physicsComponents, p_startLoading);
 }
 
-SystemObject *PhysicsScene::createComponent(const EntityID &p_entityID, const RigidBodyComponent::RigidBodyComponentConstructionInfo &p_constructionInfo)
+SystemObject *PhysicsScene::createComponent(const EntityID &p_entityID, const RigidBodyComponent::RigidBodyComponentConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	// If valid type was not specified, or object creation failed, return a null object instead
 	SystemObject *returnObject = g_nullSystemBase.getScene()->getNullObject();
@@ -232,6 +232,10 @@ SystemObject *PhysicsScene::createComponent(const EntityID &p_entityID, const Ri
 				component.m_rigidBody->setCollisionFlags(component.m_rigidBody->getCollisionFlags() | btCollisionObject::CollisionFlags::CF_KINEMATIC_OBJECT);
 				component.m_rigidBody->setActivationState(DISABLE_DEACTIVATION);
 			}
+
+			// Set linear velocity if it is not zero
+			if(p_constructionInfo.m_linearVelocity != glm::vec3())
+				component.m_rigidBody->setLinearVelocity(Math::toBtVector3(p_constructionInfo.m_linearVelocity));
 
 			// Add the rigid body to the dynamics world, essentially loading it into the physics system
 			m_dynamicsWorld->addRigidBody(component.m_rigidBody);

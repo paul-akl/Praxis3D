@@ -336,6 +336,9 @@ void main(void)
 		
 		if(LOD > LOD_PARALLAX_THRESHOLD)
 			newCoords = parallaxOcclusionMapping(texCoord, viewDir, LOD);
+			    
+		//if(newCoords.x > 1.0 || newCoords.y > 1.0 || newCoords.x < 0.0 || newCoords.y < 0.0)
+		//	discard;
 	}
 	
 	//if(distanceToFrag < 9.90)

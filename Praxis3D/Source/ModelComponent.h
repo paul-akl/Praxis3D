@@ -421,6 +421,8 @@ public:
 
 	void performCheckIsLoadedToVideoMemory() 
 	{
+		setLoadedToVideoMemory(false);
+
 		for(decltype(m_modelData.size()) modelSize = m_modelData.size(), modelIndex = 0; modelIndex < modelSize; modelIndex++)
 		{
 			if(!m_modelData[modelIndex].m_model.isLoadedToVideoMemory())

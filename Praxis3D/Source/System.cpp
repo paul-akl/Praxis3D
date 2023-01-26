@@ -21,7 +21,7 @@ SystemObject::~SystemObject()
 	ObjectDirectory::unregisterObject(*this);
 }
 
-std::vector<SystemObject*> SystemScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo)
+std::vector<SystemObject*> SystemScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	return std::vector<SystemObject*>();
 }

@@ -145,13 +145,19 @@ void RendererScene::update(const float p_deltaTime)
 					// Make the component active, so it is processed in the renderer
 					modelComponent.setActive(modelComponent.m_setActiveAfterLoading);
 
-					// Get all loadable objects from the model component
-					auto loadableObjectsFromModel = modelComponent.getLoadableObjects();
+					//if(!modelComponent.isLoadedToVideoMemory())
+					modelComponent.performCheckIsLoadedToVideoMemory();
 
-					// Iterate over all loadable objects from the model component, and if any of them are not loaded to video memory already, add them to the to-load list
-					for(decltype(loadableObjectsFromModel.size()) size = loadableObjectsFromModel.size(), i = 0; i < size; i++)
-						if(!loadableObjectsFromModel[i].isLoadedToVideoMemory())
-							m_sceneObjects.m_loadToVideoMemory.emplace_back(loadableObjectsFromModel[i]);
+					if(!modelComponent.isLoadedToVideoMemory())
+					{
+						// Get all loadable objects from the model component
+						auto loadableObjectsFromModel = modelComponent.getLoadableObjects();
+
+						// Iterate over all loadable objects from the model component, and if any of them are not loaded to video memory already, add them to the to-load list
+						for(decltype(loadableObjectsFromModel.size()) size = loadableObjectsFromModel.size(), i = 0; i < size; i++)
+							if(!loadableObjectsFromModel[i].isLoadedToVideoMemory())
+								m_sceneObjects.m_loadToVideoMemory.emplace_back(loadableObjectsFromModel[i]);
+					}
 				}
 			}
 			break;
@@ -301,12 +307,12 @@ void RendererScene::update(const float p_deltaTime)
 	calculateCamera(m_sceneObjects.m_camera.m_spatialData);
 }
 
-std::vector<SystemObject*> RendererScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo)
+std::vector<SystemObject*> RendererScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
-	return createComponents(p_entityID, p_constructionInfo.m_graphicsComponents);
+	return createComponents(p_entityID, p_constructionInfo.m_graphicsComponents, p_startLoading);
 }
 
-SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const CameraComponent::CameraComponentConstructionInfo &p_constructionInfo)
+SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const CameraComponent::CameraComponentConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	// If valid type was not specified, or object creation failed, return a null object instead
 	SystemObject *returnObject = g_nullSystemBase.getScene()->getNullObject();
@@ -335,7 +341,7 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const C
 	return returnObject;
 }
 
-SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const LightComponent::LightComponentConstructionInfo &p_constructionInfo)
+SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const LightComponent::LightComponentConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {	
 	// If valid type was not specified, or object creation failed, return a null object instead
 	SystemObject *returnObject = g_nullSystemBase.getScene()->getNullObject();
@@ -408,7 +414,7 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const L
 	return returnObject;
 }
 
-SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const ModelComponent::ModelComponentConstructionInfo &p_constructionInfo)
+SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const ModelComponent::ModelComponentConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	// If valid type was not specified, or object creation failed, return a null object instead
 	SystemObject *returnObject = g_nullSystemBase.getScene()->getNullObject();
@@ -434,6 +440,10 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const M
 			// Add the component to an array signifying that it is currently being loaded to memory
 			m_componentsLoadingToMemory.emplace_back(component);
 
+			// Start loading the component to memory in the background if the flag is set to do so
+			if(p_startLoading)
+				TaskManagerLocator::get().startBackgroundThread(std::bind(&ModelComponent::loadToMemory, &component));
+
 			returnObject = &component;
 		}
 		else // Remove the component if it failed to initialize
@@ -448,7 +458,7 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const M
 	return returnObject;
 }
 
-SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const ShaderComponent::ShaderComponentConstructionInfo &p_constructionInfo)
+SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const ShaderComponent::ShaderComponentConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {	
 	// If valid type was not specified, or object creation failed, return a null object instead
 	SystemObject *returnObject = g_nullSystemBase.getScene()->getNullObject();
@@ -489,7 +499,11 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const S
 			}
 
 			// Set the component as loaded, because the load function was called
-			component.setLoadedToMemory(true);
+			//component.setLoadedToMemory(true);
+
+			// Start loading the component to memory in the background if the flag is set to do so
+			if(p_startLoading)
+				TaskManagerLocator::get().startBackgroundThread(std::bind(&ShaderComponent::loadToMemory, &component));
 
 			returnObject = &component;
 		}

@@ -75,7 +75,7 @@ public:
 	// Exports all the data of the scene (including all objects within) as a PropertySet (for example, used for saving to map file)
 	//virtual PropertySet exportObject() { return PropertySet(Properties::Null); }
 
-	virtual std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo);
+	virtual std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 	virtual ErrorCode destroyObject(SystemObject *p_systemObject) = 0;
 	virtual SystemObject *getNullObject();
 
@@ -84,7 +84,8 @@ public:
 	virtual SystemTask *getSystemTask() = 0;
 	virtual Systems::TypeID getSystemType() = 0;
 	virtual BitMask getDesiredSystemChanges() { return Systems::Changes::None; };
-	
+	inline SceneLoader *getSceneLoader() { return m_sceneLoader; }
+
 protected:
 	bool m_initialized;
 	SystemBase *m_system;

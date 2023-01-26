@@ -92,7 +92,6 @@ ErrorCode GeometryBuffer::init()
 
 		// Create depth buffer
 		glBindTexture(GL_TEXTURE_2D, m_depthBuffer);
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_bufferWidth, m_bufferHeight, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
 		glTexImage2D(GL_TEXTURE_2D, 0, Config::FramebfrVariables().gl_depth_buffer_internal_format, m_bufferWidth, m_bufferHeight, 0, 
 					 Config::FramebfrVariables().gl_depth_buffer_texture_format, Config::FramebfrVariables().gl_depth_buffer_texture_type, NULL);
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depthBuffer, 0);

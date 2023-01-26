@@ -13,7 +13,7 @@ ErrorCode PropertyLoader::loadFromFile(std::string p_filename)
 	else
 		// If both passed string and filename string are empty, return an error
 		if(m_filename.empty())
-			return ErrorCode::Property_no_filename;
+			return ErrorCode::Filename_empty;
 
 	std::ifstream file;
 	std::string singleLine, parsedString, processedString;

@@ -260,4 +260,15 @@ namespace Utilities
 	{
 		return ((T)1 << p_bitShiftPosition);
 	}
+
+	// Copies one object to the other, performs nullptr checks and created a new object in memory if needed
+	template <class T_Component>
+	void performCopy(T_Component **p_copyTo, const T_Component * const *p_copyFrom)
+	{
+		if(*p_copyFrom != nullptr)
+			if(*p_copyTo != nullptr)
+				**p_copyTo = **p_copyFrom;
+			else
+				*p_copyTo = new T_Component(**p_copyFrom);
+	}
 }

@@ -332,4 +332,3 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 		m_renderingPasses[i]->update(*m_renderPassData, p_sceneObjects, p_deltaTime);
 	}
 }
-

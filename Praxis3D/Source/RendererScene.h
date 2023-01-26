@@ -32,6 +32,15 @@ struct GraphicsComponentsConstructionInfo
 		m_shaderConstructionInfo = nullptr;
 	}
 
+	// Perform a complete copy, instantiating (with new) every member variable pointer, instead of just assigning the pointer to the same memory
+	void completeCopy(const GraphicsComponentsConstructionInfo &p_other)
+	{
+		Utilities::performCopy<CameraComponent::CameraComponentConstructionInfo>(&m_cameraConstructionInfo, &p_other.m_cameraConstructionInfo);
+		Utilities::performCopy<LightComponent::LightComponentConstructionInfo>(&m_lightConstructionInfo, &p_other.m_lightConstructionInfo);
+		Utilities::performCopy<ModelComponent::ModelComponentConstructionInfo>(&m_modelConstructionInfo, &p_other.m_modelConstructionInfo);
+		Utilities::performCopy<ShaderComponent::ShaderComponentConstructionInfo>(&m_shaderConstructionInfo, &p_other.m_shaderConstructionInfo);
+	}
+
 	void deleteConstructionInfo()
 	{
 		if(m_cameraConstructionInfo != nullptr)
@@ -123,30 +132,30 @@ public:
 	// Processes all the objects and puts them in the separate vectors
 	void update(const float p_deltaTime);
 
-	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo);
-	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const GraphicsComponentsConstructionInfo &p_constructionInfo)
+	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
+	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const GraphicsComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true)
 	{
 		std::vector<SystemObject *> components;
 
 		if(p_constructionInfo.m_cameraConstructionInfo != nullptr)
-			components.push_back(createComponent(p_entityID, *p_constructionInfo.m_cameraConstructionInfo));
+			components.push_back(createComponent(p_entityID, *p_constructionInfo.m_cameraConstructionInfo, p_startLoading));
 
 		if(p_constructionInfo.m_lightConstructionInfo != nullptr)
-			components.push_back(createComponent(p_entityID, *p_constructionInfo.m_lightConstructionInfo));
+			components.push_back(createComponent(p_entityID, *p_constructionInfo.m_lightConstructionInfo, p_startLoading));
 
 		if(p_constructionInfo.m_modelConstructionInfo != nullptr)
-			components.push_back(createComponent(p_entityID, *p_constructionInfo.m_modelConstructionInfo));
+			components.push_back(createComponent(p_entityID, *p_constructionInfo.m_modelConstructionInfo, p_startLoading));
 
 		if(p_constructionInfo.m_shaderConstructionInfo != nullptr)
-			components.push_back(createComponent(p_entityID, *p_constructionInfo.m_shaderConstructionInfo));
+			components.push_back(createComponent(p_entityID, *p_constructionInfo.m_shaderConstructionInfo, p_startLoading));
 
 		return components;
 	}
 
-	SystemObject *createComponent(const EntityID &p_entityID, const CameraComponent::CameraComponentConstructionInfo &p_constructionInfo);
-	SystemObject *createComponent(const EntityID &p_entityID, const LightComponent::LightComponentConstructionInfo &p_constructionInfo);
-	SystemObject *createComponent(const EntityID &p_entityID, const ModelComponent::ModelComponentConstructionInfo &p_constructionInfo);
-	SystemObject *createComponent(const EntityID &p_entityID, const ShaderComponent::ShaderComponentConstructionInfo &p_constructionInfo);
+	SystemObject *createComponent(const EntityID &p_entityID, const CameraComponent::CameraComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
+	SystemObject *createComponent(const EntityID &p_entityID, const LightComponent::LightComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
+	SystemObject *createComponent(const EntityID &p_entityID, const ModelComponent::ModelComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
+	SystemObject *createComponent(const EntityID &p_entityID, const ShaderComponent::ShaderComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 

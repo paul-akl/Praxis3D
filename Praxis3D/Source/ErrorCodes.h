@@ -39,6 +39,7 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
     Code(Initialize_success,) \
     Code(Initialize_failure,) \
     Code(File_not_found,) \
+    Code(Filename_empty,) \
 	/* General engine errors */\
     Code(Destroy_obj_not_found,) \
     Code(Glew_failed,) \

@@ -11,8 +11,10 @@ public:
 	{
 		CameraComponentConstructionInfo()
 		{
-
+			m_fov = Config::graphicsVar().fov;
 		}
+
+		float m_fov;
 	};
 
 	CameraComponent(SystemScene *p_systemScene, std::string p_name, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::CameraComponent, p_entityID)

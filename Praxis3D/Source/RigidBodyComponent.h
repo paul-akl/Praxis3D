@@ -36,6 +36,7 @@ public:
 		bool m_kinematic;
 		CollisionShapeType m_collisionShapeType;
 		glm::vec3 m_collisionShapeSize;
+		glm::vec3 m_linearVelocity;
 	};
 
 	RigidBodyComponent(SystemScene *p_systemScene, std::string p_name, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::RigidBodyComponent, p_entityID)

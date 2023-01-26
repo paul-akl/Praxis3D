@@ -94,12 +94,12 @@ void GUIScene::loadInBackground()
 {
 }
 
-std::vector<SystemObject*> GUIScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo)
+std::vector<SystemObject*> GUIScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
-	return createComponents(p_entityID, p_constructionInfo.m_guiComponents);
+	return createComponents(p_entityID, p_constructionInfo.m_guiComponents, p_startLoading);
 }
 
-SystemObject *GUIScene::createComponent(const EntityID p_entityID, const GUISequenceComponent::GUISequenceComponentConstructionInfo &p_constructionInfo)
+SystemObject *GUIScene::createComponent(const EntityID p_entityID, const GUISequenceComponent::GUISequenceComponentConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {	
 	// If valid type was not specified, or object creation failed, return a null object instead
 	SystemObject *returnObject = g_nullSystemBase.getScene()->getNullObject();

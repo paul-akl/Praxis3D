@@ -14,7 +14,7 @@ function init ()
 	forwardKey:bind(inputVariables.forward_key)
 	upKey:bind(inputVariables.up_editor_key)
 	downKey:bind(inputVariables.down_editor_key)
-		
+	
 	print('Kinematic_test.lua script initialized.')
 end
 
@@ -26,6 +26,8 @@ function update (p_deltaTime)
 	positionVec3 = localTransformMat4:getPosVec3()
 	
 	positionModified = false
+	
+	spawnEntity = false
 		
 	if upKey:isActivated() then
 		positionVec3.y = positionVec3.y + (10.0 * p_deltaTime)
@@ -35,7 +37,7 @@ function update (p_deltaTime)
 		positionVec3.y = positionVec3.y - (10.0 * p_deltaTime)
 		positionModified = true
 	end
-	
+		
 	if(positionModified) then
 		spatialData:setLocalPosition(positionVec3)
 	end

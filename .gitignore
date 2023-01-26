@@ -33,3 +33,4 @@ Builds/x64/Debug/Praxis3D.lib
 *.sarif
 Praxis3D/x64/Debug/CodeAnalysisResultManifest.txt
 .vs/
+Builds/x64/Debug/Praxis3D.exe
