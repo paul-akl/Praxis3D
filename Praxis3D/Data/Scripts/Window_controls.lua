@@ -29,7 +29,8 @@ function update (p_deltaTime)
 		
 	if closeKey:isActivated() then
 		-- Set the engine running state to false, so it is shutdown the next frame
-		setEngineRunning(false)
+		--setEngineRunning(false)
+		setEngineState(EngineStateType.MainMenu)
 	end	
 	
 	if fullscreenKey:isActivated() then

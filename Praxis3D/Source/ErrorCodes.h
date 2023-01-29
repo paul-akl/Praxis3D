@@ -94,6 +94,9 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_Unknown,) \
     Code(Source_General,) \
     Code(Source_AtmScatteringPass,) \
+    Code(Source_AudioScene,) \
+    Code(Source_AudioSystem,) \
+    Code(Source_AudioTask,) \
     Code(Source_BloomCompositePass,) \
     Code(Source_BloomPass,) \
     Code(Source_BlurPass,) \
@@ -110,6 +113,7 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_GraphicsObject,) \
     Code(Source_GUI,) \
     Code(Source_GUIObject,) \
+    Code(Source_GUIPass,) \
     Code(Source_GUISequenceComponent,) \
     Code(Source_HdrMappingPass,) \
     Code(Source_LensFlareCompositePass,) \

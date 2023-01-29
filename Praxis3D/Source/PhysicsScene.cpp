@@ -97,16 +97,25 @@ ErrorCode PhysicsScene::setup(const PropertySet &p_properties)
 		}
 	}
 
+	// Get the world scene required for reserving the component pools
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	// Reserve every component type that belongs to this scene
+	worldScene->reserve<RigidBodyComponent>(Config::objectPoolVar().regid_body_component_default_pool_size);
+
 	return ErrorCode::Success;
 }
 
 void PhysicsScene::update(const float p_deltaTime)
 {
+	//std::cout << "4 Physics update" << std::endl;
+	//printf("4 Physics \n");
+
 	// Perform the physics simulation for the time step of the last frame
 	m_dynamicsWorld->stepSimulation(p_deltaTime);
 
 	// Get the world scene required for getting the entity registry
-	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+	WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
 
 	// Get the entity registry 
 	auto &entityRegistry = worldScene->getEntityRegistry();

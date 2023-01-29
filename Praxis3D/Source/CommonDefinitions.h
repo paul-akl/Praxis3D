@@ -9,6 +9,12 @@ typedef std::vector<std::function<void()>> Functors;
 
 constexpr EntityID NULL_ENTITY_ID = std::numeric_limits<EntityID>::max();
 
+enum EngineStateType : unsigned int
+{
+	EngineStateType_MainMenu = 0,
+	EngineStateType_Play
+};
+
 enum BindCommandType : unsigned int
 {
 	BindCommandType_Texture,
@@ -120,6 +126,7 @@ enum ModelBufferType : unsigned int
 	ModelBuffer_Index = ModelBuffer_NumTypesWithoutIndex,
 	ModelBuffer_NumAllTypes
 };
+
 enum AtmScatteringTextureType : unsigned int
 {
 	AtmScatteringTextureType_Irradiance = MaterialType_NumOfTypes_Extended,

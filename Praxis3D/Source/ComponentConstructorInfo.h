@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AudioScene.h"
 #include "CommonDefinitions.h"
 #include "GUIScene.h"
 #include "RendererScene.h"
@@ -27,6 +28,7 @@ struct ComponentsConstructionInfo
 		m_id = p_other.m_id;
 		m_parent = p_other.m_parent;
 
+		m_audioComponents = p_other.m_audioComponents;
 		m_graphicsComponents = p_other.m_graphicsComponents;
 		m_guiComponents = p_other.m_guiComponents;
 		m_physicsComponents = p_other.m_physicsComponents;
@@ -43,6 +45,7 @@ struct ComponentsConstructionInfo
 		m_id = p_other.m_id;
 		m_parent = p_other.m_parent;
 
+		m_audioComponents.completeCopy(p_other.m_audioComponents);
 		m_graphicsComponents.completeCopy(p_other.m_graphicsComponents);
 		m_guiComponents.completeCopy(p_other.m_guiComponents);
 		m_physicsComponents.completeCopy(p_other.m_physicsComponents);
@@ -52,6 +55,7 @@ struct ComponentsConstructionInfo
 
 	void deleteConstructionInfo()
 	{
+		m_audioComponents.deleteConstructionInfo();
 		m_graphicsComponents.deleteConstructionInfo();
 		m_guiComponents.deleteConstructionInfo();
 		m_physicsComponents.deleteConstructionInfo();
@@ -59,6 +63,7 @@ struct ComponentsConstructionInfo
 		m_worldComponents.deleteConstructionInfo();
 	}
 
+	AudioComponentsConstructionInfo m_audioComponents;
 	GraphicsComponentsConstructionInfo m_graphicsComponents;
 	GUIComponentsConstructionInfo m_guiComponents;
 	PhysicsComponentsConstructionInfo m_physicsComponents;

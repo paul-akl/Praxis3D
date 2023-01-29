@@ -19,6 +19,9 @@ void LuaScript::setFunctions()
 	m_luaState.set_function("toDegreesVec3", sol::resolve<glm::vec3(const glm::vec3 &)>(&glm::degrees));
 	m_luaState.set_function("toDegreesVec4", sol::resolve<glm::vec4(const glm::vec4 &)>(&glm::degrees));
 	m_luaState.set_function("angleAxisQuat", sol::resolve<glm::quat(const float &, const glm::vec3 &)>(&glm::angleAxis));
+	m_luaState.set_function("bitwiseOr", sol::overload([this](const int p_v1, const int p_v2) -> const int { return p_v1 | p_v2; },
+		[this](const int p_v1, const int p_v2, const int p_v3) -> const int { return p_v1 | p_v2 | p_v3; },
+		[this](const int p_v1, const int p_v2, const int p_v3, const int p_v4) -> const int { return p_v1 | p_v2 | p_v3 | p_v4; }));
 
 	// Input / Window functions
 	m_luaState.set_function("getMouseInfo", []() -> const Window::MouseInfo { return WindowLocator::get().getMouseInfo(); });
@@ -34,13 +37,17 @@ void LuaScript::setFunctions()
 
 	// Engine functions
 	m_luaState.set_function("setEngineRunning", [](const bool p_v1) -> const void {Config::m_engineVar.running = p_v1; });
+	m_luaState.set_function("setEngineState", [](const EngineStateType p_v1) -> const void {Config::m_engineVar.engineState = p_v1; });
 
 	// GUI functions
 	auto GUITable = m_luaState.create_table("GUI");
-	GUITable.set_function("Begin", [this](const std::string &p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::Begin(p_v1.c_str()); }); });
+	GUITable.set_function("Begin", sol::overload([this](const std::string &p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::Begin(p_v1.c_str()); }); },
+		[this](const std::string &p_v1, const int p_v2) -> const void { m_GUIData.addFunctor([=] { ImGui::Begin(p_v1.c_str(), 0, p_v2); }); },
+		[this](const std::string &p_v1, Conditional *p_v2, const int p_v3) -> const void { m_GUIData.addFunctor([=] { ImGui::Begin(p_v1.c_str(), &p_v2->m_flag, p_v3); }); }));
 	GUITable.set_function("BeginChild", [this](const std::string &p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::BeginChild(p_v1.c_str()); }); });
 	GUITable.set_function("BeginMenu", [this](const std::string &p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::BeginMenu(p_v1.c_str()); }); });
-	GUITable.set_function("Button", [this](const std::string &p_v1, Conditional *p_v2) -> void { m_GUIData.addFunctor([=] { p_v2->m_flag = ImGui::Button(p_v1.c_str()); }); });
+	GUITable.set_function("Button", sol::overload([this](const std::string &p_v1, Conditional *p_v2) -> void { m_GUIData.addFunctor([=] { p_v2->m_flag = ImGui::Button(p_v1.c_str()); }); },
+		[this](const std::string &p_v1, const float p_v2, const float p_v3, Conditional *p_v4) -> void { m_GUIData.addFunctor([=] { p_v4->m_flag = ImGui::Button(p_v1.c_str(), ImVec2(p_v2, p_v3)); }); }));
 	GUITable.set_function("Checkbox", [this](const std::string &p_v1, Conditional *p_v2) -> void { m_GUIData.addFunctor([=] { ImGui::Checkbox(p_v1.c_str(), &p_v2->m_flag); }); });
 	GUITable.set_function("ColorEdit3", [this](const std::string &p_v1, glm::vec3 *p_v2) -> void { m_GUIData.addFunctor([=] { ImGui::ColorEdit3(p_v1.c_str(), &(p_v2->x)); }); });
 	GUITable.set_function("ColorEdit4", [this](const std::string &p_v1, glm::vec4 *p_v2) -> void { m_GUIData.addFunctor([=] { ImGui::ColorEdit4(p_v1.c_str(), &(p_v2->x)); }); });
@@ -50,6 +57,7 @@ void LuaScript::setFunctions()
 	GUITable.set_function("EndMenuBar", [this]() -> const void { m_GUIData.addFunctor([=] { ImGui::EndMenuBar(); }); });
 	GUITable.set_function("MenuItem", [this](const std::string &p_v1, const std::string &p_v2, Conditional *p_v3) -> void { m_GUIData.addFunctor([=] { p_v3->m_flag = ImGui::MenuItem(p_v1.c_str(), p_v2.c_str()); }); });
 	GUITable.set_function("PlotLines", [this](const std::string &p_v1, const float *p_v2, int p_v3) -> const void { m_GUIData.addFunctor([=] { ImGui::PlotLines(p_v1.c_str(), p_v2, p_v3); }); });
+	GUITable.set_function("SetNextWindowPos", [this](const float p_v1, const float p_v2) -> const void { m_GUIData.addFunctor([=] { ImGui::SetNextWindowPos(ImVec2(p_v1, p_v2)); }); });
 	GUITable.set_function("SliderFloat", [this](const std::string &p_v1, float *p_v2, const float p_v3, const float p_v4) -> const void { m_GUIData.addFunctor([=] { ImGui::SliderFloat(p_v1.c_str(), p_v2, p_v3, p_v4); }); });
 	GUITable.set_function("SameLine", [this]() -> const void { m_GUIData.addFunctor([=] { ImGui::SameLine(); }); });
 	GUITable.set_function("Text", sol::overload([this](const std::string &p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::Text(p_v1.c_str()); }); },
@@ -66,6 +74,11 @@ void LuaScript::setFunctions()
 
 void LuaScript::setUsertypes()
 {
+	// Enums
+	m_luaState.new_enum("EngineStateType",
+		"MainMenu", EngineStateType::EngineStateType_MainMenu,
+		"Play", EngineStateType::EngineStateType_Play);
+
 	// Config variables
 	m_luaState.new_usertype<Config::EngineVariables>("EngineVariables",
 		"change_ctrl_cml_notify_list_reserv", &Config::EngineVariables::change_ctrl_cml_notify_list_reserv,
@@ -82,6 +95,10 @@ void LuaScript::setUsertypes()
 
 	m_luaState.new_usertype<Config::GameplayVariables>("GameplayVariables",
 		"camera_freelook_speed", &Config::GameplayVariables::camera_freelook_speed);
+
+	m_luaState.new_usertype<Config::GraphicsVariables>("GraphicsVariables",
+		"current_resolution_x", &Config::GraphicsVariables::current_resolution_x,
+		"current_resolution_y", &Config::GraphicsVariables::current_resolution_y);
 
 	m_luaState.new_usertype<Config::InputVariables>("InputVariables",
 		"back_key", &Config::InputVariables::back_key,
@@ -406,6 +423,13 @@ void LuaScript::createObjectInLua(const unsigned int p_objectType, const std::st
 
 			// Set the given variable name in Lua to point to the GameplayVariables object
 			m_luaState.set(p_variableName, Config::gameplayVar());
+
+			break;
+
+		case LuaDefinitions::GraphicsVariables:
+
+			// Set the given variable name in Lua to point to the GraphicsVariables object
+			m_luaState.set(p_variableName, Config::graphicsVar());
 
 			break;
 

@@ -29,7 +29,7 @@ ErrorCode ScriptScene::init()
 ErrorCode ScriptScene::setup(const PropertySet &p_properties)
 {
 	// Get default object pool size
-	decltype(m_scriptObjects.getPoolSize()) objectPoolSize = Config::objectPoolVar().object_pool_size;
+	int objectPoolSize = Config::objectPoolVar().object_pool_size;
 
 	for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
 	{
@@ -41,8 +41,11 @@ ErrorCode ScriptScene::setup(const PropertySet &p_properties)
 		}
 	}
 
-	// Initialize object pools
-	m_scriptObjects.init(objectPoolSize);
+	// Get the world scene required for reserving the component pools
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	// Reserve every component type that belongs to this scene
+	worldScene->reserve<LuaComponent>(Config::objectPoolVar().lua_component_default_pool_size);
 
 	return ErrorCode::Success;
 }
@@ -92,11 +95,18 @@ void ScriptScene::update(const float p_deltaTime)
 
 void ScriptScene::loadInBackground()
 {
-	// Iterate over script objects and start loading them in background
-	for(decltype(m_scriptObjects.getPoolSize()) i = 0, size = m_scriptObjects.getPoolSize(); i < size; i++)
+	// Get the world scene required for getting the entity registry
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	// Get the entity registry 
+	auto &entityRegistry = worldScene->getEntityRegistry();
+
+	auto luaView = worldScene->getEntityRegistry().view<LuaComponent>();
+	for(auto entity : luaView)
 	{
-		// TODO: load in background implementation
-		//TaskManagerLocator::get().startBackgroundThread(std::bind(&ScriptObject::loadToMemory, m_scriptObjects[i]));
+		auto &component = luaView.get<LuaComponent>(entity);
+
+		TaskManagerLocator::get().startBackgroundThread(std::bind(&LuaComponent::loadToMemory, &component));
 	}
 }
 
@@ -175,19 +185,23 @@ SystemObject *ScriptScene::createComponent(const EntityID &p_entityID, const Lua
 
 ErrorCode ScriptScene::destroyObject(SystemObject *p_systemObject)
 {
-	// Check if object is valid and belongs to graphics system
-	if(p_systemObject != nullptr && p_systemObject->getSystemType() == Systems::Graphics)
-	{
-		// Cast the system object to graphics object, as it belongs to the renderer scene
-		ScriptObject *objectToDestroy = static_cast<ScriptObject *>(p_systemObject);
+	ErrorCode returnError = ErrorCode::Success;
 
-		// Try to destroy the object; return success if it succeeds
-		if(removeObjectFromPool(*objectToDestroy))
-			return ErrorCode::Success;
+	switch(p_systemObject->getObjectType())
+	{
+	case Properties::PropertyID::LuaComponent:
+		//m_sceneLoader->getChangeController()->removeObjectLink(p_systemObject);
+		static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World))->removeComponent<LuaComponent>(p_systemObject->getEntityID());
+		break;
+
+	default:
+		// No object was found, return an appropriate error
+		returnError = ErrorCode::Destroy_obj_not_found;
+		break;
 	}
 
-	// If this point is reached, no object was found, return an appropriate error
-	return ErrorCode::Destroy_obj_not_found;
+	// If this point is reached, 
+	return returnError;
 }
 
 void ScriptScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)

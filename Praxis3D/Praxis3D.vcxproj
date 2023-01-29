@@ -138,6 +138,8 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Source\AtmScatteringModel.cpp" />
     <ClCompile Include="Source\AtmScatteringPass.cpp" />
+    <ClCompile Include="Source\AudioScene.cpp" />
+    <ClCompile Include="Source\AudioTask.cpp" />
     <ClCompile Include="Source\BaseGraphicsComponent.cpp" />
     <ClCompile Include="Source\BaseGraphicsObjects.cpp" />
     <ClCompile Include="Source\ChangeController.cpp" />
@@ -146,6 +148,7 @@
     <ClCompile Include="Source\ConfigLoader.cpp" />
     <ClCompile Include="Source\DeferredRenderer.cpp" />
     <ClCompile Include="Source\Engine.cpp" />
+    <ClCompile Include="Source\EngineState.cpp" />
     <ClCompile Include="Source\ErrorCodes.cpp" />
     <ClCompile Include="Source\ErrorHandler.cpp" />
     <ClCompile Include="Source\ErrorHandlerLocator.cpp" />
@@ -159,6 +162,7 @@
     <ClCompile Include="Source\LightComponent.cpp" />
     <ClCompile Include="Source\Loaders.cpp" />
     <ClCompile Include="Source\LuaScript.cpp" />
+    <ClCompile Include="Source\MainMenuState.cpp" />
     <ClCompile Include="Source\Math.cpp" />
     <ClCompile Include="Source\ModelLoader.cpp" />
     <ClCompile Include="Source\NullObjects.cpp" />
@@ -212,6 +216,9 @@
     <ClInclude Include="Source\AtmScatteringShaderDefinitions.h" />
     <ClInclude Include="Source\AtmScatteringShaderFunctions.h" />
     <ClInclude Include="Source\AtmScatteringShaderPass.h" />
+    <ClInclude Include="Source\AudioScene.h" />
+    <ClInclude Include="Source\AudioSystem.h" />
+    <ClInclude Include="Source\AudioTask.h" />
     <ClInclude Include="Source\BaseGraphicsComponent.h" />
     <ClInclude Include="Source\BaseGraphicsObjects.h" />
     <ClInclude Include="Source\BaseScriptObject.h" />
@@ -278,6 +285,7 @@
     <ClInclude Include="Source\LuaComponent.h" />
     <ClInclude Include="Source\LuaScript.h" />
     <ClInclude Include="Source\LuminancePass.h" />
+    <ClInclude Include="Source\MainMenuState.h" />
     <ClInclude Include="Source\Math.h" />
     <ClInclude Include="Source\ModelComponent.h" />
     <ClInclude Include="Source\ModelLoader.h" />

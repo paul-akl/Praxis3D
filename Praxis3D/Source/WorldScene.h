@@ -37,7 +37,7 @@ class WorldScene : public SystemScene
 public:
 	WorldScene(SystemBase *p_system, SceneLoader *p_sceneLoader);
 
-	ErrorCode init() { return ErrorCode::Success; }
+	ErrorCode init();
 
 	ErrorCode setup(const PropertySet &p_properties);
 
@@ -57,7 +57,6 @@ public:
 	{
 		SpatialComponent *spatialComponent = nullptr;
 
-		//auto spatial = m_entityRegistry.emplace<SpatialComponent>(newEntity, this, name);
 		spatialComponent = &addComponent<SpatialComponent>(p_entityID, this, p_constructionInfo.m_name, p_entityID);
 
 		spatialComponent->m_spatialData.setLocalPosition(p_constructionInfo.m_localPosition);
@@ -71,7 +70,6 @@ public:
 
 		// Perform a spatial data update, so that all the transform matrices are calculated
 		spatialComponent->m_spatialData.update();
-
 		return spatialComponent;
 	}
 
@@ -94,6 +92,16 @@ public:
 	void removeComponent(EntityID p_entity)
 	{
 		m_entityRegistry.remove<T_Component>(p_entity);
+	}
+
+	// Increases the size of the pool for a given component type
+	// When multi-threading is enabled, creating views concurrently on a mostly empty registry can sometimes trigger an access violation error,
+	// because a view of a non-existent component creates an empty pool for that component, hence creating views for the first time is not thread-safe.
+	// As a solution, reserve must be called for every component type, to create its pool ahead of time
+	template <class T_Component>
+	void reserve(const size_t p_capacity)
+	{
+		m_entityRegistry.storage<T_Component>().reserve(p_capacity);
 	}
 
 	inline entt::basic_registry<EntityID> &getEntityRegistry() { return m_entityRegistry; }
@@ -130,31 +138,6 @@ private:
 		std::vector<decltype(GameObject::m_GameObjectID)> m_children;
 	};
 
-	// Removes an object from a pool, by iterating checking each pool for matched index; returns true if the object was found and removed
-	inline bool removeObjectFromPool(GameObject &p_object)
-	{
-		// Go over each game object
-		for(decltype(m_gameObjects.getPoolSize()) i = 0, numAllocObjecs = 0, totalNumAllocObjs = m_gameObjects.getNumAllocated(),
-			size = m_gameObjects.getPoolSize(); i < size && numAllocObjecs < totalNumAllocObjs; i++)
-		{
-			// Check if the game object is allocated inside the pool container
-			if(m_gameObjects[i].allocated())
-			{
-				// Increment the number of allocated objects (early bail mechanism)
-				numAllocObjecs++;
-
-				// If the object matches with the one we are looking for, remove it from the game object pool
-				if(*m_gameObjects[i].getObject() == p_object)
-				{
-					m_gameObjects.remove(m_gameObjects[i].getIndex());
-					return true;
-				}
-			}
-		}
-
-		return false;
-	}
-
 	inline EntityID addEntity()
 	{
 		return m_entityRegistry.create();
@@ -169,7 +152,6 @@ private:
 	std::vector<GameObjectAndParent> m_unassignedParents;
 	std::vector<GameObjectAndChildren> m_unassignedChildren;
 
-	ObjectPool<GameObject> m_gameObjects;
 	WorldTask *m_worldTask;
 
 	ObjectRegisterConcurrent<GameObject*> m_objectRegister;

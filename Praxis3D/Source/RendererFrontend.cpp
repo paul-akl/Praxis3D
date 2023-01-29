@@ -18,7 +18,15 @@
 
 RendererFrontend::RendererFrontend() : m_renderPassData(nullptr)
 {
-	// Set up the order of the rendering passes
+	// Disable GUI rendering until GUI render pass is set (as calling GUI functions from GUI components will crash without GUI rendering pass)
+	m_guiRenderWasEnabled = Config::GUIVar().gui_render;
+	Config::m_GUIVar.gui_render = false;
+
+	m_renderingPassesSet = false;
+	for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
+		m_initializedRenderingPasses[i] = nullptr;
+
+	/*/ Set up the order of the rendering passes
 	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Geometry);
 	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_AtmScattering);
 	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Lighting);
@@ -92,7 +100,7 @@ RendererFrontend::RendererFrontend() : m_renderPassData(nullptr)
 				m_initializedRenderingPasses[RenderPassType_GUI] = new GUIPass(*this);
 			break;
 		}
-	}
+	}*/
 }
 
 RendererFrontend::~RendererFrontend()
@@ -131,6 +139,97 @@ ErrorCode RendererFrontend::init()
 	if(!ErrHandlerLoc::get().ifSuccessful(m_backend.init(m_frameData), returnCode))
 		return returnCode;
 
+	// Create the render pass data struct
+	m_renderPassData = new RenderPassData();
+
+	updateProjectionMatrix();
+
+	passLoadCommandsToBackend();
+
+	glViewport(0, 0, m_frameData.m_screenSize.x, m_frameData.m_screenSize.y);
+
+	return returnCode;
+}
+
+void RendererFrontend::setRenderingPasses(const RenderingPasses &p_renderingPasses)
+{
+	m_renderingPassesSet = true;
+
+	// Make sure the entries of the rendering passes are set to nullptr
+	for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
+	{
+		if(m_initializedRenderingPasses[i] != nullptr)
+			delete m_initializedRenderingPasses[i];
+
+		m_initializedRenderingPasses[i] = nullptr;
+	}
+
+	bool guiRenderPassSet = false;
+
+	// Create rendering passes
+	for(decltype(p_renderingPasses.size()) i = 0, size = p_renderingPasses.size(); i < size; i++)
+	{
+		switch(p_renderingPasses[i])
+		{
+		case RenderPassType_Geometry:
+			if(m_initializedRenderingPasses[RenderPassType_Geometry] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_Geometry] = new GeometryPass(*this);
+			break;
+		case RenderPassType_Lighting:
+			if(m_initializedRenderingPasses[RenderPassType_Lighting] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_Lighting] = new LightingPass(*this);
+			break;
+		case RenderPassType_AtmScattering:
+			if(m_initializedRenderingPasses[RenderPassType_AtmScattering] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_AtmScattering] = new AtmScatteringPass(*this);
+			break;
+		case RenderPassType_HdrMapping:
+			if(m_initializedRenderingPasses[RenderPassType_HdrMapping] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_HdrMapping] = new HdrMappingPass(*this);
+			break;
+		case RenderPassType_Blur:
+			if(m_initializedRenderingPasses[RenderPassType_Blur] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_Blur] = new BlurPass(*this);
+			break;
+		case RenderPassType_Bloom:
+			if(m_initializedRenderingPasses[RenderPassType_Bloom] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_Bloom] = new BloomPass(*this);
+			break;
+		case RenderPassType_BloomComposite:
+			if(m_initializedRenderingPasses[RenderPassType_BloomComposite] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_BloomComposite] = new BloomCompositePass(*this);
+			break;
+		case RenderPassType_LenseFlare:
+			if(m_initializedRenderingPasses[RenderPassType_LenseFlare] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_LenseFlare] = new LenseFlarePass(*this);
+			break;
+		case RenderPassType_LenseFlareComposite:
+			if(m_initializedRenderingPasses[RenderPassType_LenseFlareComposite] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_LenseFlareComposite] = new LenseFlareCompositePass(*this);
+			break;
+		case RenderPassType_Luminance:
+			if(m_initializedRenderingPasses[RenderPassType_Luminance] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_Luminance] = new LuminancePass(*this);
+			break;
+		case RenderPassType_Final:
+			if(m_initializedRenderingPasses[RenderPassType_Final] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_Final] = new FinalPass(*this);
+			break;
+		case RenderPassType_GUI:
+			if(m_initializedRenderingPasses[RenderPassType_GUI] == nullptr)
+				m_initializedRenderingPasses[RenderPassType_GUI] = new GUIPass(*this);
+			guiRenderPassSet = true;
+			break;
+		}
+	}
+
+	// Disable GUI rendering if the GUI render pass wasn't set; re-enable GUI rendering if GUI pass was set and if it GUI rendering was enabled before
+	if(!guiRenderPassSet)
+		Config::m_GUIVar.gui_render = false;
+	else
+		if(m_guiRenderWasEnabled)
+			Config::m_GUIVar.gui_render = true;
+
 	// Initialize rendering passes
 	for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
 	{
@@ -148,26 +247,18 @@ ErrorCode RendererFrontend::init()
 		}
 	}
 
-	// Create the render pass data struct
-	m_renderPassData = new RenderPassData();
-
 	// Reserve the required space for rendering passes array
-	m_renderingPasses.reserve(m_renderingPassesTypes.size());
+	m_renderingPasses.reserve(p_renderingPasses.size());
 
 	// Add required rendering passes to the main array
-	for(decltype(m_renderingPassesTypes.size()) i = 0, size = m_renderingPassesTypes.size(); i < size; i++)
+	for(decltype(p_renderingPasses.size()) i = 0, size = p_renderingPasses.size(); i < size; i++)
 	{
-		if(m_initializedRenderingPasses[m_renderingPassesTypes[i]] != nullptr)
-			m_renderingPasses.push_back(m_initializedRenderingPasses[m_renderingPassesTypes[i]]);
+		if(m_initializedRenderingPasses[p_renderingPasses[i]] != nullptr)
+			m_renderingPasses.push_back(m_initializedRenderingPasses[p_renderingPasses[i]]);
 	}
 
-	updateProjectionMatrix();
-
-	passLoadCommandsToBackend();
-
+	//passLoadCommandsToBackend();
 	glViewport(0, 0, m_frameData.m_screenSize.x, m_frameData.m_screenSize.y);
-
-	return returnCode;
 }
 
 void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_deltaTime)

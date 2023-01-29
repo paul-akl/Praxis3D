@@ -112,6 +112,8 @@ void Config::init()
 
 	// Game-play variables
 	AddVariablePredef(m_gameplayVar, default_map);
+	AddVariablePredef(m_gameplayVar, main_menu_map);
+	AddVariablePredef(m_gameplayVar, play_map);
 	AddVariablePredef(m_gameplayVar, camera_freelook_speed);
 
 	// Graphics variables
@@ -219,10 +221,16 @@ void Config::init()
 	AddVariablePredef(m_modelVar, optimizeGraph);
 
 	// Object pool variables
+	AddVariablePredef(m_objPoolVar, camera_component_default_pool_size);
+	AddVariablePredef(m_objPoolVar, light_component_default_pool_size);
+	AddVariablePredef(m_objPoolVar, lua_component_default_pool_size);
+	AddVariablePredef(m_objPoolVar, gui_sequence_component_default_pool_size);
+	AddVariablePredef(m_objPoolVar, model_component_default_pool_size);
 	AddVariablePredef(m_objPoolVar, object_pool_size);
-	AddVariablePredef(m_objPoolVar, model_object_pool_size);
 	AddVariablePredef(m_objPoolVar, point_light_pool_size);
-	AddVariablePredef(m_objPoolVar, shader_object_pool_size);
+	AddVariablePredef(m_objPoolVar, regid_body_component_default_pool_size);
+	AddVariablePredef(m_objPoolVar, shader_component_default_pool_size);
+	AddVariablePredef(m_objPoolVar, spatial_component_default_pool_size);
 	AddVariablePredef(m_objPoolVar, spot_light_pool_size);
 
 	// File-path variables

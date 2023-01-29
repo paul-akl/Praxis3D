@@ -419,6 +419,36 @@
 			"Scene":
 			{
 				"ObjectPoolSize": "50"
+			},
+			"System":
+			{
+				"RenderPasses":
+				[
+					{
+						"Type": "GeometryRenderPass"
+					},
+					{
+						"Type": "AtmScatteringRenderPass"
+					},
+					{
+						"Type": "LightingRenderPass"
+					},
+					{
+						"Type": "AtmScatteringRenderPass"
+					},
+					{
+						"Type": "BloomRenderPass"
+					},
+					{
+						"Type": "LuminanceRenderPass"
+					},
+					{
+						"Type": "FinalRenderPass"
+					},
+					{
+						"Type": "GUIRenderPass"
+					}
+				]
 			}
 		},
 		"Script":

@@ -11,10 +11,19 @@ WorldScene::WorldScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : Syste
 	m_worldTask = new WorldTask(this);
 }
 
+ErrorCode WorldScene::init() 
+{
+	// Since this flag is modified by hand in the Entt code, check to see if it is still correct, because updating the Entt library will revert the flag back to default (false)
+	if(!entt::basic_component_traits::in_place_delete)
+		ErrHandlerLoc().get().log(ErrorType::Error, ErrorSource::Source_WorldScene, "entt::basic_component_traits::in_place_delete is switched off, disabling pointer stability upon component deletion");
+
+	return ErrorCode::Success; 
+}
+
 ErrorCode WorldScene::setup(const PropertySet &p_properties)
 {
 	// Get default object pool size
-	decltype(m_gameObjects.getPoolSize()) objectPoolSize = Config::objectPoolVar().object_pool_size;
+	int objectPoolSize = Config::objectPoolVar().object_pool_size;
 
 	for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
 	{
@@ -26,53 +35,14 @@ ErrorCode WorldScene::setup(const PropertySet &p_properties)
 		}
 	}
 
-	// Initialize object pools
-	m_gameObjects.init(objectPoolSize);
+	// Reserve every component type that belongs to this scene
+	reserve<SpatialComponent>(Config::objectPoolVar().spatial_component_default_pool_size);
 
 	return ErrorCode::Success;
 }
 
 void WorldScene::update(const float p_deltaTime)
 {
-	//std::cout << "World update:" << std::endl;
-
-	//std::vector<EntityID> entities;
-
-	//m_entityRegistry.each([&entities](auto entity)
-	//	{
-	//		entities.push_back(entity);
-	//	});
-
-	//for(size_t i = 0; i < entities.size(); i++)
-	//{
-	//	std::cout << entities[i];
-	//	if(m_entityRegistry.all_of<CameraComponent>(entities[i]))
-	//		std::cout << " cam ";
-	//	if(m_entityRegistry.all_of<LightComponent>(entities[i]))
-	//		std::cout << " lht ";
-	//	if(m_entityRegistry.all_of<ModelComponent>(entities[i]))
-	//		std::cout << " mdl ";
-	//	std::cout << std::endl;
-	//}
-
-	//std::cout << std::endl;
-
-	// Go over each game object
-	//for(decltype(m_gameObjects.getPoolSize()) i = 0, numAllocObjecs = 0, totalNumAllocObjs = m_gameObjects.getNumAllocated(),
-	//	size = m_gameObjects.getPoolSize(); i < size && numAllocObjecs < totalNumAllocObjs; i++)
-	//{
-	//	// Check if the game object is allocated inside the pool container
-	//	if(m_gameObjects[i].allocated())
-	//	{
-	//		// Increment the number of allocated objects (early bail mechanism)
-	//		numAllocObjecs++;
-
-	//		// Update the game object
-	//		m_gameObjects[i].getObject()->update(p_deltaTime);
-	//	}
-	//}
-	
-
 	//	 ___________________________
 	//	|							|
 	//	|	  SPATIAL COMPONENT		|
@@ -184,17 +154,21 @@ std::vector<SystemObject*> WorldScene::createComponents(const EntityID p_entityI
 
 ErrorCode WorldScene::destroyObject(SystemObject *p_systemObject)
 {
-	// Check if object is valid and belongs to world system
-	if(p_systemObject != nullptr && p_systemObject->getSystemType() == Systems::World)
-	{
-		// Cast the system object to game object, as it belongs to the renderer scene
-		GameObject *objectToDestroy = static_cast<GameObject*>(p_systemObject);
+	ErrorCode returnError = ErrorCode::Success;
 
-		// Try to destroy the object; return success if it succeeds
-		if(removeObjectFromPool(*objectToDestroy))
-			return ErrorCode::Success;
+	switch(p_systemObject->getObjectType())
+	{
+	case Properties::PropertyID::SpatialComponent:
+		//m_sceneLoader->getChangeController()->removeObjectLink(p_systemObject);
+		removeComponent<SpatialComponent>(p_systemObject->getEntityID());
+		break;
+
+	default:
+		// No object was found, return an appropriate error
+		returnError = ErrorCode::Destroy_obj_not_found;
+		break;
 	}
 
-	// If this point is reached, no object was found, return an appropriate error
-	return ErrorCode::Destroy_obj_not_found;
+	// If this point is reached, 
+	return returnError;
 }

@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "CommonDefinitions.h"
 #include "ErrorCodes.h"
 #include "EnumFactory.h"
 #include "Utilities.h"
@@ -26,6 +27,7 @@ namespace Systems
 {
 	#define TYPEID(Code) \
 	Code(Null, = -1) \
+	Code(Audio,) \
 	Code(Graphics,) \
 	Code(GUI,) \
 	Code(Physics,) \
@@ -36,6 +38,7 @@ namespace Systems
 
 	const static std::string SystemNames[NumberOfSystems] =
 	{
+		GetString(Audio),
 		GetString(Graphics),
 		GetString(GUI),
 		GetString(Physics),
@@ -149,7 +152,7 @@ namespace Systems
 		}
 		namespace Audio
 		{
-
+			static constexpr BitMask All					= Changes::Type::Audio + Changes::Common::Shared1;
 		}
 		namespace Graphics
 		{
@@ -208,10 +211,13 @@ namespace Properties
 	Code(Objects,) \
 	Code(ObjectPoolSize,) \
 	Code(Scene,) \
+	Code(System,) \
 	Code(Systems,) \
 	Code(Type,) \
 	Code(Value,) \
 	Code(Variables,) \
+	/* Audio */ \
+	Code(Audio,) \
 	/* Geometry */ \
 	Code(OffsetPosition,) \
 	Code(OffsetRotation,) \
@@ -268,6 +274,7 @@ namespace Properties
 	Code(PostProcess,) \
 	Code(Renderer,) \
 	Code(Rendering,) \
+	Code(RenderPasses,) \
 	Code(RMHAO,) \
 	Code(Roughness,) \
 	Code(Shaders,) \
@@ -283,6 +290,14 @@ namespace Properties
 	Code(TextureTilingFactor,) \
 	Code(TextureScale,) \
 	Code(VertexShader,) \
+	/* Graphics rendering passes */ \
+	Code(AtmScatteringRenderPass,) \
+	Code(BloomRenderPass,) \
+	Code(GeometryRenderPass,) \
+	Code(GUIRenderPass,) \
+	Code(LightingRenderPass,) \
+	Code(LuminanceRenderPass,) \
+	Code(FinalRenderPass,) \
 	/* GUI */ \
 	Code(GUI,) \
 	Code(GUIObject,) \
@@ -487,6 +502,7 @@ public:
 			smoothing_tick_samples = 100;
 			running = true;
 			loadingState = true;
+			engineState = EngineStateType::EngineStateType_MainMenu;
 		}
 
 		int change_ctrl_cml_notify_list_reserv;
@@ -502,6 +518,7 @@ public:
 		int smoothing_tick_samples;
 		bool running;
 		bool loadingState;
+		EngineStateType engineState;
 	};
 	struct FramebfrVariables
 	{
@@ -609,10 +626,14 @@ public:
 		GameplayVariables()
 		{
 			default_map = "default.pmap";
+			main_menu_map = "mainMenu.pmap";
+			play_map = "componentTest.pmap";
 			camera_freelook_speed = 10.0f;
 		}
 
 		std::string default_map;
+		std::string main_menu_map;
+		std::string play_map;
 		float camera_freelook_speed;
 	};
 	struct GraphicsVariables
@@ -854,17 +875,29 @@ public:
 	{
 		ObjectPoolVariables()
 		{
+			camera_component_default_pool_size = 5;
+			light_component_default_pool_size = 100;
+			lua_component_default_pool_size = 5;
+			gui_sequence_component_default_pool_size = 5;
+			model_component_default_pool_size = 100;
 			object_pool_size = 50;
-			model_object_pool_size = 20;
 			point_light_pool_size = 50;
-			shader_object_pool_size = 10;
+			regid_body_component_default_pool_size = 100;
+			shader_component_default_pool_size = 5;
+			spatial_component_default_pool_size = 100;
 			spot_light_pool_size = 25;
 		}
 
+		int camera_component_default_pool_size;
+		int light_component_default_pool_size;
+		int lua_component_default_pool_size;
+		int gui_sequence_component_default_pool_size;
+		int model_component_default_pool_size;
 		int object_pool_size;
-		int model_object_pool_size;
 		int point_light_pool_size;
-		int shader_object_pool_size;
+		int regid_body_component_default_pool_size;
+		int shader_component_default_pool_size;
+		int spatial_component_default_pool_size;
 		int spot_light_pool_size;
 	};
 	struct PathsVariables

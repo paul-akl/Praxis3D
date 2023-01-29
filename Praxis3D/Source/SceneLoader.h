@@ -6,6 +6,7 @@
 #include "Universal.h"
 
 struct ComponentsConstructionInfo;
+struct AudioComponentsConstructionInfo;
 struct GraphicsComponentsConstructionInfo;
 struct GUIComponentsConstructionInfo;
 struct PhysicsComponentsConstructionInfo;
@@ -43,6 +44,7 @@ public:
 private:
 	ErrorCode importFromFile(ComponentsConstructionInfo &p_constructionInfo, const std::string &p_filename);
 	void importFromProperties(ComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties);
+	void importFromProperties(AudioComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name);
 	void importFromProperties(GraphicsComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name);
 	void importFromProperties(GUIComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name);
 	void importFromProperties(PhysicsComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name);

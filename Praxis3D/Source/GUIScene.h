@@ -58,7 +58,7 @@ public:
 	}
 
 	SystemObject *createComponent(const EntityID p_entityID, const GUISequenceComponent::GUISequenceComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
-	ErrorCode destroyObject(SystemObject* p_systemObject);
+	ErrorCode destroyObject(SystemObject *p_systemObject);
 
 	void changeOccurred(ObservedSubject* p_subject, BitMask p_changeType) { }
 
@@ -67,34 +67,6 @@ public:
 	BitMask getDesiredSystemChanges() { return Systems::Changes::Generic::CreateObject || Systems::Changes::Generic::DeleteObject; }
 	BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
 
-private:	
-	// Removes an object from a pool, by iterating checking each pool for matched index; returns true if the object was found and removed
-	inline bool removeObjectFromPool(GUIObject &p_object)
-	{
-		// Go over each GUI object
-		for(decltype(m_GUIObjects.getPoolSize()) i = 0, numAllocObjecs = 0, totalNumAllocObjs = m_GUIObjects.getNumAllocated(),
-			size = m_GUIObjects.getPoolSize(); i < size && numAllocObjecs < totalNumAllocObjs; i++)
-		{
-			// Check if the GUI object is allocated inside the pool container
-			if(m_GUIObjects[i].allocated())
-			{
-				// Increment the number of allocated objects (early bail mechanism)
-				numAllocObjecs++;
-
-				// If the object matches with the one we are looking for, remove it from the GUI object pool
-				if(*m_GUIObjects[i].getObject() == p_object)
-				{
-					m_GUIObjects.remove(m_GUIObjects[i].getIndex());
-					return true;
-				}
-			}
-		}
-
-		return false;
-	}
-
+private:
 	GUITask *m_GUITask;
-
-	// Object pools
-	ObjectPool<GUIObject> m_GUIObjects;
 };

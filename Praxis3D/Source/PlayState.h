@@ -11,16 +11,10 @@ public:
 	PlayState();
 	~PlayState();
 
-	ErrorCode init(TaskManager *p_taskManager, SystemBase *p_systems[Systems::NumberOfSystems]);
+	ErrorCode init(TaskManager *p_taskManager);
 	void update(Engine &p_engine);
 
-	void shutdown();
+	const EngineStateType getEngineStateType() final { return EngineStateType::EngineStateType_Play; }
+
 private:
-	SceneLoader m_sceneLoader;
-
-	TaskScheduler *m_scheduler;
-	UniversalScene *m_changeCtrlScene;
-
-	ChangeController *m_sceneChangeController;
-	ChangeController *m_objectChangeController;
 };

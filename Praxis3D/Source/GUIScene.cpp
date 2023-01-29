@@ -27,7 +27,7 @@ ErrorCode GUIScene::init()
 ErrorCode GUIScene::setup(const PropertySet& p_properties)
 {	
 	// Get default object pool size
-	decltype(m_GUIObjects.getPoolSize()) objectPoolSize = Config::objectPoolVar().object_pool_size;
+	int objectPoolSize = Config::objectPoolVar().object_pool_size;
 
 	for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
 	{
@@ -39,52 +39,82 @@ ErrorCode GUIScene::setup(const PropertySet& p_properties)
 		}
 	}
 
-	// Initialize object pools
-	m_GUIObjects.init(objectPoolSize);
+	// Get the world scene required for reserving the component pools
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	// Reserve every component type that belongs to this scene
+	worldScene->reserve<GUISequenceComponent>(Config::objectPoolVar().gui_sequence_component_default_pool_size);
 
 	return ErrorCode::Success;
 }
 
 void GUIScene::update(const float p_deltaTime)
 {
-	// Get the world scene required for getting components
-	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
-
-	// Set the beginning of the GUI frame
-	GUIHandlerLocator::get().beginFrame();
-
-	//	 ____________________________
-	//	|							 |
-	//	|	GUI SEQUENCE COMPONENTS	 |
-	//	|____________________________|
-	//
-	auto sequenceView = worldScene->getEntityRegistry().view<GUISequenceComponent>();
-	for(auto entity : sequenceView)
+	if(Config::GUIVar().gui_render)
 	{
-		GUISequenceComponent &sequenceComponent = sequenceView.get<GUISequenceComponent>(entity);
+		// Get the world scene required for getting components
+		WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
 
-		// Check if the script object is enabled
-		if(sequenceComponent.isObjectActive())
+		// Set the beginning of the GUI frame
+		GUIHandlerLocator::get().beginFrame();
+
+		//static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground;
+
+		//Config::graphicsVar().current_resolution_x;
+		//Config::graphicsVar().current_resolution_y;
+
+		//ImVec2 exitButtonSize(100.0f, 25.0f);
+
+		//ImGui::SetNextWindowPos(ImVec2((Config::graphicsVar().current_resolution_x / 2.0f) - (exitButtonSize.x / 2.0f), (Config::graphicsVar().current_resolution_y / 2.0f) - (exitButtonSize.y / 2.0f)));
+		//ImGui::Begin("Example: Fullscreen window", 0, flags);
+
+		//ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 255.0f, 0.0f, 255.0f));
+		//ImGui::Text("Hello, world %d", 123);
+		//ImGui::Button("Exit", exitButtonSize);
+		//ImGui::PopStyleColor();
+
+		//ImGui::End();
+
+		//	 ____________________________
+		//	|							 |
+		//	|	GUI SEQUENCE COMPONENTS	 |
+		//	|____________________________|
+		//
+		auto sequenceView = worldScene->getEntityRegistry().view<GUISequenceComponent>();
+		for(auto entity : sequenceView)
 		{
-			// Update the object
-			sequenceComponent.update(p_deltaTime);
-		}
-	}
+			GUISequenceComponent &sequenceComponent = sequenceView.get<GUISequenceComponent>(entity);
 
-	// Set the end of the GUI frame
-	GUIHandlerLocator::get().endFrame();
+			// Check if the script object is enabled
+			if(sequenceComponent.isObjectActive())
+			{
+				// Update the object
+				sequenceComponent.update(p_deltaTime);
+			}
+		}
+
+		// Set the end of the GUI frame
+		GUIHandlerLocator::get().endFrame();
+	}
 }
 
 ErrorCode GUIScene::preload()
 {
-	// Load every GUI object. It still works in parallel, however,
+	// Get the entity registry 
+	auto &entityRegistry = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World))->getEntityRegistry();
+	auto sequenceView = entityRegistry.view<GUISequenceComponent>();
+
+	std::vector<SystemObject*> componentsToLoad;
+	for(auto entity : sequenceView)
+	{
+		componentsToLoad.push_back(&sequenceView.get<GUISequenceComponent>(entity));
+	}
+
+	// Load every object to memory. It still works in parallel, however,
 	// it returns only when all objects have finished loading (simulating sequential call)
-	TaskManagerLocator::get().parallelFor(size_t(0), m_GUIObjects.getPoolSize(), size_t(1), [=](size_t i)
+	TaskManagerLocator::get().parallelFor(size_t(0), componentsToLoad.size(), size_t(1), [=](size_t i)
 		{
-			if(m_GUIObjects[i].allocated())
-			{
-				m_GUIObjects[i].getObject()->loadToMemory();
-			}
+			componentsToLoad[i]->loadToMemory();
 		});
 
 	return ErrorCode::Success;
@@ -127,19 +157,23 @@ SystemObject *GUIScene::createComponent(const EntityID p_entityID, const GUISequ
 	return returnObject;
 }
 
-ErrorCode GUIScene::destroyObject(SystemObject* p_systemObject)
+ErrorCode GUIScene::destroyObject(SystemObject *p_systemObject)
 {	
-	// Check if object is valid and belongs to the GUI system
-	if(p_systemObject != nullptr && p_systemObject->getSystemType() == Systems::GUI)
-	{
-		// Cast the system object to GUI object, as it belongs to the renderer scene
-		GUIObject *objectToDestroy = static_cast<GUIObject *>(p_systemObject);
+	ErrorCode returnError = ErrorCode::Success;
 
-		// Try to destroy the object; return success if it succeeds
-		if(removeObjectFromPool(*objectToDestroy))
-			return ErrorCode::Success;
+	switch(p_systemObject->getObjectType())
+	{
+	case Properties::PropertyID::GUISequenceComponent:
+		//m_sceneLoader->getChangeController()->removeObjectLink(p_systemObject);
+		static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World))->removeComponent<GUISequenceComponent>(p_systemObject->getEntityID());
+		break;
+
+	default:
+		// No object was found, return an appropriate error
+		returnError = ErrorCode::Destroy_obj_not_found;
+		break;
 	}
 
-	// If this point is reached, no object was found, return an appropriate error
-	return ErrorCode::Destroy_obj_not_found;
+	// If this point is reached, 
+	return returnError;
 }

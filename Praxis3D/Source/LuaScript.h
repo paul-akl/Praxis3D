@@ -19,6 +19,7 @@ namespace LuaDefinitions
 	Code(Conditional, ) \
 	Code(EngineVariables, ) \
 	Code(GameplayVariables,) \
+	Code(GraphicsVariables,) \
 	Code(InputVariables,) \
     Code(KeyCommand,) \
     Code(MouseInfo,) \
@@ -180,6 +181,34 @@ private:
 	{
 		// Create a table for user types that are supported by Lua scripts
 		m_userTypesTable = m_luaState[Config::scriptVar().userTypeTableName].get_or_create<sol::table>();
+
+		// Create a table for ImGUI window flags
+		sol::table imGuiWindowFlag = m_luaState["ImGuiWindowFlags"].get_or_create<sol::table>();
+
+		imGuiWindowFlag[sol::update_if_empty]["None"] = ImGuiWindowFlags_::ImGuiWindowFlags_None;
+		imGuiWindowFlag[sol::update_if_empty]["NoTitleBar"] = ImGuiWindowFlags_::ImGuiWindowFlags_NoTitleBar;
+		imGuiWindowFlag[sol::update_if_empty]["NoResize"] = ImGuiWindowFlags_::ImGuiWindowFlags_NoResize;
+		imGuiWindowFlag[sol::update_if_empty]["NoMove"] = ImGuiWindowFlags_::ImGuiWindowFlags_NoMove;
+		imGuiWindowFlag[sol::update_if_empty]["NoScrollbar"] = ImGuiWindowFlags_::ImGuiWindowFlags_NoScrollbar;
+		imGuiWindowFlag[sol::update_if_empty]["NoScrollWithMouse"] = ImGuiWindowFlags_::ImGuiWindowFlags_NoScrollWithMouse;
+		imGuiWindowFlag[sol::update_if_empty]["NoCollapse"] = ImGuiWindowFlags_::ImGuiWindowFlags_NoCollapse;
+		imGuiWindowFlag[sol::update_if_empty]["AlwaysAutoResize"] = ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize;
+		imGuiWindowFlag[sol::update_if_empty]["NoBackground"] = ImGuiWindowFlags_::ImGuiWindowFlags_NoBackground;
+		imGuiWindowFlag[sol::update_if_empty]["NoSavedSettings"] = ImGuiWindowFlags_::ImGuiWindowFlags_NoSavedSettings;
+		imGuiWindowFlag[sol::update_if_empty]["NoMouseInputs"] = ImGuiWindowFlags_::ImGuiWindowFlags_NoMouseInputs;
+		imGuiWindowFlag[sol::update_if_empty]["MenuBar"] = ImGuiWindowFlags_::ImGuiWindowFlags_MenuBar;
+		imGuiWindowFlag[sol::update_if_empty]["HorizontalScrollbar"] = ImGuiWindowFlags_::ImGuiWindowFlags_HorizontalScrollbar;
+		imGuiWindowFlag[sol::update_if_empty]["NoFocusOnAppearing"] = ImGuiWindowFlags_::ImGuiWindowFlags_NoFocusOnAppearing;
+		imGuiWindowFlag[sol::update_if_empty]["NoBringToFrontOnFocus"] = ImGuiWindowFlags_::ImGuiWindowFlags_NoBringToFrontOnFocus;
+		imGuiWindowFlag[sol::update_if_empty]["AlwaysVerticalScrollbar"] = ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysVerticalScrollbar;
+		imGuiWindowFlag[sol::update_if_empty]["AlwaysHorizontalScrollbar"] = ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysHorizontalScrollbar;
+		imGuiWindowFlag[sol::update_if_empty]["AlwaysUseWindowPadding"] = ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysUseWindowPadding;
+		imGuiWindowFlag[sol::update_if_empty]["NoNavInputs"] = ImGuiWindowFlags_::ImGuiWindowFlags_NoNavInputs;
+		imGuiWindowFlag[sol::update_if_empty]["NoNavFocus"] = ImGuiWindowFlags_::ImGuiWindowFlags_NoNavFocus;
+		imGuiWindowFlag[sol::update_if_empty]["UnsavedDocument"] = ImGuiWindowFlags_::ImGuiWindowFlags_UnsavedDocument;
+		imGuiWindowFlag[sol::update_if_empty]["NoNav"] = ImGuiWindowFlags_::ImGuiWindowFlags_NoNav;
+		imGuiWindowFlag[sol::update_if_empty]["NoDecoration"] = ImGuiWindowFlags_::ImGuiWindowFlags_NoDecoration;
+		imGuiWindowFlag[sol::update_if_empty]["NoInputs"] = ImGuiWindowFlags_::ImGuiWindowFlags_NoInputs;
 
 		// Add each object type to the user type table
 		for(int i = 0; i < LuaDefinitions::UserTypes::NumOfTypes; i++)

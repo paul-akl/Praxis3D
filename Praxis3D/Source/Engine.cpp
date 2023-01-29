@@ -4,6 +4,7 @@
 
 #include <iostream>
 
+#include "AudioSystem.h"
 #include "ClockLocator.h"
 #include "Engine.h"
 #include "GUIHandlerLocator.h"
@@ -33,6 +34,8 @@ Engine::Engine()
 	m_changeCtrlScene = nullptr;
 	m_sceneChangeController = nullptr;
 	m_objectChangeController = nullptr;
+	m_currentState = nullptr;
+	m_currentStateType = Config::engineVar().engineState;
 }
 
 Engine::~Engine()
@@ -41,11 +44,6 @@ Engine::~Engine()
 	delete m_taskManager;
 	delete m_errorHandler;
 	delete m_clock;
-
-	// Delete all created systems
-	for(int i = 0; i < Systems::NumberOfSystems; i++)
-		if(m_systems[i]->getSystemType() != Systems::Null)
-			delete m_systems[i];
 }
 
 // Some of the initialization sequences are order sensitive. Do not change the order of calls.
@@ -63,21 +61,15 @@ ErrorCode Engine::init()
 	if(servicesError != ErrorCode::Success)
 		return servicesError;
 
-	// Initialize all engine systems
-	auto systemsError = initSystems();
-	if(systemsError != ErrorCode::Success)
-		return systemsError;
-
 	//  ___________________________________
 	// |								   |
 	// |	ENGINE STATE INITIALIZATION	   |
 	// |___________________________________|
-	// Initialize the play state, return failure if it wasn't successful
-	if(m_playstate.init(m_taskManager, m_systems) == ErrorCode::Success)
-		m_currentState = &m_playstate;
-	else
+	// Set and initialize the current engine state
+	setCurrentStateType();
+	if(!m_currentState->isInitialized())
 		return ErrorCode::Failure;
-	
+
 	// If this point is reached, all initializations passed, mark the engine as initialized
 	m_initialized = true;
 
@@ -102,6 +94,13 @@ void Engine::run()
 		// If engine is still running
 		if(Config::engineVar().running == true)
 		{
+			// Load a different engine state, if it has been changed
+			if(m_currentStateType != Config::engineVar().engineState)
+			{
+				m_currentStateType = Config::engineVar().engineState;
+				setCurrentStateType();
+			}
+
 			// Call update on the current engine state
 			m_currentState->update(*this);
 
@@ -296,73 +295,6 @@ ErrorCode Engine::initServices()
 	}
 	else
 		ErrHandlerLoc::get().log(guiError, ErrorSource::Source_Engine);
-
-	return returnError;
-}
-
-ErrorCode Engine::initSystems()
-{
-	ErrorCode returnError = ErrorCode::Success;
-
-	//  __________________________________
-	// |								  |
-	// |  RENDERER SYSTEM INITIALIZATION  |
-	// |__________________________________|
-	// Create graphics system and check if it was successful (if not, assign a null system in it's place)
-	m_systems[Systems::Graphics] = new RendererSystem();
-	if(m_systems[Systems::Graphics]->init() != ErrorCode::Success)
-	{
-		delete m_systems[Systems::Graphics];
-		m_systems[Systems::Graphics] = &g_nullSystemBase;
-	}
-
-	//  ___________________________________
-	// |								   |
-	// |	 GUI SYSTEM INITIALIZATION	   |
-	// |___________________________________|
-	// Create GUI system and check if it was successful (if not, assign a null system in it's place)
-	m_systems[Systems::GUI] = new GUISystem();
-	if(m_systems[Systems::GUI]->init() != ErrorCode::Success)
-	{
-		delete m_systems[Systems::GUI];
-		m_systems[Systems::GUI] = &g_nullSystemBase;
-	}
-
-	//  ___________________________________
-	// |								   |
-	// |   PHYSICS SYSTEM INITIALIZATION   |
-	// |___________________________________|
-	// Create scripting system and check if it was successful (if not, assign a null system in it's place)
-	m_systems[Systems::Physics] = new PhysicsSystem();
-	if(m_systems[Systems::Physics]->init() != ErrorCode::Success)
-	{
-		delete m_systems[Systems::Physics];
-		m_systems[Systems::Physics] = &g_nullSystemBase;
-	}
-
-	//  ___________________________________
-	// |								   |
-	// |  SCRIPTING SYSTEM INITIALIZATION  |
-	// |___________________________________|
-	// Create scripting system and check if it was successful (if not, assign a null system in it's place)
-	m_systems[Systems::Script] = new ScriptSystem();
-	if(m_systems[Systems::Script]->init() != ErrorCode::Success)
-	{
-		delete m_systems[Systems::Script];
-		m_systems[Systems::Script] = &g_nullSystemBase;
-	}
-
-	//  ___________________________________
-	// |								   |
-	// |	WORLD SYSTEM INITIALIZATION	   |
-	// |___________________________________|
-	// Create scripting system and check if it was successful (if not, assign a null system in it's place)
-	m_systems[Systems::World] = new WorldSystem();
-	if(m_systems[Systems::World]->init() != ErrorCode::Success)
-	{
-		delete m_systems[Systems::World];
-		m_systems[Systems::World] = &g_nullSystemBase;
-	}
 
 	return returnError;
 }

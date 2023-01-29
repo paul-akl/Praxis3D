@@ -1,14 +1,11 @@
 #pragma once
 
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-
 #include "Clock.h"
 #include "Config.h"
 #include "ErrorCodes.h"
 #include "ErrorHandlerLocator.h"
 #include "GUIHandlerLocator.h"
+#include "MainMenuState.h"
 #include "PlayState.h"
 #include "TaskManager.h"
 #include "Window.h"
@@ -27,19 +24,54 @@ public:
 	void run();
 
 private:
+	// Sets which engine state is currently active
+	void setCurrentStateType()
+	{
+		EngineState *previousState = m_currentState;
+
+		// Set the current state
+		switch(m_currentStateType)
+		{
+		case EngineStateType_MainMenu:
+			m_currentState = &m_mainMenuState;
+			break;
+
+		case EngineStateType_Play:
+			m_currentState = &m_playstate;
+			break;
+
+		default:
+			m_currentStateType = m_currentState->getEngineStateType();
+			break;
+		}
+
+		if(!m_currentState->isInitialized())
+		{
+			// Initialize the current state
+			ErrorCode stateInitError = m_currentState->init(m_taskManager);
+
+			// If it failed to initialize, return to the previous state and log an error
+			if(stateInitError != ErrorCode::Success)
+			{
+				m_currentState = previousState;
+				m_currentStateType = m_currentState->getEngineStateType();
+				ErrHandlerLoc::get().log(stateInitError, ErrorSource::Source_Engine);
+			}
+		}
+	}
+
 	// Creates and initializes all the services and their locators
 	ErrorCode initServices();
-
-	// Creates and initializes all the engine systems
-	ErrorCode initSystems();
 
 	// Shuts all the systems, etc. down, called before returning from run()
 	void shutdown();
 
 	// Currently being executed state
 	EngineState *m_currentState;
+	EngineStateType m_currentStateType;
 
 	// Different execution states
+	MainMenuState m_mainMenuState;
 	PlayState m_playstate;
 
 	// Various required services
@@ -47,9 +79,6 @@ private:
 	GUIHandler *m_GUIHandler;
 	Window *m_window;
 	Clock *m_clock;
-
-	// All engine systems
-	SystemBase *m_systems[Systems::NumberOfSystems];
 
 	// Task manager and scheduler for multi-threading
 	TaskManager *m_taskManager;

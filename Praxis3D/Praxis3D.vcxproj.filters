@@ -175,6 +175,18 @@
     <Filter Include="Data Managers">
       <UniqueIdentifier>{1d4c199c-6fd9-492b-9c8d-23af455d408f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Audio">
+      <UniqueIdentifier>{b0af423c-ca96-4651-8735-d17c9593c49e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Audio\Header Files">
+      <UniqueIdentifier>{fb7679a3-0a75-473e-9935-b7fdf9cf027f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Audio\Source Files">
+      <UniqueIdentifier>{f3cfd48d-1244-403a-abd6-62cda62bf679}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Audio\Components">
+      <UniqueIdentifier>{de63b868-204f-4f5a-9bf7-56e48e541097}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -380,6 +392,18 @@
     </ClCompile>
     <ClCompile Include="Source\GUIHandler.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AudioScene.cpp">
+      <Filter>Audio\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AudioTask.cpp">
+      <Filter>Audio\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\MainMenuState.cpp">
+      <Filter>Engine States\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\EngineState.cpp">
+      <Filter>Engine States\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -811,6 +835,18 @@
     </ClInclude>
     <ClInclude Include="Source\ComponentConstructorInfo.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AudioScene.h">
+      <Filter>Audio\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AudioTask.h">
+      <Filter>Audio\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AudioSystem.h">
+      <Filter>Audio\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\MainMenuState.h">
+      <Filter>Engine States\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

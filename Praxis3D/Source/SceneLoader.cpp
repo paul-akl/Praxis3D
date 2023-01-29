@@ -46,17 +46,22 @@ ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 		{
 			// Create an empty property set, in case there is none in the loaded file, because a system scene setup must be called either way
 			PropertySet scenePropertySet;
+			PropertySet systemropertySet;
 
 			// Iterate over each system property set
 			for(decltype(systemProperties.getNumPropertySets()) propIndex = 0, propSize = systemProperties.getNumPropertySets(); propIndex < propSize; propIndex++)
 			{
 				// If the system scene property matches in the loaded file, retrieve it so it can be passed to the corresponding scene
 				if(Systems::SystemNames[m_systemScenes[sysIndex]->getSystemType()] == GetString(systemProperties.getPropertySetUnsafe(propIndex).getPropertyID()))
+				{
 					scenePropertySet = systemProperties.getPropertySetUnsafe(propIndex).getPropertySetByID(Properties::Scene);
+					systemropertySet = systemProperties.getPropertySetUnsafe(propIndex).getPropertySetByID(Properties::System);
+				}
 			}
 
-			// Pass the scene propertySet parameters
+			// Pass the scene and system propertySet parameters
 			m_systemScenes[sysIndex]->setup(scenePropertySet);
+			m_systemScenes[sysIndex]->getSystem()->setup(systemropertySet);
 		}
 
 		// Get Game Objects
@@ -305,6 +310,19 @@ void SceneLoader::importFromProperties(ComponentsConstructionInfo &p_constructio
 		}
 	}
 
+	// Load audio components
+	{
+		auto &sceneProperty = p_properties.getPropertySetByID(Properties::Audio);
+		if(sceneProperty)
+		{
+			for(decltype(sceneProperty.getNumPropertySets()) i = 0, size = sceneProperty.getNumPropertySets(); i < size; i++)
+			{
+				importFromProperties(p_constructionInfo.m_audioComponents, sceneProperty.getPropertySet(i), name);
+			}
+		}
+	}
+
+	// Load graphics components
 	{
 		auto &sceneProperty = p_properties.getPropertySetByID(Properties::Rendering);
 		if(sceneProperty)
@@ -316,6 +334,7 @@ void SceneLoader::importFromProperties(ComponentsConstructionInfo &p_constructio
 		}
 	}
 
+	// Load GUI components
 	{
 		auto &sceneProperty = p_properties.getPropertySetByID(Properties::GUI);
 		if(sceneProperty)
@@ -327,6 +346,7 @@ void SceneLoader::importFromProperties(ComponentsConstructionInfo &p_constructio
 		}
 	}
 
+	// Load physics components
 	{
 		auto &sceneProperty = p_properties.getPropertySetByID(Properties::Physics);
 		if(sceneProperty)
@@ -338,6 +358,7 @@ void SceneLoader::importFromProperties(ComponentsConstructionInfo &p_constructio
 		}
 	}
 
+	// Load script components
 	{
 		auto &sceneProperty = p_properties.getPropertySetByID(Properties::Script);
 		if(sceneProperty)
@@ -349,6 +370,7 @@ void SceneLoader::importFromProperties(ComponentsConstructionInfo &p_constructio
 		}
 	}
 
+	// Load world components
 	{
 		auto &sceneProperty = p_properties.getPropertySetByID(Properties::World);
 		if(sceneProperty)
@@ -357,6 +379,22 @@ void SceneLoader::importFromProperties(ComponentsConstructionInfo &p_constructio
 			{
 				importFromProperties(p_constructionInfo.m_worldComponents, sceneProperty.getPropertySet(i), name);
 			}
+		}
+	}
+}
+
+void SceneLoader::importFromProperties(AudioComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name)
+{
+	// Check if property set node is present
+	if(p_properties)
+	{
+		switch(p_properties.getPropertyID())
+		{
+		case Properties::PropertyID::Audio:
+		{
+			
+		}
+		break;
 		}
 	}
 }

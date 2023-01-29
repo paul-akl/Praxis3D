@@ -1,0 +1,101 @@
+{
+	"GameObject":
+	[
+		{
+			"Name": "root",
+			"ID": "0",
+			"World":
+			{
+				"SpatialComponent":
+				{
+					"LocalPosition": "0.0f, 0.0f, 0.0f",
+					"LocalRotation": "0.0f, 0.0f, 0.0f",
+					"LocalScale": "1.0f, 1.0f, 1.0f"
+				}
+			},
+			"Script":
+			{
+				"LuaComponent":
+				{
+					"Filename": "Window_controls.lua"
+				}
+			}
+		},
+		{
+			"Name": "GUI",
+			"ID": "1",
+			"Parent": "0",
+			"GUI":
+			{
+				"Sequence":
+				{
+
+				}
+			},
+			"Script":
+			{
+				"LuaComponent":
+				{
+					"Filename": "MainMenu.lua"
+				}
+			}
+		}
+	],
+	"LoadInBackground": "0",
+	"Systems":
+	{
+		"Graphics":
+		{
+			"Scene":
+			{
+				"ObjectPoolSize": "50"
+			},
+			"System":
+			{
+				"RenderPasses":
+				[
+					{
+						"Type": "GeometryRenderPass"
+					},
+					{
+						"Type": "LightingRenderPass"
+					},
+					{
+						"Type": "BloomRenderPass"
+					},
+					{
+						"Type": "LuminanceRenderPass"
+					},
+					{
+						"Type": "FinalRenderPass"
+					},
+					{
+						"Type": "GUIRenderPass"
+					}
+				]
+			}
+		},
+		"Script":
+		{
+			"Scene":
+			{
+				"ObjectPoolSize": "50"
+			}
+		},
+		"Physics":
+		{
+			"Scene":
+			{
+				"ObjectPoolSize": "50",
+				"Gravity": "0.0f, -9.8f, 0.0f"
+			}
+		},
+		"World":
+		{
+			"Scene":
+			{
+				"ObjectPoolSize": "50"
+			}
+		}
+	}
+}

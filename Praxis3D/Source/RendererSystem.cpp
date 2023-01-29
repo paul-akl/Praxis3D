@@ -31,6 +31,49 @@ ErrorCode RendererSystem::init()
 }
 ErrorCode RendererSystem::setup(const PropertySet &p_properties)
 {
+	RenderingPasses renderingPasses;
+
+	// Load the rendering passes
+	auto &renderPassesProperty = p_properties.getPropertySetByID(Properties::RenderPasses);
+	if(renderPassesProperty)
+	{
+		// Iterate over the property array
+		for(decltype(renderPassesProperty.getNumPropertySets()) objIndex = 0, objSize = renderPassesProperty.getNumPropertySets(); objIndex < objSize; objIndex++)
+		{
+			auto &typeProperty = renderPassesProperty.getPropertySetUnsafe(objIndex).getPropertyByID(Properties::Type);
+			if(typeProperty)
+			{
+				switch(typeProperty.getID())
+				{
+				case Properties::AtmScatteringRenderPass:
+					renderingPasses.push_back(RenderPassType::RenderPassType_AtmScattering);
+					break;
+				case Properties::BloomRenderPass:
+					renderingPasses.push_back(RenderPassType::RenderPassType_Bloom);
+					break;
+				case Properties::GeometryRenderPass:
+					renderingPasses.push_back(RenderPassType::RenderPassType_Geometry);
+					break;
+				case Properties::GUIRenderPass:
+					renderingPasses.push_back(RenderPassType::RenderPassType_GUI);
+					break;
+				case Properties::LightingRenderPass:
+					renderingPasses.push_back(RenderPassType::RenderPassType_Lighting);
+					break;
+				case Properties::LuminanceRenderPass:
+					renderingPasses.push_back(RenderPassType::RenderPassType_Luminance);
+					break;
+				case Properties::FinalRenderPass:
+					renderingPasses.push_back(RenderPassType::RenderPassType_Final);
+					break;
+				}
+			}
+		}
+	}
+
+	// Pass the loaded rendering passes to the renderer
+	m_renderer.setRenderingPasses(renderingPasses);
+
 	return ErrorCode::Success;
 }
 

@@ -22,10 +22,7 @@ RendererScene::~RendererScene()
 ErrorCode RendererScene::init()
 {
 	ErrorCode returnError = ErrorCode::Success;
-	
-	if(!entt::basic_component_traits::in_place_delete)
-		ErrHandlerLoc().get().log(ErrorType::Error, ErrorSource::Source_WorldScene, "entt::basic_component_traits::in_place_delete is switched off, disabling pointer stability upon component deletion");
-		
+			
 	// Create a default camera, in case it is not created upon loading a scene
 	m_camera = new CameraObject(this, "Default Camera");
 
@@ -40,6 +37,15 @@ ErrorCode RendererScene::init()
 
 ErrorCode RendererScene::setup(const PropertySet &p_properties)
 {
+	// Get the world scene required for reserving the component pools
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+	
+	// Reserve every component type that belongs to this scene
+	worldScene->reserve<CameraComponent>(Config::objectPoolVar().camera_component_default_pool_size);
+	worldScene->reserve<LightComponent>(Config::objectPoolVar().light_component_default_pool_size);
+	worldScene->reserve<ModelComponent>(Config::objectPoolVar().model_component_default_pool_size);
+	worldScene->reserve<ShaderComponent>(Config::objectPoolVar().shader_component_default_pool_size);
+
 	return ErrorCode::Success;
 }
 
@@ -104,6 +110,9 @@ void RendererScene::loadInBackground()
 
 void RendererScene::update(const float p_deltaTime)
 {
+	//std::cout << "2 Graphics update" << std::endl;
+	//printf("2 Graphics \n");
+
 	// Clear variables from previous frame
 	m_sceneObjects.m_directionalLight = &m_directionalLight->getLightDataSet();
 

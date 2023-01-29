@@ -266,9 +266,10 @@ public:
 
 		// Construct a local transform matrix without scaling it
 		case Systems::Changes::Spatial::LocalTransformNoScale:
-			return Math::createTransformMat(
+			m_localTransformNoScale = Math::createTransformMat(
 				m_localSpace.m_spatialData.m_position,
 				m_localSpace.m_spatialData.m_rotationQuat);
+			return m_localTransformNoScale;
 		
 		case Systems::Changes::Spatial::WorldTransform:
 			return m_worldTransform;
@@ -508,6 +509,8 @@ private:
 	glm::mat4 m_parentTransform;
 	// Transform data in world space (local and parent space added together), final transform data used for rendering
 	glm::mat4 m_worldTransform;
+	// A local transform matrix constructed without scaling it
+	mutable glm::mat4 m_localTransformNoScale;
 
 	// Used for update tracking; each time data is change, update count is incremented
 	UpdateCount m_updateCount;

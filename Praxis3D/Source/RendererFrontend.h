@@ -5,6 +5,8 @@
 #include "RendererBackend.h"
 #include "RendererScene.h"
 
+typedef std::vector<RenderPassType> RenderingPasses;
+
 class RenderPass;
 struct RenderPassData;
 
@@ -55,6 +57,8 @@ public:
 	~RendererFrontend();
 
 	ErrorCode init();
+
+	void setRenderingPasses(const RenderingPasses &p_renderingPasses);
 
 	// Renders a complete frame
 	void renderFrame(SceneObjects &p_sceneObjects, const float p_deltaTime);
@@ -306,6 +310,9 @@ protected:
 		//													m_frameData.m_screenSize.y);
 	}
 
+	bool m_renderingPassesSet;
+	bool m_guiRenderWasEnabled;
+
 	// Renderer backend, serves as an interface layer to GPU
 	RendererBackend m_backend;
 	
@@ -328,7 +335,7 @@ protected:
 	// An array of all active rendering passes
 	std::vector<RenderPass*> m_renderingPasses;
 
-	std::vector<RenderPassType> m_renderingPassesTypes;
+	//RenderingPasses m_renderingPassesTypes;
 	RenderPass *m_initializedRenderingPasses[RenderPassType::RenderPassType_NumOfTypes];
 	//bool m_renderPassBeingUsed[RenderPassType::RenderPassType_NumOfTypes];
 };
