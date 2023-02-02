@@ -110,16 +110,12 @@ void RendererScene::loadInBackground()
 
 void RendererScene::update(const float p_deltaTime)
 {
-	//std::cout << "2 Graphics update" << std::endl;
-	//printf("2 Graphics \n");
-
 	// Clear variables from previous frame
 	m_sceneObjects.m_directionalLight = &m_directionalLight->getLightDataSet();
 
 	// Clear arrays from previous frame
 	m_sceneObjects.m_pointLights.clear();
 	m_sceneObjects.m_spotLights.clear();
-	m_sceneObjects.m_loadToVideoMemory.clear();
 
 	// Get the world scene required for getting the entity registry
 	WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
@@ -537,6 +533,24 @@ ErrorCode RendererScene::destroyObject(SystemObject *p_systemObject)
 void RendererScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 {
 	//std::cout << "change occurred" << std::endl;
+}
+
+void RendererScene::receiveData(const DataType p_dataType, void *p_data)
+{
+	switch(p_dataType)
+	{
+	case DataType_Texture2D:
+		{
+			TextureLoader2D::Texture2DHandle *textureHandle = static_cast<TextureLoader2D::Texture2DHandle *>(p_data);
+			if(textureHandle->isLoadedToMemory())
+				m_sceneObjects.m_loadToVideoMemory.emplace_back(*textureHandle);
+		}
+		break;
+
+	case DataType_Texture3D:
+
+		break;
+	}
 }
 
 MaterialData RendererScene::loadMaterialData(PropertySet &p_materialProperty, Model::MaterialArrays &p_materialArraysFromModel, MaterialType p_materialType, std::size_t p_meshIndex)

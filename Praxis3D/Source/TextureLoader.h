@@ -259,7 +259,10 @@ public:
 			m_textureData->incRefCounter();
 			return *this;
 		}
-		
+
+		// Has the texture been loaded to memory (system RAM)
+		const inline bool isLoadedToMemory() const { return m_textureData->isLoadedToMemory(); }
+
 		// Has the texture been already loaded to video memory (GPU VRAM)
 		const inline bool isLoadedToVideoMemory() const { return m_textureData->isLoadedToVideoMemory(); }
 
@@ -273,8 +276,6 @@ public:
 		inline TextureDataFormat getTextureDataFormat() const { return m_textureData->m_textureDataFormat; }
 		inline TextureDataType getTextureDataType() const { return m_textureData->m_textureDataType; }
 		inline bool getEnableMipmap() const { return m_textureData->m_enableMipmap; }
-
-		inline const bool isLoadedToVideoMemory() { return m_textureData->isLoadedToVideoMemory(); }
 
 	private:
 		// Increment the reference counter when creating a handle

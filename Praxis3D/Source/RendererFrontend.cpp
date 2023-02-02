@@ -318,6 +318,9 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 		}
 	}
 
+	// Clear the load-to-GPU queue, since everything in it has been processed
+	p_sceneObjects.m_loadToVideoMemory.clear();
+
 	glm::quat qPitch = glm::angleAxis(glm::radians(p_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationEuler.x), glm::vec3(1, 0, 0));
 	glm::quat qYaw = glm::angleAxis(glm::radians(p_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationEuler.y), glm::vec3(0, 1, 0));
 	glm::quat qRoll = glm::angleAxis(glm::radians(p_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationEuler.z), glm::vec3(0, 0, 1));

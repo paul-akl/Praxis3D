@@ -30,6 +30,9 @@ public:
 	// Sends a one-off notification about a change, without requiring the registration of subject-observer
 	void oneTimeChange(ObservedSubject *p_subject, Observer *p_observer, BitMask p_changedBits);
 
+	// Sends a one-off notification (without requiring the registration of subject-observer) that contains data in the message itself
+	void oneTimeData(Observer *p_observer, DataType p_dataType, void *p_data);
+
 	ErrorCode setTaskManager(TaskManager *p_taskManager);
 
 	void shutdown() { }
@@ -76,6 +79,15 @@ private:
 		ObservedSubject *m_subject;
 		Observer		*m_observer;
 		BitMask			m_changedBits;
+	};	
+	struct OneTimeData
+	{
+		OneTimeData(Observer *p_observer, DataType p_dataType, void *p_data) :
+			m_observer(p_observer), m_dataType(p_dataType), m_data(p_data) { }
+
+		Observer *m_observer;
+		DataType m_dataType;
+		void *m_data;
 	};
 	struct MappedNotification
 	{
@@ -90,12 +102,14 @@ private:
 	std::vector<SubjectInfo>						m_subjectsList;
 	std::vector<MappedNotification>					m_cumulativeNotifyList;
 	std::list<std::vector<Notification>*>			m_notifyLists;
-	std::list<std::vector<OneTimeNotification>*>	m_oneTimeNotifyLists;
+	std::list<std::vector<OneTimeNotification> *>	m_oneTimeNotifyLists;
+	std::list<std::vector<OneTimeData>*>			m_oneTimeDataLists;
 
 	// Last ID and handles for thread local storage data
 	unsigned int m_lastID;
 	unsigned int m_tlsNotifyList;
 	unsigned int m_tlsOneTimeNotifyList;
+	unsigned int m_tlsOneTimeDataList;
 
 	BitMask m_systemsToNotify;
 	BitMask m_changesToDistribute;
@@ -113,7 +127,8 @@ private:
 	ErrorCode removeSubject(ObservedSubject *p_subject);
 
 	std::vector<Notification> *getNotifyList(unsigned int p_tlsIndex);
-	std::vector<OneTimeNotification> &getOneTimeNotifyList(unsigned int p_tlsIndex);
+	std::vector<OneTimeNotification> *getOneTimeNotifyList(unsigned int p_tlsIndex);
+	std::vector<OneTimeData> *getOneTimeDataList(unsigned int p_tlsIndex);
 
 	//Returns the last Win32 error, in string format. Returns an empty string if there is no error.
 	std::string GetLastErrorAsString()

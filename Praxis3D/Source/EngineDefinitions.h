@@ -8,3 +8,8 @@
 
 // Use glBlitFramebuffer to copy the final buffer to the default back-buffer, instead of rendering a full-screen triangle
 //#define SETTING_USE_BLIT_FRAMEBUFFER
+
+// ImGui File Browser Dialog settings
+#define okCancelButtonAlignement 1.0f
+#define okButtonWidth 100.0f
+#define cancelButtonWidth 100.0f

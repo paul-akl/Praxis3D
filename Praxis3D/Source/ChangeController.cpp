@@ -5,33 +5,41 @@
 
 ChangeController::ChangeController() : m_lastID(0), m_tlsNotifyList(TLS_OUT_OF_INDEXES), m_taskManager(nullptr)
 {
+	m_systemsToNotify = Systems::Changes::None;
+	m_changesToDistribute = Systems::Changes::None;
+
 	// Reserve space to avoid multiple reallocations
 	m_cumulativeNotifyList.reserve((size_t)Config::engineVar().change_ctrl_cml_notify_list_reserv);
 	m_subjectsList.reserve((size_t)Config::engineVar().change_ctrl_subject_list_reserv);
 	m_subjectsList.resize(1);
 
-	// Setup per thread local storage of notify and one-off-notify lists
+	// Setup per thread local storage of lists
 	m_tlsNotifyList = ::TlsAlloc();
 	m_tlsOneTimeNotifyList = ::TlsAlloc();
+	m_tlsOneTimeDataList = ::TlsAlloc();
 
 	//_ASSERT(m_tlsNotifyList != TLS_OUT_OF_INDEXES && "ChangeController: Not enough space in TLS");
 	//_ASSERT(m_tlsOneOffNotifyList != TLS_OUT_OF_INDEXES && "ChangeController: Not enough space in TLS");
 
-	// Reserve space and prepare notify lists for the main (this) thread
+	// Setup thread-local storage for main thread here, and let the task manager callback setup TLS for other threads in initThreadLocalData
+	
+	// Create, reserve space and assign the notify list for main (this) thread
 	std::vector<Notification> *list = new std::vector<Notification>;
 	list->reserve((size_t)Config::engineVar().change_ctrl_notify_list_reserv);
 	::TlsSetValue(m_tlsNotifyList, list);
 	m_notifyLists.push_back(list);
 
-	std::cout << "TlsSetValue: " << m_tlsNotifyList << ", " << list->size() << std::endl;
-
-	// Reserve space and prepare one-off notify lists for the main (this) thread
+	// Create, reserve space and assign the one-off notify list for main (this) thread
 	std::vector<OneTimeNotification> *oneOffList = new std::vector<OneTimeNotification>;
 	oneOffList->reserve((size_t)Config::engineVar().change_ctrl_oneoff_notify_list_reserv);
 	::TlsSetValue(m_tlsOneTimeNotifyList, oneOffList);
 	m_oneTimeNotifyLists.push_back(oneOffList);
 
-	std::cout << "TlsSetValue: " << m_tlsOneTimeNotifyList << ", " << oneOffList->size() << std::endl;
+	// Create, reserve space and assign the one-off data list for main (this) thread
+	std::vector<OneTimeData> *oneOffDataList = new std::vector<OneTimeData>;
+	oneOffDataList->reserve((size_t)Config::engineVar().change_ctrl_oneoff_data_list_reserv);
+	::TlsSetValue(m_tlsOneTimeDataList, oneOffDataList);
+	m_oneTimeDataLists.push_back(oneOffDataList);
 }
 ChangeController::~ChangeController()
 {
@@ -176,7 +184,23 @@ ErrorCode ChangeController::distributeChanges(BitMask p_systemsToNotify, BitMask
 	// Some of them might generate more notifications, so it might need to loop through multiple times
 	while(true)
 	{
-		// iterate over every thread-specific one-time notification list
+		// Iterate over every thread-specific one-time data list
+		for(decltype(m_oneTimeDataLists)::iterator listIterator = m_oneTimeDataLists.begin(); listIterator != m_oneTimeDataLists.end(); listIterator++)
+		{
+			// Loop over ever notification in this list
+			auto &currentList = **listIterator;
+			for(decltype(currentList.size()) i = 0, size = currentList.size(); i < size; i++)
+			{
+				// Notify the observer about the change. We cannot check if the change is desired, since the
+				// observer is not registered with the change controller in one-time changes.
+				currentList[i].m_observer->receiveData(currentList[i].m_dataType, currentList[i].m_data);
+			}
+
+			// Clear out the list before moving to the next one
+			currentList.clear();
+		}
+
+		// Iterate over every thread-specific one-time notification list
 		for(decltype(m_oneTimeNotifyLists)::iterator listIterator = m_oneTimeNotifyLists.begin(); listIterator != m_oneTimeNotifyLists.end(); listIterator++)
 		{
 			// Loop over ever notification in this list
@@ -323,17 +347,33 @@ void ChangeController::changeOccurred(ObservedSubject *p_subject, BitMask p_chan
 void ChangeController::oneTimeChange(ObservedSubject *p_subject, Observer *p_observer, BitMask p_changedBits)
 {
 	// TODO ASSERT ERROR
-	_ASSERT(p_subject);
-	_ASSERT(p_observer);
+	//_ASSERT(p_subject);
+	//_ASSERT(p_observer);
 
 	// Check if both subject and observer are valid
 	if(p_subject != nullptr && p_observer != nullptr)
 	{
 		// Get thread local notification list
-		auto &oneTimeNotifyList = getOneTimeNotifyList(m_tlsOneTimeNotifyList);
+		auto *oneTimeNotifyList = getOneTimeNotifyList(m_tlsOneTimeNotifyList);
 
 		// Don't check for duplicates, for performance reasons
-		oneTimeNotifyList.push_back(OneTimeNotification(p_subject, p_observer, p_changedBits));
+		oneTimeNotifyList->push_back(OneTimeNotification(p_subject, p_observer, p_changedBits));
+	}
+}
+
+void ChangeController::oneTimeData(Observer *p_observer, DataType p_dataType, void *p_data)
+{
+	// TODO ASSERT ERROR
+	//_ASSERT(p_observer);
+	
+	// Check if both subject and observer are valid
+	if(p_observer != nullptr)
+	{
+		// Get thread local one-time-data list
+		auto *oneTimeDataList = getOneTimeDataList(m_tlsOneTimeDataList);
+
+		// Don't check for duplicates, for performance reasons
+		oneTimeDataList->push_back(OneTimeData(p_observer, p_dataType, p_data));
 	}
 }
 
@@ -379,12 +419,12 @@ void ChangeController::resetTaskManager()
 void ChangeController::initThreadLocalData(void* p_controller)
 {
 	// TODO ERROR
-	// ASSERT( arg && "ChangeManager: No manager pointer passed to InitThreadLocalNotifyList" );
+	// ASSERT(p_controller && "ChangeManager: No manager pointer passed to InitThreadLocalNotifyList");
 
 	// Cast the passed controller to its type
 	ChangeController *controller = (ChangeController*)p_controller;
 
-	// Check if TLS handle is valid
+	// Check if TLS handle for notify list is valid and setup TLS for this thread
 	if(::TlsGetValue(controller->m_tlsNotifyList) == NULL)
 	{
 		// Create a new notify array
@@ -394,14 +434,12 @@ void ChangeController::initThreadLocalData(void* p_controller)
 		notifyList->reserve((unsigned int)Config::engineVar().change_ctrl_notify_list_reserv);
 		::TlsSetValue(controller->m_tlsNotifyList, notifyList);
 
-		//std::cout << "TlsSetValue: " << controller->m_tlsNotifyList << ", " << notifyList->size() << std::endl;
-
-		// Lock muted while adding the new array to the list
+		// Lock mutex while adding the new array to the list
 		SpinWait::Lock lock(controller->m_spinWaitUpdate);
 		controller->m_notifyLists.push_back(notifyList);
 	}
 
-	// Check if TLS handle is valid
+	// Check if TLS handle for one-time notify list is valid and setup TLS for this thread
 	if(::TlsGetValue(controller->m_tlsOneTimeNotifyList) == NULL)
 	{
 		// Create a new notify array
@@ -411,11 +449,24 @@ void ChangeController::initThreadLocalData(void* p_controller)
 		oneTimeNotifyList->reserve((unsigned int)Config::engineVar().change_ctrl_oneoff_notify_list_reserv);
 		::TlsSetValue(controller->m_tlsOneTimeNotifyList, oneTimeNotifyList);
 
-		//sstd::cout << "TlsSetValue: " << controller->m_tlsOneTimeNotifyList << ", " << oneTimeNotifyList->size() << std::endl;
-
-		// Lock muted while adding the new array to the list
+		// Lock mutex while adding the new array to the list
 		SpinWait::Lock lock(controller->m_spinWaitUpdate);
 		controller->m_oneTimeNotifyLists.push_back(oneTimeNotifyList);
+	}
+
+	// Check if TLS handle for one-time data list is valid and setup TLS for this thread
+	if(::TlsGetValue(controller->m_tlsOneTimeDataList) == NULL)
+	{
+		// Create a new notify array
+		std::vector<OneTimeData> *oneTimeDataList = new std::vector<OneTimeData>;
+
+		// Reserve space in new array and set it as a tread local storage for current (this) thread
+		oneTimeDataList->reserve((unsigned int)Config::engineVar().change_ctrl_oneoff_data_list_reserv);
+		::TlsSetValue(controller->m_tlsOneTimeDataList, oneTimeDataList);
+
+		// Lock mutex while adding the new array to the list
+		SpinWait::Lock lock(controller->m_spinWaitUpdate);
+		controller->m_oneTimeDataLists.push_back(oneTimeDataList);
 	}
 }
 void ChangeController::freeThreadLocalData(void* p_controller)
@@ -526,18 +577,13 @@ ErrorCode ChangeController::removeSubject(ObservedSubject *p_subject)
 
 inline std::vector<ChangeController::Notification> *ChangeController::getNotifyList(unsigned int p_tlsIndex)
 {
-//	LPVOID test = ::TlsGetValue(p_tlsIndex);
-
-//	unsigned int test2 = (unsigned int)test;
-
-	//std::cout << test2 << " ";
-
-//	if(test2 > 0)
-		return static_cast<std::vector<ChangeController::Notification>*>(::TlsGetValue(p_tlsIndex));
-//	else
-//		return nullptr;
+	return static_cast<std::vector<ChangeController::Notification>*>(::TlsGetValue(p_tlsIndex));
 }
-inline std::vector<ChangeController::OneTimeNotification> &ChangeController::getOneTimeNotifyList(unsigned int p_tlsIndex)
+inline std::vector<ChangeController::OneTimeNotification> *ChangeController::getOneTimeNotifyList(unsigned int p_tlsIndex)
 {
-	return *static_cast<std::vector<ChangeController::OneTimeNotification>*>(::TlsGetValue(p_tlsIndex));
+	return static_cast<std::vector<ChangeController::OneTimeNotification>*>(::TlsGetValue(p_tlsIndex));
+}
+inline std::vector<ChangeController::OneTimeData> *ChangeController::getOneTimeDataList(unsigned int p_tlsIndex)
+{
+	return static_cast<std::vector<ChangeController::OneTimeData>*>(::TlsGetValue(p_tlsIndex));
 }

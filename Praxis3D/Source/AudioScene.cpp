@@ -41,9 +41,6 @@ ErrorCode AudioScene::setup(const PropertySet &p_properties)
 
 void AudioScene::update(const float p_deltaTime)
 {
-	//std::cout << "1 Audio update" << std::endl;
-	//printf("1 Audio \n");
-
 	// Get the world scene required for getting the entity registry
 	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
 

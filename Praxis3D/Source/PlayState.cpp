@@ -23,7 +23,7 @@ ErrorCode PlayState::init(TaskManager *p_taskManager)
 	if(returnError == ErrorCode::Success)
 	{
 		// Load the default map, and log an error if it wasn't successful
-		returnError = m_sceneLoader.loadFromFile(Config::gameplayVar().default_map);
+		returnError = m_sceneLoader.loadFromFile(Config::gameplayVar().play_map);
 		if(returnError != ErrorCode::Success)
 			ErrHandlerLoc::get().log(returnError, ErrorSource::Source_SceneLoader);
 

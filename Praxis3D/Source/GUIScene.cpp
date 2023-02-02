@@ -1,4 +1,6 @@
 
+#include <ImGuiFileDialog/ImGuiFileDialog.h>
+
 #include "WorldScene.h"
 #include "ComponentConstructorInfo.h"
 #include "GUIHandlerLocator.h"
@@ -20,6 +22,14 @@ GUIScene::~GUIScene()
 ErrorCode GUIScene::init()
 {
 	m_GUITask = new GUITask(this);
+
+	// Set the text color of directories in the file browser
+	ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByTypeDir, nullptr, ImVec4(Config::GUIVar().gui_file_dialog_dir_color_R, Config::GUIVar().gui_file_dialog_dir_color_G, Config::GUIVar().gui_file_dialog_dir_color_B, 1.0f));
+	/* Some other color values for directories that were tested. Left here so that they may be used again
+	ImVec4(0.843f, 0.729f, 0.49f, 1.0f)
+	ImVec4(0.745f, 0.482f, 0.176f, 1.0f)
+	ImVec4(0.843f, 0.682f, 0.361f, 1.0f)
+	ImVec4(0.808f, 0.498f, 0.306f, 1.0f)*/
 
 	return ErrorCode::Success;
 }
@@ -58,22 +68,55 @@ void GUIScene::update(const float p_deltaTime)
 		// Set the beginning of the GUI frame
 		GUIHandlerLocator::get().beginFrame();
 
-		//static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground;
+		//	 ____________________________
+		//	|							 |
+		//	|	 FILE BROWSER DIALOGS	 |
+		//	|____________________________|
+		//
+		if(!m_fileBrowserDialogs.empty())
+		{
+			// Get the first added file browser dialog
+			auto *browserDialog = m_fileBrowserDialogs.front();
 
-		//Config::graphicsVar().current_resolution_x;
-		//Config::graphicsVar().current_resolution_y;
+			// Check if its pointer is valid
+			if(browserDialog != nullptr)
+			{
+				// Only open the current dialog once
+				if(!browserDialog->m_opened)
+				{
+					browserDialog->m_opened = true;
+					ImGuiFileDialog::Instance()->OpenDialog(
+						browserDialog->m_name.c_str(), 
+						browserDialog->m_title.c_str(), 
+						browserDialog->m_filter.c_str(), 
+						browserDialog->m_rootPath.c_str(), 
+						browserDialog->m_definedFilename.c_str(), 
+						browserDialog->m_numOfSelectableFiles, 
+						nullptr, 
+						browserDialog->m_flags);
+				}
 
-		//ImVec2 exitButtonSize(100.0f, 25.0f);
+				// Display the dialog every frame until it is completed
+				if(ImGuiFileDialog::Instance()->Display(browserDialog->m_name, ImGuiWindowFlags_::ImGuiWindowFlags_NoCollapse, ImVec2(Config::GUIVar().gui_file_dialog_min_size_x, Config::GUIVar().gui_file_dialog_min_size_y)))
+				{
+					// If the dialog completed successfully (i.e. files were selected), get the selection data
+					if(ImGuiFileDialog::Instance()->IsOk())
+					{
+						browserDialog->m_filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+						browserDialog->m_filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+						browserDialog->m_filename = ImGuiFileDialog::Instance()->GetCurrentFileName();
+						browserDialog->m_success = true;
+					}
 
-		//ImGui::SetNextWindowPos(ImVec2((Config::graphicsVar().current_resolution_x / 2.0f) - (exitButtonSize.x / 2.0f), (Config::graphicsVar().current_resolution_y / 2.0f) - (exitButtonSize.y / 2.0f)));
-		//ImGui::Begin("Example: Fullscreen window", 0, flags);
-
-		//ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 255.0f, 0.0f, 255.0f));
-		//ImGui::Text("Hello, world %d", 123);
-		//ImGui::Button("Exit", exitButtonSize);
-		//ImGui::PopStyleColor();
-
-		//ImGui::End();
+					// Close the dialog and remove it from the queue
+					ImGuiFileDialog::Instance()->Close();
+					browserDialog->m_closed = true;
+					m_fileBrowserDialogs.pop();
+				}
+			}
+			else // Remove dialog of invalid pointer
+				m_fileBrowserDialogs.pop();
+		}
 
 		//	 ____________________________
 		//	|							 |
@@ -176,4 +219,15 @@ ErrorCode GUIScene::destroyObject(SystemObject *p_systemObject)
 
 	// If this point is reached, 
 	return returnError;
+}
+
+void GUIScene::receiveData(const DataType p_dataType, void *p_data)
+{
+	switch(p_dataType)
+	{
+	case DataType_FileBrowserDialog:
+		//m_fileBrowserDialogs.push_back(std::make_pair<FileBrowserDialog *, ImGuiFileDialog>(static_cast<FileBrowserDialog *>(p_data), ImGuiFileDialog()));
+		m_fileBrowserDialogs.push(static_cast<FileBrowserDialog*>(p_data));
+		break;
+	}
 }

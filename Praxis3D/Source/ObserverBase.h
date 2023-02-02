@@ -41,6 +41,8 @@ public:
 
 	// This method gets called when data that we are interested changed in observed subject
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) = 0;
+
+	virtual void receiveData(const DataType p_dataType, void *p_data) { }
 };
 
 class ObservedSubject

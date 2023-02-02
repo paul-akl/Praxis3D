@@ -36,8 +36,6 @@ ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 	}
 	else
 	{
-		std::vector<std::pair<const std::string &, SystemObject *>> createdObjects;
-
 		// Get systems property set
 		auto &systemProperties = loadedProperties.getPropertySet().getPropertySetByID(Properties::Systems);
 
@@ -66,22 +64,22 @@ ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 
 		// Get Game Objects
 		auto &gameObjects = loadedProperties.getPropertySet().getPropertySetByID(Properties::GameObject);
-
 		if(gameObjects)
 		{
+			// Reserve enough room for all the game objects
 			constructionInfo.resize(gameObjects.getNumPropertySets());
 
-			// Iterate over all game object
+			// Iterate over all game objects
 			for(decltype(gameObjects.getNumPropertySets()) objIndex = 0, objSize = gameObjects.getNumPropertySets(); objIndex < objSize; objIndex++)
 			{
-				// Create each game object by passing its PropertySet
-				//m_systemScenes[Systems::World]->createObject(gameObjects.getPropertySetUnsafe(objIndex));
-
+				// Import the game object data from PropertySets to EntitiesConstructionInfo
 				importFromProperties(constructionInfo[objIndex], gameObjects.getPropertySetUnsafe(objIndex));
 			}
 
+			// Get the world scene required for creating entities
 			WorldScene *worldScene = static_cast<WorldScene*>(m_systemScenes[Systems::World]);
 
+			// Go over each entity and create it
 			for(decltype(constructionInfo.size()) i = 0, size = constructionInfo.size(); i < size; i++)
 			{
 				worldScene->createEntity(constructionInfo[i], false);
@@ -89,6 +87,7 @@ ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 		}
 		else
 		{
+			// GameObject property set is missing
 			returnError = ErrorCode::GameObjects_missing;
 			ErrHandlerLoc().get().log(ErrorCode::GameObjects_missing, ErrorSource::Source_SceneLoader);
 		}
@@ -149,6 +148,10 @@ ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 				m_systemScenes[i]->preload();
 		}
 	}
+
+	// Make sure to clear the memory of contructionInfo
+	for(decltype(constructionInfo.size()) i = 0, size = constructionInfo.size(); i < size; i++)
+		constructionInfo[i].deleteConstructionInfo();
 
 	return returnError;
 }

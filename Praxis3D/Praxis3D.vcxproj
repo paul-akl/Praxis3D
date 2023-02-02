@@ -115,7 +115,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>NOMINMAX;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;CUSTOM_IMGUIFILEDIALOG_CONFIG="..\\..\\..\\Praxis3D\Source\EngineDefinitions.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ConformanceMode>false</ConformanceMode>
@@ -128,6 +128,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Dependencies\include\ImGuiFileDialog\ImGuiFileDialog.cpp" />
     <ClCompile Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl.cpp" />
     <ClCompile Include="..\Dependencies\include\imgui\imgui.cpp" />
@@ -260,6 +261,7 @@
     <ClInclude Include="Source\GeometryBuffer.h" />
     <ClInclude Include="Source\GeometryPass.h" />
     <ClInclude Include="Source\GraphicsDataSets.h" />
+    <ClInclude Include="Source\GraphicsLoadToMemoryComponent.h" />
     <ClInclude Include="Source\GraphicsObject.h" />
     <ClInclude Include="Source\GUICommandBuffer.h" />
     <ClInclude Include="Source\GUIDataManager.h" />

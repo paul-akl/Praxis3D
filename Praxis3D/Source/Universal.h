@@ -38,6 +38,12 @@ public:
 		//	m_objectChangeController->oneTimeChange(p_subject, p_observer, p_changedBits);
 	}
 
+	// Sends a one-off notification to a system object containing data, without requiring the object linking
+	inline void sendData(SystemObject *p_observer, DataType p_dataType, void *p_data) { m_objectChangeController->oneTimeData(p_observer, p_dataType, p_data); }
+
+	// Sends a one-off notification to a system scene containing data, without requiring the object linking
+	inline void sendData(SystemScene *p_observer, DataType p_dataType, void *p_data) { m_sceneChangeController->oneTimeData(p_observer, p_dataType, p_data); }
+
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changes);
 
 	const std::list<UniversalObject*> &getObjects() const { return m_objects; }

@@ -163,15 +163,6 @@
     <Filter Include="Physics\Objects\Source Files">
       <UniqueIdentifier>{e4bd1596-5b50-413b-a01b-50f9b63d2f61}</UniqueIdentifier>
     </Filter>
-    <Filter Include="iImgui">
-      <UniqueIdentifier>{21610611-3d67-4391-9a40-c517773edd85}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="iImgui\Header Files">
-      <UniqueIdentifier>{91bc37cb-772a-4d51-9b83-3f9af2806aab}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="iImgui\Source Files">
-      <UniqueIdentifier>{62cfc7e5-8f92-4ff5-bcc3-0319fec10b3c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Data Managers">
       <UniqueIdentifier>{1d4c199c-6fd9-492b-9c8d-23af455d408f}</UniqueIdentifier>
     </Filter>
@@ -186,6 +177,18 @@
     </Filter>
     <Filter Include="Audio\Components">
       <UniqueIdentifier>{de63b868-204f-4f5a-9bf7-56e48e541097}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd Party">
+      <UniqueIdentifier>{8bd3d7d6-504d-440d-b077-80c9e167818e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd Party\imgui">
+      <UniqueIdentifier>{21610611-3d67-4391-9a40-c517773edd85}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd Party\imgui\Header Files">
+      <UniqueIdentifier>{91bc37cb-772a-4d51-9b83-3f9af2806aab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd Party\imgui\Source Files">
+      <UniqueIdentifier>{62cfc7e5-8f92-4ff5-bcc3-0319fec10b3c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -370,25 +373,25 @@
       <Filter>Service Locators\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Dependencies\include\imgui\imgui.cpp">
-      <Filter>iImgui\Source Files</Filter>
+      <Filter>3rd Party\imgui\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Dependencies\include\imgui\imgui_demo.cpp">
-      <Filter>iImgui\Source Files</Filter>
+      <Filter>3rd Party\imgui\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Dependencies\include\imgui\imgui_draw.cpp">
-      <Filter>iImgui\Source Files</Filter>
+      <Filter>3rd Party\imgui\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Dependencies\include\imgui\imgui_tables.cpp">
-      <Filter>iImgui\Source Files</Filter>
+      <Filter>3rd Party\imgui\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Dependencies\include\imgui\imgui_widgets.cpp">
-      <Filter>iImgui\Source Files</Filter>
+      <Filter>3rd Party\imgui\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3.cpp">
-      <Filter>iImgui\Source Files</Filter>
+      <Filter>3rd Party\imgui\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl.cpp">
-      <Filter>iImgui\Source Files</Filter>
+      <Filter>3rd Party\imgui\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\GUIHandler.cpp">
       <Filter>Source Files</Filter>
@@ -404,6 +407,9 @@
     </ClCompile>
     <ClCompile Include="Source\EngineState.cpp">
       <Filter>Engine States\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\ImGuiFileDialog\ImGuiFileDialog.cpp">
+      <Filter>3rd Party</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -768,22 +774,22 @@
       <Filter>Service Locators\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Dependencies\include\imgui\imconfig.h">
-      <Filter>iImgui\Header Files</Filter>
+      <Filter>3rd Party\imgui\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Dependencies\include\imgui\imgui.h">
-      <Filter>iImgui\Header Files</Filter>
+      <Filter>3rd Party\imgui\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Dependencies\include\imgui\imgui_internal.h">
-      <Filter>iImgui\Header Files</Filter>
+      <Filter>3rd Party\imgui\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3.h">
-      <Filter>iImgui\Header Files</Filter>
+      <Filter>3rd Party\imgui\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3_loader.h">
-      <Filter>iImgui\Header Files</Filter>
+      <Filter>3rd Party\imgui\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl.h">
-      <Filter>iImgui\Header Files</Filter>
+      <Filter>3rd Party\imgui\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\GUIPass.h">
       <Filter>Renderer\Render Passes\Header Files</Filter>
@@ -847,6 +853,9 @@
     </ClInclude>
     <ClInclude Include="Source\MainMenuState.h">
       <Filter>Engine States\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GraphicsLoadToMemoryComponent.h">
+      <Filter>Renderer\Objects\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

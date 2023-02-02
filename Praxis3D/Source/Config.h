@@ -11,7 +11,8 @@
 #include "EnumFactory.h"
 #include "Utilities.h"
 
-typedef unsigned __int64 BitMask;
+typedef uint64_t BitMask;
+//typedef uint32_t DataType;
 
 // Tests if the given bitmask contains the given flag; returns true if the flag bits are present in the bitmask
 constexpr bool CheckBitmask(const BitMask p_bitmask, const BitMask p_flag) { return ((p_bitmask & p_flag) == p_flag); }
@@ -22,6 +23,16 @@ constexpr bool CheckBitmask(const BitMask p_bitmask, const BitMask p_flag) { ret
 //#define GL_LINEAR 0x2601
 //#define GL_LESS 0x0201
 //#define GL_BACK 0x0405
+
+enum DataType : uint32_t
+{
+	DataType_Null = 0,
+	// Graphics
+	DataType_Texture2D,
+	DataType_Texture3D,
+	// GUI
+	DataType_FileBrowserDialog
+};
 
 namespace Systems
 {
@@ -492,6 +503,7 @@ public:
 			change_ctrl_cml_notify_list_reserv = 4096;
 			change_ctrl_grain_size = 50;
 			change_ctrl_notify_list_reserv = 8192;
+			change_ctrl_oneoff_data_list_reserv = 64;
 			change_ctrl_oneoff_notify_list_reserv = 64;
 			change_ctrl_subject_list_reserv = 8192;
 			delta_time_divider = 1000;
@@ -507,7 +519,8 @@ public:
 
 		int change_ctrl_cml_notify_list_reserv;
 		int change_ctrl_grain_size;
-		int change_ctrl_notify_list_reserv;
+		int change_ctrl_notify_list_reserv; 
+		int change_ctrl_oneoff_data_list_reserv;
 		int change_ctrl_oneoff_notify_list_reserv;
 		int change_ctrl_subject_list_reserv;
 		int delta_time_divider;
@@ -764,10 +777,20 @@ public:
 			gui_render = true;
 			gui_dark_style = true;
 			gui_sequence_array_reserve_size = 50;
+			gui_file_dialog_min_size_x = 400.0f;
+			gui_file_dialog_min_size_y = 200.0f;
+			gui_file_dialog_dir_color_R = 0.905f;
+			gui_file_dialog_dir_color_G = 0.623f;
+			gui_file_dialog_dir_color_B = 0.314f;
 		}
 		bool gui_render;
 		bool gui_dark_style;
 		int gui_sequence_array_reserve_size;
+		float gui_file_dialog_min_size_x;
+		float gui_file_dialog_min_size_y;
+		float gui_file_dialog_dir_color_R;
+		float gui_file_dialog_dir_color_G;
+		float gui_file_dialog_dir_color_B;
 	};
 	struct InputVariables
 	{
@@ -1415,7 +1438,7 @@ private:
 		{
 			m_variable.floatPtr = p_float;
 		}
-		Variable(std::string p_name, size_t p_mapKey, std::string *p_string) : m_varType(VariableType::stringType), m_name(p_name), m_mapKey(p_mapKey)
+		Variable(std::string p_name, size_t p_mapKey, std::string *p_string) : m_varType(VariableType::stringType), m_name(p_name), m_mapKey(p_mapKey), m_valueChanged(false)
 		{
 			m_variable.stringPtr = p_string;
 		}

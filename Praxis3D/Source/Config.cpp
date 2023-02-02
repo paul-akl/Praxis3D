@@ -63,6 +63,7 @@ void Config::init()
 	AddVariablePredef(m_engineVar, change_ctrl_cml_notify_list_reserv);
 	AddVariablePredef(m_engineVar, change_ctrl_grain_size);
 	AddVariablePredef(m_engineVar, change_ctrl_notify_list_reserv);
+	AddVariablePredef(m_engineVar, change_ctrl_oneoff_data_list_reserv);
 	AddVariablePredef(m_engineVar, change_ctrl_oneoff_notify_list_reserv);
 	AddVariablePredef(m_engineVar, change_ctrl_subject_list_reserv);
 	AddVariablePredef(m_engineVar, delta_time_divider);
@@ -170,6 +171,11 @@ void Config::init()
 	AddVariablePredef(m_GUIVar, gui_render);
 	AddVariablePredef(m_GUIVar, gui_dark_style);
 	AddVariablePredef(m_GUIVar, gui_sequence_array_reserve_size);
+	AddVariablePredef(m_GUIVar, gui_file_dialog_min_size_x);
+	AddVariablePredef(m_GUIVar, gui_file_dialog_min_size_y);
+	AddVariablePredef(m_GUIVar, gui_file_dialog_dir_color_R);
+	AddVariablePredef(m_GUIVar, gui_file_dialog_dir_color_G);
+	AddVariablePredef(m_GUIVar, gui_file_dialog_dir_color_B);
 
 	// Input variables
 	AddVariablePredef(m_inputVar, back_key);

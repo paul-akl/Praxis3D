@@ -108,9 +108,6 @@ ErrorCode PhysicsScene::setup(const PropertySet &p_properties)
 
 void PhysicsScene::update(const float p_deltaTime)
 {
-	//std::cout << "4 Physics update" << std::endl;
-	//printf("4 Physics \n");
-
 	// Perform the physics simulation for the time step of the last frame
 	m_dynamicsWorld->stepSimulation(p_deltaTime);
 
