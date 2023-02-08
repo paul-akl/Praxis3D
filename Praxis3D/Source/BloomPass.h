@@ -120,7 +120,7 @@ public:
 			const unsigned int groupY = (unsigned int)glm::ceil(mipmapSize.y / 8.0);
 
 			// Dispatch the compute shader
-			m_renderer.queueForDrawing(m_bloomDownscaleShader->getShaderHandle(), m_bloomDownscaleShader->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat, groupX, groupY, 1, MemoryBarrierType::MemoryBarrierType_AccessAndFetchBarrier);
+			m_renderer.queueForDrawing(m_bloomDownscaleShader->getShaderHandle(), m_bloomDownscaleShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix, groupX, groupY, 1, MemoryBarrierType::MemoryBarrierType_AccessAndFetchBarrier);
 			m_renderer.passComputeDispatchCommandsToBackend();
 			
 			// Half the mipmap size as we go up the mipmap levels
@@ -151,7 +151,7 @@ public:
 			const unsigned int groupY = (unsigned int)glm::ceil(mipmapSize.y / 8.0);
 
 			// Dispatch the compute shader
-			m_renderer.queueForDrawing(m_bloomUpscaleShader->getShaderHandle(), m_bloomUpscaleShader->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat, groupX, groupY, 1, MemoryBarrierType::MemoryBarrierType_AccessAndFetchBarrier);
+			m_renderer.queueForDrawing(m_bloomUpscaleShader->getShaderHandle(), m_bloomUpscaleShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix, groupX, groupY, 1, MemoryBarrierType::MemoryBarrierType_AccessAndFetchBarrier);
 			m_renderer.passComputeDispatchCommandsToBackend();
 		}
 	}

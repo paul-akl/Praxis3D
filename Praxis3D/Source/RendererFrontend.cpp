@@ -3,6 +3,7 @@
 #include "BloomCompositePass.h"
 #include "BloomPass.h"
 #include "BlurPass.h"
+#include "EntityViewDefinitions.h"
 #include "GeometryPass.h"
 #include "GUIPass.h"
 #include "LenseFlareCompositePass.h"
@@ -298,115 +299,73 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 		}
 	}
 
+	unsigned int numLoadedObjectsThisFrame = 0;
+
+	// Iterate over all objects to be rendered with geometry shader
+	for(auto entity : p_sceneObjects.m_objectsToLoadToVideoMemory)
+	{
+		GraphicsLoadToVideoMemoryComponent &component = p_sceneObjects.m_objectsToLoadToVideoMemory.get<GraphicsLoadToVideoMemoryComponent>(entity);
+
+		while(!component.m_objectsToLoad.empty())
+		{
+			if(numLoadedObjectsThisFrame++ >= 1)
+				goto jumpAfterLoading;
+
+			LoadableObjectsContainer &loadableObject = component.m_objectsToLoad.front();
+
+			switch(loadableObject.m_objectType)
+			{
+			case LoadableObjectsContainer::LoadableObjectType_Model:
+				queueForLoading(loadableObject.m_loadableObject.m_model);
+				loadableObject.m_loadableObject.m_model.setLoadedToVideoMemory(true);
+				break;
+
+			case LoadableObjectsContainer::LoadableObjectType_Shader:
+				queueForLoading(*loadableObject.m_loadableObject.m_shader);
+				loadableObject.m_loadableObject.m_shader->setLoadedToVideoMemory(true);
+				break;
+
+			case LoadableObjectsContainer::LoadableObjectType_Texture:
+				queueForLoading(loadableObject.m_loadableObject.m_texture);
+				loadableObject.m_loadableObject.m_texture.setLoadedToVideoMemory(true);
+				break;
+			}
+
+			component.m_objectsToLoad.pop();
+		}
+
+		component.m_loaded = true;
+	}
+
+	jumpAfterLoading:
+
 	// Handle loading before any rendering takes place
 	passLoadCommandsToBackend();
 
-	// Mark all loading-to-video-memory objects as loaded
-	for(decltype(p_sceneObjects.m_loadToVideoMemory.size()) i = 0, size = p_sceneObjects.m_loadToVideoMemory.size(); i < size; i++)
-	{
-		switch(p_sceneObjects.m_loadToVideoMemory[i].m_objectType)
-		{
-		case LoadableObjectsContainer::LoadableObjectType_Model:
-			p_sceneObjects.m_loadToVideoMemory[i].m_loadableObject.m_model.setLoadedToVideoMemory(true);
-			break;
-		case LoadableObjectsContainer::LoadableObjectType_Shader:
-			p_sceneObjects.m_loadToVideoMemory[i].m_loadableObject.m_shader->setLoadedToVideoMemory(true);
-			break;
-		case LoadableObjectsContainer::LoadableObjectType_Texture:
-			p_sceneObjects.m_loadToVideoMemory[i].m_loadableObject.m_texture.setLoadedToVideoMemory(true);
-			break;
-		}
-	}
-
 	// Clear the load-to-GPU queue, since everything in it has been processed
 	p_sceneObjects.m_loadToVideoMemory.clear();
-
-	glm::quat qPitch = glm::angleAxis(glm::radians(p_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationEuler.x), glm::vec3(1, 0, 0));
-	glm::quat qYaw = glm::angleAxis(glm::radians(p_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationEuler.y), glm::vec3(0, 1, 0));
-	glm::quat qRoll = glm::angleAxis(glm::radians(p_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationEuler.z), glm::vec3(0, 0, 1));
-	glm::quat orientation = qPitch * qYaw * qRoll;
 	
-	orientation = glm::toQuat(p_sceneObjects.m_camera.m_spatialData.m_transformMat);
+	// Calculate the view rotation matrix
+	const glm::quat orientation = glm::normalize(glm::toQuat(p_sceneObjects.m_cameraViewMatrix));
+	const glm::mat4 rotate = glm::mat4_cast(orientation);
 
-	//glm::quat orientation = qPitch * qYaw * qRoll; 
-	//glm::quat orientation(glm::radians(p_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationEuler));
-	orientation = glm::normalize(orientation);
-	glm::mat4 rotate = glm::mat4_cast(orientation);
-	glm::mat4 translate = glm::mat4(1.0f);
-	//translate = glm::translate(translate, -p_sceneObjects.m_camera.m_spatialData.m_spatialData.m_position);
-	translate = glm::translate(translate, -glm::vec3(p_sceneObjects.m_camera.m_spatialData.m_transformMat[3]));
-	//translate = glm::translate(translate, -glm::vec3(1.0f, 10.0f, 1.0f));
+	// Calculate the view translation matrix
+	const glm::mat4 translate = glm::translate(glm::mat4(1.0f), -glm::vec3(p_sceneObjects.m_cameraViewMatrix[3]));
 
+	// Set the full view matrix
 	m_frameData.m_viewMatrix = rotate * translate;
 
-	glm::mat4 rotationOnly = p_sceneObjects.m_camera.m_spatialData.m_transformMat;
-	rotationOnly[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-
-	//m_frameData.m_viewMatrix = rotationOnly * translate;
-
-
-	//glm::vec3 direction = glm::rotate(p_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationQuat, glm::vec3(0.0f, 0.0f, -1.0f));
-	glm::vec3 direction = glm::normalize(glm::rotate(orientation, glm::vec3(0.0f, 0.0f, -1.0f)));
-	//direction = glm::normalize(direction);
-	glm::vec3 up = glm::normalize(glm::rotate(p_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationQuat, glm::vec3(0.0f, 1.0f, 0.0f)));
-
-	//glm::mat4 ViewTranslate = glm::translate(glm::mat4(1.0f), -p_sceneObjects.m_camera.m_spatialData.m_spatialData.m_position);
-	//glm::mat4 ViewRotateX = glm::rotate(ViewTranslate, glm::radians(p_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationEuler.x), glm::vec3(1.0f, 0.0f, 0.0f));
-	//glm::mat4 View = glm::rotate(ViewRotateX, glm::radians(p_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationEuler.y), glm::vec3(0.0f, 1.0f, 0.0f));
-
-	//m_frameData.m_viewMatrix = View;
-
-	//m_frameData.m_viewMatrix = glm::lookAt(p_sceneObjects.m_camera.m_spatialData.m_spatialData.m_position, direction, up);
-	//m_frameData.m_viewMatrix = glm::lookAt(p_sceneObjects.m_camera.m_spatialData.m_spatialData.m_position, direction, up);
-	//m_frameData.m_viewMatrix = glm::lookAt(p_sceneObjects.m_camera.m_spatialData.m_spatialData.m_position, glm::vec3(0.0f, 0.0, -1.0f), glm::vec3(0.0f, 1.0, 0.0f));
-
-	// Calculate view and view-projection matrix here, so it is only done once, since it only changes between frames
-	//m_frameData.m_viewMatrix = p_sceneObjects.m_camera.m_spatialData.m_transformMat;
+	// Calculate the view-projection matrix here, so it is only done once, since it only changes between frames
 	m_frameData.m_viewProjMatrix = m_frameData.m_projMatrix * m_frameData.m_viewMatrix;
 	
 	// Convert the view matrix to row major for the atmospheric scattering shaders
 	m_frameData.m_transposeViewMatrix = glm::transpose(m_frameData.m_viewMatrix);
 
-	/*auto tempMatrix = m_frameData.m_viewMatrix;
-	
-	m_frameData.m_viewMatrix.m[0] = tempMatrix.m[0];
-	m_frameData.m_viewMatrix.m[1] = tempMatrix.m[4];
-	m_frameData.m_viewMatrix.m[2] = tempMatrix.m[8];
-	m_frameData.m_viewMatrix.m[3] = tempMatrix.m[12];
-	m_frameData.m_viewMatrix.m[4] = tempMatrix.m[1];
-	m_frameData.m_viewMatrix.m[5] = tempMatrix.m[5];
-	m_frameData.m_viewMatrix.m[6] = tempMatrix.m[9];
-	m_frameData.m_viewMatrix.m[7] = tempMatrix.m[13];
-	m_frameData.m_viewMatrix.m[8] = tempMatrix.m[2];
-	m_frameData.m_viewMatrix.m[9] = tempMatrix.m[6];
-	m_frameData.m_viewMatrix.m[10] = tempMatrix.m[10];
-	m_frameData.m_viewMatrix.m[11] = tempMatrix.m[14];
-	m_frameData.m_viewMatrix.m[12] = tempMatrix.m[3];
-	m_frameData.m_viewMatrix.m[13] = tempMatrix.m[7];
-	m_frameData.m_viewMatrix.m[14] = tempMatrix.m[11];
-	m_frameData.m_viewMatrix.m[15] = tempMatrix.m[15];*/
-
-	/*std::cout << "VIEW MATRIX:" << std::endl;
-	std::cout << m_frameData.m_viewMatrix.m[0] << " : " << m_frameData.m_viewMatrix.m[1] << " : " << m_frameData.m_viewMatrix.m[2] << " : " << m_frameData.m_viewMatrix.m[3] << std::endl;
-	std::cout << m_frameData.m_viewMatrix.m[4] << " : " << m_frameData.m_viewMatrix.m[5] << " : " << m_frameData.m_viewMatrix.m[6] << " : " << m_frameData.m_viewMatrix.m[7] << std::endl;
-	std::cout << m_frameData.m_viewMatrix.m[8] << " : " << m_frameData.m_viewMatrix.m[9] << " : " << m_frameData.m_viewMatrix.m[10] << " : " << m_frameData.m_viewMatrix.m[11] << std::endl;
-	std::cout << m_frameData.m_viewMatrix.m[12] << " : " << m_frameData.m_viewMatrix.m[13] << " : " << m_frameData.m_viewMatrix.m[14] << " : " << m_frameData.m_viewMatrix.m[15] << std::endl;
-	*/
 	// Set the camera position
-	m_frameData.m_cameraPosition = p_sceneObjects.m_camera.m_spatialData.m_transformMat[3]; //p_sceneObjects.m_camera.m_spatialData.m_spatialData.m_position;
-	
+	m_frameData.m_cameraPosition = p_sceneObjects.m_cameraViewMatrix[3];
+
 	// Set the camera target vector
-	m_frameData.m_cameraTarget = p_sceneObjects.m_camera.m_spatialData.m_spatialData.m_rotationEuler;
-
-	// Assign directional light values and also normalize its direction, so it's not necessary to do it in a shader
-	m_frameData.m_dirLightColor = p_sceneObjects.m_directionalLight->m_color;
-	m_frameData.m_dirLightIntensity = p_sceneObjects.m_directionalLight->m_intensity;
-	m_frameData.m_dirLightDirection = p_sceneObjects.m_directionalLight->m_direction;
-	m_frameData.m_dirLightDirection = glm::normalize(m_frameData.m_dirLightDirection);
-
-	// Set number of lights so they can be send to the shader
-	m_frameData.m_numPointLights = (decltype(m_frameData.m_numPointLights))p_sceneObjects.m_pointLights.size();
-	m_frameData.m_numSpotLights = (decltype(m_frameData.m_numSpotLights))p_sceneObjects.m_spotLights.size();
+	m_frameData.m_cameraTarget = normalize(glm::vec3(p_sceneObjects.m_cameraViewMatrix[2]));
 	
 	// Prepare the geometry buffer for a new frame and a geometry pass
 	m_backend.getGeometryBuffer()->initFrame();
@@ -418,8 +377,6 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 	// Set depth test function
 	glDepthFunc(Config::rendererVar().depth_test_func);
 	//glDisable(GL_CULL_FACE);
-
-	//m_renderingPasses[0]->update(p_sceneObjects, p_deltaTime);
 
 	for(decltype(m_renderingPasses.size()) i = 0, size = m_renderingPasses.size(); i < size; i++)
 	{

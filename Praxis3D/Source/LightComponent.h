@@ -57,6 +57,40 @@ public:
 		m_lightComponentType = LightComponentType::LightComponentType_spot;
 		m_lightComponent.m_spot = p_lightDataSet;
 	}
+	LightComponent(const LightComponent &p_other)
+	{
+		m_lightComponentType = p_other.m_lightComponentType;
+
+		switch(m_lightComponentType)
+		{
+		case LightComponent::LightComponentType_directional:
+			m_lightComponent.m_directional = p_other.m_lightComponent.m_directional;
+			break;
+		case LightComponent::LightComponentType_point:
+			m_lightComponent.m_point = p_other.m_lightComponent.m_point;
+			break;
+		case LightComponent::LightComponentType_spot:
+			m_lightComponent.m_spot = p_other.m_lightComponent.m_spot;
+			break;
+		}
+	}
+	LightComponent(LightComponent &&p_other) noexcept
+	{
+		m_lightComponentType = p_other.m_lightComponentType;
+
+		switch(m_lightComponentType)
+		{
+		case LightComponent::LightComponentType_directional:
+			m_lightComponent.m_directional = p_other.m_lightComponent.m_directional;
+			break;
+		case LightComponent::LightComponentType_point:
+			m_lightComponent.m_point = p_other.m_lightComponent.m_point;
+			break;
+		case LightComponent::LightComponentType_spot:
+			m_lightComponent.m_spot = p_other.m_lightComponent.m_spot;
+			break;
+		}
+	}
 
 	~LightComponent()
 	{
@@ -70,6 +104,26 @@ public:
 		case LightComponent::LightComponentType_spot:
 			break;
 		}
+	}
+
+	LightComponent &operator=(LightComponent &&p_other) noexcept
+	{
+		m_lightComponentType = p_other.m_lightComponentType;
+
+		switch(m_lightComponentType)
+		{
+		case LightComponent::LightComponentType_directional:
+			m_lightComponent.m_directional = p_other.m_lightComponent.m_directional;
+			break;
+		case LightComponent::LightComponentType_point:
+			m_lightComponent.m_point = p_other.m_lightComponent.m_point;
+			break;
+		case LightComponent::LightComponentType_spot:
+			m_lightComponent.m_spot = p_other.m_lightComponent.m_spot;
+			break;
+		}
+
+		return *this;
 	}
 
 	ErrorCode init()
@@ -86,63 +140,63 @@ public:
 		ErrorCode importError = ErrorCode::Failure;
 
 		// Check if light node is present and the component hasn't been loaded already
-		if(p_properties && !isLoadedToMemory()) 
-		{	
-			// Get the light type
-			auto const &type = p_properties.getPropertyByID(Properties::Type).getID();
+		//if(p_properties && !isLoadedToMemory()) 
+		//{	
+		//	// Get the light type
+		//	auto const &type = p_properties.getPropertyByID(Properties::Type).getID();
 
-			// Load values based on the type of light
-			switch(type)
-			{
-			case Properties::DirectionalLight:
-				m_lightComponentType = LightComponentType::LightComponentType_directional;
-				m_objectType = Properties::PropertyID::DirectionalLight;
+		//	// Load values based on the type of light
+		//	switch(type)
+		//	{
+		//	case Properties::DirectionalLight:
+		//		m_lightComponentType = LightComponentType::LightComponentType_directional;
+		//		m_objectType = Properties::PropertyID::DirectionalLight;
 
-				m_lightComponent.m_directional.m_color = p_properties.getPropertyByID(Properties::Color).getVec3f();
-				m_lightComponent.m_directional.m_intensity = p_properties.getPropertyByID(Properties::Intensity).getFloat();
-				setLoadedToMemory(true);
-				importError = ErrorCode::Success;
+		//		m_lightComponent.m_directional.m_color = p_properties.getPropertyByID(Properties::Color).getVec3f();
+		//		m_lightComponent.m_directional.m_intensity = p_properties.getPropertyByID(Properties::Intensity).getFloat();
+		//		setLoadedToMemory(true);
+		//		importError = ErrorCode::Success;
 
-				ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_LightComponent, m_name + " - Directional light loaded");
-				break;
+		//		ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_LightComponent, m_name + " - Directional light loaded");
+		//		break;
 
-			case Properties::PointLight:
-				m_lightComponentType = LightComponentType::LightComponentType_point;
-				m_objectType = Properties::PropertyID::PointLight;
+		//	case Properties::PointLight:
+		//		m_lightComponentType = LightComponentType::LightComponentType_point;
+		//		m_objectType = Properties::PropertyID::PointLight;
 
-				m_lightComponent.m_point.m_color = p_properties.getPropertyByID(Properties::Color).getVec3f();
-				m_lightComponent.m_point.m_intensity = p_properties.getPropertyByID(Properties::Intensity).getFloat();
-				setLoadedToMemory(true);
-				importError = ErrorCode::Success;
+		//		m_lightComponent.m_point.m_color = p_properties.getPropertyByID(Properties::Color).getVec3f();
+		//		m_lightComponent.m_point.m_intensity = p_properties.getPropertyByID(Properties::Intensity).getFloat();
+		//		setLoadedToMemory(true);
+		//		importError = ErrorCode::Success;
 
-				ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_LightComponent, m_name + " - Point light loaded");
-				break;
+		//		ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_LightComponent, m_name + " - Point light loaded");
+		//		break;
 
-			case Properties::SpotLight:
-				m_lightComponentType = LightComponentType::LightComponentType_spot;
-				m_objectType = Properties::PropertyID::SpotLight;
+		//	case Properties::SpotLight:
+		//		m_lightComponentType = LightComponentType::LightComponentType_spot;
+		//		m_objectType = Properties::PropertyID::SpotLight;
 
-				m_lightComponent.m_spot.m_color = p_properties.getPropertyByID(Properties::Color).getVec3f();
-				m_lightComponent.m_spot.m_cutoffAngle = p_properties.getPropertyByID(Properties::CutoffAngle).getFloat();
-				m_lightComponent.m_spot.m_intensity = p_properties.getPropertyByID(Properties::Intensity).getFloat();
-				setLoadedToMemory(true);
-				importError = ErrorCode::Success;
+		//		m_lightComponent.m_spot.m_color = p_properties.getPropertyByID(Properties::Color).getVec3f();
+		//		m_lightComponent.m_spot.m_cutoffAngle = p_properties.getPropertyByID(Properties::CutoffAngle).getFloat();
+		//		m_lightComponent.m_spot.m_intensity = p_properties.getPropertyByID(Properties::Intensity).getFloat();
+		//		setLoadedToMemory(true);
+		//		importError = ErrorCode::Success;
 
-				ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_LightComponent, m_name + " - Spot light loaded");
-				break;
+		//		ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_LightComponent, m_name + " - Spot light loaded");
+		//		break;
 
-			default:
-				ErrHandlerLoc().get().log(ErrorType::Warning, ErrorSource::Source_LightComponent, m_name + " - missing \'Type\' identifier");
-				break;
-			}
+		//	default:
+		//		ErrHandlerLoc().get().log(ErrorType::Warning, ErrorSource::Source_LightComponent, m_name + " - missing \'Type\' identifier");
+		//		break;
+		//	}
 
-			if(importError == ErrorCode::Success)
-			{
-				setLoadedToMemory(true);
-				setLoadedToVideoMemory(true);
-				setActive(true);
-			}
-		}
+		//	if(importError == ErrorCode::Success)
+		//	{
+		//		setLoadedToMemory(true);
+		//		setLoadedToVideoMemory(true);
+		//		setActive(true);
+		//	}
+		//}
 		return importError;
 	}
 
@@ -152,36 +206,36 @@ public:
 		PropertySet propertySet(Properties::Lighting);
 
 		// Add the properties based on the type of light
-		switch(getLightType())
-		{
-		case LightComponent::LightComponentType_directional:
-			propertySet.addProperty(Properties::Type, Properties::DirectionalLight);
-			propertySet.addProperty(Properties::Color, m_lightComponent.m_directional.m_color);
-			propertySet.addProperty(Properties::Intensity, m_lightComponent.m_directional.m_intensity);
+		//switch(getLightType())
+		//{
+		//case LightComponent::LightComponentType_directional:
+		//	propertySet.addProperty(Properties::Type, Properties::DirectionalLight);
+		//	propertySet.addProperty(Properties::Color, m_lightComponent.m_directional.m_color);
+		//	propertySet.addProperty(Properties::Intensity, m_lightComponent.m_directional.m_intensity);
 
-			ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_LightComponent, m_name + " - Directional light exported.");
-			break;
+		//	ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_LightComponent, m_name + " - Directional light exported.");
+		//	break;
 
-		case LightComponent::LightComponentType_point:
-			propertySet.addProperty(Properties::Type, Properties::PointLight);
-			propertySet.addProperty(Properties::Color, m_lightComponent.m_point.m_color);
-			propertySet.addProperty(Properties::Intensity, m_lightComponent.m_point.m_intensity);
+		//case LightComponent::LightComponentType_point:
+		//	propertySet.addProperty(Properties::Type, Properties::PointLight);
+		//	propertySet.addProperty(Properties::Color, m_lightComponent.m_point.m_color);
+		//	propertySet.addProperty(Properties::Intensity, m_lightComponent.m_point.m_intensity);
 
-			ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_LightComponent, m_name + " - Point light exported.");
-			break;
+		//	ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_LightComponent, m_name + " - Point light exported.");
+		//	break;
 
-		case LightComponent::LightComponentType_spot:
-			propertySet.addProperty(Properties::Type, Properties::SpotLight);
-			propertySet.addProperty(Properties::Color, m_lightComponent.m_spot.m_color);
-			propertySet.addProperty(Properties::CutoffAngle, m_lightComponent.m_spot.m_cutoffAngle);
-			propertySet.addProperty(Properties::Intensity, m_lightComponent.m_spot.m_intensity);
+		//case LightComponent::LightComponentType_spot:
+		//	propertySet.addProperty(Properties::Type, Properties::SpotLight);
+		//	propertySet.addProperty(Properties::Color, m_lightComponent.m_spot.m_color);
+		//	propertySet.addProperty(Properties::CutoffAngle, m_lightComponent.m_spot.m_cutoffAngle);
+		//	propertySet.addProperty(Properties::Intensity, m_lightComponent.m_spot.m_intensity);
 
-			ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_LightComponent, m_name + " - Spot light exported.");
-			break;
+		//	ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_LightComponent, m_name + " - Spot light exported.");
+		//	break;
 
-		default:
-			break;
-		}
+		//default:
+		//	break;
+		//}
 
 		return propertySet;
 	}
@@ -287,7 +341,6 @@ public:
 	inline SpotLightDataSet *getSpotLightSafe() { return (m_lightComponentType == LightComponentType::LightComponentType_spot) ? &m_lightComponent.m_spot : nullptr; }
 
 private:
-
 	inline void updateColor(const glm::vec3 &p_color)
 	{
 		// Update each type of light individually

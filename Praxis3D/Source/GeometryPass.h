@@ -73,7 +73,7 @@ public:
 		for(auto entity : p_sceneObjects.m_models)
 		{
 			ModelComponent &model = p_sceneObjects.m_models.get<ModelComponent>(entity);
-			if(model.isObjectActive() && model.isLoadedToVideoMemory())
+			if(model.isObjectActive())
 			{
 				SpatialComponent &spatialData = p_sceneObjects.m_models.get<SpatialComponent>(entity);
 				auto &modelData = model.getModelData();
@@ -93,7 +93,7 @@ public:
 		for(auto entity : p_sceneObjects.m_modelsWithShaders)
 		{
 			ModelComponent &model = p_sceneObjects.m_modelsWithShaders.get<ModelComponent>(entity);
-			if(model.isObjectActive() && model.isLoadedToVideoMemory())
+			if(model.isObjectActive())
 			{
 				SpatialComponent &spatialData = p_sceneObjects.m_modelsWithShaders.get<SpatialComponent>(entity);
 				ShaderComponent &shader = p_sceneObjects.m_modelsWithShaders.get<ShaderComponent>(entity);

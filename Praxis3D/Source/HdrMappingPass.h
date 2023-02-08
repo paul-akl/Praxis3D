@@ -96,7 +96,7 @@ public:
 		m_renderer.m_backend.getGeometryBuffer()->bindBuffersForWriting(m_emissiveAndOutputBuffers);
 
 		// Perform HDR mapping. Queue and render a full screen quad using an HDR pass shader
-		m_renderer.queueForDrawing(m_hdrMappingShader->getShaderHandle(), m_hdrMappingShader->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat);
+		m_renderer.queueForDrawing(m_hdrMappingShader->getShaderHandle(), m_hdrMappingShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
 		m_renderer.passScreenSpaceDrawCommandsToBackend();
 		
 		p_renderPassData.setBlurInputMap(p_renderPassData.getEmissiveInputMap());

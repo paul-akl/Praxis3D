@@ -578,7 +578,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		auto &dirLightColor = p_uniformData.m_frameData.m_dirLightColor;
+		auto &dirLightColor = p_uniformData.m_frameData.m_directionalLight.m_color;
 		glUniform3f(m_uniformHandle, dirLightColor.x, dirLightColor.y, dirLightColor.z);
 	}
 };
@@ -589,7 +589,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		auto lightDirection = p_uniformData.m_frameData.m_dirLightDirection;
+		auto lightDirection = p_uniformData.m_frameData.m_directionalLight.m_direction;
 		glUniform3f(m_uniformHandle, lightDirection.x, lightDirection.y, lightDirection.z);
 	}
 };
@@ -600,7 +600,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform1f(m_uniformHandle, p_uniformData.m_frameData.m_dirLightIntensity);
+		glUniform1f(m_uniformHandle, p_uniformData.m_frameData.m_directionalLight.m_intensity);
 	}
 };
 class NumPointLightsUniform : public BaseUniform

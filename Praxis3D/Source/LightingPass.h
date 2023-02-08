@@ -9,7 +9,9 @@ public:
 		RenderPass(p_renderer), 
 		m_pointLightBuffer(BufferType_Uniform, BufferBindTarget_Uniform, BufferUsageHint_DynamicDraw),
 		m_spotLightBuffer(BufferType_Uniform, BufferBindTarget_Uniform, BufferUsageHint_DynamicDraw),
-		m_shaderLightPass(nullptr) { }
+		m_shaderLightPass(nullptr),
+		m_maxNumPointLights(decltype(m_pointLights.size())(Config::graphicsVar().max_num_point_lights)),
+		m_maxNumSpotLights(decltype(m_spotLights.size())(Config::graphicsVar().max_num_spot_lights)) { }
 
 	~LightingPass() { }
 
@@ -24,8 +26,10 @@ public:
 		m_spotLightBuffer.m_bindingIndex = UniformBufferBinding_SpotLights;
 
 		// Set the light buffer sizes
-		m_pointLightBuffer.m_size = sizeof(PointLightDataSet) * Config::graphicsVar().max_num_point_lights;
-		m_spotLightBuffer.m_size = sizeof(SpotLightDataSet) * Config::graphicsVar().max_num_spot_lights;
+		m_pointLightBuffer.m_size = sizeof(PointLightDataSet) * m_maxNumPointLights;
+		m_spotLightBuffer.m_size = sizeof(SpotLightDataSet) * m_maxNumSpotLights;
+		m_pointLights.reserve(m_maxNumPointLights);
+		m_spotLights.reserve(m_maxNumSpotLights);
 		
 		// Set buffer values
 		m_emissiveAndOutputBuffers.resize(2);
@@ -69,13 +73,77 @@ public:
 		glDepthFunc(GL_GREATER);
 		glDepthMask(GL_FALSE);
 
+		// Clear light arrays from previous frame
+		m_pointLights.clear();
+		m_spotLights.clear();
+		m_directionalLight.clear();
+
+		// Iterate over all objects to be rendered with geometry shader
+		for(auto entity : p_sceneObjects.m_lights)
+		{
+			LightComponent &lightComponent = p_sceneObjects.m_lights.get<LightComponent>(entity);
+
+			// Check if the light is enabled
+			if(lightComponent.isObjectActive())
+			{
+				SpatialComponent &spatialComponent = p_sceneObjects.m_lights.get<SpatialComponent>(entity);
+
+				// Add the light data to the corresponding array, based on the light type
+				switch(lightComponent.getLightType())
+				{
+				case LightComponent::LightComponentType_point:
+				{
+					if(m_pointLights.size() < m_maxNumPointLights)
+					{
+						// Update position of the light data set
+						PointLightDataSet *lightDataSet = lightComponent.getPointLight();
+						lightDataSet->m_position = spatialComponent.getSpatialDataChangeManager().getWorldTransform()[3];
+
+						m_pointLights.push_back(*lightDataSet);
+					}
+				}
+				break;
+
+				case LightComponent::LightComponentType_spot:
+				{
+					if(m_spotLights.size() < m_maxNumSpotLights)
+					{
+						// Update position and rotation of the light data set
+						SpotLightDataSet *lightDataSet = lightComponent.getSpotLight();
+						lightDataSet->m_position = spatialComponent.getSpatialDataChangeManager().getWorldTransform()[3];
+						lightDataSet->m_direction = spatialComponent.getSpatialDataChangeManager().getWorldTransform()[2];
+
+						m_spotLights.push_back(*lightDataSet);
+					}
+				}
+				break;
+
+				case LightComponent::LightComponentType_directional:
+				{
+					DirectionalLightDataSet *lightDataSet = lightComponent.getDirectionalLight();
+					lightDataSet->m_direction = spatialComponent.getSpatialDataChangeManager().getWorldTransform()[2];
+
+					m_directionalLight = *lightDataSet;
+				}
+				break;
+				}
+			}
+		}
+
+		// Set the directional light data so it can be sent to the shader
+		m_renderer.m_frameData.m_directionalLight = m_directionalLight;
+
+		// Set number of lights so they can be send to the shader
+		m_renderer.m_frameData.m_numPointLights = (decltype(m_renderer.m_frameData.m_numPointLights))m_pointLights.size();
+		m_renderer.m_frameData.m_numSpotLights = (decltype(m_renderer.m_frameData.m_numSpotLights))m_spotLights.size();
+
 		// Setup point light buffer values
-		m_pointLightBuffer.m_updateSize = sizeof(PointLightDataSet) * p_sceneObjects.m_pointLights.size();
-		m_pointLightBuffer.m_data = (void*)p_sceneObjects.m_pointLights.data();
+		m_pointLightBuffer.m_updateSize = sizeof(PointLightDataSet) * m_pointLights.size();
+		m_pointLightBuffer.m_data = (void*)m_pointLights.data();
 
 		// Setup spot light buffer values
-		m_spotLightBuffer.m_updateSize = sizeof(SpotLightDataSet) * p_sceneObjects.m_spotLights.size();
-		m_spotLightBuffer.m_data = (void*)p_sceneObjects.m_spotLights.data();
+		m_spotLightBuffer.m_updateSize = sizeof(SpotLightDataSet) * m_spotLights.size();
+		m_spotLightBuffer.m_data = (void*)m_spotLights.data();
 
 		// Bind textures for reading
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferPosition, GeometryBuffer::GBufferPosition);
@@ -95,7 +163,7 @@ public:
 		m_renderer.passUpdateCommandsToBackend();
 
 		// Queue the screen space triangle, using lighting shader, to be drawn
-		m_renderer.queueForDrawing(m_shaderLightPass->getShaderHandle(), m_shaderLightPass->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat);
+		m_renderer.queueForDrawing(m_shaderLightPass->getShaderHandle(), m_shaderLightPass->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
 
 		// Pass the draw command so it is executed
 		m_renderer.passScreenSpaceDrawCommandsToBackend();
@@ -112,4 +180,11 @@ private:
 	// Light buffers
 	RendererFrontend::ShaderBuffer	m_pointLightBuffer, 
 									m_spotLightBuffer;
+
+	DirectionalLightDataSet m_directionalLight;
+	std::vector<PointLightDataSet> m_pointLights;
+	std::vector<SpotLightDataSet> m_spotLights;
+
+	decltype(m_pointLights.size()) m_maxNumPointLights;
+	decltype(m_spotLights.size()) m_maxNumSpotLights;
 };

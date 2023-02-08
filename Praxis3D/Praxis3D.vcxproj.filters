@@ -854,7 +854,7 @@
     <ClInclude Include="Source\MainMenuState.h">
       <Filter>Engine States\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GraphicsLoadToMemoryComponent.h">
+    <ClInclude Include="Source\GraphicsLoadComponents.h">
       <Filter>Renderer\Objects\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

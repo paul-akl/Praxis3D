@@ -1,7 +1,7 @@
 
 #include "AtmScatteringPass.h"
 #include "AtmScatteringShaderPass.h"
-
+#include "RendererScene.h"
 
 void AtmScatteringPass::InitModel()
 {

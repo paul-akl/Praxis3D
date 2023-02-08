@@ -93,7 +93,7 @@ public:
 
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferToImageUnitForReading(GeometryBuffer::GBufferFinal, GeometryBuffer::GBufferInputTexture, 0);
 
-		m_renderer.queueForDrawing(m_luminanceHistogramShader->getShaderHandle(), m_luminanceHistogramShader->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat, groupsX, groupsY, 1, MemoryBarrierType::MemoryBarrierType_ShaderStorageBarrier);
+		m_renderer.queueForDrawing(m_luminanceHistogramShader->getShaderHandle(), m_luminanceHistogramShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix, groupsX, groupsY, 1, MemoryBarrierType::MemoryBarrierType_ShaderStorageBarrier);
 		m_renderer.passComputeDispatchCommandsToBackend();
 
 		//glActiveTexture(GL_TEXTURE0);
@@ -101,7 +101,7 @@ public:
 
 		glBindImageTexture(0, m_luminanceAverageTexture.getHandle(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_R16F);
 
-		m_renderer.queueForDrawing(m_luminanceAverageShader->getShaderHandle(), m_luminanceAverageShader->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat, 1, 1, 1, MemoryBarrierType::MemoryBarrierType_ShaderStorageBarrier);
+		m_renderer.queueForDrawing(m_luminanceAverageShader->getShaderHandle(), m_luminanceAverageShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix, 1, 1, 1, MemoryBarrierType::MemoryBarrierType_ShaderStorageBarrier);
 		m_renderer.passComputeDispatchCommandsToBackend();
 
 
@@ -115,7 +115,7 @@ public:
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
 
 		// Queue and render a full screen quad using a final pass shader
-		m_renderer.queueForDrawing(m_tonemappingShader->getShaderHandle(), m_tonemappingShader->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat);
+		m_renderer.queueForDrawing(m_tonemappingShader->getShaderHandle(), m_tonemappingShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
 		m_renderer.passScreenSpaceDrawCommandsToBackend();
 
 		p_renderPassData.swapColorInputOutputMaps();

@@ -261,7 +261,7 @@
     <ClInclude Include="Source\GeometryBuffer.h" />
     <ClInclude Include="Source\GeometryPass.h" />
     <ClInclude Include="Source\GraphicsDataSets.h" />
-    <ClInclude Include="Source\GraphicsLoadToMemoryComponent.h" />
+    <ClInclude Include="Source\GraphicsLoadComponents.h" />
     <ClInclude Include="Source\GraphicsObject.h" />
     <ClInclude Include="Source\GUICommandBuffer.h" />
     <ClInclude Include="Source\GUIDataManager.h" />

@@ -1,12 +1,12 @@
 #pragma once
 
+#include "GraphicsDataSets.h"
 #include "Math.h"
 
 struct UniformFrameData
 {
 	UniformFrameData()
 	{
-		m_dirLightIntensity = 0.0f;
 		m_numPointLights = 0;
 		m_numSpotLights = 0;
 		m_deltaTime = 0.0f;
@@ -30,9 +30,7 @@ struct UniformFrameData
 				m_transposeViewMatrix;
 
 	// Parameters of direction light, since there can be only one of it
-	glm::vec3 m_dirLightColor,
-				m_dirLightDirection;
-	float		m_dirLightIntensity;
+	DirectionalLightDataSet m_directionalLight;
 
 	// Delta time of the last frame
 	float		m_deltaTime;

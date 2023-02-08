@@ -6,18 +6,12 @@
 
 #include <list>
 
-#include "CameraGraphicsObject.h"
 #include "EntityViewDefinitions.h"
-#include "EnvironmentMapObjects.h"
 #include "GraphicsDataSets.h"
-#include "GraphicsObject.h"
-#include "LightComponent.h"
-#include "LightingGraphicsObjects.h"
+#include "GraphicsLoadComponents.h"
 #include "Loaders.h"
 #include "ObjectPool.h"
-#include "ModelGraphicsObjects.h"
 #include "RenderTask.h"
-#include "ShaderGraphicsObjects.h"
 #include "System.h"
 
 class RendererSystem;
@@ -90,23 +84,16 @@ struct LoadableComponentContainer
 // Used to store processed objects, so they can be sent to the renderer
 struct SceneObjects
 {
-	SceneObjects() : /*m_staticSkybox(nullptr),*/ m_directionalLight(nullptr) { }
+	SceneObjects() { }
 
+	// ECS registry views
 	ModelSpatialView m_models;
 	ModelShaderSpatialView m_modelsWithShaders;
+	LightSpatialView m_lights;
+	LoadToVideoMemoryView m_objectsToLoadToVideoMemory;
 
 	// Camera
-	CameraData m_camera;
-	//EnvironmentMapObject *m_staticSkybox;
-
-	// Lights
-	const DirectionalLightDataSet *m_directionalLight;
-	std::vector<PointLightDataSet> m_pointLights;
-	std::vector<SpotLightDataSet> m_spotLights;
-
-	// Models
-	std::vector<ModelAndSpatialData> m_modelData;
-	std::vector<ModelShaderSpatialData> m_modelDataWithShaders;
+	glm::mat4 m_cameraViewMatrix;
 
 	// Objects that need to be loaded to VRAM
 	std::vector<LoadableObjectsContainer> m_loadToVideoMemory;
@@ -172,60 +159,10 @@ public:
 	inline SceneObjects &getSceneObjects() { return m_sceneObjects; }
 	
 private:
-	inline void calculateCamera(SpatialTransformData &p_viewData)
-	{
-		/*p_viewData.m_spatialData.m_rotationEuler = Math::toRadian(p_viewData.m_spatialData.m_rotationEuler);
-		p_viewData.m_spatialData.m_rotationEuler.y = 0.5f;
-		p_viewData.m_spatialData.m_rotationEuler.z = 3.14f;
-
-		const glm::vec3 upVector = Math::cross(p_viewData.m_spatialData.m_rotationEuler.z, p_viewData.m_spatialData.m_rotationEuler.y);
-		const glm::vec3 targetVector(0.0f, p_viewData.m_spatialData.m_rotationEuler.y, p_viewData.m_spatialData.m_rotationEuler.z);
-
-		p_viewData.m_transformMat.initCamera(p_viewData.m_spatialData.m_position, targetVector + p_viewData.m_spatialData.m_position, upVector);*/
-
-		//p_viewData.m_transformMat.identity();
-		//p_viewData.m_transformMat.translate(-p_viewData.m_spatialData.m_position);
-		//p_viewData.m_transformMat.rotate(p_viewData.m_spatialData.m_rotationEuler);
-
-		/*/p_viewData.m_transformMat
-
-		p_viewData.m_transformMat = glm::translate(p_viewData.m_transformMat, p_viewData.m_spatialData.m_position);
-
-		//glm::quat quaternion(glm::radians(p_rotation));
-		//returnMatrix *= glm::toMat4(quaternion);
-
-		glm::quat yawQ = glm::quat(glm::vec3(0.0f, glm::radians(p_viewData.m_spatialData.m_rotationEuler.y), 0.0f));
-		yawQ = glm::normalize(yawQ);
-		glm::mat4 yawMat = glm::mat4_cast(yawQ);
-
-		glm::quat pitchQ = glm::quat(glm::vec3(glm::radians(p_viewData.m_spatialData.m_rotationEuler.z), 0.0f, 0.0f));
-		pitchQ = glm::normalize(pitchQ);
-		glm::mat4 pitchMat = glm::mat4_cast(pitchQ);
-
-		glm::quat rollQ = glm::quat(glm::vec3(0.0f, 0.0f, glm::radians(p_viewData.m_spatialData.m_rotationEuler.z)));
-		rollQ = glm::normalize(rollQ);
-		glm::mat4 rollMat = glm::mat4_cast(rollQ);
-
-		p_viewData.m_transformMat *= pitchMat * yawMat * rollMat;
-
-		p_viewData.m_transformMat = glm::scale(p_viewData.m_transformMat, p_viewData.m_spatialData.m_scale);*/
-
-		//p_viewData.m_transformMat = Math::createTransformMat(-p_viewData.m_spatialData.m_position, p_viewData.m_spatialData.m_rotationEuler, p_viewData.m_spatialData.m_scale);
-
-	}
-
 	MaterialData loadMaterialData(PropertySet &p_materialProperty, Model::MaterialArrays &p_materialArraysFromModel, MaterialType p_materialType, std::size_t p_meshIndex);
 
-	// Stores objects that are currently being loaded to memory in a background thread
-	std::list<LoadableComponentContainer> m_componentsLoadingToMemory;
-		
-	EnvironmentMapObject *m_skybox;
-
-	// Only one camera present at a time
-	CameraObject *m_camera;
-
 	// Only one directional light present at a time
-	DirectionalLightObject *m_directionalLight;
+	DirectionalLightDataSet m_directionalLight;
 
 	// Used to store processed objects
 	SceneObjects m_sceneObjects;

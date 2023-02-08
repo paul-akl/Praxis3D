@@ -249,12 +249,21 @@ struct RenderableMeshData
 
 struct DirectionalLightDataSet
 {
-	DirectionalLightDataSet(glm::vec3 p_color = glm::vec3(1.0f), 
+	DirectionalLightDataSet(glm::vec3 p_color = glm::vec3(0.0f), 
 		glm::vec3 p_direction = glm::vec3(0.0f, 1.0f, 0.0f),
-		float p_intensity = 1.0f) :
+		float p_intensity = 0.0f) :
 		m_color(p_color), 
 		m_direction(p_direction), 
 		m_intensity(p_intensity) { }
+
+	DirectionalLightDataSet &operator=(const DirectionalLightDataSet &p_other)
+	{
+		m_color = p_other.m_color;
+		m_direction = p_other.m_direction;
+		m_intensity = p_other.m_intensity;
+
+		return *this;
+	}
 
 	void clear()
 	{

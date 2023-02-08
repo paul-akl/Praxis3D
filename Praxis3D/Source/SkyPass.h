@@ -58,7 +58,7 @@ public:
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
 
 		// Perform various visual effects in the post process shader
-		m_renderer.queueForDrawing(m_skyPassShader->getShaderHandle(), m_skyPassShader->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat);
+		m_renderer.queueForDrawing(m_skyPassShader->getShaderHandle(), m_skyPassShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
 		
 		// Pass the draw command so it is executed
 		m_renderer.passScreenSpaceDrawCommandsToBackend();

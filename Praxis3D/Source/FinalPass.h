@@ -80,7 +80,7 @@ public:
 		m_renderer.m_backend.getGeometryBuffer()->bindFramebufferForWriting(GeometryBuffer::FramebufferDefault);
 
 		// Queue and render a full screen quad using a final pass shader
-		m_renderer.queueForDrawing(m_shaderFinalPass->getShaderHandle(), m_shaderFinalPass->getUniformUpdater(), p_sceneObjects.m_camera.m_spatialData.m_transformMat);
+		m_renderer.queueForDrawing(m_shaderFinalPass->getShaderHandle(), m_shaderFinalPass->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
 		m_renderer.passScreenSpaceDrawCommandsToBackend();
 
 #endif // SETTING_USE_BLIT_FRAMEBUFFER
