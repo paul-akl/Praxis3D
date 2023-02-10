@@ -87,6 +87,9 @@ EntityID WorldScene::createEntity(const ComponentsConstructionInfo &p_constructi
 			break;
 		}
 
+	// Add AUDIO components
+	std::vector<SystemObject*> audioComponents = m_sceneLoader->getSystemScene(Systems::Audio)->createComponents(newEntity, p_constructionInfo, p_startLoading);
+
 	// Add RENDERING components
 	std::vector<SystemObject*> renderingComponents = m_sceneLoader->getSystemScene(Systems::Graphics)->createComponents(newEntity, p_constructionInfo, p_startLoading);
 
@@ -125,6 +128,12 @@ EntityID WorldScene::createEntity(const ComponentsConstructionInfo &p_constructi
 			// Link SCRIPTING -> PHYSICS
 			for(decltype(physicsComponents.size()) physicsIndex = 0, physicsSize = physicsComponents.size(); physicsIndex < physicsSize; physicsIndex++)
 				m_sceneLoader->getChangeController()->createObjectLink(scriptingComponents[scriptingIndex], physicsComponents[physicsIndex]);
+		}
+
+		// Link SCRIPTING -> AUDIO
+		for(decltype(audioComponents.size()) audioIndex = 0, audioSize = audioComponents.size(); audioIndex < audioSize; audioIndex++)
+		{
+			m_sceneLoader->getChangeController()->createObjectLink(scriptingComponents[scriptingIndex], audioComponents[audioIndex]);
 		}
 
 		// Link SCRIPTING -> GUI

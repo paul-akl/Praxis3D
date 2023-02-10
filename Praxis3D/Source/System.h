@@ -60,30 +60,52 @@ public:
 		: m_initialized(false), m_system(p_system), m_sceneLoader(p_sceneLoader) { }
 	//~SystemScene();
 
+	// Gets the parent system
 	SystemBase *getSystem() { return m_system; }
 
+	// Initializes the scene
 	virtual ErrorCode init() = 0;
 
+	// Internal scene data-driven setup based on passed properties
 	virtual ErrorCode setup(const PropertySet &p_properties) = 0;
+	
+	// Activation is called when the engine play state containing this scene is made current (activated)
+	virtual void activate() { }
 
+	// Deactivation is called when the engine play state changes and this scene isn't current anymore
+	virtual void deactivate() { }
+
+	// Called every frame with the last frame's delta time
 	virtual void update(const float p_deltaTime) = 0;
 
+	// Load all the scene objects at once
 	virtual ErrorCode preload() = 0;
 
+	// Start loading all the scene objects in the background threads and return (without waiting)
 	virtual void loadInBackground() = 0;
 
-	// Exports all the data of the scene (including all objects within) as a PropertySet (for example, used for saving to map file)
-	//virtual PropertySet exportObject() { return PropertySet(Properties::Null); }
-
+	// Create all the components that belong to this scene, that are contained in ComponentsConstructionInfo; return a vector of all created components
 	virtual std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
+
+	// Destroy an object that belongs to this system scene
 	virtual ErrorCode destroyObject(SystemObject *p_systemObject) = 0;
+
+	// Returns a null system object that is used as a fall-back when an object creation fails
 	virtual SystemObject *getNullObject();
 
+	// Called whenever there are changes pending for this scene; always called at the end of frame
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
 
+	// Return the parent system task
 	virtual SystemTask *getSystemTask() = 0;
+
+	// Return the system type that this scene belongs to
 	virtual Systems::TypeID getSystemType() = 0;
+
+	// Return the data changes this scene is subscribed to
 	virtual BitMask getDesiredSystemChanges() { return Systems::Changes::None; };
+
+	// Return the parent scene loader
 	inline SceneLoader *getSceneLoader() { return m_sceneLoader; }
 
 protected:
@@ -198,6 +220,10 @@ public:
 	virtual void update(const float p_deltaTime) = 0;
 
 	virtual bool isPrimaryThreadOnly() = 0;
+
+	virtual void activate() { m_systemScene->activate(); }
+
+	virtual void deactivate() { m_systemScene->deactivate(); }
 
 protected:
 	SystemScene *m_systemScene;

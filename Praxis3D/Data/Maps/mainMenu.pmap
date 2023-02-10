@@ -25,6 +25,18 @@
 			"Name": "GUI",
 			"ID": "1",
 			"Parent": "0",
+			"Audio":
+			{
+				"SoundComponent":
+				{
+					"Filename": "chat.mp3",
+					"Type": "Music",
+					"Loop": "true",
+					"Spatialized": "false",
+					"StartPlaying": "true",
+					"Volume": "0.5f"
+				}
+			},
 			"GUI":
 			{
 				"Sequence":

@@ -40,6 +40,9 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
     Code(Initialize_failure,) \
     Code(File_not_found,) \
     Code(Filename_empty,) \
+	/* Audio system errors */\
+	Code(Audio_no_drivers, ) \
+	Code(Audio_system_init_failed, ) \
 	/* General engine errors */\
     Code(Destroy_obj_not_found,) \
     Code(Glew_failed,) \
@@ -143,6 +146,7 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_ShaderLoader,) \
     Code(Source_SkyObject,) \
     Code(Source_SkyPass,) \
+    Code(Source_SoundComponent,) \
     Code(Source_TextureLoader,) \
     Code(Source_Window,) \
     Code(Source_World,) \

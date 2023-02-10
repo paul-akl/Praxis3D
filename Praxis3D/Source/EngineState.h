@@ -17,7 +17,12 @@ public:
 	virtual ~EngineState();
 
 	virtual ErrorCode init(TaskManager *p_taskManager);
+
 	virtual void update(Engine &p_engine) = 0;
+
+	virtual void activate();
+
+	virtual void deactivate();
 
 	virtual void shutdown();
 

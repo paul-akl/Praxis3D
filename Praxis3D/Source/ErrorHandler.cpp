@@ -28,6 +28,8 @@ ErrorHandler::ErrorHandler()
 	AssignErrorType(Initialize_failure, Info);
 	AssignErrorType(File_not_found, Warning);
 	AssignErrorType(Filename_empty, Warning);
+	AssignErrorType(Audio_no_drivers, Error);
+	AssignErrorType(Audio_system_init_failed, Error);
 	AssignErrorType(Destroy_obj_not_found, Warning);
 	AssignErrorType(Glew_failed, FatalError);
 	AssignErrorType(Ifstream_failed, Warning);

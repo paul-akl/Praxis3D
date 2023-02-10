@@ -67,12 +67,21 @@ function init ()
 	buttonExitPressedTexture:loadToMemory()
 	buttonExitPressedTexture:loadToVideoMemory()
 	
-	-- Logo texture
+	-- Engine logo texture
 	praxisLogoTexture = loadTexture2D('logo1.png')
 	praxisLogoTexture:loadToMemory()
 	praxisLogoTexture:loadToVideoMemory()
 	
+	-- Fmod logo texture
+	fmodLogoTexture = loadTexture2D('FMOD Logo White - Black Background.png')
+	fmodLogoTexture:loadToMemory()
+	fmodLogoTexture:loadToVideoMemory()
+	
 	praxisLogoScale = 1
+	fmodLogoScale = 0.05
+	
+	fmodLogoOffsetMultX = 0.05
+	fmodLogoOffsetMultY = 1.95
 	
 	--buttonSizeX = 100.0
 	--buttonSizeY = 25.0
@@ -110,9 +119,18 @@ function update (p_deltaTime)
 	buttonPositionX = halfScreenSizeX * buttonOffsetMultX
 	buttonPositionY = halfScreenSizeY * buttonOffsetMultY
 	
-	-- Calculate logo size based in texture and window size (try to fit it on screen vertically)
-	logoAdjustedSizeX = praxisLogoTexture:getTextureWidth() / (praxisLogoTexture:getTextureWidth() / graphicsVariables.current_resolution_x) * praxisLogoScale
-	logoAdjustedSizeY = praxisLogoTexture:getTextureHeight() / (praxisLogoTexture:getTextureWidth() / graphicsVariables.current_resolution_x) * praxisLogoScale
+	-- Calculate engine logo size based based on texture and window size (try to fit it on screen vertically)
+	engineLogoAdjustedSizeX = praxisLogoTexture:getTextureWidth() / (praxisLogoTexture:getTextureWidth() / graphicsVariables.current_resolution_x) * praxisLogoScale
+	engineLogoAdjustedSizeY = praxisLogoTexture:getTextureHeight() / (praxisLogoTexture:getTextureWidth() / graphicsVariables.current_resolution_x) * praxisLogoScale
+	
+	-- Calculate fmod logo size based on texture and window size (so it scaled with the screen size)
+	fmodLogoAdjustedSizeMultAverage = ((fmodLogoTexture:getTextureHeight() / graphicsVariables.current_resolution_y) + (fmodLogoTexture:getTextureWidth() / graphicsVariables.current_resolution_x)) / 2
+	fmodLogoAdjustedSizeX = fmodLogoTexture:getTextureWidth() / fmodLogoAdjustedSizeMultAverage * fmodLogoScale
+	fmodLogoAdjustedSizeY = fmodLogoTexture:getTextureHeight() / fmodLogoAdjustedSizeMultAverage * fmodLogoScale
+
+	-- Remove window padding and border size, so the content inside the window fills the whole window
+	GUI.PushStyleVar(ImGuiStyleVar.WindowPadding, 0.0, 0.0)
+	GUI.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0.0)
 
 	-- Draw the background color
 	GUI.PushStyleColor(ImGuiCol.WindowBg, 0.102, 0.102, 0.102, 255.0)
@@ -123,10 +141,17 @@ function update (p_deltaTime)
 	GUI.PopStyleColor()
 	
 	-- Draw the engine logo
-	GUI.SetNextWindowPos((graphicsVariables.current_resolution_x - logoAdjustedSizeX) / 2, (graphicsVariables.current_resolution_y - logoAdjustedSizeY) / 2)
-	GUI.SetNextWindowSize(logoAdjustedSizeX, logoAdjustedSizeY)
+	GUI.SetNextWindowPos((graphicsVariables.current_resolution_x - engineLogoAdjustedSizeX) / 2, (graphicsVariables.current_resolution_y - engineLogoAdjustedSizeY) / 2)
+	GUI.SetNextWindowSize(engineLogoAdjustedSizeX, engineLogoAdjustedSizeY)
 	GUI.Begin('PRAXIS LOGO', bitwiseOr(ImGuiWindowFlags.NoDecoration, ImGuiWindowFlags.NoMove, ImGuiWindowFlags.NoSavedSettings, ImGuiWindowFlags.NoBackground, ImGuiWindowFlags.NoMouseInputs))
-	GUI.Image(praxisLogoTexture, logoAdjustedSizeX, logoAdjustedSizeY)
+	GUI.Image(praxisLogoTexture, engineLogoAdjustedSizeX, engineLogoAdjustedSizeY)
+	GUI.End()
+	
+	-- Draw the fmod logo
+	GUI.SetNextWindowPos((halfScreenSizeX - (fmodLogoAdjustedSizeX / 2)) * fmodLogoOffsetMultX, (halfScreenSizeY - (fmodLogoAdjustedSizeY / 2)) * fmodLogoOffsetMultY)
+	GUI.SetNextWindowSize(fmodLogoAdjustedSizeX, fmodLogoAdjustedSizeY)
+	GUI.Begin('FMOD LOGO', bitwiseOr(ImGuiWindowFlags.NoDecoration, ImGuiWindowFlags.NoMove, ImGuiWindowFlags.NoSavedSettings, ImGuiWindowFlags.NoBackground, ImGuiWindowFlags.NoMouseInputs))
+	GUI.Image(fmodLogoTexture, fmodLogoAdjustedSizeX, fmodLogoAdjustedSizeY)
 	GUI.End()
 	
 	-- Push transparent background colors for all buttons
@@ -192,6 +217,9 @@ function update (p_deltaTime)
 	-- Pop the transparent background colors for all buttons
 	GUI.PopStyleColor(3)
 	
+	-- Pop the removal of frame padding and border size
+	GUI.PopStyleVar(2)
+	
 	-- Check if the EXIT button is pressed; close the engine if it is
 	if exitButtonPressed:isChecked() then
 		print('Exit called from MainMenu.lua')
@@ -229,6 +257,4 @@ function update (p_deltaTime)
 		fileBrowserLoadMapOpened = false
 		fileBrowserLoadMap:reset()
 	end
-	
-	--print('test')
 end

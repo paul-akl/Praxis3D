@@ -11,6 +11,7 @@
 #include <vector>
 #include "Window.h"
 
+#include "EngineDefinitions.h"
 #include "System.h"
 #include "SpinWait.h"
 
@@ -62,11 +63,107 @@ public:
 	// and their subtasks are complete. Work on tasks dedicated to the primary thread
 	void waitForSystemTasks(SystemTask **p_tasks, unsigned int p_count);
 
+	// Called from primary thread to wait until specified tasks spawned with issueJobsForSystemTasks
+	// and their subtasks are complete. Work on tasks dedicated to the primary thread
+	// Templated version
+	template<typename T_Func, typename... T_Args>
+	void waitForSystemTasks(SystemTask **p_tasks, unsigned int p_count, T_Func &p_func, T_Args&&... p_args)
+	{
+		//TODO ERROR
+		assert(isPrimaryThread());
+		assert(p_count > 0);
+		assert(p_count <= Systems::Types::Max);
+
+		// Execute the tasks we are waiting, now
+		// Save the tasks we aren't waiting, for next time
+
+		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+
+		for(std::vector<SystemTask *>::iterator iterator = m_primaryThreadSystemTaskList.begin(); iterator != m_primaryThreadSystemTaskList.end(); iterator++)
+		{
+			// Check if we are waiting for this thread
+			if(std::find(p_tasks, p_tasks + p_count, *iterator))
+			{
+				// If we are, execute it on the primary thread
+				p_func(*iterator, std::forward<T_Args>(p_args)...);
+			}
+			else
+			{
+				// If we aren't, save it for next time
+				m_tempTasksList.push_back(*iterator);
+			}
+		}
+
+		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+		m_primaryThreadSystemTaskList.clear();
+		m_primaryThreadSystemTaskList.swap(m_tempTasksList);
+
+		// Wait for the parallel calculation
+		m_systemTasksRoot->wait_for_all();
+	}
+
 	// Does a callback once from each thread used by the TaskManager; Calls one at a time, and only once
 	void nonStandardPerThreadCallback(JobFunct p_callback, void *p_data);
 
 	// Assigns threads to tasks and executed them; deals with tasks that are to be run on primary thread
 	void issueJobsForSystemTasks(SystemTask **p_tasks, unsigned int p_count, float p_deltaTime);
+
+	// Assigns threads to tasks and executed them; deals with tasks that are to be run on primary thread
+	// Templated version
+	template<typename T_Func, typename... T_Args>
+	void issueJobsForSystemTasks(SystemTask **p_tasks, unsigned int p_count, T_Func &p_func, T_Args&&... p_args)
+	{
+		//TODO ERROR
+		assert(isPrimaryThread());
+		assert(p_count > 0);
+
+		//m_deltaTime = p_deltaTime;
+
+		updateThreadPoolSize();
+
+		assert(m_systemTasksRoot != nullptr);
+
+		// Set reference count to 1, to support wait_for_all
+		m_systemTasksRoot->set_ref_count(1);
+
+		// Schedule tasks based on their performance hint order
+		tbb::task_list taskList;
+		unsigned int affinityCount = (unsigned int)m_affinityIDs.size();
+
+		// TODO: implement performance hint
+
+		for(unsigned int currentTask = 0; currentTask < p_count; currentTask++)
+		{
+#ifdef SETTING_MULTITHREADING_ENABLED
+			if(p_tasks[currentTask]->isPrimaryThreadOnly())
+			{
+				m_primaryThreadSystemTaskList.push_back(p_tasks[currentTask]);
+			}
+			else
+			{
+				auto test = std::bind(p_func, p_tasks[currentTask], std::forward<T_Args>(p_args)...);
+
+				TaskManagerGlobal::GenericCallbackTaskFunctor<decltype(test)> *systemTask
+					= new(m_systemTasksRoot->allocate_additional_child_of(*m_systemTasksRoot))
+					TaskManagerGlobal::GenericCallbackTaskFunctor<decltype(test)>(test);
+				
+				// TODO ASSERT ERROR
+				assert(systemTask != nullptr);
+
+				// Affinity will increase the chances that each SystemTask will be assigned
+				// to a unique thread, regardless of PerformanceHint
+				systemTask->set_affinity(m_affinityIDs[currentTask % affinityCount]);
+				taskList.push_back(*systemTask);
+			}
+#else
+			m_primaryThreadSystemTaskList.push_back(p_tasks[currentTask]);
+#endif
+		}
+
+		// We only spawn system tasks here. They in their turn will spawn descendant tasks.
+		// Waiting for the whole bunch completion happens in WaitForSystemTasks.
+		m_systemTasksRoot->spawn(taskList);
+	}
 
 	// TBB paralle_for wrapper for job tasks
 	void parallelFor(SystemTask *p_systemTask, ParallelForFunc p_jobFunc, void *p_param, unsigned int p_begin, unsigned int p_end, unsigned int p_minGrainSize = 1);
@@ -78,10 +175,8 @@ public:
 		// If multi-threading is enabled 
 #ifdef SETTING_MULTITHREADING_ENABLED
 		m_backgroundTaskGroup.run(p_func);
-
 #else
 		p_func();
-
 #endif
 	}
 
@@ -93,11 +188,9 @@ public:
 		// If multi-threading is enabled 
 #ifdef SETTING_MULTITHREADING_ENABLED
 		tbb::parallel_for(p_first, p_last, p_step, p_func);
-
 #else
 		for(Index i = p_first; i < p_last; i += p_step)
 			p_func(i);
-
 #endif
 	}
 
@@ -106,8 +199,8 @@ public:
 	{
 		// TODO: implement job instruction hints to issue tasks on threads more efficiently 
 
-		//return m_numOfThreads;
-		return PerformanceHint::Task_NoPerformanceHint;
+		return m_numOfThreads;
+		//return PerformanceHint::Task_NoPerformanceHint;
 	}
 
 	// Waits for the background threads to finish their work
@@ -155,164 +248,139 @@ private:
 	unsigned int m_numOfRequestedThreads;
 };
 
-/*#include <tbb\tbb.h>
-#include <wtypes.h>
-
-#include "TaskSet.h"
-
-typedef void(*TaskSetFunc)(void*, int, unsigned int, unsigned int);
-typedef unsigned int TaskSetHandle;
-
-#define TASKSETHANDLE_INVALID			0xFFFFFFFF
-#define MAX_SUCCESSORS                  5
-#define MAX_TASKSETS                    256
-#define MAX_TASKSETNAMELENGTH           512
-
-tbb::atomic<INT>						g_contextIdCount;
-tbb::enumerable_thread_specific<INT>	g_contextId;
-
-class TbbContextId;
-class GenericTask;
-class TaskSet;
-
-class TaskManager
+namespace TaskManagerGlobal
 {
-public:
-TaskManager();
-~TaskManager();
+	// Used to store a single parameter for generic callback
+	class GenericCallbackData
+	{
+	public:
+		GenericCallbackData(void *p_param) : m_param(p_param) { }
 
-void init();
-void shutdown();
+	protected:
+		void *m_param;
+	};
 
-bool createTaskSet(TaskSetFunc p_func, void *p_arg, unsigned int p_taskCount, TaskSetHandle *p_depends,
-unsigned int p_dependsCount, OPTIONAL char* p_name, OUT TaskSetHandle *p_outHandle);
+	// Stores a function pointer (usually TaskManager::JobFunct) and a single parameter
+	template<typename T_Func>
+	class GenericCallbackTask : public tbb::task, public GenericCallbackData
+	{
+	public:
+		GenericCallbackTask(T_Func p_ptr, void *p_param) : GenericCallbackData(p_param), m_ptr(p_ptr) { }
 
-void releaseHandle(TaskSetHandle p_taskSet);
-void releaseHandles(TaskSetHandle *p_taskSetList, unsigned int p_taskSetCount);
+		tbb::task *execute()
+		{
+			//TODO ERROR
+			assert(m_ptr != nullptr);
 
-void waitForSet(TaskSetHandle p_taskSet);
-void waitForAll();
+			m_ptr(m_param);
 
-bool isSetComplete(TaskSetHandle p_set);
+			return NULL;
+		}
 
-private:
-friend class GenericTask;
+	protected:
+		T_Func m_ptr;
+	};
 
-TaskSetHandle allocateTaskSet();
+	// Stores a function pointer (to be used with std::bind, so the function pointer already contains all the parameters it needs)
+	template<typename T_Func>
+	class GenericCallbackTaskFunctor : public tbb::task
+	{
+	public:
+		GenericCallbackTaskFunctor(T_Func &p_func) : m_func(p_func) { }
 
-void completeTaskSet(TaskSetHandle p_set);
+		tbb::task *execute()
+		{
+			m_func();
 
-TaskSet			*m_taskSets[MAX_TASKSETS];
-TbbContextId	*m_tbbContextId;
-void			*m_tbbInit;
-unsigned int	m_nextFreeSet;
-};
+			return NULL;
+		}
 
-class TbbContextId : public tbb::task_scheduler_observer
-{
-void on_scheduler_entry(bool)
-{
-INT context = g_contextIdCount.fetch_and_increment();
-g_contextId.local() = context;
+	private:
+		T_Func m_func;
+	};
+
+	class SynchronizeTask : public tbb::task
+	{
+	public:
+		SynchronizeTask() { }
+
+		tbb::task *execute()
+		{
+			// TODO ERRORS
+			assert(m_callback != NULL);
+			assert(m_allCallbacksInvokedEvent != NULL);
+
+			m_callback(m_callbackParam);
+
+			if(InterlockedDecrement(&m_callbacksCount) == 0)
+			{
+				SetEvent(m_allCallbacksInvokedEvent);
+			}
+			else
+			{
+				WaitForSingleObject(m_allCallbacksInvokedEvent, INFINITE);
+			}
+
+			return NULL;
+		}
+
+		static void prepareCallback(TaskManager::JobFunct p_func, void *p_param, unsigned int p_count)
+		{
+			m_callback = p_func;
+			m_callbackParam = p_param;
+			m_callbacksCount = p_count;
+			ResetEvent(m_allCallbacksInvokedEvent);
+		}
+
+	protected:
+		friend class TaskManager;
+		static void *m_callbackParam;
+		static volatile long m_callbacksCount;
+		static void *m_allCallbacksInvokedEvent;
+		static TaskManager::JobFunct m_callback;
+	};
+
+	class StallTask : public tbb::task
+	{
+	public:
+		StallTask(TaskManager *p_taskManager, void *p_waitFor) : m_taskManager(p_taskManager), m_waitFor(p_waitFor) { }
+
+		tbb::task *execute()
+		{
+			if(m_taskManager->isPrimaryThread())
+			{
+				// Cannot stall a primary task, so stall some other task
+				m_taskManager->addStallTask();
+
+				// Wait a bit to give some time for some thread to pick up the stall task
+				// TODO change hardcoded value
+				tbb::this_tbb_thread::sleep(tbb::tick_count::interval_t(0.1));
+			}
+			else
+			{
+				//TODO ERROR
+				assert(m_waitFor != nullptr);
+				WaitForSingleObject(m_waitFor, INFINITE);
+			}
+			return NULL;
+		}
+
+	protected:
+		void *m_waitFor;
+		TaskManager *m_taskManager;
+	};
+
+	class ParallelFor : public GenericCallbackData
+	{
+	public:
+		ParallelFor(TaskManager::ParallelForFunc p_pfCallback, void *p_param) : GenericCallbackData(p_param), m_parallelForCallback(p_pfCallback) { }
+
+		void operator () (const tbb::blocked_range<unsigned int> &p_right) const
+		{
+			m_parallelForCallback(m_param, p_right.begin(), p_right.end());
+		}
+
+	private:
+		TaskManager::ParallelForFunc m_parallelForCallback;
+	};
 }
-
-public:
-TbbContextId()
-{
-g_contextIdCount = 0;
-observe(true);
-}
-};
-
-class SpinLock
-{
-public:
-SpinLock() : m_lock(0)	{ }
-~SpinLock()				{ }
-
-void lock()
-{
-while (_InterlockedCompareExchange((long*)&m_lock, 1, 0) == 1)
-{
-
-}
-}
-
-void unlock()
-{
-m_lock = 0;
-}
-
-private:
-volatile unsigned int m_lock;
-};
-
-class GenericTask : public tbb::task
-{
-public:
-GenericTask();
-GenericTask(TaskSetFunc p_func, void* p_arg, unsigned int p_id, unsigned int p_size, char* p_setName, TaskSetHandle p_taskSet) :
-m_func(p_func), m_arg(p_arg), m_id(p_id), m_size(p_size), m_setName(p_setName), m_taskSet(p_taskSet)
-{
-
-}
-
-task* execute();
-//{
-//	m_func(m_arg, g_contextId.local(), m_id, m_size);
-//	g_taskManager.completeTaskSet(m_taskSet);
-//}
-
-private:
-TaskSetFunc		m_func;
-void*			m_arg;
-unsigned int	m_id;
-unsigned int	m_size;
-char*			m_setName;
-TaskSetHandle		m_taskSet;
-};
-
-class TaskSet : public tbb::task
-{
-public:
-TaskSet() :
-m_func(NULL),
-m_arg(0),
-m_size(0),
-m_taskSet(TASKSETHANDLE_INVALID),
-m_hasBeenWaitedOn(false)
-{
-m_setName[0] = 0;
-memset(m_successors, 0, sizeof(m_successors));
-}
-
-~TaskSet() { }
-
-task* execute()
-{
-set_ref_count(m_size + 1);
-
-for (unsigned int i = 0; i < m_size; i++)
-{
-spawn(*new(allocate_child()) GenericTask(m_func, m_arg, i, m_size, m_setName, m_taskSet));
-}
-
-return NULL;
-}
-
-TaskSet			*m_successors[MAX_SUCCESSORS];
-TaskSetHandle	m_taskSet;
-bool			m_hasBeenWaitedOn;
-
-TaskSetFunc	m_func;
-void		*m_arg;
-
-volatile unsigned int	m_startCount;
-volatile unsigned int	m_completionCount;
-volatile unsigned int	m_refCount;
-
-unsigned int	m_size;
-SpinLock		m_successorsLock;
-
-char	m_setName[MAX_TASKSETNAMELENGTH];
-};*/

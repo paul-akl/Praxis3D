@@ -58,6 +58,16 @@ private:
 				ErrHandlerLoc::get().log(stateInitError, ErrorSource::Source_Engine);
 			}
 		}
+
+		// If the state changed, deactivate the previous one, and activate the new one
+		if(m_currentState != previousState)
+		{
+			if(previousState != nullptr)
+				previousState->deactivate();
+
+			if(m_currentState != nullptr)
+				m_currentState->activate();
+		}
 	}
 
 	// Creates and initializes all the services and their locators

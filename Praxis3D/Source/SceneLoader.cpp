@@ -393,11 +393,77 @@ void SceneLoader::importFromProperties(AudioComponentsConstructionInfo &p_constr
 	{
 		switch(p_properties.getPropertyID())
 		{
-		case Properties::PropertyID::Audio:
-		{
-			
-		}
-		break;
+			case Properties::PropertyID::SoundComponent:
+			{
+				if(p_constructionInfo.m_soundConstructionInfo == nullptr)
+					p_constructionInfo.m_soundConstructionInfo = new SoundComponent::SoundComponentConstructionInfo();
+
+				p_constructionInfo.m_soundConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::SoundComponent);
+
+				// Get the sound filename
+				auto const &filename = p_properties.getPropertyByID(Properties::Filename).getString();
+
+				if(!filename.empty())
+				{
+					// Get the sound type
+					auto const &type = p_properties.getPropertyByID(Properties::Type).getID();
+
+					// Load values based on the type of sound
+					switch(type)
+					{
+					case Properties::Ambient:
+
+						p_constructionInfo.m_soundConstructionInfo->m_soundType = SoundComponent::SoundType::SoundType_Ambient;
+
+						p_properties.getValueByID(Properties::Loop, p_constructionInfo.m_soundConstructionInfo->m_loop);
+						p_properties.getValueByID(Properties::Spatialized, p_constructionInfo.m_soundConstructionInfo->m_spatialized);
+						p_properties.getValueByID(Properties::StartPlaying, p_constructionInfo.m_soundConstructionInfo->m_startPlaying);
+						p_properties.getValueByID(Properties::Volume, p_constructionInfo.m_soundConstructionInfo->m_volume);
+						p_constructionInfo.m_soundConstructionInfo->m_soundFilename = filename;
+
+						break;
+
+					case Properties::Music:
+
+						p_constructionInfo.m_soundConstructionInfo->m_soundType = SoundComponent::SoundType::SoundType_Music;
+
+						p_properties.getValueByID(Properties::Loop, p_constructionInfo.m_soundConstructionInfo->m_loop);
+						p_properties.getValueByID(Properties::Spatialized, p_constructionInfo.m_soundConstructionInfo->m_spatialized);
+						p_properties.getValueByID(Properties::StartPlaying, p_constructionInfo.m_soundConstructionInfo->m_startPlaying);
+						p_properties.getValueByID(Properties::Volume, p_constructionInfo.m_soundConstructionInfo->m_volume);
+						p_constructionInfo.m_soundConstructionInfo->m_soundFilename = filename;
+
+						break;
+
+					case Properties::SoundEffect:
+
+						p_constructionInfo.m_soundConstructionInfo->m_soundType = SoundComponent::SoundType::SoundType_SoundEffect;
+
+						p_properties.getValueByID(Properties::Loop, p_constructionInfo.m_soundConstructionInfo->m_loop);
+						p_properties.getValueByID(Properties::Spatialized, p_constructionInfo.m_soundConstructionInfo->m_spatialized);
+						p_properties.getValueByID(Properties::StartPlaying, p_constructionInfo.m_soundConstructionInfo->m_startPlaying);
+						p_properties.getValueByID(Properties::Volume, p_constructionInfo.m_soundConstructionInfo->m_volume);
+						p_constructionInfo.m_soundConstructionInfo->m_soundFilename = filename;
+
+						break;
+
+					default:
+
+						ErrHandlerLoc().get().log(ErrorCode::Property_missing_type, p_name, ErrorSource::Source_SoundComponent);
+						delete p_constructionInfo.m_soundConstructionInfo;
+						p_constructionInfo.m_soundConstructionInfo = nullptr;
+
+						break;
+					}
+				}
+				else
+				{
+					ErrHandlerLoc().get().log(ErrorCode::Property_no_filename, p_name, ErrorSource::Source_SoundComponent);
+					delete p_constructionInfo.m_soundConstructionInfo;
+					p_constructionInfo.m_soundConstructionInfo = nullptr;
+				}
+			}
+			break;
 		}
 	}
 }
@@ -435,8 +501,8 @@ void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_con
 
 					p_constructionInfo.m_lightConstructionInfo->m_lightComponentType = LightComponent::LightComponentType::LightComponentType_directional;
 
-					p_constructionInfo.m_lightConstructionInfo->m_color = p_properties.getPropertyByID(Properties::Color).getVec3f();
-					p_constructionInfo.m_lightConstructionInfo->m_intensity = p_properties.getPropertyByID(Properties::Intensity).getFloat();
+					p_properties.getValueByID(Properties::Color, p_constructionInfo.m_lightConstructionInfo->m_color);
+					p_properties.getValueByID(Properties::Intensity, p_constructionInfo.m_lightConstructionInfo->m_intensity);
 
 					break;
 
@@ -444,8 +510,8 @@ void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_con
 
 					p_constructionInfo.m_lightConstructionInfo->m_lightComponentType = LightComponent::LightComponentType::LightComponentType_point;
 
-					p_constructionInfo.m_lightConstructionInfo->m_color = p_properties.getPropertyByID(Properties::Color).getVec3f();
-					p_constructionInfo.m_lightConstructionInfo->m_intensity = p_properties.getPropertyByID(Properties::Intensity).getFloat();
+					p_properties.getValueByID(Properties::Color, p_constructionInfo.m_lightConstructionInfo->m_color);
+					p_properties.getValueByID(Properties::Intensity, p_constructionInfo.m_lightConstructionInfo->m_intensity);
 
 					break;
 
@@ -453,9 +519,9 @@ void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_con
 
 					p_constructionInfo.m_lightConstructionInfo->m_lightComponentType = LightComponent::LightComponentType::LightComponentType_spot;
 
-					p_constructionInfo.m_lightConstructionInfo->m_color = p_properties.getPropertyByID(Properties::Color).getVec3f();
-					p_constructionInfo.m_lightConstructionInfo->m_cutoffAngle = p_properties.getPropertyByID(Properties::CutoffAngle).getFloat();
-					p_constructionInfo.m_lightConstructionInfo->m_intensity = p_properties.getPropertyByID(Properties::Intensity).getFloat();
+					p_properties.getValueByID(Properties::Color, p_constructionInfo.m_lightConstructionInfo->m_color);
+					p_properties.getValueByID(Properties::CutoffAngle, p_constructionInfo.m_lightConstructionInfo->m_cutoffAngle);
+					p_properties.getValueByID(Properties::Intensity, p_constructionInfo.m_lightConstructionInfo->m_intensity);
 
 					break;
 

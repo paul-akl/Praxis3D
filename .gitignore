@@ -1,8 +1,9 @@
 Praxis3D/x64/Debug 64bit/Praxis3D.vcxproj.FileListAbsolute.txt
-
 \.vs/Praxis3D/v16/ipch/
 VC/
-
+Dependencies/include/fmod/
+Dependencies/x64/Debug/lib/fmod/
+Dependencies/x64/Release/lib/fmod/
 *.dae
 *.jpeg
 *.jpg

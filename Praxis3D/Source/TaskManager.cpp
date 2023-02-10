@@ -3,138 +3,21 @@
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
 
-//#include "Global.h"
 #include "EngineDefinitions.h"
 #include "ClockLocator.h"
 #include "TaskManager.h"
 
+// Initialize static variables in TaskManagerGlobal namespace
 namespace TaskManagerGlobal
 {
-	class GenericCallbackData
-	{
-	public:
-		GenericCallbackData(void *p_param) : m_param(p_param) { }
-
-	protected:
-		void *m_param;
-	};
-
-	template<class ClassPointer>
-	class GenericCallbackTask : public tbb::task, public GenericCallbackData
-	{
-	public:
-		GenericCallbackTask(ClassPointer p_ptr, void *p_param) : GenericCallbackData(p_param), m_ptr(p_ptr) { }
-
-		virtual tbb::task *execute()
-		{
-			//TODO ERROR
-			assert(m_ptr != nullptr);
-
-			m_ptr(m_param);
-
-			return NULL;
-		}
-
-	protected:
-		ClassPointer m_ptr;
-	};
-
-	class SynchronizeTask : public tbb::task
-	{
-	public:
-		SynchronizeTask() { }
-
-		tbb::task *execute()
-		{
-			// TODO ERRORS
-			assert(m_callback != NULL);
-			assert(m_allCallbacksInvokedEvent != NULL);
-
-			m_callback(m_callbackParam);
-
-			if(InterlockedDecrement(&m_callbacksCount) == 0)
-			{
-				SetEvent(m_allCallbacksInvokedEvent);
-			}
-			else
-			{
-				WaitForSingleObject(m_allCallbacksInvokedEvent, INFINITE);
-			}
-
-			return NULL;
-		}
-
-		static void prepareCallback(TaskManager::JobFunct p_func, void *p_param, unsigned int p_count)
-		{
-			m_callback = p_func;
-			m_callbackParam = p_param;
-			m_callbacksCount = p_count;
-			ResetEvent(m_allCallbacksInvokedEvent);
-		}
-
-	protected:
-		friend class TaskManager;
-		static void	*m_callbackParam;
-		static volatile long m_callbacksCount;
-		static void *m_allCallbacksInvokedEvent;
-		static TaskManager::JobFunct m_callback;
-	};
-
-	class StallTask : public tbb::task
-	{
-	public:
-		StallTask(TaskManager *p_taskManager, void *p_waitFor) : m_taskManager(p_taskManager), m_waitFor(p_waitFor) { }
-
-		tbb::task *execute()
-		{
-			if(m_taskManager->isPrimaryThread())
-			{
-				// Cannot stall a primary task, so stall some other task
-				m_taskManager->addStallTask();
-
-				// Wait a bit to give some time for some thread to pick up the stall task
-				// TODO change hardcoded value
-				tbb::this_tbb_thread::sleep(tbb::tick_count::interval_t(0.1));
-			}
-			else
-			{
-				//TODO ERROR
-				assert(m_waitFor != nullptr);
-				WaitForSingleObject(m_waitFor, INFINITE);
-			}
-			return NULL;
-		}
-
-	protected:
-		void		*m_waitFor;
-		TaskManager *m_taskManager;
-	};
-
-	class ParallelFor : public GenericCallbackData
-	{
-	public:
-		ParallelFor(TaskManager::ParallelForFunc p_pfCallback, void *p_param) : GenericCallbackData(p_param), m_parallelForCallback(p_pfCallback) { }
-
-		void operator () (const tbb::blocked_range<unsigned int> & p_right) const
-		{
-			m_parallelForCallback(m_param, p_right.begin(), p_right.end());
-		}
-
-	private:
-		TaskManager::ParallelForFunc m_parallelForCallback;
-	};
-
 	void *SynchronizeTask::m_callbackParam = nullptr;
 	volatile long SynchronizeTask::m_callbacksCount = 0;
 	void *SynchronizeTask::m_allCallbacksInvokedEvent = nullptr;
 	TaskManager::JobFunct SynchronizeTask::m_callback = nullptr;
-
-	//static TaskManager *g_taskManager = nullptr;
 }
 
 TaskManager::TaskManager()
 {
-
 	m_stallPoolParent = nullptr;
 	m_systemTasksRoot = nullptr;
 	m_tbbScheduler = nullptr;
@@ -333,9 +216,29 @@ void TaskManager::issueJobsForSystemTasks(SystemTask **p_tasks, unsigned int p_c
 				//if(getPerformanceHint(p_tasks[currentTask]) == (PerformanceHint)perfHint)
 				//{
 					// This task can be run on an arbitrary thread - allocate it 
-					TaskManagerGlobal::GenericCallbackTask<TaskManager::JobFunct> *systemTask
+					//TaskManagerGlobal::GenericCallbackTask<TaskManager::JobFunct> *systemTask
+					//	= new(m_systemTasksRoot->allocate_additional_child_of(*m_systemTasksRoot))
+					//	TaskManagerGlobal::GenericCallbackTask<TaskManager::JobFunct>(systemTaskCallback, p_tasks[currentTask]);
+
+					//std::bind(p_func, currentTask, std::forward<T_Type>(p_args)...)
+
+					//auto test = std::bind(&SystemTask::update, p_tasks[currentTask], p_deltaTime);
+
+					//TaskManagerGlobal::GenericCallbackTask2<std::function<void(SystemTask *)>> *systemTask = new(m_systemTasksRoot->allocate_additional_child_of(*m_systemTasksRoot)) TaskManagerGlobal::GenericCallbackTask2<std::function<void(SystemTask *)>>(std::bind(&SystemTask::update, p_tasks[currentTask], p_deltaTime));
+					//TaskManagerGlobal::GenericCallbackTask2<std::function<void()>> *systemTask = new(m_systemTasksRoot->allocate_additional_child_of(*m_systemTasksRoot)) TaskManagerGlobal::GenericCallbackTask2<std::function<void()>>(std::bind(&SystemTask::update, p_tasks[currentTask], p_deltaTime));
+
+					//TaskManagerGlobal::GenericCallbackTask3<void(SystemTask::*)(SystemTask*, float), SystemTask*, float> *systemTask = new(m_systemTasksRoot->allocate_additional_child_of(*m_systemTasksRoot))
+					//	TaskManagerGlobal::GenericCallbackTask3<void(SystemTask::*)(SystemTask*, float), SystemTask*, float>(&SystemTask::update, p_tasks[currentTask], p_deltaTime);
+
+					//auto test = std::bind(&SystemTask::update, p_tasks[currentTask], p_deltaTime);
+
+					TaskManagerGlobal::GenericCallbackTaskFunctor<decltype(std::bind(&SystemTask::update, p_tasks[currentTask], p_deltaTime))> *systemTask
 						= new(m_systemTasksRoot->allocate_additional_child_of(*m_systemTasksRoot))
-						TaskManagerGlobal::GenericCallbackTask<TaskManager::JobFunct>(systemTaskCallback, p_tasks[currentTask]);
+						TaskManagerGlobal::GenericCallbackTaskFunctor<decltype(std::bind(&SystemTask::update, p_tasks[currentTask], p_deltaTime))>(std::bind(&SystemTask::update, p_tasks[currentTask], p_deltaTime));
+
+
+					//TaskManagerGlobal::GenericCallbackTask<TaskManager::JobFunct> *systemTask
+					//	= new(m_systemTasksRoot->allocate_additional_child_of(*m_systemTasksRoot))TaskManagerGlobal::GenericCallbackTask<TaskManager::JobFunct>(systemTaskCallback2, std::function<void(SystemTask*, float)>(&SystemTask::update), p_tasks[currentTask], p_deltaTime);
 
 					// TODO ASSERT ERROR
 					assert(systemTask != nullptr);

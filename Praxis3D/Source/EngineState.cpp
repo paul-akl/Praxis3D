@@ -67,6 +67,22 @@ ErrorCode EngineState::init(TaskManager *p_taskManager)
 	return returnError;
 }
 
+void EngineState::activate()
+{
+	m_scheduler->execute<>(std::function<void(SystemTask *)>(&SystemTask::activate));
+
+	m_objectChangeController->distributeChanges();
+	m_sceneChangeController->distributeChanges();
+}
+
+void EngineState::deactivate()
+{
+	m_scheduler->execute<>(std::function<void(SystemTask *)>(&SystemTask::deactivate));
+
+	m_objectChangeController->distributeChanges();
+	m_sceneChangeController->distributeChanges();
+}
+
 void EngineState::shutdown()
 {
 	if(m_initialized)

@@ -26,6 +26,7 @@ namespace Properties
 // A version of the "AddVariable" macro, with 3 of the 5 parameters predefined
 #define AddVariablePredef(STRUCT, VAR) AddVariable(VEC_PREDEF, HASH_PREDEF, VEC_PREDEF.size() + OFFSET_PREDEF, STRUCT, VAR)
 
+Config::AudioVariables		Config::m_audioVar;
 Config::ComponentVariables	Config::m_componentVar;
 Config::ConfigFileVariables	Config::m_configFileVar;
 Config::EngineVariables		Config::m_engineVar;
@@ -51,6 +52,9 @@ void Config::init()
 	// Add variables and their names to internal containers, so they could be checked / names matched later.
 	// Note: not all the variables are assigned to containers, as some are not meant to be loaded from config file.
 
+	// Audio Variables
+	AddVariablePredef(m_audioVar, num_audio_channels);
+
 	// Component Variables
 	AddVariablePredef(m_componentVar, camera_component_name);
 	AddVariablePredef(m_componentVar, component_name_separator);
@@ -72,6 +76,7 @@ void Config::init()
 	AddVariablePredef(m_engineVar, gl_context_minor_version);
 	AddVariablePredef(m_engineVar, object_directory_init_pool_size);
 	AddVariablePredef(m_engineVar, smoothing_tick_samples);
+	AddVariablePredef(m_engineVar, task_scheduler_clock_frequency);
 
 	// Frame-buffer variables
 	AddVariablePredef(m_framebfrVar, gl_position_buffer_internal_format);
@@ -238,6 +243,7 @@ void Config::init()
 	AddVariablePredef(m_objPoolVar, shader_component_default_pool_size);
 	AddVariablePredef(m_objPoolVar, spatial_component_default_pool_size);
 	AddVariablePredef(m_objPoolVar, spot_light_pool_size);
+	AddVariablePredef(m_objPoolVar, sound_component_default_pool_size);
 
 	// File-path variables
 	AddVariablePredef(m_filepathVar, config_path);

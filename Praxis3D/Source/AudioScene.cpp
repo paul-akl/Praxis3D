@@ -8,17 +8,58 @@
 AudioScene::AudioScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader)
 {
 	m_audioTask = nullptr;
+	m_fmodSystem = nullptr;
+	m_masterChannelGroup = nullptr;
+	m_musicChannelGroup = nullptr;
+	m_ambientChannelGroup = nullptr;
+	m_numSoundDrivers = 0;
 }
 
 AudioScene::~AudioScene()
 {
+	if(m_fmodSystem != nullptr)
+	{
+		m_fmodSystem->close();
+		m_fmodSystem->release();
+	}
 }
 
 ErrorCode AudioScene::init()
 {
+	ErrorCode returnError = ErrorCode::Success;
+
 	m_audioTask = new AudioTask(this);
 
-	return ErrorCode::Success;
+	// Create the fmod sound system
+	auto fmodError = FMOD::System_Create(&m_fmodSystem);
+
+	// Check if the sound system was created successfully
+	if(fmodError != FMOD_OK)
+	{
+		ErrHandlerLoc::get().log(ErrorCode::Audio_system_init_failed, ErrorSource::Source_AudioScene);
+		returnError = ErrorCode::Audio_system_init_failed;
+	}
+	else
+	{
+		// Get the number of sound drivers
+		m_fmodSystem->getNumDrivers(&m_numSoundDrivers);
+
+		// Do not continue if there are no sound drivers
+		if(m_numSoundDrivers == 0)
+		{
+			ErrHandlerLoc::get().log(ErrorCode::Audio_no_drivers, ErrorSource::Source_AudioScene);
+			returnError = ErrorCode::Audio_no_drivers;
+		}
+		else
+		{
+			// Initialize our Instance with 36 Channels
+			m_fmodSystem->init(Config::audioVar().num_audio_channels, FMOD_INIT_NORMAL, NULL);
+
+			m_fmodSystem->createChannelGroup("music", &m_musicChannelGroup);
+		}
+	}
+
+	return returnError;
 }
 
 ErrorCode AudioScene::setup(const PropertySet &p_properties)
@@ -30,31 +71,72 @@ ErrorCode AudioScene::setup(const PropertySet &p_properties)
 		case Properties::ObjectPoolSize:
 
 			break;
-		case Properties::Gravity:
-			//m_dynamicsWorld->setGravity(Math::toBtVector3(p_properties[i].getVec3f()));
-			break;
 		}
 	}
+
+	// Get the world scene required for reserving the component pools
+	WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
+
+	// Reserve every component type that belongs to this scene
+	worldScene->reserve<SoundComponent>(Config::objectPoolVar().sound_component_default_pool_size);
 
 	return ErrorCode::Success;
 }
 
+void AudioScene::activate()
+{
+}
+
+void AudioScene::deactivate()
+{
+	// Get the entity registry 
+	auto &entityRegistry = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World))->getEntityRegistry();
+
+	auto soundComponentView = entityRegistry.view<SoundComponent>();
+	for(auto entity : soundComponentView)
+	{
+		auto &component = soundComponentView.get<SoundComponent>(entity);
+
+		if(component.isObjectActive())
+		{
+			if(component.m_playing)
+			{
+				component.m_channel->stop();
+				component.m_playing = false;
+			}
+		}
+	}
+}
+
 void AudioScene::update(const float p_deltaTime)
 {
+	m_fmodSystem->update();
+
 	// Get the world scene required for getting the entity registry
-	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+	WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
 
 	// Get the entity registry 
 	auto &entityRegistry = worldScene->getEntityRegistry();
 
-	// Get the rigid body component view and iterate every entity that contains is
-	/*auto rigidBodyView = worldScene->getEntityRegistry().view<RigidBodyComponent>();
-	for(auto entity : rigidBodyView)
+	auto soundComponentView = entityRegistry.view<SoundComponent>();
+	for(auto entity : soundComponentView)
 	{
-		auto &component = rigidBodyView.get<RigidBodyComponent>(entity);
+		auto &component = soundComponentView.get<SoundComponent>(entity);
 
-		component.update(p_deltaTime);
-	}*/
+		if(component.isObjectActive())
+		{
+			if(!component.m_playing)
+			{
+				if(component.m_startPlaying)
+				{
+					component.m_playing = true;
+					m_fmodSystem->playSound(component.m_sound, 0, true, &component.m_channel);
+					component.m_channel->setVolume(component.m_volume);
+					component.m_channel->setPaused(false);
+				}
+			}
+		}
+	}
 }
 
 ErrorCode AudioScene::preload()
@@ -71,7 +153,7 @@ std::vector<SystemObject*> AudioScene::createComponents(const EntityID p_entityI
 	return createComponents(p_entityID, p_constructionInfo.m_audioComponents, p_startLoading);
 }
 
-/*SystemObject *AudioScene::createComponent(const EntityID &p_entityID, const RigidBodyComponent::RigidBodyComponentConstructionInfo &p_constructionInfo, const bool p_startLoading)
+SystemObject *AudioScene::createComponent(const EntityID &p_entityID, const SoundComponent::SoundComponentConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	// If valid type was not specified, or object creation failed, return a null object instead
 	SystemObject *returnObject = g_nullSystemBase.getScene()->getNullObject();
@@ -79,111 +161,65 @@ std::vector<SystemObject*> AudioScene::createComponents(const EntityID p_entityI
 	// Get the world scene required for attaching components to the entity
 	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
 
-	auto &component = worldScene->addComponent<RigidBodyComponent>(p_entityID, this, p_constructionInfo.m_name, p_entityID);
+	auto &component = worldScene->addComponent<SoundComponent>(p_entityID, this, p_constructionInfo.m_name, p_entityID);
 
 	// Try to initialize the camera component
 	auto componentInitError = component.init();
 	if(componentInitError == ErrorCode::Success)
 	{
-		component.m_collisionShapeType = p_constructionInfo.m_collisionShapeType;
-		component.m_kinematic = p_constructionInfo.m_kinematic;
-		component.m_objectType = Properties::PropertyID::RigidBodyComponent;
+		component.m_soundType = p_constructionInfo.m_soundType;
+		component.m_soundFilename = p_constructionInfo.m_soundFilename;
+		component.m_loop = p_constructionInfo.m_loop;
+		component.m_spatialized = p_constructionInfo.m_spatialized;
+		component.m_startPlaying = p_constructionInfo.m_startPlaying;
+		component.m_volume = p_constructionInfo.m_volume;
+		component.m_objectType = Properties::PropertyID::SoundComponent;
 		component.setActive(p_constructionInfo.m_active);
-		component.setLoadedToMemory(true);
-		component.setLoadedToVideoMemory(true);
 
-		if(component.m_collisionShapeType != RigidBodyComponent::CollisionShapeType::CollisionShapeType_Null)
+		FMOD_MODE mode = 0;
+
+		if(component.m_loop)
+			mode |= FMOD_LOOP_NORMAL;
+		else
+			mode |= FMOD_LOOP_OFF;
+
+		if(component.m_spatialized)
+			mode |= FMOD_3D | FMOD_3D_WORLDRELATIVE | FMOD_3D_INVERSEROLLOFF;
+		else
+			mode |= FMOD_2D;
+
+
+		switch(component.m_soundType)
 		{
-			switch(component.m_collisionShapeType)
+			case SoundComponent::SoundType::SoundType_Music:
 			{
-			case RigidBodyComponent::CollisionShapeType::CollisionShapeType_Box:
-			{
-				btVector3 boxHalfExtents = Math::toBtVector3(p_constructionInfo.m_collisionShapeSize);
-				component.m_collisionShape.m_boxShape = new btBoxShape(boxHalfExtents);
+				m_fmodSystem->createStream((Config::filepathVar().sound_path + component.m_soundFilename).c_str(), mode, component.m_soundExInfo, &component.m_sound);
 			}
 			break;
 
-			case RigidBodyComponent::CollisionShapeType::CollisionShapeType_Sphere:
+			case SoundComponent::SoundType::SoundType_Ambient:
 			{
-				float radius = p_constructionInfo.m_collisionShapeSize.x;
-				component.m_collisionShape.m_sphereShape = new btSphereShape(radius);
+				m_fmodSystem->createStream((Config::filepathVar().sound_path + component.m_soundFilename).c_str(), mode, component.m_soundExInfo, &component.m_sound);
 			}
 			break;
-			}
 
-			// Success on the loaded collision shape
-			ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_RigidBodyComponent, component.getName() + " - Collision shape loaded");
-
-			// Create the struct that holds all the required information for constructing a rigid body
-			component.m_constructionInfo = new btRigidBody::btRigidBodyConstructionInfo(p_constructionInfo.m_mass, &component.m_motionState, component.getCollisionShape());
-
-			component.m_constructionInfo->m_friction = p_constructionInfo.m_friction;
-			component.m_constructionInfo->m_restitution = p_constructionInfo.m_restitution;
-
-			// If mass is not zero, rigid body is dynamic; in that case, calculate the local inertia 
-			if(component.m_constructionInfo->m_mass != 0.0f)
+			case SoundComponent::SoundType::SoundType_SoundEffect:
 			{
-				// Kinematic objects must have a mass of zero
-				if(component.m_kinematic)
-				{
-					component.m_constructionInfo->m_mass = 0.0f;
-					ErrHandlerLoc().get().log(ErrorCode::Kinematic_has_mass, component.getName(), ErrorSource::Source_RigidBodyComponent);
-				}
-				else
-					component.getCollisionShape()->calculateLocalInertia(component.m_constructionInfo->m_mass, component.m_constructionInfo->m_localInertia);
+				m_fmodSystem->createSound((Config::filepathVar().sound_path + component.m_soundFilename).c_str(), mode, component.m_soundExInfo, &component.m_sound);
 			}
-
-			// Set the body origin in space to the position in Spatial Component, if the Spatial Component is present
-			auto *spatialComponent = worldScene->getEntityRegistry().try_get<SpatialComponent>(p_entityID);
-			if(spatialComponent != nullptr)
-			{
-				btTransform groundTransform;
-				groundTransform.setIdentity();
-				groundTransform.setOrigin(Math::toBtVector3(spatialComponent->getSpatialDataChangeManager().getLocalSpaceData().m_spatialData.m_position));
-				groundTransform.setRotation(Math::toBtQuaternion(spatialComponent->getSpatialDataChangeManager().getLocalSpaceData().m_spatialData.m_rotationQuat));
-				//groundTransform.setFromOpenGLMatrix(&spatialComponent->getSpatialDataChangeManager().getLocalSpaceData().m_transformMat[0][0]);
-				component.m_motionState.setWorldTransform(groundTransform);
-
-				component.m_motionState.updateMotionStateTrans();
-			}
-
-			// Add the collision shape
-			m_collisionShapes.push_back(component.getCollisionShape());
-
-			// Create the rigid body by passing the rigid body construction info
-			component.m_rigidBody = new btRigidBody(*component.m_constructionInfo);
-
-			if(component.m_kinematic)
-			{
-				component.m_rigidBody->setCollisionFlags(component.m_rigidBody->getCollisionFlags() | btCollisionObject::CollisionFlags::CF_KINEMATIC_OBJECT);
-				component.m_rigidBody->setActivationState(DISABLE_DEACTIVATION);
-			}
-
-			// Set linear velocity if it is not zero
-			if(p_constructionInfo.m_linearVelocity != glm::vec3())
-				component.m_rigidBody->setLinearVelocity(Math::toBtVector3(p_constructionInfo.m_linearVelocity));
-
-			// Add the rigid body to the dynamics world, essentially loading it into the physics system
-			m_dynamicsWorld->addRigidBody(component.m_rigidBody);
-
-			returnObject = &component;
-
+			break;
 		}
-		else // Remove the component if it didn't have a collision shape
-		{
-			// Missing the collision shape
-			worldScene->removeComponent<RigidBodyComponent>(p_entityID);
-			ErrHandlerLoc().get().log(ErrorCode::Collision_missing, component.getName(), ErrorSource::Source_RigidBodyComponent);
-		}
+
+		returnObject = &component;
 	}
 	else // Remove the component if it failed to initialize
 	{
-		worldScene->removeComponent<RigidBodyComponent>(p_entityID);
-		ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_RigidBodyComponent, component.getName());
+		worldScene->removeComponent<SoundComponent>(p_entityID);
+		ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_SoundComponent, component.getName());
 	}
 
 	return returnObject;
-}*/
+}
 
 ErrorCode AudioScene::destroyObject(SystemObject *p_systemObject)
 {

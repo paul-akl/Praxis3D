@@ -857,6 +857,9 @@
     <ClInclude Include="Source\GraphicsLoadComponents.h">
       <Filter>Renderer\Objects\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\SoundComponent.h">
+      <Filter>Audio\Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\config.ini" />

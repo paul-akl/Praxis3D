@@ -35,7 +35,7 @@ ErrorCode PlayState::init(TaskManager *p_taskManager)
 
 void PlayState::update(Engine &p_engine)
 {
-	m_scheduler->execute(ClockLocator::get().getDeltaSecondsF());
+	m_scheduler->execute<>(std::function<void(SystemTask *, float)>(&SystemTask::update), ClockLocator::get().getDeltaSecondsF());
 	
 	m_objectChangeController->distributeChanges();
 	m_sceneChangeController->distributeChanges();

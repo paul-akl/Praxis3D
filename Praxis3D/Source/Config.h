@@ -228,7 +228,15 @@ namespace Properties
 	Code(Value,) \
 	Code(Variables,) \
 	/* Audio */ \
+	Code(Ambient,) \
 	Code(Audio,) \
+	Code(Loop,) \
+	Code(Music,) \
+	Code(SoundComponent,) \
+	Code(SoundEffect,) \
+	Code(Spatialized,) \
+	Code(StartPlaying,) \
+	Code(Volume,) \
 	/* Geometry */ \
 	Code(OffsetPosition,) \
 	Code(OffsetRotation,) \
@@ -466,6 +474,14 @@ class Config
 	friend class RendererFrontend;
 	friend class Window;
 public:
+	struct AudioVariables
+	{
+		AudioVariables()
+		{
+			num_audio_channels = 32;
+		}
+		int num_audio_channels;
+	};
 	struct ComponentVariables
 	{
 		ComponentVariables()
@@ -512,6 +528,7 @@ public:
 			gl_context_minor_version = 3;
 			object_directory_init_pool_size = 1000;
 			smoothing_tick_samples = 100;
+			task_scheduler_clock_frequency = 120;
 			running = true;
 			loadingState = true;
 			engineState = EngineStateType::EngineStateType_MainMenu;
@@ -529,6 +546,7 @@ public:
 		int gl_context_minor_version;
 		int object_directory_init_pool_size;
 		int smoothing_tick_samples;
+		int task_scheduler_clock_frequency;
 		bool running;
 		bool loadingState;
 		EngineStateType engineState;
@@ -909,6 +927,7 @@ public:
 			shader_component_default_pool_size = 5;
 			spatial_component_default_pool_size = 100;
 			spot_light_pool_size = 25;
+			sound_component_default_pool_size = 50;
 		}
 
 		int camera_component_default_pool_size;
@@ -922,6 +941,7 @@ public:
 		int shader_component_default_pool_size;
 		int spatial_component_default_pool_size;
 		int spot_light_pool_size;
+		int sound_component_default_pool_size;
 	};
 	struct PathsVariables
 	{
@@ -1400,6 +1420,7 @@ public:
 		bool window_in_focus;
 	};
 
+	const inline static AudioVariables		&audioVar()			{ return m_audioVar;		}
 	const inline static ComponentVariables	&componentVar()		{ return m_componentVar;	}
 	const inline static ConfigFileVariables	&configFileVar()	{ return m_configFileVar;	}
 	const inline static EngineVariables		&engineVar()		{ return m_engineVar;		}
@@ -1516,6 +1537,7 @@ private:
 		size_t m_mapKey;
 	};
 
+	static AudioVariables		m_audioVar;
 	static ComponentVariables	m_componentVar;
 	static ConfigFileVariables	m_configFileVar;
 	static EngineVariables		m_engineVar;
@@ -1540,6 +1562,7 @@ private:
 
 	static void setVariable(std::string p_name, std::string p_variable);
 
+	inline static AudioVariables		&setAudioVar()		{ return m_audioVar;		}
 	inline static ComponentVariables	&setComponentVar()	{ return m_componentVar;	}
 	inline static ConfigFileVariables	&setConfigFileVar()	{ return m_configFileVar;	}
 	inline static EngineVariables		&setEngineVar()		{ return m_engineVar;		}

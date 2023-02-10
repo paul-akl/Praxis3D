@@ -1,6 +1,16 @@
 #pragma once
 
-#include "AUdioTask.h"
+#pragma comment(lib, "fmod/fmod_vc.lib")
+//#pragma comment(lib, "fmod/fmodL_vc.lib")
+//#pragma comment(lib, "fmod/fmodstudio_vc.lib")
+//#pragma comment(lib, "fmod/fmodstudioL_vc.lib")
+//#pragma comment(lib, "fmod/fsbank_vc.lib")
+
+#include <fmod/core/fmod.hpp>
+#include <fmod/core/fmod_errors.h>
+
+#include "AudioTask.h"
+#include "SoundComponent.h"
 #include "System.h"
 
 struct ComponentsConstructionInfo;
@@ -9,22 +19,22 @@ struct AudioComponentsConstructionInfo
 {
 	AudioComponentsConstructionInfo()
 	{
-		//m_rigidBodyConstructionInfo = nullptr;
+		m_soundConstructionInfo = nullptr;
 	}
 
 	// Perform a complete copy, instantiating (with new) every member variable pointer, instead of just assigning the pointer to the same memory
 	void completeCopy(const AudioComponentsConstructionInfo &p_other)
 	{
-		//Utilities::performCopy<RigidBodyComponent::RigidBodyComponentConstructionInfo>(&m_rigidBodyConstructionInfo, &p_other.m_rigidBodyConstructionInfo);
+		Utilities::performCopy<SoundComponent::SoundComponentConstructionInfo>(&m_soundConstructionInfo, &p_other.m_soundConstructionInfo);
 	}
 
 	void deleteConstructionInfo()
 	{
-		//if(m_rigidBodyConstructionInfo != nullptr)
-		//	delete m_rigidBodyConstructionInfo;
+		if(m_soundConstructionInfo != nullptr)
+			delete m_soundConstructionInfo;
 	}
 
-	//RigidBodyComponent::RigidBodyComponentConstructionInfo *m_rigidBodyConstructionInfo;
+	SoundComponent::SoundComponentConstructionInfo *m_soundConstructionInfo;
 };
 
 class AudioScene : public SystemScene
@@ -37,6 +47,10 @@ public:
 
 	ErrorCode setup(const PropertySet &p_properties);
 
+	void activate();
+
+	void deactivate();
+
 	void update(const float p_deltaTime);
 
 	ErrorCode preload();
@@ -48,13 +62,13 @@ public:
 	{
 		std::vector<SystemObject*> components;
 
-		//if(p_constructionInfo.m_rigidBodyConstructionInfo != nullptr)
-		//	components.push_back(createComponent(p_entityID, *p_constructionInfo.m_rigidBodyConstructionInfo, p_startLoading));
+		if(p_constructionInfo.m_soundConstructionInfo != nullptr)
+			components.push_back(createComponent(p_entityID, *p_constructionInfo.m_soundConstructionInfo, p_startLoading));
 
 		return components;
 	}
 
-	//SystemObject *createComponent(const EntityID &p_entityID, const RigidBodyComponent::RigidBodyComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
+	SystemObject *createComponent(const EntityID &p_entityID, const SoundComponent::SoundComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
@@ -66,4 +80,11 @@ public:
 
 private:
 	AudioTask *m_audioTask;
+	FMOD::System *m_fmodSystem;
+
+	FMOD::ChannelGroup *m_masterChannelGroup;
+	FMOD::ChannelGroup *m_musicChannelGroup;
+	FMOD::ChannelGroup *m_ambientChannelGroup;
+
+	int m_numSoundDrivers;
 };

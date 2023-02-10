@@ -292,6 +292,7 @@
     <ClInclude Include="Source\ModelComponent.h" />
     <ClInclude Include="Source\ModelLoader.h" />
     <ClInclude Include="Source\ModelGraphicsObjects.h" />
+    <ClInclude Include="Source\SoundComponent.h" />
     <ClInclude Include="Source\NullObjects.h" />
     <ClInclude Include="Source\NullSystemObjects.h" />
     <ClInclude Include="Source\ObjectDirectory.h" />

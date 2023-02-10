@@ -11,7 +11,7 @@
 class PropertySet;
 
 // Stores a single value of a variable type. Has a getter function for each type. If a getter of
-// incorrect type is called, it deals with it by converting the internal value to a type of the
+// incorrect type is called, it deals with it by converting the internal value to the type of the
 // getter. Has a propertyID tag, to distinguish between other instances.
 class Property
 {
@@ -33,50 +33,49 @@ public:
 	};
 
 	// Type can be determined by overloaded constructor call
-	Property() : m_propertyID(Properties::Null), m_variableType(Type_null) { }
-	Property(const Properties::PropertyID p_propertyID) : m_propertyID(p_propertyID), m_variableType(Type_null) { }
-	Property(const Properties::PropertyID p_propertyID, const bool p_variable) : m_propertyID(p_propertyID), m_variableType(Type_bool)
+	Property() noexcept : m_propertyID(Properties::Null), m_variableType(Type_null) { }
+	Property(const Properties::PropertyID p_propertyID) noexcept : m_propertyID(p_propertyID), m_variableType(Type_null) { }
+	Property(const Properties::PropertyID p_propertyID, const bool p_variable) noexcept : m_propertyID(p_propertyID), m_variableType(Type_bool)
 	{ 
 		m_variable.m_bool = p_variable;
 	}
-	Property(const Properties::PropertyID p_propertyID, const int p_variable) : m_propertyID(p_propertyID), m_variableType(Type_int)
+	Property(const Properties::PropertyID p_propertyID, const int p_variable) noexcept : m_propertyID(p_propertyID), m_variableType(Type_int)
 	{
 		m_variable.m_int = p_variable;
 	}
-	Property(const Properties::PropertyID p_propertyID, const float p_variable) : m_propertyID(p_propertyID), m_variableType(Type_float)
+	Property(const Properties::PropertyID p_propertyID, const float p_variable) noexcept : m_propertyID(p_propertyID), m_variableType(Type_float)
 	{
 		m_variable.m_float = p_variable;
 	}
-	Property(const Properties::PropertyID p_propertyID, const double p_variable) : m_propertyID(p_propertyID), m_variableType(Type_double)
+	Property(const Properties::PropertyID p_propertyID, const double p_variable) noexcept : m_propertyID(p_propertyID), m_variableType(Type_double)
 	{
 		m_variable.m_double = p_variable;
 	}
-	Property(const Properties::PropertyID p_propertyID, const glm::ivec2 &p_variable) : m_propertyID(p_propertyID), m_variableType(Type_vec2i)
+	Property(const Properties::PropertyID p_propertyID, const glm::ivec2 &p_variable) noexcept : m_propertyID(p_propertyID), m_variableType(Type_vec2i)
 	{
 		m_variable.m_vec2i = p_variable;
 	}
-	Property(const Properties::PropertyID p_propertyID, const glm::vec2 &p_variable) : m_propertyID(p_propertyID), m_variableType(Type_vec2f)
+	Property(const Properties::PropertyID p_propertyID, const glm::vec2 &p_variable) noexcept : m_propertyID(p_propertyID), m_variableType(Type_vec2f)
 	{
 		m_variable.m_vec2f = p_variable;
-		//m_vec2f = new glm::vec2(p_variable);
 	}
-	Property(const Properties::PropertyID p_propertyID, const glm::vec3 &p_variable) : m_propertyID(p_propertyID), m_variableType(Type_vec3f)
+	Property(const Properties::PropertyID p_propertyID, const glm::vec3 &p_variable) noexcept : m_propertyID(p_propertyID), m_variableType(Type_vec3f)
 	{
 		m_variable.m_vec3f = p_variable;
 	}
-	Property(const Properties::PropertyID p_propertyID, const glm::vec4 &p_variable) : m_propertyID(p_propertyID), m_variableType(Type_vec4f)
+	Property(const Properties::PropertyID p_propertyID, const glm::vec4 &p_variable) noexcept : m_propertyID(p_propertyID), m_variableType(Type_vec4f)
 	{
 		m_variable.m_vec4f = p_variable;
 	}
-	Property(const Properties::PropertyID p_propertyID, const std::string &p_variable) : m_propertyID(p_propertyID), m_variableType(Type_string)
+	Property(const Properties::PropertyID p_propertyID, const std::string &p_variable) noexcept : m_propertyID(p_propertyID), m_variableType(Type_string)
 	{
 		new (&m_variable.m_string) std::string(p_variable);
 	}
-	Property(const Properties::PropertyID p_propertyID, const Properties::PropertyID p_variable) : m_propertyID(p_propertyID), m_variableType(Type_propertyID)
+	Property(const Properties::PropertyID p_propertyID, const Properties::PropertyID p_variable) noexcept : m_propertyID(p_propertyID), m_variableType(Type_propertyID)
 	{
 		m_variable.m_ID = p_variable;
 	}
-	Property(const Property &p_property) : m_propertyID(p_property.m_propertyID), m_variableType(p_property.m_variableType)
+	Property(const Property &p_property) noexcept : m_propertyID(p_property.m_propertyID), m_variableType(p_property.m_variableType)
 	{
 		switch(m_variableType)
 		{
@@ -112,10 +111,9 @@ public:
 			break;
 		}
 	}
-	//~Property() { }
 
 	// Getters for each type
-	const inline bool getBool() const
+	const inline bool getBool() const noexcept
 	{
 		switch(m_variableType)
 		{
@@ -157,7 +155,7 @@ public:
 			break;
 		}
 	}
-	const inline int getInt() const
+	const inline int getInt() const noexcept
 	{
 		switch(m_variableType)
 		{
@@ -197,7 +195,7 @@ public:
 			break;
 		}
 	}
-	const inline float getFloat() const
+	const inline float getFloat() const noexcept
 	{
 		switch(m_variableType)
 		{
@@ -237,7 +235,7 @@ public:
 			break;
 		}
 	}
-	const inline double getDouble() const
+	const inline double getDouble() const noexcept
 	{
 		switch(m_variableType)
 		{
@@ -277,7 +275,7 @@ public:
 			break;
 		}
 	}
-	const inline glm::ivec2 getVec2i() const
+	const inline glm::ivec2 getVec2i() const noexcept
 	{
 		switch(m_variableType)
 		{
@@ -317,7 +315,7 @@ public:
 			break;
 		}
 	}
-	const inline glm::vec2 getVec2f() const
+	const inline glm::vec2 getVec2f() const noexcept
 	{
 		switch(m_variableType)
 		{
@@ -357,7 +355,7 @@ public:
 			break;
 		}
 	}
-	const inline glm::vec3 getVec3f() const
+	const inline glm::vec3 getVec3f() const noexcept
 	{
 		switch(m_variableType)
 		{
@@ -397,7 +395,7 @@ public:
 			break;
 		}
 	}
-	const inline glm::vec4 getVec4f() const
+	const inline glm::vec4 getVec4f() const noexcept
 	{
 		switch(m_variableType)
 		{
@@ -437,7 +435,7 @@ public:
 			break;
 		}
 	}
-	const inline std::string getString() const
+	const inline std::string getString() const noexcept
 	{
 		switch(m_variableType)
 		{
@@ -482,7 +480,7 @@ public:
 			break;
 		}
 	}
-	const inline Properties::PropertyID getID() const
+	const inline Properties::PropertyID getID() const noexcept
 	{
 		if(m_variableType == Type_propertyID)
 			return m_variable.m_ID;
@@ -491,22 +489,22 @@ public:
 	}
 
 	// Get the type of the native value stored inside the Property
-	const inline PropertyVariableType getVariableType() const { return m_variableType; }
+	const inline PropertyVariableType getVariableType() const noexcept { return m_variableType; }
 
 	// Returns the property ID of Property class, NOT the property ID stored in enum (as property value)
-	const inline Properties::PropertyID getPropertyID() const				{ return m_propertyID;			}
-	const inline void setPropertyID(Properties::PropertyID &p_propertyID)	{ m_propertyID = p_propertyID;	}
+	const inline Properties::PropertyID getPropertyID() const noexcept { return m_propertyID; }
+	const inline void setPropertyID(const Properties::PropertyID &p_propertyID) noexcept { m_propertyID = p_propertyID;	}
 
 	// Equal and less than operators accepting property ID enum
-	const inline bool operator==(const Properties::PropertyID &p_propertyID) const { return (m_propertyID == p_propertyID); }
-	const inline bool operator<(const Properties::PropertyID &p_propertyID) const { return (m_propertyID < p_propertyID); }
+	const inline bool operator==(const Properties::PropertyID &p_propertyID) const noexcept { return (m_propertyID == p_propertyID); }
+	const inline bool operator<(const Properties::PropertyID &p_propertyID) const noexcept { return (m_propertyID < p_propertyID); }
 
 	// Equal and less than operators accepting property class
-	const inline bool operator==(const Property &p_property) const { return (m_propertyID == p_property.m_propertyID); }
-	const inline bool operator<(const Property &p_property) const { return (m_propertyID < p_property.m_propertyID); }
+	const inline bool operator==(const Property &p_property) const noexcept { return (m_propertyID == p_property.m_propertyID); }
+	const inline bool operator<(const Property &p_property) const noexcept { return (m_propertyID < p_property.m_propertyID); }
 
 	// Assignment operator
-	Property &operator=(const Property &p_property)
+	Property &operator=(const Property &p_property) noexcept
 	{
 		m_propertyID = p_property.m_propertyID;
 		m_variableType = p_property.m_variableType;
@@ -549,13 +547,13 @@ public:
 	}
 
 	// Bool operator; returns true if the property is valid and false if the property is null
-	inline explicit operator bool() const { return m_propertyID != Properties::Null; }
+	inline explicit operator bool() const noexcept { return m_propertyID != Properties::Null; }
 
 	// Returns true if the native variable type of the property is string (meaning the string that was retrieved from the property is
-	const inline bool isVariableTypeString() const { return (m_variableType == PropertyVariableType::Type_string); }
+	const inline bool isVariableTypeString() const noexcept { return (m_variableType == PropertyVariableType::Type_string); }
 
 	// Converts the property to text (used for saving properties to text files)
-	const inline std::string toString() { return "\"" + std::string(GetString(m_propertyID)) + "\": \"" + getString() + "\""; }
+	const inline std::string toString() const noexcept { return "\"" + std::string(GetString(m_propertyID)) + "\": \"" + getString() + "\""; }
 private:
 	PropertyVariableType m_variableType;
 	union VariableUnion
@@ -582,13 +580,13 @@ private:
 class PropertySet
 {
 public:
-	PropertySet(Properties::PropertyID p_propertyID = Properties::Null)
+	PropertySet(Properties::PropertyID p_propertyID = Properties::Null) noexcept
 		: m_propertyID(p_propertyID), m_optimizedForSearch(false), m_numPropertySets(0), m_numProperties(0) { }
 	~PropertySet() { }
 
 	// Adds an instance of property to internal array; takes only the arguments of property
 	template<class... T_Args>
-	inline void addProperty(T_Args&&... p_args)
+	inline void addProperty(T_Args&&... p_args) noexcept
 	{
 		m_properties.emplace_back(std::forward<T_Args>(p_args)...);
 		m_numProperties++;
@@ -597,7 +595,7 @@ public:
 
 	// Adds an instance of property set to internal array; takes only the arguments of property set
 	template<class... T_Args>
-	inline PropertySet &addPropertySet(T_Args&&... p_args)
+	inline PropertySet &addPropertySet(T_Args&&... p_args) noexcept
 	{
 		m_propertySets.emplace_back(std::forward<T_Args>(p_args)...);
 		m_numPropertySets++;
@@ -606,7 +604,7 @@ public:
 	}
 	
 	// Adds an instance of property to internal array
-	inline void addProperty(Property &&p_property)
+	inline void addProperty(Property &&p_property) noexcept
 	{
 		m_properties.push_back(p_property);
 		m_numProperties++;
@@ -614,7 +612,7 @@ public:
 	}
 	
 	// Adds an instance of property set to internal array
-	inline PropertySet &addPropertySet(PropertySet &&p_propertySet)
+	inline PropertySet &addPropertySet(PropertySet &&p_propertySet) noexcept
 	{
 		m_propertySets.push_back(p_propertySet);
 		m_numPropertySets++;
@@ -641,7 +639,7 @@ public:
 
 	// Finds a property with a matching ID and returns it. Uses faster search
 	// of the property set is optimized for search (by calling optimizeForSearch())
-	const inline Property &getPropertyByID(Properties::PropertyID p_propertyID) const
+	const inline Property &getPropertyByID(const Properties::PropertyID p_propertyID) const noexcept
 	{
 		if(m_optimizedForSearch)
 		{
@@ -667,7 +665,7 @@ public:
 	
 	// Finds a property set with a matching ID and returns it. Uses faster search
 	// of the property set is optimized for search (by calling optimizeForSearch())
-	const inline PropertySet &getPropertySetByID(Properties::PropertyID p_propertyID) const
+	const inline PropertySet &getPropertySetByID(const Properties::PropertyID p_propertyID) const noexcept
 	{
 		if(m_optimizedForSearch)
 		{
@@ -691,7 +689,7 @@ public:
 	}
 	
 	// Returns a property by index; checks for out of bounds index and returns null property in that case
-	const inline Property &getProperty(size_t p_index) const
+	const inline Property &getProperty(const size_t p_index) const noexcept
 	{
 		// Check if index is in bounds
 		if(p_index >= 0 && p_index < m_numProperties)
@@ -701,7 +699,7 @@ public:
 	}
 
 	// Returns a property set by index; checks for out of bounds index and returns null property set in that case
-	const inline PropertySet &getPropertySet(size_t p_index) const
+	const inline PropertySet &getPropertySet(const size_t p_index) const noexcept
 	{
 		// Check if index is in bounds
 		if(p_index >= 0 && p_index < m_numPropertySets)
@@ -712,26 +710,26 @@ public:
 
 	// Returns a property by index without checking if index is valid.
 	// Unsafe - can go out of bounds, use for performance critical code only
-	const inline Property &getPropertyUnsafe(size_t p_index) const { return m_properties[p_index]; }
+	const inline Property &getPropertyUnsafe(const size_t p_index) const noexcept { return m_properties[p_index]; }
 
 	// Returns a property set by index without checking if index is valid.
 	// Unsafe - can go out of bounds, use for performance critical code only
-	const inline PropertySet &getPropertySetUnsafe(size_t p_index) const { return m_propertySets[p_index]; }
+	const inline PropertySet &getPropertySetUnsafe(const size_t p_index) const noexcept { return m_propertySets[p_index]; }
 
 	// Array subscription operator; retrieves an individual property.
 	// Unsafe - can go out of bounds, use for performance critical code only
-	const inline Property &operator[] (size_t p_index) const { return m_properties[p_index]; }
+	const inline Property &operator[] (const size_t p_index) const noexcept { return m_properties[p_index]; }
 
 	// Equal and less than operators accepting property ID enum
-	const inline bool operator==(const Properties::PropertyID &p_propertyID) const { return (m_propertyID == p_propertyID); }
-	const inline bool operator<(const Properties::PropertyID &p_propertyID) const { return (m_propertyID < p_propertyID); }
+	const inline bool operator==(const Properties::PropertyID &p_propertyID) const noexcept { return (m_propertyID == p_propertyID); }
+	const inline bool operator<(const Properties::PropertyID &p_propertyID) const noexcept { return (m_propertyID < p_propertyID); }
 
 	// Equal and less than operators accepting property set class
-	const inline bool operator==(const PropertySet &p_propertySet) const { return (m_propertyID == p_propertySet.m_propertyID); }
-	const inline bool operator<(const PropertySet &p_propertySet) const { return (m_propertyID < p_propertySet.m_propertyID); }
+	const inline bool operator==(const PropertySet &p_propertySet) const noexcept { return (m_propertyID == p_propertySet.m_propertyID); }
+	const inline bool operator<(const PropertySet &p_propertySet) const noexcept { return (m_propertyID < p_propertySet.m_propertyID); }
 
 	// Adds two PropertySets together (including their pripertySets and individual properties)
-	inline PropertySet operator+(const PropertySet &p_propertySet) const 
+	inline PropertySet operator+(const PropertySet &p_propertySet) const noexcept
 	{
 		// Create a new propertySet that is a copy of the currentProperty set
 		PropertySet combinedSet(*this);
@@ -752,12 +750,92 @@ public:
 	}
 
 	// Setters
-	const inline void setPropertyID(Properties::PropertyID p_propertyID) { m_propertyID = p_propertyID; }
+	const inline void setPropertyID(const Properties::PropertyID p_propertyID) { m_propertyID = p_propertyID; }
 
 	// Getters
 	inline size_t getNumProperties() const { return m_numProperties; }
 	inline size_t getNumPropertySets() const { return m_numPropertySets; }
 	const inline Properties::PropertyID getPropertyID() const { return m_propertyID; }
+
+	// Sets the passed bool to the value of a property matching the passed ID, if the property is present
+	const inline void getValueByID(const Properties::PropertyID p_propertyID, bool &p_value) const noexcept
+	{
+		auto &valueProperty = getPropertyByID(p_propertyID);
+		if(valueProperty)
+			p_value = valueProperty.getBool();
+	}
+
+	// Sets the passed int to the value of a property matching the passed ID, if the property is present
+	const inline void getValueByID(const Properties::PropertyID p_propertyID, int &p_value) const noexcept
+	{
+		auto &valueProperty = getPropertyByID(p_propertyID);
+		if(valueProperty)
+			p_value = valueProperty.getInt();
+	}
+
+	// Sets the passed float to the value of a property matching the passed ID, if the property is present
+	const inline void getValueByID(const Properties::PropertyID p_propertyID, float &p_value) const noexcept
+	{
+		auto &valueProperty = getPropertyByID(p_propertyID);
+		if(valueProperty)
+			p_value = valueProperty.getFloat();
+	}
+
+	// Sets the passed double to the value of a property matching the passed ID, if the property is present
+	const inline void getValueByID(const Properties::PropertyID p_propertyID, double &p_value) const noexcept
+	{
+		auto &valueProperty = getPropertyByID(p_propertyID);
+		if(valueProperty)
+			p_value = valueProperty.getDouble();
+	}
+
+	// Sets the passed ivec2 to the value of a property matching the passed ID, if the property is present
+	const inline void getValueByID(const Properties::PropertyID p_propertyID, glm::ivec2 &p_value) const noexcept
+	{
+		auto &valueProperty = getPropertyByID(p_propertyID);
+		if(valueProperty)
+			p_value = valueProperty.getVec2i();
+	}
+
+	// Sets the passed vec2 to the value of a property matching the passed ID, if the property is present
+	const inline void getValueByID(const Properties::PropertyID p_propertyID, glm::vec2 &p_value) const noexcept
+	{
+		auto &valueProperty = getPropertyByID(p_propertyID);
+		if(valueProperty)
+			p_value = valueProperty.getVec2f();
+	}
+
+	// Sets the passed vec3 to the value of a property matching the passed ID, if the property is present
+	const inline void getValueByID(const Properties::PropertyID p_propertyID, glm::vec3 &p_value) const noexcept
+	{
+		auto &valueProperty = getPropertyByID(p_propertyID);
+		if(valueProperty)
+			p_value = valueProperty.getVec3f();
+	}
+
+	// Sets the passed vec4 to the value of a property matching the passed ID, if the property is present
+	const inline void getValueByID(const Properties::PropertyID p_propertyID, glm::vec4 &p_value) const noexcept
+	{
+		auto &valueProperty = getPropertyByID(p_propertyID);
+		if(valueProperty)
+			p_value = valueProperty.getVec4f();
+	}
+
+	// Sets the passed string to the value of a property matching the passed ID, if the property is present
+	const inline void getValueByID(const Properties::PropertyID p_propertyID, std::string &p_value) const noexcept
+	{
+		auto &valueProperty = getPropertyByID(p_propertyID);
+		if(valueProperty)
+			p_value = valueProperty.getString();
+	}
+
+	// Sets the passed PropertyID to the value of a property matching the passed ID, if the property is present
+	const inline void getValueByID(const Properties::PropertyID p_propertyID, Properties::PropertyID &p_value) const noexcept
+	{
+		auto &valueProperty = getPropertyByID(p_propertyID);
+		if(valueProperty)
+			p_value = valueProperty.getPropertyID();
+	}
 
 	// Bool operator; returns true if the property is valid and false if the property is null
 	inline explicit operator bool() const { return m_propertyID != Properties::Null; }

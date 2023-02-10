@@ -53,22 +53,11 @@ public:
 	}
 	ErrorCode init() final override
 	{
-		// Mark the object as loaded, because there is nothing to be specifically loaded, at least for now
-		//setLoadedToMemory(true);
-		//setLoadedToVideoMemory(true);
-
 		return ErrorCode::Success;
 	}
 
 	void loadToMemory()
 	{
-		auto luaError = ErrorCode::Success;// m_luaScript.init();
-
-		if(luaError != ErrorCode::Success)
-			ErrHandlerLoc().get().log(luaError, ErrorSource::Source_LuaComponent, m_name);
-		//else
-		//	m_luaScriptLoaded = true;
-
 		setActive(true);
 	}
 
@@ -80,24 +69,6 @@ public:
 
 			postChanges(Systems::Changes::Spatial::LocalTransformNoScale);
 		}
-
-		//std::cout << m_motionState.getWorldTransform()[3].x << " : " << m_motionState.getWorldTransform()[3].y << " : " << m_motionState.getWorldTransform()[3].z << std::endl;
-
-		/*/ Perform updates only the if the script is loaded
-		if(m_luaScriptLoaded)
-		{
-			// Get the current spatial data
-			m_luaSpatialData.setSpatialData(*m_spatialData);
-
-			// Update the lua script
-			m_luaScript.update(p_deltaTime);
-
-			// Get the changes from the lua script
-			auto changes = m_luaScript.getChanges();
-
-			// Post the new changes
-			postChanges(changes);
-		}*/
 	}
 
 	ErrorCode importObject(const PropertySet &p_properties) final override
