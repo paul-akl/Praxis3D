@@ -39,10 +39,10 @@ public:
 	}
 
 	// Sends a one-off notification to a system object containing data, without requiring the object linking
-	inline void sendData(SystemObject *p_observer, DataType p_dataType, void *p_data) { m_objectChangeController->oneTimeData(p_observer, p_dataType, p_data); }
+	inline void sendData(SystemObject *p_observer, DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving = false) { m_objectChangeController->oneTimeData(p_observer, p_dataType, p_data, p_deleteAfterReceiving); }
 
 	// Sends a one-off notification to a system scene containing data, without requiring the object linking
-	inline void sendData(SystemScene *p_observer, DataType p_dataType, void *p_data) { m_sceneChangeController->oneTimeData(p_observer, p_dataType, p_data); }
+	inline void sendData(SystemScene *p_observer, DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving = false) { m_sceneChangeController->oneTimeData(p_observer, p_dataType, p_data, p_deleteAfterReceiving); }
 
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changes);
 

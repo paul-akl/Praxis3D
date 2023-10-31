@@ -148,12 +148,13 @@ public:
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType);
 
-	void receiveData(const DataType p_dataType, void *p_data);
+	void receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving);
 
 	BitMask getDesiredSystemChanges() { return Systems::Changes::Generic::All; }
 	BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
 
 	// Getters
+	const unsigned int getUnsignedInt(const Observer *p_observer, BitMask p_changedBits) const;
 	SystemTask *getSystemTask() { return m_renderTask; }
 	Systems::TypeID getSystemType() { return Systems::Graphics; }
 	inline SceneObjects &getSceneObjects() { return m_sceneObjects; }

@@ -42,7 +42,7 @@ public:
 	// This method gets called when data that we are interested changed in observed subject
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) = 0;
 
-	virtual void receiveData(const DataType p_dataType, void *p_data) { }
+	virtual void receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving) { }
 };
 
 class ObservedSubject
@@ -70,6 +70,7 @@ public:
 	const virtual glm::mat4				&getMat4(const Observer *p_observer, BitMask p_changedBits)					const { return NullObjects::NullMat4f;					}
 	const virtual bool					getBool(const Observer *p_observer, BitMask p_changedBits)					const { return NullObjects::NullBool;					}
 	const virtual int					getInt(const Observer *p_observer, BitMask p_changedBits)					const { return NullObjects::NullInt;					}
+	const virtual unsigned int			getUnsignedInt(const Observer *p_observer, BitMask p_changedBits)			const { return NullObjects::NullUnsignedInt;			}
 	const virtual float					getFloat(const Observer *p_observer, BitMask p_changedBits)					const { return NullObjects::NullFloat;					}
 	const virtual double				&getDouble(const Observer *p_observer, BitMask p_changedBits)				const { return NullObjects::NullDouble;					}
 	const virtual std::string			&getString(const Observer *p_observer, BitMask p_changedBits)				const { return NullObjects::NullString;					}

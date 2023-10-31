@@ -234,7 +234,7 @@ void LuaScript::setFunctions()
 
 	// Input / Window functions
 	m_luaState.set_function("getMouseInfo", []() -> const Window::MouseInfo { return WindowLocator::get().getMouseInfo(); });
-	m_luaState.set_function("mouseCaptured", []() -> const bool { return Config::windowVar().mouse_captured; });
+	m_luaState.set_function("getMouseCapture", []() -> const bool { return Config::windowVar().mouse_captured; });
 	m_luaState.set_function("setFullscreen", [](const bool p_v1) -> const void { WindowLocator::get().setFullscreen(p_v1); });
 	m_luaState.set_function("setMouseCapture", [](const bool p_v1) -> const void { WindowLocator::get().setMouseCapture(p_v1); });
 	m_luaState.set_function("setVerticalSync", [](const bool p_v1) -> const void { WindowLocator::get().setVerticalSync(p_v1); });
@@ -307,7 +307,8 @@ void LuaScript::setUsertypes()
 	// Enums
 	m_luaState.new_enum("EngineStateType",
 		"MainMenu", EngineStateType::EngineStateType_MainMenu,
-		"Play", EngineStateType::EngineStateType_Play);
+		"Play", EngineStateType::EngineStateType_Play,
+		"Editor", EngineStateType::EngineStateType_Editor);
 
 	// Config variables
 	m_luaState.new_usertype<Config::EngineVariables>("EngineVariables",

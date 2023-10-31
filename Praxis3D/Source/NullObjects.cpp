@@ -23,6 +23,7 @@ const glm::mat3				NullObjects::NullMat3f = glm::mat3();
 const glm::mat4				NullObjects::NullMat4f = glm::mat4();
 const bool					NullObjects::NullBool = false;
 const int					NullObjects::NullInt = 0;
+const unsigned int			NullObjects::NullUnsignedInt = 0;
 const float					NullObjects::NullFloat = 0.0f;
 const double				NullObjects::NullDouble = 0.0;
 const std::string			NullObjects::NullString;

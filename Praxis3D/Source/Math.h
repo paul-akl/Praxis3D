@@ -9,6 +9,7 @@
 #include <bullet3/LinearMath/btQuaternion.h>
 #include <bullet3/LinearMath/btVector3.h>
 #include <cmath>
+#include <fmod/fmod_common.h>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
@@ -33,8 +34,8 @@
 
 namespace Math
 {
-	const glm::mat4 createTransformMat(const glm::vec3 &p_position, const glm::vec3 &p_rotation, const glm::vec3 &p_scale);	
-	const inline glm::mat4 createTransformMat(const glm::vec3 &p_position, const glm::quat &p_rotation)
+	const glm::mat4 createTransformMat(const glm::vec3 &p_position, const glm::vec3 &p_rotation, const glm::vec3 &p_scale) noexcept;
+	const inline glm::mat4 createTransformMat(const glm::vec3 &p_position, const glm::quat &p_rotation) noexcept
 	{
 		glm::mat4 returnMatrix(1.0f);
 
@@ -44,7 +45,7 @@ namespace Math
 
 		return returnMatrix;
 	}
-	const inline glm::mat4 createTransformMat(const glm::vec3 &p_position, const glm::quat &p_rotation, const glm::vec3 &p_scale)
+	const inline glm::mat4 createTransformMat(const glm::vec3 &p_position, const glm::quat &p_rotation, const glm::vec3 &p_scale) noexcept
 	{
 		glm::mat4 returnMatrix(1.0f);
 
@@ -59,7 +60,7 @@ namespace Math
 		return returnMatrix;
 	}
 
-	const inline glm::mat4 perspectiveRadian(const float p_FOV, const int p_screenWidth, const int p_screenHeight)
+	const inline glm::mat4 perspectiveRadian(const float p_FOV, const int p_screenWidth, const int p_screenHeight) noexcept
 	{
 		glm::mat4 m(1.0f);
 
@@ -74,7 +75,7 @@ namespace Math
 
 		return m;
 	}
-	const inline glm::quat eulerDegreesToQuaterion(const glm::vec3 &p_degrees)
+	const inline glm::quat eulerDegreesToQuaterion(const glm::vec3 &p_degrees) noexcept
 	{
 		glm::quat qPitch = glm::angleAxis(glm::radians(p_degrees.x), glm::vec3(1, 0, 0));
 		glm::quat qYaw = glm::angleAxis(glm::radians(p_degrees.y), glm::vec3(0, 1, 0));
@@ -83,29 +84,33 @@ namespace Math
 		return glm::normalize(qPitch * qYaw * qRoll);
 	}
 
-	const inline btVector3 toBtVector3(const glm::vec3 p_vec) { return btVector3(p_vec.x, p_vec.y, p_vec.z); }
+	const inline FMOD_VECTOR toFmodVector(const glm::vec3 &p_vec) noexcept { return FMOD_VECTOR{ p_vec.x, p_vec.y, p_vec.z }; }
 
-	const inline btVector3 toBtVector3(const glm::vec4 p_vec) { return btVector3(p_vec.x, p_vec.y, p_vec.z); }
+	const inline FMOD_VECTOR toFmodVector(const glm::vec4 &p_vec) noexcept { return FMOD_VECTOR{ p_vec.x, p_vec.y, p_vec.z }; }
 
-	const inline glm::vec3 toGlmVec3(const btVector3 &p_vec) { return glm::vec3(p_vec.getX(), p_vec.getY(), p_vec.getZ()); }
+	const inline FMOD_VECTOR toFmodVector(const btVector3 &p_vec) noexcept { return FMOD_VECTOR{ p_vec[0], p_vec[1], p_vec[2] }; }
 
-	//const inline btVector3 glmToBullet(const glm::vec3 &p_vec) { return btVector3(p_vec.x, p_vec.y, p_vec.z); }
+	const inline btVector3 toBtVector3(const glm::vec3 &p_vec) noexcept { return btVector3(p_vec.x, p_vec.y, p_vec.z); }
 
-	const inline glm::quat toGlmQuat(const btQuaternion &p_quat) { return glm::quat(p_quat.getW(), p_quat.getX(), p_quat.getY(), p_quat.getZ()); }
+	const inline btVector3 toBtVector3(const glm::vec4 &p_vec) noexcept { return btVector3(p_vec.x, p_vec.y, p_vec.z); }
 
-	const inline btQuaternion toBtQuaternion(const glm::quat &p_quat) { return btQuaternion(p_quat.x, p_quat.y, p_quat.z, p_quat.w); }
+	const inline glm::vec3 toGlmVec3(const btVector3 &p_vec) noexcept { return glm::vec3(p_vec.getX(), p_vec.getY(), p_vec.getZ()); }
 
-	const inline btMatrix3x3 toBtMatrix3x3(const glm::mat3 &p_mat) { return btMatrix3x3(p_mat[0][0], p_mat[1][0], p_mat[2][0], p_mat[0][1], p_mat[1][1], p_mat[2][1], p_mat[0][2], p_mat[1][2], p_mat[2][2]); }
+	const inline glm::quat toGlmQuat(const btQuaternion &p_quat) noexcept { return glm::quat(p_quat.getW(), p_quat.getX(), p_quat.getY(), p_quat.getZ()); }
+
+	const inline btQuaternion toBtQuaternion(const glm::quat &p_quat) noexcept { return btQuaternion(p_quat.x, p_quat.y, p_quat.z, p_quat.w); }
+
+	const inline btMatrix3x3 toBtMatrix3x3(const glm::mat3 &p_mat) noexcept { return btMatrix3x3(p_mat[0][0], p_mat[1][0], p_mat[2][0], p_mat[0][1], p_mat[1][1], p_mat[2][1], p_mat[0][2], p_mat[1][2], p_mat[2][2]); }
 
 	// btTransform does not contain a full 4x4 matrix, so this transform is lossy.
 	// Affine transformations are OK but perspective transformations are not.
-	const inline btTransform toBtTransform(const glm::mat4 &p_mat)
+	const inline btTransform toBtTransform(const glm::mat4 &p_mat) noexcept
 	{
 		glm::mat3 m3(p_mat);
 		return btTransform(toBtMatrix3x3(m3), toBtVector3(glm::vec3(p_mat[3][0], p_mat[3][1], p_mat[3][2])));
 	}
 
-	const inline glm::mat4 toGlmMat4(const btTransform &p_trans)
+	const inline glm::mat4 toGlmMat4(const btTransform &p_trans) noexcept
 	{
 		glm::mat4 m(1.0f);
 		const btMatrix3x3 &basis = p_trans.getBasis();
@@ -130,7 +135,7 @@ namespace Math
 		return m;
 	}
 	
-	const inline glm::mat4 toGlmMat4(btScalar *p_mat)
+	const inline glm::mat4 toGlmMat4(btScalar *p_mat) noexcept
 	{
 		return glm::mat4(
 			p_mat[0], p_mat[1], p_mat[2], p_mat[3],

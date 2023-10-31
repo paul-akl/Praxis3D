@@ -49,7 +49,7 @@ public:
 		else
 		{
 			// Iterate over all the system scenes and update them
-			for(UniversalScene::SystemSceneMap::iterator it = m_systemScenes.begin(); it != m_systemScenes.end(); it++)
+			for(UniversalScene::SystemSceneMap::reverse_iterator it = m_systemScenes.rbegin(); it != m_systemScenes.rend(); it++)
 			{
 				// Get the scene
 				SystemScene *currentScene = it->second;

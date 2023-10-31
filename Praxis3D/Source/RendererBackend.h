@@ -431,6 +431,8 @@ public:
 
 	inline GeometryBuffer *getGeometryBuffer() { return m_gbuffer; }
 
+	inline unsigned int getFramebufferTextureHandle(GBufferTextureType p_bufferType) const { return m_gbuffer->getBufferTextureHandle(p_bufferType); }
+
 protected:
 	// Currently bound and last updated objects
 	struct CurrentState

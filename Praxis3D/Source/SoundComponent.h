@@ -1,8 +1,8 @@
 #pragma once
 
-#include <fmod/core/fmod.hpp>
-#include <fmod/core/fmod_errors.h>
-#include <fmod/core/fmod_common.h>
+#include <fmod/fmod.hpp>
+#include <fmod/fmod_errors.h>
+#include <fmod/fmod_common.h>
 
 #include "InheritanceObjects.h"
 

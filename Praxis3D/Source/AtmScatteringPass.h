@@ -186,9 +186,9 @@ public:
 			auto tex3 = m_atmScatteringModel->getSingleMieTexture();
 			auto tex4 = m_atmScatteringModel->getTransmittanceTexture();
 
-			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GeometryBuffer::GBufferInputTexture);
-			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferPosition, GeometryBuffer::GBufferPosition);
-			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferNormal, GeometryBuffer::GBufferNormal);
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GBufferTextureType::GBufferInputTexture);
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferPosition, GBufferTextureType::GBufferPosition);
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferNormal, GBufferTextureType::GBufferNormal);
 			
 			// Set atmosphere parameters buffer size and data
 			//m_atmParamBuffer.m_updateSize = sizeof(AtmScatteringParameters);

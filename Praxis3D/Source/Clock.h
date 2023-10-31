@@ -37,6 +37,15 @@ public:
 	// Returns current number Frames per Second
 	const virtual float getFPS() = 0;
 
+	// Returns an index of 0 or 1, depending if the current frame count is even or odd. Used to access double-buffered arrays. Front buffer
+	const inline unsigned int getDoubleBufferingIndexFront() const noexcept { return isFrameEven() ? 1 : 0; }
+
+	// Returns an index of 0 or 1, depending if the current frame count is even or odd. Used to access double-buffered arrays. Back buffer
+	const inline unsigned int getDoubleBufferingIndexBack() const noexcept { return isFrameEven() ? 0 : 1; }
+
+	// Returns true if the current frame count is even; false if it is odd. Used for double-buffered arrays
+	const virtual bool isFrameEven() const noexcept { return true; }
+
 protected:
 	virtual const double getCurrentTime() = 0;
 	virtual const float getCurrentTimeF() = 0;
@@ -63,6 +72,8 @@ private:
 	size_t	m_tickSamples,
 			m_currentTickIndex;
 
+	bool m_frameIsEven;
+
 public:
 	Clock()
 	{
@@ -85,6 +96,8 @@ public:
 		m_currentTickIndex = 0;
 
 		m_tickList = nullptr;
+
+		m_frameIsEven = true;
 	}
 	~Clock() { }
 
@@ -149,6 +162,8 @@ public:
 
 		// Average out the ticks and calculate FPS
 		m_currentFPS = 1.0f / (m_tickSum / m_tickSamples);
+
+		m_frameIsEven = !m_frameIsEven;
 	}
 
 	// Returns a double of the last frame in milliseconds
@@ -175,6 +190,9 @@ public:
 
 	// Returns current number Frames per Second
 	const float getFPS() { return m_currentFPS; }
+
+	// Returns true if the current frame count is even; false if it is odd. Used for double-buffered arrays
+	const bool isFrameEven() const noexcept { return m_frameIsEven; }
 
 protected:
 	const double getCurrentTime()

@@ -3,6 +3,8 @@
 #include <GL\glew.h>
 #include <functional>
 
+#include "EnumFactory.h"
+
 typedef std::uint32_t EntityID;
 typedef unsigned int UpdateCount;
 typedef std::vector<std::function<void()>> Functors;
@@ -12,7 +14,8 @@ constexpr EntityID NULL_ENTITY_ID = std::numeric_limits<EntityID>::max();
 enum EngineStateType : unsigned int
 {
 	EngineStateType_MainMenu = 0,
-	EngineStateType_Play
+	EngineStateType_Play,
+	EngineStateType_Editor
 };
 
 enum BindCommandType : unsigned int
@@ -77,13 +80,7 @@ enum BufferUsageHint : unsigned int
 	BufferUsageHint_StaticDraw		= GL_STATIC_DRAW,
 	BufferUsageHint_DynamicDraw		= GL_DYNAMIC_DRAW,
 	BufferUsageHint_DynamicCopy		= GL_DYNAMIC_COPY
-};/*
-enum LightBufferBinding : unsigned int
-{
-	LightBufferBinding_PointLight = 0,
-	LightBufferBinding_SpotLight,
-	LightBufferBinding_Total
-};*/
+};
 enum LoadObjectType : unsigned int
 {
 	LoadObject_Buffer,
@@ -206,3 +203,40 @@ enum UniformBufferBinding : unsigned int
 	UniformBufferBinding_AtmScatParam,
 	UniformBufferBinding_LensFlareParam
 };
+
+enum GBufferTextureType : unsigned int
+{
+	GBufferPosition,
+	GBufferDiffuse,
+	GBufferNormal,
+	GBufferEmissive,
+	GBufferMatProperties,
+	GBufferFinal,
+	GBufferNumTextures = GBufferFinal,
+	GBufferIntermediate,
+	GBufferTotalNumTextures,
+	GBufferInputTexture = GBufferTotalNumTextures,
+	GbufferOutputTexture
+};
+
+/*enum ObjectMaterialType : unsigned int
+{
+	ObjectMaterialType_Null = 0,
+	ObjectMaterialType_Glass,
+	ObjectMaterialType_Metal,
+	ObjectMaterialType_Plastic,
+	ObjectMaterialType_Rock,
+	ObjectMaterialType_Wood,
+	ObjectMaterialType_NumOfTypes
+};*/
+
+#define OBJ_MATERIAL_ID(Code) \
+	Code(Concrete, = 0) \
+	Code(Glass,) \
+	Code(Metal,) \
+	Code(Plastic,) \
+	Code(Rock,) \
+	Code(Rubber,) \
+	Code(Wood,) \
+	Code(NumberOfMaterialTypes,) 
+DECLARE_ENUM(ObjectMaterialType, OBJ_MATERIAL_ID)

@@ -47,9 +47,7 @@ function init ()
 	if not spawnObject.m_worldComponents:spatialPresent() then
 		spawnObject.m_worldComponents:createSpatial()
 	end
-	
-	
-	
+		
 	print('Camera_free.lua script initialized.')
 end
 
@@ -70,7 +68,7 @@ function update (p_deltaTime)
 	
 	-- Rotate the camera matrix by the view angles
 	-- Perform rotations only if the mouse is captured inside the game window
-	if mouseCaptured() or mouseRightKey:isActivated() then
+	if getMouseCapture() or mouseRightKey:isActivated() then
 		-- Rotate camera up/down based on the X direction (left/right) of the view matrix (camera's inverse matrix)
 		localTransformMat4 = localTransformMat4:rotate(toRadianF(verticalAngleF), localTransformInverseMat4:getRotXVec3())
 		-- Rotate camera left/right on a fixed Y direction (up/down) to not introduce any roll
@@ -121,15 +119,16 @@ function update (p_deltaTime)
 		positionVec3 = positionVec3 - upDirectionVec3:mulF(finalMovementSpeedF * p_deltaTime)
 	end
 	
-	if mouseLeftKey:isActivated() then
-		mouseLeftKey:deactivate()
-		spawnObject.m_worldComponents.m_spatialConstructionInfo.m_localPosition = positionVec3 - forwardDirectionVec3:mulF(1.5)
-		spawnObject.m_worldComponents.m_spatialConstructionInfo.m_localRotationQuaternion = localTransformMat4:toQuat():inverse()
-		spawnObject.m_physicsComponents.m_rigidBodyConstructionInfo.m_linearVelocity = forwardDirectionVec3:mulF(-20.0)
-		
-		--spawnObject.m_worldComponents.m_spatialConstructionInfo.m_localRotationQuaternion = spatialData:getLocalSpaceData().m_spatialData.m_rotationQuaternion:inverse()
-		
-		createEntity(spawnObject)
+	-- Spawn an entity if the mouse is captured and the left mouse button is pressed
+	if getMouseCapture() and mouseLeftKey:isActivated() then
+			mouseLeftKey:deactivate()
+			spawnObject.m_worldComponents.m_spatialConstructionInfo.m_localPosition = positionVec3 - forwardDirectionVec3:mulF(1.5)
+			spawnObject.m_worldComponents.m_spatialConstructionInfo.m_localRotationQuaternion = localTransformMat4:toQuat():inverse()
+			spawnObject.m_physicsComponents.m_rigidBodyConstructionInfo.m_linearVelocity = forwardDirectionVec3:mulF(-20.0)
+			
+			--spawnObject.m_worldComponents.m_spatialConstructionInfo.m_localRotationQuaternion = spatialData:getLocalSpaceData().m_spatialData.m_rotationQuaternion:inverse()
+			
+			createEntity(spawnObject)
 	end
 	
 	-- Set the new position of the camera, and keep the W variable the same

@@ -136,6 +136,9 @@ public:
 		});
 	}
 
+	// Retrieve a const reference to an internal object pool
+	const std::vector<TObject *> &getObjectPool() const { return m_objectPool; }
+
 	// Returns false if there are any objects in the LoadToVideoMemory queue
 	//const inline bool isLoadToVideoMemoryQueueEmpty() const { return m_objectLoadToVideoMemoryQueue.empty(); }
 

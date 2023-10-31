@@ -4,6 +4,8 @@
 #include "TaskManagerLocator.h"
 #include "WorldScene.h"
 
+PhysicsScene *PhysicsScene::s_currentPhysicsScene = nullptr;
+
 PhysicsScene::PhysicsScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader)
 {
 	m_physicsTask = nullptr;
@@ -79,6 +81,8 @@ ErrorCode PhysicsScene::init()
 
 	m_dynamicsWorld = new btDiscreteDynamicsWorld(m_collisionDispatcher, m_collisionBroadphase, m_collisionSolver, m_collisionConfiguration);
 	
+	m_dynamicsWorld->setInternalTickCallback(&PhysicsScene::internalTickCallbackProxy);
+
 	return ErrorCode::Success;
 }
 
@@ -102,20 +106,34 @@ ErrorCode PhysicsScene::setup(const PropertySet &p_properties)
 
 	// Reserve every component type that belongs to this scene
 	worldScene->reserve<RigidBodyComponent>(Config::objectPoolVar().regid_body_component_default_pool_size);
+	worldScene->reserve<CollisionEventComponent>(Config::objectPoolVar().regid_body_component_default_pool_size);
 
 	return ErrorCode::Success;
 }
 
 void PhysicsScene::update(const float p_deltaTime)
 {
-	// Perform the physics simulation for the time step of the last frame
-	m_dynamicsWorld->stepSimulation(p_deltaTime);
+	// Get double buffering index
+	auto dbIndex = ClockLocator::get().getDoubleBufferingIndexBack();
 
 	// Get the world scene required for getting the entity registry
 	WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
 
 	// Get the entity registry 
 	auto &entityRegistry = worldScene->getEntityRegistry();
+
+	// Get the collision event component view and iterate every entity while resetting the collision counters
+	auto collisionEventsView = worldScene->getEntityRegistry().view<CollisionEventComponent>();
+	for(auto entity : collisionEventsView)
+	{
+		auto &component = collisionEventsView.get<CollisionEventComponent>(entity);
+
+		component.m_numOfDynamicCollisions[dbIndex] = 0;
+		component.m_numOfStaticCollisions[dbIndex] = 0;
+	}
+
+	// Perform the physics simulation for the time step of the last frame
+	m_dynamicsWorld->stepSimulation(p_deltaTime);
 
 	// Get the rigid body component view and iterate every entity that contains is
 	auto rigidBodyView = worldScene->getEntityRegistry().view<RigidBodyComponent>();
@@ -124,6 +142,166 @@ void PhysicsScene::update(const float p_deltaTime)
 		auto &component = rigidBodyView.get<RigidBodyComponent>(entity);
 
 		component.update(p_deltaTime);
+	}
+}
+
+void PhysicsScene::internalTickCallback(btDynamicsWorld *p_world, btScalar p_timeStep)
+{
+	// Get the world scene required for getting the entity registry
+	WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
+
+	// Get the entity registry 
+	auto &entityRegistry = worldScene->getEntityRegistry();
+
+	// Get double buffering index
+	auto dbIndex = ClockLocator::get().getDoubleBufferingIndexBack();
+
+	for(decltype(p_world->getDispatcher()->getNumManifolds()) manifoldIndex = 0, manifoldSize = p_world->getDispatcher()->getNumManifolds(); manifoldIndex < manifoldSize; manifoldIndex++)
+	{
+		btPersistentManifold *contactManifold = p_world->getDispatcher()->getManifoldByIndexInternal(manifoldIndex);
+
+		const btCollisionObject *objectA = static_cast<const btCollisionObject *>(contactManifold->getBody0());
+		const btCollisionObject *objectB = static_cast<const btCollisionObject *>(contactManifold->getBody1());
+
+		EntityID entityA = *static_cast<EntityID *>(objectA->getUserPointer());
+		EntityID entityB = *static_cast<EntityID *>(objectB->getUserPointer());
+
+		bool processCollision = false;
+
+		for(decltype(contactManifold->getNumContacts()) contactIndex = 0, contactSize = contactManifold->getNumContacts(); contactIndex < contactSize; contactIndex++)
+		{
+			auto *collisionEventComponentObjectA = entityRegistry.try_get<CollisionEventComponent>(entityA);
+			auto *collisionEventComponentObjectB = entityRegistry.try_get<CollisionEventComponent>(entityB);
+
+			btManifoldPoint &manifoldPoint = contactManifold->getContactPoint(contactIndex);
+			if(manifoldPoint.getDistance() < 0.0f && manifoldPoint.m_lifeTime < Config::physicsVar().life_time_threshold)
+			{
+				//std::cout << manifoldPoint.m_contactMotion1 << " | ";
+				//std::cout << manifoldPoint.m_contactMotion2 << std::endl;
+
+				//if(manifoldPoint.m_appliedImpulseLateral1 > )
+
+				if(manifoldPoint.m_appliedImpulse > Config::physicsVar().applied_impulse_threshold)
+				{
+					if(collisionEventComponentObjectA->m_numOfDynamicCollisions[dbIndex] < NUM_DYNAMIC_COLLISION_EVENTS)
+					{
+						collisionEventComponentObjectA->m_dynamicCollisions[dbIndex][collisionEventComponentObjectA->m_numOfDynamicCollisions[dbIndex]].m_firstObjInCollisionPair = true;
+						collisionEventComponentObjectA->m_dynamicCollisions[dbIndex][collisionEventComponentObjectA->m_numOfDynamicCollisions[dbIndex]].m_entityID = entityB;
+						collisionEventComponentObjectA->m_dynamicCollisions[dbIndex][collisionEventComponentObjectA->m_numOfDynamicCollisions[dbIndex]].m_appliedImpulse = manifoldPoint.m_appliedImpulse;
+						collisionEventComponentObjectA->m_dynamicCollisions[dbIndex][collisionEventComponentObjectA->m_numOfDynamicCollisions[dbIndex]].m_position = Math::toGlmVec3(manifoldPoint.getPositionWorldOnA());
+						collisionEventComponentObjectA->m_dynamicCollisions[dbIndex][collisionEventComponentObjectA->m_numOfDynamicCollisions[dbIndex]].m_velocity = Math::toGlmVec3(objectA->getInterpolationLinearVelocity());
+
+						collisionEventComponentObjectA->m_numOfDynamicCollisions[dbIndex]++;
+					}
+					else
+					{
+						std::cout << entityA << " : max DYNAMIC collision events" << std::endl;
+					}
+
+					if(collisionEventComponentObjectB->m_numOfDynamicCollisions[dbIndex] < NUM_DYNAMIC_COLLISION_EVENTS)
+					{
+						collisionEventComponentObjectB->m_dynamicCollisions[dbIndex][collisionEventComponentObjectB->m_numOfDynamicCollisions[dbIndex]].m_firstObjInCollisionPair = false;
+						collisionEventComponentObjectB->m_dynamicCollisions[dbIndex][collisionEventComponentObjectB->m_numOfDynamicCollisions[dbIndex]].m_entityID = entityA;
+						collisionEventComponentObjectB->m_dynamicCollisions[dbIndex][collisionEventComponentObjectB->m_numOfDynamicCollisions[dbIndex]].m_appliedImpulse = manifoldPoint.m_appliedImpulse;
+						collisionEventComponentObjectB->m_dynamicCollisions[dbIndex][collisionEventComponentObjectB->m_numOfDynamicCollisions[dbIndex]].m_position = Math::toGlmVec3(manifoldPoint.getPositionWorldOnB());
+						collisionEventComponentObjectB->m_dynamicCollisions[dbIndex][collisionEventComponentObjectB->m_numOfDynamicCollisions[dbIndex]].m_velocity = Math::toGlmVec3(objectB->getInterpolationLinearVelocity());
+
+						collisionEventComponentObjectB->m_numOfDynamicCollisions[dbIndex]++;
+					}
+					else
+					{
+						std::cout << entityB << " : max DYNAMIC collision events" << std::endl;
+					}
+
+				}
+				else
+				{
+					if(collisionEventComponentObjectA->m_numOfStaticCollisions[dbIndex] < NUM_STATIC_COLLISION_EVENTS)
+					{
+						collisionEventComponentObjectA->m_staticCollisions[dbIndex][collisionEventComponentObjectA->m_numOfStaticCollisions[dbIndex]].m_firstObjInCollisionPair = true;
+						collisionEventComponentObjectA->m_staticCollisions[dbIndex][collisionEventComponentObjectA->m_numOfStaticCollisions[dbIndex]].m_entityID = entityB;
+						collisionEventComponentObjectA->m_staticCollisions[dbIndex][collisionEventComponentObjectA->m_numOfStaticCollisions[dbIndex]].m_appliedImpulse = manifoldPoint.m_appliedImpulse;
+						collisionEventComponentObjectA->m_staticCollisions[dbIndex][collisionEventComponentObjectA->m_numOfStaticCollisions[dbIndex]].m_position = Math::toGlmVec3(manifoldPoint.getPositionWorldOnA());
+						collisionEventComponentObjectA->m_staticCollisions[dbIndex][collisionEventComponentObjectA->m_numOfStaticCollisions[dbIndex]].m_velocity = Math::toGlmVec3(objectA->getInterpolationLinearVelocity());
+
+						collisionEventComponentObjectA->m_numOfStaticCollisions[dbIndex]++;
+					}
+					else
+					{
+						std::cout << entityA << " : max STATIC collision events" << std::endl;
+					}
+
+					if(collisionEventComponentObjectB->m_numOfStaticCollisions[dbIndex] < NUM_STATIC_COLLISION_EVENTS)
+					{
+						collisionEventComponentObjectB->m_staticCollisions[dbIndex][collisionEventComponentObjectB->m_numOfStaticCollisions[dbIndex]].m_firstObjInCollisionPair = false;
+						collisionEventComponentObjectB->m_staticCollisions[dbIndex][collisionEventComponentObjectB->m_numOfStaticCollisions[dbIndex]].m_entityID = entityA;
+						collisionEventComponentObjectB->m_staticCollisions[dbIndex][collisionEventComponentObjectB->m_numOfStaticCollisions[dbIndex]].m_appliedImpulse = manifoldPoint.m_appliedImpulse;
+						collisionEventComponentObjectB->m_staticCollisions[dbIndex][collisionEventComponentObjectB->m_numOfStaticCollisions[dbIndex]].m_position = Math::toGlmVec3(manifoldPoint.getPositionWorldOnB());
+						collisionEventComponentObjectB->m_staticCollisions[dbIndex][collisionEventComponentObjectB->m_numOfStaticCollisions[dbIndex]].m_velocity = Math::toGlmVec3(objectB->getInterpolationLinearVelocity());
+
+						collisionEventComponentObjectB->m_numOfStaticCollisions[dbIndex]++;
+					}
+					else
+					{
+						std::cout << entityB << " : max STATIC collision events" << std::endl;
+					}
+				}
+			}
+			//if(pt.getDistance() < 0.f)
+			//{
+			//	const btVector3 &ptA = pt.getPositionWorldOnA();
+			//	const btVector3 &ptB = pt.getPositionWorldOnB();
+			//	const btVector3 &normalOnB = pt.m_normalWorldOnB;
+			//}
+		}
+
+		if(processCollision)
+		{
+			//const btCollisionObject *obA = static_cast<const btCollisionObject *>(contactManifold->getBody0());
+			//const btCollisionObject *obB = static_cast<const btCollisionObject *>(contactManifold->getBody1());
+
+			//EntityID entityA = *static_cast<EntityID *>(obA->getUserPointer());
+			//EntityID entityB = *static_cast<EntityID *>(obB->getUserPointer());
+
+			std::string materialTypeEntityA;
+			std::string materialTypeEntityB;
+
+			auto objectMaterialComponentA = entityRegistry.try_get<ObjectMaterialComponent>(entityA);
+			if(objectMaterialComponentA != nullptr)
+			{
+				switch(objectMaterialComponentA->getObjectMaterialType())
+				{
+				case ObjectMaterialType::Metal:
+					materialTypeEntityA = "metal";
+					break;
+				case ObjectMaterialType::Rock:
+					materialTypeEntityA = "rock";
+					break;
+				case ObjectMaterialType::Wood:
+					materialTypeEntityA = "wood";
+					break;
+				}
+			}
+
+			auto objectMaterialComponentB = entityRegistry.try_get<ObjectMaterialComponent>(entityB);
+			if(objectMaterialComponentB != nullptr)
+			{
+				switch(objectMaterialComponentB->getObjectMaterialType())
+				{
+				case ObjectMaterialType::Metal:
+					materialTypeEntityB = "metal";
+					break;
+				case ObjectMaterialType::Rock:
+					materialTypeEntityB = "rock";
+					break;
+				case ObjectMaterialType::Wood:
+					materialTypeEntityB = "wood";
+					break;
+				}
+			}
+
+			std::cout << materialTypeEntityA << " <-> " << materialTypeEntityB << std::endl;
+		}
 	}
 }
 
@@ -233,6 +411,9 @@ SystemObject *PhysicsScene::createComponent(const EntityID &p_entityID, const Ri
 			// Create the rigid body by passing the rigid body construction info
 			component.m_rigidBody = new btRigidBody(*component.m_constructionInfo);
 
+			// Set the entity ID of the entity that this component belongs to, so it can be retrieved later
+			component.m_rigidBody->setUserPointer(new EntityID(p_entityID));
+
 			if(component.m_kinematic)
 			{
 				component.m_rigidBody->setCollisionFlags(component.m_rigidBody->getCollisionFlags() | btCollisionObject::CollisionFlags::CF_KINEMATIC_OBJECT);
@@ -263,6 +444,14 @@ SystemObject *PhysicsScene::createComponent(const EntityID &p_entityID, const Ri
 	}
 
 	return returnObject;
+}
+
+void PhysicsScene::createCollisionEventComponent(const EntityID &p_entityID)
+{
+	// Get the world scene required for attaching components to the entity
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	worldScene->addComponent<CollisionEventComponent>(p_entityID, p_entityID);
 }
 
 ErrorCode PhysicsScene::destroyObject(SystemObject *p_systemObject)

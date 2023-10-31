@@ -11,6 +11,7 @@
 ScriptScene::ScriptScene(ScriptSystem *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader)
 {
 	m_scriptingTask = nullptr;
+	m_luaScriptsEnabled = true;
 }
 
 ScriptScene::~ScriptScene()
@@ -55,40 +56,43 @@ void ScriptScene::update(const float p_deltaTime)
 	// Get the world scene required for getting components
 	WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
 
-	//	 ____________________________
-	//	|							 |
-	//	| LUA AND SPATIAL COMPONENTS |
-	//	|____________________________|
-	//
-	auto luaAndSpatialView = worldScene->getEntityRegistry().view<LuaComponent, SpatialComponent>();	
-	for(auto entity : luaAndSpatialView)
+	if(m_luaScriptsEnabled)
 	{
-		LuaComponent &luaComponent = luaAndSpatialView.get<LuaComponent>(entity);
-		SpatialComponent &spatialComponent = luaAndSpatialView.get<SpatialComponent>(entity);
-
-		// Check if the script object is enabled
-		if(luaComponent.isObjectActive())
+		//	 ____________________________
+		//	|							 |
+		//	| LUA AND SPATIAL COMPONENTS |
+		//	|____________________________|
+		//
+		auto luaAndSpatialView = worldScene->getEntityRegistry().view<LuaComponent, SpatialComponent>();
+		for(auto entity : luaAndSpatialView)
 		{
-			// Update the object
-  			luaComponent.update(p_deltaTime, spatialComponent);
+			LuaComponent &luaComponent = luaAndSpatialView.get<LuaComponent>(entity);
+			SpatialComponent &spatialComponent = luaAndSpatialView.get<SpatialComponent>(entity);
+
+			// Check if the script object is enabled
+			if(luaComponent.isObjectActive())
+			{
+				// Update the object
+				luaComponent.update(p_deltaTime, spatialComponent);
+			}
 		}
-	}
 
-	//	 ____________________________
-	//	|							 |
-	//	|		LUA COMPONENTS		 |
-	//	|____________________________|
-	//
-	auto luaOnlyView = worldScene->getEntityRegistry().view<LuaComponent>(entt::exclude<SpatialComponent>);
-	for(auto entity : luaOnlyView)
-	{
-		LuaComponent &luaComponent = luaOnlyView.get<LuaComponent>(entity);
-
-		// Check if the script object is enabled
-		if(luaComponent.isObjectActive())
+		//	 ____________________________
+		//	|							 |
+		//	|		LUA COMPONENTS		 |
+		//	|____________________________|
+		//
+		auto luaOnlyView = worldScene->getEntityRegistry().view<LuaComponent>(entt::exclude<SpatialComponent>);
+		for(auto entity : luaOnlyView)
 		{
-			// Update the object
-			luaComponent.update(p_deltaTime);
+			LuaComponent &luaComponent = luaOnlyView.get<LuaComponent>(entity);
+
+			// Check if the script object is enabled
+			if(luaComponent.isObjectActive())
+			{
+				// Update the object
+				luaComponent.update(p_deltaTime);
+			}
 		}
 	}
 }
@@ -206,6 +210,16 @@ ErrorCode ScriptScene::destroyObject(SystemObject *p_systemObject)
 
 void ScriptScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 {
+}
+
+void ScriptScene::receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving)
+{
+	switch(p_dataType)
+	{
+	case DataType_EnableLuaScripting:
+		m_luaScriptsEnabled = static_cast<bool>(p_data);
+		break;
+	}
 }
 
 FreeCamera *ScriptScene::loadFreeCamera(const PropertySet & p_properties)

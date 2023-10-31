@@ -47,6 +47,19 @@ class Texture2D : public LoaderBase<TextureLoader2D, Texture2D>::UniqueObject
 	friend class TextureLoader2D;
 	friend class Texture2DHandle;
 	friend class LoaderBase<TextureLoader2D, Texture2D>::UniqueObject;
+public:
+	inline unsigned int getHandle() const { return m_handle; }
+
+	inline unsigned int getTextureHeight() const { return m_textureHeight; }
+	inline unsigned int getTextureWidth() const { return m_textureWidth; }
+
+	inline TextureFormat getTextureFormat()			const { return m_textureFormat; }
+	inline TextureDataFormat getTextureDataFormat() const { return m_textureDataFormat; }
+	inline TextureDataType getTextureDataType()		const { return m_textureDataType; }
+	inline bool getMipmapEnabled()					const { return m_enableMipmap; }
+	inline int getMipmapLevel()						const { return m_mipmapLevel; }
+	inline const unsigned char *getPixelData()		const { return m_pixelData; }
+
 protected:
 	Texture2D(LoaderBase<TextureLoader2D, Texture2D> *p_loaderBase, std::string p_filename, size_t p_uniqueID, unsigned int p_handle) : UniqueObject(p_loaderBase, p_uniqueID, p_filename), m_handle(p_handle)
 	{
@@ -276,6 +289,7 @@ public:
 		inline TextureDataFormat getTextureDataFormat() const { return m_textureData->m_textureDataFormat; }
 		inline TextureDataType getTextureDataType() const { return m_textureData->m_textureDataType; }
 		inline bool getEnableMipmap() const { return m_textureData->m_enableMipmap; }
+		inline const unsigned char *getPixelData() const { return m_textureData->m_pixelData; }
 
 	private:
 		// Increment the reference counter when creating a handle

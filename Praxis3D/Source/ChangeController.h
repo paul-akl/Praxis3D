@@ -31,7 +31,7 @@ public:
 	void oneTimeChange(ObservedSubject *p_subject, Observer *p_observer, BitMask p_changedBits);
 
 	// Sends a one-off notification (without requiring the registration of subject-observer) that contains data in the message itself
-	void oneTimeData(Observer *p_observer, DataType p_dataType, void *p_data);
+	void oneTimeData(Observer *p_observer, const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving);
 
 	ErrorCode setTaskManager(TaskManager *p_taskManager);
 
@@ -82,12 +82,13 @@ private:
 	};	
 	struct OneTimeData
 	{
-		OneTimeData(Observer *p_observer, DataType p_dataType, void *p_data) :
-			m_observer(p_observer), m_dataType(p_dataType), m_data(p_data) { }
+		OneTimeData(Observer *p_observer, DataType p_dataType, void *p_data, bool p_deleteAfterReceiving) :
+			m_observer(p_observer), m_dataType(p_dataType), m_data(p_data), m_deleteAfterReceiving(p_deleteAfterReceiving) { }
 
 		Observer *m_observer;
 		DataType m_dataType;
 		void *m_data;
+		bool m_deleteAfterReceiving;
 	};
 	struct MappedNotification
 	{

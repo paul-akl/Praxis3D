@@ -33,8 +33,8 @@ public:
 
 		// Set buffer values
 		m_emissiveAndOutputBuffers.resize(2);
-		m_emissiveAndOutputBuffers[0] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(GeometryBuffer::GBufferDiffuse);
-		m_emissiveAndOutputBuffers[1] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(GeometryBuffer::GBufferFinal);
+		m_emissiveAndOutputBuffers[0] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(GBufferTextureType::GBufferDiffuse);
+		m_emissiveAndOutputBuffers[1] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(GBufferTextureType::GBufferFinal);
 
 		// Create a property-set used to load blur vertical shaders
 		PropertySet hdrMappingShaderProperties(Properties::Shaders);
@@ -72,10 +72,10 @@ public:
 		if(Config::graphicsVar().eye_adaption)
 		{
 			// Generate mipmaps for the final buffer, for use in tone mapping
-			m_renderer.m_backend.getGeometryBuffer()->generateMipmap(GeometryBuffer::GBufferFinal);
+			m_renderer.m_backend.getGeometryBuffer()->generateMipmap(GBufferTextureType::GBufferFinal);
 		}
 
-		p_renderPassData.setEmissiveInputMap(GeometryBuffer::GBufferDiffuse);
+		p_renderPassData.setEmissiveInputMap(GBufferTextureType::GBufferDiffuse);
 
 		m_emissiveAndOutputBuffers[0] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(p_renderPassData.getEmissiveInputMap());
 		m_emissiveAndOutputBuffers[1] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(p_renderPassData.getColorOutputMap());
@@ -84,9 +84,9 @@ public:
 		//m_renderer.m_backend.getGeometryBuffer()->bindFramebufferForWriting(GeometryBuffer::FramebufferDefault);
 		
 		// Bind final texture for reading so it can be accessed in the shaders
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferFinal, GeometryBuffer::GBufferFinal);
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferEmissive, GeometryBuffer::GBufferEmissive);
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GeometryBuffer::GBufferInputTexture);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferFinal, GBufferTextureType::GBufferFinal);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferEmissive, GBufferTextureType::GBufferEmissive);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GBufferTextureType::GBufferInputTexture);
 
 		// Bind intermediate texture for writing to, so HDR mapping is outputed to it
 		//m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferEmissive);
@@ -100,7 +100,7 @@ public:
 		m_renderer.passScreenSpaceDrawCommandsToBackend();
 		
 		p_renderPassData.setBlurInputMap(p_renderPassData.getEmissiveInputMap());
-		p_renderPassData.setBlurOutputMap(GeometryBuffer::GBufferEmissive);
+		p_renderPassData.setBlurOutputMap(GBufferTextureType::GBufferEmissive);
 		p_renderPassData.setIntermediateMap(p_renderPassData.getColorInputMap());
 		p_renderPassData.m_blurDoBlending = false;
 		p_renderPassData.m_numOfBlurPasses = Config::graphicsVar().bloom_blur_passes;

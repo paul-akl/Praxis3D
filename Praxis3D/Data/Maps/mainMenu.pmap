@@ -33,7 +33,7 @@
 					"Type": "Music",
 					"Loop": "true",
 					"Spatialized": "false",
-					"StartPlaying": "true",
+					"StartPlaying": "false",
 					"Volume": "0.5f"
 				}
 			},
@@ -56,6 +56,21 @@
 	"LoadInBackground": "0",
 	"Systems":
 	{
+		"Audio":
+		{
+			"Scene":
+			{
+				"Banks":
+				[
+					{
+						"Filename": "Impact.bank"
+					},
+					{
+						"Filename": "Impacts_extended.bank"
+					}
+				]
+			}
+		},
 		"Graphics":
 		{
 			"Scene":

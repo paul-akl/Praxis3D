@@ -124,9 +124,6 @@
     <Filter Include="World\Source Files">
       <UniqueIdentifier>{ef9fc0a2-c5b9-4436-9390-d0e8b46beeb7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="World\Objects">
-      <UniqueIdentifier>{073f3e46-6b78-459f-b76e-6a8931bf6a7d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="GUI">
       <UniqueIdentifier>{5d9cc408-17a7-4f79-a669-b3449d7c1f4b}</UniqueIdentifier>
     </Filter>
@@ -154,15 +151,6 @@
     <Filter Include="Physics\Source Files">
       <UniqueIdentifier>{3ce1f9b3-cfd0-497a-9015-72a1bd709383}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Physics\Objects">
-      <UniqueIdentifier>{ca05ff66-0884-4e5e-82cf-a7ec62640633}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Physics\Objects\Header Files">
-      <UniqueIdentifier>{22318761-baf8-4bed-9e91-3a324bf6a25e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Physics\Objects\Source Files">
-      <UniqueIdentifier>{e4bd1596-5b50-413b-a01b-50f9b63d2f61}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Data Managers">
       <UniqueIdentifier>{1d4c199c-6fd9-492b-9c8d-23af455d408f}</UniqueIdentifier>
     </Filter>
@@ -189,6 +177,30 @@
     </Filter>
     <Filter Include="3rd Party\imgui\Source Files">
       <UniqueIdentifier>{62cfc7e5-8f92-4ff5-bcc3-0319fec10b3c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\Components">
+      <UniqueIdentifier>{073f3e46-6b78-459f-b76e-6a8931bf6a7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics\Components">
+      <UniqueIdentifier>{ca05ff66-0884-4e5e-82cf-a7ec62640633}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics\Components\Header Files">
+      <UniqueIdentifier>{22318761-baf8-4bed-9e91-3a324bf6a25e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics\Components\Source Files">
+      <UniqueIdentifier>{e4bd1596-5b50-413b-a01b-50f9b63d2f61}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd Party\imgui_tex_inspect">
+      <UniqueIdentifier>{1baaf603-4eff-47a8-8596-afcc9775eb02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd Party\imgui_tex_inspect\Header Files">
+      <UniqueIdentifier>{2ccb8c0e-011a-4086-a79f-f036a45f9844}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd Party\imgui_tex_inspect\Source Files">
+      <UniqueIdentifier>{33d7137d-f092-4a4d-a706-a5e56bf889bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd Party\ImGuiFileDialog">
+      <UniqueIdentifier>{64b58db8-35ed-4a66-b8c7-bab40e593fb2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -408,8 +420,26 @@
     <ClCompile Include="Source\EngineState.cpp">
       <Filter>Engine States\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\CommonDefinitions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\FmodErrorCodes.cpp">
+      <Filter>Audio\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\EditorState.cpp">
+      <Filter>Engine States\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\EditorWindow.cpp">
+      <Filter>GUI\Objects\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\imgui_tex_inspect\imgui_tex_inspect.cpp">
+      <Filter>3rd Party\imgui_tex_inspect\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\imgui_tex_inspect\tex_inspect_opengl.cpp">
+      <Filter>3rd Party\imgui_tex_inspect\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\Dependencies\include\ImGuiFileDialog\ImGuiFileDialog.cpp">
-      <Filter>3rd Party</Filter>
+      <Filter>3rd Party\ImGuiFileDialog</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -699,7 +729,7 @@
       <Filter>World\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\GameObject.h">
-      <Filter>World\Objects</Filter>
+      <Filter>World\Components</Filter>
     </ClInclude>
     <ClInclude Include="Source\WorldTask.h">
       <Filter>World\Header Files</Filter>
@@ -813,22 +843,22 @@
       <Filter>Data Managers</Filter>
     </ClInclude>
     <ClInclude Include="Source\PhysicsObject.h">
-      <Filter>Physics\Objects\Header Files</Filter>
+      <Filter>Physics\Components\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\PhysicsMotionState.h">
       <Filter>Physics\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RigidBodyComponent.h">
-      <Filter>Physics\Objects\Header Files</Filter>
+      <Filter>Physics\Components\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\CollisionShapeComponent.h">
-      <Filter>Physics\Objects\Header Files</Filter>
+      <Filter>Physics\Components\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\SpatialComponent.h">
-      <Filter>World\Objects</Filter>
+      <Filter>World\Components</Filter>
     </ClInclude>
     <ClInclude Include="Source\GameObjectComponent.h">
-      <Filter>World\Objects</Filter>
+      <Filter>World\Components</Filter>
     </ClInclude>
     <ClInclude Include="Source\EntityViewDefinitions.h">
       <Filter>Header Files</Filter>
@@ -859,6 +889,39 @@
     </ClInclude>
     <ClInclude Include="Source\SoundComponent.h">
       <Filter>Audio\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ObjectMaterialComponent.h">
+      <Filter>World\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\CollisionEventComponent.h">
+      <Filter>Physics\Components\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\SoundListenerComponent.h">
+      <Filter>Audio\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\FmodErrorCodes.h">
+      <Filter>Audio\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ImpactSoundComponent.h">
+      <Filter>Audio\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\EditorState.h">
+      <Filter>Engine States\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\EditorWindow.h">
+      <Filter>GUI\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\MetadataComponent.h">
+      <Filter>World\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\imgui_tex_inspect\imgui_tex_inspect.h">
+      <Filter>3rd Party\imgui_tex_inspect\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\imgui_tex_inspect\imgui_tex_inspect_internal.h">
+      <Filter>3rd Party\imgui_tex_inspect\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\imgui_tex_inspect\tex_inspect_opengl.h">
+      <Filter>3rd Party\imgui_tex_inspect\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

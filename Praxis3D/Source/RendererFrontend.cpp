@@ -152,6 +152,23 @@ ErrorCode RendererFrontend::init()
 	return returnCode;
 }
 
+void RendererFrontend::setGUIPassFunctorSequence(FunctorSequence *p_GUIPassFunctorSequence)
+{
+	m_renderPassData->setGUIPassFunctorSequence(p_GUIPassFunctorSequence);
+}
+
+void RendererFrontend::setRenderFinalToTexture(const bool p_renderToTexture)
+{
+	if(m_renderPassData != nullptr)
+		m_renderPassData->setRenderFinalToTexture(p_renderToTexture);
+}
+
+void RendererFrontend::setRenderToTextureResolution(const glm::ivec2 p_renderToTextureResolution)
+{
+	Config::m_graphicsVar.render_to_texture_resolution_x = p_renderToTextureResolution.x;
+	Config::m_graphicsVar.render_to_texture_resolution_y = p_renderToTextureResolution.y;
+}
+
 void RendererFrontend::setRenderingPasses(const RenderingPasses &p_renderingPasses)
 {
 	m_renderingPassesSet = true;
@@ -264,18 +281,38 @@ void RendererFrontend::setRenderingPasses(const RenderingPasses &p_renderingPass
 
 void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_deltaTime)
 {
-	if(m_frameData.m_screenSize.x != Config::graphicsVar().current_resolution_x ||
-		m_frameData.m_screenSize.y != Config::graphicsVar().current_resolution_y)
+	// Adjust rendering resolution if the screen size has changed
+	if(m_renderPassData->m_renderFinalToTexture)
 	{
-		// Set the new resolution
-		m_frameData.m_screenSize.x = Config::graphicsVar().current_resolution_x;
-		m_frameData.m_screenSize.y = Config::graphicsVar().current_resolution_y;
+		if(m_frameData.m_screenSize.x != Config::graphicsVar().render_to_texture_resolution_x ||
+			m_frameData.m_screenSize.y != Config::graphicsVar().render_to_texture_resolution_y)
+		{
+			// Set the new resolution
+			m_frameData.m_screenSize.x = Config::graphicsVar().render_to_texture_resolution_x;
+			m_frameData.m_screenSize.y = Config::graphicsVar().render_to_texture_resolution_y;
 
-		// Update the projection matrix because it is dependent on the screen size
-		updateProjectionMatrix();
+			// Update the projection matrix because it is dependent on the screen size
+			updateProjectionMatrix();
 
-		// Set screen size in the backend
-		m_backend.setScreenSize(m_frameData);
+			// Set screen size in the backend
+			m_backend.setScreenSize(m_frameData);
+		}
+	}
+	else
+	{
+		if(m_frameData.m_screenSize.x != Config::graphicsVar().current_resolution_x ||
+			m_frameData.m_screenSize.y != Config::graphicsVar().current_resolution_y)
+		{
+			// Set the new resolution
+			m_frameData.m_screenSize.x = Config::graphicsVar().current_resolution_x;
+			m_frameData.m_screenSize.y = Config::graphicsVar().current_resolution_y;
+
+			// Update the projection matrix because it is dependent on the screen size
+			updateProjectionMatrix();
+
+			// Set screen size in the backend
+			m_backend.setScreenSize(m_frameData);
+		}
 	}
 
 	// Clear draw commands at the beginning of each frame
@@ -365,7 +402,7 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 	m_frameData.m_cameraPosition = p_sceneObjects.m_cameraViewMatrix[3];
 
 	// Set the camera target vector
-	m_frameData.m_cameraTarget = normalize(glm::vec3(p_sceneObjects.m_cameraViewMatrix[2]));
+	m_frameData.m_cameraTarget = normalize(glm::vec3(0.0f, 0.0f, -1.0f) * glm::mat3(p_sceneObjects.m_cameraViewMatrix));
 	
 	// Prepare the geometry buffer for a new frame and a geometry pass
 	m_backend.getGeometryBuffer()->initFrame();
@@ -382,4 +419,13 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 	{
 		m_renderingPasses[i]->update(*m_renderPassData, p_sceneObjects, p_deltaTime);
 	}
+}
+
+unsigned int RendererFrontend::getFramebufferTextureHandle(GBufferTextureType p_bufferType) const
+{
+	//std::cout << "frontend  :" << m_renderPassData->getColorOutputMap() << std::endl;
+
+	//return m_renderPassData->getColorOutputMap();
+
+	return m_backend.getFramebufferTextureHandle(p_bufferType); 
 }

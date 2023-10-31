@@ -20,6 +20,7 @@ namespace NullObjects
 	const extern glm::mat4				NullMat4f;
 	const extern bool					NullBool;
 	const extern int					NullInt;
+	const extern unsigned int			NullUnsignedInt;
 	const extern float					NullFloat;
 	const extern double					NullDouble;
 	const extern std::string			NullString;

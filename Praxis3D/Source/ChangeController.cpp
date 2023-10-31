@@ -187,13 +187,15 @@ ErrorCode ChangeController::distributeChanges(BitMask p_systemsToNotify, BitMask
 		// Iterate over every thread-specific one-time data list
 		for(decltype(m_oneTimeDataLists)::iterator listIterator = m_oneTimeDataLists.begin(); listIterator != m_oneTimeDataLists.end(); listIterator++)
 		{
-			// Loop over ever notification in this list
+			// Get the list of a single thread
 			auto &currentList = **listIterator;
-			for(decltype(currentList.size()) i = 0, size = currentList.size(); i < size; i++)
+
+			// Loop over ever notification in this list
+			for(decltype(currentList.size()) i = 0; i < currentList.size(); i++)
 			{
 				// Notify the observer about the change. We cannot check if the change is desired, since the
 				// observer is not registered with the change controller in one-time changes.
-				currentList[i].m_observer->receiveData(currentList[i].m_dataType, currentList[i].m_data);
+				currentList[i].m_observer->receiveData(currentList[i].m_dataType, currentList[i].m_data, currentList[i].m_deleteAfterReceiving);
 			}
 
 			// Clear out the list before moving to the next one
@@ -203,9 +205,12 @@ ErrorCode ChangeController::distributeChanges(BitMask p_systemsToNotify, BitMask
 		// Iterate over every thread-specific one-time notification list
 		for(decltype(m_oneTimeNotifyLists)::iterator listIterator = m_oneTimeNotifyLists.begin(); listIterator != m_oneTimeNotifyLists.end(); listIterator++)
 		{
-			// Loop over ever notification in this list
+			// Get the list of a single thread
 			auto &currentList = **listIterator;
-			for(decltype(currentList.size()) i = 0, size = currentList.size(); i < size; i++)
+
+			// BUGFIX: compare the iterator to container size during every loop (instead of assigning the size to a variable once at start), 
+			// as observers upon receiving data might send out One Time notifications themselves, and the container size would increase during the iteration of the container
+			for(decltype(currentList.size()) i = 0; i < currentList.size(); i++)
 			{
 				// Notify the observer about the change. We cannot check if the change is desired, since the
 				// observer is not registered with the change controller in one-time changes.
@@ -361,7 +366,7 @@ void ChangeController::oneTimeChange(ObservedSubject *p_subject, Observer *p_obs
 	}
 }
 
-void ChangeController::oneTimeData(Observer *p_observer, DataType p_dataType, void *p_data)
+void ChangeController::oneTimeData(Observer *p_observer, const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving = false)
 {
 	// TODO ASSERT ERROR
 	//_ASSERT(p_observer);
@@ -373,7 +378,7 @@ void ChangeController::oneTimeData(Observer *p_observer, DataType p_dataType, vo
 		auto *oneTimeDataList = getOneTimeDataList(m_tlsOneTimeDataList);
 
 		// Don't check for duplicates, for performance reasons
-		oneTimeDataList->push_back(OneTimeData(p_observer, p_dataType, p_data));
+		oneTimeDataList->push_back(OneTimeData(p_observer, p_dataType, p_data, p_deleteAfterReceiving));
 	}
 }
 

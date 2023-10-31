@@ -742,7 +742,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GBufferPosition);
+		glUniform1i(m_uniformHandle, GBufferTextureType::GBufferPosition);
 	}
 };
 class DiffuseMapUniform : public BaseUniform
@@ -752,7 +752,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GBufferDiffuse);
+		glUniform1i(m_uniformHandle, GBufferTextureType::GBufferDiffuse);
 	}
 };
 class NormalMapUniform : public BaseUniform
@@ -762,7 +762,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GBufferNormal);
+		glUniform1i(m_uniformHandle, GBufferTextureType::GBufferNormal);
 	}
 };
 class EmissiveMapUniform : public BaseUniform
@@ -772,7 +772,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GBufferEmissive);
+		glUniform1i(m_uniformHandle, GBufferTextureType::GBufferEmissive);
 	}
 };
 class MatPropertiesMapUniform : public BaseUniform
@@ -782,7 +782,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GBufferMatProperties);
+		glUniform1i(m_uniformHandle, GBufferTextureType::GBufferMatProperties);
 	}
 };
 class IntermediateMapUniform : public BaseUniform
@@ -792,7 +792,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GBufferIntermediate);
+		glUniform1i(m_uniformHandle, GBufferTextureType::GBufferIntermediate);
 	}
 };
 class FinalMapUniform : public BaseUniform
@@ -802,7 +802,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GBufferFinal);
+		glUniform1i(m_uniformHandle, GBufferTextureType::GBufferFinal);
 	}
 };
 class InputMapUniform : public BaseUniform
@@ -812,7 +812,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GBufferInputTexture);
+		glUniform1i(m_uniformHandle, GBufferTextureType::GBufferInputTexture);
 	}
 };
 class OutputMapUniform : public BaseUniform
@@ -822,7 +822,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform1i(m_uniformHandle, GeometryBuffer::GBufferTextureType::GbufferOutputTexture);
+		glUniform1i(m_uniformHandle, GBufferTextureType::GbufferOutputTexture);
 	}
 };
 

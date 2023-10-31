@@ -3,6 +3,10 @@
 	"Parent": "0",
 	"World":
 	{
+		"ObjectMaterialComponent":
+		{
+			"Type": "Wood"
+		},
 		"SpatialComponent":
 		{
 			"LocalPosition": "0.0f, 0.0f, 0.0f",

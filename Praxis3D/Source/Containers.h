@@ -121,3 +121,48 @@ struct Int64Packer
 
 	unsigned __int32 x, y;
 };
+
+// Contains GUI settings for an editor window
+struct EditorWindowSettings
+{
+	EditorWindowSettings()
+	{
+		m_enabled = true;
+	}
+
+	bool m_enabled;
+};
+
+// Stores a vector of std::functions (Functors) and methods to add, clear and get them
+struct FunctorSequence
+{
+	FunctorSequence() { }
+
+	template<typename Functor>
+	inline void addFunctor(Functor p_functor) { m_functors.push_back(p_functor); }
+
+	const Functors &getFunctors() const { return m_functors; }
+
+	void clear() { m_functors.clear(); }
+
+	Functors m_functors;
+};
+
+// Stores two template objects to be used for double buffering
+template <class T_Object>
+struct DoubleBufferedContainer
+{
+	DoubleBufferedContainer() 
+	{
+		m_swapFlag = false;
+	}
+
+	T_Object &getFront() { return m_buffers[(int)m_swapFlag]; }
+	T_Object &getBack() { return m_buffers[(int)!m_swapFlag]; }
+
+	void swapBuffer() { m_swapFlag = !m_swapFlag; }
+
+	bool m_swapFlag;
+
+	T_Object m_buffers[2];
+};

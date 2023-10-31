@@ -52,7 +52,7 @@ public:
 		//glDepthMask(GL_FALSE);
 
 		// Bind input color texture for reading so it can be accessed in the shaders
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GeometryBuffer::GBufferInputTexture);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GBufferTextureType::GBufferInputTexture);
 
 		// Bind output color texture for writing to, so it can be used as an intermediate buffer between blur passes
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());

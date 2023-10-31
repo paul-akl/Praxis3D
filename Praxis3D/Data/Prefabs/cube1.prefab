@@ -1,5 +1,12 @@
 {
 	"Name": "Cube",
+	"World":
+	{
+		"ObjectMaterialComponent":
+		{
+			"Type": "Wood"
+		}
+	},
 	"Rendering":
 	{
 		"ModelComponent":

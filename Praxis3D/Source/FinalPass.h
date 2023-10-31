@@ -70,14 +70,19 @@ public:
 		}
 
 		// Bind final texture for reading so it can be accessed in the shaders
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferEmissive, GeometryBuffer::GBufferEmissive);
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GeometryBuffer::GBufferInputTexture);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferEmissive, GBufferTextureType::GBufferEmissive);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GBufferTextureType::GBufferInputTexture);
 
-		//glActiveTexture(GL_TEXTURE0 + GeometryBuffer::GBufferInputTexture);
-		//glBindTexture(GL_TEXTURE_2D, p_renderPassData.m_luminanceAverageTextureHandle_DELETE_THIS_AFTER_DEBUG);
-
-		// Set the default framebuffer to be drawn to
-		m_renderer.m_backend.getGeometryBuffer()->bindFramebufferForWriting(GeometryBuffer::FramebufferDefault);
+		// If the render to texture flag is set, draw the scene to an FBO instead of the screen (i.e. so that it can be rendered in a GUI window during editor state)
+		if(p_renderPassData.m_renderFinalToTexture)
+		{
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GBufferTextureType::GBufferEmissive);
+		}
+		else
+		{
+			// Set the default framebuffer to be drawn to
+			m_renderer.m_backend.getGeometryBuffer()->bindFramebufferForWriting(GeometryBuffer::FramebufferDefault);
+		}
 
 		// Queue and render a full screen quad using a final pass shader
 		m_renderer.queueForDrawing(m_shaderFinalPass->getShaderHandle(), m_shaderFinalPass->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);

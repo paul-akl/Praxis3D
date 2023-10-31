@@ -1,4 +1,5 @@
 
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include <ImGuiFileDialog/ImGuiFileDialog.h>
 
 #include "WorldScene.h"
@@ -11,12 +12,17 @@
 GUIScene::GUIScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader)
 {
 	 m_GUITask = nullptr;
+	 m_editorWindow = nullptr;
+	 m_GUISequenceEnabled = true;
 }
 
 GUIScene::~GUIScene()
 {
 	if(m_GUITask != nullptr)
 		delete m_GUITask;
+
+	if(m_editorWindow != nullptr)
+		delete m_editorWindow;
 }
 
 ErrorCode GUIScene::init()
@@ -120,6 +126,16 @@ void GUIScene::update(const float p_deltaTime)
 
 		//	 ____________________________
 		//	|							 |
+		//	|		EDITOR WINDOW		 |
+		//	|____________________________|
+		//
+		if(m_editorWindow != nullptr)
+		{
+			m_editorWindow->update(p_deltaTime);
+		}
+
+		//	 ____________________________
+		//	|							 |
 		//	|	GUI SEQUENCE COMPONENTS	 |
 		//	|____________________________|
 		//
@@ -131,8 +147,12 @@ void GUIScene::update(const float p_deltaTime)
 			// Check if the script object is enabled
 			if(sequenceComponent.isObjectActive())
 			{
-				// Update the object
-				sequenceComponent.update(p_deltaTime);
+				// If GUI Sequence objects are enabled, update the object
+				// otherwise just clear the sequence without drawing it
+				if(m_GUISequenceEnabled)
+					sequenceComponent.update(p_deltaTime);
+				else
+					sequenceComponent.clearSequence();
 			}
 		}
 
@@ -221,13 +241,49 @@ ErrorCode GUIScene::destroyObject(SystemObject *p_systemObject)
 	return returnError;
 }
 
-void GUIScene::receiveData(const DataType p_dataType, void *p_data)
+void GUIScene::receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving)
 {
 	switch(p_dataType)
 	{
+	case DataType_EnableGUISequence:
+		setGUISequenceEnabled(static_cast<bool>(p_data));
+		break;
+
 	case DataType_FileBrowserDialog:
-		//m_fileBrowserDialogs.push_back(std::make_pair<FileBrowserDialog *, ImGuiFileDialog>(static_cast<FileBrowserDialog *>(p_data), ImGuiFileDialog()));
+		// Cast the sent data into the intended type and add it to the file-browser dialog queue
 		m_fileBrowserDialogs.push(static_cast<FileBrowserDialog*>(p_data));
+		break;
+
+	case DataType_EditorWindow:
+		// Cast the sent data into the intended type
+		EditorWindowSettings *editorWindowSettings = static_cast<EditorWindowSettings*>(p_data);
+
+		// If the editor window should be enabled
+		if(editorWindowSettings->m_enabled)
+		{
+			// If the editor window doesn't exist, create it
+			if(m_editorWindow == nullptr)
+			{
+				m_editorWindow = new EditorWindow(this, Config::GUIVar().gui_editor_window_name, 0);
+				m_editorWindow->init();
+				m_editorWindow->setup(*editorWindowSettings);
+			}
+			else // If the editor window does exist, just send the settings to it
+				m_editorWindow->setup(*editorWindowSettings);
+		}
+		else // If the editor should be disabled
+		{
+			// If the editor window exist, delete it
+			if(m_editorWindow != nullptr)
+			{
+				delete m_editorWindow;
+				m_editorWindow = nullptr;
+			}
+		}
+
+		// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
+		if(p_deleteAfterReceiving)
+			delete editorWindowSettings;
 		break;
 	}
 }

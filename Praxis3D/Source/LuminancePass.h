@@ -91,26 +91,23 @@ public:
 		unsigned int groupsX = static_cast<uint32_t>(glm::ceil(imageWidth / 16.0f));
 		unsigned int groupsY = static_cast<uint32_t>(glm::ceil(imageHeight / 16.0f));
 
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferToImageUnitForReading(GeometryBuffer::GBufferFinal, GeometryBuffer::GBufferInputTexture, 0);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferToImageUnitForReading(GBufferTextureType::GBufferFinal, GBufferTextureType::GBufferInputTexture, 0);
 
 		m_renderer.queueForDrawing(m_luminanceHistogramShader->getShaderHandle(), m_luminanceHistogramShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix, groupsX, groupsY, 1, MemoryBarrierType::MemoryBarrierType_ShaderStorageBarrier);
 		m_renderer.passComputeDispatchCommandsToBackend();
-
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_2D, m_luminanceAverageTexture.getHandle());
 
 		glBindImageTexture(0, m_luminanceAverageTexture.getHandle(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_R16F);
 
 		m_renderer.queueForDrawing(m_luminanceAverageShader->getShaderHandle(), m_luminanceAverageShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix, 1, 1, 1, MemoryBarrierType::MemoryBarrierType_ShaderStorageBarrier);
 		m_renderer.passComputeDispatchCommandsToBackend();
 
-
 		glDisable(GL_DEPTH_TEST);
 
 		glActiveTexture(GL_TEXTURE0 + LuminanceTextureType::LensFlareTextureType_AverageLuminance);
 		glBindTexture(GL_TEXTURE_2D, m_luminanceAverageTexture.getHandle());
 
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GeometryBuffer::GBufferInputTexture);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GBufferTextureType::GBufferInputTexture);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GBufferTextureType::GBufferInputTexture);
 
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
 

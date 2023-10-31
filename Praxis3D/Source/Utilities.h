@@ -174,6 +174,21 @@ namespace Utilities
 		return returnFilename;
 	}
 
+	// Returns part of the string before the given delimiter
+	static std::string splitStringBeforeDelimiter(const std::string &p_delimiter, const std::string &p_string)
+	{
+		// Find the position of the delimiter, split the string and return the part of the string before the delimiter
+		return p_string.substr(0, p_string.find(p_delimiter));
+	}
+
+	// Returns part of the string after the given delimiter (not containing the delimiter itself)
+	static std::string splitStringAfterDelimiter(const std::string &p_delimiter, const std::string &p_string)
+	{
+		// Find the last position (reverse find) of the delimiter and adjust the position to not include the delimiter itself
+		// Split the string and return what is left after the delimiter
+		return p_string.substr(p_string.rfind(p_delimiter) + p_delimiter.size(), p_string.size());
+	}
+
 	// Converts all slashes present in the string to backslashes ( '/' -> '\' )
 	static std::string slashToBackslash(const std::string& p_textWithSlashes)
 	{

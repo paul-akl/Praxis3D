@@ -38,6 +38,7 @@ Config::InputVariables		Config::m_inputVar;
 Config::ModelVariables		Config::m_modelVar;
 Config::ObjectPoolVariables	Config::m_objPoolVar;
 Config::PathsVariables		Config::m_filepathVar;
+Config::PhysicsVariables	Config::m_physicsVar;
 Config::RendererVariables	Config::m_rendererVar;
 Config::ScriptVariables		Config::m_scriptVar;
 Config::ShaderVariables		Config::m_shaderVar;
@@ -54,6 +55,10 @@ void Config::init()
 
 	// Audio Variables
 	AddVariablePredef(m_audioVar, num_audio_channels);
+	AddVariablePredef(m_audioVar, default_sound_bank);
+	AddVariablePredef(m_audioVar, default_sound_bank_string);
+	AddVariablePredef(m_audioVar, default_impact_sound_bank);
+	AddVariablePredef(m_audioVar, pathDelimiter);
 
 	// Component Variables
 	AddVariablePredef(m_componentVar, camera_component_name);
@@ -138,6 +143,8 @@ void Config::init()
 	AddVariablePredef(m_graphicsVar, multisample_samples);
 	AddVariablePredef(m_graphicsVar, rendering_res_x);
 	AddVariablePredef(m_graphicsVar, rendering_res_y);
+	AddVariablePredef(m_graphicsVar, render_to_texture_resolution_x);
+	AddVariablePredef(m_graphicsVar, render_to_texture_resolution_y);
 	AddVariablePredef(m_graphicsVar, tonemap_method);
 	AddVariablePredef(m_graphicsVar, alpha_threshold);
 	AddVariablePredef(m_graphicsVar, emissive_multiplier);
@@ -173,6 +180,7 @@ void Config::init()
 	AddVariablePredef(m_graphicsVar, z_near);
 
 	// GUI variables
+	AddVariablePredef(m_GUIVar, gui_docking_enabled);
 	AddVariablePredef(m_GUIVar, gui_render);
 	AddVariablePredef(m_GUIVar, gui_dark_style);
 	AddVariablePredef(m_GUIVar, gui_sequence_array_reserve_size);
@@ -181,6 +189,12 @@ void Config::init()
 	AddVariablePredef(m_GUIVar, gui_file_dialog_dir_color_R);
 	AddVariablePredef(m_GUIVar, gui_file_dialog_dir_color_G);
 	AddVariablePredef(m_GUIVar, gui_file_dialog_dir_color_B);
+	AddVariablePredef(m_GUIVar, editor_button_gui_sequence_texture);
+	AddVariablePredef(m_GUIVar, editor_button_pause_texture);
+	AddVariablePredef(m_GUIVar, editor_button_play_texture);
+	AddVariablePredef(m_GUIVar, editor_button_restart_texture);
+	AddVariablePredef(m_GUIVar, editor_button_scripting_enabled_texture);
+	AddVariablePredef(m_GUIVar, gui_editor_window_name);
 
 	// Input variables
 	AddVariablePredef(m_inputVar, back_key);
@@ -255,6 +269,10 @@ void Config::init()
 	AddVariablePredef(m_filepathVar, shader_path);
 	AddVariablePredef(m_filepathVar, sound_path);
 	AddVariablePredef(m_filepathVar, texture_path);
+
+	// Physics variables
+	AddVariablePredef(m_physicsVar, applied_impulse_threshold);
+	AddVariablePredef(m_physicsVar, life_time_threshold);
 	
 	// Renderer variables
 	AddVariablePredef(m_rendererVar, atm_scattering_ground_vert_shader);
@@ -323,6 +341,7 @@ void Config::init()
 	AddVariablePredef(m_rendererVar, max_num_point_lights);
 	AddVariablePredef(m_rendererVar, max_num_spot_lights);
 	AddVariablePredef(m_rendererVar, objects_loaded_per_frame);
+	AddVariablePredef(m_rendererVar, render_to_texture_buffer);
 	AddVariablePredef(m_rendererVar, shader_pool_size);
 	AddVariablePredef(m_rendererVar, depth_test);
 	AddVariablePredef(m_rendererVar, face_culling);

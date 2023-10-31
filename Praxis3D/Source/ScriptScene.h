@@ -70,6 +70,8 @@ public:
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType);
 
+	void receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving);
+
 	BitMask getDesiredSystemChanges() { return 0; }
 	BitMask getPotentialSystemChanges() { return 0; }
 
@@ -93,4 +95,6 @@ private:
 	WorldEditScript *loadWorldEdit(const PropertySet &p_properties);
 
 	ScriptTask *m_scriptingTask;
+
+	bool m_luaScriptsEnabled;
 };

@@ -5,6 +5,8 @@
 #define THREADS_Y 1
 #define THREADS_Z 1
 
+#define ADAPTATION_SPEED 0.02
+
 layout(binding = 0, r16f) uniform image2D averageLuminanceTexture;
 layout(binding = 1, std430) buffer histogramBuffer
 {
@@ -53,11 +55,13 @@ void main()
 		// Map from our histogram space to actual luminance
 		float weightedAvgLum = exp2(((weightedLogAverage / 254.0) * logLuminanceRange) + minLogLuminance);
 
-		float time = clamp(deltaTimeS * 1, 0.1, 1.0);//clamp(1.0 - exp(deltaTimeS * 1.1), 0.1, 1.0);
+		//float time = clamp(deltaTimeS * 1, 0.1, 1.0);
+		float time = clamp(1.0 - exp(deltaTimeS * 1.1), ADAPTATION_SPEED, 1.0);
 
 		// The new stored value will be interpolated using the last frames value
 		// to prevent sudden shifts in the exposure.
-		float lumLastFrame = imageLoad(averageLuminanceTexture, ivec2(0, 0)).x;
+		// BUGFIX: Without 'max' the frame luminance would sometimes get to NaN
+		float lumLastFrame = max(imageLoad(averageLuminanceTexture, ivec2(0, 0)).x, -10.0);
 		float adaptedLum = lumLastFrame + (weightedAvgLum - lumLastFrame) * time;
 		imageStore(averageLuminanceTexture, ivec2(0, 0), vec4(adaptedLum, 0.0, 0.0, 0.0));
 	}

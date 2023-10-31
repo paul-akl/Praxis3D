@@ -49,18 +49,18 @@ public:
 		glDepthFunc(GL_LEQUAL);
 
 		// Set input and output color maps for this frame
-		p_renderPassData.setColorInputMap(GeometryBuffer::GBufferIntermediate);
-		p_renderPassData.setColorOutputMap(GeometryBuffer::GBufferFinal);
+		p_renderPassData.setColorInputMap(GBufferTextureType::GBufferIntermediate);
+		p_renderPassData.setColorOutputMap(GBufferTextureType::GBufferFinal);
 
 		// Bind the geometry framebuffer to be used
-		m_renderer.m_backend.getGeometryBuffer()->bindFramebufferForWriting(GeometryBuffer::FramebufferGeometry);
+		m_renderer.m_backend.getGeometryBuffer()->bindFramebufferForWriting(GeometryBuffer::GBufferFramebufferType::FramebufferGeometry);
 
 		// Bind all the geometry buffer textures to be drawn to
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferPosition);
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferDiffuse);
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferNormal);
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferEmissive);
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferMatProperties);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GBufferTextureType::GBufferPosition);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GBufferTextureType::GBufferDiffuse);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GBufferTextureType::GBufferNormal);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GBufferTextureType::GBufferEmissive);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GBufferTextureType::GBufferMatProperties);
 
 		// Initialize the geometry framebuffer for the geometry pass
 		m_renderer.m_backend.getGeometryBuffer()->initGeometryPass();

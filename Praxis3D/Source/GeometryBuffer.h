@@ -13,21 +13,6 @@ public:
 		FramebufferGeometry
 	};
 
-	enum GBufferTextureType : unsigned int
-	{
-		GBufferPosition,
-		GBufferDiffuse,
-		GBufferNormal,
-		GBufferEmissive,
-		GBufferMatProperties,
-		GBufferFinal,
-		GBufferNumTextures = GBufferFinal,
-		GBufferIntermediate,
-		GBufferTotalNumTextures,
-		GBufferInputTexture = GBufferTotalNumTextures,
-		GbufferOutputTexture
-	};
-
 	typedef unsigned int GBufferTexture;
 
 	GeometryBuffer(unsigned int p_bufferWidth, unsigned int p_bufferHeight);
@@ -51,19 +36,19 @@ public:
 		glActiveTexture(GL_TEXTURE0 + p_activeTexture);
 		switch(p_buffer)
 		{
-		case GeometryBuffer::GBufferPosition:
-		case GeometryBuffer::GBufferDiffuse:
-		case GeometryBuffer::GBufferNormal:
-		case GeometryBuffer::GBufferEmissive:
+		case GBufferTextureType::GBufferPosition:
+		case GBufferTextureType::GBufferDiffuse:
+		case GBufferTextureType::GBufferNormal:
+		case GBufferTextureType::GBufferEmissive:
 			glBindTexture(GL_TEXTURE_2D, m_GBTextures[p_buffer]);
 			break;
-		case GeometryBuffer::GBufferMatProperties:
+		case GBufferTextureType::GBufferMatProperties:
 			glBindTexture(GL_TEXTURE_2D, m_GBTextures[p_buffer]);
 			break;
-		case GeometryBuffer::GBufferFinal:
+		case GBufferTextureType::GBufferFinal:
 			glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
 			break;
-		case GeometryBuffer::GBufferIntermediate:
+		case GBufferTextureType::GBufferIntermediate:
 			glBindTexture(GL_TEXTURE_2D, m_intermediateBuffer);
 			break;
 		}
@@ -73,19 +58,19 @@ public:
 		glActiveTexture(GL_TEXTURE0);
 		switch(p_buffer)
 		{
-		case GeometryBuffer::GBufferPosition:
-		case GeometryBuffer::GBufferDiffuse:
-		case GeometryBuffer::GBufferNormal:
-		case GeometryBuffer::GBufferEmissive:
+		case GBufferTextureType::GBufferPosition:
+		case GBufferTextureType::GBufferDiffuse:
+		case GBufferTextureType::GBufferNormal:
+		case GBufferTextureType::GBufferEmissive:
 			glBindTexture(GL_TEXTURE_2D, m_GBTextures[p_buffer]);
 			break;
-		case GeometryBuffer::GBufferMatProperties:
+		case GBufferTextureType::GBufferMatProperties:
 			glBindTexture(GL_TEXTURE_2D, m_GBTextures[p_buffer]);
 			break;
-		case GeometryBuffer::GBufferFinal:
+		case GBufferTextureType::GBufferFinal:
 			glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
 			break;
-		case GeometryBuffer::GBufferIntermediate:
+		case GBufferTextureType::GBufferIntermediate:
 			glBindTexture(GL_TEXTURE_2D, m_intermediateBuffer);
 			break;
 		}
@@ -118,10 +103,10 @@ public:
 	{
 		switch(p_framebufferType)
 		{
-		case GeometryBuffer::FramebufferDefault:
+		case GeometryBuffer::GBufferFramebufferType::FramebufferDefault:
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 			break;
-		case GeometryBuffer::FramebufferGeometry:
+		case GeometryBuffer::GBufferFramebufferType::FramebufferGeometry:
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_FBO);
 			break;
 		}
@@ -130,10 +115,10 @@ public:
 	{
 		switch(p_framebufferType)
 		{
-		case GeometryBuffer::FramebufferDefault:
+		case GeometryBuffer::GBufferFramebufferType::FramebufferDefault:
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 			break;
-		case GeometryBuffer::FramebufferGeometry:
+		case GeometryBuffer::GBufferFramebufferType::FramebufferGeometry:
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO);
 			break;
 		}
@@ -156,29 +141,59 @@ public:
 	{
 		return GL_COLOR_ATTACHMENT0 + p_buffer;
 	}
+	inline GLuint getBufferTextureHandle(GBufferTextureType p_bufferTextureType) const
+	{
+		switch(p_bufferTextureType)
+		{
+		case GBufferTextureType::GBufferPosition:
+			return m_GBTextures[p_bufferTextureType];
+			break;
+		case GBufferTextureType::GBufferDiffuse:
+			return m_GBTextures[p_bufferTextureType];
+			break;
+		case GBufferTextureType::GBufferNormal:
+			return m_GBTextures[p_bufferTextureType];
+			break;
+		case GBufferTextureType::GBufferEmissive:
+			return m_GBTextures[p_bufferTextureType];
+			break;
+		case GBufferTextureType::GBufferMatProperties:
+			return m_GBTextures[p_bufferTextureType];
+			break;
+		case GBufferTextureType::GBufferFinal:
+			return m_finalBuffer;
+			break;
+		case GBufferTextureType::GBufferIntermediate:
+			return m_intermediateBuffer;
+			break;
+		default:
+			return 0;
+			break;
+		}
+	}
 
 protected:
 	inline void bindBufferToImageUnit(const GBufferTextureType p_buffer, const int p_imageUnitIndex, const int p_mipLevel, const GLenum p_access)
 	{
 		switch(p_buffer)
 		{
-		case GeometryBuffer::GBufferPosition:
+		case GBufferTextureType::GBufferPosition:
 			glBindImageTexture(p_imageUnitIndex, m_GBTextures[p_buffer], p_mipLevel, GL_FALSE, 0, p_access, Config::FramebfrVariables().gl_position_buffer_internal_format);
-		case GeometryBuffer::GBufferDiffuse:
+		case GBufferTextureType::GBufferDiffuse:
 			glBindImageTexture(p_imageUnitIndex, m_GBTextures[p_buffer], p_mipLevel, GL_FALSE, 0, p_access, Config::FramebfrVariables().gl_diffuse_buffer_internal_format);
-		case GeometryBuffer::GBufferNormal:
+		case GBufferTextureType::GBufferNormal:
 			glBindImageTexture(p_imageUnitIndex, m_GBTextures[p_buffer], p_mipLevel, GL_FALSE, 0, p_access, Config::FramebfrVariables().gl_normal_buffer_internal_format);
-		case GeometryBuffer::GBufferEmissive:
+		case GBufferTextureType::GBufferEmissive:
 			glBindImageTexture(p_imageUnitIndex, m_GBTextures[p_buffer], p_mipLevel, GL_FALSE, 0, p_access, Config::FramebfrVariables().gl_emissive_buffer_internal_format);
 			break;
-		case GeometryBuffer::GBufferMatProperties:
+		case GBufferTextureType::GBufferMatProperties:
 			glBindImageTexture(p_imageUnitIndex, m_GBTextures[p_buffer], p_mipLevel, GL_FALSE, 0, p_access, Config::FramebfrVariables().gl_mat_properties_buffer_internal_format);
 			break;
-		case GeometryBuffer::GBufferFinal:
+		case GBufferTextureType::GBufferFinal:
 			glBindTextureUnit(0, m_finalBuffer);
 			glBindImageTexture(p_imageUnitIndex, m_finalBuffer, p_mipLevel, GL_FALSE, 0, p_access, Config::FramebfrVariables().gl_final_buffer_internal_format);
 			break;
-		case GeometryBuffer::GBufferIntermediate:
+		case GBufferTextureType::GBufferIntermediate:
 			glBindImageTexture(p_imageUnitIndex, m_intermediateBuffer, p_mipLevel, GL_FALSE, 0, p_access, Config::FramebfrVariables().gl_blur_buffer_internal_format);
 			break;
 		}

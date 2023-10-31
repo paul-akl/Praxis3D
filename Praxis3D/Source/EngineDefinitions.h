@@ -13,3 +13,8 @@
 #define okCancelButtonAlignement 1.0f
 #define okButtonWidth 100.0f
 #define cancelButtonWidth 100.0f
+#define IMGUI_DEFINE_MATH_OPERATORS
+
+// Physics Collision Event Component array sizes
+#define NUM_DYNAMIC_COLLISION_EVENTS 10u
+#define NUM_STATIC_COLLISION_EVENTS 20u

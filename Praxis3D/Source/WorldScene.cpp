@@ -36,6 +36,8 @@ ErrorCode WorldScene::setup(const PropertySet &p_properties)
 	}
 
 	// Reserve every component type that belongs to this scene
+	reserve<MetadataComponent>(Config::objectPoolVar().spatial_component_default_pool_size);
+	reserve<ObjectMaterialComponent>(Config::objectPoolVar().spatial_component_default_pool_size);
 	reserve<SpatialComponent>(Config::objectPoolVar().spatial_component_default_pool_size);
 
 	return ErrorCode::Success;
@@ -73,6 +75,9 @@ EntityID WorldScene::createEntity(const ComponentsConstructionInfo &p_constructi
 	}
 	else // Do not request a specific entity ID if the requested ID is null
 		newEntity = addEntity();
+
+	// Create the metadata component by passing all of the construction info
+	createComponent(newEntity, p_constructionInfo, p_startLoading);
 
 	// Add WORLD components
 	std::vector<SystemObject*> worldComponents = createComponents(newEntity, p_constructionInfo.m_worldComponents, p_startLoading);
@@ -158,6 +163,9 @@ std::vector<SystemObject*> WorldScene::createComponents(const EntityID p_entityI
 	if(p_constructionInfo.m_spatialConstructionInfo != nullptr)
 		components.push_back(createComponent(p_entityID, *p_constructionInfo.m_spatialConstructionInfo, p_startLoading));
 
+	if(p_constructionInfo.m_objectMaterialConstructionInfo != nullptr)
+		components.push_back(createComponent(p_entityID, *p_constructionInfo.m_objectMaterialConstructionInfo, p_startLoading));
+
 	return components;
 }
 
@@ -167,6 +175,11 @@ ErrorCode WorldScene::destroyObject(SystemObject *p_systemObject)
 
 	switch(p_systemObject->getObjectType())
 	{
+	case Properties::PropertyID::ObjectMaterialComponent:
+		//m_sceneLoader->getChangeController()->removeObjectLink(p_systemObject);
+		removeComponent<ObjectMaterialComponent>(p_systemObject->getEntityID());
+		break;
+
 	case Properties::PropertyID::SpatialComponent:
 		//m_sceneLoader->getChangeController()->removeObjectLink(p_systemObject);
 		removeComponent<SpatialComponent>(p_systemObject->getEntityID());
@@ -180,4 +193,17 @@ ErrorCode WorldScene::destroyObject(SystemObject *p_systemObject)
 
 	// If this point is reached, 
 	return returnError;
+}
+
+SystemObject *WorldScene::createComponent(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
+{
+	MetadataComponent *metadataComponent = nullptr;
+
+	metadataComponent = &addComponent<MetadataComponent>(p_entityID, this, p_constructionInfo.m_name, p_entityID);
+
+	metadataComponent->setParent(p_constructionInfo.m_parent);
+
+	metadataComponent->init();
+
+	return metadataComponent;
 }

@@ -104,7 +104,7 @@ public:
 		glm::uvec2 mipmapSize = glm::uvec2(imageWidth / 2, imageHeight / 2);
 		unsigned int mipmapLevels = calculateMipmapLevels(imageWidth, imageHeight);
 
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferFinal, GeometryBuffer::GBufferInputTexture);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferFinal, GBufferTextureType::GBufferInputTexture);
 
 		// Bloom downscaling
 		for(unsigned int i = 0; i < mipmapLevels - 1; i++)
@@ -114,7 +114,7 @@ public:
 			m_renderer.m_frameData.m_mipLevel = i;
 
 			// Bind the corresponding mipmap level of the image buffer
-			m_renderer.m_backend.getGeometryBuffer()->bindBufferToImageUnitForWriting(GeometryBuffer::GBufferFinal, 0, i + 1);
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferToImageUnitForWriting(GBufferTextureType::GBufferFinal, 0, i + 1);
 
 			const unsigned int groupX = (unsigned int)glm::ceil(mipmapSize.x / 8.0);
 			const unsigned int groupY = (unsigned int)glm::ceil(mipmapSize.y / 8.0);
@@ -131,7 +131,7 @@ public:
 		glActiveTexture(GL_TEXTURE0 + LensFlareTextureType::LensFlareTextureType_LenseDirt);
 		glBindTexture(GL_TEXTURE_2D, m_lensDirtTexture.getHandle());
 
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferFinal, GeometryBuffer::GBufferInputTexture);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferFinal, GBufferTextureType::GBufferInputTexture);
 
 		// Bloom upscaling
 		for(unsigned int i = mipmapLevels - 1; i >= 1; i--)
@@ -145,7 +145,7 @@ public:
 			m_renderer.m_frameData.m_mipLevel = i;
 
 			// Bind the corresponding mipmap level of the image buffer
-			m_renderer.m_backend.getGeometryBuffer()->bindBufferToImageUnitForWriting(GeometryBuffer::GBufferFinal, 0, i - 1);
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferToImageUnitForWriting(GBufferTextureType::GBufferFinal, 0, i - 1);
 
 			const unsigned int groupX = (unsigned int)glm::ceil(mipmapSize.x / 8.0);
 			const unsigned int groupY = (unsigned int)glm::ceil(mipmapSize.y / 8.0);

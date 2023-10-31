@@ -40,7 +40,7 @@ protected:
 
 	enum CubemapTypes : unsigned int
 	{
-		StaticEnvMap = GeometryBuffer::GBufferTextureType::GBufferNumTextures,
+		StaticEnvMap = GBufferTextureType::GBufferNumTextures,
 		DynamicEnvMap
 	};
 
@@ -67,41 +67,41 @@ public:
 	virtual ~RendererState() { }
 
 	const inline glm::mat4 &getModelMatrix()			const { return m_renderer->m_currentObjectData->m_modelMat;				 }
-	const inline glm::mat4 &getViewMatrix()			const { return m_renderer->m_currentCamera->m_baseObjectData.m_modelMat; }
+	const inline glm::mat4 &getViewMatrix()				const { return m_renderer->m_currentCamera->m_baseObjectData.m_modelMat; }
 	const inline glm::mat4 &getProjectionMatrix()		const { return m_renderer->m_projMatrix;								 }
-	const inline glm::mat4 &getViewProjMatrix()		const { return m_renderer->m_viewProjMatrix;							 }
+	const inline glm::mat4 &getViewProjMatrix()			const { return m_renderer->m_viewProjMatrix;							 }
 	const inline glm::mat4 &getModelViewMatrix()		const { return m_renderer->m_modelViewMatrix;							 }
 	const inline glm::mat4 &getModelViewProjMatrix()	const { return m_renderer->m_modelViewProjMatrix;						 }
 
-	const inline glm::ivec2 getScreenSize()			const { return m_renderer->m_screenSize;								}
+	const inline glm::ivec2 getScreenSize()				const { return m_renderer->m_screenSize;								}
 	const inline float getElapsedTime()					const { return ClockLocator::get().getElapsedSecondsF();				}
 	const inline float getAlphaThreshold()				const { return m_renderer->m_currentObjectData->m_alphaThreshold;		}
 	const inline float getEmissiveThreshold()			const { return m_renderer->m_currentObjectData->m_emissiveThreshold;	}
 	const inline float getHeightScale()					const { return m_renderer->m_currentObjectData->m_heightScale;			}
 	const inline float getTextureTilingFactor()			const { return m_renderer->m_currentObjectData->m_textureTilingFactor;	}
 
-	const virtual glm::vec3 &getDirLightColor()		const { return m_emptyVec; }
-	const virtual glm::vec3 &getDirLightDirection()	const { return m_emptyVec; }
+	const virtual glm::vec3 &getDirLightColor()			const { return m_emptyVec; }
+	const virtual glm::vec3 &getDirLightDirection()		const { return m_emptyVec; }
 	const virtual float getDirLightintensity()			const { return 1.0f; }
 	const virtual unsigned int getNumPointLights()		const { return 0; }
 	const virtual unsigned int getNumSpotLights()		const { return 0; }
 
-	const inline glm::vec3 &getCameraPosition()		const { return m_renderer->m_currentCamera->m_baseObjectData.m_position; }
+	const inline glm::vec3 &getCameraPosition()			const { return m_renderer->m_currentCamera->m_baseObjectData.m_position; }
 	const inline glm::vec2 &getCameraAngle()			const { return m_renderer->m_currentCamera->m_cameraAngle;				 }
 	const inline glm::vec3 &getCameraTarget()			const { return m_renderer->m_currentCamera->m_baseObjectData.m_rotation; }
-	const inline glm::vec3 &getCameraRightVec()		const { return m_emptyVec; } // Unused
+	const inline glm::vec3 &getCameraRightVec()			const { return m_emptyVec; } // Unused
 	const inline glm::vec3 &getCameraUpVec()			const { return m_emptyVec; } // Unused
 
 	const virtual glm::vec3 getFogColor()				const { return m_emptyVec; }
 	const virtual float getFogDensity()					const { return 0.0f; }
 
-	const unsigned int getBlurMapPosition()				const { return GeometryBuffer::GBufferTextureType::GBufferIntermediate;			 }
-	const unsigned int getDiffuseMapPosition()			const { return GeometryBuffer::GBufferTextureType::GBufferDiffuse;		 }
-	const unsigned int getEmissiveMapPosition()			const { return GeometryBuffer::GBufferTextureType::GBufferEmissive;		 }
-	const unsigned int getMatPropertiesMapPosition()	const { return GeometryBuffer::GBufferTextureType::GBufferMatProperties; }
-	const unsigned int getNormalMapPosition()			const { return GeometryBuffer::GBufferTextureType::GBufferNormal;		 }
-	const unsigned int getPositionMapPosition()			const { return GeometryBuffer::GBufferTextureType::GBufferPosition;		 }
-	const unsigned int getFinalMapPosition()			const { return GeometryBuffer::GBufferTextureType::GBufferFinal;		 }
+	const unsigned int getBlurMapPosition()				const { return GBufferTextureType::GBufferIntermediate;	 }
+	const unsigned int getDiffuseMapPosition()			const { return GBufferTextureType::GBufferDiffuse;		 }
+	const unsigned int getEmissiveMapPosition()			const { return GBufferTextureType::GBufferEmissive;		 }
+	const unsigned int getMatPropertiesMapPosition()	const { return GBufferTextureType::GBufferMatProperties; }
+	const unsigned int getNormalMapPosition()			const { return GBufferTextureType::GBufferNormal;		 }
+	const unsigned int getPositionMapPosition()			const { return GBufferTextureType::GBufferPosition;		 }
+	const unsigned int getFinalMapPosition()			const { return GBufferTextureType::GBufferFinal;		 }
 
 	const inline unsigned int getDiffuseTexturePos()	const { return Renderer::TextureTypes::DiffuseTexture;		}
 	const inline unsigned int getEmissiveTexturePos()	const { return Renderer::TextureTypes::EmissiveTexture;		}
@@ -112,7 +112,7 @@ public:
 	const inline unsigned int getStaticEnvMapPos()	const { return Renderer::CubemapTypes::StaticEnvMap;	}
 
 	const virtual glm::mat4 getTestMat()	const { return m_emptyMatrix;	}
-	const virtual glm::vec4 getTestVec()	const { return glm::vec4();	}
+	const virtual glm::vec4 getTestVec()	const { return glm::vec4();		}
 	const virtual float getTestFloat()		const { return 0.0f;			}
 
 private:

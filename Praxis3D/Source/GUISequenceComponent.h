@@ -42,8 +42,7 @@ public:
 		for(decltype(m_guiSequence.size()) i = 0, size = m_guiSequence.size(); i < size; i++)
 			m_guiSequence[i]();
 
-		if(!m_staticSequence)
-			m_guiSequence.clear();
+		clearSequence();
 	}
 
 	ErrorCode importObject(const PropertySet &p_properties) final override
@@ -127,9 +126,13 @@ public:
 			m_guiSequence = p_subject->getFunctors(this, Systems::Changes::GUI::Sequence);
 	}
 
+	void clearSequence()
+	{
+		if(!m_staticSequence)
+			m_guiSequence.clear();
+	}
+
 private:
-	// GUI data
-	//GUIDataManager m_GUIData;
 	Functors m_guiSequence;
 
 	bool m_staticSequence;

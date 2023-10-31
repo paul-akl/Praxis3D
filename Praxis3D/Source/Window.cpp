@@ -197,7 +197,6 @@ void Window::handleSDLEvent(const SDL_Event &p_SDLEvent)
 			
 			if(!Config::windowVar().fullscreen || Config::windowVar().fullscreen_borderless)
 			{
-
 				Config::setGraphicsVar().current_resolution_x = p_SDLEvent.window.data1;
 				Config::setGraphicsVar().current_resolution_y = p_SDLEvent.window.data2;
 				

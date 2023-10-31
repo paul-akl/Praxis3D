@@ -1,11 +1,6 @@
 #include "Math.h"
 
-/*namespace Math
-{
-
-}*/
-
-const glm::mat4 Math::createTransformMat(const glm::vec3 &p_position, const glm::vec3 &p_rotation, const glm::vec3 &p_scale)
+const glm::mat4 Math::createTransformMat(const glm::vec3 &p_position, const glm::vec3 &p_rotation, const glm::vec3 &p_scale) noexcept
 {
 	glm::mat4 returnMatrix(1.0f);
 

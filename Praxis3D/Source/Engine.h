@@ -2,6 +2,7 @@
 
 #include "Clock.h"
 #include "Config.h"
+#include "EditorState.h"
 #include "ErrorCodes.h"
 #include "ErrorHandlerLocator.h"
 #include "GUIHandlerLocator.h"
@@ -38,6 +39,10 @@ private:
 
 		case EngineStateType_Play:
 			m_currentState = &m_playstate;
+			break;
+
+		case EngineStateType_Editor:
+			m_currentState = &m_editorState;
 			break;
 
 		default:
@@ -83,6 +88,7 @@ private:
 	// Different execution states
 	MainMenuState m_mainMenuState;
 	PlayState m_playstate;
+	EditorState m_editorState;
 
 	// Various required services
 	ErrorHandler *m_errorHandler;

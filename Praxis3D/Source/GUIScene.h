@@ -1,10 +1,12 @@
 #pragma once
 
+#include "EditorWindow.h"
 #include "GUIObject.h"
 #include "GUITask.h"
 #include "ObjectPool.h"
 #include "System.h"
 
+class EditorWindow;
 class GUISystem;
 struct ComponentsConstructionInfo;
 
@@ -103,7 +105,7 @@ public:
 
 	void changeOccurred(ObservedSubject* p_subject, BitMask p_changeType) { }
 
-	void receiveData(const DataType p_dataType, void *p_data);
+	void receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving);
 
 	SystemTask *getSystemTask() { return m_GUITask; };
 	Systems::TypeID getSystemType() { return Systems::TypeID::GUI; };
@@ -111,6 +113,10 @@ public:
 	BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
 
 private:
+	inline void setGUISequenceEnabled(const bool p_GUISequenceEnabled) { m_GUISequenceEnabled = p_GUISequenceEnabled; }
+
 	GUITask *m_GUITask;
 	std::queue<FileBrowserDialog*> m_fileBrowserDialogs;
+	EditorWindow *m_editorWindow;
+	bool m_GUISequenceEnabled;
 };

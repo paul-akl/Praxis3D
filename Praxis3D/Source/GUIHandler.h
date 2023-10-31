@@ -97,6 +97,10 @@ protected:
 		ImGui::CreateContext();
 		m_io = &ImGui::GetIO(); //(void)m_io;
 
+		// Enable docking if it is set in the config
+		if(Config::GUIVar().gui_docking_enabled)
+			m_io->ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
 		// Setup Dear ImGui style
 		if(Config::GUIVar().gui_dark_style)
 			ImGui::StyleColorsDark();
@@ -140,6 +144,10 @@ protected:
 
 		// Begin new GUI frame (prepares frame to receive new GUI calls)
 		ImGui::NewFrame();
+
+		// If docking is enabled, set the whole main viewport as a docking area
+		if(Config::GUIVar().gui_docking_enabled)
+			ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 	}
 
 	void render();

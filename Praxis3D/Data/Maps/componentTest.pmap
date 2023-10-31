@@ -67,6 +67,10 @@
 			"Parent": "0",
 			"World":
 			{
+				"ObjectMaterialComponent":
+				{
+					"Type": "Rock"
+				},
 				"SpatialComponent":
 				{
 					"LocalPosition": "0.0f, 0.5f, 0.0f",
@@ -135,8 +139,28 @@
 			"Name": "Cube 1",
 			"Parent": "0",
 			"Prefab": "cubeMetalPaintedChips.prefab",
+			"Audio":
+			{
+				"ImpactSoundComponent":
+				{
+					"Type" : "Box"
+				},
+				"SoundComponent":
+				{
+					"Filename": "Spinning out.wav",
+					"Type": "Music",
+					"Loop": "true",
+					"Spatialized": "true",
+					"StartPlaying": "true",
+					"Volume": "0.0f"
+				}
+			},
 			"World":
 			{
+				"ObjectMaterialComponent":
+				{
+					"Type": "Metal"
+				},
 				"SpatialComponent":
 				{
 					"LocalPosition": "0.0f, 30.0f, 0.0f",
@@ -151,6 +175,10 @@
 			"Prefab": "cubeMetalPaintedChips.prefab",
 			"World":
 			{
+				"ObjectMaterialComponent":
+				{
+					"Type": "Wood"
+				},
 				"SpatialComponent":
 				{
 					"LocalPosition": "3.0f, 3.0f, 0.0f",
@@ -271,6 +299,13 @@
 			"ID": "10",
 			"Name": "Camera 1",
 			"Parent": "0",
+			"Audio":
+			{
+				"SoundListenerComponent":
+				{
+					"ID": "0"
+				}
+			},
 			"World":
 			{
 				"SpatialComponent":
@@ -414,6 +449,21 @@
 	"LoadInBackground": "0",
 	"Systems":
 	{
+		"Audio":
+		{
+			"Scene":
+			{
+				"Banks":
+				[
+					{
+						"Filename": "Impact.bank"
+					},
+					{
+						"Filename": "Impacts_extended.bank"
+					}
+				]
+			}
+		},
 		"Graphics":
 		{
 			"Scene":

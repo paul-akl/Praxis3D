@@ -13,6 +13,9 @@ function init ()
 	create(Types.Conditional, 'playButtonPressed')
 	create(Types.Conditional, 'playButtonHover')
 	
+	create(Types.Conditional, 'editorButtonPressed')
+	create(Types.Conditional, 'editorButtonHover')
+	
 	create(Types.Conditional, 'optionsButtonPressed')
 	create(Types.Conditional, 'optionsButtonHover')
 	
@@ -39,6 +42,15 @@ function init ()
 	buttonPlayPressedTexture = loadTexture2D('buttons\\button_play_1.png')
 	buttonPlayPressedTexture:loadToMemory()
 	buttonPlayPressedTexture:loadToVideoMemory()
+	
+	-- Editor button textures
+	buttonEditorTexture = loadTexture2D('buttons\\button_editor_0.png')
+	buttonEditorTexture:loadToMemory()
+	buttonEditorTexture:loadToVideoMemory()
+	
+	buttonEditorPressedTexture = loadTexture2D('buttons\\button_editor_1.png')
+	buttonEditorPressedTexture:loadToMemory()
+	buttonEditorPressedTexture:loadToVideoMemory()
 	
 	-- Options button textures
 	buttonOptionsTexture = loadTexture2D('buttons\\button_options_0.png')
@@ -192,8 +204,19 @@ function update (p_deltaTime)
 	GUI.IsItemHovered(optionsButtonHover)
 	GUI.End()
 	
-	-- Draw the PLAY button
+	-- Draw the EDIT button
 	GUI.SetNextWindowPos(buttonPositionX - buttonHalfSizeX, buttonPositionY - buttonHalfSizeY - ((buttonSpacing + buttonSizeY) * 3))
+	GUI.Begin('EDITOR BTN', bitwiseOr(ImGuiWindowFlags.NoDecoration, ImGuiWindowFlags.NoMove, ImGuiWindowFlags.NoSavedSettings, ImGuiWindowFlags.NoBackground))
+	if editorButtonHover:isChecked() then
+		GUI.ImageButton(buttonEditorPressedTexture, editorButtonPressed)
+	else
+		GUI.ImageButton(buttonEditorTexture, editorButtonPressed)
+	end
+	GUI.IsItemHovered(editorButtonHover)
+	GUI.End()
+	
+	-- Draw the PLAY button
+	GUI.SetNextWindowPos(buttonPositionX - buttonHalfSizeX, buttonPositionY - buttonHalfSizeY - ((buttonSpacing + buttonSizeY) * 4))
 	GUI.Begin('PLAY BTN', bitwiseOr(ImGuiWindowFlags.NoDecoration, ImGuiWindowFlags.NoMove, ImGuiWindowFlags.NoSavedSettings, ImGuiWindowFlags.NoBackground))
 	if playButtonHover:isChecked() then
 		GUI.ImageButton(buttonPlayPressedTexture, playButtonPressed)
@@ -204,7 +227,7 @@ function update (p_deltaTime)
 	GUI.End()
 	
 	-- Draw the LOAD MAP button
-	GUI.SetNextWindowPos(buttonPositionX - buttonHalfSizeX, buttonPositionY - buttonHalfSizeY - ((buttonSpacing + buttonSizeY) * 4))
+	GUI.SetNextWindowPos(buttonPositionX - buttonHalfSizeX, buttonPositionY - buttonHalfSizeY - ((buttonSpacing + buttonSizeY) * 5))
 	GUI.Begin('LOAD BTN', bitwiseOr(ImGuiWindowFlags.NoDecoration, ImGuiWindowFlags.NoMove, ImGuiWindowFlags.NoSavedSettings, ImGuiWindowFlags.NoBackground))
 	if loadButtonHover:isChecked() then
 		GUI.ImageButton(buttonLoadPressedTexture, loadButtonPressed)
@@ -234,6 +257,12 @@ function update (p_deltaTime)
 	-- Check if the OPTIONS button is pressed
 	if optionsButtonPressed:isChecked() then
 		print('OPTIONS')
+	end
+	
+	-- Check if the EDITOR button is pressed; change the current engine state to EDITOR, if it is
+	if editorButtonPressed:isChecked() then
+		setEngineState(EngineStateType.Editor)
+		--setMouseCapture(true)
 	end
 	
 	-- Check if the PLAY button is pressed; change the current engine state to PLAY, if it is

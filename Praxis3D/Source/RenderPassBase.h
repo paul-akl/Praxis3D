@@ -9,20 +9,23 @@ struct RenderPassData
 {
 	RenderPassData()
 	{
-		m_colorInputMap = GeometryBuffer::GBufferDiffuse;
-		m_colorOutputMap = GeometryBuffer::GBufferFinal;
-		m_emissiveInputMap = GeometryBuffer::GBufferEmissive;
+		m_colorInputMap = GBufferTextureType::GBufferDiffuse;
+		m_colorOutputMap = GBufferTextureType::GBufferFinal;
+		m_emissiveInputMap = GBufferTextureType::GBufferEmissive;
 
-		m_blurInputMap = GeometryBuffer::GBufferEmissive;
-		m_blurOutputMap = GeometryBuffer::GBufferEmissive;
-		m_blurBlendingMap = GeometryBuffer::GBufferFinal;
+		m_blurInputMap = GBufferTextureType::GBufferEmissive;
+		m_blurOutputMap = GBufferTextureType::GBufferEmissive;
+		m_blurBlendingMap = GBufferTextureType::GBufferFinal;
 
-		m_intermediateMap = GeometryBuffer::GBufferIntermediate;
+		m_intermediateMap = GBufferTextureType::GBufferIntermediate;
+
+		m_GUIPassFunctorSequence = nullptr;
 
 		m_numOfBlurPasses = 1;
 
 		m_atmScatDoSkyPass = true;
 		m_blurDoBlending = false;
+		m_renderFinalToTexture = false;
 	}
 
 	inline void swapColorInputOutputMaps()
@@ -33,35 +36,48 @@ struct RenderPassData
 	}
 
 	// Setters
-	inline void setColorInputMap(GeometryBuffer::GBufferTextureType p_inputColorMap)		{ m_colorInputMap = p_inputColorMap;		}
-	inline void setColorOutputMap(GeometryBuffer::GBufferTextureType p_outputColorMap)		{ m_colorOutputMap = p_outputColorMap;		}
-	inline void setEmissiveInputMap(GeometryBuffer::GBufferTextureType p_emissiveInputMap)	{ m_emissiveInputMap = p_emissiveInputMap;	}
-	inline void setBlurInputMap(GeometryBuffer::GBufferTextureType p_blurInputMap)			{ m_blurInputMap = p_blurInputMap;			}
-	inline void setBlurOutputMap(GeometryBuffer::GBufferTextureType p_blurOutputMap)		{ m_blurOutputMap = p_blurOutputMap;		}
-	inline void setBlurBlendingMap(GeometryBuffer::GBufferTextureType p_blurBlendingMap)	{ m_blurBlendingMap = p_blurBlendingMap;	}
-	inline void setIntermediateMap(GeometryBuffer::GBufferTextureType p_intermediateMap)	{ m_intermediateMap = p_intermediateMap;	}
+	inline void setColorInputMap(GBufferTextureType p_inputColorMap)			{ m_colorInputMap = p_inputColorMap;			}
+	inline void setColorOutputMap(GBufferTextureType p_outputColorMap)			{ m_colorOutputMap = p_outputColorMap;			}
+	inline void setEmissiveInputMap(GBufferTextureType p_emissiveInputMap)		{ m_emissiveInputMap = p_emissiveInputMap;		}
+	inline void setBlurInputMap(GBufferTextureType p_blurInputMap)				{ m_blurInputMap = p_blurInputMap;				}
+	inline void setBlurOutputMap(GBufferTextureType p_blurOutputMap)			{ m_blurOutputMap = p_blurOutputMap;			}
+	inline void setBlurBlendingMap(GBufferTextureType p_blurBlendingMap)		{ m_blurBlendingMap = p_blurBlendingMap;		}
+	inline void setIntermediateMap(GBufferTextureType p_intermediateMap)		{ m_intermediateMap = p_intermediateMap;		}
+	inline void setRenderFinalToTexture(const bool p_renderToTexture)			{ m_renderFinalToTexture = p_renderToTexture;	}
+	inline void setGUIPassFunctorSequence(FunctorSequence *p_functorSequence)	{ m_GUIPassFunctorSequence = p_functorSequence; }
 
 	// Getters
-	const inline GeometryBuffer::GBufferTextureType getColorInputMap() const	{ return m_colorInputMap;		}
-	const inline GeometryBuffer::GBufferTextureType getColorOutputMap() const	{ return m_colorOutputMap;		}
-	const inline GeometryBuffer::GBufferTextureType getEmissiveInputMap() const { return m_emissiveInputMap;	}
-	const inline GeometryBuffer::GBufferTextureType getBlurInputMap() const		{ return m_blurInputMap;		}
-	const inline GeometryBuffer::GBufferTextureType getBlurOutputMap() const	{ return m_blurOutputMap;		}
-	const inline GeometryBuffer::GBufferTextureType getBlurBlendingMap() const	{ return m_blurBlendingMap;		}
-	const inline GeometryBuffer::GBufferTextureType getIntermediateMap() const	{ return m_intermediateMap;		}
+	const inline GBufferTextureType getColorInputMap() const	{ return m_colorInputMap;			}
+	const inline GBufferTextureType getColorOutputMap() const	{ return m_colorOutputMap;			}
+	const inline GBufferTextureType getEmissiveInputMap() const { return m_emissiveInputMap;		}
+	const inline GBufferTextureType getBlurInputMap() const		{ return m_blurInputMap;			}
+	const inline GBufferTextureType getBlurOutputMap() const	{ return m_blurOutputMap;			}
+	const inline GBufferTextureType getBlurBlendingMap() const	{ return m_blurBlendingMap;			}
+	const inline GBufferTextureType getIntermediateMap() const	{ return m_intermediateMap;			}
+	const inline bool getRenderFinalToTexture() const			{ return m_renderFinalToTexture;	}
+	inline FunctorSequence *getGUIPassFunctorSequence() 
+	{ 
+		FunctorSequence *returnFunctorSequence = m_GUIPassFunctorSequence;
+		m_GUIPassFunctorSequence = nullptr; 
+		return returnFunctorSequence;
+	}
 
 	// Remember which color maps to write to and read from, in different rendering passes.
-	GeometryBuffer::GBufferTextureType	m_colorInputMap,
-										m_colorOutputMap,
-										m_emissiveInputMap,
-										m_blurInputMap,
-										m_blurOutputMap,
-										m_blurBlendingMap,
-										m_intermediateMap;
+	GBufferTextureType	m_colorInputMap,
+						m_colorOutputMap,
+						m_emissiveInputMap,
+						m_blurInputMap,
+						m_blurOutputMap,
+						m_blurBlendingMap,
+						m_intermediateMap;
+
+	// Used to pass GUI calls to the GUI pass that require to be called from the main (graphics) thread
+	FunctorSequence *m_GUIPassFunctorSequence;
 
 	unsigned int m_numOfBlurPasses;
 	bool m_atmScatDoSkyPass;
 	bool m_blurDoBlending;
+	bool m_renderFinalToTexture;
 };
 
 class RenderPass

@@ -37,6 +37,28 @@ public:
 		if(!GUIHandlerLocator::get().getFrameReadyFlag().test())
 			GUIHandlerLocator::get().getFrameReadyFlag().wait(false);
 
+		// Work through the GUI functor sequence after the GUI frame is ready, so that the GUI isn't called multiple times simultaneously
+
+		// Get GUI functor sequence
+		auto GUIFunctorSequence = p_renderPassData.getGUIPassFunctorSequence();
+
+		// Check if the sequence is present
+		if(GUIFunctorSequence != nullptr)
+		{
+			// Get the functors
+			const Functors &GUISequence = GUIFunctorSequence->getFunctors();
+
+			// Go over each functor and call the function stored in it
+			for(decltype(GUISequence.size()) i = 0, size = GUISequence.size(); i < size; i++)
+				GUISequence[i]();
+
+			// Clear the sequence after all the functions have been called
+			GUIFunctorSequence->clear();
+		}
+
+		// Set the default framebuffer to be drawn to
+		m_renderer.m_backend.getGeometryBuffer()->bindFramebufferForWriting(GeometryBuffer::FramebufferDefault);
+
 		// Render the GUI
 		GUIHandlerLocator::get().render();
 	}

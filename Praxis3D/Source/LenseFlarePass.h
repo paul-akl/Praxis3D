@@ -45,8 +45,8 @@ public:
 		
 		// Set buffer values
 		m_diffuseAndOutputBuffers.resize(2);
-		m_diffuseAndOutputBuffers[0] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(GeometryBuffer::GBufferDiffuse);
-		m_diffuseAndOutputBuffers[1] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(GeometryBuffer::GBufferFinal);
+		m_diffuseAndOutputBuffers[0] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(GBufferTextureType::GBufferDiffuse);
+		m_diffuseAndOutputBuffers[1] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(GBufferTextureType::GBufferFinal);
 
 		// Create a property-set used to load blur vertical shaders
 		PropertySet shaderProperties(Properties::Shaders);
@@ -112,12 +112,12 @@ public:
 		m_diffuseAndOutputBuffers[1] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(p_renderPassData.getColorOutputMap());
 
 		// Bind input color texture for reading so it can be accessed in the shaders
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GeometryBuffer::GBufferInputTexture);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GBufferTextureType::GBufferInputTexture);
 		//m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GeometryBuffer::GBufferEmissive, GeometryBuffer::GBufferEmissive);
 		
 		// Bind textures for writing
 		//m_renderer.m_backend.getGeometryBuffer()->bindBuffersForWriting(m_diffuseAndOutputBuffers);
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GeometryBuffer::GBufferDiffuse);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GBufferTextureType::GBufferDiffuse);
 
 		// Bind lens flare textures
 		glActiveTexture(GL_TEXTURE0 + LensFlareTextureType::LensFlareTextureType_GhostGradient);
@@ -127,8 +127,8 @@ public:
 		m_renderer.queueForDrawing(m_lenseFlareShader->getShaderHandle(), m_lenseFlareShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
 		m_renderer.passScreenSpaceDrawCommandsToBackend();
 
-		p_renderPassData.setBlurInputMap(GeometryBuffer::GBufferDiffuse);
-		p_renderPassData.setBlurOutputMap(GeometryBuffer::GBufferDiffuse);
+		p_renderPassData.setBlurInputMap(GBufferTextureType::GBufferDiffuse);
+		p_renderPassData.setBlurOutputMap(GBufferTextureType::GBufferDiffuse);
 		p_renderPassData.setIntermediateMap(p_renderPassData.getColorOutputMap());
 		p_renderPassData.m_blurDoBlending = false;
 		p_renderPassData.m_numOfBlurPasses = Config::graphicsVar().lens_flare_blur_passes;

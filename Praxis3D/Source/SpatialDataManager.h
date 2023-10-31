@@ -208,6 +208,9 @@ public:
 			}
 		}
 		
+		if(CheckBitmask(p_changeType, Systems::Changes::Spatial::Velocity))
+			setVelocity(p_subject.getVec3(&m_parent, Systems::Changes::Spatial::Velocity));
+
 		// Update the world-space data if any changes have been made
 		if(localOrWorldTransformChanged)
 		{
@@ -234,6 +237,9 @@ public:
 	// Get world-space transform (combination of the local-space and the parent objects world-space)
 	const inline glm::mat4 &getWorldTransform() const { return m_worldTransform; }
 
+	// Get the current velocity
+	const inline glm::vec3 &getVelocity() const { return m_velocity; }
+
 	const inline glm::quat &getQuaternion(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		if(CheckBitmask(p_changedBits, Systems::Changes::Spatial::LocalRotation))
@@ -253,6 +259,9 @@ public:
 
 		case Systems::Changes::Spatial::LocalScale:
 			return m_localSpace.m_spatialData.m_scale;
+
+		case Systems::Changes::Spatial::Velocity:
+			return m_velocity;
 		}
 
 		return NullObjects::NullVec3f;
@@ -444,6 +453,7 @@ public:
 		if(m_trackLocalChanges)
 			m_changes |= Systems::Changes::Spatial::AllLocal;
 	}
+	const inline void setVelocity(const glm::vec3 &p_velocity) { m_velocity = p_velocity; }
 
 	// Set (world) transform of the parent object, that gets multiplied by the local transform to get world transform
 	const inline void setParentTransform(const glm::mat4 &p_transform)
@@ -511,6 +521,8 @@ private:
 	glm::mat4 m_worldTransform;
 	// A local transform matrix constructed without scaling it
 	mutable glm::mat4 m_localTransformNoScale;
+	// Current velocity vector
+	glm::vec3 m_velocity;
 
 	// Used for update tracking; each time data is change, update count is incremented
 	UpdateCount m_updateCount;

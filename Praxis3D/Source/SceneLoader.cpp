@@ -22,6 +22,7 @@ SceneLoader::~SceneLoader()
 ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 {
 	ErrorCode returnError = ErrorCode::Success;
+	m_filename = p_filename;
 
 	EntitiesConstructionInfo constructionInfo;
 
@@ -464,6 +465,18 @@ void SceneLoader::importFromProperties(AudioComponentsConstructionInfo &p_constr
 				}
 			}
 			break;
+
+			case Properties::PropertyID::SoundListenerComponent:
+			{
+				if(p_constructionInfo.m_soundListenerConstructionInfo == nullptr)
+					p_constructionInfo.m_soundListenerConstructionInfo = new SoundListenerComponent::SoundListenerComponentConstructionInfo();
+
+				p_constructionInfo.m_soundListenerConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::SoundListenerComponent);
+
+				p_properties.getValueByID(Properties::PropertyID::ID, p_constructionInfo.m_soundListenerConstructionInfo->m_listenerID);
+				p_properties.getValueByID(Properties::PropertyID::Active, p_constructionInfo.m_soundListenerConstructionInfo->m_active);
+			}
+			break;
 		}
 	}
 }
@@ -842,6 +855,64 @@ void SceneLoader::importFromProperties(WorldComponentsConstructionInfo &p_constr
 	{
 		switch(p_properties.getPropertyID())
 		{
+		case Properties::PropertyID::ObjectMaterialComponent:
+			{
+				if(p_constructionInfo.m_objectMaterialConstructionInfo == nullptr)
+					p_constructionInfo.m_objectMaterialConstructionInfo = new ObjectMaterialComponent::ObjectMaterialComponentConstructionInfo();
+
+				p_constructionInfo.m_objectMaterialConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::ObjectMaterialComponent);
+
+				// Get the type property representing the object material type
+				auto const &typeProperty = p_properties.getPropertyByID(Properties::Type);
+
+				// Check if the property exists
+				if(typeProperty)
+				{
+					// Define the type based on the imported property
+					switch(typeProperty.getID())
+					{
+					case Properties::Concrete:
+					default:
+						p_constructionInfo.m_objectMaterialConstructionInfo->m_materialType = ObjectMaterialType::Concrete;
+						break;
+
+					case Properties::Glass:
+						p_constructionInfo.m_objectMaterialConstructionInfo->m_materialType = ObjectMaterialType::Glass;
+					break;
+
+					case Properties::Metal:
+						p_constructionInfo.m_objectMaterialConstructionInfo->m_materialType = ObjectMaterialType::Metal;
+						break;
+
+					case Properties::Plastic:
+						p_constructionInfo.m_objectMaterialConstructionInfo->m_materialType = ObjectMaterialType::Plastic;
+						break;
+
+					case Properties::Rock:
+						p_constructionInfo.m_objectMaterialConstructionInfo->m_materialType = ObjectMaterialType::Rock;
+						break;
+
+					case Properties::Rubber:
+						p_constructionInfo.m_objectMaterialConstructionInfo->m_materialType = ObjectMaterialType::Rubber;
+						break;
+
+					case Properties::Wood:
+						p_constructionInfo.m_objectMaterialConstructionInfo->m_materialType = ObjectMaterialType::Wood;
+						break;
+
+						// If this is reached, the object material type was not valid
+						ErrHandlerLoc().get().log(ErrorCode::Property_missing_type, p_name, ErrorSource::Source_ObjectMaterialComponent);
+						break;
+					}
+				}
+				else
+				{
+					// Missing the Type property entirely
+					ErrHandlerLoc().get().log(ErrorCode::Property_missing_type, p_name, ErrorSource::Source_ObjectMaterialComponent);
+				}
+			}
+			break;
+
 			case Properties::PropertyID::SpatialComponent:
 			{
 				if(p_constructionInfo.m_spatialConstructionInfo == nullptr)

@@ -110,6 +110,7 @@ ErrorCode GeometryBuffer::init()
 		glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
 		glTexImage2D(GL_TEXTURE_2D, 0, Config::FramebfrVariables().gl_final_buffer_internal_format, m_bufferWidth, m_bufferHeight, 0, 
 					 Config::FramebfrVariables().gl_final_buffer_texture_format, Config::FramebfrVariables().gl_final_buffer_texture_type, NULL);
+
 		// If HDR bloom is enabled, buffer should use a different min_filter (to support mipmapping)
 		if(Config::graphicsVar().bloom_enabled)
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Config::FramebfrVariables().gl_final_buffer_min_filter_HDR);
@@ -119,9 +120,10 @@ ErrorCode GeometryBuffer::init()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, Config::FramebfrVariables().gl_buffers_wrap_s_method);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, Config::FramebfrVariables().gl_buffers_wrap_t_method);
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GBufferFinal, GL_TEXTURE_2D, m_finalBuffer, 0);
+
 		// If HDR bloom is enabled, create mip maps for the final buffer
 		if(Config::graphicsVar().bloom_enabled)
-			generateMipmap(GeometryBuffer::GBufferFinal);
+			generateMipmap(GBufferTextureType::GBufferFinal);
 
 		// Check for errors and return an error in case of one
 		m_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -151,22 +153,24 @@ void GeometryBuffer::setBufferSize(unsigned int p_bufferWidth, unsigned int p_bu
 			glTexImage2D(GL_TEXTURE_2D, 0, m_internalFormats[i], m_bufferWidth, m_bufferHeight, 0, m_textureFormats[i], m_textureTypes[i], NULL);
 		}
 
+		// Create depth buffer
+		glBindTexture(GL_TEXTURE_2D, m_depthBuffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, Config::FramebfrVariables().gl_depth_buffer_internal_format, m_bufferWidth, m_bufferHeight, 0,
+			Config::FramebfrVariables().gl_depth_buffer_texture_format, Config::FramebfrVariables().gl_depth_buffer_texture_type, NULL);
+
 		// Create the intermediate buffer, that acts as an intermediate buffer between vertical and horizontal blur passes
 		glBindTexture(GL_TEXTURE_2D, m_intermediateBuffer);
 		glTexImage2D(GL_TEXTURE_2D, 0, Config::FramebfrVariables().gl_blur_buffer_internal_format, m_bufferWidth, m_bufferHeight, 0,
 			Config::FramebfrVariables().gl_blur_buffer_texture_format, Config::FramebfrVariables().gl_blur_buffer_texture_type, NULL);
 
-		// Create the final buffer, that gets renderred to the screen
+		// Create the final buffer, that gets rendered to the screen
 		glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
 		glTexImage2D(GL_TEXTURE_2D, 0, Config::FramebfrVariables().gl_final_buffer_internal_format, m_bufferWidth, m_bufferHeight, 0,
 			Config::FramebfrVariables().gl_final_buffer_texture_format, Config::FramebfrVariables().gl_final_buffer_texture_type, NULL);
-		
-		// Create depth buffer
-		glBindTexture(GL_TEXTURE_2D, m_depthBuffer);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_bufferWidth, m_bufferHeight, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
-		glTexImage2D(GL_TEXTURE_2D, 0, Config::FramebfrVariables().gl_depth_buffer_internal_format, m_bufferWidth, m_bufferHeight, 0,
-			Config::FramebfrVariables().gl_depth_buffer_texture_format, Config::FramebfrVariables().gl_depth_buffer_texture_type, NULL);
 
+		// If HDR bloom is enabled, create mip maps for the final buffer
+		if(Config::graphicsVar().bloom_enabled)
+			generateMipmap(GBufferTextureType::GBufferFinal);
 	}
 }
 void GeometryBuffer::setBufferSize(GLuint p_buffer, unsigned int p_bufferWidth, unsigned int p_bufferHeight)

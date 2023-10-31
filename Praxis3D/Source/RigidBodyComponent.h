@@ -49,7 +49,7 @@ public:
 	}
 	~RigidBodyComponent()
 	{
-
+		delete static_cast<EntityID*>(m_rigidBody->getUserPointer());
 	}
 	ErrorCode init() final override
 	{

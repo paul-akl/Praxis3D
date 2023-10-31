@@ -58,10 +58,15 @@ public:
 
 	ErrorCode init();
 
+	void setGUIPassFunctorSequence(FunctorSequence *p_GUIPassFunctorSequence);
+	void setRenderFinalToTexture(const bool p_renderToTexture);
+	void setRenderToTextureResolution(const glm::ivec2 p_renderToTextureResolution);
 	void setRenderingPasses(const RenderingPasses &p_renderingPasses);
 
 	// Renders a complete frame
 	void renderFrame(SceneObjects &p_sceneObjects, const float p_deltaTime);
+
+	unsigned int getFramebufferTextureHandle(GBufferTextureType p_bufferType) const;
 	
 protected:
 	inline void queueForDrawing(const ModelData &p_modelData, const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_modelMatrix, const glm::mat4 &p_viewProjMatrix)

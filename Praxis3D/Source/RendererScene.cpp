@@ -560,15 +560,38 @@ void RendererScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeT
 	//std::cout << "change occurred" << std::endl;
 }
 
-void RendererScene::receiveData(const DataType p_dataType, void *p_data)
+void RendererScene::receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving)
 {
 	switch(p_dataType)
 	{
+	case DataType_GUIPassFunctors:
+		m_renderTask->m_renderer.setGUIPassFunctorSequence(static_cast<FunctorSequence *>(p_data));
+		break;
+
+	case DataType_RenderToTexture:
+		m_renderTask->m_renderer.setRenderFinalToTexture(static_cast<bool>(p_data));
+		break;
+
+	case DataType_RenderToTextureResolution:
+		{
+			auto renderToTextureResolution = static_cast<glm::ivec2 *>(p_data);
+			m_renderTask->m_renderer.setRenderToTextureResolution(*renderToTextureResolution);
+
+			// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
+			if(p_deleteAfterReceiving)
+				delete renderToTextureResolution;
+		}
+		break;
+
 	case DataType_Texture2D:
 		{
 			TextureLoader2D::Texture2DHandle *textureHandle = static_cast<TextureLoader2D::Texture2DHandle *>(p_data);
 			if(textureHandle->isLoadedToMemory())
 				m_sceneObjects.m_loadToVideoMemory.emplace_back(*textureHandle);
+
+			// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
+			if(p_deleteAfterReceiving)
+				delete textureHandle;
 		}
 		break;
 
@@ -576,6 +599,35 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data)
 
 		break;
 	}
+}
+
+const unsigned int RendererScene::getUnsignedInt(const Observer *p_observer, BitMask p_changedBits) const
+{
+	if(CheckBitmask(p_changedBits, Systems::Changes::Graphics::RenderToTextureBuffer))
+		return m_renderTask->m_renderer.getFramebufferTextureHandle(static_cast<GBufferTextureType>(Config::rendererVar().render_to_texture_buffer));
+
+	if(CheckBitmask(p_changedBits, Systems::Changes::Graphics::PositionBuffer))
+		return m_renderTask->m_renderer.getFramebufferTextureHandle(GBufferTextureType::GBufferPosition);
+
+	if(CheckBitmask(p_changedBits, Systems::Changes::Graphics::DiffuseBuffer))
+		return m_renderTask->m_renderer.getFramebufferTextureHandle(GBufferTextureType::GBufferDiffuse);
+
+	if(CheckBitmask(p_changedBits, Systems::Changes::Graphics::NormalBuffer))
+		return m_renderTask->m_renderer.getFramebufferTextureHandle(GBufferTextureType::GBufferNormal);
+
+	if(CheckBitmask(p_changedBits, Systems::Changes::Graphics::EmissiveBuffer))
+		return m_renderTask->m_renderer.getFramebufferTextureHandle(GBufferTextureType::GBufferEmissive);
+
+	if(CheckBitmask(p_changedBits, Systems::Changes::Graphics::MatPropertiesBuffer))
+		return m_renderTask->m_renderer.getFramebufferTextureHandle(GBufferTextureType::GBufferMatProperties);
+
+	if(CheckBitmask(p_changedBits, Systems::Changes::Graphics::IntermediateBuffer))
+		return m_renderTask->m_renderer.getFramebufferTextureHandle(GBufferTextureType::GBufferIntermediate);
+
+	if(CheckBitmask(p_changedBits, Systems::Changes::Graphics::FinalBuffer))
+		return m_renderTask->m_renderer.getFramebufferTextureHandle(GBufferTextureType::GBufferFinal);
+
+	return NullObjects::NullUnsignedInt;
 }
 
 MaterialData RendererScene::loadMaterialData(PropertySet &p_materialProperty, Model::MaterialArrays &p_materialArraysFromModel, MaterialType p_materialType, std::size_t p_meshIndex)

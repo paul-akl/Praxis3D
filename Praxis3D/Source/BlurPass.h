@@ -67,7 +67,7 @@ public:
 		//m_renderer.m_backend.getGeometryBuffer()->bindFramebufferForWriting(GeometryBuffer::FramebufferDefault);
 		
 		// Bind emissive texture for reading so it can be accessed in the shaders
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getBlurInputMap(), GeometryBuffer::GBufferInputTexture);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getBlurInputMap(), GBufferTextureType::GBufferInputTexture);
 
 		// Bind blur texture for writing to, so it can be used as an intermediate buffer between blur passes
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getIntermediateMap());
@@ -79,7 +79,7 @@ public:
 		for(decltype(p_renderPassData.m_numOfBlurPasses) i = 0; i < p_renderPassData.m_numOfBlurPasses; i++)
 		{
 			// Bind intermediate blur texture for reading so it can be accessed in the shaders
-			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getIntermediateMap(), GeometryBuffer::GBufferInputTexture);
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getIntermediateMap(), GBufferTextureType::GBufferInputTexture);
 
 			// Bind emissive texture for writing to, so the second pass populates it with the final blur result
 			m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getBlurInputMap());
@@ -89,7 +89,7 @@ public:
 			m_renderer.passScreenSpaceDrawCommandsToBackend();
 
 			// Bind emissive texture for reading so it can be accessed in the shaders
-			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getBlurInputMap(), GeometryBuffer::GBufferInputTexture);
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getBlurInputMap(), GBufferTextureType::GBufferInputTexture);
 
 			// Bind blur texture for writing to, so it can be used as an intermediate buffer between blur passes
 			m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getIntermediateMap());
@@ -107,7 +107,7 @@ public:
 		}
 
 		// Bind intermediate blur texture for reading so it can be accessed in the shaders
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getIntermediateMap(), GeometryBuffer::GBufferInputTexture);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getIntermediateMap(), GBufferTextureType::GBufferInputTexture);
 		
 		// Bind emissive texture for writing to, so the second pass populates it with the final blur result
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getBlurOutputMap());

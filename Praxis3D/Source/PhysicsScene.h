@@ -1,6 +1,7 @@
 #pragma once
 
 // TODO: add release and debug libs based on compile configuration
+#ifdef _DEBUG
 #pragma comment(lib, "bullet/Bullet2FileLoader_Debug.lib")
 #pragma comment(lib, "bullet/Bullet3Collision_Debug.lib")
 #pragma comment(lib, "bullet/Bullet3Common_Debug.lib")
@@ -27,9 +28,14 @@
 #pragma comment(lib, "bullet/HACD_Debug.lib")
 #pragma comment(lib, "bullet/LinearMath_Debug.lib")
 #pragma comment(lib, "bullet/OpenGLWindow_Debug.lib")
+#endif
+
+#ifdef _RELEASE
+#endif
 
 #include <bullet3/btBulletDynamicsCommon.h>
 
+#include "CollisionEventComponent.h"
 #include "ObjectPool.h"
 #include "System.h"
 #include "PhysicsObject.h"
@@ -70,7 +76,19 @@ public:
 
 	ErrorCode setup(const PropertySet &p_properties);
 
+	void activate()
+	{
+		s_currentPhysicsScene = this;
+	}
+
 	void update(const float p_deltaTime);
+
+	void internalTickCallback(btDynamicsWorld *p_world, btScalar p_timeStep);
+
+	static void internalTickCallbackProxy(btDynamicsWorld *p_world, btScalar p_timeStep)
+	{
+		s_currentPhysicsScene->internalTickCallback(p_world, p_timeStep);
+	}
 
 	ErrorCode preload();
 
@@ -84,10 +102,15 @@ public:
 		if(p_constructionInfo.m_rigidBodyConstructionInfo != nullptr)
 			components.push_back(createComponent(p_entityID, *p_constructionInfo.m_rigidBodyConstructionInfo, p_startLoading));
 
+		// If any physics components were created, add a Collision Event component as well
+		if(!components.empty())
+			createCollisionEventComponent(p_entityID);
+
 		return components;
 	}
 
 	SystemObject *createComponent(const EntityID &p_entityID, const RigidBodyComponent::RigidBodyComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
+	void createCollisionEventComponent(const EntityID &p_entityID);
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
@@ -123,11 +146,6 @@ private:
 		return false;
 	}
 
-	inline void addObjectToWorld(PhysicsObject &p_object)
-	{
-
-	}
-
 	PhysicsTask *m_physicsTask;
 
 	// Collision configuration
@@ -141,4 +159,6 @@ private:
 
 	// An array of all collision shapes
 	btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
+
+	static PhysicsScene *s_currentPhysicsScene;
 };

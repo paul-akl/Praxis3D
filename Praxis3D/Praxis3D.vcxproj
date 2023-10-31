@@ -63,12 +63,12 @@
     <LibraryPath>$(SolutionDir)\VC\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)\VC x64\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\VC x64\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Dependencies\include\;$(SolutionDir)Dependencies\include\Lua\;$(SolutionDir)Dependencies\include\imgui\;$(SolutionDir)Dependencies\include\sdl\;$(SolutionDir)Dependencies\include\bullet3\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Dependencies\$(Platform)\$(Configuration)\lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)\Builds\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)Dependencies\include\;$(SolutionDir)Dependencies\include\Lua\;$(SolutionDir)Dependencies\include\imgui\;$(SolutionDir)Dependencies\include\sdl\;$(SolutionDir)Dependencies\include\bullet3\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Dependencies\include\;$(SolutionDir)Dependencies\include\Lua\;$(SolutionDir)Dependencies\include\imgui\;$(SolutionDir)Dependencies\include\sdl\;$(SolutionDir)Dependencies\include\bullet3\;$(SolutionDir)Dependencies\include\imgui_tex_inspect\;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Dependencies\$(Platform)\$(Configuration)\lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)Builds\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
@@ -99,6 +99,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <PreprocessorDefinitions>NOMINMAX;_RELEASE;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;CUSTOM_IMGUIFILEDIALOG_CONFIG="..\\..\\..\\Praxis3D\Source\EngineDefinitions.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -136,6 +137,8 @@
     <ClCompile Include="..\Dependencies\include\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\Dependencies\include\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\Dependencies\include\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\Dependencies\include\imgui_tex_inspect\imgui_tex_inspect.cpp" />
+    <ClCompile Include="..\Dependencies\include\imgui_tex_inspect\tex_inspect_opengl.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Source\AtmScatteringModel.cpp" />
     <ClCompile Include="Source\AtmScatteringPass.cpp" />
@@ -145,14 +148,18 @@
     <ClCompile Include="Source\BaseGraphicsObjects.cpp" />
     <ClCompile Include="Source\ChangeController.cpp" />
     <ClCompile Include="Source\ClockLocator.cpp" />
+    <ClCompile Include="Source\CommonDefinitions.cpp" />
     <ClCompile Include="Source\Config.cpp" />
     <ClCompile Include="Source\ConfigLoader.cpp" />
     <ClCompile Include="Source\DeferredRenderer.cpp" />
+    <ClCompile Include="Source\EditorState.cpp" />
+    <ClCompile Include="Source\EditorWindow.cpp" />
     <ClCompile Include="Source\Engine.cpp" />
     <ClCompile Include="Source\EngineState.cpp" />
     <ClCompile Include="Source\ErrorCodes.cpp" />
     <ClCompile Include="Source\ErrorHandler.cpp" />
     <ClCompile Include="Source\ErrorHandlerLocator.cpp" />
+    <ClCompile Include="Source\FmodErrorCodes.cpp" />
     <ClCompile Include="Source\GeometryBuffer.cpp" />
     <ClCompile Include="Source\GUIHandler.cpp" />
     <ClCompile Include="Source\GUIHandlerLocator.cpp" />
@@ -209,6 +216,9 @@
     <ClInclude Include="..\Dependencies\include\imgui\imconfig.h" />
     <ClInclude Include="..\Dependencies\include\imgui\imgui.h" />
     <ClInclude Include="..\Dependencies\include\imgui\imgui_internal.h" />
+    <ClInclude Include="..\Dependencies\include\imgui_tex_inspect\imgui_tex_inspect.h" />
+    <ClInclude Include="..\Dependencies\include\imgui_tex_inspect\imgui_tex_inspect_internal.h" />
+    <ClInclude Include="..\Dependencies\include\imgui_tex_inspect\tex_inspect_opengl.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="resource1.h" />
     <ClInclude Include="Source\AtmScatteringConstants.h" />
@@ -232,6 +242,7 @@
     <ClInclude Include="Source\ChangeController.h" />
     <ClInclude Include="Source\Clock.h" />
     <ClInclude Include="Source\ClockLocator.h" />
+    <ClInclude Include="Source\CollisionEventComponent.h" />
     <ClInclude Include="Source\CollisionShapeComponent.h" />
     <ClInclude Include="Source\CommandBuffer.h" />
     <ClInclude Include="Source\CommonDefinitions.h" />
@@ -243,6 +254,8 @@
     <ClInclude Include="Source\DebugRotateScript.h" />
     <ClInclude Include="Source\DebugUIScript.h" />
     <ClInclude Include="Source\DeferredRenderer.h" />
+    <ClInclude Include="Source\EditorWindow.h" />
+    <ClInclude Include="Source\EditorState.h" />
     <ClInclude Include="Source\Engine.h" />
     <ClInclude Include="Source\EngineDefinitions.h" />
     <ClInclude Include="Source\EngineState.h" />
@@ -254,6 +267,7 @@
     <ClInclude Include="Source\ErrorHandlerLocator.h" />
     <ClInclude Include="Source\Filesystem.h" />
     <ClInclude Include="Source\FinalPass.h" />
+    <ClInclude Include="Source\FmodErrorCodes.h" />
     <ClInclude Include="Source\Framebuffer.h" />
     <ClInclude Include="Source\GameLogicObject.h" />
     <ClInclude Include="Source\GameObject.h" />
@@ -274,6 +288,7 @@
     <ClInclude Include="Source\GUISystem.h" />
     <ClInclude Include="Source\GUITask.h" />
     <ClInclude Include="Source\HdrMappingPass.h" />
+    <ClInclude Include="Source\ImpactSoundComponent.h" />
     <ClInclude Include="Source\InheritanceObjects.h" />
     <ClInclude Include="Source\Input.h" />
     <ClInclude Include="Source\KeyCommand.h" />
@@ -288,6 +303,8 @@
     <ClInclude Include="Source\LuaScript.h" />
     <ClInclude Include="Source\LuminancePass.h" />
     <ClInclude Include="Source\MainMenuState.h" />
+    <ClInclude Include="Source\MetadataComponent.h" />
+    <ClInclude Include="Source\ObjectMaterialComponent.h" />
     <ClInclude Include="Source\Math.h" />
     <ClInclude Include="Source\ModelComponent.h" />
     <ClInclude Include="Source\ModelLoader.h" />
@@ -332,6 +349,7 @@
     <ClInclude Include="Source\ShaderUniformUpdater.h" />
     <ClInclude Include="Source\SkyPass.h" />
     <ClInclude Include="Source\SolarTimeScript.h" />
+    <ClInclude Include="Source\SoundListenerComponent.h" />
     <ClInclude Include="Source\SpatialComponent.h" />
     <ClInclude Include="Source\SpatialDataManager.h" />
     <ClInclude Include="Source\SpinWait.h" />

@@ -2,6 +2,8 @@
 
 #include "EntityViewDefinitions.h"
 #include "GameObject.h"
+#include "MetadataComponent.h"
+#include "ObjectMaterialComponent.h"
 #include "ObjectPool.h"
 #include "ObjectRegister.h"
 #include "System.h"
@@ -15,21 +17,29 @@ struct WorldComponentsConstructionInfo
 	WorldComponentsConstructionInfo()
 	{
 		m_spatialConstructionInfo = nullptr;
+		m_objectMaterialConstructionInfo = nullptr;
 	}
 
 	// Perform a complete copy, instantiating (with new) every member variable pointer, instead of just assigning the pointer to the same memory
 	void completeCopy(const WorldComponentsConstructionInfo &p_other)
 	{
 		Utilities::performCopy<SpatialComponent::SpatialComponentConstructionInfo>(&m_spatialConstructionInfo, &p_other.m_spatialConstructionInfo);
+		Utilities::performCopy<ObjectMaterialComponent::ObjectMaterialComponentConstructionInfo>(&m_objectMaterialConstructionInfo, &p_other.m_objectMaterialConstructionInfo);
 	}
 
 	void deleteConstructionInfo()
 	{
 		if(m_spatialConstructionInfo != nullptr)
 			delete m_spatialConstructionInfo;
+		m_spatialConstructionInfo = nullptr;
+
+		if(m_objectMaterialConstructionInfo != nullptr)
+			delete m_objectMaterialConstructionInfo;
+		m_objectMaterialConstructionInfo = nullptr;
 	}
 
 	SpatialComponent::SpatialComponentConstructionInfo *m_spatialConstructionInfo;
+	ObjectMaterialComponent::ObjectMaterialComponentConstructionInfo *m_objectMaterialConstructionInfo;
 };
 
 class WorldScene : public SystemScene
@@ -52,6 +62,21 @@ public:
 	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const WorldComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 	ErrorCode destroyObject(SystemObject *p_systemObject);
+
+	SystemObject *createComponent(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
+
+	SystemObject *createComponent(const EntityID p_entityID, const ObjectMaterialComponent::ObjectMaterialComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true)
+	{
+		ObjectMaterialComponent *objectMaterialComponent = nullptr;
+
+		objectMaterialComponent = &addComponent<ObjectMaterialComponent>(p_entityID, this, p_constructionInfo.m_name, p_entityID);
+
+		objectMaterialComponent->m_materialType = p_constructionInfo.m_materialType;
+
+		objectMaterialComponent->init();
+
+		return objectMaterialComponent;
+	}
 
 	SystemObject *createComponent(const EntityID p_entityID, const SpatialComponent::SpatialComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true)
 	{

@@ -28,10 +28,17 @@ enum DataType : uint32_t
 {
 	DataType_Null = 0,
 	// Graphics
+	DataType_GUIPassFunctors,
+	DataType_RenderToTexture,
+	DataType_RenderToTextureResolution,
 	DataType_Texture2D,
 	DataType_Texture3D,
 	// GUI
-	DataType_FileBrowserDialog
+	DataType_EnableGUISequence,
+	DataType_EditorWindow,
+	DataType_FileBrowserDialog,
+	// Scripting
+	DataType_EnableLuaScripting
 };
 
 namespace Systems
@@ -94,6 +101,31 @@ namespace Systems
 		static constexpr BitMask None		= (BitMask)1 << 0;
 		static constexpr BitMask Lua		= (BitMask)1 << 1;
 	}
+	namespace AllComponentTypes
+	{
+		static constexpr BitMask None							= (BitMask)1 << 0;
+
+		static constexpr BitMask AudioImpactSoundComponent		= (BitMask)1 << 1;
+		static constexpr BitMask AudioSoundComponent			= (BitMask)1 << 2;
+		static constexpr BitMask AudioSoundListenerComponent	= (BitMask)1 << 3;
+
+		static constexpr BitMask GUISequenceComponent			= (BitMask)1 << 4;
+
+		static constexpr BitMask GraphicsCameraComponent		= (BitMask)1 << 5;
+		static constexpr BitMask GraphicsLightingComponent		= (BitMask)1 << 6;
+		static constexpr BitMask GraphicsModelComponent			= (BitMask)1 << 7;
+		static constexpr BitMask GraphicsShaderComponent		= (BitMask)1 << 8;
+
+		static constexpr BitMask PhysicsCollisionEventComponent = (BitMask)1 << 9;
+		static constexpr BitMask PhysicsCollisionShapeComponent = (BitMask)1 << 10;
+		static constexpr BitMask PhysicsRigidBodyComponent		= (BitMask)1 << 11;
+
+		static constexpr BitMask ScriptingLuaComponent			= (BitMask)1 << 12;
+
+		static constexpr BitMask WorldMetadataComponent			= (BitMask)1 << 13;
+		static constexpr BitMask WorldObjectMaterialComponent	= (BitMask)1 << 14;
+		static constexpr BitMask WorldSpatialComponent			= (BitMask)1 << 15;
+	}
 	namespace Changes
 	{
 		namespace Common
@@ -155,8 +187,10 @@ namespace Systems
 			static constexpr BitMask WorldTransform			= Changes::Type::Spatial + Changes::Common::Shared9;
 			static constexpr BitMask WorldTransformNoScale	= Changes::Type::Spatial + Changes::Common::Shared10;
 
-			static constexpr BitMask AllLocalNoTransform	= LocalPosition | LocalRotation | LocalScale;
-			static constexpr BitMask AllWorldNoTransform	= WorldPosition | WorldRotation | WorldScale;
+			static constexpr BitMask Velocity				= Changes::Type::Spatial + Changes::Common::Shared11;
+
+			static constexpr BitMask AllLocalNoTransform	= LocalPosition | LocalRotation | LocalScale | Velocity;
+			static constexpr BitMask AllWorldNoTransform	= WorldPosition | WorldRotation | WorldScale | Velocity;
 			static constexpr BitMask AllLocal				= AllLocalNoTransform | LocalTransform | LocalTransformNoScale;
 			static constexpr BitMask AllWorld				= AllWorldNoTransform | WorldTransform | WorldTransformNoScale;
 			static constexpr BitMask All					= AllLocal | AllWorld;
@@ -169,6 +203,7 @@ namespace Systems
 		{
 			static constexpr BitMask Lighting				= Changes::Type::Graphics + Changes::Common::Shared21;
 			static constexpr BitMask Camera					= Changes::Type::Graphics + Changes::Common::Shared20;
+			static constexpr BitMask Framebuffers			= Changes::Type::Graphics + Changes::Common::Shared19;
 
 			static constexpr BitMask Target					= Changes::Type::Graphics + Changes::Graphics::Camera + Changes::Common::Shared1;
 			static constexpr BitMask UpVector				= Changes::Type::Graphics + Changes::Graphics::Camera + Changes::Common::Shared2;
@@ -181,7 +216,17 @@ namespace Systems
 			static constexpr BitMask Intensity				= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared7;
 			static constexpr BitMask AllLighting			= LightEnabled | Color | CutoffAngle | Direction | Intensity;
 
-			static constexpr BitMask All					= AllCamera | AllLighting;
+			static constexpr BitMask PositionBuffer			= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared8;
+			static constexpr BitMask DiffuseBuffer			= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared9;
+			static constexpr BitMask NormalBuffer			= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared10;
+			static constexpr BitMask EmissiveBuffer			= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared11;
+			static constexpr BitMask MatPropertiesBuffer	= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared12;
+			static constexpr BitMask IntermediateBuffer		= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared13;
+			static constexpr BitMask FinalBuffer			= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared14;
+			static constexpr BitMask RenderToTextureBuffer	= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared15;
+			static constexpr BitMask AllBuffers				= PositionBuffer | DiffuseBuffer | NormalBuffer | EmissiveBuffer | MatPropertiesBuffer | IntermediateBuffer | FinalBuffer | RenderToTextureBuffer;
+
+			static constexpr BitMask All					= AllCamera | AllLighting | AllBuffers;
 		}
 		namespace GUI
 		{
@@ -211,6 +256,7 @@ namespace Properties
 	#define PROPERTYID(Code) \
 	Code(Null, = 0) \
 	/* General */ \
+	Code(Active,) \
 	Code(ArrayEntry,) \
 	Code(Components,) \
 	Code(Default,) \
@@ -230,10 +276,12 @@ namespace Properties
 	/* Audio */ \
 	Code(Ambient,) \
 	Code(Audio,) \
+	Code(Banks,) \
 	Code(Loop,) \
 	Code(Music,) \
 	Code(SoundComponent,) \
 	Code(SoundEffect,) \
+	Code(SoundListenerComponent,) \
 	Code(Spatialized,) \
 	Code(StartPlaying,) \
 	Code(Volume,) \
@@ -318,6 +366,7 @@ namespace Properties
 	Code(LuminanceRenderPass,) \
 	Code(FinalRenderPass,) \
 	/* GUI */ \
+	Code(EditorWindow,) \
 	Code(GUI,) \
 	Code(GUIObject,) \
 	Code(GUISequenceComponent,) \
@@ -408,11 +457,20 @@ namespace Properties
 	Code(WindowTitle,) \
 	/* World */ \
 	Code(Children,) \
+	Code(Concrete,) \
 	Code(GameObject,) \
+	Code(Glass,) \
 	Code(ID,) \
+	Code(MetadataComponent,) \
+	Code(Metal,) \
+	Code(ObjectMaterialComponent,) \
 	Code(Parent,) \
+	Code(Plastic,) \
 	Code(Prefab,) \
+	Code(Rock,) \
+	Code(Rubber,) \
 	Code(SpatialComponent,) \
+	Code(Wood,) \
 	Code(World,) \
 	/* End of property IDs */ \
 	Code(NumberOfPropertyIDs,) 
@@ -469,6 +527,8 @@ class Config
 	// These friend classes are the only objects allowed to modify config variables:
 	friend class DebugUIScript;
 	friend class DeferredRenderer;
+	friend class EditorState;
+	friend class EditorWindow;
 	friend class ErrorHandler;
 	friend class LuaScript;
 	friend class RendererFrontend;
@@ -478,9 +538,23 @@ public:
 	{
 		AudioVariables()
 		{
+			impact_max_volume_threshold = 200.0f;
+			impact_soft_hard_threshold = 30.0f;
+			max_impact_volume = 2.0f;
 			num_audio_channels = 32;
+			default_sound_bank = "Master.bank";
+			default_sound_bank_string = "Master.strings.bank";
+			default_impact_sound_bank = "Impact.bank";
+			pathDelimiter = ":/";
 		}
+		float impact_max_volume_threshold;
+		float impact_soft_hard_threshold;
+		float max_impact_volume;
 		int num_audio_channels;
+		std::string default_sound_bank;
+		std::string default_sound_bank_string;
+		std::string default_impact_sound_bank;
+		std::string pathDelimiter;
 	};
 	struct ComponentVariables
 	{
@@ -531,6 +605,7 @@ public:
 			task_scheduler_clock_frequency = 120;
 			running = true;
 			loadingState = true;
+			editorState = false;
 			engineState = EngineStateType::EngineStateType_MainMenu;
 		}
 
@@ -549,6 +624,7 @@ public:
 		int task_scheduler_clock_frequency;
 		bool running;
 		bool loadingState;
+		bool editorState;
 		EngineStateType engineState;
 	};
 	struct FramebfrVariables
@@ -691,6 +767,8 @@ public:
 			multisample_samples = 1;
 			rendering_res_x = 1600;
 			rendering_res_y = 900;
+			render_to_texture_resolution_x = 1600;
+			render_to_texture_resolution_y = 900;
 			tonemap_method = 6;
 			alpha_threshold = 0.0f;
 			bloom_intensity = 1.0f;
@@ -750,6 +828,8 @@ public:
 		int multisample_samples;
 		int rendering_res_x;
 		int rendering_res_y;
+		int render_to_texture_resolution_x;
+		int render_to_texture_resolution_y;
 		int tonemap_method;
 		float alpha_threshold;
 		float bloom_intensity;
@@ -792,6 +872,7 @@ public:
 	{
 		GUIVariables()
 		{
+			gui_docking_enabled = true;
 			gui_render = true;
 			gui_dark_style = true;
 			gui_sequence_array_reserve_size = 50;
@@ -800,7 +881,14 @@ public:
 			gui_file_dialog_dir_color_R = 0.905f;
 			gui_file_dialog_dir_color_G = 0.623f;
 			gui_file_dialog_dir_color_B = 0.314f;
+			editor_button_gui_sequence_texture = "buttons\\button_gui_sequence_1.png";
+			editor_button_pause_texture = "buttons\\button_editor_pause_1.png";
+			editor_button_play_texture = "buttons\\button_editor_play_1.png";
+			editor_button_restart_texture = "buttons\\button_editor_restart_1.png";
+			editor_button_scripting_enabled_texture = "buttons\\button_scripting_1.png";
+			gui_editor_window_name = "Editor window";
 		}
+		bool gui_docking_enabled;
 		bool gui_render;
 		bool gui_dark_style;
 		int gui_sequence_array_reserve_size;
@@ -809,6 +897,12 @@ public:
 		float gui_file_dialog_dir_color_R;
 		float gui_file_dialog_dir_color_G;
 		float gui_file_dialog_dir_color_B;
+		std::string editor_button_gui_sequence_texture;
+		std::string editor_button_pause_texture;
+		std::string editor_button_play_texture;
+		std::string editor_button_restart_texture;
+		std::string editor_button_scripting_enabled_texture;
+		std::string gui_editor_window_name;
 	};
 	struct InputVariables
 	{
@@ -968,6 +1062,16 @@ public:
 		std::string sound_path;
 		std::string texture_path;
 	};
+	struct PhysicsVariables
+	{
+		PhysicsVariables()
+		{
+			applied_impulse_threshold = 20.0f;
+			life_time_threshold = 2;
+		}
+		float applied_impulse_threshold;
+		int life_time_threshold;
+	};
 	struct RendererVariables
 	{
 		RendererVariables()
@@ -1036,6 +1140,7 @@ public:
 			max_num_point_lights = 50;
 			max_num_spot_lights = 10;
 			objects_loaded_per_frame = 1;
+			render_to_texture_buffer = GBufferTextureType::GBufferEmissive;
 			shader_pool_size = 10;
 			depth_test = true;
 			face_culling = true;
@@ -1105,6 +1210,7 @@ public:
 		int max_num_point_lights;
 		int max_num_spot_lights;
 		int objects_loaded_per_frame;
+		int render_to_texture_buffer;
 		int shader_pool_size;
 		bool depth_test;
 		bool face_culling;
@@ -1432,6 +1538,7 @@ public:
 	const inline static ModelVariables		&modelVar()			{ return m_modelVar;		}
 	const inline static ObjectPoolVariables &objectPoolVar()	{ return m_objPoolVar;		}
 	const inline static PathsVariables		&filepathVar()		{ return m_filepathVar;		}
+	const inline static PhysicsVariables	&physicsVar()		{ return m_physicsVar;		}
 	const inline static RendererVariables	&rendererVar()		{ return m_rendererVar;		}
 	const inline static ScriptVariables		&scriptVar()		{ return m_scriptVar;		}
 	const inline static ShaderVariables		&shaderVar()		{ return m_shaderVar;		}
@@ -1465,8 +1572,8 @@ private:
 		}
 		~Variable() { }
 
-		inline bool operator==(const size_t p_mapKey)		 { return (m_mapKey == p_mapKey); }
-		inline bool operator==(const std::string &p_name) { return (m_name == p_name); }
+		inline bool operator==(const size_t p_mapKey)		{ return (m_mapKey == p_mapKey); }
+		inline bool operator==(const std::string &p_name)	{ return (m_name == p_name);	 }
 
 		inline bool valueChanged() { return m_valueChanged; }
 
@@ -1549,6 +1656,7 @@ private:
 	static ModelVariables		m_modelVar;
 	static ObjectPoolVariables	m_objPoolVar;
 	static PathsVariables		m_filepathVar;
+	static PhysicsVariables		m_physicsVar;
 	static RendererVariables	m_rendererVar;
 	static ScriptVariables		m_scriptVar;
 	static ShaderVariables		m_shaderVar;
@@ -1573,6 +1681,7 @@ private:
 	inline static InputVariables		&setInputVar()		{ return m_inputVar;		}
 	inline static ModelVariables		&setModelVar()		{ return m_modelVar;		}
 	inline static PathsVariables		&setFilepathVar()	{ return m_filepathVar;		}
+	inline static PhysicsVariables		&setPhysicsVar()	{ return m_physicsVar;		}
 	inline static RendererVariables		&setRendererVar()	{ return m_rendererVar;		}
 	inline static ScriptVariables		&setScriptVar()		{ return m_scriptVar;		}
 	inline static ShaderVariables		&setShaderVar()		{ return m_shaderVar;		}

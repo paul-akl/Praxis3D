@@ -129,6 +129,7 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_ModelComponent,) \
     Code(Source_ModelLoader,) \
     Code(Source_ObjectDirectory,) \
+    Code(Source_ObjectMaterialComponent,) \
     Code(Source_Physics,) \
     Code(Source_PhysicsObject,) \
     Code(Source_PlayerObject,) \
@@ -147,6 +148,7 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_SkyObject,) \
     Code(Source_SkyPass,) \
     Code(Source_SoundComponent,) \
+    Code(Source_SoundListenerComponent,) \
     Code(Source_TextureLoader,) \
     Code(Source_Window,) \
     Code(Source_World,) \
