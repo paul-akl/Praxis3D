@@ -42,7 +42,7 @@ public:
 		ErrorCode shaderError;
 
 		m_name = "Lense Flare Rendering Pass";
-		
+
 		// Set buffer values
 		m_diffuseAndOutputBuffers.resize(2);
 		m_diffuseAndOutputBuffers[0] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(GBufferTextureType::GBufferDiffuse);
@@ -64,26 +64,29 @@ public:
 			m_renderer.queueForLoading(*m_lenseFlareShader);	// Queue the shader to be loaded to GPU
 		else
 			returnError = shaderError;
-		
+
 		// Set lens flare parameters buffer shader binding index
 		m_lensFlareParamBuffer.m_bindingIndex = UniformBufferBinding_LensFlareParam;
 
 		// Set lens flare parameters buffer size and data
 		m_lensFlareParamBuffer.m_size = sizeof(LensFlareParameters);
-		m_lensFlareParamBuffer.m_data = (void*)(&m_lensFlareParam);
+		m_lensFlareParamBuffer.m_data = (void *)(&m_lensFlareParam);
 
 		// Queue lens flare parameters buffer to be created
 		m_renderer.queueForLoading(m_lensFlareParamBuffer);
 
 		// Create textures for lens flare effect and load them to memory
 		m_lensFlareGhostGradient.loadToMemory();
-		
+
 		// Queue lens flare textures for loading to GPU
 		m_renderer.queueForLoading(m_lensFlareGhostGradient);
-		
+
 		// Check for errors and log either a successful or a failed initialization
 		if(returnError == ErrorCode::Success)
+		{
 			ErrHandlerLoc::get().log(ErrorCode::Initialize_success, ErrorSource::Source_LensFlarePass);
+			setInitialized(true);
+		}
 		else
 			ErrHandlerLoc::get().log(ErrorCode::Initialize_failure, ErrorSource::Source_LensFlarePass);
 

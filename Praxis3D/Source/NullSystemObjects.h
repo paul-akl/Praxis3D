@@ -15,14 +15,14 @@ public:
 
 	ErrorCode setup(const PropertySet &p_properties) { return ErrorCode::Success; }
 
-	//ErrorCode destroyScene(SystemScene *p_systemScene) { return ErrorCode::Success; }
-
 	std::string getName() { return ""; }
 	Systems::TypeID getSystemType() { return Systems::Null; }
 
-	SystemScene *createScene(SceneLoader *p_sceneLoader);
+	SystemScene *createScene(SceneLoader *p_sceneLoader, EngineStateType p_engineState);
 
-	SystemScene *getScene();
+	SystemScene *getScene(EngineStateType p_engineState);
+
+	void deleteScene(EngineStateType p_engineState) { }
 
 	void loadInBackground() { }
 

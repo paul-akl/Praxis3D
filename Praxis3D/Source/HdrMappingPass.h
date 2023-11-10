@@ -58,7 +58,10 @@ public:
 		
 		// Check for errors and log either a successful or a failed initialization
 		if(returnError == ErrorCode::Success)
+		{
 			ErrHandlerLoc::get().log(ErrorCode::Initialize_success, ErrorSource::Source_HdrMappingPass);
+			setInitialized(true);
+		}
 		else
 			ErrHandlerLoc::get().log(ErrorCode::Initialize_failure, ErrorSource::Source_HdrMappingPass);
 

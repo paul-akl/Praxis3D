@@ -25,7 +25,7 @@ RendererFrontend::RendererFrontend() : m_renderPassData(nullptr)
 
 	m_renderingPassesSet = false;
 	for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
-		m_initializedRenderingPasses[i] = nullptr;
+		m_allRenderPasses[i] = nullptr;
 
 	/*/ Set up the order of the rendering passes
 	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Geometry);
@@ -110,8 +110,8 @@ RendererFrontend::~RendererFrontend()
 	for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
 	{
 		// Check if has been created
-		if(m_initializedRenderingPasses[i] != nullptr)
-			delete m_initializedRenderingPasses[i];
+		if(m_allRenderPasses[i] != nullptr)
+			delete m_allRenderPasses[i];
 	}
 
 	delete m_renderPassData;
@@ -174,70 +174,140 @@ void RendererFrontend::setRenderingPasses(const RenderingPasses &p_renderingPass
 	m_renderingPassesSet = true;
 
 	// Make sure the entries of the rendering passes are set to nullptr
-	for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
-	{
-		if(m_initializedRenderingPasses[i] != nullptr)
-			delete m_initializedRenderingPasses[i];
+	//for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
+	//{
+	//	if(m_initializedRenderingPasses[i] != nullptr)
+	//		delete m_initializedRenderingPasses[i];
 
-		m_initializedRenderingPasses[i] = nullptr;
-	}
+	//	m_initializedRenderingPasses[i] = nullptr;
+	//}
+
+	m_activeRenderPasses.clear();
 
 	bool guiRenderPassSet = false;
 
 	// Create rendering passes
+	//for(decltype(p_renderingPasses.size()) i = 0, size = p_renderingPasses.size(); i < size; i++)
+	//{
+	//	switch(p_renderingPasses[i])
+	//	{
+	//	case RenderPassType_Geometry:
+	//		if(m_initializedRenderingPasses[RenderPassType_Geometry] == nullptr)
+	//			m_initializedRenderingPasses[RenderPassType_Geometry] = new GeometryPass(*this);
+	//		break;
+	//	case RenderPassType_Lighting:
+	//		if(m_initializedRenderingPasses[RenderPassType_Lighting] == nullptr)
+	//			m_initializedRenderingPasses[RenderPassType_Lighting] = new LightingPass(*this);
+	//		break;
+	//	case RenderPassType_AtmScattering:
+	//		if(m_initializedRenderingPasses[RenderPassType_AtmScattering] == nullptr)
+	//			m_initializedRenderingPasses[RenderPassType_AtmScattering] = new AtmScatteringPass(*this);
+	//		break;
+	//	case RenderPassType_HdrMapping:
+	//		if(m_initializedRenderingPasses[RenderPassType_HdrMapping] == nullptr)
+	//			m_initializedRenderingPasses[RenderPassType_HdrMapping] = new HdrMappingPass(*this);
+	//		break;
+	//	case RenderPassType_Blur:
+	//		if(m_initializedRenderingPasses[RenderPassType_Blur] == nullptr)
+	//			m_initializedRenderingPasses[RenderPassType_Blur] = new BlurPass(*this);
+	//		break;
+	//	case RenderPassType_Bloom:
+	//		if(m_initializedRenderingPasses[RenderPassType_Bloom] == nullptr)
+	//			m_initializedRenderingPasses[RenderPassType_Bloom] = new BloomPass(*this);
+	//		break;
+	//	case RenderPassType_BloomComposite:
+	//		if(m_initializedRenderingPasses[RenderPassType_BloomComposite] == nullptr)
+	//			m_initializedRenderingPasses[RenderPassType_BloomComposite] = new BloomCompositePass(*this);
+	//		break;
+	//	case RenderPassType_LenseFlare:
+	//		if(m_initializedRenderingPasses[RenderPassType_LenseFlare] == nullptr)
+	//			m_initializedRenderingPasses[RenderPassType_LenseFlare] = new LenseFlarePass(*this);
+	//		break;
+	//	case RenderPassType_LenseFlareComposite:
+	//		if(m_initializedRenderingPasses[RenderPassType_LenseFlareComposite] == nullptr)
+	//			m_initializedRenderingPasses[RenderPassType_LenseFlareComposite] = new LenseFlareCompositePass(*this);
+	//		break;
+	//	case RenderPassType_Luminance:
+	//		if(m_initializedRenderingPasses[RenderPassType_Luminance] == nullptr)
+	//			m_initializedRenderingPasses[RenderPassType_Luminance] = new LuminancePass(*this);
+	//		break;
+	//	case RenderPassType_Final:
+	//		if(m_initializedRenderingPasses[RenderPassType_Final] == nullptr)
+	//			m_initializedRenderingPasses[RenderPassType_Final] = new FinalPass(*this);
+	//		break;
+	//	case RenderPassType_GUI:
+	//		if(m_initializedRenderingPasses[RenderPassType_GUI] == nullptr)
+	//			m_initializedRenderingPasses[RenderPassType_GUI] = new GUIPass(*this);
+	//		guiRenderPassSet = true;
+	//		break;
+	//	}
+	//}
+
 	for(decltype(p_renderingPasses.size()) i = 0, size = p_renderingPasses.size(); i < size; i++)
 	{
 		switch(p_renderingPasses[i])
 		{
-		case RenderPassType_Geometry:
-			if(m_initializedRenderingPasses[RenderPassType_Geometry] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_Geometry] = new GeometryPass(*this);
-			break;
-		case RenderPassType_Lighting:
-			if(m_initializedRenderingPasses[RenderPassType_Lighting] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_Lighting] = new LightingPass(*this);
-			break;
-		case RenderPassType_AtmScattering:
-			if(m_initializedRenderingPasses[RenderPassType_AtmScattering] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_AtmScattering] = new AtmScatteringPass(*this);
-			break;
-		case RenderPassType_HdrMapping:
-			if(m_initializedRenderingPasses[RenderPassType_HdrMapping] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_HdrMapping] = new HdrMappingPass(*this);
-			break;
-		case RenderPassType_Blur:
-			if(m_initializedRenderingPasses[RenderPassType_Blur] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_Blur] = new BlurPass(*this);
-			break;
-		case RenderPassType_Bloom:
-			if(m_initializedRenderingPasses[RenderPassType_Bloom] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_Bloom] = new BloomPass(*this);
-			break;
-		case RenderPassType_BloomComposite:
-			if(m_initializedRenderingPasses[RenderPassType_BloomComposite] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_BloomComposite] = new BloomCompositePass(*this);
-			break;
-		case RenderPassType_LenseFlare:
-			if(m_initializedRenderingPasses[RenderPassType_LenseFlare] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_LenseFlare] = new LenseFlarePass(*this);
-			break;
-		case RenderPassType_LenseFlareComposite:
-			if(m_initializedRenderingPasses[RenderPassType_LenseFlareComposite] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_LenseFlareComposite] = new LenseFlareCompositePass(*this);
-			break;
-		case RenderPassType_Luminance:
-			if(m_initializedRenderingPasses[RenderPassType_Luminance] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_Luminance] = new LuminancePass(*this);
-			break;
-		case RenderPassType_Final:
-			if(m_initializedRenderingPasses[RenderPassType_Final] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_Final] = new FinalPass(*this);
-			break;
-		case RenderPassType_GUI:
-			if(m_initializedRenderingPasses[RenderPassType_GUI] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_GUI] = new GUIPass(*this);
-			guiRenderPassSet = true;
-			break;
+			case RenderPassType_Geometry:
+				if(m_allRenderPasses[RenderPassType_Geometry] == nullptr)
+					m_allRenderPasses[RenderPassType_Geometry] = new GeometryPass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_Geometry]);
+				break;
+			case RenderPassType_Lighting:
+				if(m_allRenderPasses[RenderPassType_Lighting] == nullptr)
+					m_allRenderPasses[RenderPassType_Lighting] = new LightingPass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_Lighting]);
+				break;
+			case RenderPassType_AtmScattering:
+				if(m_allRenderPasses[RenderPassType_AtmScattering] == nullptr)
+					m_allRenderPasses[RenderPassType_AtmScattering] = new AtmScatteringPass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_AtmScattering]);
+				break;
+			case RenderPassType_HdrMapping:
+				if(m_allRenderPasses[RenderPassType_HdrMapping] == nullptr)
+					m_allRenderPasses[RenderPassType_HdrMapping] = new HdrMappingPass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_HdrMapping]);
+				break;
+			case RenderPassType_Blur:
+				if(m_allRenderPasses[RenderPassType_Blur] == nullptr)
+					m_allRenderPasses[RenderPassType_Blur] = new BlurPass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_Blur]);
+				break;
+			case RenderPassType_Bloom:
+				if(m_allRenderPasses[RenderPassType_Bloom] == nullptr)
+					m_allRenderPasses[RenderPassType_Bloom] = new BloomPass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_Bloom]);
+				break;
+			case RenderPassType_BloomComposite:
+				if(m_allRenderPasses[RenderPassType_BloomComposite] == nullptr)
+					m_allRenderPasses[RenderPassType_BloomComposite] = new BloomCompositePass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_BloomComposite]);
+				break;
+			case RenderPassType_LenseFlare:
+				if(m_allRenderPasses[RenderPassType_LenseFlare] == nullptr)
+					m_allRenderPasses[RenderPassType_LenseFlare] = new LenseFlarePass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_LenseFlare]);
+				break;
+			case RenderPassType_LenseFlareComposite:
+				if(m_allRenderPasses[RenderPassType_LenseFlareComposite] == nullptr)
+					m_allRenderPasses[RenderPassType_LenseFlareComposite] = new LenseFlareCompositePass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_LenseFlareComposite]);
+				break;
+			case RenderPassType_Luminance:
+				if(m_allRenderPasses[RenderPassType_Luminance] == nullptr)
+					m_allRenderPasses[RenderPassType_Luminance] = new LuminancePass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_Luminance]);
+				break;
+			case RenderPassType_Final:
+				if(m_allRenderPasses[RenderPassType_Final] == nullptr)
+					m_allRenderPasses[RenderPassType_Final] = new FinalPass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_Final]);
+				break;
+			case RenderPassType_GUI:
+				if(m_allRenderPasses[RenderPassType_GUI] == nullptr)
+					m_allRenderPasses[RenderPassType_GUI] = new GUIPass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_GUI]);
+				guiRenderPassSet = true;
+				break;
 		}
 	}
 
@@ -248,32 +318,48 @@ void RendererFrontend::setRenderingPasses(const RenderingPasses &p_renderingPass
 		if(m_guiRenderWasEnabled)
 			Config::m_GUIVar.gui_render = true;
 
-	// Initialize rendering passes
-	for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
+	for(decltype(m_activeRenderPasses.size()) size = m_activeRenderPasses.size(), i = 0; i < size; i++)
 	{
-		// Check if has been created
-		if(m_initializedRenderingPasses[i] != nullptr)
+		if(!m_activeRenderPasses[i]->isInitialized())
 		{
 			// Initialize the rendering pass and check if it was successful
-			if(m_initializedRenderingPasses[i]->init() != ErrorCode::Success)
+			if(m_activeRenderPasses[i]->init() != ErrorCode::Success)
 			{
 				// Log an error and delete the rendering pass
-				ErrHandlerLoc::get().log(ErrorType::Error, ErrorSource::Source_Renderer, m_initializedRenderingPasses[i]->getName() + " failed to load.");
-				delete m_initializedRenderingPasses[i];
-				m_initializedRenderingPasses[i] = nullptr;
+				ErrHandlerLoc::get().log(ErrorType::Error, ErrorSource::Source_Renderer, m_activeRenderPasses[i]->getName() + " failed to load.");
+				m_activeRenderPasses.erase(m_activeRenderPasses.begin() + i);
+				i--;
 			}
 		}
 	}
 
-	// Reserve the required space for rendering passes array
-	m_renderingPasses.reserve(p_renderingPasses.size());
+	// Initialize rendering passes
+	//for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
+	//{
+	//	// Check if has been created
+	//	if(m_initializedRenderingPasses[i] != nullptr)
+	//	{
+	//		// Initialize the rendering pass and check if it was successful
+	//		if(m_initializedRenderingPasses[i]->init() != ErrorCode::Success)
+	//		{
+	//			// Log an error and delete the rendering pass
+	//			ErrHandlerLoc::get().log(ErrorType::Error, ErrorSource::Source_Renderer, m_initializedRenderingPasses[i]->getName() + " failed to load.");
+	//			delete m_initializedRenderingPasses[i];
+	//			m_initializedRenderingPasses[i] = nullptr;
+	//		}
+	//	}
+	//}
 
-	// Add required rendering passes to the main array
-	for(decltype(p_renderingPasses.size()) i = 0, size = p_renderingPasses.size(); i < size; i++)
-	{
-		if(m_initializedRenderingPasses[p_renderingPasses[i]] != nullptr)
-			m_renderingPasses.push_back(m_initializedRenderingPasses[p_renderingPasses[i]]);
-	}
+	//// Reserve the required space for rendering passes array
+	//m_renderingPasses.clear();
+	//m_renderingPasses.reserve(p_renderingPasses.size());
+
+	//// Add required rendering passes to the main array
+	//for(decltype(p_renderingPasses.size()) i = 0, size = p_renderingPasses.size(); i < size; i++)
+	//{
+	//	if(m_initializedRenderingPasses[p_renderingPasses[i]] != nullptr)
+	//		m_renderingPasses.push_back(m_initializedRenderingPasses[p_renderingPasses[i]]);
+	//}
 
 	//passLoadCommandsToBackend();
 	glViewport(0, 0, m_frameData.m_screenSize.x, m_frameData.m_screenSize.y);
@@ -283,7 +369,7 @@ const RenderingPasses RendererFrontend::getRenderingPasses()
 {
 	RenderingPasses renderPasses;
 
-	for(const auto renderPass : m_renderingPasses)
+	for(const auto renderPass : m_activeRenderPasses)
 	{
 		if(renderPass != nullptr)
 		{
@@ -430,17 +516,13 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 	glDepthFunc(Config::rendererVar().depth_test_func);
 	//glDisable(GL_CULL_FACE);
 
-	for(decltype(m_renderingPasses.size()) i = 0, size = m_renderingPasses.size(); i < size; i++)
+	for(decltype(m_activeRenderPasses.size()) i = 0, size = m_activeRenderPasses.size(); i < size; i++)
 	{
-		m_renderingPasses[i]->update(*m_renderPassData, p_sceneObjects, p_deltaTime);
+		m_activeRenderPasses[i]->update(*m_renderPassData, p_sceneObjects, p_deltaTime);
 	}
 }
 
 unsigned int RendererFrontend::getFramebufferTextureHandle(GBufferTextureType p_bufferType) const
 {
-	//std::cout << "frontend  :" << m_renderPassData->getColorOutputMap() << std::endl;
-
-	//return m_renderPassData->getColorOutputMap();
-
 	return m_backend.getFramebufferTextureHandle(p_bufferType); 
 }

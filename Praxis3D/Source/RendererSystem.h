@@ -13,7 +13,7 @@ public:
 	RendererSystem();
 	~RendererSystem();
 
-	virtual ErrorCode init();
+	ErrorCode init();
 
 	ErrorCode setup(const PropertySet &p_properties);
 
@@ -21,19 +21,26 @@ public:
 
 	//virtual ErrorCode destroyScene(SystemScene *p_systemScene);
 
-	virtual ErrorCode preload();
+	ErrorCode preload();
 	void loadInBackground();
 
 	Systems::TypeID getSystemType() { return Systems::Graphics; }
 
-	virtual SystemScene *createScene(SceneLoader *p_sceneLoader);
+	SystemScene *createScene(SceneLoader *p_sceneLoader, EngineStateType p_engineState);
 
-	virtual SystemScene *getScene();
+	SystemScene *getScene(EngineStateType p_engineState);
+
+	void deleteScene(EngineStateType p_engineState);
 
 	RendererFrontend &getRenderer() { return m_renderer; }
 
+	void setRenderingPasses(const RenderingPasses &p_renderingPasses)
+	{
+		m_renderer.setRenderingPasses(p_renderingPasses);
+	}
+
 protected:
 	RendererFrontend m_renderer;
-	RendererScene *m_rendererScene;
+	RendererScene *m_rendererScenes[EngineStateType::EngineStateType_NumOfTypes];
 };
 

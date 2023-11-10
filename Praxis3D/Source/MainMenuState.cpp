@@ -8,7 +8,7 @@
 #include "RendererSystem.h"
 #include "WorldSystem.h"
 
-MainMenuState::MainMenuState() : EngineState()
+MainMenuState::MainMenuState(Engine &p_engine) : EngineState(p_engine, EngineStateType::EngineStateType_MainMenu)
 {
 }
 

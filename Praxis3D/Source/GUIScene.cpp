@@ -65,6 +65,18 @@ void GUIScene::exportSetup(PropertySet &p_propertySet)
 	objectPoolSizePropertySet.addProperty(Properties::GUISequenceComponent, (int)worldScene->getPoolSize<GUISequenceComponent>());
 }
 
+void GUIScene::activate()
+{
+	if(m_editorWindow != nullptr)
+		m_editorWindow->activate();
+}
+
+void GUIScene::deactivate()
+{
+	if(m_editorWindow != nullptr)
+		m_editorWindow->deactivate();
+}
+
 void GUIScene::update(const float p_deltaTime)
 {
 	if(Config::GUIVar().gui_render)
@@ -220,7 +232,7 @@ void GUIScene::exportComponents(const EntityID p_entityID, GUIComponentsConstruc
 SystemObject *GUIScene::createComponent(const EntityID p_entityID, const GUISequenceComponent::GUISequenceComponentConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {	
 	// If valid type was not specified, or object creation failed, return a null object instead
-	SystemObject *returnObject = g_nullSystemBase.getScene()->getNullObject();
+	SystemObject *returnObject = g_nullSystemBase.getScene(EngineStateType::EngineStateType_Default)->getNullObject();
 
 	// Get the world scene required for attaching components to the entity
 	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
@@ -295,6 +307,8 @@ void GUIScene::receiveData(const DataType p_dataType, void *p_data, const bool p
 			}
 			else // If the editor window does exist, just send the settings to it
 				m_editorWindow->setup(*editorWindowSettings);
+
+			GUIHandlerLocator::get().enableDocking();
 		}
 		else // If the editor should be disabled
 		{

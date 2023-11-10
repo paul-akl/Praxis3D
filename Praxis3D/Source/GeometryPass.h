@@ -33,6 +33,8 @@ public:
 
 			// Log a successful initialization
 			ErrHandlerLoc::get().log(ErrorCode::Initialize_success, ErrorSource::Source_GeometryPass);
+
+			setInitialized(true);
 		}
 		else
 		{

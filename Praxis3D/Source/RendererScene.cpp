@@ -10,8 +10,8 @@
 RendererScene::RendererScene(RendererSystem *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader, Properties::PropertyID::Renderer)
 {
 	m_renderTask = new RenderTask(this, p_system->getRenderer());
-	//m_camera = nullptr;
-	//m_skybox = nullptr;
+	m_renderToTexture = false; 
+	m_renderToTextureResolution = glm::ivec2(Config::graphicsVar().current_resolution_x, Config::graphicsVar().current_resolution_y);
 }
 
 RendererScene::~RendererScene()
@@ -55,6 +55,44 @@ ErrorCode RendererScene::setup(const PropertySet &p_properties)
 	worldScene->reserve<GraphicsLoadToMemoryComponent>(modelComponentPoolSize + shaderComponentPoolSize);
 	worldScene->reserve<GraphicsLoadToVideoMemoryComponent>(modelComponentPoolSize + shaderComponentPoolSize);
 
+	// Load the rendering passes
+	auto &renderPassesProperty = p_properties.getPropertySetByID(Properties::RenderPasses);
+	if(renderPassesProperty)
+	{
+		// Iterate over the property array
+		for(decltype(renderPassesProperty.getNumPropertySets()) objIndex = 0, objSize = renderPassesProperty.getNumPropertySets(); objIndex < objSize; objIndex++)
+		{
+			auto &typeProperty = renderPassesProperty.getPropertySetUnsafe(objIndex).getPropertyByID(Properties::Type);
+			if(typeProperty)
+			{
+				switch(typeProperty.getID())
+				{
+					case Properties::AtmScatteringRenderPass:
+						m_renderingPasses.push_back(RenderPassType::RenderPassType_AtmScattering);
+						break;
+					case Properties::BloomRenderPass:
+						m_renderingPasses.push_back(RenderPassType::RenderPassType_Bloom);
+						break;
+					case Properties::GeometryRenderPass:
+						m_renderingPasses.push_back(RenderPassType::RenderPassType_Geometry);
+						break;
+					case Properties::GUIRenderPass:
+						m_renderingPasses.push_back(RenderPassType::RenderPassType_GUI);
+						break;
+					case Properties::LightingRenderPass:
+						m_renderingPasses.push_back(RenderPassType::RenderPassType_Lighting);
+						break;
+					case Properties::LuminanceRenderPass:
+						m_renderingPasses.push_back(RenderPassType::RenderPassType_Luminance);
+						break;
+					case Properties::FinalRenderPass:
+						m_renderingPasses.push_back(RenderPassType::RenderPassType_Final);
+						break;
+				}
+			}
+		}
+	}
+
 	return ErrorCode::Success;
 }
 
@@ -69,6 +107,23 @@ void RendererScene::exportSetup(PropertySet &p_propertySet)
 	objectPoolSizePropertySet.addProperty(Properties::LightComponent, (int)worldScene->getPoolSize<LightComponent>());
 	objectPoolSizePropertySet.addProperty(Properties::ModelComponent, (int)worldScene->getPoolSize<ModelComponent>());
 	objectPoolSizePropertySet.addProperty(Properties::ShaderComponent, (int)worldScene->getPoolSize<ShaderComponent>());
+}
+
+void RendererScene::activate()
+{
+	auto rendererSystem = static_cast<RendererSystem *>(m_system);
+
+	// Set rendering passes
+	rendererSystem->setRenderingPasses(m_renderingPasses);
+
+	// Set whether render the scene to texture or the whole screen
+	rendererSystem->getRenderer().setRenderFinalToTexture(m_renderToTexture);
+
+	// Set render-to-texture resolution, if enabled
+	if(m_renderToTexture)
+	{
+		rendererSystem->getRenderer().setRenderToTextureResolution(m_renderToTextureResolution);
+	}
 }
 
 ErrorCode RendererScene::preload()
@@ -415,7 +470,7 @@ void RendererScene::exportComponents(const EntityID p_entityID, GraphicsComponen
 SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const CameraComponent::CameraComponentConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	// If valid type was not specified, or object creation failed, return a null object instead
-	SystemObject *returnObject = g_nullSystemBase.getScene()->getNullObject();
+	SystemObject *returnObject = g_nullSystemBase.getScene(EngineStateType::EngineStateType_Default)->getNullObject();
 
 	// Get the world scene required for attaching components to the entity
 	WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
@@ -445,7 +500,7 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const C
 SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const LightComponent::LightComponentConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {	
 	// If valid type was not specified, or object creation failed, return a null object instead
-	SystemObject *returnObject = g_nullSystemBase.getScene()->getNullObject();
+	SystemObject *returnObject = g_nullSystemBase.getScene(EngineStateType::EngineStateType_Default)->getNullObject();
 
 	// Proceed only if the light type is not null
 	if(p_constructionInfo.m_lightComponentType != LightComponent::LightComponentType::LightComponentType_null)
@@ -518,7 +573,7 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const L
 SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const ModelComponent::ModelComponentConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	// If valid type was not specified, or object creation failed, return a null object instead
-	SystemObject *returnObject = g_nullSystemBase.getScene()->getNullObject();
+	SystemObject *returnObject = g_nullSystemBase.getScene(EngineStateType::EngineStateType_Default)->getNullObject();
 
 	// Make sure there are models present
 	if(!p_constructionInfo.m_modelsProperties.m_modelNames.empty())
@@ -563,7 +618,7 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const M
 SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const ShaderComponent::ShaderComponentConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {	
 	// If valid type was not specified, or object creation failed, return a null object instead
-	SystemObject *returnObject = g_nullSystemBase.getScene()->getNullObject();
+	SystemObject *returnObject = g_nullSystemBase.getScene(EngineStateType::EngineStateType_Default)->getNullObject();
 
 	// Check if any of the shader nodes are present
 	if(!p_constructionInfo.m_vetexShaderFilename.empty() && !p_constructionInfo.m_fragmentShaderFilename.empty())
@@ -644,13 +699,15 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 		break;
 
 	case DataType_RenderToTexture:
-		m_renderTask->m_renderer.setRenderFinalToTexture(static_cast<bool>(p_data));
+		m_renderToTexture = static_cast<bool>(p_data);
+		m_renderTask->m_renderer.setRenderFinalToTexture(m_renderToTexture);
 		break;
 
 	case DataType_RenderToTextureResolution:
 		{
 			auto renderToTextureResolution = static_cast<glm::ivec2 *>(p_data);
-			m_renderTask->m_renderer.setRenderToTextureResolution(*renderToTextureResolution);
+			m_renderToTextureResolution = *renderToTextureResolution;
+			m_renderTask->m_renderer.setRenderToTextureResolution(m_renderToTextureResolution);
 
 			// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
 			if(p_deleteAfterReceiving)

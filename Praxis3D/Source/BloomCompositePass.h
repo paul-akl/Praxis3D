@@ -38,6 +38,9 @@ public:
 		else
 			returnError = shaderError;
 		
+		if(returnError == ErrorCode::Success)
+			setInitialized(true);
+
 		return returnError;
 	}
 

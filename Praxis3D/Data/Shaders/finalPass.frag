@@ -95,5 +95,5 @@ void main(void)
 	//fragmentColor = gammaCorrection(fragmentColor, gamma);
 	
 	// Write the color to the framebuffer
-	outputColor = vec4(fragmentColor, 1.0);	
+	outputColor = vec4(fragmentColor, 1.0);
 }

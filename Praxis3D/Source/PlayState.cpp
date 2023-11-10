@@ -8,7 +8,7 @@
 #include "RendererSystem.h"
 #include "WorldSystem.h"
 
-PlayState::PlayState() : EngineState()
+PlayState::PlayState(Engine &p_engine) : EngineState(p_engine, EngineStateType::EngineStateType_Play)
 {
 }
 

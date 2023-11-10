@@ -37,3 +37,7 @@ Praxis3D/x64/Debug/CodeAnalysisResultManifest.txt
 Builds/x64/Debug/Praxis3D.exe
 Builds/x64/Debug/Praxis3D.exe
 Praxis3D/Data/Sounds/
+compileData.scor
+compileData.scor.gbl
+compileData.scor.incl
+compileData.scor.t0000

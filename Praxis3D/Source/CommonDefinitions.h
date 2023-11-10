@@ -13,9 +13,11 @@ constexpr EntityID NULL_ENTITY_ID = std::numeric_limits<EntityID>::max();
 
 enum EngineStateType : unsigned int
 {
-	EngineStateType_MainMenu = 0,
+	EngineStateType_Default = 0,
+	EngineStateType_MainMenu = EngineStateType_Default,
 	EngineStateType_Play,
-	EngineStateType_Editor
+	EngineStateType_Editor,
+	EngineStateType_NumOfTypes
 };
 
 enum BindCommandType : unsigned int
@@ -54,6 +56,7 @@ enum RenderPassType : unsigned int
 	RenderPassType_GUI,
 	RenderPassType_NumOfTypes
 };
+typedef std::vector<RenderPassType> RenderingPasses;
 
 enum BufferType : unsigned int
 {

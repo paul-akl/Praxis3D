@@ -75,10 +75,7 @@
 		{
 			"Scene":
 			{
-				"ObjectPoolSize": "50"
-			},
-			"System":
-			{
+				"ObjectPoolSize": "50",
 				"RenderPasses":
 				[
 					{
@@ -100,6 +97,9 @@
 						"Type": "GUIRenderPass"
 					}
 				]
+			},
+			"System":
+			{
 			}
 		},
 		"Script":

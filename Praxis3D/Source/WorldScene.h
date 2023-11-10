@@ -162,7 +162,7 @@ public:
 
 	// Get the internal pool size of a given component
 	template <class T_Component>
-	unsigned int getPoolSize()
+	size_t getPoolSize()
 	{
 		return m_entityRegistry.storage<T_Component>().size();
 	}

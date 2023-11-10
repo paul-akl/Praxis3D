@@ -17,6 +17,7 @@ public:
 	~UniversalScene();
 
 	SystemScene *extend(SystemBase *p_system);
+	ErrorCode extend(SystemScene *p_scene);
 	ErrorCode unextend(SystemScene *p_scene);
 
 	UniversalObject *createObject(std::string p_name = "");

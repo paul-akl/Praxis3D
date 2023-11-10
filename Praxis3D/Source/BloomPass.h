@@ -47,6 +47,7 @@ public:
 		{
 			ErrHandlerLoc::get().log(ErrorCode::Initialize_success, ErrorSource::Source_BloomPass);
 			returnError = ErrorCode::Success;
+			setInitialized(true);
 		}
 		else
 		{

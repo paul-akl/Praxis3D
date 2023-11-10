@@ -28,5 +28,5 @@ std::vector<SystemObject*> SystemScene::createComponents(const EntityID p_entity
 
 SystemObject *SystemScene::getNullObject()
 {
-	return g_nullSystemBase.getScene()->getNullObject();
+	return g_nullSystemBase.getScene(EngineStateType::EngineStateType_Default)->getNullObject();
 }

@@ -8,13 +8,11 @@
 class PlayState : public EngineState
 {
 public:
-	PlayState();
+	PlayState(Engine &p_engine);
 	~PlayState();
 
 	ErrorCode init(TaskManager *p_taskManager);
 	void update(Engine &p_engine);
-
-	const EngineStateType getEngineStateType() final { return EngineStateType::EngineStateType_Play; }
 
 private:
 };

@@ -92,6 +92,10 @@ public:
 
 	void exportSetup(PropertySet &p_propertySet);
 
+	void activate();
+
+	void deactivate();
+
 	void update(const float p_deltaTime);
 
 	ErrorCode preload();

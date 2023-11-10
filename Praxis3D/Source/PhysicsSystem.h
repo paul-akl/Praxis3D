@@ -9,10 +9,17 @@ class PhysicsSystem : public SystemBase
 public:
 	PhysicsSystem()
 	{
-		m_physicsScene = nullptr;
+		for(unsigned int i = 0; i < EngineStateType::EngineStateType_NumOfTypes; i++)
+			m_physicsScenes[i] = nullptr;
+
 		m_systemName = GetString(Systems::Physics);
 	}
-	~PhysicsSystem() { }
+	~PhysicsSystem()
+	{
+		for(unsigned int i = 0; i < EngineStateType::EngineStateType_NumOfTypes; i++)
+			if(m_physicsScenes[i] != nullptr)
+				delete m_physicsScenes[i];
+	}
 
 	ErrorCode init()
 	{
@@ -40,13 +47,13 @@ public:
 
 	Systems::TypeID getSystemType() { return Systems::Physics; }
 
-	SystemScene *createScene(SceneLoader *p_sceneLoader)
+	SystemScene *createScene(SceneLoader *p_sceneLoader, EngineStateType p_engineState)
 	{
-		if(m_physicsScene == nullptr)
+		if(m_physicsScenes[p_engineState] == nullptr)
 		{
 			// Create new scene
-			m_physicsScene = new PhysicsScene(this, p_sceneLoader);
-			ErrorCode sceneError = m_physicsScene->init();
+			m_physicsScenes[p_engineState] = new PhysicsScene(this, p_sceneLoader);
+			ErrorCode sceneError = m_physicsScenes[p_engineState]->init();
 
 			// Check if it initialized correctly (cannot continue without the scene)
 			if(sceneError != ErrorCode::Success)
@@ -55,11 +62,17 @@ public:
 			}
 		}
 
-		return m_physicsScene;
+		return m_physicsScenes[p_engineState];
 	}
 
-	SystemScene *getScene() { return m_physicsScene; }
+	SystemScene *getScene(EngineStateType p_engineState) { return m_physicsScenes[p_engineState]; }
+
+	void deleteScene(EngineStateType p_engineState)
+	{
+		if(m_physicsScenes[p_engineState] != nullptr)
+			delete m_physicsScenes[p_engineState];
+	}
 
 protected:
-	PhysicsScene *m_physicsScene;
+	PhysicsScene *m_physicsScenes[EngineStateType::EngineStateType_NumOfTypes];
 };

@@ -7,11 +7,18 @@ class WorldSystem : public SystemBase
 {
 public:
 	WorldSystem() 
-	{ 
-		m_worldScene = nullptr;
+	{
+		for(unsigned int i = 0; i < EngineStateType::EngineStateType_NumOfTypes; i++)
+			m_worldScenes[i] = nullptr;
+
 		m_systemName = GetString(Systems::World);
 	}
-	~WorldSystem() { }
+	~WorldSystem() 
+	{
+		for(unsigned int i = 0; i < EngineStateType::EngineStateType_NumOfTypes; i++)
+			if(m_worldScenes[i] != nullptr)
+				delete m_worldScenes[i];
+	}
 
 	ErrorCode init()
 	{
@@ -39,13 +46,13 @@ public:
 
 	Systems::TypeID getSystemType() { return Systems::World; }
 
-	SystemScene *createScene(SceneLoader *p_sceneLoader)
+	SystemScene *createScene(SceneLoader *p_sceneLoader, EngineStateType p_engineState)
 	{
-		if(m_worldScene == nullptr)
+		if(m_worldScenes[p_engineState] == nullptr)
 		{
 			// Create new scene
-			m_worldScene = new WorldScene(this, p_sceneLoader);
-			ErrorCode sceneError = m_worldScene->init();
+			m_worldScenes[p_engineState] = new WorldScene(this, p_sceneLoader);
+			ErrorCode sceneError = m_worldScenes[p_engineState]->init();
 
 			// Check if it initialized correctly (cannot continue without the scene)
 			if(sceneError != ErrorCode::Success)
@@ -59,11 +66,17 @@ public:
 			}
 		}
 
-		return m_worldScene;
+		return m_worldScenes[p_engineState];
 	}
 
-	SystemScene *getScene() { return m_worldScene; }
+	SystemScene *getScene(EngineStateType p_engineState) { return m_worldScenes[p_engineState]; }
+
+	void deleteScene(EngineStateType p_engineState)
+	{
+		if(m_worldScenes[p_engineState] != nullptr)
+			delete m_worldScenes[p_engineState];
+	}
 
 protected:
-	WorldScene *m_worldScene;
+	WorldScene *m_worldScenes[EngineStateType::EngineStateType_NumOfTypes];
 };

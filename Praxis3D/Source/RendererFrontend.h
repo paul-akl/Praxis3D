@@ -5,8 +5,6 @@
 #include "RendererBackend.h"
 #include "RendererScene.h"
 
-typedef std::vector<RenderPassType> RenderingPasses;
-
 class RenderPass;
 struct RenderPassData;
 
@@ -340,9 +338,10 @@ protected:
 	glm::mat4 m_viewProjMatrix;
 	
 	// An array of all active rendering passes
-	std::vector<RenderPass*> m_renderingPasses;
+	std::vector<RenderPass*> m_activeRenderPasses;
+	RenderPass* m_allRenderPasses[RenderPassType::RenderPassType_NumOfTypes];
 
 	//RenderingPasses m_renderingPassesTypes;
-	RenderPass *m_initializedRenderingPasses[RenderPassType::RenderPassType_NumOfTypes];
+	//RenderPass *m_initializedRenderingPasses[RenderPassType::RenderPassType_NumOfTypes];
 	//bool m_renderPassBeingUsed[RenderPassType::RenderPassType_NumOfTypes];
 };

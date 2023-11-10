@@ -4,12 +4,12 @@ NullSystemScene NullSystemBase::m_nullSystemScene(nullptr);
 NullSystemTask NullSystemScene::m_nullSystemTask(nullptr);
 NullSystemObject NullSystemScene::m_nullSystemObject;
 
-SystemScene *NullSystemBase::createScene(SceneLoader *p_sceneLoader)
+SystemScene *NullSystemBase::createScene(SceneLoader *p_sceneLoader, EngineStateType p_engineState)
 {
 	return &m_nullSystemScene;
 }
 
-SystemScene *NullSystemBase::getScene()
+SystemScene *NullSystemBase::getScene(EngineStateType p_engineState)
 {
 	return &m_nullSystemScene;
 }

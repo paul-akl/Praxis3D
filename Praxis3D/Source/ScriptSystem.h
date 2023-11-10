@@ -8,23 +8,23 @@ class ScriptSystem : public SystemBase
 {
 public:
 	ScriptSystem();
-	virtual ~ScriptSystem();
+	~ScriptSystem();
 
-	virtual ErrorCode init();
+	ErrorCode init();
 
 	ErrorCode setup(const PropertySet &p_properties);
-
-	//virtual ErrorCode preload();
 
 	void loadInBackground();
 
 	Systems::TypeID getSystemType() { return Systems::Script; }
 
-	virtual SystemScene *createScene(SceneLoader *p_sceneLoader);
+	SystemScene *createScene(SceneLoader *p_sceneLoader, EngineStateType p_engineState);
 
-	virtual SystemScene *getScene();
+	SystemScene *getScene(EngineStateType p_engineState);
+
+	void deleteScene(EngineStateType p_engineState);
 	
 protected:
-	ScriptScene *m_scriptingScene;
+	ScriptScene *m_scriptingScenes[EngineStateType::EngineStateType_NumOfTypes];
 };
 

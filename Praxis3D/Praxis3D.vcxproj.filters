@@ -324,9 +324,6 @@
     <ClCompile Include="Source\PlayState.cpp">
       <Filter>Engine States\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\WorldEditState.cpp">
-      <Filter>Engine States\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RendererBackend.cpp">
       <Filter>Renderer\Source Files</Filter>
     </ClCompile>
@@ -630,9 +627,6 @@
       <Filter>Engine States\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\PlayState.h">
-      <Filter>Engine States\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\WorldEditState.h">
       <Filter>Engine States\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\WorldEditObject.h">

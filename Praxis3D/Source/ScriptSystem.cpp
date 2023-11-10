@@ -6,13 +6,17 @@
 
 ScriptSystem::ScriptSystem()
 {
-	m_scriptingScene = nullptr;
+	for(unsigned int i = 0; i < EngineStateType::EngineStateType_NumOfTypes; i++)
+		m_scriptingScenes[i] = nullptr;
+
 	m_systemName = GetString(Systems::Script);
 }
 
 ScriptSystem::~ScriptSystem()
 {
-
+	for(unsigned int i = 0; i < EngineStateType::EngineStateType_NumOfTypes; i++)
+		if(m_scriptingScenes[i] != nullptr)
+			delete m_scriptingScenes[i];
 }
 
 ErrorCode ScriptSystem::init()
@@ -41,13 +45,13 @@ void ScriptSystem::loadInBackground()
 {
 }
 
-SystemScene *ScriptSystem::createScene(SceneLoader *p_sceneLoader)
+SystemScene *ScriptSystem::createScene(SceneLoader *p_sceneLoader, EngineStateType p_engineState)
 {
-	if(m_scriptingScene == nullptr)
+	if(m_scriptingScenes[p_engineState] == nullptr)
 	{
 		// Create new scene
-		m_scriptingScene = new ScriptScene(this, p_sceneLoader);
-		ErrorCode sceneError = m_scriptingScene->init();
+		m_scriptingScenes[p_engineState] = new ScriptScene(this, p_sceneLoader);
+		ErrorCode sceneError = m_scriptingScenes[p_engineState]->init();
 
 		// Check if it initialized correctly (cannot continue without the scene)
 		if(sceneError != ErrorCode::Success)
@@ -56,10 +60,16 @@ SystemScene *ScriptSystem::createScene(SceneLoader *p_sceneLoader)
 		}
 	}
 
-	return m_scriptingScene;
+	return m_scriptingScenes[p_engineState];
 }
 
-SystemScene *ScriptSystem::getScene()
+SystemScene *ScriptSystem::getScene(EngineStateType p_engineState)
 {
-	return m_scriptingScene;
+	return m_scriptingScenes[p_engineState];
+}
+
+void ScriptSystem::deleteScene(EngineStateType p_engineState)
+{
+	if(m_scriptingScenes[p_engineState] != nullptr)
+		delete m_scriptingScenes[p_engineState];
 }

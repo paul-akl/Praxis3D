@@ -14,6 +14,7 @@
 // Class containing a complete one instance of the engine.
 class Engine
 {
+	friend class EngineState;
 public:
 	Engine();
 	~Engine();
@@ -25,6 +26,9 @@ public:
 	void run();
 
 private:
+	// Get all engine systems. Return a pointer to an array the size of Systems::NumberOfSystems
+	SystemBase **getSystems() { return m_systems; }
+
 	// Sets which engine state is currently active
 	void setCurrentStateType()
 	{
@@ -59,7 +63,8 @@ private:
 			if(stateInitError != ErrorCode::Success)
 			{
 				m_currentState = previousState;
-				m_currentStateType = m_currentState->getEngineStateType();
+				if(m_currentState != nullptr)
+					m_currentStateType = m_currentState->getEngineStateType();
 				ErrHandlerLoc::get().log(stateInitError, ErrorSource::Source_Engine);
 			}
 		}
@@ -78,6 +83,9 @@ private:
 	// Creates and initializes all the services and their locators
 	ErrorCode initServices();
 
+	// Creates and initializes all the engine systems
+	ErrorCode initSystems();
+
 	// Shuts all the systems, etc. down, called before returning from run()
 	void shutdown();
 
@@ -90,6 +98,9 @@ private:
 	PlayState m_playstate;
 	EditorState m_editorState;
 
+	// All engine systems
+	SystemBase *m_systems[Systems::NumberOfSystems];
+	
 	// Various required services
 	ErrorHandler *m_errorHandler;
 	GUIHandler *m_GUIHandler;

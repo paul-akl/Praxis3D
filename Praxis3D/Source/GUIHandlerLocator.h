@@ -7,6 +7,7 @@
 // an empty (null) service if it hasn't been initialized. Uses dependency injection pattern.
 class GUIHandlerLocator
 {
+	friend class EditorWindow;
 	friend class Engine;
 	friend class GUIPass;
 	friend class GUIScene;

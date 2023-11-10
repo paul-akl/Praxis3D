@@ -60,7 +60,7 @@ SystemScene *UniversalScene::extend(SystemBase *p_system)
 	}
 
 	// Get the new scene
-	SystemScene *newScene = p_system->getScene();
+	SystemScene *newScene = nullptr;// p_system->getScene();
 
 	// TODO ASSERT ERROR
 	_ASSERT(newScene != nullptr);
@@ -81,6 +81,34 @@ SystemScene *UniversalScene::extend(SystemBase *p_system)
 	}
 
 	return newScene;
+}
+ErrorCode UniversalScene::extend(SystemScene *p_scene)
+{
+	ErrorCode returnError = ErrorCode::Success;
+
+	if(p_scene != nullptr)
+	{
+		// Get the system type
+		BitMask systemType = p_scene->getSystemType();
+
+		// Check for duplicates
+		if(m_systemScenes.find(systemType) == m_systemScenes.end())
+		{
+			// Add the new scene to the list
+			m_systemScenes[systemType] = p_scene;
+
+			// Register the new scene to receive all changes
+			m_sceneChangeController->registerSubject(p_scene, p_scene->getDesiredSystemChanges(), this);
+		}
+		else
+		{
+			returnError = ErrorCode::Universal_scene_extend_duplicate;
+		}
+	}
+	else
+		returnError = ErrorCode::Universal_scene_extend_null;
+
+	return returnError;
 }
 ErrorCode UniversalScene::unextend(SystemScene *p_scene)
 {

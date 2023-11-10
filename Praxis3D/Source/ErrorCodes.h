@@ -56,6 +56,8 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
 	/* GUI errors */ \
 	Code(Editor_path_outside_current_dir,) \
 	Code(GL_context_missing,) \
+	Code(Universal_scene_extend_null,) \
+	Code(Universal_scene_extend_duplicate,) \
 	Code(Window_handle_missing,) \
 	/* Model loader errors */ \
 	Code(AssimpScene_failed,) \
@@ -152,6 +154,7 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_SoundComponent,) \
     Code(Source_SoundListenerComponent,) \
     Code(Source_TextureLoader,) \
+    Code(Source_UniversalScene,) \
     Code(Source_Window,) \
     Code(Source_World,) \
     Code(Source_WorldScene,) \

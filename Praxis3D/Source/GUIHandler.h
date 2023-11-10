@@ -29,6 +29,12 @@ public:
 	// Get an atomic flag that marks when the GUI frame is ready to be rendered
 	inline std::atomic_flag &getFrameReadyFlag()  { return m_frameReady; }
 
+	// Enable docking windows
+	void enableDocking() { }
+
+	// Disable docking windows
+	void disableDocking() { }
+
 protected:
 	virtual ErrorCode init() { return ErrorCode::Success; }
 
@@ -87,6 +93,16 @@ public:
 		ImGui_ImplSDL2_ProcessEvent(&p_SDLEvent);
 	}
 
+	void enableDocking()
+	{
+		m_io->ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	}
+
+	void disableDocking()
+	{
+		m_io->ConfigFlags &= ~(ImGuiConfigFlags_DockingEnable);
+	}
+
 protected:
 	ErrorCode init()
 	{
@@ -95,7 +111,7 @@ protected:
 		// Setup Dear ImGui context
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
-		m_io = &ImGui::GetIO(); //(void)m_io;
+		m_io = &ImGui::GetIO();
 
 		// Enable docking if it is set in the config
 		if(Config::GUIVar().gui_docking_enabled)
@@ -144,10 +160,6 @@ protected:
 
 		// Begin new GUI frame (prepares frame to receive new GUI calls)
 		ImGui::NewFrame();
-
-		// If docking is enabled, set the whole main viewport as a docking area
-		if(Config::GUIVar().gui_docking_enabled)
-			ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 	}
 
 	void render();

@@ -7,7 +7,7 @@
 #include "RendererSystem.h"
 #include "WorldSystem.h"
 
-EditorState::EditorState() : EngineState()
+EditorState::EditorState(Engine &p_engine) : EngineState(p_engine, EngineStateType::EngineStateType_Editor)
 {
 }
 

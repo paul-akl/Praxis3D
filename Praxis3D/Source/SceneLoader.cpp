@@ -12,7 +12,7 @@ SceneLoader::SceneLoader()
 	m_loadInBackground = false;
 
 	for(int i = 0; i < Systems::NumberOfSystems; i++)
-		m_systemScenes[i] = g_nullSystemBase.createScene(this);
+		m_systemScenes[i] = g_nullSystemBase.createScene(this, EngineStateType::EngineStateType_Default);
 }
 
 SceneLoader::~SceneLoader()

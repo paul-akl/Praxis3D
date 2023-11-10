@@ -9,11 +9,17 @@ class GUISystem : public SystemBase
 public:
 	GUISystem()
 	{
-		m_GUIScene = nullptr;
-		//m_guiHandler = nullptr;
+		for(unsigned int i = 0; i < EngineStateType::EngineStateType_NumOfTypes; i++)
+			m_GUIScenes[i] = nullptr;
+
 		m_systemName = GetString(Systems::GUI);
 	}
-	~GUISystem() { }
+	~GUISystem()
+	{
+		for(unsigned int i = 0; i < EngineStateType::EngineStateType_NumOfTypes; i++)
+			if(m_GUIScenes[i] != nullptr)
+				delete m_GUIScenes[i];
+	}
 
 	ErrorCode init()
 	{
@@ -39,13 +45,13 @@ public:
 
 	Systems::TypeID getSystemType() { return Systems::GUI; }
 
-	SystemScene *createScene(SceneLoader *p_sceneLoader)
+	SystemScene *createScene(SceneLoader *p_sceneLoader, EngineStateType p_engineState)
 	{
-		if (m_GUIScene == nullptr)
+		if(m_GUIScenes[p_engineState] == nullptr)
 		{
 			// Create new scene
-			m_GUIScene = new GUIScene(this, p_sceneLoader);
-			ErrorCode sceneError = m_GUIScene->init();
+			m_GUIScenes[p_engineState] = new GUIScene(this, p_sceneLoader);
+			ErrorCode sceneError = m_GUIScenes[p_engineState]->init();
 
 			// Check if it initialized correctly (cannot continue without the scene)
 			if (sceneError != ErrorCode::Success)
@@ -59,19 +65,17 @@ public:
 			}
 		}
 
-		return m_GUIScene;
+		return m_GUIScenes[p_engineState];
 	}
 
-	SystemScene* getScene() { return m_GUIScene; }
+	SystemScene* getScene(EngineStateType p_engineState) { return m_GUIScenes[p_engineState]; }
 
-	// Set the GUI Handler, so it can be used to draw GUI to the framebuffer at the end of the frame
-	//inline void setGUIHanlder(GUIHandler *p_guiHandler) { m_guiHandler = p_guiHandler; }
-
-	// Get the GUI Handler; returns nullptr if the GUI Handler is not set
-	//inline GUIHandler *getGUIHanlder() { return m_guiHandler; }
+	void deleteScene(EngineStateType p_engineState)
+	{
+		if(m_GUIScenes[p_engineState] != nullptr)
+			delete m_GUIScenes[p_engineState];
+	}
 
 protected:
-	GUIScene* m_GUIScene;
-
-	//GUIHandler *m_guiHandler;
+	GUIScene *m_GUIScenes[EngineStateType::EngineStateType_NumOfTypes];
 };

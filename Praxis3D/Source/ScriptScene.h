@@ -99,7 +99,7 @@ public:
 		if(m_scriptingTask != nullptr)
 			return m_scriptingTask;
 
-		return g_nullSystemBase.getScene()->getSystemTask();
+		return g_nullSystemBase.getScene(EngineStateType::EngineStateType_Default)->getSystemTask();
 	}
 	Systems::TypeID getSystemType() { return Systems::Script; }
 

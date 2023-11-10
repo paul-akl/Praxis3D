@@ -42,11 +42,13 @@ public:
 	virtual Systems::TypeID getSystemType() = 0;
 	virtual std::string getName() { return m_systemName; }
 
-	// Passes scene loader as argument so that scenes could have access to other system scenes 
-	// that are register with this scene loader
-	virtual SystemScene *createScene(SceneLoader *p_sceneLoader) = 0;
+	// Passes scene loader as argument so that scenes could have access to other system scenes that are register with this scene loader
+	// Also takes in an engine state type, as a way to identify created scenes, since scenes can only be created for each engine state
+	virtual SystemScene *createScene(SceneLoader *p_sceneLoader, EngineStateType p_engineState) = 0;
 
-	virtual SystemScene *getScene() = 0;
+	virtual SystemScene *getScene(EngineStateType p_engineState) = 0;
+
+	virtual void deleteScene(EngineStateType p_engineState) = 0;
 
 	virtual void loadInBackground() = 0;
 	

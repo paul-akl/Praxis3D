@@ -30,7 +30,7 @@ public:
 		m_spotLightBuffer.m_size = sizeof(SpotLightDataSet) * m_maxNumSpotLights;
 		m_pointLights.reserve(m_maxNumPointLights);
 		m_spotLights.reserve(m_maxNumSpotLights);
-		
+
 		// Set buffer values
 		m_emissiveAndOutputBuffers.resize(2);
 		m_emissiveAndOutputBuffers[0] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(GBufferTextureType::GBufferEmissive);
@@ -56,10 +56,13 @@ public:
 		// Queue light buffers to be created
 		m_renderer.queueForLoading(m_pointLightBuffer);
 		m_renderer.queueForLoading(m_spotLightBuffer);
-		
+
 		// Check for errors and log either a successful or a failed initialization
 		if(returnError == ErrorCode::Success)
+		{
 			ErrHandlerLoc::get().log(ErrorCode::Initialize_success, ErrorSource::Source_LightingPass);
+			setInitialized(true);
+		}
 		else
 			ErrHandlerLoc::get().log(ErrorCode::Initialize_failure, ErrorSource::Source_LightingPass);
 

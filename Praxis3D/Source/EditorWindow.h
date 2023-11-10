@@ -3,6 +3,7 @@
 #include "ComponentConstructorInfo.h"
 #include "ErrorHandlerLocator.h"
 #include "GUIHandler.h"
+#include "GUIHandlerLocator.h"
 #include "LightComponent.h"
 #include "Loaders.h"
 #include "InheritanceObjects.h"
@@ -37,7 +38,7 @@ public:
 		for(unsigned int i = 0; i < ObjectMaterialType::NumberOfMaterialTypes; i++)
 			m_physicalMaterialProperties.push_back(GetString(static_cast<ObjectMaterialType>(i)));
 	}
-	~EditorWindow() { }
+	~EditorWindow();
 
 	ErrorCode init();
 
@@ -47,68 +48,9 @@ public:
 
 	void update(const float p_deltaTime);
 
-	ErrorCode importObject(const PropertySet &p_properties) final override
-	{
-		ErrorCode importError = ErrorCode::Failure;
+	void activate();
 
-		// Check if PropertySet isn't empty and the component hasn't been loaded already
-		if(p_properties)// && !isLoadedToMemory())
-		{
-			if(p_properties.getPropertyID() == Properties::Sequence)
-			{
-				importError = ErrorCode::Success;
-				/*			auto const &luaFilenameProperty = p_properties.getPropertyByID(Properties::Filename);
-
-							if(luaFilenameProperty)
-							{
-								std::string luaFilename = luaFilenameProperty.getString();
-								if(!luaFilename.empty())
-								{
-									luaFilename = Config::filepathVar().script_path + luaFilename;
-									if(Filesystem::exists(luaFilename))
-									{
-										m_luaScript.setScriptFilename(luaFilename);
-
-										importError = ErrorCode::Success;
-										ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_LuaComponent, m_name + " - Script loaded");
-									}
-									else
-									{
-										importError = ErrorCode::File_not_found;
-										ErrHandlerLoc().get().log(ErrorType::Warning, ErrorSource::Source_LuaComponent, m_name + " - File \'" + luaFilename + "\' not found");
-									}
-								}
-								else
-								{
-									importError = ErrorCode::Property_no_filename;
-									ErrHandlerLoc().get().log(ErrorType::Warning, ErrorSource::Source_LuaComponent, m_name + " - Property \'" + GetString(Properties::Filename) + "\' is empty");
-								}
-							}
-							else
-							{
-								importError = ErrorCode::Property_no_filename;
-								ErrHandlerLoc().get().log(ErrorType::Warning, ErrorSource::Source_LuaComponent, m_name + " - Missing \'" + GetString(Properties::Filename) + "\' property");
-							}*/
-			}
-
-			if(importError == ErrorCode::Success)
-			{
-				//setLoadedToMemory(true);
-				//setLoadedToVideoMemory(true);
-				setActive(true);
-			}
-		}
-
-		return importError;
-	}
-
-	PropertySet exportObject() final override
-	{
-		// Create the root Camera property set
-		PropertySet propertySet(Properties::Camera);
-
-		return propertySet;
-	}
+	void deactivate();
 
 	// System type is GUI
 	BitMask getSystemType() final override { return Systems::GUI; }

@@ -57,7 +57,26 @@
 			{
 				"LuaComponent":
 				{
-					"Filename": "GUI_test.lua"
+					"Filename": "GUI_test.lua",
+					"Variables":
+					[
+						{
+							"Name": "cameraSpeed",
+							"Value": "10.0f"
+						},
+						{
+							"Name": "cameraSpeedMultiplier",
+							"Value": "10.0f"
+						},
+						{
+							"Name": "stringTest",
+							"Value": "test1"
+						},
+						{
+							"Name": "boolTest",
+							"Value": "false"
+						}
+					]
 				}
 			}
 		},
@@ -198,6 +217,24 @@
 				"LuaComponent":
 				{
 					"Filename": "Kinematic_test.lua"
+				}
+			}
+		},
+		{
+			"ID": "44",
+			"Name": "Cube3",
+			"Parent": "0",
+			"Prefab": "cube1.prefab",
+			"World":
+			{
+				"ObjectMaterialComponent":
+				{
+					"Type": "Wood"
+				},
+				"SpatialComponent":
+				{
+					"LocalPosition": "8.0f, 3.0f, 0.0f",
+					"LocalRotation": "0.0f, 45.0f, 0.0f"
 				}
 			}
 		},
@@ -468,10 +505,7 @@
 		{
 			"Scene":
 			{
-				"ObjectPoolSize": "50"
-			},
-			"System":
-			{
+				"ObjectPoolSize": "50",
 				"RenderPasses":
 				[
 					{
@@ -499,6 +533,9 @@
 						"Type": "GUIRenderPass"
 					}
 				]
+			},
+			"System":
+			{
 			}
 		},
 		"Script":

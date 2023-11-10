@@ -112,6 +112,8 @@ public:
 
 	void exportSetup(PropertySet &p_propertySet);
 
+	void activate();
+
 	// Preloads all the resources in the scene (as opposed to loading them while rendering, in background threads)
 	ErrorCode preload();
 
@@ -224,4 +226,11 @@ private:
 
 	// Task responsible for initiating rendering each frame
 	RenderTask *m_renderTask;
+
+	// Contains a list of rendering passes that gets set in the renderer system
+	RenderingPasses m_renderingPasses;
+
+	// Render-to-texture data
+	bool m_renderToTexture;
+	glm::ivec2 m_renderToTextureResolution;
 };

@@ -71,6 +71,8 @@ public:
 			m_renderer.queueForLoading(m_histogramBuffer);
 			m_renderer.queueForLoading(m_luminanceAverageTexture);
 
+			setInitialized(true);
+
 			ErrHandlerLoc::get().log(ErrorCode::Initialize_success, ErrorSource::Source_LuminancePass);
 		}
 		else

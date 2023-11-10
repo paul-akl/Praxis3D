@@ -207,7 +207,6 @@
     <ClCompile Include="Source\Universal.cpp" />
     <ClCompile Include="Source\Window.cpp" />
     <ClCompile Include="Source\WindowLocator.cpp" />
-    <ClCompile Include="Source\WorldEditState.cpp" />
     <ClCompile Include="Source\WorldScene.cpp" />
     <ClCompile Include="Source\WorldTask.cpp" />
   </ItemGroup>
@@ -369,7 +368,6 @@
     <ClInclude Include="Source\Window.h" />
     <ClInclude Include="Source\WindowLocator.h" />
     <ClInclude Include="Source\WorldEditObject.h" />
-    <ClInclude Include="Source\WorldEditState.h" />
     <ClInclude Include="Source\WorldScene.h" />
     <ClInclude Include="Source\WorldSystem.h" />
     <ClInclude Include="Source\WorldTask.h" />

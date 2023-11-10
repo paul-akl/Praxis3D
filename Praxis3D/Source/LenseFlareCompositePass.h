@@ -22,7 +22,7 @@ public:
 		ErrorCode shaderError = ErrorCode::Success;
 
 		m_name = "Lense Flare Composite Rendering Pass";
-		
+
 		// Set buffer values
 		m_diffuseAndOutputBuffers.resize(2);
 		m_diffuseAndOutputBuffers[0] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(GBufferTextureType::GBufferDiffuse);
@@ -44,18 +44,21 @@ public:
 			m_renderer.queueForLoading(*m_lenseFlareShader);	// Queue the shader to be loaded to GPU
 		else
 			returnError = shaderError;
-		
+
 		// Create textures for lens flare effect and load them to memory
 		m_lensFlareDirt.loadToMemory();
 		m_lenseFlareStarburst.loadToMemory();
-		
+
 		// Queue lens flare textures for loading to GPU
 		m_renderer.queueForLoading(m_lensFlareDirt);
 		m_renderer.queueForLoading(m_lenseFlareStarburst);
 
 		// Check for errors and log either a successful or a failed initialization
 		if(returnError == ErrorCode::Success)
+		{
 			ErrHandlerLoc::get().log(ErrorCode::Initialize_success, ErrorSource::Source_LensFlareCompositePass);
+			setInitialized(true);
+		}
 		else
 			ErrHandlerLoc::get().log(ErrorCode::Initialize_failure, ErrorSource::Source_LensFlareCompositePass);
 

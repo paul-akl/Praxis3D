@@ -8,13 +8,11 @@
 class MainMenuState : public EngineState
 {
 public:
-	MainMenuState();
+	MainMenuState(Engine &p_engine);
 	~MainMenuState();
 
 	ErrorCode init(TaskManager *p_taskManager);
 	void update(Engine &p_engine);
-
-	const EngineStateType getEngineStateType() final { return EngineStateType::EngineStateType_MainMenu; }
 
 private:
 };

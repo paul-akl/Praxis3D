@@ -13,7 +13,7 @@ class SystemBase;
 class EngineState
 {
 public:
-	EngineState();
+	EngineState(Engine &p_engine, EngineStateType p_engineState);
 	virtual ~EngineState();
 
 	virtual ErrorCode init(TaskManager *p_taskManager);
@@ -26,20 +26,18 @@ public:
 
 	virtual void shutdown();
 
-	virtual const EngineStateType getEngineStateType() = 0;
+	const inline EngineStateType getEngineStateType() { return m_engineStateType; }
 
 	const inline bool isInitialized() const { return m_initialized; }
 
 protected:
-	// Creates and initializes all the engine systems
-	ErrorCode initSystems();
-
 	bool m_initialized;
+	EngineStateType m_engineStateType;
 
-	// All engine systems
-	SystemBase *m_systems[Systems::NumberOfSystems];
+	// Reference to engine, used for getting systems
+	Engine &m_engine;
 
-	// System scenes register
+	// System scenes loader and register
 	SceneLoader m_sceneLoader;
 
 	// Multi-threading task scheduler

@@ -27,6 +27,12 @@
 #include <imgui_tex_inspect.h>
 #include <imgui/imgui_stdlib.h>
 
+EditorWindow::~EditorWindow()
+{
+    // Tell the renderer to draw the scene to the screen
+    m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_RenderToTexture, (void *)false);
+}
+
 ErrorCode EditorWindow::init()
 {
     return ErrorCode::Success;
@@ -34,6 +40,9 @@ ErrorCode EditorWindow::init()
 
 void EditorWindow::update(const float p_deltaTime)
 {
+    // Set the docking area over the whole screen
+    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+
     // Clear the texture inspector functor sequence from the last frame
     m_textureInspectorSequence.swapBuffer();
     m_textureInspectorSequence.getFront().clear();
@@ -156,7 +165,7 @@ void EditorWindow::update(const float p_deltaTime)
                     m_fileBrowserDialog.m_definedFilename = m_systemScene->getSceneLoader()->getSceneFilename();
                     m_fileBrowserDialog.m_filter = ".pmap,.*";
                     m_fileBrowserDialog.m_title = "Open scene";
-                    m_fileBrowserDialog.m_name = "##OpenSceneFileDialog";
+                    m_fileBrowserDialog.m_name = "OpenSceneFileDialog";
                     m_fileBrowserDialog.m_rootPath = Config::filepathVar().map_path;
 
                     // Tell the GUI scene to open the file browser
@@ -178,7 +187,7 @@ void EditorWindow::update(const float p_deltaTime)
                     m_fileBrowserDialog.m_flags = FileBrowserDialog::FileBrowserDialogFlags::FileBrowserDialogFlags_ConfirmOverwrite;
                     m_fileBrowserDialog.m_filter = ".pmap,.*";
                     m_fileBrowserDialog.m_title = "Save scene";
-                    m_fileBrowserDialog.m_name = "##SaveSceneFileDialog";
+                    m_fileBrowserDialog.m_name = "SaveSceneFileDialog";
                     m_fileBrowserDialog.m_rootPath = Config::filepathVar().map_path;
                     
                     // Tell the GUI scene to open the file browser
@@ -863,7 +872,7 @@ void EditorWindow::update(const float p_deltaTime)
                                         // Define file browser variables
                                         m_fileBrowserDialog.m_filter = ".lua,.*";
                                         m_fileBrowserDialog.m_title = "Open LUA script file";
-                                        m_fileBrowserDialog.m_name = "##OpenLuaScriptFileDialog";
+                                        m_fileBrowserDialog.m_name = "OpenLuaScriptFileDialog";
                                         m_fileBrowserDialog.m_rootPath = Config::filepathVar().script_path;
 
                                         // Tell the GUI scene to open the file browser
@@ -1397,6 +1406,14 @@ void EditorWindow::update(const float p_deltaTime)
             }
             break;
     }
+}
+
+void EditorWindow::activate()
+{
+}
+
+void EditorWindow::deactivate()
+{
 }
 
 void EditorWindow::setup(EditorWindowSettings &p_editorWindowSettings)

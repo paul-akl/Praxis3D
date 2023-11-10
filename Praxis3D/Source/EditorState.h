@@ -8,7 +8,7 @@
 class EditorState : public EngineState
 {
 public:
-	EditorState();
+	EditorState(Engine &p_engine);
 	~EditorState();
 
 	ErrorCode init(TaskManager *p_taskManager);
@@ -17,8 +17,6 @@ public:
 	void activate();
 
 	void deactivate();
-
-	const EngineStateType getEngineStateType() final { return EngineStateType::EngineStateType_Editor; }
 
 private:
 	EditorWindowSettings m_editorWindowSettings;

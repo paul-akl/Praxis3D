@@ -38,6 +38,8 @@ ErrorHandler::ErrorHandler()
 	AssignErrorType(Geometrybuffer_failed, FatalError);
 	AssignErrorType(Editor_path_outside_current_dir, Warning);
 	AssignErrorType(GL_context_missing, Error);
+	AssignErrorType(Universal_scene_extend_null, Error);
+	AssignErrorType(Universal_scene_extend_duplicate, Error);
 	AssignErrorType(Window_handle_missing, Error);
 	AssignErrorType(AssimpScene_failed, Error);
 	AssignErrorType(ObjectPool_full, Warning); 

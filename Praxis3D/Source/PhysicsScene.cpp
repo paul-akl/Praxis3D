@@ -19,20 +19,20 @@ PhysicsScene::PhysicsScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : S
 
 PhysicsScene::~PhysicsScene()
 {
-	//remove the rigidbodies from the dynamics world and delete them
+	// Remove the rigidbodies from the dynamics world and delete them
 	for(int i = m_dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
 	{
 		btCollisionObject *obj = m_dynamicsWorld->getCollisionObjectArray()[i];
 		btRigidBody *body = btRigidBody::upcast(obj);
-		if(body && body->getMotionState())
+		if(body)
 		{
-			delete body->getMotionState();
+			delete static_cast<EntityID *>(body->getUserPointer());
 		}
 		m_dynamicsWorld->removeCollisionObject(obj);
 		delete obj;
 	}
 
-	//delete collision shapes
+	// Delete collision shapes
 	for(int i = 0; i < m_collisionShapes.size(); i++)
 	{
 		btCollisionShape *shape = m_collisionShapes[i];
@@ -40,27 +40,27 @@ PhysicsScene::~PhysicsScene()
 		delete shape;
 	}
 
-	//delete dynamics world
+	// Delete dynamics world
 	if(m_dynamicsWorld != nullptr)
 		delete m_dynamicsWorld;
 
-	//delete solver
+	// Delete solver
 	if(m_collisionSolver != nullptr)
 		delete m_collisionSolver;
 
-	//delete broadphase
+	// Delete broadphase
 	if(m_collisionBroadphase != nullptr)
 		delete m_collisionBroadphase;
 
-	//delete dispatcher
+	// Delete dispatcher
 	if(m_collisionDispatcher != nullptr)
 		delete m_collisionDispatcher;
 
-	//delete collision configuration
+	// Delete collision configuration
 	if(m_collisionConfiguration != nullptr)
 		delete m_collisionConfiguration;
 
-	//next line is optional: it will be cleared by the destructor when the array goes out of scope
+	// Next line is optional: it will be cleared by the destructor when the array goes out of scope
 	m_collisionShapes.clear();
 }
 
@@ -374,7 +374,7 @@ void PhysicsScene::exportComponents(const EntityID p_entityID, PhysicsComponents
 SystemObject *PhysicsScene::createComponent(const EntityID &p_entityID, const RigidBodyComponent::RigidBodyComponentConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	// If valid type was not specified, or object creation failed, return a null object instead
-	SystemObject *returnObject = g_nullSystemBase.getScene()->getNullObject();
+	SystemObject *returnObject = g_nullSystemBase.getScene(EngineStateType::EngineStateType_Default)->getNullObject();
 
 	// Get the world scene required for attaching components to the entity
 	WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
