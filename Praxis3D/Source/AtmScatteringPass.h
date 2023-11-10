@@ -8,7 +8,7 @@ class AtmScatteringPass : public RenderPass
 {
 public:
 	AtmScatteringPass(RendererFrontend &p_renderer) :
-		RenderPass(p_renderer),
+		RenderPass(p_renderer, RenderPassType::RenderPassType_AtmScattering),
 		m_useConstantSolarSpectrum(false),
 		m_useOzone(true),
 		m_useCombinedTextures(true),

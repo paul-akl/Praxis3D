@@ -3,7 +3,7 @@
 #include "ErrorHandlerLocator.h"
 #include "TaskManager.h"
 
-ChangeController::ChangeController() : m_lastID(0), m_tlsNotifyList(TLS_OUT_OF_INDEXES), m_taskManager(nullptr)
+ChangeController::ChangeController() : Observer(Properties::PropertyID::ChangeController), m_lastID(0), m_tlsNotifyList(TLS_OUT_OF_INDEXES), m_taskManager(nullptr)
 {
 	m_systemsToNotify = Systems::Changes::None;
 	m_changesToDistribute = Systems::Changes::None;

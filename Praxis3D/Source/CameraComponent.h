@@ -19,7 +19,7 @@ public:
 
 	CameraComponent(SystemScene *p_systemScene, std::string p_name, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::CameraComponent, p_entityID)
 	{
-
+		m_fov = Config::graphicsVar().fov;
 	}
 	~CameraComponent() { }
 
@@ -81,8 +81,15 @@ public:
 	BitMask getDesiredSystemChanges() final override { return Systems::Changes::Graphics::Camera; }
 	BitMask getPotentialSystemChanges() final override { return Systems::Changes::None; }
 
-	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
+	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) 
+	{
+		if(CheckBitmask(p_changeType, Systems::Changes::Generic::Active))
+		{
+			// Get the active flag from the subject and set the active flag accordingly
+			setActive(p_subject->getBool(this, Systems::Changes::Generic::Active));
+		}
+	}
 
 private:
-
+	float m_fov;
 };

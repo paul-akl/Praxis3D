@@ -5,7 +5,7 @@
 #include "TaskManagerLocator.h"
 #include "WorldScene.h"
 
-AudioScene::AudioScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader)
+AudioScene::AudioScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader, Properties::PropertyID::Audio)
 {
 	m_audioTask = nullptr;
 	m_coreSystem = nullptr;
@@ -193,19 +193,12 @@ ErrorCode AudioScene::setup(const PropertySet &p_properties)
 	// Get the world scene required for reserving the component pools
 	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
 
-	// Reserve every component type that belongs to this scene
-	worldScene->reserve<SoundComponent>(Config::objectPoolVar().sound_component_default_pool_size);
-	worldScene->reserve<SoundListenerComponent>(Config::objectPoolVar().camera_component_default_pool_size);
+	// Get the property set containing object pool size
+	auto &objectPoolSizeProperty = p_properties.getPropertySetByID(Properties::ObjectPoolSize);
 
-	for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
-	{
-		switch(p_properties[i].getPropertyID())
-		{
-		case Properties::ObjectPoolSize:
-
-			break;
-		}
-	}
+	// Reserve every component type that belongs to this scene (and set the minimum number of objects based on default config)
+	worldScene->reserve<SoundComponent>(std::max(Config::objectPoolVar().sound_component_default_pool_size, objectPoolSizeProperty.getPropertyByID(Properties::SoundComponent).getInt()));
+	worldScene->reserve<SoundListenerComponent>(std::max(Config::objectPoolVar().sound_listener_component_default_pool_size, objectPoolSizeProperty.getPropertyByID(Properties::SoundListenerComponent).getInt()));
 
 	FMOD::Studio::Bank *defaultSoundBank = nullptr;
 
@@ -232,8 +225,12 @@ ErrorCode AudioScene::setup(const PropertySet &p_properties)
 				FMOD::Studio::Bank *soundBank = nullptr;
 
 				if(fmodErrorLog(m_studioSystem->loadBankFile((Config::filepathVar().sound_path + filename).c_str(), FMOD_STUDIO_LOAD_BANK_NORMAL, &soundBank), filename))
+				{
 					if(fmodErrorLog(soundBank->loadSampleData(), filename))
 						addImpactSoundBank(soundBank);
+
+					m_bankFilenames.push_back(std::make_pair(filename, soundBank));
+				}
 			}
 		}
 	}
@@ -291,6 +288,24 @@ ErrorCode AudioScene::setup(const PropertySet &p_properties)
 	loadParameterGUIDs();
 
 	return ErrorCode::Success;
+}
+
+void AudioScene::exportSetup(PropertySet &p_propertySet)
+{
+	// Get the world scene required for getting the pool sizes
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	// Add object pool sizes
+	auto &objectPoolSizePropertySet = p_propertySet.addPropertySet(Properties::ObjectPoolSize);
+	objectPoolSizePropertySet.addProperty(Properties::SoundComponent, (int)worldScene->getPoolSize<SoundComponent>());
+	objectPoolSizePropertySet.addProperty(Properties::SoundListenerComponent, (int)worldScene->getPoolSize<SoundListenerComponent>());
+
+	// Add sound banks
+	auto &banksPropertySet = p_propertySet.addPropertySet(Properties::Banks);
+	for(const auto &filenameAndBank : m_bankFilenames)
+	{
+		banksPropertySet.addPropertySet(Properties::ArrayEntry).addProperty(Properties::Filename, filenameAndBank.first);
+	}
 }
 
 void AudioScene::activate()
@@ -494,6 +509,40 @@ void AudioScene::loadInBackground()
 std::vector<SystemObject*> AudioScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	return createComponents(p_entityID, p_constructionInfo.m_audioComponents, p_startLoading);
+}
+
+void AudioScene::exportComponents(const EntityID p_entityID, ComponentsConstructionInfo &p_constructionInfo)
+{
+	exportComponents(p_entityID, p_constructionInfo.m_audioComponents);
+}
+
+void AudioScene::exportComponents(const EntityID p_entityID, AudioComponentsConstructionInfo &p_constructionInfo)
+{
+	// Get the world scene required for getting the entity registry
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	// Get the entity registry 
+	auto &entityRegistry = worldScene->getEntityRegistry();
+
+	// Export SoundComponent
+	auto *soundComponent = entityRegistry.try_get<SoundComponent>(p_entityID);
+	if(soundComponent != nullptr)
+	{
+		if(p_constructionInfo.m_soundConstructionInfo == nullptr)
+			p_constructionInfo.m_soundConstructionInfo = new SoundComponent::SoundComponentConstructionInfo();
+
+		exportComponent(*p_constructionInfo.m_soundConstructionInfo, *soundComponent);
+	}
+
+	// Export SoundListenerComponent
+	auto *soundListenerComponent = entityRegistry.try_get<SoundListenerComponent>(p_entityID);
+	if(soundListenerComponent != nullptr)
+	{
+		if(p_constructionInfo.m_soundListenerConstructionInfo == nullptr)
+			p_constructionInfo.m_soundListenerConstructionInfo = new SoundListenerComponent::SoundListenerComponentConstructionInfo();
+
+		exportComponent(*p_constructionInfo.m_soundListenerConstructionInfo, *soundListenerComponent);
+	}
 }
 
 SystemObject *AudioScene::createComponent(const EntityID &p_entityID, const SoundComponent::SoundComponentConstructionInfo &p_constructionInfo, const bool p_startLoading)

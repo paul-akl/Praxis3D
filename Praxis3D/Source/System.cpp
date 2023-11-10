@@ -3,14 +3,14 @@
 #include "ObjectDirectory.h"
 #include "System.h"
 
-SystemObject::SystemObject() : m_initialized(false), m_active(false), m_updateNeeded(false), m_systemScene(nullptr), m_objectType(Properties::Null), m_objectID(0)
+SystemObject::SystemObject() : Observer(Properties::Null), m_initialized(false), m_active(false), m_updateNeeded(false), m_systemScene(nullptr), m_objectID(0)
 {
 	setName("Null Object");
 	m_entityID = NULL_ENTITY_ID;
 	//m_objectID = ObjectDirectory::registerObject(*this);
 }
 
-SystemObject::SystemObject(SystemScene *p_systemScene, const std::string &p_name, Properties::PropertyID p_objectType, EntityID p_entityID) : m_initialized(false), m_active(false), m_updateNeeded(false), m_systemScene(p_systemScene), m_objectType(p_objectType), m_objectID(0), m_entityID(p_entityID)
+SystemObject::SystemObject(SystemScene *p_systemScene, const std::string &p_name, Properties::PropertyID p_objectType, EntityID p_entityID) : Observer(p_objectType), m_initialized(false), m_active(false), m_updateNeeded(false), m_systemScene(p_systemScene), m_objectID(0), m_entityID(p_entityID)
 {
 	setName(p_name);
 	m_objectID = ObjectDirectory::registerObject(*this);

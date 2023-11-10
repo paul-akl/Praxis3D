@@ -4,12 +4,13 @@
 
 #include "WorldScene.h"
 #include "ComponentConstructorInfo.h"
+#include "EditorWindow.h"
 #include "GUIHandlerLocator.h"
 #include "GUIScene.h"
 #include "NullSystemObjects.h"
 #include "TaskManagerLocator.h"
 
-GUIScene::GUIScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader)
+GUIScene::GUIScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader, Properties::PropertyID::GUI)
 {
 	 m_GUITask = nullptr;
 	 m_editorWindow = nullptr;
@@ -41,27 +42,27 @@ ErrorCode GUIScene::init()
 }
 
 ErrorCode GUIScene::setup(const PropertySet& p_properties)
-{	
-	// Get default object pool size
-	int objectPoolSize = Config::objectPoolVar().object_pool_size;
-
-	for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
-	{
-		switch(p_properties[i].getPropertyID())
-		{
-		case Properties::ObjectPoolSize:
-			objectPoolSize = p_properties[i].getInt();
-			break;
-		}
-	}
-
+{
 	// Get the world scene required for reserving the component pools
 	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
 
-	// Reserve every component type that belongs to this scene
-	worldScene->reserve<GUISequenceComponent>(Config::objectPoolVar().gui_sequence_component_default_pool_size);
+	// Get the property set containing object pool size
+	auto &objectPoolSizeProperty = p_properties.getPropertySetByID(Properties::ObjectPoolSize);
+
+	// Reserve every component type that belongs to this scene (and set the minimum number of objects based on default config)
+	worldScene->reserve<GUISequenceComponent>(std::max(Config::objectPoolVar().gui_sequence_component_default_pool_size, objectPoolSizeProperty.getPropertyByID(Properties::GUISequenceComponent).getInt()));
 
 	return ErrorCode::Success;
+}
+
+void GUIScene::exportSetup(PropertySet &p_propertySet)
+{
+	// Get the world scene required for getting the pool sizes
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	// Add object pool sizes
+	auto &objectPoolSizePropertySet = p_propertySet.addPropertySet(Properties::ObjectPoolSize);
+	objectPoolSizePropertySet.addProperty(Properties::GUISequenceComponent, (int)worldScene->getPoolSize<GUISequenceComponent>());
 }
 
 void GUIScene::update(const float p_deltaTime)
@@ -190,6 +191,30 @@ void GUIScene::loadInBackground()
 std::vector<SystemObject*> GUIScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	return createComponents(p_entityID, p_constructionInfo.m_guiComponents, p_startLoading);
+}
+
+void GUIScene::exportComponents(const EntityID p_entityID, ComponentsConstructionInfo &p_constructionInfo)
+{
+	exportComponents(p_entityID, p_constructionInfo.m_guiComponents);
+}
+
+void GUIScene::exportComponents(const EntityID p_entityID, GUIComponentsConstructionInfo &p_constructionInfo)
+{
+	// Get the world scene required for getting the entity registry
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	// Get the entity registry 
+	auto &entityRegistry = worldScene->getEntityRegistry();
+
+	// Export GUISequenceComponent
+	auto *guiSequenceComponent = entityRegistry.try_get<GUISequenceComponent>(p_entityID);
+	if(guiSequenceComponent != nullptr)
+	{
+		if(p_constructionInfo.m_guiSequenceConstructionInfo == nullptr)
+			p_constructionInfo.m_guiSequenceConstructionInfo = new GUISequenceComponent::GUISequenceComponentConstructionInfo();
+
+		exportComponent(*p_constructionInfo.m_guiSequenceConstructionInfo, *guiSequenceComponent);
+	}
 }
 
 SystemObject *GUIScene::createComponent(const EntityID p_entityID, const GUISequenceComponent::GUISequenceComponentConstructionInfo &p_constructionInfo, const bool p_startLoading)

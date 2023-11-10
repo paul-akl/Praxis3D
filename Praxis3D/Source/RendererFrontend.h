@@ -63,6 +63,8 @@ public:
 	void setRenderToTextureResolution(const glm::ivec2 p_renderToTextureResolution);
 	void setRenderingPasses(const RenderingPasses &p_renderingPasses);
 
+	const RenderingPasses getRenderingPasses();
+
 	// Renders a complete frame
 	void renderFrame(SceneObjects &p_sceneObjects, const float p_deltaTime);
 

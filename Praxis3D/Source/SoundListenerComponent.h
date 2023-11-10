@@ -45,10 +45,12 @@ public:
 
 	BitMask getDesiredSystemChanges() final override { return Systems::Changes::Audio::All; }
 	BitMask getPotentialSystemChanges() final override { return Systems::Changes::None; }
+	const inline int getListenerID() const { return m_listenerID; }
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
-
+		if(CheckBitmask(p_changeType, Systems::Changes::Audio::ListenerID))
+			m_listenerID = p_subject->getInt(this, Systems::Changes::Audio::ListenerID);
 	}
 
 private:

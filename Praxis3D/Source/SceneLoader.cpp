@@ -168,34 +168,88 @@ ErrorCode SceneLoader::saveToFile(const std::string p_filename)
 
 	if(!filename.empty())
 	{
-		PropertySet propertySet(Properties::Default);
+		// Get the world scene required for getting the entity registry
+		WorldScene *worldScene = static_cast<WorldScene *>(m_systemScenes[Systems::World]);
+
+		// Get the entity registry 
+		auto &entityRegistry = worldScene->getEntityRegistry();
+
+		// Add root property set for the whole file
+		PropertySet rootPropertySet(Properties::Default);
+
+		// Add root property set game objects
+		auto &gameObjects = rootPropertySet.addPropertySet(Properties::GameObject);
+
+		// An array holding all of the entities
+		std::vector<EntityID> allEntities;
+
+		// Add all entities to the array
+		entityRegistry.each([&](auto entity)
+			{
+				allEntities.push_back(entity);
+			});
+
+		// Sort the entities so they are written to file in order
+		std::sort(allEntities.begin(), allEntities.end());
+
+		// Iterate every entity
+		for(auto &entity : allEntities)
+		{
+			// Create an array entry for the entity
+			auto &gameObjectEntry = gameObjects.addPropertySet(Properties::ArrayEntry);
+
+			// Export the entity to the Construction Info
+			ComponentsConstructionInfo constructionInfo;
+			worldScene->exportEntity(entity, constructionInfo);
+
+			// Export the Construction Info to the Property Set
+			exportToProperties(constructionInfo, gameObjectEntry);
+		}
 
 		// Add scene loaded properties
-		propertySet.addProperty(Properties::LoadInBackground, m_loadInBackground);
-		
+		rootPropertySet.addProperty(Properties::LoadInBackground, m_loadInBackground);
+
 		// Add root property set for systems
-		auto &systems = propertySet.addPropertySet(Properties::Systems);
+		auto &rootSystemsPropertySet = rootPropertySet.addPropertySet(Properties::Systems);
 
 		// Add each system's properties
-		//for(size_t i = 0; i < Systems::NumberOfSystems; i++)
-		//	systems.addPropertySet(m_systemScenes[i]->exportObject());
-
-		// Add root property set for object links
-		auto &objLinksPropertySet = propertySet.addPropertySet(Properties::ObjectLinks);
-
-		// Get object links from the change controller
-		/*auto &objLinkList = m_changeController->getObjectLinksList();
-
-		for(UniversalScene::ObjectLinkList::const_iterator it = objLinkList.begin(); it != objLinkList.end(); it++)
+		for(size_t systemType = 0; systemType < Systems::NumberOfSystems; systemType++)
 		{
-			auto &objectLinkEntry = objLinksPropertySet.addPropertySet(Properties::ArrayEntry);
-			objectLinkEntry.addProperty(Properties::Subject, it->m_observerName);
-			objectLinkEntry.addProperty(Properties::Observer, it->m_subjectName);
-		}*/
+			// Convert TypeID to PropertyID
+			Properties::PropertyID systemTypeProperty = Properties::Null;
+			switch(systemType)
+			{
+				case Systems::TypeID::Audio:
+					systemTypeProperty = Properties::Audio;
+					break;
+				case Systems::TypeID::Graphics:
+					systemTypeProperty = Properties::Graphics;
+					break;
+				case Systems::TypeID::GUI:
+					systemTypeProperty = Properties::GUI;
+					break;
+				case Systems::TypeID::Physics:
+					systemTypeProperty = Properties::Physics;
+					break;
+				case Systems::TypeID::Script:
+					systemTypeProperty = Properties::Script;
+					break;
+				case Systems::TypeID::World:
+					systemTypeProperty = Properties::World;
+					break;
+			}
+
+			// Add system type entry
+			auto &systemPropertyIDentry = rootSystemsPropertySet.addPropertySet(systemTypeProperty);
+
+			// Add scene and system settings
+			m_systemScenes[systemType]->exportSetup(systemPropertyIDentry.addPropertySet(Properties::Scene));
+			m_systemScenes[systemType]->getSystem()->exportSetup(systemPropertyIDentry.addPropertySet(Properties::System));
+		}
 
 		// Save properties to a file
-		PropertyLoader savedProperties(Config::filepathVar().map_path + filename);
-		ErrorCode loaderError = savedProperties.saveToFile(propertySet);
+		PropertyLoader savedProperties(filename);
+		ErrorCode loaderError = savedProperties.saveToFile(rootPropertySet);
 
 		// Check if loading was successful, return an error, if not
 		if(loaderError != ErrorCode::Success)
@@ -300,17 +354,19 @@ void SceneLoader::importFromProperties(ComponentsConstructionInfo &p_constructio
 		switch(p_properties[i].getPropertyID())
 		{
 			case Properties::Parent:
-			{
-				// Get the entity ID if the parent object
-				p_constructionInfo.m_parent = (EntityID)p_properties[i].getInt();
-			}
-			break;
+				{
+					// Get the entity ID if the parent object
+					p_constructionInfo.m_parent = (EntityID)p_properties[i].getInt();
+				}
+				break;
 
 			case Properties::Prefab:
-			{
-				importPrefab(p_constructionInfo, p_properties[i].getString());
-			}
-			break;
+				{
+					std::string prefabName = p_properties[i].getString();
+					importPrefab(p_constructionInfo, prefabName);
+					p_constructionInfo.m_prefab = prefabName;
+				}
+				break;
 		}
 	}
 
@@ -941,6 +997,427 @@ void SceneLoader::importFromProperties(WorldComponentsConstructionInfo &p_constr
 				}
 			}
 			break;
+		}
+	}
+}
+
+void SceneLoader::exportToProperties(const ComponentsConstructionInfo &p_constructionInfo, PropertySet &p_properties)
+{
+	p_properties.addProperty(Properties::PropertyID::Name, p_constructionInfo.m_name);
+	p_properties.addProperty(Properties::PropertyID::ID, (int)p_constructionInfo.m_id);
+	p_properties.addProperty(Properties::PropertyID::Parent, (int)p_constructionInfo.m_parent);
+
+	if(!p_constructionInfo.m_prefab.empty())
+		p_properties.addProperty(Properties::PropertyID::Prefab, p_constructionInfo.m_prefab);
+
+	// Export audio components
+	exportToProperties(p_constructionInfo.m_audioComponents, p_properties);
+
+	// Export graphics components
+	exportToProperties(p_constructionInfo.m_graphicsComponents, p_properties);
+
+	// Export GUI components
+	exportToProperties(p_constructionInfo.m_guiComponents, p_properties);
+
+	// Export physics components
+	exportToProperties(p_constructionInfo.m_physicsComponents, p_properties);
+
+	// Export script components
+	exportToProperties(p_constructionInfo.m_scriptComponents, p_properties);
+
+	// Export world components
+	exportToProperties(p_constructionInfo.m_worldComponents, p_properties);
+}
+
+void SceneLoader::exportToProperties(const AudioComponentsConstructionInfo &p_constructionInfo, PropertySet &p_properties)
+{
+	if(	p_constructionInfo.m_soundConstructionInfo != nullptr ||
+		p_constructionInfo.m_soundListenerConstructionInfo != nullptr)
+	{
+		auto &propertySet = p_properties.addPropertySet(Properties::PropertyID::Audio);
+
+		// Export SoundComponent
+		if(p_constructionInfo.m_soundConstructionInfo != nullptr)
+		{
+			auto &componentPropertySet = propertySet.addPropertySet(Properties::PropertyID::SoundComponent);
+
+			componentPropertySet.addProperty(Properties::PropertyID::Active, p_constructionInfo.m_soundConstructionInfo->m_active);
+			componentPropertySet.addProperty(Properties::PropertyID::Filename, p_constructionInfo.m_soundConstructionInfo->m_soundFilename);
+			switch(p_constructionInfo.m_soundConstructionInfo->m_soundType)
+			{
+				case SoundComponent::SoundType::SoundType_Ambient:
+					componentPropertySet.addProperty(Properties::PropertyID::Type, Properties::PropertyID::Ambient);
+					break;
+				case SoundComponent::SoundType::SoundType_Music:
+					componentPropertySet.addProperty(Properties::PropertyID::Type, Properties::PropertyID::Music);
+					break;
+				case SoundComponent::SoundType::SoundType_SoundEffect:
+					componentPropertySet.addProperty(Properties::PropertyID::Type, Properties::PropertyID::SoundEffect);
+					break;
+			}
+			componentPropertySet.addProperty(Properties::PropertyID::Loop, p_constructionInfo.m_soundConstructionInfo->m_loop);
+			componentPropertySet.addProperty(Properties::PropertyID::Spatialized, p_constructionInfo.m_soundConstructionInfo->m_spatialized);
+			componentPropertySet.addProperty(Properties::PropertyID::StartPlaying, p_constructionInfo.m_soundConstructionInfo->m_startPlaying);
+			componentPropertySet.addProperty(Properties::PropertyID::Volume, p_constructionInfo.m_soundConstructionInfo->m_volume);
+		}
+
+		// Export SoundListenerComponent
+		if(p_constructionInfo.m_soundListenerConstructionInfo != nullptr)
+		{
+			auto &componentPropertySet = propertySet.addPropertySet(Properties::PropertyID::SoundListenerComponent);
+
+			componentPropertySet.addProperty(Properties::PropertyID::Active, p_constructionInfo.m_soundListenerConstructionInfo->m_active);
+			//componentPropertySet.addProperty(Properties::PropertyID::ListenerID, p_constructionInfo.m_soundListenerConstructionInfo->m_listenerID);
+		}
+	}
+}
+
+void SceneLoader::exportToProperties(const GraphicsComponentsConstructionInfo &p_constructionInfo, PropertySet &p_properties)
+{
+	if(p_constructionInfo.m_cameraConstructionInfo != nullptr ||
+		p_constructionInfo.m_lightConstructionInfo != nullptr ||
+		p_constructionInfo.m_modelConstructionInfo != nullptr ||
+		p_constructionInfo.m_shaderConstructionInfo != nullptr)
+	{
+		auto &propertySet = p_properties.addPropertySet(Properties::PropertyID::Graphics);
+
+		// Export CameraComponent
+		if(p_constructionInfo.m_cameraConstructionInfo != nullptr)
+		{
+			auto &componentPropertySet = propertySet.addPropertySet(Properties::PropertyID::CameraComponent);
+
+			componentPropertySet.addProperty(Properties::PropertyID::Active, p_constructionInfo.m_cameraConstructionInfo->m_active);
+			//componentPropertySet.addProperty(Properties::PropertyID::FOV, p_constructionInfo.m_cameraConstructionInfo->m_fov);
+		}
+
+		// Export LightComponent
+		if(p_constructionInfo.m_lightConstructionInfo != nullptr)
+		{
+			auto &componentPropertySet = propertySet.addPropertySet(Properties::PropertyID::LightComponent);
+
+			componentPropertySet.addProperty(Properties::PropertyID::Active, p_constructionInfo.m_lightConstructionInfo->m_active);
+			switch(p_constructionInfo.m_lightConstructionInfo->m_lightComponentType)
+			{
+				case LightComponent::LightComponentType::LightComponentType_directional:
+					componentPropertySet.addProperty(Properties::PropertyID::Type, Properties::PropertyID::DirectionalLight);
+					componentPropertySet.addProperty(Properties::PropertyID::Color, p_constructionInfo.m_lightConstructionInfo->m_color);
+					componentPropertySet.addProperty(Properties::PropertyID::Intensity, p_constructionInfo.m_lightConstructionInfo->m_intensity);
+					break;
+				case LightComponent::LightComponentType::LightComponentType_point:
+					componentPropertySet.addProperty(Properties::PropertyID::Type, Properties::PropertyID::PointLight);
+					componentPropertySet.addProperty(Properties::PropertyID::Color, p_constructionInfo.m_lightConstructionInfo->m_color);
+					componentPropertySet.addProperty(Properties::PropertyID::Intensity, p_constructionInfo.m_lightConstructionInfo->m_intensity);
+					break;
+				case LightComponent::LightComponentType::LightComponentType_spot:
+					componentPropertySet.addProperty(Properties::PropertyID::Type, Properties::PropertyID::SpotLight);
+					componentPropertySet.addProperty(Properties::PropertyID::Color, p_constructionInfo.m_lightConstructionInfo->m_color);
+					componentPropertySet.addProperty(Properties::PropertyID::Intensity, p_constructionInfo.m_lightConstructionInfo->m_intensity);
+					componentPropertySet.addProperty(Properties::PropertyID::CutoffAngle, p_constructionInfo.m_lightConstructionInfo->m_cutoffAngle);
+					break;
+			}
+
+		}
+
+		// Export ModelComponent
+		if(p_constructionInfo.m_modelConstructionInfo != nullptr)
+		{
+			auto &componentPropertySet = propertySet.addPropertySet(Properties::PropertyID::ModelComponent);
+
+			componentPropertySet.addProperty(Properties::PropertyID::Active, p_constructionInfo.m_modelConstructionInfo->m_active);
+
+			auto &modelsPropertySet = componentPropertySet.addPropertySet(Properties::PropertyID::Models);
+
+			// Go over each model
+			for(auto &model : p_constructionInfo.m_modelConstructionInfo->m_modelsProperties.m_modelNames)
+			{
+				auto &modelPropertyArrayEntry = modelsPropertySet.addPropertySet(Properties::ArrayEntry);
+
+				// Add model data
+				modelPropertyArrayEntry.addProperty(Properties::PropertyID::Filename, model);
+
+				auto &meshesPropertySet = modelPropertyArrayEntry.addPropertySet(Properties::PropertyID::Meshes);
+
+				// Go over each mesh
+				for(decltype(p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_numOfMeshes) i = 0; i < p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_numOfMeshes; i++)
+				{
+					// Make sure the mesh data is present
+					if(p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_present[i])
+					{
+						auto &meshPropertyArrayEntry = meshesPropertySet.addPropertySet(Properties::ArrayEntry);
+
+						// Add mesh data
+						meshPropertyArrayEntry.addProperty(Properties::PropertyID::Index, (int)i);
+						meshPropertyArrayEntry.addProperty(Properties::PropertyID::AlphaThreshold, p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_alphaThreshold[i]);
+						meshPropertyArrayEntry.addProperty(Properties::PropertyID::HeightScale, p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_heightScale[i]);
+
+						auto &materialsPropertySet = meshPropertyArrayEntry.addPropertySet(Properties::Materials);
+
+						// Go over each material
+						for(unsigned int materialType = 0; materialType < MaterialType::MaterialType_NumOfTypes; materialType++)
+						{
+							// Make sure the material filename is not empty
+							if(!p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_meshMaterials[i][materialType].empty())
+							{
+								Properties::PropertyID materialPropertyID = Properties::Null;
+
+								// Convert MaterialType to PropertyID
+								switch(materialType)
+								{
+									case MaterialType_Diffuse:
+										materialPropertyID = Properties::Diffuse;
+										break;
+									case MaterialType_Normal:
+										materialPropertyID = Properties::Normal;
+										break;
+									case MaterialType_Emissive:
+										materialPropertyID = Properties::Emissive;
+										break;
+									case MaterialType_Combined:
+										materialPropertyID = Properties::RMHAO;
+										break;
+								}
+								auto &materialPropertySet = materialsPropertySet.addPropertySet(materialPropertyID);
+
+								// Add material data
+								materialPropertySet.addProperty(Properties::PropertyID::Filename, p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_meshMaterials[i][materialType]);
+								materialPropertySet.addProperty(Properties::PropertyID::TextureScale, p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_meshMaterialsScale[i][materialType]);
+							}
+						}
+					}
+				}
+
+
+
+			}
+
+			modelsPropertySet.addPropertySet(Properties::ArrayEntry);
+		}
+
+		// Export ShaderComponent
+		if(p_constructionInfo.m_shaderConstructionInfo != nullptr)
+		{
+			auto &componentPropertySet = propertySet.addPropertySet(Properties::PropertyID::ShaderComponent);
+
+			componentPropertySet.addProperty(Properties::PropertyID::Active, p_constructionInfo.m_shaderConstructionInfo->m_active);
+
+			// Add shader data, making sure isn't not empty before adding it
+			if(!p_constructionInfo.m_shaderConstructionInfo->m_fragmentShaderFilename.empty())
+				componentPropertySet.addProperty(Properties::PropertyID::FragmentShader, p_constructionInfo.m_shaderConstructionInfo->m_fragmentShaderFilename);
+			if(!p_constructionInfo.m_shaderConstructionInfo->m_vetexShaderFilename.empty())
+				componentPropertySet.addProperty(Properties::PropertyID::VertexShader, p_constructionInfo.m_shaderConstructionInfo->m_vetexShaderFilename);
+			if(!p_constructionInfo.m_shaderConstructionInfo->m_geometryShaderFilename.empty())
+				componentPropertySet.addProperty(Properties::PropertyID::GeometryShader, p_constructionInfo.m_shaderConstructionInfo->m_geometryShaderFilename);
+		}
+	}
+}
+
+void SceneLoader::exportToProperties(const GUIComponentsConstructionInfo &p_constructionInfo, PropertySet &p_properties)
+{
+	if(p_constructionInfo.m_guiSequenceConstructionInfo != nullptr)
+	{
+		auto &propertySet = p_properties.addPropertySet(Properties::PropertyID::GUI);
+
+		// Export GUISequenceComponent
+		if(p_constructionInfo.m_guiSequenceConstructionInfo != nullptr)
+		{
+			auto &componentPropertySet = propertySet.addPropertySet(Properties::PropertyID::GUISequenceComponent);
+
+			// Add GUI sequence data
+			componentPropertySet.addProperty(Properties::PropertyID::Active, p_constructionInfo.m_guiSequenceConstructionInfo->m_active);
+			componentPropertySet.addProperty(Properties::PropertyID::Static, p_constructionInfo.m_guiSequenceConstructionInfo->m_staticSequence);
+		}
+	}
+}
+
+void SceneLoader::exportToProperties(const PhysicsComponentsConstructionInfo &p_constructionInfo, PropertySet &p_properties)
+{
+	if(p_constructionInfo.m_rigidBodyConstructionInfo != nullptr)
+	{
+		auto &propertySet = p_properties.addPropertySet(Properties::PropertyID::Physics);
+
+		// Export RigidBodyComponent
+		if(p_constructionInfo.m_rigidBodyConstructionInfo != nullptr)
+		{
+			auto &componentPropertySet = propertySet.addPropertySet(Properties::PropertyID::RigidBodyComponent);
+
+			// Add rigid body data
+			componentPropertySet.addProperty(Properties::PropertyID::Active, p_constructionInfo.m_rigidBodyConstructionInfo->m_active);
+			componentPropertySet.addProperty(Properties::PropertyID::Friction, p_constructionInfo.m_rigidBodyConstructionInfo->m_friction);
+			componentPropertySet.addProperty(Properties::PropertyID::Mass, p_constructionInfo.m_rigidBodyConstructionInfo->m_mass);
+			componentPropertySet.addProperty(Properties::PropertyID::Restitution, p_constructionInfo.m_rigidBodyConstructionInfo->m_restitution);
+			componentPropertySet.addProperty(Properties::PropertyID::Kinematic, p_constructionInfo.m_rigidBodyConstructionInfo->m_kinematic);
+
+			// Convert CollisionShapeType to PropertyID
+			Properties::PropertyID collisionShapeType = Properties::Null;
+			switch(p_constructionInfo.m_rigidBodyConstructionInfo->m_collisionShapeType)
+			{
+				case RigidBodyComponent::CollisionShapeType_Box:
+					collisionShapeType = Properties::Box;
+					break;
+				case RigidBodyComponent::CollisionShapeType_Capsule:
+					collisionShapeType = Properties::Capsule;
+					break;
+				case RigidBodyComponent::CollisionShapeType_Cone:
+					collisionShapeType = Properties::Cone;
+					break;
+				case RigidBodyComponent::CollisionShapeType_ConvexHull:
+					collisionShapeType = Properties::ConvexHull;
+					break;
+				case RigidBodyComponent::CollisionShapeType_Cylinder:
+					collisionShapeType = Properties::Cylinder;
+					break;
+				case RigidBodyComponent::CollisionShapeType_Sphere:
+					collisionShapeType = Properties::Sphere;
+					break;
+			}
+
+			// Add collision shape data, if it's valid
+			if(collisionShapeType != Properties::Null)
+			{
+				auto &collisionShapePropertySet = componentPropertySet.addPropertySet(Properties::PropertyID::CollisionShape);
+				collisionShapePropertySet.addProperty(Properties::PropertyID::Type, collisionShapeType);
+				collisionShapePropertySet.addProperty(Properties::PropertyID::Size, p_constructionInfo.m_rigidBodyConstructionInfo->m_collisionShapeSize);
+			}
+		}
+	}
+}
+
+void SceneLoader::exportToProperties(const ScriptComponentsConstructionInfo &p_constructionInfo, PropertySet &p_properties)
+{
+	if(p_constructionInfo.m_luaConstructionInfo != nullptr)
+	{
+		auto &propertySet = p_properties.addPropertySet(Properties::PropertyID::Script);
+
+		// Export LuaComponent
+		if(p_constructionInfo.m_luaConstructionInfo != nullptr)
+		{
+			auto &componentPropertySet = propertySet.addPropertySet(Properties::PropertyID::LuaComponent);
+
+			// Add LUA component data
+			if(!p_constructionInfo.m_luaConstructionInfo->m_luaScriptFilename.empty())
+			{
+				componentPropertySet.addProperty(Properties::PropertyID::Active, p_constructionInfo.m_luaConstructionInfo->m_active);
+				componentPropertySet.addProperty(Properties::PropertyID::Filename, p_constructionInfo.m_luaConstructionInfo->m_luaScriptFilename);
+
+				if(!p_constructionInfo.m_luaConstructionInfo->m_variables.empty())
+				{
+					auto &variablesPropertySet = componentPropertySet.addPropertySet(Properties::PropertyID::Variables);
+
+					// Go over each variable
+					for(auto &variable : p_constructionInfo.m_luaConstructionInfo->m_variables)
+					{
+						// Make sure variable type is valid
+						if(variable.second.getVariableType() != Property::PropertyVariableType::Type_null)
+						{
+							auto &variableArrayEntry = variablesPropertySet.addPropertySet(Properties::PropertyID::ArrayEntry);
+
+							// Add variable data
+							variableArrayEntry.addProperty(Properties::PropertyID::Name, variable.first);
+
+							// Add the appropriate data based on the variable's data type
+							switch(variable.second.getVariableType())
+							{
+								case Property::PropertyVariableType::Type_bool:
+									variableArrayEntry.addProperty(Properties::PropertyID::Value, variable.second.getBool());
+									break;
+								case Property::PropertyVariableType::Type_int:
+									variableArrayEntry.addProperty(Properties::PropertyID::Value, variable.second.getInt());
+									break;
+								case Property::PropertyVariableType::Type_float:
+									variableArrayEntry.addProperty(Properties::PropertyID::Value, variable.second.getFloat());
+									break;
+								case Property::PropertyVariableType::Type_double:
+									variableArrayEntry.addProperty(Properties::PropertyID::Value, variable.second.getDouble());
+									break;
+								case Property::PropertyVariableType::Type_vec2i:
+									variableArrayEntry.addProperty(Properties::PropertyID::Value, variable.second.getVec2i());
+									break;
+								case Property::PropertyVariableType::Type_vec2f:
+									variableArrayEntry.addProperty(Properties::PropertyID::Value, variable.second.getVec2f());
+									break;
+								case Property::PropertyVariableType::Type_vec3f:
+									variableArrayEntry.addProperty(Properties::PropertyID::Value, variable.second.getVec3f());
+									break;
+								case Property::PropertyVariableType::Type_vec4f:
+									variableArrayEntry.addProperty(Properties::PropertyID::Value, variable.second.getVec4f());
+									break;
+								case Property::PropertyVariableType::Type_string:
+									variableArrayEntry.addProperty(Properties::PropertyID::Value, variable.second.getString());
+									break;
+								case Property::PropertyVariableType::Type_propertyID:
+									variableArrayEntry.addProperty(Properties::PropertyID::Value, variable.second.getID());
+									break;
+							}
+						}
+					}
+
+				}
+			}
+		}
+	}
+
+	std::string m_luaScriptFilename;
+	std::vector<std::pair<std::string, Property>> m_variables;
+}
+
+void SceneLoader::exportToProperties(const WorldComponentsConstructionInfo &p_constructionInfo, PropertySet &p_properties)
+{
+	if(	p_constructionInfo.m_objectMaterialConstructionInfo != nullptr ||
+		p_constructionInfo.m_spatialConstructionInfo != nullptr)
+	{
+		auto &propertySet = p_properties.addPropertySet(Properties::PropertyID::World);
+
+		// Export ObjectMaterialComponent
+		if(p_constructionInfo.m_objectMaterialConstructionInfo != nullptr)
+		{
+			// Convert ObjectMaterialType to PropertyID
+			Properties::PropertyID objectMaterialType = Properties::Null;
+			switch(p_constructionInfo.m_objectMaterialConstructionInfo->m_materialType)
+			{
+				case Concrete:
+					objectMaterialType = Properties::Concrete;
+					break;
+				case Glass:
+					objectMaterialType = Properties::Glass;
+					break;
+				case Metal:
+					objectMaterialType = Properties::Metal;
+					break;
+				case Plastic:
+					objectMaterialType = Properties::Plastic;
+					break;
+				case Rock:
+					objectMaterialType = Properties::Rock;
+					break;
+				case Rubber:
+					objectMaterialType = Properties::Rubber;
+					break;
+				case Wood:
+					objectMaterialType = Properties::Wood;
+					break;
+			}
+
+			// Add object material data, if it's valid
+			if(objectMaterialType != Properties::Null)
+			{
+				auto &componentPropertySet = propertySet.addPropertySet(Properties::PropertyID::ObjectMaterialComponent);
+
+				componentPropertySet.addProperty(Properties::PropertyID::Active, p_constructionInfo.m_objectMaterialConstructionInfo->m_active);
+				componentPropertySet.addProperty(Properties::PropertyID::Type, objectMaterialType);
+			}
+		}
+
+		// Export SpatialComponent
+		if(p_constructionInfo.m_spatialConstructionInfo != nullptr)
+		{
+			auto &componentPropertySet = propertySet.addPropertySet(Properties::PropertyID::SpatialComponent);
+
+			// Add spatial data
+			componentPropertySet.addProperty(Properties::PropertyID::Active, p_constructionInfo.m_spatialConstructionInfo->m_active);
+			componentPropertySet.addProperty(Properties::PropertyID::LocalPosition, p_constructionInfo.m_spatialConstructionInfo->m_localPosition);
+			componentPropertySet.addProperty(Properties::PropertyID::LocalRotation, p_constructionInfo.m_spatialConstructionInfo->m_localRotationEuler);
+			componentPropertySet.addProperty(Properties::PropertyID::LocalRotationQuaternion, Math::toGlmVec4(p_constructionInfo.m_spatialConstructionInfo->m_localRotationQuaternion));
+			componentPropertySet.addProperty(Properties::PropertyID::LocalScale, p_constructionInfo.m_spatialConstructionInfo->m_localScale);
 		}
 	}
 }

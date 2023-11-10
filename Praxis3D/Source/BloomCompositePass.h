@@ -7,7 +7,7 @@ class BloomCompositePass : public RenderPass
 {
 public:
 	BloomCompositePass(RendererFrontend &p_renderer) :
-		RenderPass(p_renderer)
+		RenderPass(p_renderer, RenderPassType::RenderPassType_BloomComposite)
 	{
 		m_bloomCompositeShader = nullptr;
 	}

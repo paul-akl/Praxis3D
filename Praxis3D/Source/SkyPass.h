@@ -7,7 +7,7 @@ class SkyPass : public RenderPass
 {
 public:
 	SkyPass(RendererFrontend &p_renderer) :
-		RenderPass(p_renderer) { }
+		RenderPass(p_renderer, RenderPassType::RenderPassType_NumOfTypes) { }
 
 	~SkyPass() { }
 

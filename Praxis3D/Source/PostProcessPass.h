@@ -7,7 +7,7 @@ class PostProcessPass : public RenderPass
 {
 public:
 	PostProcessPass(RendererFrontend &p_renderer) :
-		RenderPass(p_renderer), 
+		RenderPass(p_renderer, RenderPassType::RenderPassType_NumOfTypes),
 		m_lensFlareParamBuffer(BufferType_Uniform, BufferBindTarget_Uniform, BufferUsageHint_DynamicDraw),
 		m_lensFlareGhostGradient(Loaders::texture2D().load(Config::rendererVar().lens_flare_ghost_gradient_texture))
 	{

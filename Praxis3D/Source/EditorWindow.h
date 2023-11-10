@@ -1,19 +1,24 @@
 #pragma once
 
+#include "ComponentConstructorInfo.h"
 #include "ErrorHandlerLocator.h"
 #include "GUIHandler.h"
+#include "LightComponent.h"
 #include "Loaders.h"
 #include "InheritanceObjects.h"
+#include "RigidBodyComponent.h"
 #include "System.h"
+
+struct FileBrowserDialog;
 
 class EditorWindow : public SystemObject
 {
 	friend class GUIScene;
 public:
 	EditorWindow(SystemScene *p_systemScene, std::string p_name, const EntityID p_entityID, std::size_t p_id = 0) : 
-		SystemObject(p_systemScene, p_name, Properties::PropertyID::EditorWindow, p_entityID)
+		SystemObject(p_systemScene, p_name, Properties::PropertyID::EditorWindow, p_entityID),
+		m_selectedEntity(*this)
 	{
-		m_selectedEntity = NULL_ENTITY_ID;
 		m_renderSceneToTexture = true;
 		m_GUISequenceEnabled = false;
 		m_LUAScriptingEnabled = true;
@@ -21,6 +26,16 @@ public:
 
 		m_selectedTexture = nullptr;
 		m_textureInspectorTabFlags = 0;
+
+		m_colorEditFlags = ImGuiColorEditFlags_Float;
+		m_browseButtonWidth = 60.0f;
+		m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_None;
+		m_fileBrowserDialog.m_name = "EditorFileBrowserDialog";
+
+		m_luaVariableTypeStrings = { "null", "bool", "int", "float", "double", "vec2i", "vec2f", "vec3f", "vec4f", "string", "propertyID" };
+
+		for(unsigned int i = 0; i < ObjectMaterialType::NumberOfMaterialTypes; i++)
+			m_physicalMaterialProperties.push_back(GetString(static_cast<ObjectMaterialType>(i)));
 	}
 	~EditorWindow() { }
 
@@ -109,10 +124,217 @@ public:
 
 	void setup(EditorWindowSettings &p_editorWindowSettings);
 
+	const inline glm::quat &getQuaternion(const Observer *p_observer, BitMask p_changedBits) const
+	{
+		return m_selectedEntity.m_spatialDataManager.getQuaternion(p_observer, p_changedBits);
+	}
+	const glm::vec3 &getVec3(const Observer *p_observer, BitMask p_changedBits)	const 
+	{ 
+		if((p_changedBits & Systems::Changes::Type::Spatial) != 0)
+		{
+			return m_selectedEntity.m_spatialDataManager.getVec3(p_observer, p_changedBits);
+		}
+		else
+		{
+			switch(p_changedBits)
+			{
+				case Systems::Changes::Graphics::Color:
+				{
+					switch(m_selectedEntity.m_lightType)
+					{
+					case LightComponent::LightComponentType::LightComponentType_directional:
+						return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_color;
+						break;
+					case LightComponent::LightComponentType::LightComponentType_point:
+						return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_color;
+						break;
+					case LightComponent::LightComponentType::LightComponentType_spot:
+						return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_color;
+						break;
+					}
+				}
+				break;
+				case Systems::Changes::Physics::CollisionShapeSize:
+				{
+					return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeSize;
+				}
+				break;
+			}
+		}
+
+		return NullObjects::NullVec3f;
+	}
+	const inline glm::mat4 &getMat4(const Observer *p_observer, BitMask p_changedBits) const
+	{
+			return m_selectedEntity.m_spatialDataManager.getMat4(p_observer, p_changedBits);
+	}
+
+	const bool getBool(const Observer *p_observer, BitMask p_changedBits) const 
+	{ 
+		switch(p_changedBits)
+		{
+			case Systems::Changes::Physics::Kinematic:
+			{
+				return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_kinematic;
+			}
+			break;
+
+			case Systems::Changes::GUI::StaticSequence:
+			{
+				return m_selectedEntity.m_componentData.m_guiComponents.m_guiSequenceConstructionInfo->m_staticSequence;
+			}
+			break;
+
+			case Systems::Changes::Generic::Active:
+			{
+				switch(p_observer->getObjectType())
+				{
+					case Properties::PropertyID::SoundComponent:
+						return m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_active;
+					case Properties::PropertyID::SoundListenerComponent:
+						return m_selectedEntity.m_componentData.m_audioComponents.m_soundListenerConstructionInfo->m_active;
+
+					case Properties::PropertyID::CameraComponent:
+						return m_selectedEntity.m_componentData.m_graphicsComponents.m_cameraConstructionInfo->m_active;
+					case Properties::PropertyID::LightComponent:
+						return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_active;
+					case Properties::PropertyID::ModelComponent:
+						return m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_active;
+					case Properties::PropertyID::ShaderComponent:
+						return m_selectedEntity.m_componentData.m_graphicsComponents.m_shaderConstructionInfo->m_active;
+
+					case Properties::PropertyID::GUISequenceComponent:
+						return m_selectedEntity.m_componentData.m_guiComponents.m_guiSequenceConstructionInfo->m_active;
+
+					case Properties::PropertyID::RigidBodyComponent:
+						return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_active;
+
+					case Properties::PropertyID::LuaComponent:
+						return m_selectedEntity.m_componentData.m_scriptComponents.m_luaConstructionInfo->m_active;
+
+					case Properties::PropertyID::ObjectMaterialComponent:
+						return m_selectedEntity.m_componentData.m_worldComponents.m_objectMaterialConstructionInfo->m_active;
+					case Properties::PropertyID::SpatialComponent:
+						return m_selectedEntity.m_componentData.m_worldComponents.m_spatialConstructionInfo->m_active;
+				}
+			}
+			break;
+		}
+
+		return NullObjects::NullBool; 
+	}
+	const int getInt(const Observer *p_observer, BitMask p_changedBits) const 
+	{ 
+		switch(p_changedBits)
+		{
+		case Systems::Changes::Audio::ListenerID:
+			{
+				if(m_selectedEntity.m_componentData.m_audioComponents.m_soundListenerConstructionInfo->m_listenerID >= 0)
+					return m_selectedEntity.m_componentData.m_audioComponents.m_soundListenerConstructionInfo->m_listenerID;
+			}
+			break;
+
+		case Systems::Changes::Physics::CollisionShapeType:
+			{
+				if(m_selectedEntity.m_collisionShapeType >= 0 && m_selectedEntity.m_collisionShapeType < RigidBodyComponent::CollisionShapeType::CollisionShapeType_NumOfTypes)
+					return m_selectedEntity.m_collisionShapeType;
+			}
+			break;
+		}
+
+		return NullObjects::NullInt; 
+	}
+	const unsigned int getUnsignedInt(const Observer *p_observer, BitMask p_changedBits) const 
+	{ 
+		switch(p_changedBits)
+		{
+		case Systems::Changes::World::ObjectMaterialType:
+			{
+				if(m_selectedEntity.m_objectMaterialType >= 0 && m_selectedEntity.m_objectMaterialType < ObjectMaterialType::NumberOfMaterialTypes)
+					return (unsigned int)m_selectedEntity.m_objectMaterialType;
+			}
+			break;
+		}
+
+		return NullObjects::NullUnsignedInt; 
+	}
+	const float getFloat(const Observer *p_observer, BitMask p_changedBits) const 
+	{
+		switch(p_changedBits)
+		{
+			case Systems::Changes::Graphics::CutoffAngle:
+			{
+				if(m_selectedEntity.m_lightType == LightComponent::LightComponentType::LightComponentType_spot)
+					return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_cutoffAngle;
+			}
+			break;
+
+			case Systems::Changes::Graphics::Intensity:
+			{
+				switch(m_selectedEntity.m_lightType)
+				{
+					case LightComponent::LightComponentType::LightComponentType_directional:
+					case LightComponent::LightComponentType::LightComponentType_point:
+					case LightComponent::LightComponentType::LightComponentType_spot:
+						return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_intensity;
+					break;
+				}
+			}
+			break;
+
+			case Systems::Changes::Physics::Friction:
+			{
+				return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_friction;
+			}
+			break;
+
+			case Systems::Changes::Physics::Mass:
+			{
+				return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_mass;
+			}
+			break;
+
+			case Systems::Changes::Physics::Restitution:
+			{
+				return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_restitution;
+			}
+			break;
+		}
+
+		return NullObjects::NullFloat; 
+	}
+	const std::string &getString(const Observer *p_observer, BitMask p_changedBits)	const 
+	{
+		switch(p_changedBits)
+		{
+			case Systems::Changes::Generic::Name:
+				{
+					return m_selectedEntity.m_componentData.m_name;
+				}
+				break;
+
+			case Systems::Changes::Script::Filename:
+				{
+					return m_selectedEntity.m_componentData.m_scriptComponents.m_luaConstructionInfo->m_luaScriptFilename;
+				}
+				break;
+		}
+
+		return NullObjects::NullString; 
+	}
+	const inline SpatialData &getSpatialData(const Observer *p_observer, BitMask p_changedBits) const
+	{
+		return m_selectedEntity.m_spatialDataManager.getSpatialData(p_observer, p_changedBits);
+	}
+	const inline SpatialTransformData &getSpatialTransformData(const Observer *p_observer, BitMask p_changedBits) const
+	{
+		return m_selectedEntity.m_spatialDataManager.getSpatialTransformData(p_observer, p_changedBits);
+	}
+
 private:
 	struct ComponentListEntry
 	{
-		ComponentListEntry(EntityID p_entityID, const std::string &p_name, const std::string &p_combinedEntityIdAndName) : m_entityID(p_entityID), m_name(p_name), m_combinedEntityIdAndName(p_combinedEntityIdAndName) { }
+		ComponentListEntry(const EntityID p_entityID, const std::string &p_name, const std::string &p_combinedEntityIdAndName) : m_entityID(p_entityID), m_name(p_name), m_combinedEntityIdAndName(p_combinedEntityIdAndName) { }
 
 		EntityID m_entityID;
 		std::string m_name;
@@ -120,7 +342,7 @@ private:
 	};
 	struct EntityListEntry
 	{
-		EntityListEntry(EntityID p_entityID, EntityID p_parentEntityID, const std::string &p_name, const std::string &p_combinedEntityIdAndName) : m_entityID(p_entityID), m_parentEntityID(p_parentEntityID), m_name(p_name), m_combinedEntityIdAndName(p_combinedEntityIdAndName), m_componentFlag(Systems::AllComponentTypes::None) { }
+		EntityListEntry(const EntityID p_entityID, const EntityID p_parentEntityID, const std::string &p_name, const std::string &p_combinedEntityIdAndName) : m_entityID(p_entityID), m_parentEntityID(p_parentEntityID), m_name(p_name), m_combinedEntityIdAndName(p_combinedEntityIdAndName), m_componentFlag(Systems::AllComponentTypes::None) { }
 		EntityListEntry(const EntityListEntry &p_entityListEntry) : m_entityID(p_entityListEntry.m_entityID), m_parentEntityID(p_entityListEntry.m_parentEntityID), m_name(p_entityListEntry.m_name), m_combinedEntityIdAndName(p_entityListEntry.m_combinedEntityIdAndName), m_componentFlag(Systems::AllComponentTypes::None) { }
 		bool operator==(const EntityListEntry &p_entityListEntry) { return m_entityID == p_entityListEntry.m_entityID; }
 
@@ -133,7 +355,7 @@ private:
 	struct EntityHierarchyEntry
 	{
 		EntityHierarchyEntry() : m_entityID(NULL_ENTITY_ID), m_parent(NULL_ENTITY_ID), m_componentFlag(Systems::AllComponentTypes::None) { }
-		EntityHierarchyEntry(EntityID p_entityID, EntityID p_parent, const std::string &p_name, const std::string &p_combinedEntityIdAndName, const BitMask p_componentFlag) : m_entityID(p_entityID), m_parent(p_parent), m_name(p_name), m_combinedEntityIdAndName(p_combinedEntityIdAndName), m_componentFlag(p_componentFlag){ }
+		EntityHierarchyEntry(const EntityID p_entityID, const EntityID p_parent, const std::string &p_name, const std::string &p_combinedEntityIdAndName, const BitMask p_componentFlag) : m_entityID(p_entityID), m_parent(p_parent), m_name(p_name), m_combinedEntityIdAndName(p_combinedEntityIdAndName), m_componentFlag(p_componentFlag){ }
 
 		bool operator==(const EntityHierarchyEntry &p_childEntityEntry) { return m_entityID == p_childEntityEntry.m_entityID; }
 
@@ -185,6 +407,74 @@ private:
 		std::string m_combinedEntityIdAndName;
 		std::vector<EntityHierarchyEntry> m_children;
 	};
+	struct SelectedEntity
+	{
+		SelectedEntity(const Observer &p_parent) : m_spatialDataManager(p_parent)
+		{ 
+			m_entityID = NULL_ENTITY_ID;
+			m_objectMaterialType = ObjectMaterialType::Concrete;
+			m_lightType = LightComponent::LightComponentType::LightComponentType_null;
+			m_collisionShapeType = RigidBodyComponent::CollisionShapeType::CollisionShapeType_Null;
+
+			m_luaVariablesModified = false;
+			m_luaScriptFilenameModified = false;
+
+			m_componentData.m_audioComponents.m_soundConstructionInfo = new SoundComponent::SoundComponentConstructionInfo();
+			m_componentData.m_audioComponents.m_soundListenerConstructionInfo = new SoundListenerComponent::SoundListenerComponentConstructionInfo();
+
+			m_componentData.m_graphicsComponents.m_cameraConstructionInfo = new CameraComponent::CameraComponentConstructionInfo();
+			m_componentData.m_graphicsComponents.m_lightConstructionInfo = new LightComponent::LightComponentConstructionInfo();
+			m_componentData.m_graphicsComponents.m_modelConstructionInfo = new ModelComponent::ModelComponentConstructionInfo();
+			m_componentData.m_graphicsComponents.m_shaderConstructionInfo = new ShaderComponent::ShaderComponentConstructionInfo();
+
+			m_componentData.m_guiComponents.m_guiSequenceConstructionInfo = new GUISequenceComponent::GUISequenceComponentConstructionInfo();
+
+			m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo = new RigidBodyComponent::RigidBodyComponentConstructionInfo();
+
+			m_componentData.m_scriptComponents.m_luaConstructionInfo = new LuaComponent::LuaComponentConstructionInfo();
+
+			m_componentData.m_worldComponents.m_objectMaterialConstructionInfo = new ObjectMaterialComponent::ObjectMaterialComponentConstructionInfo();
+			m_componentData.m_worldComponents.m_spatialConstructionInfo = new SpatialComponent::SpatialComponentConstructionInfo();
+		}
+
+		inline operator bool() const { return m_entityID != NULL_ENTITY_ID; }
+
+		void setEntity(const EntityID p_entityID)
+		{
+			m_entityID = p_entityID;
+			m_luaVariablesModified = false;
+			m_luaScriptFilenameModified = false;
+		}
+
+		void unselect()
+		{
+			m_entityID = NULL_ENTITY_ID;
+			m_luaVariablesModified = false;
+			m_luaScriptFilenameModified = false;
+		}
+
+		EntityID m_entityID;
+
+		ComponentsConstructionInfo m_componentData;
+
+		// SpatialComponent data
+		SpatialDataManager m_spatialDataManager;
+
+		// ObjectMaterialComponent data 
+		int m_objectMaterialType;
+
+		// LightComponent data
+		int m_lightType;
+
+		// RigidBodyComponent data
+		int m_collisionShapeType;
+
+		// An array of external lua variables
+		std::vector<std::pair<std::string, Property>> m_luaVariables;
+
+		bool m_luaVariablesModified;
+		bool m_luaScriptFilenameModified;
+	};
 
 	enum ButtonTextureType : unsigned int
 	{
@@ -193,16 +483,42 @@ private:
 		ButtonTextureType_Restart,
 		ButtonTextureType_GUISequence,
 		ButtonTextureType_ScriptingEnable,
+		ButtonTextureType_DeleteEntry,
+		ButtonTextureType_Add,
+		ButtonTextureType_OpenFile,
+		ButtonTextureType_Reload,
 		ButtonTextureType_NumOfTypes
 	};
-
 	enum EditorSceneState : unsigned int
 	{
 		EditorSceneState_Play,
 		EditorSceneState_Pause
 	};
+	enum FileBrowserActivated : unsigned int
+	{
+		FileBrowserActivated_None,
+		FileBrowserActivated_LuaScript,
+		FileBrowserActivated_LoadScene,
+		FileBrowserActivated_SaveScene
+	};
 
 	void drawEntityHierarchyEntry(EntityHierarchyEntry &p_entityEntry);
+	inline void drawLeftAlignedLabelText(const char *p_labelText, float p_nextWidgetOffset)
+	{
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text(p_labelText);
+		ImGui::SameLine();
+		ImGui::SetCursorPosX(p_nextWidgetOffset);
+		ImGui::SetNextItemWidth(ImGui::GetWindowWidth() - p_nextWidgetOffset);
+	}
+	inline void drawLeftAlignedLabelText(const char *p_labelText, float p_nextWidgetOffset, float p_nextItemWidth)
+	{
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text(p_labelText);
+		ImGui::SameLine();
+		ImGui::SetCursorPosX(p_nextWidgetOffset);
+		ImGui::SetNextItemWidth(p_nextItemWidth);
+	}
 	//void getComponentsOfEntity(std::vector<ComponentListEntry> &p_componentList, EntityID p_entityID);
 
 	void updateEntityList();
@@ -322,22 +638,32 @@ private:
 	bool show_another_window;
 	float clear_color;
 
-	// Texture inspector variables
-	Texture2D *m_selectedTexture;
-	ImGuiTabItemFlags m_textureInspectorTabFlags;
-	DoubleBufferedContainer<FunctorSequence> m_textureInspectorSequence;
-
 	bool m_renderSceneToTexture;
 	bool m_GUISequenceEnabled;
 	bool m_LUAScriptingEnabled;
 	EditorSceneState m_sceneState;
 	glm::ivec2 m_centerWindowSize;
+	std::vector<const char *> m_physicalMaterialProperties;
+
+	// GUI settings
+	ImGuiColorEditFlags m_colorEditFlags;
+	float m_browseButtonWidth;
+	FileBrowserActivated m_currentlyOpenedFileBrowser;
+	FileBrowserDialog m_fileBrowserDialog;
+
+	// LUA variables editor data
+	std::vector<const char *> m_luaVariableTypeStrings;
+
+	// Texture inspector variables
+	Texture2D *m_selectedTexture;
+	ImGuiTabItemFlags m_textureInspectorTabFlags;
+	DoubleBufferedContainer<FunctorSequence> m_textureInspectorSequence;
 
 	// Scene entities
 	std::vector<ComponentListEntry> m_componentList;
 	std::vector<EntityListEntry> m_entityList;
 	std::vector<EntityHierarchyEntry> m_entityHierarchy;
-	EntityID m_selectedEntity;
+	SelectedEntity m_selectedEntity;
 
 	// Button textures
 	std::vector<TextureLoader2D::Texture2DHandle> m_buttonTextures;

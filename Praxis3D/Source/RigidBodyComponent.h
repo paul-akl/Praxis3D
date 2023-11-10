@@ -15,7 +15,8 @@ public:
 		CollisionShapeType_Cone,
 		CollisionShapeType_ConvexHull,
 		CollisionShapeType_Cylinder,
-		CollisionShapeType_Sphere
+		CollisionShapeType_Sphere,
+		CollisionShapeType_NumOfTypes
 	};
 
 	struct RigidBodyComponentConstructionInfo : public SystemObject::SystemObjectConstructionInfo
@@ -229,24 +230,24 @@ public:
 
 		switch(m_collisionShapeType)
 		{
-		case CollisionShapeType::CollisionShapeType_Box:
-			collisionShape = m_collisionShape.m_boxShape;
-			break;
-		case CollisionShapeType::CollisionShapeType_Capsule:
-			collisionShape = m_collisionShape.m_capsuleShape;
-			break;
-		case CollisionShapeType::CollisionShapeType_Cone:
-			collisionShape = m_collisionShape.m_coneShape;
-			break;
-		case CollisionShapeType::CollisionShapeType_ConvexHull:
-			collisionShape = m_collisionShape.m_convexHullShape;
-			break;
-		case CollisionShapeType::CollisionShapeType_Cylinder:
-			collisionShape = m_collisionShape.m_cylinderShape;
-			break;
-		case CollisionShapeType::CollisionShapeType_Sphere:
-			collisionShape = m_collisionShape.m_sphereShape;
-			break;
+			case CollisionShapeType::CollisionShapeType_Box:
+				collisionShape = m_collisionShape.m_boxShape;
+				break;
+			case CollisionShapeType::CollisionShapeType_Capsule:
+				collisionShape = m_collisionShape.m_capsuleShape;
+				break;
+			case CollisionShapeType::CollisionShapeType_Cone:
+				collisionShape = m_collisionShape.m_coneShape;
+				break;
+			case CollisionShapeType::CollisionShapeType_ConvexHull:
+				collisionShape = m_collisionShape.m_convexHullShape;
+				break;
+			case CollisionShapeType::CollisionShapeType_Cylinder:
+				collisionShape = m_collisionShape.m_cylinderShape;
+				break;
+			case CollisionShapeType::CollisionShapeType_Sphere:
+				collisionShape = m_collisionShape.m_sphereShape;
+				break;
 		}
 
 		return collisionShape;
@@ -257,46 +258,36 @@ public:
 	inline btConvexHullShape *getCollisionShapeConvexHull() { return m_collisionShapeType == CollisionShapeType::CollisionShapeType_ConvexHull ? m_collisionShape.m_convexHullShape : nullptr; }
 	inline btCylinderShape *getCollisionShapeCylinder()     { return m_collisionShapeType == CollisionShapeType::CollisionShapeType_Cylinder   ? m_collisionShape.m_cylinderShape   : nullptr; }
 	inline btSphereShape *getCollisionShapeSphere()         { return m_collisionShapeType == CollisionShapeType::CollisionShapeType_Sphere     ? m_collisionShape.m_sphereShape     : nullptr; }
-
-	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
+	inline const std::vector<const char *> &getCollisionTypeText() const { return m_collisionShapeTypeText; }
+	inline const btRigidBody *getRigidBody() const { return m_rigidBody; }
+	inline const glm::vec3 getCollisionShapeSize() const
 	{
-		// Track what data has been modified
-		BitMask newChanges = Systems::Changes::None;
-
-		// Consider ignoring LocalTransform change, as Bullet can only accept a transform matrix that does not have scale applied to it. LocalTransform however includes scaling.
-		// To avoid scaled transform, only the position is retrieved from the LocalTransform, and the rotation is retrieved by getting a LocalRotation quaternion.
-		// This might cause a problem of getting an out-of-date rotation, as it is not certain if the LocalRotation quaternion has been updated.
-		if(CheckBitmask(p_changeType, Systems::Changes::Spatial::LocalTransform))
+		switch(m_collisionShapeType)
 		{
-			m_motionState.setPosition(p_subject->getMat4(this, Systems::Changes::Spatial::LocalTransform));
-			m_motionState.setRotation(p_subject->getQuaternion(this, Systems::Changes::Spatial::LocalRotation));
-
-			newChanges |= Systems::Changes::Spatial::LocalTransformNoScale;
+			case CollisionShapeType::CollisionShapeType_Box:
+				return Math::toGlmVec3(m_collisionShape.m_boxShape->getImplicitShapeDimensions());
+				break;
+			case CollisionShapeType::CollisionShapeType_Capsule:
+				return Math::toGlmVec3(m_collisionShape.m_capsuleShape->getImplicitShapeDimensions());
+				break;
+			case CollisionShapeType::CollisionShapeType_Cone:
+				return Math::toGlmVec3(m_collisionShape.m_coneShape->getImplicitShapeDimensions());
+				break;
+			case CollisionShapeType::CollisionShapeType_ConvexHull:
+				return Math::toGlmVec3(m_collisionShape.m_convexHullShape->getImplicitShapeDimensions());
+				break;
+			case CollisionShapeType::CollisionShapeType_Cylinder:
+				return Math::toGlmVec3(m_collisionShape.m_cylinderShape->getImplicitShapeDimensions());
+				break;
+			case CollisionShapeType::CollisionShapeType_Sphere:
+				return Math::toGlmVec3(m_collisionShape.m_sphereShape->getImplicitShapeDimensions());
+				break;
 		}
 
-		if(CheckBitmask(p_changeType, Systems::Changes::Spatial::LocalTransformNoScale))
-		{
-			m_motionState.setWorldTransform(p_subject->getMat4(this, Systems::Changes::Spatial::LocalTransformNoScale));
-
-			newChanges |= Systems::Changes::Spatial::LocalTransformNoScale;
-		}
-		
-		if(CheckBitmask(p_changeType, Systems::Changes::Spatial::LocalPosition))
-		{
-			m_motionState.setPosition(p_subject->getVec3(this, Systems::Changes::Spatial::LocalPosition));
-
-			newChanges |= Systems::Changes::Spatial::LocalPosition;
-		}
-
-		if(CheckBitmask(p_changeType, Systems::Changes::Spatial::LocalRotation))
-		{
-			m_motionState.setRotation(p_subject->getQuaternion(this, Systems::Changes::Spatial::LocalRotation));
-
-			newChanges |= Systems::Changes::Spatial::LocalRotation;
-		}
-
-		postChanges(newChanges);
+		return glm::vec3(0.5f);
 	}
+
+	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType);
 
 	const glm::mat4 &getMat4(const Observer *p_observer, BitMask p_changedBits)								const override { return m_motionState.getWorldTransform(); }
 	const glm::quat &getQuaternion(const Observer *p_observer, BitMask p_changedBits)						const override { return m_motionState.getRotation(); }
@@ -314,6 +305,8 @@ private:
 	} m_collisionShape;
 
 	CollisionShapeType m_collisionShapeType;
+
+	std::vector<const char *> m_collisionShapeTypeText { "null", "Box", "Capsule", "Cone", "Convex hull", "Cylinder", "Sphere" };
 
 	btRigidBody *m_rigidBody; 
 	

@@ -69,6 +69,7 @@ struct Conditional
 
 class LuaScript
 {
+	friend class LuaComponent;
 public:
 	LuaScript(SystemScene *p_scriptScene, SpatialDataManager &p_spatialData, GUIDataManager &p_GUIData) : m_scriptScene(p_scriptScene), m_spatialData(p_spatialData), m_GUIData(p_GUIData)
 	{ 
@@ -160,8 +161,18 @@ public:
 	}
 
 	const inline std::string &getLuaScriptFilename() const { return m_luaScriptFilename; }
+	const inline std::vector<std::pair<std::string, Property>> &getLuaVariables() const { return m_variables; }
 
 private:
+	// Terminate the current LUA script and initialize it again
+	void reload()
+	{
+		terminate();
+		init();
+	}
+	// Remove the LUA script and delete all objects created by it
+	void terminate();
+
 	// Sets lua tables with various definitions and values
 	void setDefinitions();
 	// Binds functions, so that they can be called from the lua script

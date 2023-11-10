@@ -37,6 +37,8 @@ enum DataType : uint32_t
 	DataType_EnableGUISequence,
 	DataType_EditorWindow,
 	DataType_FileBrowserDialog,
+	// Physics
+	DataType_SimulationActive,
 	// Scripting
 	DataType_EnableLuaScripting
 };
@@ -152,6 +154,14 @@ namespace Systems
 			static constexpr BitMask Shared20	= (BitMask)1 << 20;
 			static constexpr BitMask Shared21	= (BitMask)1 << 21;
 		}
+		namespace Unique
+		{
+			static constexpr BitMask Unique1 = (BitMask)1 << 30;
+			static constexpr BitMask Unique2 = (BitMask)1 << 31;
+			static constexpr BitMask Unique3 = (BitMask)1 << 32;
+			static constexpr BitMask Unique4 = (BitMask)1 << 33;
+			static constexpr BitMask Unique5 = (BitMask)1 << 34;
+		}
 		namespace Type
 		{
 			static constexpr BitMask Generic	= (BitMask)1 << 63;
@@ -161,6 +171,7 @@ namespace Systems
 			static constexpr BitMask GUI		= (BitMask)1 << 59;
 			static constexpr BitMask Physics	= (BitMask)1 << 58;
 			static constexpr BitMask Script		= (BitMask)1 << 57;
+			static constexpr BitMask World		= (BitMask)1 << 56;
 		}
 
 		namespace Generic
@@ -169,9 +180,12 @@ namespace Systems
 			static constexpr BitMask DeleteObject		= Changes::Type::Generic + Changes::Common::Shared2;
 			static constexpr BitMask ExtendObject		= Changes::Type::Generic + Changes::Common::Shared3;
 			static constexpr BitMask UnextendObject		= Changes::Type::Generic + Changes::Common::Shared4;
-			static constexpr BitMask Name				= Changes::Type::Generic + Changes::Common::Shared5;
-			static constexpr BitMask Link				= Changes::Type::Generic + Changes::Common::Shared6;
-			static constexpr BitMask All				= CreateObject | DeleteObject | ExtendObject | Name | Link;
+			static constexpr BitMask Link				= Changes::Type::Generic + Changes::Common::Shared5;
+
+			static constexpr BitMask Active				= Changes::Type::Generic + Changes::Unique::Unique1;
+			static constexpr BitMask Name				= Changes::Type::Generic + Changes::Unique::Unique2;
+
+			static constexpr BitMask All				= CreateObject | DeleteObject | ExtendObject | Link | Active | Name;
 		}
 		namespace Spatial
 		{
@@ -197,7 +211,9 @@ namespace Systems
 		}
 		namespace Audio
 		{
-			static constexpr BitMask All					= Changes::Type::Audio + Changes::Common::Shared1;
+			static constexpr BitMask ListenerID				= Changes::Type::Audio + Changes::Common::Shared1;
+
+			static constexpr BitMask All					= ListenerID;
 		}
 		namespace Graphics
 		{
@@ -231,19 +247,31 @@ namespace Systems
 		namespace GUI
 		{
 			static constexpr BitMask Sequence				= Changes::Type::GUI + Changes::Common::Shared1;
-			static constexpr BitMask Placholder				= Changes::Type::GUI + Changes::Common::Shared2;
-			static constexpr BitMask All					= Sequence | Placholder;
+			static constexpr BitMask StaticSequence			= Changes::Type::GUI + Changes::Common::Shared2;
+			static constexpr BitMask All					= Sequence | StaticSequence;
 		}
 		namespace Physics
 		{
-			static constexpr BitMask Placholder1			= Changes::Type::Physics + Changes::Common::Shared1;
-			static constexpr BitMask Placholder2			= Changes::Type::Physics + Changes::Common::Shared2;
-			static constexpr BitMask All = Placholder1 | Placholder2;
+			static constexpr BitMask CollisionShapeSize		= Changes::Type::Physics + Changes::Common::Shared1;
+			static constexpr BitMask CollisionShapeType		= Changes::Type::Physics + Changes::Common::Shared2;
+			static constexpr BitMask Friction				= Changes::Type::Physics + Changes::Common::Shared3;
+			static constexpr BitMask Mass					= Changes::Type::Physics + Changes::Common::Shared4;
+			static constexpr BitMask Restitution			= Changes::Type::Physics + Changes::Common::Shared5;
+			static constexpr BitMask Kinematic				= Changes::Type::Physics + Changes::Common::Shared6;
+			//static constexpr BitMask LinearVelocity			= Changes::Type::Physics + Changes::Common::Shared7;
+
+			static constexpr BitMask All					= CollisionShapeType | CollisionShapeSize | Friction | Mass | Restitution | Kinematic;
 		}
 		namespace Script
 		{
-			static constexpr BitMask Placholder				= Changes::Type::GUI + Changes::Common::Shared1;
-			static constexpr BitMask All					= Placholder;
+			static constexpr BitMask Filename				= Changes::Type::GUI + Changes::Common::Shared1;
+			static constexpr BitMask Reload					= Changes::Type::GUI + Changes::Common::Shared2;
+			static constexpr BitMask All					= Filename | Reload;
+		}
+		namespace World
+		{
+			static constexpr BitMask ObjectMaterialType		= Changes::Type::World + Changes::Common::Shared1;
+			static constexpr BitMask All					= ObjectMaterialType;
 		}
 
 		static constexpr BitMask None = 0;
@@ -258,6 +286,7 @@ namespace Properties
 	/* General */ \
 	Code(Active,) \
 	Code(ArrayEntry,) \
+	Code(ChangeController,) \
 	Code(Components,) \
 	Code(Default,) \
 	Code(Filename,) \
@@ -271,6 +300,8 @@ namespace Properties
 	Code(System,) \
 	Code(Systems,) \
 	Code(Type,) \
+	Code(UniversalObject,) \
+	Code(UniversalScene,) \
 	Code(Value,) \
 	Code(Variables,) \
 	/* Audio */ \
@@ -397,6 +428,7 @@ namespace Properties
 	/* Physics */ \
 	Code(Box,) \
 	Code(Capsule,) \
+	Code(CollisionEventComponent,) \
 	Code(CollisionShape,) \
 	Code(CollisionShapeComponent,) \
 	Code(Cone,) \
@@ -876,15 +908,21 @@ public:
 			gui_render = true;
 			gui_dark_style = true;
 			gui_sequence_array_reserve_size = 50;
+			editor_float_slider_speed = 0.01f;
+			editor_lua_variables_max_height = 200.0f;
 			gui_file_dialog_min_size_x = 400.0f;
 			gui_file_dialog_min_size_y = 200.0f;
 			gui_file_dialog_dir_color_R = 0.905f;
 			gui_file_dialog_dir_color_G = 0.623f;
 			gui_file_dialog_dir_color_B = 0.314f;
+			editor_button_add_texture = "buttons\\button_add_3.png";
+			editor_button_delete_entry_texture = "buttons\\button_delete_5.png";
 			editor_button_gui_sequence_texture = "buttons\\button_gui_sequence_1.png";
-			editor_button_pause_texture = "buttons\\button_editor_pause_1.png";
-			editor_button_play_texture = "buttons\\button_editor_play_1.png";
-			editor_button_restart_texture = "buttons\\button_editor_restart_1.png";
+			editor_button_open_file_texture = "buttons\\button_open_file_1.png";
+			editor_button_pause_texture = "buttons\\button_editor_pause_2.png";
+			editor_button_play_texture = "buttons\\button_editor_play_2.png";
+			editor_button_reload_texture = "buttons\\button_reload_3.png";
+			editor_button_restart_texture = "buttons\\button_editor_restart_2.png";
 			editor_button_scripting_enabled_texture = "buttons\\button_scripting_1.png";
 			gui_editor_window_name = "Editor window";
 		}
@@ -892,14 +930,20 @@ public:
 		bool gui_render;
 		bool gui_dark_style;
 		int gui_sequence_array_reserve_size;
+		float editor_float_slider_speed;
+		float editor_lua_variables_max_height;
 		float gui_file_dialog_min_size_x;
 		float gui_file_dialog_min_size_y;
 		float gui_file_dialog_dir_color_R;
 		float gui_file_dialog_dir_color_G;
 		float gui_file_dialog_dir_color_B;
+		std::string editor_button_add_texture;
+		std::string editor_button_delete_entry_texture;
 		std::string editor_button_gui_sequence_texture;
+		std::string editor_button_open_file_texture;
 		std::string editor_button_pause_texture;
 		std::string editor_button_play_texture;
+		std::string editor_button_reload_texture;
 		std::string editor_button_restart_texture;
 		std::string editor_button_scripting_enabled_texture;
 		std::string gui_editor_window_name;
@@ -1022,6 +1066,7 @@ public:
 			spatial_component_default_pool_size = 100;
 			spot_light_pool_size = 25;
 			sound_component_default_pool_size = 50;
+			sound_listener_component_default_pool_size = 50;
 		}
 
 		int camera_component_default_pool_size;
@@ -1036,6 +1081,7 @@ public:
 		int spatial_component_default_pool_size;
 		int spot_light_pool_size;
 		int sound_component_default_pool_size;
+		int sound_listener_component_default_pool_size;
 	};
 	struct PathsVariables
 	{

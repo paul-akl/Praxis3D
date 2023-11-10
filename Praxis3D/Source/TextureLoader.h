@@ -352,6 +352,14 @@ public:
 		return Texture2DHandle(returnTexture);
 	}
 
+	inline bool isTextureDefault(const Texture2DHandle &p_textureHandle) const 
+	{ 
+		return p_textureHandle.m_textureData == m_default2DTexture ||
+			p_textureHandle.m_textureData == m_defaultEmissive ||
+			p_textureHandle.m_textureData == m_defaultHeight ||
+			p_textureHandle.m_textureData == m_defaultNormal;
+	}
+
 protected:
 	// Default textures used in place of missing ones when loading textures
 	Texture2D *m_default2DTexture;

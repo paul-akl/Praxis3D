@@ -7,7 +7,7 @@ class BlurPass : public RenderPass
 {
 public:
 	BlurPass(RendererFrontend &p_renderer) :
-		RenderPass(p_renderer) { }
+		RenderPass(p_renderer, RenderPassType::RenderPassType_Blur) { }
 
 	~BlurPass() { }
 

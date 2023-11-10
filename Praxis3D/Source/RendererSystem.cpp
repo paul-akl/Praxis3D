@@ -77,6 +77,49 @@ ErrorCode RendererSystem::setup(const PropertySet &p_properties)
 	return ErrorCode::Success;
 }
 
+void RendererSystem::exportSetup(PropertySet &p_propertySet)
+{
+	// Create the render passes Property Set entry
+	auto &RenderPassesPropertySet = p_propertySet.addPropertySet(Properties::RenderPasses);
+
+	// Get the rendering passes from the renderer
+	auto renderingPasses = m_renderer.getRenderingPasses();
+
+	// Go over each rendering pass
+	for(auto renderPassType : renderingPasses)
+	{
+		// Convert RenderPassType to PropertyID
+		Properties::PropertyID renderPassTypeProperty = Properties::Null;
+		switch(renderPassType)
+		{
+			case RenderPassType::RenderPassType_AtmScattering:
+				renderPassTypeProperty = Properties::AtmScatteringRenderPass;
+				break;
+			case RenderPassType::RenderPassType_Bloom:
+				renderPassTypeProperty = Properties::BloomRenderPass;
+				break;
+			case RenderPassType::RenderPassType_Geometry:
+				renderPassTypeProperty = Properties::GeometryRenderPass;
+				break;
+			case RenderPassType::RenderPassType_GUI:
+				renderPassTypeProperty = Properties::GUIRenderPass;
+				break;
+			case RenderPassType::RenderPassType_Lighting:
+				renderPassTypeProperty = Properties::LightingRenderPass;
+				break;
+			case RenderPassType::RenderPassType_Luminance:
+				renderPassTypeProperty = Properties::LuminanceRenderPass;
+				break;
+			case RenderPassType::RenderPassType_Final:
+				renderPassTypeProperty = Properties::FinalRenderPass;
+				break;
+		}
+
+		// Add the rendering pass array entry and rendering pass type
+		RenderPassesPropertySet.addPropertySet(Properties::ArrayEntry).addProperty(Properties::Type, renderPassTypeProperty);
+	}
+}
+
 ErrorCode RendererSystem::preload()
 {
 	if(m_rendererScene != nullptr)

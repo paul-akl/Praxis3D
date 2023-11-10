@@ -129,7 +129,7 @@ public:
 
 
 			// Calculate model matrix
-			//m_worldSpace.m_transformMat = Math::createTransformMat(m_worldSpace.m_spatialData.m_position, m_worldSpace.m_spatialData.m_rotationEuler, m_worldSpace.m_spatialData.m_scale);
+			//m_worldSpace.m_transformMatNoScale = Math::createTransformMat(m_worldSpace.m_spatialData.m_position, m_worldSpace.m_spatialData.m_rotationEuler, m_worldSpace.m_spatialData.m_scale);
 
 			// Update components
 			//if(modelComponentPresent())

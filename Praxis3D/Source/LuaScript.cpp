@@ -14,6 +14,11 @@ namespace LuaDefinitions
 
 LuaScript::~LuaScript()
 {
+	terminate();
+}
+
+void LuaScript::terminate()
+{
 	// Unbind all created key commands
 	for(decltype(m_keyCommands.size()) i = 0; i < m_keyCommands.size(); i++)
 	{
@@ -23,10 +28,12 @@ LuaScript::~LuaScript()
 			delete m_keyCommands[i];
 		}
 	}
+	m_keyCommands.clear();
 
 	// Delete all created conditionals
 	for(decltype(m_conditionals.size()) i = 0; i < m_conditionals.size(); i++)
 		delete m_conditionals[i];
+	m_conditionals.clear();
 
 	// Delete all created component construction info objects
 	for(decltype(m_componentsConstructionInfo.size()) i = 0; i < m_componentsConstructionInfo.size(); i++)
@@ -34,6 +41,7 @@ LuaScript::~LuaScript()
 		m_componentsConstructionInfo[i]->deleteConstructionInfo();
 		delete m_componentsConstructionInfo[i];
 	}
+	m_componentsConstructionInfo.clear();
 }
 
 void LuaScript::setDefinitions()

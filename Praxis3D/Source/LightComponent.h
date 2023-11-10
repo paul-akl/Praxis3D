@@ -63,15 +63,15 @@ public:
 
 		switch(m_lightComponentType)
 		{
-		case LightComponent::LightComponentType_directional:
-			m_lightComponent.m_directional = p_other.m_lightComponent.m_directional;
-			break;
-		case LightComponent::LightComponentType_point:
-			m_lightComponent.m_point = p_other.m_lightComponent.m_point;
-			break;
-		case LightComponent::LightComponentType_spot:
-			m_lightComponent.m_spot = p_other.m_lightComponent.m_spot;
-			break;
+			case LightComponent::LightComponentType_directional:
+				m_lightComponent.m_directional = p_other.m_lightComponent.m_directional;
+				break;
+			case LightComponent::LightComponentType_point:
+				m_lightComponent.m_point = p_other.m_lightComponent.m_point;
+				break;
+			case LightComponent::LightComponentType_spot:
+				m_lightComponent.m_spot = p_other.m_lightComponent.m_spot;
+				break;
 		}
 	}
 	LightComponent(LightComponent &&p_other) noexcept
@@ -80,15 +80,15 @@ public:
 
 		switch(m_lightComponentType)
 		{
-		case LightComponent::LightComponentType_directional:
-			m_lightComponent.m_directional = p_other.m_lightComponent.m_directional;
-			break;
-		case LightComponent::LightComponentType_point:
-			m_lightComponent.m_point = p_other.m_lightComponent.m_point;
-			break;
-		case LightComponent::LightComponentType_spot:
-			m_lightComponent.m_spot = p_other.m_lightComponent.m_spot;
-			break;
+			case LightComponent::LightComponentType_directional:
+				m_lightComponent.m_directional = p_other.m_lightComponent.m_directional;
+				break;
+			case LightComponent::LightComponentType_point:
+				m_lightComponent.m_point = p_other.m_lightComponent.m_point;
+				break;
+			case LightComponent::LightComponentType_spot:
+				m_lightComponent.m_spot = p_other.m_lightComponent.m_spot;
+				break;
 		}
 	}
 
@@ -97,12 +97,12 @@ public:
 		// Nothing to delete so far
 		switch(m_lightComponentType)
 		{
-		case LightComponent::LightComponentType_directional:
-			break;
-		case LightComponent::LightComponentType_point:
-			break;
-		case LightComponent::LightComponentType_spot:
-			break;
+			case LightComponent::LightComponentType_directional:
+				break;
+			case LightComponent::LightComponentType_point:
+				break;
+			case LightComponent::LightComponentType_spot:
+				break;
 		}
 	}
 
@@ -112,15 +112,15 @@ public:
 
 		switch(m_lightComponentType)
 		{
-		case LightComponent::LightComponentType_directional:
-			m_lightComponent.m_directional = p_other.m_lightComponent.m_directional;
-			break;
-		case LightComponent::LightComponentType_point:
-			m_lightComponent.m_point = p_other.m_lightComponent.m_point;
-			break;
-		case LightComponent::LightComponentType_spot:
-			m_lightComponent.m_spot = p_other.m_lightComponent.m_spot;
-			break;
+			case LightComponent::LightComponentType_directional:
+				m_lightComponent.m_directional = p_other.m_lightComponent.m_directional;
+				break;
+			case LightComponent::LightComponentType_point:
+				m_lightComponent.m_point = p_other.m_lightComponent.m_point;
+				break;
+			case LightComponent::LightComponentType_spot:
+				m_lightComponent.m_spot = p_other.m_lightComponent.m_spot;
+				break;
 		}
 
 		return *this;
@@ -339,6 +339,41 @@ public:
 	inline PointLightDataSet *getPointLightSafe() { return (m_lightComponentType == LightComponentType::LightComponentType_point) ? &m_lightComponent.m_point : nullptr; }
 	// Get the spot light data set. If the type of light is not spot, returns a null pointer
 	inline SpotLightDataSet *getSpotLightSafe() { return (m_lightComponentType == LightComponentType::LightComponentType_spot) ? &m_lightComponent.m_spot : nullptr; }
+
+	const inline glm::vec3 getColor() const
+	{
+		switch(m_lightComponentType)
+		{
+			case LightComponent::LightComponentType_directional:
+				return m_lightComponent.m_directional.m_color;
+				break;
+			case LightComponent::LightComponentType_point:
+				return m_lightComponent.m_point.m_color;
+				break;
+			case LightComponent::LightComponentType_spot:
+				return m_lightComponent.m_spot.m_color;
+				break;
+		}
+
+		return glm::vec3(1.0f);
+	}
+	const inline float getIntensity() const
+	{
+		switch(m_lightComponentType)
+		{
+			case LightComponent::LightComponentType_directional:
+				return m_lightComponent.m_directional.m_intensity;
+				break;
+			case LightComponent::LightComponentType_point:
+				return m_lightComponent.m_point.m_intensity;
+				break;
+			case LightComponent::LightComponentType_spot:
+				return m_lightComponent.m_spot.m_intensity;
+				break;
+		}
+
+		return 1.0f;
+	}
 
 private:
 	inline void updateColor(const glm::vec3 &p_color)

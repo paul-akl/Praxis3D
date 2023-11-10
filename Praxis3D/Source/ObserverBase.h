@@ -37,12 +37,19 @@ class ObservedSubject;
 class Observer
 {
 public:
+	Observer(Properties::PropertyID p_objectType) : m_objectType(p_objectType) { }
 	//virtual ~Observer() = 0;
 
 	// This method gets called when data that we are interested changed in observed subject
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) = 0;
 
 	virtual void receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving) { }
+
+	inline Properties::PropertyID getObjectType() const { return m_objectType; }
+	inline void setObjectType(const Properties::PropertyID p_objectType) { m_objectType = p_objectType; }
+
+protected:
+	Properties::PropertyID m_objectType;
 };
 
 class ObservedSubject

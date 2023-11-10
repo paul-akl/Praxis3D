@@ -114,6 +114,8 @@ public:
 	BitMask getDesiredSystemChanges() final override { return Systems::Changes::GUI::All; }
 	BitMask getPotentialSystemChanges() final override { return Systems::Changes::None; }
 
+	const inline bool isStaticSequence() const { return m_staticSequence; }
+
 	const Functors &getFunctors(const Observer *p_observer, BitMask p_changedBits)
 	{
 		if(CheckBitmask(p_changedBits, Systems::Changes::Type::GUI))
@@ -124,6 +126,9 @@ public:
 	{
 		if(CheckBitmask(p_changeType, Systems::Changes::GUI::Sequence))
 			m_guiSequence = p_subject->getFunctors(this, Systems::Changes::GUI::Sequence);
+
+		if(CheckBitmask(p_changeType, Systems::Changes::GUI::StaticSequence))
+			m_staticSequence = p_subject->getBool(this, Systems::Changes::GUI::StaticSequence);
 	}
 
 	void clearSequence()

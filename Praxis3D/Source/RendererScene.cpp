@@ -7,7 +7,7 @@
 #include "SpatialComponent.h"
 #include "WorldScene.h"
 
-RendererScene::RendererScene(RendererSystem *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader)
+RendererScene::RendererScene(RendererSystem *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader, Properties::PropertyID::Renderer)
 {
 	m_renderTask = new RenderTask(this, p_system->getRenderer());
 	//m_camera = nullptr;
@@ -39,16 +39,36 @@ ErrorCode RendererScene::setup(const PropertySet &p_properties)
 {
 	// Get the world scene required for reserving the component pools
 	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
-	
-	// Reserve every component type that belongs to this scene
-	worldScene->reserve<CameraComponent>(Config::objectPoolVar().camera_component_default_pool_size);
-	worldScene->reserve<GraphicsLoadToMemoryComponent>(Config::objectPoolVar().model_component_default_pool_size + Config::objectPoolVar().shader_component_default_pool_size);
-	worldScene->reserve<GraphicsLoadToVideoMemoryComponent>(Config::objectPoolVar().model_component_default_pool_size + Config::objectPoolVar().shader_component_default_pool_size);
-	worldScene->reserve<LightComponent>(Config::objectPoolVar().light_component_default_pool_size);
-	worldScene->reserve<ModelComponent>(Config::objectPoolVar().model_component_default_pool_size);
-	worldScene->reserve<ShaderComponent>(Config::objectPoolVar().shader_component_default_pool_size);
+
+	// Get the property set containing object pool size
+	auto &objectPoolSizeProperty = p_properties.getPropertySetByID(Properties::ObjectPoolSize);
+
+	// Get model and shader components pool sizes
+	int modelComponentPoolSize = std::max(Config::objectPoolVar().model_component_default_pool_size, objectPoolSizeProperty.getPropertyByID(Properties::ModelComponent).getInt());
+	int shaderComponentPoolSize = std::max(Config::objectPoolVar().shader_component_default_pool_size, objectPoolSizeProperty.getPropertyByID(Properties::ShaderComponent).getInt());
+
+	// Reserve every component type that belongs to this scene (and set the minimum number of objects based on default config)
+	worldScene->reserve<CameraComponent>(std::max(Config::objectPoolVar().camera_component_default_pool_size, objectPoolSizeProperty.getPropertyByID(Properties::CameraComponent).getInt()));
+	worldScene->reserve<LightComponent>(std::max(Config::objectPoolVar().light_component_default_pool_size, objectPoolSizeProperty.getPropertyByID(Properties::LightComponent).getInt()));
+	worldScene->reserve<ModelComponent>(modelComponentPoolSize);
+	worldScene->reserve<ShaderComponent>(shaderComponentPoolSize);
+	worldScene->reserve<GraphicsLoadToMemoryComponent>(modelComponentPoolSize + shaderComponentPoolSize);
+	worldScene->reserve<GraphicsLoadToVideoMemoryComponent>(modelComponentPoolSize + shaderComponentPoolSize);
 
 	return ErrorCode::Success;
+}
+
+void RendererScene::exportSetup(PropertySet &p_propertySet)
+{
+	// Get the world scene required for getting the pool sizes
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	// Add object pool sizes
+	auto &objectPoolSizePropertySet = p_propertySet.addPropertySet(Properties::ObjectPoolSize);
+	objectPoolSizePropertySet.addProperty(Properties::CameraComponent, (int)worldScene->getPoolSize<CameraComponent>());
+	objectPoolSizePropertySet.addProperty(Properties::LightComponent, (int)worldScene->getPoolSize<LightComponent>());
+	objectPoolSizePropertySet.addProperty(Properties::ModelComponent, (int)worldScene->getPoolSize<ModelComponent>());
+	objectPoolSizePropertySet.addProperty(Properties::ShaderComponent, (int)worldScene->getPoolSize<ShaderComponent>());
 }
 
 ErrorCode RendererScene::preload()
@@ -338,6 +358,60 @@ std::vector<SystemObject*> RendererScene::createComponents(const EntityID p_enti
 	return createComponents(p_entityID, p_constructionInfo.m_graphicsComponents, p_startLoading);
 }
 
+void RendererScene::exportComponents(const EntityID p_entityID, ComponentsConstructionInfo &p_constructionInfo)
+{
+	exportComponents(p_entityID, p_constructionInfo.m_graphicsComponents);
+}
+
+void RendererScene::exportComponents(const EntityID p_entityID, GraphicsComponentsConstructionInfo &p_constructionInfo)
+{
+	// Get the world scene required for getting the entity registry
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	// Get the entity registry 
+	auto &entityRegistry = worldScene->getEntityRegistry();
+
+	// Export CameraComponent
+	auto *cameraComponent = entityRegistry.try_get<CameraComponent>(p_entityID);
+	if(cameraComponent != nullptr)
+	{
+		if(p_constructionInfo.m_cameraConstructionInfo == nullptr)
+			p_constructionInfo.m_cameraConstructionInfo = new CameraComponent::CameraComponentConstructionInfo();
+
+		exportComponent(*p_constructionInfo.m_cameraConstructionInfo, *cameraComponent);
+	}
+
+	// Export LightComponent
+	auto *lightComponent = entityRegistry.try_get<LightComponent>(p_entityID);
+	if(lightComponent != nullptr)
+	{
+		if(p_constructionInfo.m_lightConstructionInfo == nullptr)
+			p_constructionInfo.m_lightConstructionInfo = new LightComponent::LightComponentConstructionInfo();
+
+		exportComponent(*p_constructionInfo.m_lightConstructionInfo, *lightComponent);
+	}
+
+	// Export ModelComponent
+	auto *modelComponent = entityRegistry.try_get<ModelComponent>(p_entityID);
+	if(modelComponent != nullptr)
+	{
+		if(p_constructionInfo.m_modelConstructionInfo == nullptr)
+			p_constructionInfo.m_modelConstructionInfo = new ModelComponent::ModelComponentConstructionInfo();
+
+		exportComponent(*p_constructionInfo.m_modelConstructionInfo, *modelComponent);
+	}
+
+	// Export ShaderComponent
+	auto *shaderComponent = entityRegistry.try_get<ShaderComponent>(p_entityID);
+	if(shaderComponent != nullptr)
+	{
+		if(p_constructionInfo.m_shaderConstructionInfo == nullptr)
+			p_constructionInfo.m_shaderConstructionInfo = new ShaderComponent::ShaderComponentConstructionInfo();
+
+		exportComponent(*p_constructionInfo.m_shaderConstructionInfo, *shaderComponent);
+	}
+}
+
 SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const CameraComponent::CameraComponentConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	// If valid type was not specified, or object creation failed, return a null object instead
@@ -355,6 +429,7 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const C
 		component.setActive(p_constructionInfo.m_active);
 		component.setLoadedToMemory(true);
 		component.setLoadedToVideoMemory(true);
+		component.m_fov = p_constructionInfo.m_fov;
 
 		returnObject = &component;
 	}

@@ -441,6 +441,12 @@
     <ClCompile Include="..\Dependencies\include\ImGuiFileDialog\ImGuiFileDialog.cpp">
       <Filter>3rd Party\ImGuiFileDialog</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RigidBodyComponent.cpp">
+      <Filter>Physics\Components\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\imgui\imgui_stdlib.cpp">
+      <Filter>3rd Party\imgui\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ErrorCodes.h">
@@ -922,6 +928,9 @@
     </ClInclude>
     <ClInclude Include="..\Dependencies\include\imgui_tex_inspect\tex_inspect_opengl.h">
       <Filter>3rd Party\imgui_tex_inspect\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\imgui\imgui_stdlib.h">
+      <Filter>3rd Party\imgui\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

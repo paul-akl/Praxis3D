@@ -15,12 +15,14 @@ public:
 		CollisionShapeType_Cone,
 		CollisionShapeType_ConvexHull,
 		CollisionShapeType_Cylinder,
-		CollisionShapeType_Sphere
+		CollisionShapeType_Sphere,
+		CollisionShapeType_NumOfTypes
 	};
 
 	CollisionShapeComponent(SystemScene *p_systemScene, std::string p_name, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::CollisionShapeComponent)
 	{
 		m_collisionShapeType = CollisionShapeType::CollisionShapeType_Null;
+		m_collisionShape.m_boxShape = nullptr;
 	}
 	~CollisionShapeComponent()
 	{
@@ -151,6 +153,12 @@ public:
 
 	BitMask getDesiredSystemChanges() final override { return Systems::Changes::None; }
 	BitMask getPotentialSystemChanges() final override { return Systems::Changes::None; }
+
+	inline const char **getCollisionTypeText() const
+	{
+		const char *collisionTypeText[] = { "null", "Box", "Capsule", "Cone", "Convex hull", "Cylinder", "Sphere"};
+		return collisionTypeText;
+	}
 
 	const inline CollisionShapeType getCollisionShapeType() const { return m_collisionShapeType; }
 	inline btCollisionShape *getCollisionShape()

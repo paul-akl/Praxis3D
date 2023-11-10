@@ -197,8 +197,36 @@ public:
 
 		return NullObjects::NullFunctors;
 	}
+	const inline LuaScript *getLuaScript() const { return m_luaScript; }
 
-	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
+	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) 
+	{
+		if(CheckBitmask(p_changeType, Systems::Changes::Script::Filename))
+		{
+			if(m_luaScript != nullptr)
+			{
+				// Get the new LUA script filename from the observed subject
+				auto luaScriptFilename = p_subject->getString(this, Systems::Changes::Script::Filename);
+
+				// Check if the lua script exists
+				if(!luaScriptFilename.empty())
+				{
+					m_luaScript->setScriptFilename(luaScriptFilename);
+
+					m_luaScript->reload();
+				}
+			}
+		}
+
+		if(CheckBitmask(p_changeType, Systems::Changes::Script::Reload))
+		{
+			// Check if the lua script exists
+			if(m_luaScript != nullptr)
+			{
+				m_luaScript->reload();
+			}
+		}
+	}
 
 	void setSpatialDataManagerReference(const SpatialDataManager &p_spatialData) 
 	{ 

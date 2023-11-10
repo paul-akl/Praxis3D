@@ -7,7 +7,7 @@
 class GUIPass : public RenderPass
 {
 public:
-	GUIPass(RendererFrontend &p_renderer) : RenderPass(p_renderer) { }
+	GUIPass(RendererFrontend &p_renderer) : RenderPass(p_renderer, RenderPassType::RenderPassType_GUI) { }
 
 	~GUIPass() { }
 

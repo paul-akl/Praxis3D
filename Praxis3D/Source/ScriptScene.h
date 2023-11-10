@@ -46,7 +46,9 @@ public:
 
 	ErrorCode init();
 
-	ErrorCode setup(const PropertySet &p_properties);
+	ErrorCode setup(const PropertySet &p_properties); 
+	
+	void exportSetup(PropertySet &p_propertySet);
 
 	void update(const float p_deltaTime);
 
@@ -65,7 +67,23 @@ public:
 		return components;
 	}
 
+	void exportComponents(const EntityID p_entityID, ComponentsConstructionInfo &p_constructionInfo);
+	void exportComponents(const EntityID p_entityID, ScriptComponentsConstructionInfo &p_constructionInfo);
+
 	SystemObject *createComponent(const EntityID &p_entityID, const LuaComponent::LuaComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
+
+	void exportComponent(LuaComponent::LuaComponentConstructionInfo &p_constructionInfo, const LuaComponent &p_component)
+	{
+		p_constructionInfo.m_active = p_component.isObjectActive();
+		p_constructionInfo.m_name = p_component.getName();
+
+		if(p_component.getLuaScript() != nullptr)
+		{
+			p_constructionInfo.m_luaScriptFilename = Utilities::stripFilename(p_component.getLuaScript()->getLuaScriptFilename());
+			p_constructionInfo.m_variables = p_component.getLuaScript()->getLuaVariables();
+		}
+	}
+
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType);

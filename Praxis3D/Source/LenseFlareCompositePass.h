@@ -7,7 +7,7 @@ class LenseFlareCompositePass : public RenderPass
 {
 public:
 	LenseFlareCompositePass(RendererFrontend &p_renderer) :
-		RenderPass(p_renderer), 
+		RenderPass(p_renderer, RenderPassType::RenderPassType_LenseFlareComposite),
 		m_lensFlareDirt(Loaders::texture2D().load(Config::rendererVar().lens_flare_dirt_texture)),
 		m_lenseFlareStarburst(Loaders::texture2D().load(Config::rendererVar().lens_flare_starburst_texture))
 	{

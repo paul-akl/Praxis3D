@@ -279,6 +279,21 @@ void RendererFrontend::setRenderingPasses(const RenderingPasses &p_renderingPass
 	glViewport(0, 0, m_frameData.m_screenSize.x, m_frameData.m_screenSize.y);
 }
 
+const RenderingPasses RendererFrontend::getRenderingPasses()
+{
+	RenderingPasses renderPasses;
+
+	for(const auto renderPass : m_renderingPasses)
+	{
+		if(renderPass != nullptr)
+		{
+			renderPasses.push_back(renderPass->getRenderPassType());
+		}
+	}
+
+	return renderPasses;
+}
+
 void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_deltaTime)
 {
 	// Adjust rendering resolution if the screen size has changed

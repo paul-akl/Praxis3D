@@ -29,12 +29,15 @@ class SystemBase
 {
 public:
 	SystemBase() : m_initialized(false) { }
-	//~SystemBase();
 
 	virtual ErrorCode init() = 0;
 	//virtual ErrorCode destroyScene(SystemScene *p_systemScene) = 0;
 
+	// Internal system data-driven setup based on passed properties
 	virtual ErrorCode setup(const PropertySet &p_properties) = 0;
+
+	// Exports all the system settings
+	virtual void exportSetup(PropertySet &p_propertySet) { }
 
 	virtual Systems::TypeID getSystemType() = 0;
 	virtual std::string getName() { return m_systemName; }
@@ -56,8 +59,8 @@ class SystemScene : public ObservedSubject, public Observer
 {
 	friend SystemBase;
 public:
-	SystemScene(SystemBase *p_system, SceneLoader *p_sceneLoader)
-		: m_initialized(false), m_system(p_system), m_sceneLoader(p_sceneLoader) { }
+	SystemScene(SystemBase *p_system, SceneLoader *p_sceneLoader, Properties::PropertyID p_objectType)
+		: Observer(p_objectType), m_initialized(false), m_system(p_system), m_sceneLoader(p_sceneLoader) { }
 	//~SystemScene();
 
 	// Gets the parent system
@@ -68,6 +71,9 @@ public:
 
 	// Internal scene data-driven setup based on passed properties
 	virtual ErrorCode setup(const PropertySet &p_properties) = 0;
+
+	// Exports all the scene settings
+	virtual void exportSetup(PropertySet &p_propertySet) { }
 	
 	// Activation is called when the engine play state containing this scene is made current (activated)
 	virtual void activate() { }
@@ -86,6 +92,9 @@ public:
 
 	// Create all the components that belong to this scene, that are contained in ComponentsConstructionInfo; return a vector of all created components
 	virtual std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
+
+	// Exports all the components that belong to this scene into ComponentsConstructionInfo
+	virtual void exportComponents(const EntityID p_entityID, ComponentsConstructionInfo &p_constructionInfo) { }
 
 	// Destroy an object that belongs to this system scene
 	virtual ErrorCode destroyObject(SystemObject *p_systemObject) = 0;
@@ -157,7 +166,6 @@ public:
 	inline bool isUpdateNeeded() const					{ return m_updateNeeded;				 }
 	const inline std::string &getName() const			{ return m_name;						 }
 	inline SystemScene *getSystemScene() const			{ return m_systemScene;					 }
-	inline Properties::PropertyID getObjectType() const { return m_objectType;					 }
 	const virtual std::string &getString(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		switch(p_changedBits)
@@ -174,7 +182,6 @@ public:
 	inline void setParent(void *p_parent)								 { m_parent = p_parent;				}
 	inline void setName(std::string p_name)								 { m_name = p_name;					}
 	inline void setSystemScene(SystemScene *p_systemScene)				 { m_systemScene = p_systemScene;	}
-	inline void setObjectType(const Properties::PropertyID p_objectType) { m_objectType = p_objectType;		}
 	inline void setActive(const bool p_isActive)						 { m_active = p_isActive;			}
 
 	// Bool operator; returns true if the system object is not null (i.e. valid derived object)
@@ -190,8 +197,6 @@ protected:
 
 	// Sets the 'update needed' flag to false
 	inline void updatePerformed() { setUpdateNeeded(false); }
-
-	Properties::PropertyID m_objectType;
 
 	void *m_parent;
 	bool m_initialized;

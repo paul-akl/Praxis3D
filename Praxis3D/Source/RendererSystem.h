@@ -17,6 +17,8 @@ public:
 
 	ErrorCode setup(const PropertySet &p_properties);
 
+	void exportSetup(PropertySet &p_propertySet);
+
 	//virtual ErrorCode destroyScene(SystemScene *p_systemScene);
 
 	virtual ErrorCode preload();

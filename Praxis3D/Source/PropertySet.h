@@ -148,6 +148,10 @@ public:
 				&& m_variable.m_vec4f.z == 0.0f && m_variable.m_vec4f.w == 0.0f ? false : true;
 			break;
 		case Property::Type_string:
+			if(m_variable.m_string == "true" || "1")
+				return true;
+			if(m_variable.m_string == "false" || "0")
+				return false;
 			return m_variable.m_string == "" ? false : true;
 			break;
 		case Property::Type_propertyID:
@@ -444,7 +448,7 @@ public:
 			return "";
 			break;
 		case Property::Type_bool:
-			return m_variable.m_bool == false ? "0" : "1";
+			return m_variable.m_bool == false ? "false" : "true";
 			break;
 		case Property::Type_int:
 			return Utilities::toString(m_variable.m_int);

@@ -66,6 +66,8 @@ public:
 
 	ErrorCode setup(const PropertySet &p_properties);
 
+	void exportSetup(PropertySet &p_propertySet);
+
 	void activate();
 
 	void deactivate();
@@ -90,8 +92,32 @@ public:
 		return components;
 	}
 
+	void exportComponents(const EntityID p_entityID, ComponentsConstructionInfo &p_constructionInfo);
+	void exportComponents(const EntityID p_entityID, AudioComponentsConstructionInfo &p_constructionInfo);
+
 	SystemObject *createComponent(const EntityID &p_entityID, const SoundComponent::SoundComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 	SystemObject *createComponent(const EntityID &p_entityID, const SoundListenerComponent::SoundListenerComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
+
+	void exportComponent(SoundComponent::SoundComponentConstructionInfo &p_constructionInfo, const SoundComponent &p_component)
+	{
+		p_constructionInfo.m_active = p_component.isObjectActive();
+		p_constructionInfo.m_name = p_component.getName();
+
+		p_constructionInfo.m_loop = p_component.m_loop;
+		p_constructionInfo.m_soundFilename = p_component.m_soundFilename;
+		p_constructionInfo.m_soundType = p_component.m_soundType;
+		p_constructionInfo.m_spatialized = p_component.m_spatialized;
+		p_constructionInfo.m_startPlaying = p_component.m_startPlaying;
+		p_constructionInfo.m_volume = p_component.m_volume;
+	}
+	void exportComponent(SoundListenerComponent::SoundListenerComponentConstructionInfo &p_constructionInfo, const SoundListenerComponent &p_component)
+	{
+		p_constructionInfo.m_active = p_component.isObjectActive();
+		p_constructionInfo.m_name = p_component.getName();
+
+		p_constructionInfo.m_listenerID = p_component.getListenerID();
+	}
+
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
@@ -187,6 +213,7 @@ private:
 	//std::vector<FMOD::Studio::EventDescription*> m_impactSounds;
 	//std::unordered_map<std::string, std::size_t> m_impactSoundsIndexMap;
 	std::unordered_map<std::string, FMOD::Studio::EventDescription*> m_impactSounds;
+	std::vector<std::pair<std::string, FMOD::Studio::Bank *>> m_bankFilenames;
 
 	float m_dTime;
 };

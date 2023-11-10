@@ -2,6 +2,7 @@
 #include "Universal.h"
 
 UniversalScene::UniversalScene(ChangeController *p_sceneChangeController, ChangeController *p_objectChangeController) : 
+								Observer(Properties::PropertyID::UniversalScene),
 								m_sceneChangeController(p_sceneChangeController), 
 								m_objectChangeController(p_objectChangeController)
 {
@@ -223,8 +224,7 @@ void UniversalScene::changeOccurred(ObservedSubject *p_subject, BitMask p_change
 	}
 }
 
-UniversalObject::UniversalObject(UniversalScene *p_universalScene, std::string p_name)
-	:	m_scene(p_universalScene)
+UniversalObject::UniversalObject(UniversalScene *p_universalScene, std::string p_name) : Observer(Properties::PropertyID::UniversalObject), m_scene(p_universalScene)
 {
 	setName(p_name);
 }

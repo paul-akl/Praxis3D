@@ -35,7 +35,7 @@ public:
 	{
 		// Check if any changes have been done
 		//if(p_changedBits)
-		//	m_objectChangeController->oneTimeChange(p_subject, p_observer, p_changedBits);
+		m_objectChangeController->oneTimeChange(p_subject, p_observer, p_changedBits);
 	}
 
 	// Sends a one-off notification to a system object containing data, without requiring the object linking

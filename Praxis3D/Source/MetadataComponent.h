@@ -36,16 +36,24 @@ public:
 	BitMask getSystemType() final override { return Systems::World; }
 
 	BitMask getDesiredSystemChanges() final override { return Systems::Changes::None; }
-	BitMask getPotentialSystemChanges() final override { return Systems::Changes::None; }
+	BitMask getPotentialSystemChanges() final override { return Systems::Changes::Generic::Name; }
 	inline EntityID getParentEntityID() const { return m_parent; }
+	const inline std::string getPrefabName() const { return m_prefab; }
+	const inline bool getUsesPrefab() const { return !m_prefab.empty(); }
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
-
+		if(CheckBitmask(p_changeType, Systems::Changes::Generic::Name))
+		{
+			setName(p_subject->getString(this, Systems::Changes::Generic::Name));
+		}
 	}
 
 private:
 	inline void setParent(const EntityID p_parentEntityID) { m_parent = p_parentEntityID; }
+	inline void setPrefabName(const std::string p_prefabName) { m_prefab = p_prefabName; }
 
 	EntityID m_parent;
+
+	std::string m_prefab;
 };

@@ -5,7 +5,7 @@
 class GeometryPass : public RenderPass
 {
 public:
-	GeometryPass(RendererFrontend &p_renderer) : RenderPass(p_renderer) { }
+	GeometryPass(RendererFrontend &p_renderer) : RenderPass(p_renderer, RenderPassType::RenderPassType_Geometry) { }
 
 	~GeometryPass() { }
 
@@ -83,7 +83,7 @@ public:
 					m_renderer.queueForDrawing(modelData[i],
 						geomShaderHandle,
 						geomUniformUpdater,
-						spatialData.getSpatialDataChangeManager().getWorldTransform(),
+						spatialData.getSpatialDataChangeManager().getWorldTransformWithScale(),
 						m_renderer.m_viewProjMatrix);
 				}
 			}
@@ -106,7 +106,7 @@ public:
 						m_renderer.queueForDrawing(modelData[i],
 							shader.getShaderData()->m_shader.getShaderHandle(),
 							shader.getShaderData()->m_shader.getUniformUpdater(),
-							spatialData.getSpatialDataChangeManager().getWorldTransform(),
+							spatialData.getSpatialDataChangeManager().getWorldTransformWithScale(),
 							m_renderer.m_viewProjMatrix);
 					}
 				}

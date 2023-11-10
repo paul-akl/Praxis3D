@@ -6,7 +6,7 @@
 #include "SpatialComponent.h"
 #include "WorldScene.h"
 
-WorldScene::WorldScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader)
+WorldScene::WorldScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader, Properties::PropertyID::World)
 {
 	m_worldTask = new WorldTask(this);
 }
@@ -22,25 +22,24 @@ ErrorCode WorldScene::init()
 
 ErrorCode WorldScene::setup(const PropertySet &p_properties)
 {
-	// Get default object pool size
-	int objectPoolSize = Config::objectPoolVar().object_pool_size;
+	// Get the property set containing object pool size
+	auto &objectPoolSizeProperty = p_properties.getPropertySetByID(Properties::ObjectPoolSize);
 
-	for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
-	{
-		switch(p_properties[i].getPropertyID())
-		{
-		case Properties::ObjectPoolSize:
-			objectPoolSize = p_properties[i].getInt();
-			break;
-		}
-	}
-
-	// Reserve every component type that belongs to this scene
-	reserve<MetadataComponent>(Config::objectPoolVar().spatial_component_default_pool_size);
-	reserve<ObjectMaterialComponent>(Config::objectPoolVar().spatial_component_default_pool_size);
-	reserve<SpatialComponent>(Config::objectPoolVar().spatial_component_default_pool_size);
+	// Reserve every component type that belongs to this scene (and set the minimum number of objects based on default config)
+	reserve<MetadataComponent>(std::max(Config::objectPoolVar().spatial_component_default_pool_size, objectPoolSizeProperty.getPropertyByID(Properties::MetadataComponent).getInt()));
+	reserve<ObjectMaterialComponent>(std::max(Config::objectPoolVar().spatial_component_default_pool_size, objectPoolSizeProperty.getPropertyByID(Properties::ObjectMaterialComponent).getInt()));
+	reserve<SpatialComponent>(std::max(Config::objectPoolVar().spatial_component_default_pool_size, objectPoolSizeProperty.getPropertyByID(Properties::SpatialComponent).getInt()));
 
 	return ErrorCode::Success;
+}
+
+void WorldScene::exportSetup(PropertySet &p_propertySet)
+{
+	// Add object pool sizes
+	auto &objectPoolSizePropertySet = p_propertySet.addPropertySet(Properties::ObjectPoolSize);
+	objectPoolSizePropertySet.addProperty(Properties::MetadataComponent, (int)getPoolSize<MetadataComponent>());
+	objectPoolSizePropertySet.addProperty(Properties::ObjectMaterialComponent, (int)getPoolSize<ObjectMaterialComponent>());
+	objectPoolSizePropertySet.addProperty(Properties::SpatialComponent, (int)getPoolSize<SpatialComponent>());
 }
 
 void WorldScene::update(const float p_deltaTime)
@@ -151,6 +150,30 @@ EntityID WorldScene::createEntity(const ComponentsConstructionInfo &p_constructi
 	return newEntity;
 }
 
+void WorldScene::exportEntity(const EntityID p_entityID, ComponentsConstructionInfo &p_constructionInfo)
+{
+	if(m_entityRegistry.valid(p_entityID))
+	{
+		// Export AUDIO components
+		m_sceneLoader->getSystemScene(Systems::Audio)->exportComponents(p_entityID, p_constructionInfo);
+
+		// Export RENDERING components
+		m_sceneLoader->getSystemScene(Systems::Graphics)->exportComponents(p_entityID, p_constructionInfo);
+
+		// Export GUI components
+		m_sceneLoader->getSystemScene(Systems::GUI)->exportComponents(p_entityID, p_constructionInfo);
+
+		// Export PHYSICS components
+		m_sceneLoader->getSystemScene(Systems::Physics)->exportComponents(p_entityID, p_constructionInfo);
+
+		// Export SCRIPTING components
+		m_sceneLoader->getSystemScene(Systems::Script)->exportComponents(p_entityID, p_constructionInfo);
+
+		// Export WORLD components
+		exportComponents(p_entityID, p_constructionInfo);
+	}
+}
+
 std::vector<SystemObject*> WorldScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	return createComponents(p_entityID, p_constructionInfo.m_worldComponents, p_startLoading);
@@ -167,6 +190,47 @@ std::vector<SystemObject*> WorldScene::createComponents(const EntityID p_entityI
 		components.push_back(createComponent(p_entityID, *p_constructionInfo.m_objectMaterialConstructionInfo, p_startLoading));
 
 	return components;
+}
+
+void WorldScene::exportComponents(const EntityID p_entityID, ComponentsConstructionInfo &p_constructionInfo)
+{
+	p_constructionInfo.m_id = p_entityID;
+
+	// Export MetadataComponent
+	auto *metadataComponent = m_entityRegistry.try_get<MetadataComponent>(p_entityID);
+	if(metadataComponent != nullptr)
+	{
+		p_constructionInfo.m_name = metadataComponent->getName();
+		p_constructionInfo.m_parent = metadataComponent->getParentEntityID();
+
+		if(metadataComponent->getUsesPrefab())
+			p_constructionInfo.m_prefab = metadataComponent->getPrefabName();
+	}
+	else
+	{
+		p_constructionInfo.m_name = GetString(Properties::GameObject) + Utilities::toString(p_entityID);
+		p_constructionInfo.m_parent = 0;
+	}
+
+	// Export SpatialComponent
+	auto *spatialComponent = m_entityRegistry.try_get<SpatialComponent>(p_entityID);
+	if(spatialComponent != nullptr)
+	{
+		if(p_constructionInfo.m_worldComponents.m_spatialConstructionInfo == nullptr)
+			p_constructionInfo.m_worldComponents.m_spatialConstructionInfo = new SpatialComponent::SpatialComponentConstructionInfo();
+
+		exportComponent(*p_constructionInfo.m_worldComponents.m_spatialConstructionInfo, *spatialComponent);
+	}
+
+	// Export ObjectMaterialComponent
+	auto *objectMaterialComponent = m_entityRegistry.try_get<ObjectMaterialComponent>(p_entityID);
+	if(objectMaterialComponent != nullptr)
+	{
+		if(p_constructionInfo.m_worldComponents.m_objectMaterialConstructionInfo == nullptr)
+			p_constructionInfo.m_worldComponents.m_objectMaterialConstructionInfo = new ObjectMaterialComponent::ObjectMaterialComponentConstructionInfo();
+
+		exportComponent(*p_constructionInfo.m_worldComponents.m_objectMaterialConstructionInfo, *objectMaterialComponent);
+	}
 }
 
 ErrorCode WorldScene::destroyObject(SystemObject *p_systemObject)
@@ -203,6 +267,9 @@ SystemObject *WorldScene::createComponent(const EntityID p_entityID, const Compo
 
 	metadataComponent->setParent(p_constructionInfo.m_parent);
 
+	if(!p_constructionInfo.m_prefab.empty())
+		metadataComponent->setPrefabName(p_constructionInfo.m_prefab);
+	
 	metadataComponent->init();
 
 	return metadataComponent;

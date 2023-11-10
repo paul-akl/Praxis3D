@@ -110,6 +110,8 @@ public:
 	// Sets up various scene-specific values (should be called before creating objects / updating)
 	ErrorCode setup(const PropertySet &p_properties);
 
+	void exportSetup(PropertySet &p_propertySet);
+
 	// Preloads all the resources in the scene (as opposed to loading them while rendering, in background threads)
 	ErrorCode preload();
 
@@ -139,10 +141,62 @@ public:
 		return components;
 	}
 
+	void exportComponents(const EntityID p_entityID, ComponentsConstructionInfo &p_constructionInfo);
+	void exportComponents(const EntityID p_entityID, GraphicsComponentsConstructionInfo &p_constructionInfo);
+
 	SystemObject *createComponent(const EntityID &p_entityID, const CameraComponent::CameraComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 	SystemObject *createComponent(const EntityID &p_entityID, const LightComponent::LightComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 	SystemObject *createComponent(const EntityID &p_entityID, const ModelComponent::ModelComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 	SystemObject *createComponent(const EntityID &p_entityID, const ShaderComponent::ShaderComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
+
+	void exportComponent(CameraComponent::CameraComponentConstructionInfo &p_constructionInfo, const CameraComponent &p_component)
+	{
+		p_constructionInfo.m_active = p_component.isObjectActive();
+		p_constructionInfo.m_name = p_component.getName();
+		p_constructionInfo.m_fov = p_component.m_fov;
+	}
+	void exportComponent(LightComponent::LightComponentConstructionInfo &p_constructionInfo, const LightComponent &p_component)
+	{
+		p_constructionInfo.m_active = p_component.isObjectActive();
+		p_constructionInfo.m_name = p_component.getName();
+
+		p_constructionInfo.m_lightComponentType = p_component.getLightType();
+
+		switch(p_component.getLightType())
+		{
+			case LightComponent::LightComponentType_directional:
+				p_constructionInfo.m_color = p_component.m_lightComponent.m_directional.m_color;
+				p_constructionInfo.m_intensity = p_component.m_lightComponent.m_directional.m_intensity;
+				p_constructionInfo.m_direction = p_component.m_lightComponent.m_directional.m_direction;
+				break;
+			case LightComponent::LightComponentType_point:
+				p_constructionInfo.m_color = p_component.m_lightComponent.m_point.m_color;
+				p_constructionInfo.m_intensity = p_component.m_lightComponent.m_point.m_intensity;
+				break;
+			case LightComponent::LightComponentType_spot:
+				p_constructionInfo.m_color = p_component.m_lightComponent.m_spot.m_color;
+				p_constructionInfo.m_intensity = p_component.m_lightComponent.m_spot.m_intensity;
+				p_constructionInfo.m_cutoffAngle = p_component.m_lightComponent.m_spot.m_cutoffAngle;
+				break;
+		}
+	}
+	void exportComponent(ModelComponent::ModelComponentConstructionInfo &p_constructionInfo, const ModelComponent &p_component)
+	{
+		p_constructionInfo.m_active = p_component.isObjectActive();
+		p_constructionInfo.m_name = p_component.getName();
+
+		p_component.getMeshMaterialsProperties(p_constructionInfo.m_materialsFromProperties);
+		p_component.getModelsProperties(p_constructionInfo.m_modelsProperties);
+	}
+	void exportComponent(ShaderComponent::ShaderComponentConstructionInfo &p_constructionInfo, const ShaderComponent &p_component)
+	{
+		p_constructionInfo.m_active = p_component.isObjectActive();
+		p_constructionInfo.m_name = p_component.getName();
+
+		p_constructionInfo.m_fragmentShaderFilename = p_component.getShaderData()->m_shader.getShaderFilename(ShaderType::ShaderType_Fragment);
+		p_constructionInfo.m_geometryShaderFilename = p_component.getShaderData()->m_shader.getShaderFilename(ShaderType::ShaderType_Geometry);
+		p_constructionInfo.m_vetexShaderFilename = p_component.getShaderData()->m_shader.getShaderFilename(ShaderType::ShaderType_Vertex);
+	}
 
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 

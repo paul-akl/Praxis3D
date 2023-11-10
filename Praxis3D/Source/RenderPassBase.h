@@ -83,7 +83,7 @@ struct RenderPassData
 class RenderPass
 {
 public:
-	RenderPass(RendererFrontend &p_renderer) : m_renderer(p_renderer) { }
+	RenderPass(RendererFrontend &p_renderer, RenderPassType p_renderPassType) : m_renderer(p_renderer), m_renderPassType(p_renderPassType), m_ID(0) { }
 	virtual ~RenderPass() { }
 
 	virtual ErrorCode init() = 0;
@@ -96,9 +96,11 @@ public:
 
 	inline const std::string &getName() const { return m_name; }
 	inline unsigned int getID() const { return m_ID; }
+	RenderPassType getRenderPassType() const { return m_renderPassType; }
 
 protected:
 	unsigned int m_ID;
+	RenderPassType m_renderPassType;
 	std::string m_name;
 
 	RendererFrontend &m_renderer;

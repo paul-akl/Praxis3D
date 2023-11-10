@@ -6,7 +6,7 @@
 
 PhysicsScene *PhysicsScene::s_currentPhysicsScene = nullptr;
 
-PhysicsScene::PhysicsScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader)
+PhysicsScene::PhysicsScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader, Properties::PropertyID::Physics)
 {
 	m_physicsTask = nullptr;
 	m_collisionConfiguration = nullptr;
@@ -14,6 +14,7 @@ PhysicsScene::PhysicsScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : S
 	m_collisionDispatcher = nullptr;
 	m_collisionBroadphase = nullptr;
 	m_dynamicsWorld = nullptr;
+	m_simulationRunning = true;
 }
 
 PhysicsScene::~PhysicsScene()
@@ -92,9 +93,6 @@ ErrorCode PhysicsScene::setup(const PropertySet &p_properties)
 	{
 		switch(p_properties[i].getPropertyID())
 		{
-		case Properties::ObjectPoolSize:
-
-			break;
 		case Properties::Gravity:
 			m_dynamicsWorld->setGravity(Math::toBtVector3(p_properties[i].getVec3f()));
 			break;
@@ -104,11 +102,28 @@ ErrorCode PhysicsScene::setup(const PropertySet &p_properties)
 	// Get the world scene required for reserving the component pools
 	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
 
-	// Reserve every component type that belongs to this scene
-	worldScene->reserve<RigidBodyComponent>(Config::objectPoolVar().regid_body_component_default_pool_size);
-	worldScene->reserve<CollisionEventComponent>(Config::objectPoolVar().regid_body_component_default_pool_size);
+	// Get the property set containing object pool size
+	auto &objectPoolSizeProperty = p_properties.getPropertySetByID(Properties::ObjectPoolSize);
+
+	// Reserve every component type that belongs to this scene (and set the minimum number of objects based on default config)
+	worldScene->reserve<RigidBodyComponent>(std::max(Config::objectPoolVar().regid_body_component_default_pool_size, objectPoolSizeProperty.getPropertyByID(Properties::RigidBodyComponent).getInt()));
+	worldScene->reserve<CollisionEventComponent>(std::max(Config::objectPoolVar().regid_body_component_default_pool_size, objectPoolSizeProperty.getPropertyByID(Properties::CollisionEventComponent).getInt()));
 
 	return ErrorCode::Success;
+}
+
+void PhysicsScene::exportSetup(PropertySet &p_propertySet)
+{
+	// Get the world scene required for getting the pool sizes
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	// Add object pool sizes
+	auto &objectPoolSizePropertySet = p_propertySet.addPropertySet(Properties::ObjectPoolSize);
+	objectPoolSizePropertySet.addProperty(Properties::RigidBodyComponent, (int)worldScene->getPoolSize<RigidBodyComponent>());
+	objectPoolSizePropertySet.addProperty(Properties::CollisionEventComponent, (int)worldScene->getPoolSize<CollisionEventComponent>());
+
+	// Add physics world properties
+	p_propertySet.addProperty(Properties::Gravity, Math::toGlmVec3(m_dynamicsWorld->getGravity()));
 }
 
 void PhysicsScene::update(const float p_deltaTime)
@@ -132,8 +147,11 @@ void PhysicsScene::update(const float p_deltaTime)
 		component.m_numOfStaticCollisions[dbIndex] = 0;
 	}
 
-	// Perform the physics simulation for the time step of the last frame
-	m_dynamicsWorld->stepSimulation(p_deltaTime);
+	if(m_simulationRunning)
+	{
+		// Perform the physics simulation for the time step of the last frame
+		m_dynamicsWorld->stepSimulation(p_deltaTime);
+	}
 
 	// Get the rigid body component view and iterate every entity that contains is
 	auto rigidBodyView = worldScene->getEntityRegistry().view<RigidBodyComponent>();
@@ -329,6 +347,30 @@ std::vector<SystemObject*> PhysicsScene::createComponents(const EntityID p_entit
 	return createComponents(p_entityID, p_constructionInfo.m_physicsComponents, p_startLoading);
 }
 
+void PhysicsScene::exportComponents(const EntityID p_entityID, ComponentsConstructionInfo &p_constructionInfo)
+{
+	exportComponents(p_entityID, p_constructionInfo.m_physicsComponents);
+}
+
+void PhysicsScene::exportComponents(const EntityID p_entityID, PhysicsComponentsConstructionInfo &p_constructionInfo)
+{
+	// Get the world scene required for getting the entity registry
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	// Get the entity registry 
+	auto &entityRegistry = worldScene->getEntityRegistry();
+
+	// Export RigidBodyComponent
+	auto *rigidBodyComponent = entityRegistry.try_get<RigidBodyComponent>(p_entityID);
+	if(rigidBodyComponent != nullptr)
+	{
+		if(p_constructionInfo.m_rigidBodyConstructionInfo == nullptr)
+			p_constructionInfo.m_rigidBodyConstructionInfo = new RigidBodyComponent::RigidBodyComponentConstructionInfo();
+
+		exportComponent(*p_constructionInfo.m_rigidBodyConstructionInfo, *rigidBodyComponent);
+	}
+}
+
 SystemObject *PhysicsScene::createComponent(const EntityID &p_entityID, const RigidBodyComponent::RigidBodyComponentConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	// If valid type was not specified, or object creation failed, return a null object instead
@@ -399,7 +441,7 @@ SystemObject *PhysicsScene::createComponent(const EntityID &p_entityID, const Ri
 				groundTransform.setIdentity();
 				groundTransform.setOrigin(Math::toBtVector3(spatialComponent->getSpatialDataChangeManager().getLocalSpaceData().m_spatialData.m_position));
 				groundTransform.setRotation(Math::toBtQuaternion(spatialComponent->getSpatialDataChangeManager().getLocalSpaceData().m_spatialData.m_rotationQuat));
-				//groundTransform.setFromOpenGLMatrix(&spatialComponent->getSpatialDataChangeManager().getLocalSpaceData().m_transformMat[0][0]);
+				//groundTransform.setFromOpenGLMatrix(&spatialComponent->getSpatialDataChangeManager().getLocalSpaceData().m_transformMatNoScale[0][0]);
 				component.m_motionState.setWorldTransform(groundTransform);
 
 				component.m_motionState.updateMotionStateTrans();

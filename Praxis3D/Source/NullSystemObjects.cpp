@@ -14,7 +14,7 @@ SystemScene *NullSystemBase::getScene()
 	return &m_nullSystemScene;
 }
 
-NullSystemScene::NullSystemScene(SystemBase *p_system) : SystemScene(p_system, nullptr)
+NullSystemScene::NullSystemScene(SystemBase *p_system) : SystemScene(p_system, nullptr, Properties::PropertyID::Null)
 {
 	m_nullSystemTask.setSystemScene(this);
 }

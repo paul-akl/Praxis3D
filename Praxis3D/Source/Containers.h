@@ -51,26 +51,26 @@ struct SpatialTransformData
 	{
 		clear();
 	}
-	SpatialTransformData(const SpatialData &p_spatialData, const glm::mat4 &p_transformMat) : m_spatialData(p_spatialData), m_transformMat(p_transformMat) { }
+	SpatialTransformData(const SpatialData &p_spatialData, const glm::mat4 &p_transformMat) : m_spatialData(p_spatialData), m_transformMatNoScale(p_transformMat) { }
 
 	friend const inline SpatialTransformData operator+(const SpatialTransformData &p_left, const SpatialTransformData &p_right)
 	{
-		return SpatialTransformData(p_left.m_spatialData + p_right.m_spatialData, p_left.m_transformMat * p_right.m_transformMat);
+		return SpatialTransformData(p_left.m_spatialData + p_right.m_spatialData, p_left.m_transformMatNoScale * p_right.m_transformMatNoScale);
 	}
 	const inline SpatialTransformData operator+=(const SpatialTransformData &p_data)
 	{ 
-		return SpatialTransformData(m_spatialData + p_data.m_spatialData, m_transformMat * p_data.m_transformMat);
+		return SpatialTransformData(m_spatialData + p_data.m_spatialData, m_transformMatNoScale * p_data.m_transformMatNoScale);
 	}
 
 	// Set all the data to default
 	void clear()
 	{
 		m_spatialData.clear();
-		m_transformMat = glm::mat4(1.0f);
+		m_transformMatNoScale = glm::mat4(1.0f);
 	}
 
 	SpatialData m_spatialData;
-	glm::mat4 m_transformMat;
+	glm::mat4 m_transformMatNoScale;
 };
 
 // Stores all GUI data

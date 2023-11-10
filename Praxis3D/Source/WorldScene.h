@@ -51,6 +51,8 @@ public:
 
 	ErrorCode setup(const PropertySet &p_properties);
 
+	void exportSetup(PropertySet &p_propertySet);
+
 	void update(const float p_deltaTime);
 
 	ErrorCode preload() { return ErrorCode::Success; }
@@ -58,9 +60,13 @@ public:
 	void loadInBackground() { }
 
 	EntityID createEntity(const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
+	void exportEntity(const EntityID p_entityID, ComponentsConstructionInfo &p_constructionInfo);
 
 	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const WorldComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
+
+	void exportComponents(const EntityID p_entityID, ComponentsConstructionInfo &p_constructionInfo);
+
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
 	SystemObject *createComponent(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
@@ -71,6 +77,7 @@ public:
 
 		objectMaterialComponent = &addComponent<ObjectMaterialComponent>(p_entityID, this, p_constructionInfo.m_name, p_entityID);
 
+		objectMaterialComponent->setActive(p_constructionInfo.m_active);
 		objectMaterialComponent->m_materialType = p_constructionInfo.m_materialType;
 
 		objectMaterialComponent->init();
@@ -84,6 +91,7 @@ public:
 
 		spatialComponent = &addComponent<SpatialComponent>(p_entityID, this, p_constructionInfo.m_name, p_entityID);
 
+		spatialComponent->setActive(p_constructionInfo.m_active);
 		spatialComponent->m_spatialData.setLocalPosition(p_constructionInfo.m_localPosition);
 		spatialComponent->m_spatialData.setLocalScale(p_constructionInfo.m_localScale);
 
@@ -96,6 +104,29 @@ public:
 		// Perform a spatial data update, so that all the transform matrices are calculated
 		spatialComponent->m_spatialData.update();
 		return spatialComponent;
+	}
+
+	void exportComponent(ObjectMaterialComponent::ObjectMaterialComponentConstructionInfo &p_constructionInfo, const ObjectMaterialComponent &p_component)
+	{
+		p_constructionInfo.m_active = p_component.isObjectActive();
+		p_constructionInfo.m_name = p_component.getName();
+
+		p_constructionInfo.m_materialType = p_component.getObjectMaterialType();
+	}
+
+	void exportComponent(SpatialComponent::SpatialComponentConstructionInfo &p_constructionInfo, SpatialComponent &p_component)
+	{
+		p_constructionInfo.m_active = p_component.isObjectActive();
+		p_constructionInfo.m_name = p_component.getName();
+
+		// Call update to make sure the spatial data is current
+		p_component.m_spatialData.update();
+		p_component.m_spatialData.calculateLocalRotationEuler();
+
+		p_constructionInfo.m_localPosition = p_component.getSpatialDataChangeManager().getLocalSpaceData().m_spatialData.m_position;
+		p_constructionInfo.m_localRotationEuler = p_component.getSpatialDataChangeManager().getLocalSpaceData().m_spatialData.m_rotationEuler;
+		p_constructionInfo.m_localRotationQuaternion = p_component.getSpatialDataChangeManager().getLocalSpaceData().m_spatialData.m_rotationQuat;
+		p_constructionInfo.m_localScale = p_component.getSpatialDataChangeManager().getLocalSpaceData().m_spatialData.m_scale;
 	}
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
@@ -127,6 +158,13 @@ public:
 	void reserve(const size_t p_capacity)
 	{
 		m_entityRegistry.storage<T_Component>().reserve(p_capacity);
+	}
+
+	// Get the internal pool size of a given component
+	template <class T_Component>
+	unsigned int getPoolSize()
+	{
+		return m_entityRegistry.storage<T_Component>().size();
 	}
 
 	inline entt::basic_registry<EntityID> &getEntityRegistry() { return m_entityRegistry; }

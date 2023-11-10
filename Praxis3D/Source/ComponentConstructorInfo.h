@@ -73,6 +73,8 @@ struct ComponentsConstructionInfo
 	std::string m_name;
 	EntityID m_id;
 	EntityID m_parent;
+
+	std::string m_prefab;
 };
 
 typedef std::vector<ComponentsConstructionInfo> EntitiesConstructionInfo;

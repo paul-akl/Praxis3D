@@ -76,6 +76,8 @@ public:
 
 	ErrorCode setup(const PropertySet &p_properties);
 
+	void exportSetup(PropertySet &p_propertySet);
+
 	void activate()
 	{
 		s_currentPhysicsScene = this;
@@ -108,17 +110,51 @@ public:
 
 		return components;
 	}
+	
+	void exportComponents(const EntityID p_entityID, ComponentsConstructionInfo &p_constructionInfo);
+	void exportComponents(const EntityID p_entityID, PhysicsComponentsConstructionInfo &p_constructionInfo);
 
 	SystemObject *createComponent(const EntityID &p_entityID, const RigidBodyComponent::RigidBodyComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 	void createCollisionEventComponent(const EntityID &p_entityID);
+
+	void exportComponent(RigidBodyComponent::RigidBodyComponentConstructionInfo &p_constructionInfo, const RigidBodyComponent &p_component)
+	{
+		p_constructionInfo.m_active = p_component.isObjectActive();
+		p_constructionInfo.m_name = p_component.getName();
+
+		p_constructionInfo.m_friction = p_component.getRigidBody()->getFriction();
+		p_constructionInfo.m_mass = p_component.getRigidBody()->getMass();
+		p_constructionInfo.m_restitution = p_component.getRigidBody()->getRestitution();
+		p_constructionInfo.m_kinematic = p_component.getRigidBody()->isKinematicObject();
+		p_constructionInfo.m_collisionShapeType = p_component.getCollisionShapeType();
+		p_constructionInfo.m_collisionShapeSize = p_component.getCollisionShapeSize();
+		p_constructionInfo.m_linearVelocity = Math::toGlmVec3(p_component.getRigidBody()->getLinearVelocity());
+	}
+
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
+
+	void receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving)
+	{
+		switch(p_dataType)
+		{
+			case DataType_SimulationActive:
+				m_simulationRunning = static_cast<bool>(p_data);
+				break;
+		}
+	}
 
 	SystemTask *getSystemTask() { return m_physicsTask; };
 	Systems::TypeID getSystemType() { return Systems::TypeID::Physics; };
 	BitMask getDesiredSystemChanges() { return Systems::Changes::Generic::CreateObject || Systems::Changes::Generic::DeleteObject; }
 	BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
+
+	// Fluch the collision contacts of a rigid body (used after changing the collision shape dimensions)
+	void cleanProxyFromPairs(btRigidBody &p_rigidBody)
+	{
+		m_collisionBroadphase->getOverlappingPairCache()->cleanProxyFromPairs(p_rigidBody.getBroadphaseProxy(), m_collisionDispatcher);
+	}
 
 private:
 	// Removes an object from a pool, by iterating checking each pool for matched index; returns true if the object was found and removed
@@ -161,4 +197,6 @@ private:
 	btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
 
 	static PhysicsScene *s_currentPhysicsScene;
+
+	bool m_simulationRunning;
 };

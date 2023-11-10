@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <iostream>
 
 #include "Containers.h"
 #include "CommonDefinitions.h"
@@ -46,7 +47,9 @@ public:
 		m_worldTransformUpToDate = p_spatialDataManager.m_worldTransformUpToDate;
 		m_localSpace = p_spatialDataManager.m_localSpace;
 		m_parentTransform = p_spatialDataManager.m_parentTransform;
-		m_worldTransform = p_spatialDataManager.m_worldTransform;
+		m_localTransformWithScale = p_spatialDataManager.m_localTransformWithScale;
+		m_worldTransformWithScale = p_spatialDataManager.m_worldTransformWithScale;
+		m_worldTransformNoScale = p_spatialDataManager.m_worldTransformNoScale;
 		m_updateCount = p_spatialDataManager.m_updateCount;
 		m_changes = p_spatialDataManager.m_changes;
 
@@ -60,7 +63,7 @@ public:
 		{
 			if(!m_localPositionUpToDate)
 			{
-				m_localSpace.m_spatialData.m_position = m_localSpace.m_transformMat[3];
+				m_localSpace.m_spatialData.m_position = m_localSpace.m_transformMatNoScale[3];
 				m_localPositionUpToDate = true;
 
 				if(m_trackLocalChanges)
@@ -76,7 +79,14 @@ public:
 			if(!m_localQuaternionUpToDate)
 			{
 				if(m_localTransformUpToDate)
-					m_localSpace.m_spatialData.m_rotationQuat = glm::toQuat(m_localSpace.m_transformMat);
+				{
+					m_localSpace.m_spatialData.m_rotationQuat = glm::toQuat(m_localSpace.m_transformMatNoScale);
+					const glm::mat3 rotMtx(
+						glm::vec3(m_localSpace.m_transformMatNoScale[0]),
+						glm::vec3(m_localSpace.m_transformMatNoScale[1]),
+						glm::vec3(m_localSpace.m_transformMatNoScale[2]));
+					m_localSpace.m_spatialData.m_rotationQuat = glm::quat_cast(rotMtx);
+				}
 				else
 					m_localSpace.m_spatialData.m_rotationQuat = Math::eulerDegreesToQuaterion(m_localSpace.m_spatialData.m_rotationEuler);
 
@@ -95,7 +105,7 @@ public:
 				glm::vec3 skew;
 				glm::vec4 perspective;
 
-				glm::decompose(m_localSpace.m_transformMat, m_localSpace.m_spatialData.m_scale, rotation, translation, skew, perspective);
+				glm::decompose(m_localSpace.m_transformMatNoScale, m_localSpace.m_spatialData.m_scale, rotation, translation, skew, perspective);
 				m_localScaleUpToDate = true;
 
 				if(m_trackLocalChanges)
@@ -104,10 +114,9 @@ public:
 
 			if(!m_localTransformUpToDate)
 			{
-				m_localSpace.m_transformMat = Math::createTransformMat(
+				m_localSpace.m_transformMatNoScale = Math::createTransformMat(
 					m_localSpace.m_spatialData.m_position, 
-					m_localSpace.m_spatialData.m_rotationQuat, 
-					m_localSpace.m_spatialData.m_scale);
+					m_localSpace.m_spatialData.m_rotationQuat);
 
 				m_localTransformUpToDate = true;
 
@@ -121,7 +130,8 @@ public:
 		// Calculate the world transform if it's outdated
 		if(!m_worldTransformUpToDate)
 		{
-			m_worldTransform = m_localSpace.m_transformMat * m_parentTransform;
+			m_worldTransformNoScale = m_localSpace.m_transformMatNoScale * m_parentTransform;
+			m_worldTransformWithScale = glm::scale(m_worldTransformNoScale, m_localSpace.m_spatialData.m_scale);
 
 			m_worldTransformUpToDate = true;
 
@@ -179,14 +189,15 @@ public:
 
 					if(CheckBitmask(p_changeType, Systems::Changes::Spatial::LocalTransform))
 					{
-						setLocalTransform(p_subject.getMat4(&m_parent, Systems::Changes::Spatial::LocalTransform));
+						setLocalTransformWithScale(p_subject.getMat4(&m_parent, Systems::Changes::Spatial::LocalTransform));
 						localOrWorldTransformChanged = true;
 					}
 
 					if(CheckBitmask(p_changeType, Systems::Changes::Spatial::LocalTransformNoScale))
 					{
-						// Scale the local transform before assigning it
-						setLocalTransform(glm::scale(p_subject.getMat4(&m_parent, Systems::Changes::Spatial::LocalTransform), m_localSpace.m_spatialData.m_scale));
+						//setLocalTransform(glm::scale(p_subject.getMat4(&m_parent, Systems::Changes::Spatial::LocalTransform), m_localSpace.m_spatialData.m_scale));
+						setLocalTransform(p_subject.getMat4(&m_parent, Systems::Changes::Spatial::LocalTransformNoScale));
+
 						localOrWorldTransformChanged = true;
 					}
 				}
@@ -214,7 +225,8 @@ public:
 		// Update the world-space data if any changes have been made
 		if(localOrWorldTransformChanged)
 		{
-			m_worldTransform = m_localSpace.m_transformMat * m_parentTransform;
+			m_worldTransformNoScale = m_localSpace.m_transformMatNoScale * m_parentTransform;
+			m_worldTransformWithScale = glm::scale(m_worldTransformNoScale, m_localSpace.m_spatialData.m_scale);
 
 			m_worldTransformUpToDate = true;
 
@@ -227,15 +239,19 @@ public:
 
 	// Get local-space spatial data
 	const inline SpatialTransformData &getLocalSpaceData() const { return m_localSpace; }
+	inline SpatialTransformData &getLocalSpaceDataNonConst() { return m_localSpace; }
 
 	// Get local-space transform
-	const inline glm::mat4 &getLocalTransform() const { return m_localSpace.m_transformMat; }
+	const inline glm::mat4 &getLocalTransform() const { return m_localSpace.m_transformMatNoScale; }
 
 	// Get world-space transform of the parent
 	const inline glm::mat4 &getParemtTransform() const { return m_parentTransform; }
 
 	// Get world-space transform (combination of the local-space and the parent objects world-space)
-	const inline glm::mat4 &getWorldTransform() const { return m_worldTransform; }
+	const inline glm::mat4 &getWorldTransform() const { return m_worldTransformNoScale; }
+
+	// Get world-space transform with scale applied (combination of the local-space and the parent objects world-space)
+	const inline glm::mat4 &getWorldTransformWithScale() const { return m_worldTransformWithScale; }
 
 	// Get the current velocity
 	const inline glm::vec3 &getVelocity() const { return m_velocity; }
@@ -270,18 +286,20 @@ public:
 	{
 		switch(p_changedBits)
 		{
+		// Apply scale to the local transform matrix
 		case Systems::Changes::Spatial::LocalTransform:
-			return m_localSpace.m_transformMat;
 
-		// Construct a local transform matrix without scaling it
+			m_localTransformWithScale = glm::scale(m_localSpace.m_transformMatNoScale, m_localSpace.m_spatialData.m_scale);
+			return m_localTransformWithScale;
+
 		case Systems::Changes::Spatial::LocalTransformNoScale:
-			m_localTransformNoScale = Math::createTransformMat(
-				m_localSpace.m_spatialData.m_position,
-				m_localSpace.m_spatialData.m_rotationQuat);
-			return m_localTransformNoScale;
+			return m_localSpace.m_transformMatNoScale;
 		
 		case Systems::Changes::Spatial::WorldTransform:
-			return m_worldTransform;
+			return m_worldTransformNoScale;
+
+		case Systems::Changes::Spatial::WorldTransformNoScale:
+			return m_worldTransformNoScale;
 		}
 
 		return NullObjects::NullMat4f;
@@ -326,7 +344,7 @@ public:
 	{
 		m_localSpace = p_spatialDataManager.m_localSpace;
 		m_parentTransform = p_spatialDataManager.m_parentTransform;
-		m_worldTransform = p_spatialDataManager.m_worldTransform;
+		m_worldTransformNoScale = p_spatialDataManager.m_worldTransformNoScale;
 
 		m_localEverythingUpToDate = p_spatialDataManager.m_localEverythingUpToDate;
 		m_localPositionUpToDate = p_spatialDataManager.m_localPositionUpToDate;
@@ -401,7 +419,7 @@ public:
 	}
 	const inline void setLocalTransform(const glm::mat4 p_transform)
 	{
-		m_localSpace.m_transformMat = p_transform;
+		m_localSpace.m_transformMatNoScale = p_transform;
 
 		// Updated variables
 		m_localTransformUpToDate = true;
@@ -415,7 +433,24 @@ public:
 		m_localScaleUpToDate = false;
 
 		if(m_trackLocalChanges)
-			m_changes |= Systems::Changes::Spatial::LocalTransform;
+			m_changes |= Systems::Changes::Spatial::LocalTransformNoScale;
+	}
+	const inline void setLocalTransformWithScale(const glm::mat4 p_transform)
+	{
+		m_localTransformWithScale = p_transform;
+
+		glm::vec3 scale;
+		glm::quat rotation;
+		glm::vec3 translation;
+		glm::vec3 skew;
+		glm::vec4 perspective;
+		glm::decompose(m_localTransformWithScale, scale, rotation, translation, skew, perspective);
+
+		m_localSpace.m_spatialData.m_position = translation;
+		m_localSpace.m_spatialData.m_rotationQuat = rotation;
+		m_localSpace.m_spatialData.m_scale = scale;
+
+		setLocalTransform(Math::createTransformMat(m_localSpace.m_spatialData.m_position, m_localSpace.m_spatialData.m_rotationQuat));
 	}
 	const inline void setLocalSpatialData(const SpatialData &p_spatialData)
 	{
@@ -466,9 +501,9 @@ public:
 	// Set world transform, that should be the combination of local and parent transforms
 	const inline void setWorldTransform(const glm::mat4 p_transform)		
 	{ 
-		m_worldTransform = p_transform;
+		m_worldTransformNoScale = p_transform;
 
-		m_changes |= Systems::Changes::Spatial::WorldTransform;
+		m_changes |= Systems::Changes::Spatial::WorldTransformNoScale;
 	}
 
 	const inline void calculateLocalTransform() 
@@ -476,8 +511,25 @@ public:
 		updateTransformMatrix(m_localSpace); 
 	}
 
-private:
+	// Manually updates the local rotation Euler angles, as they are not automatically updated
+	const inline void calculateLocalRotationEuler()
+	{
+		if(!m_localQuaternionUpToDate)
+		{
+			if(m_localTransformUpToDate)
+				m_localSpace.m_spatialData.m_rotationQuat = glm::toQuat(m_localSpace.m_transformMatNoScale);
+			else
+				m_localSpace.m_spatialData.m_rotationQuat = Math::eulerDegreesToQuaterion(m_localSpace.m_spatialData.m_rotationEuler);
 
+			m_localQuaternionUpToDate = true;
+		}
+
+		m_localSpace.m_spatialData.m_rotationEuler = glm::degrees(glm::eulerAngles(m_localSpace.m_spatialData.m_rotationQuat));
+
+		m_localEulerUpToDate = true;
+	}
+
+private:
 	const inline void localDataChanged()
 	{
 		m_localTransformUpToDate = false;
@@ -487,9 +539,8 @@ private:
 	// Recalculates the model transform matrix in the world-space
 	void updateTransformMatrix(SpatialTransformData &p_spacialTransformData)
 	{
-		p_spacialTransformData.m_transformMat = Math::createTransformMat(	p_spacialTransformData.m_spatialData.m_position, 
-																			p_spacialTransformData.m_spatialData.m_rotationEuler, 
-																			p_spacialTransformData.m_spatialData.m_scale);
+		p_spacialTransformData.m_transformMatNoScale = Math::createTransformMat(p_spacialTransformData.m_spatialData.m_position, 
+																				p_spacialTransformData.m_spatialData.m_rotationEuler);
 	}
 
 	// Increments the update count; should be called after any data has been changed
@@ -517,10 +568,12 @@ private:
 	SpatialTransformData m_localSpace;
 	// Transform data in world space the parent object
 	glm::mat4 m_parentTransform;
-	// Transform data in world space (local and parent space added together), final transform data used for rendering
-	glm::mat4 m_worldTransform;
-	// A local transform matrix constructed without scaling it
-	mutable glm::mat4 m_localTransformNoScale;
+	// Transform data in world space (local and parent space added together), with scale applied, final transform data used for rendering
+	glm::mat4 m_worldTransformWithScale;
+	// Transform data in world space (local and parent space added together)
+	glm::mat4 m_worldTransformNoScale;
+	// A local transform matrix constructed while scaling it
+	mutable glm::mat4 m_localTransformWithScale;
 	// Current velocity vector
 	glm::vec3 m_velocity;
 

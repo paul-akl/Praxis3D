@@ -8,7 +8,7 @@
 #include "TaskManagerLocator.h"
 #include "WorldScene.h"
 
-ScriptScene::ScriptScene(ScriptSystem *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader)
+ScriptScene::ScriptScene(ScriptSystem *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader, Properties::PropertyID::Script)
 {
 	m_scriptingTask = nullptr;
 	m_luaScriptsEnabled = true;
@@ -29,26 +29,26 @@ ErrorCode ScriptScene::init()
 
 ErrorCode ScriptScene::setup(const PropertySet &p_properties)
 {
-	// Get default object pool size
-	int objectPoolSize = Config::objectPoolVar().object_pool_size;
-
-	for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
-	{
-		switch(p_properties[i].getPropertyID())
-		{
-		case Properties::ObjectPoolSize:
-			objectPoolSize = p_properties[i].getInt();
-			break;
-		}
-	}
-
 	// Get the world scene required for reserving the component pools
 	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
 
-	// Reserve every component type that belongs to this scene
-	worldScene->reserve<LuaComponent>(Config::objectPoolVar().lua_component_default_pool_size);
+	// Get the property set containing object pool size
+	auto &objectPoolSizeProperty = p_properties.getPropertySetByID(Properties::ObjectPoolSize);
+
+	// Reserve every component type that belongs to this scene (and set the minimum number of objects based on default config)
+	worldScene->reserve<LuaComponent>(std::max(Config::objectPoolVar().lua_component_default_pool_size, objectPoolSizeProperty.getPropertyByID(Properties::LuaComponent).getInt()));
 
 	return ErrorCode::Success;
+}
+
+void ScriptScene::exportSetup(PropertySet &p_propertySet)
+{
+	// Get the world scene required for getting the pool sizes
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	// Add object pool sizes
+	auto &objectPoolSizePropertySet = p_propertySet.addPropertySet(Properties::ObjectPoolSize);
+	objectPoolSizePropertySet.addProperty(Properties::LuaComponent, (int)worldScene->getPoolSize<LuaComponent>());
 }
 
 void ScriptScene::update(const float p_deltaTime)
@@ -132,6 +132,30 @@ ErrorCode ScriptScene::preload()
 std::vector<SystemObject*> ScriptScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	return createComponents(p_entityID, p_constructionInfo.m_scriptComponents, p_startLoading);
+}
+
+void ScriptScene::exportComponents(const EntityID p_entityID, ComponentsConstructionInfo &p_constructionInfo)
+{
+	exportComponents(p_entityID, p_constructionInfo.m_scriptComponents);
+}
+
+void ScriptScene::exportComponents(const EntityID p_entityID, ScriptComponentsConstructionInfo &p_constructionInfo)
+{
+	// Get the world scene required for getting the entity registry
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	// Get the entity registry 
+	auto &entityRegistry = worldScene->getEntityRegistry();
+
+	// Export LuaComponent
+	auto *luaComponent = entityRegistry.try_get<LuaComponent>(p_entityID);
+	if(luaComponent != nullptr)
+	{
+		if(p_constructionInfo.m_luaConstructionInfo == nullptr)
+			p_constructionInfo.m_luaConstructionInfo = new LuaComponent::LuaComponentConstructionInfo();
+
+		exportComponent(*p_constructionInfo.m_luaConstructionInfo, *luaComponent);
+	}
 }
 
 SystemObject *ScriptScene::createComponent(const EntityID &p_entityID, const LuaComponent::LuaComponentConstructionInfo &p_constructionInfo, const bool p_startLoading)

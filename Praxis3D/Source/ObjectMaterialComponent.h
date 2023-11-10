@@ -47,7 +47,16 @@ public:
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
+		if(CheckBitmask(p_changeType, Systems::Changes::World::ObjectMaterialType))
+		{
+			// Get the new material type from the observed subject
+			auto newMaterialType = p_subject->getUnsignedInt(this, Systems::Changes::World::ObjectMaterialType);
 
+			// If the new material type number is within the bounds of the ObjectMaterialType enum, 
+			// cast the number to the enum and assign it as the material type of this component
+			if(newMaterialType < ObjectMaterialType::NumberOfMaterialTypes)
+				m_materialType = static_cast<ObjectMaterialType>(newMaterialType);
+		}
 	}
 
 	inline ObjectMaterialType getObjectMaterialType() const noexcept { return m_materialType; }

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "EditorWindow.h"
 #include "GUIObject.h"
 #include "GUITask.h"
 #include "ObjectPool.h"
@@ -34,6 +33,14 @@ struct GUIComponentsConstructionInfo
 
 struct FileBrowserDialog
 {
+	enum FileBrowserDialogFlags : unsigned int
+	{
+		FileBrowserDialogFlags_None = 0,
+		FileBrowserDialogFlags_ConfirmOverwrite = (1 << 0),
+		FileBrowserDialogFlags_DontShowHiddenFiles = (1 << 1),
+		FileBrowserDialogFlags_DisableCreateDirectoryButton = (1 << 2)
+	};
+
 	FileBrowserDialog()
 	{
 		m_opened = false;
@@ -41,7 +48,7 @@ struct FileBrowserDialog
 		m_success = false;
 		m_rootPath = ".";
 		m_numOfSelectableFiles = 1;
-		m_flags = 0;
+		m_flags = FileBrowserDialogFlags_None;
 	}
 
 	// Only reset the values that are assigned after opening the dialog
@@ -65,8 +72,8 @@ struct FileBrowserDialog
 				m_filename,
 				m_filePathName;
 
-	int m_numOfSelectableFiles,
-		m_flags;
+	int m_numOfSelectableFiles;
+	unsigned int m_flags;
 
 	bool m_opened,
 		 m_closed,
@@ -82,6 +89,8 @@ public:
 	ErrorCode init();
 
 	ErrorCode setup(const PropertySet& p_properties);
+
+	void exportSetup(PropertySet &p_propertySet);
 
 	void update(const float p_deltaTime);
 
@@ -100,7 +109,19 @@ public:
 		return components;
 	}
 
+	void exportComponents(const EntityID p_entityID, ComponentsConstructionInfo &p_constructionInfo);
+	void exportComponents(const EntityID p_entityID, GUIComponentsConstructionInfo &p_constructionInfo);
+
 	SystemObject *createComponent(const EntityID p_entityID, const GUISequenceComponent::GUISequenceComponentConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
+
+	void exportComponent(GUISequenceComponent::GUISequenceComponentConstructionInfo &p_constructionInfo, const GUISequenceComponent &p_component)
+	{
+		p_constructionInfo.m_active = p_component.isObjectActive();
+		p_constructionInfo.m_name = p_component.getName();
+
+		p_constructionInfo.m_staticSequence = p_component.isStaticSequence();
+	}
+
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
 	void changeOccurred(ObservedSubject* p_subject, BitMask p_changeType) { }

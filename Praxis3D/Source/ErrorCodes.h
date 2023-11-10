@@ -54,6 +54,7 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
 	Code(Framebuffer_failed,) \
 	Code(Geometrybuffer_failed,) \
 	/* GUI errors */ \
+	Code(Editor_path_outside_current_dir,) \
 	Code(GL_context_missing,) \
 	Code(Window_handle_missing,) \
 	/* Model loader errors */ \
@@ -115,6 +116,7 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_GeometryPass,) \
     Code(Source_GraphicsObject,) \
     Code(Source_GUI,) \
+    Code(Source_GUIEditor,) \
     Code(Source_GUIObject,) \
     Code(Source_GUIPass,) \
     Code(Source_GUISequenceComponent,) \

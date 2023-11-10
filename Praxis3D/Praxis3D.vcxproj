@@ -135,6 +135,7 @@
     <ClCompile Include="..\Dependencies\include\imgui\imgui.cpp" />
     <ClCompile Include="..\Dependencies\include\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\Dependencies\include\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\Dependencies\include\imgui\imgui_stdlib.cpp" />
     <ClCompile Include="..\Dependencies\include\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\Dependencies\include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\Dependencies\include\imgui_tex_inspect\imgui_tex_inspect.cpp" />
@@ -189,6 +190,7 @@
     <ClCompile Include="Source\RendererScene.cpp" />
     <ClCompile Include="Source\RendererSystem.cpp" />
     <ClCompile Include="Source\RenderTask.cpp" />
+    <ClCompile Include="Source\RigidBodyComponent.cpp" />
     <ClCompile Include="Source\Scancodes.cpp" />
     <ClCompile Include="Source\SceneLoader.cpp" />
     <ClCompile Include="Source\ScriptScene.cpp" />
@@ -216,6 +218,7 @@
     <ClInclude Include="..\Dependencies\include\imgui\imconfig.h" />
     <ClInclude Include="..\Dependencies\include\imgui\imgui.h" />
     <ClInclude Include="..\Dependencies\include\imgui\imgui_internal.h" />
+    <ClInclude Include="..\Dependencies\include\imgui\imgui_stdlib.h" />
     <ClInclude Include="..\Dependencies\include\imgui_tex_inspect\imgui_tex_inspect.h" />
     <ClInclude Include="..\Dependencies\include\imgui_tex_inspect\imgui_tex_inspect_internal.h" />
     <ClInclude Include="..\Dependencies\include\imgui_tex_inspect\tex_inspect_opengl.h" />

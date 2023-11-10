@@ -6,7 +6,7 @@ class LuminancePass : public RenderPass
 {
 public:
 	LuminancePass(RendererFrontend &p_renderer) :
-		RenderPass(p_renderer),
+		RenderPass(p_renderer, RenderPassType::RenderPassType_Luminance),
 		m_histogramBuffer(BufferType_ElementArray, BufferBindTarget_ShaderStorage, BufferUsageHint_DynamicDraw),
 		m_luminanceAverageTexture(Loaders::texture2D().create("LuminanceTexture", 1, 1, TextureFormat_Red, TextureDataFormat_R16F, TextureDataType_Float)),
 		m_luminanceHistogramShader(nullptr),

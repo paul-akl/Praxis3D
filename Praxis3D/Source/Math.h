@@ -77,11 +77,12 @@ namespace Math
 	}
 	const inline glm::quat eulerDegreesToQuaterion(const glm::vec3 &p_degrees) noexcept
 	{
-		glm::quat qPitch = glm::angleAxis(glm::radians(p_degrees.x), glm::vec3(1, 0, 0));
-		glm::quat qYaw = glm::angleAxis(glm::radians(p_degrees.y), glm::vec3(0, 1, 0));
-		glm::quat qRoll = glm::angleAxis(glm::radians(p_degrees.z), glm::vec3(0, 0, 1));
+		return glm::quat{glm::radians(p_degrees)};
+		//glm::quat qPitch = glm::angleAxis(glm::radians(p_degrees.x), glm::vec3(1, 0, 0));
+		//glm::quat qYaw = glm::angleAxis(glm::radians(p_degrees.y), glm::vec3(0, 1, 0));
+		//glm::quat qRoll = glm::angleAxis(glm::radians(p_degrees.z), glm::vec3(0, 0, 1));
 
-		return glm::normalize(qPitch * qYaw * qRoll);
+		//return glm::normalize(qPitch * qYaw * qRoll);
 	}
 
 	const inline FMOD_VECTOR toFmodVector(const glm::vec3 &p_vec) noexcept { return FMOD_VECTOR{ p_vec.x, p_vec.y, p_vec.z }; }
@@ -95,6 +96,8 @@ namespace Math
 	const inline btVector3 toBtVector3(const glm::vec4 &p_vec) noexcept { return btVector3(p_vec.x, p_vec.y, p_vec.z); }
 
 	const inline glm::vec3 toGlmVec3(const btVector3 &p_vec) noexcept { return glm::vec3(p_vec.getX(), p_vec.getY(), p_vec.getZ()); }
+
+	const inline glm::vec4 toGlmVec4(const glm::quat &p_quat) noexcept { return glm::vec4(p_quat.x, p_quat.y, p_quat.z, p_quat.w); }
 
 	const inline glm::quat toGlmQuat(const btQuaternion &p_quat) noexcept { return glm::quat(p_quat.getW(), p_quat.getX(), p_quat.getY(), p_quat.getZ()); }
 

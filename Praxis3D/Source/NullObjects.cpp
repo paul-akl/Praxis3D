@@ -11,10 +11,12 @@
 class NullObserver : public Observer
 {
 public:
+	NullObserver() : Observer(Properties::PropertyID::Null) { }
+
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
 };
 
-constexpr NullObserver nullObserver;
+const NullObserver nullObserver;
 
 const glm::quat				NullObjects::NullQuaterion = glm::quat();
 const glm::vec3				NullObjects::NullVec3f = glm::vec3(1.0f);

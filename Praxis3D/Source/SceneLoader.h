@@ -36,10 +36,20 @@ public:
 	inline SystemScene *getSystemScene(Systems::TypeID p_systemType) const { return m_systemScenes[p_systemType]; }
 	inline UniversalScene *getChangeController() const { return m_changeController; }
 
+	// Load a scene from file, pass it along to every system scene and create every entity
 	ErrorCode loadFromFile(const std::string &p_filename);
+
+	// Export the entire entity registry and system scene settings to file
 	ErrorCode saveToFile(const std::string p_filename = "");
 
+	// Load a single prefab from file
 	ErrorCode importPrefab(ComponentsConstructionInfo &p_constructionInfo, const std::string &p_filename, const bool p_forceReload = false);
+
+	// Returns all prefabs that have been loaded during scene loading
+	const std::map<std::string, ComponentsConstructionInfo> &getPrefabs() { return m_prefabs; }
+
+	// Returns the last loaded scene filename
+	const std::string &getSceneFilename() const { return m_filename; }
 
 private:
 	ErrorCode importFromFile(ComponentsConstructionInfo &p_constructionInfo, const std::string &p_filename);
@@ -50,6 +60,15 @@ private:
 	void importFromProperties(PhysicsComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name);
 	void importFromProperties(ScriptComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name);
 	void importFromProperties(WorldComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties, const std::string &p_name);
+
+	void exportToProperties(const ComponentsConstructionInfo &p_constructionInfo, PropertySet &p_properties);
+	void exportToProperties(const AudioComponentsConstructionInfo &p_constructionInfo, PropertySet &p_properties);
+	void exportToProperties(const GraphicsComponentsConstructionInfo &p_constructionInfo, PropertySet &p_properties);
+	void exportToProperties(const GUIComponentsConstructionInfo &p_constructionInfo, PropertySet &p_properties);
+	void exportToProperties(const PhysicsComponentsConstructionInfo &p_constructionInfo, PropertySet &p_properties);
+	void exportToProperties(const ScriptComponentsConstructionInfo &p_constructionInfo, PropertySet &p_properties);
+	void exportToProperties(const WorldComponentsConstructionInfo &p_constructionInfo, PropertySet &p_properties);
+
 
 	// Mutex used to block calls from other threads while import operation is in progress
 	SpinWait m_mutex;

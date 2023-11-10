@@ -5,7 +5,7 @@
 class ReflectionPass : public RenderPass
 {
 public:
-	ReflectionPass(RendererFrontend &p_renderer) : RenderPass(p_renderer) { }
+	ReflectionPass(RendererFrontend &p_renderer) : RenderPass(p_renderer, RenderPassType::RenderPassType_NumOfTypes) { }
 
 	~ReflectionPass() { }
 

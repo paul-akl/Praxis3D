@@ -58,7 +58,7 @@ public:
 
 		std::size_t m_numOfMeshes;
 		std::vector<std::vector<std::string>> m_meshMaterials;
-		std::vector< std::vector<glm::vec2>> m_meshMaterialsScale;
+		std::vector<std::vector<glm::vec2>> m_meshMaterialsScale;
 		std::vector<float> m_alphaThreshold;
 		std::vector<float> m_heightScale;
 		std::vector<bool> m_present;
@@ -442,6 +442,54 @@ public:
 	}
 
 	const inline std::vector<ModelData> &getModelData() const { return m_modelData; }
+
+	inline void getMeshMaterialsProperties(MeshMaterialsProperties &p_modelsProperties) const
+	{
+		// Go over each model
+		for(decltype(m_modelData.size()) modelSize = m_modelData.size(), modelIndex = 0; modelIndex < modelSize; modelIndex++)
+		{
+			// Loop over each mesh
+			for(decltype(m_modelData[modelIndex].m_meshes.size()) meshSize = m_modelData[modelIndex].m_meshes.size(), meshIndex = 0; meshIndex < meshSize; meshIndex++)
+			{
+				// Declaration of material and scale vectors, that are filled in during the material loop
+				std::vector<std::string> meshMaterials;
+				std::vector<glm::vec2> meshMaterialScales;
+				bool materialPresent = false;
+
+				// Loop over each material
+				for(unsigned int materialIndex = 0; materialIndex < MaterialType::MaterialType_NumOfTypes; materialIndex++)
+				{
+					// Add texture filename only if the texture is not a default placeholder
+					if(Loaders::texture2D().isTextureDefault(m_modelData[modelIndex].m_meshes[meshIndex].m_materials[materialIndex].m_texture))
+						meshMaterials.push_back(std::string());
+					else
+					{
+						meshMaterials.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_materials[materialIndex].m_texture.getFilename());
+						materialPresent = true;
+					}
+
+					// Add texture scale
+					meshMaterialScales.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_materials[materialIndex].m_textureScale);
+				}
+
+				p_modelsProperties.m_meshMaterials.push_back(meshMaterials);
+				p_modelsProperties.m_meshMaterialsScale.push_back(meshMaterialScales);
+				p_modelsProperties.m_alphaThreshold.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_alphaThreshold);
+				p_modelsProperties.m_heightScale.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_heightScale);
+				p_modelsProperties.m_present.push_back(materialPresent);
+				p_modelsProperties.m_numOfMeshes++;
+			}
+		}
+	}
+	inline void getModelsProperties(ModelsProperties &p_modelsProperties) const
+	{
+		// Go over each model
+		for(decltype(m_modelData.size()) modelSize = m_modelData.size(), modelIndex = 0; modelIndex < modelSize; modelIndex++)
+		{
+			// Add model filename to the models properties
+			p_modelsProperties.m_modelNames.emplace_back(m_modelData[modelIndex].m_model.getFilename());
+		}
+	}
 
 private:
 	inline MaterialData loadMaterialData(PropertySet &p_materialProperty, Model::MaterialArrays &p_materialArraysFromModel, MaterialType p_materialType, std::size_t p_meshIndex)

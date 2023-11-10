@@ -7,7 +7,7 @@ class FinalPass : public RenderPass
 {
 public:
 	FinalPass(RendererFrontend &p_renderer) : 
-		RenderPass(p_renderer) { }
+		RenderPass(p_renderer, RenderPassType::RenderPassType_Final) { }
 
 	~FinalPass() { }
 
