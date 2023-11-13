@@ -74,7 +74,10 @@ public:
 	void deleteScene(EngineStateType p_engineState)
 	{
 		if(m_worldScenes[p_engineState] != nullptr)
+		{
 			delete m_worldScenes[p_engineState];
+			m_worldScenes[p_engineState] = nullptr;
+		}
 	}
 
 protected:

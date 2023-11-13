@@ -26,57 +26,58 @@ public:
 	void run();
 
 private:
+	// Gets engine changes (if there are any) from the Universal scene of the current Engine State and process them
+	void processEngineChanges();
+
 	// Get all engine systems. Return a pointer to an array the size of Systems::NumberOfSystems
 	SystemBase **getSystems() { return m_systems; }
 
 	// Sets which engine state is currently active
-	void setCurrentStateType()
+	void setCurrentStateType(EngineStateType p_newStateType)
 	{
-		EngineState *previousState = m_currentState;
+		// Track whether the state failed to change
+		bool changeState = true;
 
-		// Set the current state
-		switch(m_currentStateType)
-		{
-		case EngineStateType_MainMenu:
-			m_currentState = &m_mainMenuState;
-			break;
+		// Create the state if it hasn't been created already
+		if(m_engineStates[p_newStateType] == nullptr)
+			createState(&m_engineStates[p_newStateType], p_newStateType);
 
-		case EngineStateType_Play:
-			m_currentState = &m_playstate;
-			break;
-
-		case EngineStateType_Editor:
-			m_currentState = &m_editorState;
-			break;
-
-		default:
-			m_currentStateType = m_currentState->getEngineStateType();
-			break;
-		}
-
-		if(!m_currentState->isInitialized())
+		if(!m_engineStates[p_newStateType]->isInitialized())
 		{
 			// Initialize the current state
-			ErrorCode stateInitError = m_currentState->init(m_taskManager);
+			ErrorCode stateInitError = m_engineStates[p_newStateType]->init(m_taskManager);
 
 			// If it failed to initialize, return to the previous state and log an error
 			if(stateInitError != ErrorCode::Success)
 			{
-				m_currentState = previousState;
-				if(m_currentState != nullptr)
-					m_currentStateType = m_currentState->getEngineStateType();
+				changeState = false;
 				ErrHandlerLoc::get().log(stateInitError, ErrorSource::Source_Engine);
+			}
+			else
+			{
+				// Load the scene
+				ErrorCode loadError = m_engineStates[p_newStateType]->load();
+
+				// If it failed to load, log an error
+				if(loadError != ErrorCode::Success)
+				{
+					changeState = false;
+					ErrHandlerLoc::get().log(loadError, getEngineStateTypeString(m_currentStateType), ErrorSource::Source_Engine);
+				}
 			}
 		}
 
 		// If the state changed, deactivate the previous one, and activate the new one
-		if(m_currentState != previousState)
+		if(changeState)
 		{
-			if(previousState != nullptr)
-				previousState->deactivate();
+			if(m_engineStates[m_currentStateType] != nullptr)
+				m_engineStates[m_currentStateType]->deactivate();
 
-			if(m_currentState != nullptr)
-				m_currentState->activate();
+			if(m_engineStates[p_newStateType] != nullptr)
+				m_engineStates[p_newStateType]->activate();
+
+			m_currentStateType = p_newStateType;
+			Config::m_engineVar.engineState = m_currentStateType;
 		}
 	}
 
@@ -89,14 +90,53 @@ private:
 	// Shuts all the systems, etc. down, called before returning from run()
 	void shutdown();
 
+	// Creates an engine state of the given type
+	void createState(EngineState **p_currentState, EngineStateType p_engineStateType)
+	{
+		if(*p_currentState == nullptr)
+			switch(p_engineStateType)
+			{
+				case EngineStateType_MainMenu:
+					*p_currentState = new MainMenuState(*this);
+					break;
+
+				case EngineStateType_Play:
+					*p_currentState = new PlayState(*this);
+					break;
+
+				case EngineStateType_Editor:
+					*p_currentState = new EditorState(*this);
+					break;
+			}
+	}
+
+	// Converts EngineStateType into a text string
+	const inline std::string getEngineStateTypeString(EngineStateType p_engineStateType) const
+	{
+		std::string returnString = "Invalid engine state";
+
+		switch(p_engineStateType)
+		{
+			case EngineStateType_MainMenu:
+				returnString = "Main menu state";
+				break;
+			case EngineStateType_Play:
+				returnString = "Play state";
+				break;
+			case EngineStateType_Editor:
+				returnString = "Editor state";
+				break;
+		}
+
+		return returnString;
+	}
+
 	// Currently being executed state
-	EngineState *m_currentState;
+	//EngineState *m_currentState;
 	EngineStateType m_currentStateType;
 
 	// Different execution states
-	MainMenuState m_mainMenuState;
-	PlayState m_playstate;
-	EditorState m_editorState;
+	EngineState *m_engineStates[EngineStateType::EngineStateType_NumOfTypes];
 
 	// All engine systems
 	SystemBase *m_systems[Systems::NumberOfSystems];

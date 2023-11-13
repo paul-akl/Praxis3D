@@ -144,6 +144,7 @@
     <ClCompile Include="Source\AtmScatteringModel.cpp" />
     <ClCompile Include="Source\AtmScatteringPass.cpp" />
     <ClCompile Include="Source\AudioScene.cpp" />
+    <ClCompile Include="Source\AudioSystem.cpp" />
     <ClCompile Include="Source\AudioTask.cpp" />
     <ClCompile Include="Source\BaseGraphicsComponent.cpp" />
     <ClCompile Include="Source\BaseGraphicsObjects.cpp" />

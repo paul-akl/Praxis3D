@@ -29,8 +29,12 @@
 
 EditorWindow::~EditorWindow()
 {
-    // Tell the renderer to draw the scene to the screen
-    m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_RenderToTexture, (void *)false);
+    // If engine is still running
+    if(Config::engineVar().running == true)
+    {
+        // Tell the renderer to draw the scene to the screen
+        //m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_RenderToTexture, (void *)false);
+    }
 }
 
 ErrorCode EditorWindow::init()
@@ -193,6 +197,11 @@ void EditorWindow::update(const float p_deltaTime)
                     // Tell the GUI scene to open the file browser
                     m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
                 }
+            }
+            if(ImGui::MenuItem("Reload scene")) 
+            {
+                // Send a notification to the engine to reload the current engine state
+                m_systemScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_SceneReload));
             }
 
             ImGui::Separator();
@@ -1381,6 +1390,10 @@ void EditorWindow::update(const float p_deltaTime)
                     if(m_fileBrowserDialog.m_success)
                     {
                         //m_systemScene->getSceneLoader()->loadFromFile(m_fileBrowserDialog.m_filename);
+                        // Send a notification to the engine to reload the current engine state
+                        m_systemScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_SceneFilename, EngineStateType::EngineStateType_Editor, m_fileBrowserDialog.m_filename));
+                        m_systemScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_SceneReload));
+
                     }
 
                     // Reset the file browser and mark the file browser as not opened

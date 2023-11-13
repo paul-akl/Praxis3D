@@ -128,7 +128,7 @@ public:
 	BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
 
 private:
-	// Returns true if the operation was successful; returns falls if operation failed and logs an error
+	// Returns true if the operation was successful; returns false if operation failed and logs an error
 	const inline bool fmodErrorLog(const FMOD_RESULT p_fmodResult, const std::string &p_objectName = "", const ErrorType p_errorType = ErrorType::Warning, const ErrorSource p_errorSource = ErrorSource::Source_AudioScene) const noexcept
 	{
 		// Check if the operation result is OK

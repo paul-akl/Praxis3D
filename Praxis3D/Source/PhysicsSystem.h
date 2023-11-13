@@ -70,7 +70,10 @@ public:
 	void deleteScene(EngineStateType p_engineState)
 	{
 		if(m_physicsScenes[p_engineState] != nullptr)
+		{
 			delete m_physicsScenes[p_engineState];
+			m_physicsScenes[p_engineState] = nullptr;
+		}
 	}
 
 protected:

@@ -4,7 +4,8 @@
 UniversalScene::UniversalScene(ChangeController *p_sceneChangeController, ChangeController *p_objectChangeController) : 
 								Observer(Properties::PropertyID::UniversalScene),
 								m_sceneChangeController(p_sceneChangeController), 
-								m_objectChangeController(p_objectChangeController)
+								m_objectChangeController(p_objectChangeController),
+								m_engineChangePending(false)
 {
 
 }
@@ -224,6 +225,16 @@ void UniversalScene::createObjectLink(ObservedSubject *p_subject, SystemObject *
 void UniversalScene::removeObjectLink(ObservedSubject *p_subject, SystemObject *p_observer)
 {
 	m_objectChangeController->unregisterSubject(p_subject, p_observer);
+}
+
+void UniversalScene::sendEngineChange(EngineChangeData &p_engineChangeData)
+{
+	// Make sure calls from other threads are locked, while current call is in progress
+	// This is needed so the changes list isn't being written to simultaneously from different threads
+	SpinWait::Lock lock(m_mutex);
+
+	m_engineChangeQueue.push_back(p_engineChangeData);
+	m_engineChangePending = true;
 }
 
 void UniversalScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changes)

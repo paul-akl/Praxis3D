@@ -71,5 +71,8 @@ SystemScene *ScriptSystem::getScene(EngineStateType p_engineState)
 void ScriptSystem::deleteScene(EngineStateType p_engineState)
 {
 	if(m_scriptingScenes[p_engineState] != nullptr)
+	{
 		delete m_scriptingScenes[p_engineState];
+		m_scriptingScenes[p_engineState] = nullptr;
+	}
 }

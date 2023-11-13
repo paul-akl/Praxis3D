@@ -11,7 +11,8 @@ public:
 	EditorState(Engine &p_engine);
 	~EditorState();
 
-	ErrorCode init(TaskManager *p_taskManager);
+	ErrorCode load();
+
 	void update(Engine &p_engine);
 
 	void activate();

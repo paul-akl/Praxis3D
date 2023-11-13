@@ -561,6 +561,7 @@ class Config
 	friend class DeferredRenderer;
 	friend class EditorState;
 	friend class EditorWindow;
+	friend class Engine;
 	friend class ErrorHandler;
 	friend class LuaScript;
 	friend class RendererFrontend;

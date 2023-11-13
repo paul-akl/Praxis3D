@@ -254,7 +254,7 @@ void LuaScript::setFunctions()
 
 	// Engine functions
 	m_luaState.set_function("setEngineRunning", [](const bool p_v1) -> const void {Config::m_engineVar.running = p_v1; });
-	m_luaState.set_function("setEngineState", [](const EngineStateType p_v1) -> const void {Config::m_engineVar.engineState = p_v1; });
+	m_luaState.set_function("setEngineState", [this](const EngineStateType p_v1) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_StateChange, p_v1)); });
 
 	// GUI functions
 	auto GUITable = m_luaState.create_table("GUI");

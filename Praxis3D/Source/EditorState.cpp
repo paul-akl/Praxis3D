@@ -9,27 +9,30 @@
 
 EditorState::EditorState(Engine &p_engine) : EngineState(p_engine, EngineStateType::EngineStateType_Editor)
 {
+	m_sceneFilename = Config::gameplayVar().play_map;
 }
 
 EditorState::~EditorState()
 {
 }
 
-ErrorCode EditorState::init(TaskManager *p_taskManager)
+ErrorCode EditorState::load()
 {
-	ErrorCode returnError = EngineState::init(p_taskManager);
+	ErrorCode returnError = ErrorCode::Initialize_failure;
 
-	if(returnError == ErrorCode::Success)
+	if(m_initialized)
 	{
-		// Load the default map, and log an error if it wasn't successful
-		returnError = m_sceneLoader.loadFromFile(Config::gameplayVar().play_map);
-		
+		// Load the scene map, and log an error if it wasn't successful
+		returnError = m_sceneLoader.loadFromFile(m_sceneFilename);
 		if(returnError != ErrorCode::Success)
+		{
 			ErrHandlerLoc::get().log(returnError, ErrorSource::Source_SceneLoader);
-
-		m_sceneLoader.getChangeController()->sendData(static_cast<GUIScene *>(m_sceneLoader.getSystemScene(Systems::GUI)), DataType::DataType_EditorWindow, (void *)&m_editorWindowSettings);
-
-		m_initialized = true;
+		}
+		else
+		{
+			// Tell the GUI scene to create the editor window
+			m_sceneLoader.getChangeController()->sendData(static_cast<GUIScene *>(m_sceneLoader.getSystemScene(Systems::GUI)), DataType::DataType_EditorWindow, (void *)&m_editorWindowSettings);
+		}
 	}
 
 	return returnError;

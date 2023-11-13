@@ -21,14 +21,7 @@ public:
 				delete m_audioScenes[i];
 	}
 
-	ErrorCode init()
-	{
-		ErrorCode returnCode = ErrorCode::Success;
-
-		ErrHandlerLoc::get().log(ErrorCode::Initialize_success, ErrorSource::Source_AudioSystem);
-
-		return returnCode;
-	}
+	ErrorCode init();
 
 	ErrorCode setup(const PropertySet &p_properties)
 	{
@@ -73,7 +66,10 @@ public:
 	void deleteScene(EngineStateType p_engineState)
 	{
 		if(m_audioScenes[p_engineState] != nullptr)
+		{
 			delete m_audioScenes[p_engineState];
+			m_audioScenes[p_engineState] = nullptr;
+		}
 	}
 
 protected:

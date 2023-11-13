@@ -11,6 +11,14 @@ typedef std::vector<std::function<void()>> Functors;
 
 constexpr EntityID NULL_ENTITY_ID = std::numeric_limits<EntityID>::max();
 
+enum EngineChangeType : unsigned int
+{
+	EngineChangeType_None = 0,
+	EngineChangeType_SceneFilename,
+	EngineChangeType_SceneLoad,
+	EngineChangeType_SceneReload,
+	EngineChangeType_StateChange
+};
 enum EngineStateType : unsigned int
 {
 	EngineStateType_Default = 0,

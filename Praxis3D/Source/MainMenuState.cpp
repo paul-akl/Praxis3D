@@ -10,27 +10,11 @@
 
 MainMenuState::MainMenuState(Engine &p_engine) : EngineState(p_engine, EngineStateType::EngineStateType_MainMenu)
 {
+	m_sceneFilename = Config::gameplayVar().main_menu_map;
 }
 
 MainMenuState::~MainMenuState()
 {
-}
-
-ErrorCode MainMenuState::init(TaskManager *p_taskManager)
-{
-	ErrorCode returnError = EngineState::init(p_taskManager);
-
-	if(returnError == ErrorCode::Success)
-	{
-		// Load the default map, and log an error if it wasn't successful
-		returnError = m_sceneLoader.loadFromFile(Config::gameplayVar().main_menu_map);
-		if(returnError != ErrorCode::Success)
-			ErrHandlerLoc::get().log(returnError, ErrorSource::Source_SceneLoader);
-
-		m_initialized = true;
-	}
-
-	return returnError;
 }
 
 void MainMenuState::update(Engine &p_engine)

@@ -444,6 +444,9 @@
     <ClCompile Include="..\Dependencies\include\imgui\imgui_stdlib.cpp">
       <Filter>3rd Party\imgui\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\AudioSystem.cpp">
+      <Filter>Audio\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ErrorCodes.h">

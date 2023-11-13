@@ -10,27 +10,11 @@
 
 PlayState::PlayState(Engine &p_engine) : EngineState(p_engine, EngineStateType::EngineStateType_Play)
 {
+	m_sceneFilename = Config::gameplayVar().play_map;
 }
 
 PlayState::~PlayState()
 {
-}
-
-ErrorCode PlayState::init(TaskManager *p_taskManager)
-{
-	ErrorCode returnError = EngineState::init(p_taskManager);
-	
-	if(returnError == ErrorCode::Success)
-	{
-		// Load the default map, and log an error if it wasn't successful
-		returnError = m_sceneLoader.loadFromFile(Config::gameplayVar().play_map);
-		if(returnError != ErrorCode::Success)
-			ErrHandlerLoc::get().log(returnError, ErrorSource::Source_SceneLoader);
-
-		m_initialized = true;
-	}
-
-	return returnError;
 }
 
 void PlayState::update(Engine &p_engine)

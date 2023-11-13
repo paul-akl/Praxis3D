@@ -51,6 +51,9 @@ public:
 	// Returns the last loaded scene filename
 	const std::string &getSceneFilename() const { return m_filename; }
 
+	// Set the scene filename that is used when loading from file
+	inline void setSceneFilename(const std::string &p_filename) { m_filename = p_filename; }
+
 private:
 	ErrorCode importFromFile(ComponentsConstructionInfo &p_constructionInfo, const std::string &p_filename);
 	void importFromProperties(ComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties);

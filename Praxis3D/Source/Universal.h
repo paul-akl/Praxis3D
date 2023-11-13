@@ -6,6 +6,7 @@
 
 #include "ChangeController.h"
 #include "ObserverBase.h"
+#include "SpinWait.h"
 #include "System.h"
 
 class UniversalObject;
@@ -31,6 +32,9 @@ public:
 	// Removes the link between the subject and the observer, so that the observer will no longer be notified of any data changes within the subject
 	void removeObjectLink(ObservedSubject *p_subject, SystemObject *p_observer);
 
+	// Queues an engine change that is processed before the next frame by the Engine
+	void sendEngineChange(EngineChangeData &p_engineChangeData);
+
 	// Sends a one-off notification about a change, without requiring the object linking
 	void sendChange(SystemObject *p_subject, SystemObject *p_observer, BitMask p_changedBits)
 	{
@@ -47,8 +51,16 @@ public:
 
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changes);
 
-	const std::list<UniversalObject*> &getObjects() const { return m_objects; }
-	const std::map<BitMask, SystemScene*> &getSystemScenes() const { return m_systemScenes; }
+	const inline std::list<UniversalObject*> &getObjects() const { return m_objects; }
+	const inline std::map<BitMask, SystemScene*> &getSystemScenes() const { return m_systemScenes; }
+	const inline std::list<EngineChangeData> &getEngineChangeQueue() const { return m_engineChangeQueue; }
+	const inline bool getEngineChangePending() const { return m_engineChangePending; }
+
+	void inline clearEngineChangeQueue()
+	{
+		m_engineChangeQueue.clear();
+		m_engineChangePending = false;
+	}
 
 	typedef std::map<BitMask, SystemScene*> SystemSceneMap;
 	typedef std::list<UniversalObject*>		UniversalObjectList;
@@ -70,6 +82,11 @@ protected:
 	SystemSceneMap		m_systemScenes;
 	ObjectLinkList		m_objectLinks;
 	UniversalObjectList	m_objects;
+
+	SpinWait m_mutex;
+
+	bool m_engineChangePending;
+	std::list<EngineChangeData> m_engineChangeQueue;
 
 public:
 	const ObjectLinkList &getObjectLinksList() { return m_objectLinks; }

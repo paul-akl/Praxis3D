@@ -18,6 +18,8 @@ public:
 
 	virtual ErrorCode init(TaskManager *p_taskManager);
 
+	virtual ErrorCode load() = 0;
+
 	virtual void update(Engine &p_engine) = 0;
 
 	virtual void activate();
@@ -28,7 +30,11 @@ public:
 
 	const inline EngineStateType getEngineStateType() { return m_engineStateType; }
 
+	inline UniversalScene *getChangeControllerScene() { return m_changeCtrlScene; }
+
 	const inline bool isInitialized() const { return m_initialized; }
+
+	inline void setSceneFilename(const std::string &p_filename) { m_sceneFilename = p_filename; }
 
 protected:
 	bool m_initialized;
@@ -47,5 +53,7 @@ protected:
 	// Subject - observer messaging systems
 	ChangeController *m_sceneChangeController;
 	ChangeController *m_objectChangeController;
+
+	std::string m_sceneFilename;
 };
 

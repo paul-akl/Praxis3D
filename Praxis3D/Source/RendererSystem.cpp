@@ -171,5 +171,8 @@ SystemScene *RendererSystem::getScene(EngineStateType p_engineState)
 void RendererSystem::deleteScene(EngineStateType p_engineState)
 {
 	if(m_rendererScenes[p_engineState] != nullptr)
+	{
 		delete m_rendererScenes[p_engineState];
+		m_rendererScenes[p_engineState] = nullptr;
+	}
 }

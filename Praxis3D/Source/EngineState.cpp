@@ -10,14 +10,11 @@
 
 EngineState::EngineState(Engine &p_engine, EngineStateType p_engineState) : m_engine(p_engine), m_engineStateType(p_engineState), m_initialized(false)
 {
-	m_sceneChangeController = new ChangeController();
-	m_objectChangeController = new ChangeController();
+	m_sceneChangeController = nullptr;
+	m_objectChangeController = nullptr;
 
 	m_scheduler = nullptr;
 	m_changeCtrlScene = nullptr;
-
-	//for(int i = 0; i < Systems::NumberOfSystems; i++)
-	//	m_systems[i] = nullptr;
 }
 
 EngineState::~EngineState()
@@ -35,6 +32,10 @@ ErrorCode EngineState::init(TaskManager *p_taskManager)
 	// Clear the engine state first, if it has already been initialized
 	if(m_initialized)
 		shutdown();
+
+	// Create change controllers
+	m_sceneChangeController = new ChangeController();
+	m_objectChangeController = new ChangeController();
 
 	// Get all engine systems
 	auto systems = m_engine.getSystems();
@@ -70,7 +71,10 @@ ErrorCode EngineState::init(TaskManager *p_taskManager)
 		returnError = m_objectChangeController->setTaskManager(p_taskManager);
 
 		if(returnError == ErrorCode::Success)
+		{
 			returnError = m_sceneChangeController->setTaskManager(p_taskManager);
+			m_initialized = true;
+		}
 	}
 
 	return returnError;

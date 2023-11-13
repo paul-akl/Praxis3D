@@ -21,7 +21,7 @@ int Engine::m_instances = 0;
 
 #define ENUMTOSTRING(ENUM) #ENUM
 
-Engine::Engine() : m_mainMenuState(*this), m_playstate(*this), m_editorState(*this)
+Engine::Engine() //m_mainMenuState(*this), m_playstate(*this), m_editorState(*this)
 {
 	m_instances++;
 	m_initialized = false;
@@ -34,12 +34,21 @@ Engine::Engine() : m_mainMenuState(*this), m_playstate(*this), m_editorState(*th
 	m_changeCtrlScene = nullptr;
 	m_sceneChangeController = nullptr;
 	m_objectChangeController = nullptr;
-	m_currentState = nullptr;
 	m_currentStateType = Config::engineVar().engineState;
+
+	for(unsigned int i = 0; i < EngineStateType::EngineStateType_NumOfTypes; i++)
+		m_engineStates[i] = nullptr;
+
+	for(unsigned int i = 0; i < Systems::NumberOfSystems; i++)
+		m_systems[i] = nullptr;
 }
 
 Engine::~Engine()
 {
+	for(unsigned int i = 0; i < EngineStateType::EngineStateType_NumOfTypes; i++)
+		if(m_engineStates[i] != nullptr)
+			delete m_engineStates[i];
+
 	// Delete systems
 	delete m_taskManager;
 	delete m_errorHandler;
@@ -71,8 +80,8 @@ ErrorCode Engine::init()
 	// |	ENGINE STATE INITIALIZATION	   |
 	// |___________________________________|
 	// Set and initialize the current engine state
-	setCurrentStateType();
-	if(m_currentState == nullptr || !m_currentState->isInitialized())
+	setCurrentStateType(m_currentStateType);
+	if(m_engineStates[m_currentStateType] == nullptr || !m_engineStates[m_currentStateType]->isInitialized())
 		return ErrorCode::Failure;
 
 	// If this point is reached, all initializations passed, mark the engine as initialized
@@ -99,15 +108,17 @@ void Engine::run()
 		// If engine is still running
 		if(Config::engineVar().running == true)
 		{
+			processEngineChanges();
+
 			// Load a different engine state, if it has been changed
-			if(m_currentStateType != Config::engineVar().engineState)
-			{
-				m_currentStateType = Config::engineVar().engineState;
-				setCurrentStateType();
-			}
+			//if(m_currentStateType != Config::engineVar().engineState)
+			//{
+			//	m_currentStateType = Config::engineVar().engineState;
+			//	setCurrentStateType();
+			//}
 
 			// Call update on the current engine state
-			m_currentState->update(*this);
+			m_engineStates[m_currentStateType]->update(*this);
 
 			// Swap buffers. If v-sync is enabled, this call should halt for appropriate time
 			m_window->swapBuffers();
@@ -121,6 +132,64 @@ void Engine::run()
 
 	// Call shutdown before returning
 	shutdown();
+}
+
+void Engine::processEngineChanges()
+{
+	// Check if there are any engine changes
+	auto changeControllerScene = m_engineStates[m_currentStateType]->getChangeControllerScene();
+	if(changeControllerScene->getEngineChangePending())
+	{
+		// Go over each engine change
+		auto &engineChanges = changeControllerScene->getEngineChangeQueue();
+		for(auto const &change : engineChanges)
+		{
+			switch(change.m_changeType)
+			{
+				case EngineChangeType_SceneFilename:
+					{
+						m_engineStates[change.m_engineStateType]->setSceneFilename(change.m_filename);
+					}
+					break;
+				case EngineChangeType_SceneLoad:
+					{
+						if(m_engineStates[change.m_engineStateType] != nullptr)
+						{
+							// Load the scene
+							ErrorCode loadError = m_engineStates[change.m_engineStateType]->load();
+
+							// If it failed to load, log an error
+							if(loadError != ErrorCode::Success)
+								ErrHandlerLoc::get().log(loadError, getEngineStateTypeString(change.m_engineStateType), ErrorSource::Source_Engine);
+						}
+						else
+							ErrHandlerLoc::get().log(ErrorCode::Initialize_failure, getEngineStateTypeString(change.m_engineStateType), ErrorSource::Source_Engine);
+					}
+					break;
+				case EngineChangeType_SceneReload:
+					{
+						// Delete the current scene
+						if(m_engineStates[m_currentStateType] != nullptr)
+						{
+							delete m_engineStates[m_currentStateType];
+							m_engineStates[m_currentStateType] = nullptr;
+						}
+
+						setCurrentStateType(m_currentStateType);
+						return;
+					}
+					break;
+				case EngineChangeType_StateChange:
+					{
+						setCurrentStateType(change.m_engineStateType);
+					}
+					break;
+			}
+		}
+
+		// Mark engine changes as being processed by clearing the queue
+		changeControllerScene->clearEngineChangeQueue();
+	}
 }
 
 ErrorCode Engine::initServices()
@@ -152,10 +221,10 @@ ErrorCode Engine::initServices()
 		ErrHandlerLoc::provide(m_errorHandler);
 	}
 	else
-		printf("Error: Error handler has failed to initialize. Error code: %i\n", errHandlerError);
+		printf("Error: Error handler has failed to initialize. Error code: %s\n", GetString(errHandlerError));
 
 	//  ___________________________________
-	// |								   |
+	// |								   |n
 	// |    SET CONFIGURATION VARIABLES    |
 	// |___________________________________|
 	// Initialize configuration variables
@@ -386,7 +455,9 @@ ErrorCode Engine::initSystems()
 void Engine::shutdown()
 {
 	// Shutdown engine states
-	m_playstate.shutdown();
+	for(unsigned int i = 0; i < EngineStateType::EngineStateType_NumOfTypes; i++)
+		if(m_engineStates[i] != nullptr)
+			m_engineStates[i]->shutdown();
 
 	// Cancel all the tasks in background threads
 	m_taskManager->cancelBackgroundThreads();

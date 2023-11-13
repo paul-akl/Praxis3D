@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "CommonDefinitions.h"
 #include "Math.h"
 
@@ -165,4 +167,20 @@ struct DoubleBufferedContainer
 	bool m_swapFlag;
 
 	T_Object m_buffers[2];
+};
+
+// Stores an engine change type and all associated data needed for that change
+struct EngineChangeData
+{
+	EngineChangeData() : m_changeType(EngineChangeType::EngineChangeType_None), m_engineStateType(EngineStateType::EngineStateType_Default) { }
+	EngineChangeData(EngineChangeType p_changeType, EngineStateType p_engineStateType = EngineStateType::EngineStateType_Default, std::string p_filename = "") : m_changeType(p_changeType), m_engineStateType(p_engineStateType), m_filename(p_filename) { }
+	~EngineChangeData() { }
+
+	void setChangeType(const EngineChangeType p_changeType) { m_changeType = p_changeType; }
+	void setEngineStateType(const EngineStateType p_engineStateType) { m_engineStateType = p_engineStateType; }
+	void setFilename(const std::string &p_filename) { m_filename = p_filename; }
+
+	EngineChangeType m_changeType;
+	EngineStateType m_engineStateType;
+	std::string m_filename;
 };
