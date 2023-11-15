@@ -1,5 +1,7 @@
+#include <glm/gtc/type_ptr.hpp>
 
 #include "AudioScene.h"
+#include "AudioSystem.h"
 #include "ComponentConstructorInfo.h"
 #include "NullSystemObjects.h"
 #include "TaskManagerLocator.h"
@@ -10,180 +12,34 @@ AudioScene::AudioScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : Syste
 	m_audioTask = nullptr;
 	m_coreSystem = nullptr;
 	m_studioSystem = nullptr;
-	m_masterChannelGroup = nullptr;
-	m_ambientChannelGroup = nullptr;
-	m_sfxChannelGroup = nullptr;
-	m_musicChannelGroup = nullptr;
-	m_impactBank = nullptr;
-	m_defaultImpactSoundsLoaded = false;
-	m_numSoundDrivers = 0;
 
-	m_lastPlayedImpactSound = 0;
-	m_distribution = std::uniform_real_distribution<float>(0.5f, 1.5f);
+	volume_ambient = 0.0f;
+	volume_master = 0.0f;
+	volume_music = 0.0f;
+	volume_sfx = 0.0f;
 
-	m_dTime = 0.0f;
+	for(unsigned int i = 0; i < ObjectMaterialType::NumberOfMaterialTypes; i++)
+		m_impactEvents[i] = nullptr;
+
+	// Get audio system
+	m_audioSystem = static_cast<AudioSystem *>(p_system);
 }
 
 AudioScene::~AudioScene()
 {
-	if(m_studioSystem != nullptr)
-	{
-		if(m_coreSystem != nullptr)
-			m_coreSystem->release();
-
-		m_studioSystem->release();
-	}
+	deactivate();
 }
 
 ErrorCode AudioScene::init()
 {
 	ErrorCode returnError = ErrorCode::Success;
 
+	// Create audio task, required for task scheduler to call update of this scene
 	m_audioTask = new AudioTask(this);
 
-	// Create the FMOD studio system
-	auto fmodError = FMOD::Studio::System::create(&m_studioSystem);
-
-	// Check if the sound system was created successfully
-	if(fmodError != FMOD_OK)
-	{
-		ErrHandlerLoc::get().log(ErrorCode::Audio_system_init_failed, ErrorSource::Source_AudioScene);
-		returnError = ErrorCode::Audio_system_init_failed;
-	}
-	else
-	{
-		// Get the FMOD core system
-		m_studioSystem->getCoreSystem(&m_coreSystem);
-
-		// Get the number of sound drivers
-		m_coreSystem->getNumDrivers(&m_numSoundDrivers);
-
-		// Do not continue if there are no sound drivers
-		if(m_numSoundDrivers == 0)
-		{
-			ErrHandlerLoc::get().log(ErrorCode::Audio_no_drivers, ErrorSource::Source_AudioScene);
-			returnError = ErrorCode::Audio_no_drivers;
-		}
-		else
-		{
-			// Initialize our Instance with 36 Channels
-			m_studioSystem->initialize(Config::audioVar().num_audio_channels, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_NORMAL | FMOD_INIT_VOL0_BECOMES_VIRTUAL | FMOD_INIT_3D_RIGHTHANDED, NULL);
-
-			m_coreSystem->createChannelGroup("music", &m_musicChannelGroup);
-
-			//fmodErrorLog(m_coreSystem->loadPlugin((Config::filepathVar().sound_path + "fmod_distance_filter.dll").c_str(), 0, 0));
-
-			//fmodErrorLog(m_studioSystem->loadBankFile((Config::filepathVar().sound_path + "Master.bank").c_str(), FMOD_STUDIO_LOAD_BANK_NORMAL, &m_testBank1));
-			//fmodErrorLog(m_studioSystem->loadBankFile((Config::filepathVar().sound_path + "bmw_1m_s3.bank").c_str(), FMOD_STUDIO_LOAD_BANK_NORMAL, &m_testBank1));
-			//fmodErrorLog(m_testBank1->loadSampleData());
-			//fmodErrorLog(m_studioSystem->loadBankFile((Config::filepathVar().sound_path + "Master.strings.bank").c_str(), FMOD_STUDIO_LOAD_BANK_NORMAL, &m_testBank1));
-			//fmodErrorLog(m_testBank1->loadSampleData());
-			//fmodErrorLog(m_studioSystem->loadBankFile((Config::filepathVar().sound_path + "SFX.bank").c_str(), FMOD_STUDIO_LOAD_BANK_NORMAL, &m_testBank1));
-
-			auto loadError = m_testBank1->loadSampleData();
-
-			if(loadError != FMOD_OK)
-			{
-				std::cout << "LOAD FAILED" << std::endl;
-			}
-
-			//m_testBank1->
-
-			int eventCount;
-
-			m_testBank1->getEventCount(&eventCount);
-
-			std::cout << "Event count: " << eventCount << std::endl;
-
-			FMOD::Studio::EventDescription *eventDescription[50];
-			//FMOD::Studio::EventInstance *eventInstance;
-
-			m_testBank1->getEventList(eventDescription, 50, &eventCount);
-
-			FMOD::Studio::EventDescription *description1;
-			FMOD::Studio::EventInstance *instance1;
-
-			auto error1 = m_studioSystem->getEvent("event:/Interactables/Wooden Collision", &description1);
-
-			if(error1 == FMOD_OK)
-			{
-				std::cout << "EVENT FOUND" << std::endl;
-				//description1->
-				description1->loadSampleData();
-				description1->createInstance(&m_eventInstance1);
-				m_eventInstance1->start();
-			}
-			else
-			{
-				std::cout << "EVENT NOT FOUND" << std::endl;
-			}
-
-			for(int i = 0; i < eventCount; i++)
-			{
-				char path[100];
-				int retrieved;
-
-				eventDescription[i]->getPath(path, 100, &retrieved);
-
-				//eventDescription[i]->
-
-				std::cout << path << std::endl;
-
-				//eventDescription[i]->loadSampleData();
-
-				int descrCount;
-				eventDescription[i]->getParameterDescriptionCount(&descrCount);
-
-				FMOD_STUDIO_USER_PROPERTY paramDescr;
-				auto userPropError = eventDescription[i]->getUserProperty("Music_prop", &paramDescr);
-
-				if(userPropError == FMOD_OK)
-				{
-					std::cout << paramDescr.name << std::endl;
-
-					switch(paramDescr.type)
-					{
-					case FMOD_STUDIO_USER_PROPERTY_TYPE_INTEGER:
-						std::cout << paramDescr.intvalue << std::endl;
-						break;
-					case FMOD_STUDIO_USER_PROPERTY_TYPE_BOOLEAN:
-						std::cout << paramDescr.boolvalue << std::endl;
-						break;
-					case FMOD_STUDIO_USER_PROPERTY_TYPE_FLOAT:
-						std::cout << paramDescr.floatvalue << std::endl;
-						break;
-					case FMOD_STUDIO_USER_PROPERTY_TYPE_STRING:
-						std::cout << paramDescr.stringvalue << std::endl;
-						break;
-					}
-				}
-
-				//for(int i = 0; i < descrCount; i++)
-				//{
-				//	FMOD_STUDIO_PARAMETER_DESCRIPTION *paramDescr = nullptr;
-				//	eventDescription[i]->getParameterDescriptionByIndex(i, paramDescr);
-
-				//	std::cout << paramDescr->name << std::endl;
-				//}
-
-				//auto instanceError = eventDescription[i]->createInstance(&m_eventInstance1);
-				//if(instanceError != FMOD_OK)
-				//{
-				//	std::cout << "CREATE INSTANCE FAILED" << std::endl;
-				//}
-				//else
-				{
-					//auto startError = m_eventInstance1->start();
-					//if(startError != FMOD_OK)
-					//{
-					//	std::cout << "START FAILED" << std::endl;
-					//}
-				}
-
-				//std::cout << i << ": Path: " << path << std::endl;
-			}
-		}
-	}
+	// Get the handles to FMOD studio and core systems
+	m_studioSystem = m_audioSystem->getStudioSystem();
+	m_coreSystem = m_audioSystem->getCoreSystem();
 
 	return returnError;
 }
@@ -200,17 +56,6 @@ ErrorCode AudioScene::setup(const PropertySet &p_properties)
 	worldScene->reserve<SoundComponent>(std::max(Config::objectPoolVar().sound_component_default_pool_size, objectPoolSizeProperty.getPropertyByID(Properties::SoundComponent).getInt()));
 	worldScene->reserve<SoundListenerComponent>(std::max(Config::objectPoolVar().sound_listener_component_default_pool_size, objectPoolSizeProperty.getPropertyByID(Properties::SoundListenerComponent).getInt()));
 
-	FMOD::Studio::Bank *defaultSoundBank = nullptr;
-
-	// Load default sound bank
-	if(fmodErrorLog(m_studioSystem->loadBankFile((Config::filepathVar().sound_path + Config::audioVar().default_sound_bank).c_str(), FMOD_STUDIO_LOAD_BANK_NORMAL, &defaultSoundBank), Config::audioVar().default_sound_bank))
-		if(fmodErrorLog(defaultSoundBank->loadSampleData(), Config::audioVar().default_sound_bank))
-			addImpactSoundBank(defaultSoundBank);
-
-	// Load default string bank
-	if(fmodErrorLog(m_studioSystem->loadBankFile((Config::filepathVar().sound_path + Config::audioVar().default_sound_bank_string).c_str(), FMOD_STUDIO_LOAD_BANK_NORMAL, &defaultSoundBank), Config::audioVar().default_sound_bank_string))
-		fmodErrorLog(defaultSoundBank->loadSampleData(), Config::audioVar().default_sound_bank_string);
-
 	auto const &banksProperty = p_properties.getPropertySetByID(Properties::Banks);
 	if(banksProperty)
 	{
@@ -224,10 +69,10 @@ ErrorCode AudioScene::setup(const PropertySet &p_properties)
 
 				FMOD::Studio::Bank *soundBank = nullptr;
 
-				if(fmodErrorLog(m_studioSystem->loadBankFile((Config::filepathVar().sound_path + filename).c_str(), FMOD_STUDIO_LOAD_BANK_NORMAL, &soundBank), filename))
+				if(AudioSystem::fmodErrorLog(m_studioSystem->loadBankFile((Config::filepathVar().sound_path + filename).c_str(), FMOD_STUDIO_LOAD_BANK_NORMAL, &soundBank), filename))
 				{
-					if(fmodErrorLog(soundBank->loadSampleData(), filename))
-						addImpactSoundBank(soundBank);
+					if(AudioSystem::fmodErrorLog(soundBank->loadSampleData(), filename))
+						m_audioSystem->addImpactSoundBank(soundBank);
 
 					m_bankFilenames.push_back(std::make_pair(filename, soundBank));
 				}
@@ -235,57 +80,31 @@ ErrorCode AudioScene::setup(const PropertySet &p_properties)
 		}
 	}
 
-	// Load default impact sound bank for basic object impact sounds
-	//if(fmodErrorLog(m_studioSystem->loadBankFile((Config::filepathVar().sound_path + Config::audioVar().default_impact_sound_bank).c_str(), FMOD_STUDIO_LOAD_BANK_NORMAL, &m_impactBank), Config::audioVar().default_impact_sound_bank))
+	for(unsigned int materialTypeIndex = 0; materialTypeIndex < ObjectMaterialType::NumberOfMaterialTypes; materialTypeIndex++)
+	{
+		std::string materialTypeString = GetString(static_cast<ObjectMaterialType>(materialTypeIndex));
+
+		for(auto &sound : m_audioSystem->m_impactSounds)
+		{
+			if(sound.first == materialTypeString)
+			{
+				std::cout << "found sound: " << sound.first << std::endl;
+				m_impactEvents[materialTypeIndex] = sound.second;
+				break;
+			}
+		}
+	}
+	
+	//FMOD::Studio::Bank *soundBank = nullptr;
+	//if(AudioSystem::fmodErrorLog(m_studioSystem->loadBankFile((Config::filepathVar().sound_path + "Music.bank").c_str(), FMOD_STUDIO_LOAD_BANK_NORMAL, &soundBank), "Music.bank"))
 	//{
-	//	m_defaultImpactSoundsLoaded = true;
-
-	//	// Load default impact sound bank to memory
-	//	if(fmodErrorLog(m_impactBank->loadSampleData(), Config::audioVar().default_impact_sound_bank))
+	//	if(AudioSystem::fmodErrorLog(soundBank->loadSampleData(), "Music.bank"))
 	//	{
-	//		addImpactSoundBank(m_impactBank);
-	//		for(int i = 0; i < ObjectMaterialType::NumberOfMaterialTypes; i++)
-	//		{
-	//			std::string eventName = GetString(static_cast<ObjectMaterialType>(i));
-	//			std::string fullEventName = "event:/" + eventName;
-	//			fmodErrorLog(m_studioSystem->getEvent(fullEventName.c_str(), &m_impactEvents[i]), eventName);
-	//		}
+	//		std::cout << "Music.bank loaded" << std::endl;
 	//	}
-
-	//	m_studioSystem->getEvent("event:/Metal", &m_eventDescr1);
-	//	m_eventDescr1->createInstance(&m_eventInstance1);
 	//}
 
-	FMOD_MODE mode = FMOD_LOOP_OFF | FMOD_3D | FMOD_3D_WORLDRELATIVE | FMOD_3D_INVERSEROLLOFF;
-
-	for(unsigned int i = 0; i < ObjectMaterialType::NumberOfMaterialTypes; i++)
-	{
-		m_collisionSounds[i].m_filename = "Footsteps_MetalV1_Jump_Land_02.wav";
-
-		m_coreSystem->createSound((Config::filepathVar().sound_path + m_collisionSounds[i].m_filename).c_str(), mode, nullptr, &m_collisionSounds[i].m_sound);
-	}
-
-	m_coreSystem->createChannelGroup("sfx", &m_sfxChannelGroup);
-
-	m_coreSystem->createDSPByType(FMOD_DSP_TYPE::FMOD_DSP_TYPE_PITCHSHIFT, &m_pitch);
-	m_sfxChannelGroup->addDSP(0, m_pitch);
-
-	m_coreSystem->createSound((Config::filepathVar().sound_path + "metal_solid_impact_soft1.wav").c_str(), FMOD_LOOP_OFF | FMOD_2D, nullptr, &m_metalImpactSound[0]);
-	m_coreSystem->createSound((Config::filepathVar().sound_path + "metal_solid_impact_soft2.wav").c_str(), FMOD_LOOP_OFF | FMOD_2D, nullptr, &m_metalImpactSound[1]);
-	m_coreSystem->createSound((Config::filepathVar().sound_path + "metal_solid_impact_soft3.wav").c_str(), FMOD_LOOP_OFF | FMOD_2D, nullptr, &m_metalImpactSound[2]);
-
-	m_coreSystem->playSound(m_metalImpactSound[0], m_sfxChannelGroup, true, &m_metalImpactChannel[0]);
-	//m_coreSystem->playSound(m_metalImpactSound[1], m_sfxChannelGroup, false, &m_metalImpactChannel[1]);
-	//m_coreSystem->playSound(m_metalImpactSound[2], m_sfxChannelGroup, false, &m_metalImpactChannel[2]);
-
-	std::cout << "EVENT NAMES:" << std::endl;
-	for(auto &it : m_impactSounds)
-	{
-		// Do stuff
-		std::cout << it.first << std::endl;
-	}
-
-	loadParameterGUIDs();
+	//loadParameterGUIDs();
 
 	return ErrorCode::Success;
 }
@@ -317,6 +136,7 @@ void AudioScene::deactivate()
 	// Get the entity registry 
 	auto &entityRegistry = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World))->getEntityRegistry();
 
+	// Stop all audio from Sound Components (FMOD CORE)
 	auto soundComponentView = entityRegistry.view<SoundComponent>();
 	for(auto entity : soundComponentView)
 	{
@@ -331,58 +151,28 @@ void AudioScene::deactivate()
 			}
 		}
 	}
+
+	// Stop all audio going through master bus (FMOD STUDIO)
+	m_audioSystem->getBus(AudioBusType::AudioBusType_Master)->stopAllEvents(FMOD_STUDIO_STOP_MODE::FMOD_STUDIO_STOP_IMMEDIATE);
 }
 
 void AudioScene::update(const float p_deltaTime)
 {
-	m_dTime += p_deltaTime;
+	//FMOD::Studio::EventDescription *musicDescription;
+	//m_studioSystem->getEvent("event:/MainMenuMusic", &musicDescription);
 
-	FMOD_STUDIO_PLAYBACK_STATE playbackState;
-	m_eventInstance1->getPlaybackState(&playbackState);
-	if(playbackState != FMOD_STUDIO_PLAYBACK_STATE::FMOD_STUDIO_PLAYBACK_PLAYING)
-	{
-		//m_eventInstance1->setParameterByName("Speed", 4.0f);
-		//m_eventInstance1->setParameterByName("Box", 1.0f);
-		//m_eventInstance1->start();
-	}
-	
-	if(m_dTime > 1.0f)
-	{
-		m_dTime -= 1.0f;
+	//int instanceCount = 0;
+	//musicDescription->getInstanceCount(&instanceCount);
 
-		FMOD::Studio::EventInstance *eventInstance;
+	//if(instanceCount == 0)
+	//{
+	//	FMOD::Studio::EventInstance *eventInstance;
 
-		m_eventDescr1->createInstance(&eventInstance);
+	//	musicDescription->createInstance(&eventInstance);
 
-		eventInstance->setParameterByName("Speed", 4.0f);
-		eventInstance->setParameterByName("Barrel", 1.0f);
-		//eventInstance->start();
-		//eventInstance->release();
-
-	}
-
-	bool metalImpactPlaying = false;
-	m_metalImpactChannel[0]->isPlaying(&metalImpactPlaying);
-	if(!metalImpactPlaying)
-	{
-		std::uniform_real_distribution<float> dis(0.95f, 1.05f);
-		std::uniform_int_distribution<int> dis2(0, 2);
-
-		float randomPitch = dis(m_randomEngine);
-		int randomSound = dis2(m_randomEngine);
-
-		while(randomSound == m_lastPlayedImpactSound)
-		{
-			randomSound = dis2(m_randomEngine);
-		}
-
-		//std::cout << "random sound: " << randomSound << std::endl;
-
-		m_lastPlayedImpactSound = randomSound;
-
-		m_pitch->setParameterFloat(0, randomPitch);
-		//m_coreSystem->playSound(m_metalImpactSound[randomSound], m_sfxChannelGroup, false, &m_metalImpactChannel[0]);
-	}
+	//	eventInstance->start();
+	//	eventInstance->release();
+	//}
 
 	// Get double buffering FRONT index
 	auto frontIndex = ClockLocator::get().getDoubleBufferingIndexFront();
@@ -393,6 +183,11 @@ void AudioScene::update(const float p_deltaTime)
 	// Get the entity registry 
 	auto &entityRegistry = worldScene->getEntityRegistry();
 
+	//	 ___________________________
+	//	|							|
+	//	|	SOUND LISTENER UPDATE	|
+	//	|___________________________|
+	//
 	// Find the first active sound listener and get its spatial component
 	auto listenerSpatialComponentView = entityRegistry.view<SoundListenerComponent, SpatialComponent>();
 	for(auto entity : listenerSpatialComponentView)
@@ -407,20 +202,27 @@ void AudioScene::update(const float p_deltaTime)
 
 			// Get the world matrix of the camera
 			auto &worldTransform = listenerSpatialComponent.getSpatialDataChangeManager().getWorldTransform();
+			auto const worldTranslate = glm::mat3(worldTransform);
 
 			// Calculate all 3D listener attributes
-			FMOD_VECTOR position = Math::toFmodVector(worldTransform[3]);
-			FMOD_VECTOR velocity = Math::toFmodVector(listenerSpatialComponent.getSpatialDataChangeManager().getVelocity());
-			FMOD_VECTOR forwardDirection = Math::toFmodVector(glm::vec3(0.0f, 0.0f, -1.0f) * glm::mat3(worldTransform));
-			FMOD_VECTOR upDirection = Math::toFmodVector(glm::vec3(0.0f, 1.0f, 0.0f) * glm::mat3(worldTransform));
+			FMOD_3D_ATTRIBUTES spatialAttributes;
+			spatialAttributes.position = Math::toFmodVector(worldTransform[3]);
+			spatialAttributes.velocity = Math::toFmodVector(listenerSpatialComponent.getSpatialDataChangeManager().getVelocity());
+			spatialAttributes.forward = Math::toFmodVector(glm::vec3(0.0f, 0.0f, -1.0f) * worldTranslate);
+			spatialAttributes.up = Math::toFmodVector(glm::vec3(0.0f, 1.0f, 0.0f) * worldTranslate);
 
 			// Update the listener
-			m_coreSystem->set3DListenerAttributes(listenerComponent.m_listenerID, &position, &velocity, &forwardDirection, &upDirection);
+			m_studioSystem->setListenerAttributes(listenerComponent.m_listenerID, &spatialAttributes);
 
 			break;
 		}
 	}
 
+	//	 ___________________________
+	//	|							|
+	//	|  SOUND COMPONENTS UPDATE	|
+	//	|___________________________|
+	//
 	auto soundComponentView = entityRegistry.view<SoundComponent>();
 	for(auto entity : soundComponentView)
 	{
@@ -435,6 +237,19 @@ void AudioScene::update(const float p_deltaTime)
 					component.m_playing = true;
 					m_coreSystem->playSound(component.m_sound, 0, true, &component.m_channel);
 					component.m_channel->setVolume(component.m_volume);
+
+					if(component.m_spatialized)
+					{
+						auto spatialComponent = entityRegistry.try_get<SpatialComponent>(entity);
+						if(spatialComponent != nullptr)
+						{
+							FMOD_VECTOR velocity = Math::toFmodVector(spatialComponent->getSpatialDataChangeManager().getVelocity());
+							FMOD_VECTOR position = Math::toFmodVector(spatialComponent->getSpatialDataChangeManager().getWorldTransform()[3]);
+
+							component.m_channel->set3DAttributes(&position, &velocity);
+						}
+					}
+
 					component.m_channel->setPaused(false);
 				}
 			}
@@ -460,7 +275,12 @@ void AudioScene::update(const float p_deltaTime)
 			}
 		}
 	}	
-	
+
+	//	 ___________________________
+	//	|							|
+	//	|  COLLISION EVENTS UPDATE	|
+	//	|___________________________|
+	//
 	auto collisionEventMaterialView = worldScene->getEntityRegistry().view<CollisionEventComponent, ObjectMaterialComponent>();
 	for(auto entity : collisionEventMaterialView)
 	{
@@ -472,29 +292,70 @@ void AudioScene::update(const float p_deltaTime)
 
 			for(size_t i = 0, size = collisionComponent.m_numOfDynamicCollisions[frontIndex]; i < size; i++)
 			{
-				if(collisionComponent.m_dynamicCollisions[frontIndex][i].m_firstObjInCollisionPair)
+				//if(collisionComponent.m_dynamicCollisions[frontIndex][i].m_firstObjInCollisionPair)
 				{
-					FMOD_VECTOR position = Math::toFmodVector(collisionComponent.m_dynamicCollisions[frontIndex][i].m_position);
-					FMOD_VECTOR velocity = Math::toFmodVector(collisionComponent.m_dynamicCollisions[frontIndex][i].m_velocity);
+					// Get the transform matrix
+					glm::mat4 transformMatrix;
+					collisionComponent.m_dynamicCollisions[frontIndex][i].m_worldTransform.getOpenGLMatrix(glm::value_ptr(transformMatrix));
+					const glm::mat3 translateMatrix = glm::mat3(transformMatrix);
 
-					float volume = glm::min(collisionComponent.m_dynamicCollisions[frontIndex][i].m_appliedImpulse / 200.0f, 1.0f);
+					// Get 3D attributes
+					FMOD_3D_ATTRIBUTES spatialAttributes;
+					spatialAttributes.position = Math::toFmodVector(transformMatrix[3]);
+					spatialAttributes.velocity = Math::toFmodVector(collisionComponent.m_dynamicCollisions[frontIndex][i].m_velocity);
+					spatialAttributes.forward = Math::toFmodVector(glm::vec3(0.0f, 0.0f, -1.0f) * translateMatrix);
+					spatialAttributes.up = Math::toFmodVector(glm::vec3(0.0f, 1.0f, 0.0f) * translateMatrix);
+					const float volume = glm::min(collisionComponent.m_dynamicCollisions[frontIndex][i].m_appliedImpulse / Config::audioVar().impact_impulse_volume_divider, Config::audioVar().impact_max_volume_threshold);
 
-					FMOD::Channel *channel;
-					m_coreSystem->playSound(m_collisionSounds[materialComponent.getObjectMaterialType()].m_sound, 0, true, &channel);
-					channel->setVolume(volume);
-					channel->set3DAttributes(&position, &velocity);
-					channel->setPaused(false);
+					// Create an event (sound) instance
+					FMOD::Studio::EventInstance *eventInstance;
+					m_impactEvents[materialComponent.getObjectMaterialType()]->createInstance(&eventInstance);
 
-					//m_eventInstance1->set3DAttributes()
-					//m_eventInstance1->start();
+					// Set sound parameters and play the sound
+					eventInstance->setParameterByName("Impulse", collisionComponent.m_dynamicCollisions[frontIndex][i].m_appliedImpulse / Config::audioVar().impact_impulse_param_divider);
+					eventInstance->setVolume(volume);
+					eventInstance->set3DAttributes(&spatialAttributes);
+					eventInstance->start();
+					eventInstance->setPaused(false);
+					eventInstance->release();
 				}
 			}
 		}
 	}
 
+
+	//	 ___________________________
+	//	|							|
+	//	|	   VOLUME CHANGES		|
+	//	|___________________________|
+	//
+	// Ambient volume
+	if(volume_ambient != Config::audioVar().volume_ambient)
+	{
+		volume_ambient = Config::audioVar().volume_ambient;
+		m_audioSystem->getBus(AudioBusType::AudioBusType_Ambient)->setVolume(volume_ambient);
+	}
+	// Master volume
+	if(volume_master != Config::audioVar().volume_master)
+	{
+		volume_master = Config::audioVar().volume_master;
+		m_audioSystem->getBus(AudioBusType::AudioBusType_Master)->setVolume(volume_master);
+	}
+	// Music volume
+	if(volume_music != Config::audioVar().volume_music)
+	{
+		volume_music = Config::audioVar().volume_music;
+		m_audioSystem->getBus(AudioBusType::AudioBusType_Music)->setVolume(volume_music);
+	}
+	// SFX volume
+	if(volume_sfx != Config::audioVar().volume_sfx)
+	{
+		volume_sfx = Config::audioVar().volume_sfx;
+		m_audioSystem->getBus(AudioBusType::AudioBusType_SFX)->setVolume(volume_sfx);
+	}
+
 	// Update the sound system
 	m_studioSystem->update();
-	//m_coreSystem->update();
 }
 
 ErrorCode AudioScene::preload()

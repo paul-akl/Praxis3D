@@ -11,6 +11,7 @@ struct CollisionEvent
 	EntityID m_entityID;
 	glm::vec3 m_position;
 	glm::vec3 m_velocity;
+	btTransform m_worldTransform;
 	float m_appliedImpulse;
 	bool m_firstObjInCollisionPair;
 };

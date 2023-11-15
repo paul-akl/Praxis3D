@@ -204,10 +204,11 @@ void PhysicsScene::internalTickCallback(btDynamicsWorld *p_world, btScalar p_tim
 					if(collisionEventComponentObjectA->m_numOfDynamicCollisions[dbIndex] < NUM_DYNAMIC_COLLISION_EVENTS)
 					{
 						collisionEventComponentObjectA->m_dynamicCollisions[dbIndex][collisionEventComponentObjectA->m_numOfDynamicCollisions[dbIndex]].m_firstObjInCollisionPair = true;
-						collisionEventComponentObjectA->m_dynamicCollisions[dbIndex][collisionEventComponentObjectA->m_numOfDynamicCollisions[dbIndex]].m_entityID = entityB;
+						collisionEventComponentObjectA->m_dynamicCollisions[dbIndex][collisionEventComponentObjectA->m_numOfDynamicCollisions[dbIndex]].m_entityID = entityA;
 						collisionEventComponentObjectA->m_dynamicCollisions[dbIndex][collisionEventComponentObjectA->m_numOfDynamicCollisions[dbIndex]].m_appliedImpulse = manifoldPoint.m_appliedImpulse;
 						collisionEventComponentObjectA->m_dynamicCollisions[dbIndex][collisionEventComponentObjectA->m_numOfDynamicCollisions[dbIndex]].m_position = Math::toGlmVec3(manifoldPoint.getPositionWorldOnA());
 						collisionEventComponentObjectA->m_dynamicCollisions[dbIndex][collisionEventComponentObjectA->m_numOfDynamicCollisions[dbIndex]].m_velocity = Math::toGlmVec3(objectA->getInterpolationLinearVelocity());
+						collisionEventComponentObjectA->m_dynamicCollisions[dbIndex][collisionEventComponentObjectA->m_numOfDynamicCollisions[dbIndex]].m_worldTransform = objectA->getWorldTransform();
 
 						collisionEventComponentObjectA->m_numOfDynamicCollisions[dbIndex]++;
 					}
@@ -219,10 +220,11 @@ void PhysicsScene::internalTickCallback(btDynamicsWorld *p_world, btScalar p_tim
 					if(collisionEventComponentObjectB->m_numOfDynamicCollisions[dbIndex] < NUM_DYNAMIC_COLLISION_EVENTS)
 					{
 						collisionEventComponentObjectB->m_dynamicCollisions[dbIndex][collisionEventComponentObjectB->m_numOfDynamicCollisions[dbIndex]].m_firstObjInCollisionPair = false;
-						collisionEventComponentObjectB->m_dynamicCollisions[dbIndex][collisionEventComponentObjectB->m_numOfDynamicCollisions[dbIndex]].m_entityID = entityA;
+						collisionEventComponentObjectB->m_dynamicCollisions[dbIndex][collisionEventComponentObjectB->m_numOfDynamicCollisions[dbIndex]].m_entityID = entityB;
 						collisionEventComponentObjectB->m_dynamicCollisions[dbIndex][collisionEventComponentObjectB->m_numOfDynamicCollisions[dbIndex]].m_appliedImpulse = manifoldPoint.m_appliedImpulse;
 						collisionEventComponentObjectB->m_dynamicCollisions[dbIndex][collisionEventComponentObjectB->m_numOfDynamicCollisions[dbIndex]].m_position = Math::toGlmVec3(manifoldPoint.getPositionWorldOnB());
 						collisionEventComponentObjectB->m_dynamicCollisions[dbIndex][collisionEventComponentObjectB->m_numOfDynamicCollisions[dbIndex]].m_velocity = Math::toGlmVec3(objectB->getInterpolationLinearVelocity());
+						collisionEventComponentObjectB->m_dynamicCollisions[dbIndex][collisionEventComponentObjectB->m_numOfDynamicCollisions[dbIndex]].m_worldTransform = objectB->getWorldTransform();
 
 						collisionEventComponentObjectB->m_numOfDynamicCollisions[dbIndex]++;
 					}
@@ -237,10 +239,11 @@ void PhysicsScene::internalTickCallback(btDynamicsWorld *p_world, btScalar p_tim
 					if(collisionEventComponentObjectA->m_numOfStaticCollisions[dbIndex] < NUM_STATIC_COLLISION_EVENTS)
 					{
 						collisionEventComponentObjectA->m_staticCollisions[dbIndex][collisionEventComponentObjectA->m_numOfStaticCollisions[dbIndex]].m_firstObjInCollisionPair = true;
-						collisionEventComponentObjectA->m_staticCollisions[dbIndex][collisionEventComponentObjectA->m_numOfStaticCollisions[dbIndex]].m_entityID = entityB;
+						collisionEventComponentObjectA->m_staticCollisions[dbIndex][collisionEventComponentObjectA->m_numOfStaticCollisions[dbIndex]].m_entityID = entityA;
 						collisionEventComponentObjectA->m_staticCollisions[dbIndex][collisionEventComponentObjectA->m_numOfStaticCollisions[dbIndex]].m_appliedImpulse = manifoldPoint.m_appliedImpulse;
 						collisionEventComponentObjectA->m_staticCollisions[dbIndex][collisionEventComponentObjectA->m_numOfStaticCollisions[dbIndex]].m_position = Math::toGlmVec3(manifoldPoint.getPositionWorldOnA());
 						collisionEventComponentObjectA->m_staticCollisions[dbIndex][collisionEventComponentObjectA->m_numOfStaticCollisions[dbIndex]].m_velocity = Math::toGlmVec3(objectA->getInterpolationLinearVelocity());
+						collisionEventComponentObjectA->m_staticCollisions[dbIndex][collisionEventComponentObjectA->m_numOfStaticCollisions[dbIndex]].m_worldTransform = objectA->getWorldTransform();
 
 						collisionEventComponentObjectA->m_numOfStaticCollisions[dbIndex]++;
 					}
@@ -252,10 +255,11 @@ void PhysicsScene::internalTickCallback(btDynamicsWorld *p_world, btScalar p_tim
 					if(collisionEventComponentObjectB->m_numOfStaticCollisions[dbIndex] < NUM_STATIC_COLLISION_EVENTS)
 					{
 						collisionEventComponentObjectB->m_staticCollisions[dbIndex][collisionEventComponentObjectB->m_numOfStaticCollisions[dbIndex]].m_firstObjInCollisionPair = false;
-						collisionEventComponentObjectB->m_staticCollisions[dbIndex][collisionEventComponentObjectB->m_numOfStaticCollisions[dbIndex]].m_entityID = entityA;
+						collisionEventComponentObjectB->m_staticCollisions[dbIndex][collisionEventComponentObjectB->m_numOfStaticCollisions[dbIndex]].m_entityID = entityB;
 						collisionEventComponentObjectB->m_staticCollisions[dbIndex][collisionEventComponentObjectB->m_numOfStaticCollisions[dbIndex]].m_appliedImpulse = manifoldPoint.m_appliedImpulse;
 						collisionEventComponentObjectB->m_staticCollisions[dbIndex][collisionEventComponentObjectB->m_numOfStaticCollisions[dbIndex]].m_position = Math::toGlmVec3(manifoldPoint.getPositionWorldOnB());
 						collisionEventComponentObjectB->m_staticCollisions[dbIndex][collisionEventComponentObjectB->m_numOfStaticCollisions[dbIndex]].m_velocity = Math::toGlmVec3(objectB->getInterpolationLinearVelocity());
+						collisionEventComponentObjectB->m_staticCollisions[dbIndex][collisionEventComponentObjectB->m_numOfStaticCollisions[dbIndex]].m_worldTransform = objectB->getWorldTransform();
 
 						collisionEventComponentObjectB->m_numOfStaticCollisions[dbIndex]++;
 					}

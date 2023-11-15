@@ -1,13 +1,5 @@
 #pragma once
 
-#pragma comment(lib, "fmod/fmod_vc.lib")
-//#pragma comment(lib, "fmod/fmodL_vc.lib")
-#pragma comment(lib, "fmod/fmodstudio_vc.lib")
-//#pragma comment(lib, "fmod/fmodstudioL_vc.lib")
-//#pragma comment(lib, "fmod/fsbank_vc.lib")
-
-#include <fmod/fmod.hpp>
-#include <fmod/fmod_errors.h>
 #include <fmod/fmod_studio.hpp>
 #include <random>
 
@@ -17,6 +9,7 @@
 #include "SoundListenerComponent.h"
 #include "System.h"
 
+class AudioSystem;
 struct ComponentsConstructionInfo;
 
 struct AudioComponentsConstructionInfo
@@ -128,92 +121,26 @@ public:
 	BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
 
 private:
-	// Returns true if the operation was successful; returns false if operation failed and logs an error
-	const inline bool fmodErrorLog(const FMOD_RESULT p_fmodResult, const std::string &p_objectName = "", const ErrorType p_errorType = ErrorType::Warning, const ErrorSource p_errorSource = ErrorSource::Source_AudioScene) const noexcept
-	{
-		// Check if the operation result is OK
-		if(p_fmodResult != FMOD_RESULT::FMOD_OK)
-		{
-			// Convert the FMOD error to a string of the actual error name
-			// If the object name was given, include it in the error
-			if(p_objectName.empty())
-				ErrHandlerLoc::get().log(p_errorType, p_errorSource, GetString(static_cast<FmodErrorCodes>(p_fmodResult)));
-			else
-				ErrHandlerLoc::get().log(p_errorType, p_errorSource, "\'" + p_objectName + "\': " + GetString(static_cast<FmodErrorCodes>(p_fmodResult)));
-
-			// Operation failed - return false
-			return false;
-		}
-		else // Operation successful - return true
-			return true;
-	}
-
-	void addImpactSoundBank(FMOD::Studio::Bank *p_soundBank)
-	{
-		// Get the number of sound events
-		int numOfEvents = 0;
-		p_soundBank->getEventCount(&numOfEvents);
-
-		if(numOfEvents > 0)
-		{
-			// Get the list of sound events
-			FMOD::Studio::EventDescription **events = new FMOD::Studio::EventDescription * [numOfEvents];
-			p_soundBank->getEventList(events, numOfEvents, &numOfEvents);
-
-			// Go over each sound event
-			for(int eventIndex = 0; eventIndex < numOfEvents; eventIndex++)
-			{
-				// Get sound event path
-				char path[512];
-				events[eventIndex]->getPath(path, 512, nullptr);
-
-				// Extract the sound event name from the path, and assign the event itself to the event name entry in the impact sound map
-				m_impactSounds[Utilities::splitStringAfterDelimiter(Config::audioVar().pathDelimiter, std::string(path))] = events[eventIndex];
-			}
-
-			// Delete the pointer to an array of pointers that was created
-			delete events;
-		}
-	}
-
 	void loadParameterGUIDs();
 
 	AudioTask *m_audioTask;
+	AudioSystem *m_audioSystem;
+
+	// FMOD studio and core system handles
 	FMOD::Studio::System *m_studioSystem;
 	FMOD::System *m_coreSystem;
-
-	FMOD::ChannelGroup *m_masterChannelGroup;
-	FMOD::ChannelGroup *m_ambientChannelGroup;
-	FMOD::ChannelGroup *m_sfxChannelGroup;
-	FMOD::ChannelGroup *m_musicChannelGroup;
-
-	// Sound effects for object impacts
-	FMOD::Studio::Bank *m_impactBank;
 
 	// Sound events for object impacts
 	FMOD::Studio::EventDescription *m_impactEvents[ObjectMaterialType::NumberOfMaterialTypes];
 
 	SingleSound m_collisionSounds[ObjectMaterialType::NumberOfMaterialTypes];
 
-	bool m_defaultImpactSoundsLoaded;
+	// Volume values of different buses
+	float volume_ambient;
+	float volume_master;
+	float volume_music;
+	float volume_sfx;
 
-	int m_numSoundDrivers;
-
-	FMOD::Studio::Bank *m_testBank1;
-	FMOD::Studio::EventDescription *m_eventDescr1;
-	FMOD::Studio::EventInstance *m_eventInstance1;
-	FMOD::Sound *m_metalImpactSound[3];
-	FMOD::Channel *m_metalImpactChannel[3];
-	FMOD::DSP *m_pitch;
-	std::random_device m_randomDevice;
-	std::default_random_engine m_randomEngine;
-	std::uniform_real_distribution<float> m_distribution;
-	int m_lastPlayedImpactSound;
-
-	//std::vector<FMOD::Studio::EventDescription*> m_impactSounds;
-	//std::unordered_map<std::string, std::size_t> m_impactSoundsIndexMap;
-	std::unordered_map<std::string, FMOD::Studio::EventDescription*> m_impactSounds;
+	// All banks that this scene have loaded
 	std::vector<std::pair<std::string, FMOD::Studio::Bank *>> m_bankFilenames;
-
-	float m_dTime;
 };

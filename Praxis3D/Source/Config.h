@@ -571,19 +571,42 @@ public:
 	{
 		AudioVariables()
 		{
-			impact_max_volume_threshold = 200.0f;
+			impact_impulse_param_divider = 1.0f;
+			impact_impulse_volume_divider = 200.0f;
+			impact_max_volume_threshold = 1.0f;
 			impact_soft_hard_threshold = 30.0f;
 			max_impact_volume = 2.0f;
+			volume_ambient = 1.0f;
+			volume_master = 1.0f;
+			volume_music = 1.0f;
+			volume_sfx = 1.0f;
 			num_audio_channels = 32;
+			bus_name_ambient = "Ambient";
+			bus_name_master = "";
+			bus_name_music = "Music";
+			bus_name_prefix = "bus:/";
+			bus_name_sfx = "SFX";
 			default_sound_bank = "Master.bank";
 			default_sound_bank_string = "Master.strings.bank";
 			default_impact_sound_bank = "Impact.bank";
 			pathDelimiter = ":/";
 		}
+
+		float impact_impulse_param_divider;
+		float impact_impulse_volume_divider;
 		float impact_max_volume_threshold;
 		float impact_soft_hard_threshold;
 		float max_impact_volume;
+		float volume_ambient;
+		float volume_master;
+		float volume_music;
+		float volume_sfx;
 		int num_audio_channels;
+		std::string bus_name_ambient;
+		std::string bus_name_master;
+		std::string bus_name_music;
+		std::string bus_name_prefix;
+		std::string bus_name_sfx;
 		std::string default_sound_bank;
 		std::string default_sound_bank_string;
 		std::string default_impact_sound_bank;

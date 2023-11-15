@@ -59,8 +59,8 @@ ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 			}
 
 			// Pass the scene and system propertySet parameters
-			m_systemScenes[sysIndex]->setup(scenePropertySet);
 			m_systemScenes[sysIndex]->getSystem()->setup(systemropertySet);
+			m_systemScenes[sysIndex]->setup(scenePropertySet);
 		}
 
 		// Get Game Objects

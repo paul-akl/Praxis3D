@@ -162,7 +162,7 @@
 			{
 				"ImpactSoundComponent":
 				{
-					"Type" : "Box"
+					"Type" : "Concrete"
 				},
 				"SoundComponent":
 				{
@@ -235,6 +235,68 @@
 				{
 					"LocalPosition": "8.0f, 3.0f, 0.0f",
 					"LocalRotation": "0.0f, 45.0f, 0.0f"
+				}
+			}
+		},
+		{
+			"ID": "55",
+			"Name": "Sound1",
+			"Parent": "0",
+			"Audio":
+			{
+				"SoundComponent":
+				{
+					"Filename": "Spinning out.wav",
+					"Type": "Music",
+					"Spatialized": "true",
+					"Loop": "true",
+					"StartPlaying": "true",
+					"Volume": "0.5f"
+				}
+			},
+			"World":
+			{
+				"ObjectMaterialComponent":
+				{
+					"Type": "Wood"
+				},
+				"SpatialComponent":
+				{
+					"LocalPosition": "20.0f, 5.0f, 0.0f",
+					"LocalRotation": "0.0f, 0.0f, 0.0f"
+				}
+			},
+			"Rendering":
+			{
+				"ModelComponent":
+				{
+					"Models":
+					[
+						{
+							"Filename": "sphereNew4.3DS",
+							"Meshes":
+							[
+								{
+									"Index": "0",
+									"AlphaThreshold": "0.0f",
+									"HeightScale": "0.0f",
+									"Materials":
+									{
+										"Diffuse":
+										{
+											"Filename": "test_albedoGold.png",
+											"TextureScale": "1.0f, 1.0f"
+										},
+										"RMHAO":
+										{
+											"Filename": "test1_RM.png",
+											"TextureScale": "1.0f, 1.0f"
+										}
+									}
+								}
+							]
+						}
+					]
 				}
 			}
 		},

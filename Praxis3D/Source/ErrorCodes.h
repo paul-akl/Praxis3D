@@ -41,6 +41,7 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
     Code(File_not_found,) \
     Code(Filename_empty,) \
 	/* Audio system errors */\
+	Code(Audio_invalid_bus_type, ) \
 	Code(Audio_no_drivers, ) \
 	Code(Audio_system_init_failed, ) \
 	/* General engine errors */\

@@ -54,7 +54,21 @@ void Config::init()
 	// Note: not all the variables are assigned to containers, as some are not meant to be loaded from config file.
 
 	// Audio Variables
+	AddVariablePredef(m_audioVar, impact_impulse_param_divider);
+	AddVariablePredef(m_audioVar, impact_impulse_volume_divider);
+	AddVariablePredef(m_audioVar, impact_max_volume_threshold); 
+	AddVariablePredef(m_audioVar, impact_soft_hard_threshold);
+	AddVariablePredef(m_audioVar, max_impact_volume);
+	AddVariablePredef(m_audioVar, volume_ambient);
+	AddVariablePredef(m_audioVar, volume_master);
+	AddVariablePredef(m_audioVar, volume_music);
+	AddVariablePredef(m_audioVar, volume_sfx);
 	AddVariablePredef(m_audioVar, num_audio_channels);
+	AddVariablePredef(m_audioVar, bus_name_ambient);
+	AddVariablePredef(m_audioVar, bus_name_master);
+	AddVariablePredef(m_audioVar, bus_name_music);
+	AddVariablePredef(m_audioVar, bus_name_prefix);
+	AddVariablePredef(m_audioVar, bus_name_sfx);
 	AddVariablePredef(m_audioVar, default_sound_bank);
 	AddVariablePredef(m_audioVar, default_sound_bank_string);
 	AddVariablePredef(m_audioVar, default_impact_sound_bank);

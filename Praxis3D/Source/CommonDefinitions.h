@@ -241,6 +241,15 @@ enum GBufferTextureType : unsigned int
 	ObjectMaterialType_NumOfTypes
 };*/
 
+enum AudioBusType : unsigned int
+{
+	AudioBusType_Ambient,
+	AudioBusType_Master,
+	AudioBusType_Music,
+	AudioBusType_SFX,
+	AudioBusType_NumOfTypes
+};
+
 #define OBJ_MATERIAL_ID(Code) \
 	Code(Concrete, = 0) \
 	Code(Glass,) \

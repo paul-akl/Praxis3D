@@ -8,6 +8,7 @@
 		"Initialize_failure"								: "Failed to initialized",
 		"File_not_found"										: "File missing",
 		"Filename_empty"										: "Filename is empty",
+		"Audio_invalid_bus_type"						: "Trying to assign an invalid audio bus type",
 		"Audio_no_drivers"									: "System has no sound devices",
 		"Audio_system_init_failed"					: "Audio system has failed to initialize",
 		"Destroy_obj_not_found"							: "Destruction: object not found",
