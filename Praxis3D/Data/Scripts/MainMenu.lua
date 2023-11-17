@@ -37,7 +37,7 @@ function init ()
 	
 	buttonSpacing = 5
 	
-	print('MainMenu.lua script initialized.')
+	ErrHandlerLoc.logErrorCode(ErrorCode.Initialize_success, getLuaFilename())
 end
 	
 function update (p_deltaTime)

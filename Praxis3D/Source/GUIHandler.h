@@ -20,7 +20,7 @@ public:
 		m_frameReady.clear();
 	}
 
-	// Let the GUI process an SDL even so it can be registered
+	// Let the GUI process an SDL event so it can be registered
 	virtual void processSDLEvent(const SDL_Event &p_SDLEvent) { }
 
 	// Has the GUI Handle been initialized
@@ -30,10 +30,16 @@ public:
 	inline std::atomic_flag &getFrameReadyFlag()  { return m_frameReady; }
 
 	// Enable docking windows
-	void enableDocking() { }
+	virtual void enableDocking() { }
 
 	// Disable docking windows
-	void disableDocking() { }
+	virtual void disableDocking() { }
+
+	// Returns true if the mouse is captured by the GUI, thus mouse events shouldn't propagate to the main application
+	virtual bool isMouseCaptured() { return false; }
+
+	// Returns true if the keyboard is captured by the GUI, thus keyboard events shouldn't propagate to the main application
+	virtual bool isKeyboardCaptured() { return false; }
 
 protected:
 	virtual ErrorCode init() { return ErrorCode::Success; }
@@ -88,6 +94,7 @@ public:
 		delete m_io;
 	}
 
+	// Let the GUI process an SDL event so it can be registered
 	void processSDLEvent(const SDL_Event &p_SDLEvent) 
 	{
 		ImGui_ImplSDL2_ProcessEvent(&p_SDLEvent);
@@ -102,6 +109,12 @@ public:
 	{
 		m_io->ConfigFlags &= ~(ImGuiConfigFlags_DockingEnable);
 	}
+
+	// Returns true if the mouse is captured by the GUI, thus mouse events shouldn't propagate to the main application
+	bool isMouseCaptured() { return m_io->WantCaptureMouse; }
+
+	// Returns true if the keyboard is captured by the GUI, thus keyboard events shouldn't propagate to the main application
+	bool isKeyboardCaptured() { return m_io->WantCaptureKeyboard; }
 
 protected:
 	ErrorCode init()

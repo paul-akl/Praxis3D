@@ -337,38 +337,53 @@ ErrorCode SceneLoader::importFromFile(ComponentsConstructionInfo &p_construction
 
 void SceneLoader::importFromProperties(ComponentsConstructionInfo &p_constructionInfo, const PropertySet &p_properties)
 {
-	// Get the object name and ID
-	std::string name = p_properties.getPropertyByID(Properties::Name).getString();
-	EntityID desiredEntityID = (EntityID)p_properties.getPropertyByID(Properties::ID).getInt();
+	// Load Prefab first
+	auto &prefabProperty = p_properties.getPropertyByID(Properties::Prefab);
+	if(prefabProperty)
+	{
+		std::string prefabName = prefabProperty.getString();
+		importPrefab(p_constructionInfo, prefabName);
+		p_constructionInfo.m_prefab = prefabName;
+	}
 
-	// If the name property is missing, generate a unique name based on the entity ID
-	if(name.empty())
-		name = GetString(Properties::GameObject) + Utilities::toString(desiredEntityID);
-
-	p_constructionInfo.m_name = name;
-	p_constructionInfo.m_id = desiredEntityID;
+	// Variable for the object name
+	std::string name;
 
 	// Load property data
 	for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
 	{
 		switch(p_properties[i].getPropertyID())
 		{
+			case Properties::ID:
+				{
+					// Get the desired ID of the entity
+					p_constructionInfo.m_id = (EntityID)p_properties[i].getInt();
+				}
+				break;
+			case Properties::Name:
+				{
+					// Get the entity name
+					name = p_properties[i].getString();
+				}
+				break;
 			case Properties::Parent:
 				{
 					// Get the entity ID if the parent object
 					p_constructionInfo.m_parent = (EntityID)p_properties[i].getInt();
 				}
 				break;
-
-			case Properties::Prefab:
-				{
-					std::string prefabName = p_properties[i].getString();
-					importPrefab(p_constructionInfo, prefabName);
-					p_constructionInfo.m_prefab = prefabName;
-				}
-				break;
 		}
 	}
+
+	// If the name property is missing, generate a unique name based on the entity ID
+	if(name.empty())
+		if(p_constructionInfo.m_name.empty())
+			name = GetString(Properties::GameObject) + Utilities::toString(p_constructionInfo.m_id);
+		else
+			name = p_constructionInfo.m_name + Utilities::toString(p_constructionInfo.m_id);
+
+	// Make sure to assign values after the Prefab has been imported (if there was one)
+	p_constructionInfo.m_name = name;
 
 	// Load audio components
 	{

@@ -121,6 +121,9 @@ public:
 	BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
 
 private:
+	void createSound(SoundComponent &p_soundComponent);
+	void playSound(SoundComponent &p_soundComponent);
+
 	void loadParameterGUIDs();
 
 	AudioTask *m_audioTask;
@@ -136,10 +139,12 @@ private:
 	SingleSound m_collisionSounds[ObjectMaterialType::NumberOfMaterialTypes];
 
 	// Volume values of different buses
-	float volume_ambient;
-	float volume_master;
-	float volume_music;
-	float volume_sfx;
+	float m_volumeAmbient;
+	float m_volumeMaster;
+	float m_volumeMusic;
+	float m_volumeSoundEffects;
+
+	FMOD::ChannelGroup *m_soundTypeChannelGroups[SoundComponent::SoundType_NumOfTypes];
 
 	// All banks that this scene have loaded
 	std::vector<std::pair<std::string, FMOD::Studio::Bank *>> m_bankFilenames;

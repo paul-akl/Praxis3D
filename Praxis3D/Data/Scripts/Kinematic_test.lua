@@ -15,7 +15,7 @@ function init ()
 	upKey:bind(inputVariables.up_editor_key)
 	downKey:bind(inputVariables.down_editor_key)
 	
-	print('Kinematic_test.lua script initialized.')
+	ErrHandlerLoc.logErrorCode(ErrorCode.Initialize_success, getLuaFilename())
 end
 
 function update (p_deltaTime)

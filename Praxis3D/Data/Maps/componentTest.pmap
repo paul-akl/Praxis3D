@@ -239,6 +239,57 @@
 			}
 		},
 		{
+			"ID": "54",
+			"Name": "Model test",
+			"Parent": "0",
+			"World":
+			{
+				"ObjectMaterialComponent":
+				{
+					"Type": "Wood"
+				},
+				"SpatialComponent":
+				{
+					"LocalPosition": "0.0f, 0.0f, -20.0f",
+					"LocalRotation": "0.0f, 0.0f, 0.0f",
+					"LocalScale": "0.05f, 0.05f, 0.05f"
+				}
+			},
+			"Rendering":
+			{
+				"ModelComponent":
+				{
+					"Models":
+					[
+						{
+							"Filename": "street_lamp_fbx.fbx",
+							"Meshes":
+							[
+								{
+									"Index": "0",
+									"AlphaThreshold": "0.0f",
+									"HeightScale": "0.0f",
+									"Materials":
+									{
+										"Diffuse":
+										{
+											"Filename": "test_albedoGold.png",
+											"TextureScale": "1.0f, 1.0f"
+										},
+										"RMHAO":
+										{
+											"Filename": "test1_RM.png",
+											"TextureScale": "1.0f, 1.0f"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		},
+		{
 			"ID": "55",
 			"Name": "Sound1",
 			"Parent": "0",
@@ -251,7 +302,7 @@
 					"Spatialized": "true",
 					"Loop": "true",
 					"StartPlaying": "true",
-					"Volume": "0.5f"
+					"Volume": "1.0f"
 				}
 			},
 			"World":
@@ -433,7 +484,7 @@
 						},
 						{
 							"Name": "cameraSpeedMultiplier",
-							"Value": "10.0f"
+							"Value": "100000.0f"
 						}
 					]
 				}
@@ -447,7 +498,7 @@
 			{
 				"SpatialComponent":
 				{
-					"LocalRotation": "-60.0f, 0.0f, 0.0f"
+					"LocalRotation": "-40.0f, 0.0f, 0.0f"
 				}
 			},
 			"Rendering":
@@ -457,6 +508,13 @@
 					"Type": "DirectionalLight",
 					"Color": "1.0f, 0.0f, 0.0f",
 					"Intensity": "10.0f"
+				}
+			},
+			"Script":
+			{
+				"LuaComponent":
+				{
+					"Filename": "Sun_move.lua"
 				}
 			}
 		},
@@ -560,7 +618,14 @@
 					{
 						"Filename": "Impacts_extended.bank"
 					}
-				]
+				],
+				"Volume":
+				{
+					"Master": "0.5f",
+					"Ambient": "1.0f",
+					"Music": "0.1f",
+					"SoundEffect": "1.0f"
+				}
 			}
 		},
 		"Graphics":

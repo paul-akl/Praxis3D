@@ -30,7 +30,10 @@ public:
 		m_numSoundDrivers = 0;
 
 		for(unsigned int i = 0; i < AudioBusType::AudioBusType_NumOfTypes; i++)
+		{
 			m_buses[i] = nullptr;
+			m_channelGroups[i] = nullptr;
+		}
 	}
 	~AudioSystem()
 	{
@@ -171,6 +174,7 @@ protected:
 	}
 
 	FMOD::Studio::Bus *getBus(const AudioBusType p_busType) { return m_buses[p_busType]; }
+	FMOD::ChannelGroup *getChannelGroup(const AudioBusType p_busType) { return m_channelGroups[p_busType]; }
 
 	AudioScene *m_audioScenes[EngineStateType::EngineStateType_NumOfTypes];
 
@@ -184,6 +188,7 @@ protected:
 
 	// Holds all the audio bus types, used for manipulating grouped sounds (like changing volume)
 	FMOD::Studio::Bus *m_buses[AudioBusType::AudioBusType_NumOfTypes];
+	FMOD::ChannelGroup *m_channelGroups[AudioBusType::AudioBusType_NumOfTypes];
 
 	int m_numSoundDrivers;
 };

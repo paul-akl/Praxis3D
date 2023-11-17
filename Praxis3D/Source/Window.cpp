@@ -163,7 +163,7 @@ void Window::handleEvents()
 			// If GUI is enabled, send the event to it
 			if(m_enableGUI)
 				m_guiHandler->processSDLEvent(SDLEvent);
-
+				
 			handleSDLEvent(SDLEvent);
 		}
 	}
@@ -190,135 +190,144 @@ void Window::handleSDLEvent(const SDL_Event &p_SDLEvent)
 	switch(p_SDLEvent.type)
 	{
 	case SDL_WINDOWEVENT:
-	{
-		switch(p_SDLEvent.window.event)
 		{
-		case SDL_WINDOWEVENT_RESIZED:
-			
-			if(!Config::windowVar().fullscreen || Config::windowVar().fullscreen_borderless)
+			switch(p_SDLEvent.window.event)
 			{
-				Config::setGraphicsVar().current_resolution_x = p_SDLEvent.window.data1;
-				Config::setGraphicsVar().current_resolution_y = p_SDLEvent.window.data2;
-				
-				if(!Config::windowVar().fullscreen)
-				{
-					Config::setWindowVar().window_size_windowed_x = p_SDLEvent.window.data1;
-					Config::setWindowVar().window_size_windowed_y = p_SDLEvent.window.data2;
-				}
+				case SDL_WINDOWEVENT_RESIZED:
 
-				ErrHandlerLoc::get().log(ErrorType::Info, ErrorSource::Source_Window, "The window has been resized to " + Utilities::toString(p_SDLEvent.window.data1) + "x" + Utilities::toString(p_SDLEvent.window.data2));
+					if(!Config::windowVar().fullscreen || Config::windowVar().fullscreen_borderless)
+					{
+						Config::setGraphicsVar().current_resolution_x = p_SDLEvent.window.data1;
+						Config::setGraphicsVar().current_resolution_y = p_SDLEvent.window.data2;
+
+						if(!Config::windowVar().fullscreen)
+						{
+							Config::setWindowVar().window_size_windowed_x = p_SDLEvent.window.data1;
+							Config::setWindowVar().window_size_windowed_y = p_SDLEvent.window.data2;
+						}
+
+						ErrHandlerLoc::get().log(ErrorType::Info, ErrorSource::Source_Window, "The window has been resized to " + Utilities::toString(p_SDLEvent.window.data1) + "x" + Utilities::toString(p_SDLEvent.window.data2));
+					}
+
+					break;
+
+				case SDL_WINDOWEVENT_MOVED:
+
+					Config::setWindowVar().window_position_x = p_SDLEvent.window.data1;
+					Config::setWindowVar().window_position_y = p_SDLEvent.window.data2;
+
+					break;
+
+				case SDL_WINDOWEVENT_FOCUS_GAINED:
+
+					Config::m_windowVar.window_in_focus = true;
+
+					// If mouse was captured before focus, re-capture it
+					if(m_mouseCapturedBeforeLostFocus)
+					{
+						// Recapture the mouse
+						Config::m_windowVar.mouse_captured = m_mouseCapturedBeforeLostFocus;
+						setMouseRelativeMode(m_mouseCapturedBeforeLostFocus);
+
+						// Set flag to false, so that it will only be set to true if focus is lost
+						m_mouseCapturedBeforeLostFocus = false;
+					}
+
+					break;
+
+				case SDL_WINDOWEVENT_FOCUS_LOST:
+
+					Config::m_windowVar.window_in_focus = false;
+
+					// If mouse should be un-captured on lost focus and mouse is currently captured
+					if(Config::windowVar().mouse_release_on_lost_focus && Config::windowVar().mouse_captured)
+					{
+						// Set the flag to true, so that it will be recaptured on gained focus
+						m_mouseCapturedBeforeLostFocus = true;
+
+						// Un-capture the mouse
+						Config::m_windowVar.mouse_captured = false;
+						setMouseRelativeMode(false);
+					}
+
+					break;
+
+				case SDL_WINDOWEVENT_CLOSE:
+
+					// This is not an ideal way to shutdown the engine, but if it happens,
+					// mark engine as not running anymore, and it will be shutdown shortly
+
+					Config::m_engineVar.running = false;
+
+					break;
 			}
-
-			break;
-
-		case SDL_WINDOWEVENT_MOVED:
-
-			Config::setWindowVar().window_position_x = p_SDLEvent.window.data1;
-			Config::setWindowVar().window_position_y = p_SDLEvent.window.data2;
-
-			break;
-
-		case SDL_WINDOWEVENT_FOCUS_GAINED:
-
-			Config::m_windowVar.window_in_focus = true;
-
-			// If mouse was captured before focus, re-capture it
-			if(m_mouseCapturedBeforeLostFocus)
-			{
-				// Recapture the mouse
-				Config::m_windowVar.mouse_captured = m_mouseCapturedBeforeLostFocus;
-				setMouseRelativeMode(m_mouseCapturedBeforeLostFocus);
-
-				// Set flag to false, so that it will only be set to true if focus is lost
-				m_mouseCapturedBeforeLostFocus = false;
-			}
-
-			break;
-
-		case SDL_WINDOWEVENT_FOCUS_LOST:
-
-			Config::m_windowVar.window_in_focus = false;
-
-			// If mouse should be un-captured on lost focus and mouse is currently captured
-			if(Config::windowVar().mouse_release_on_lost_focus && Config::windowVar().mouse_captured)
-			{
-				// Set the flag to true, so that it will be recaptured on gained focus
-				m_mouseCapturedBeforeLostFocus = true;
-
-				// Un-capture the mouse
-				Config::m_windowVar.mouse_captured = false;
-				setMouseRelativeMode(false);
-			}
-
-			break;
-
-		case SDL_WINDOWEVENT_CLOSE:
-
-			// This is not an ideal way to shutdown the engine, but if it happens,
-			// mark engine as not running anymore, and it will be shutdown shortly
-
-			Config::m_engineVar.running = false;
-
 			break;
 		}
-		break;
-	}
 
 	case SDL_MOUSEMOTION:
-	{
-		// Get the relative mouse location
-		m_mouseInfo.m_movementCurrentFrameX += p_SDLEvent.motion.xrel;
-		m_mouseInfo.m_movementCurrentFrameY += p_SDLEvent.motion.yrel;
-		
-		break;
-	}
+		{
+			if(!m_enableGUI || !m_guiHandler->isMouseCaptured())
+			{
+				// Get the relative mouse location
+				m_mouseInfo.m_movementCurrentFrameX += p_SDLEvent.motion.xrel;
+				m_mouseInfo.m_movementCurrentFrameY += p_SDLEvent.motion.yrel;
+			}
+
+			break;
+		}
 
 	case SDL_MOUSEWHEEL:
-	{
-		if(p_SDLEvent.wheel.x != 0)
 		{
-			m_mouseInfo.m_wheelX = p_SDLEvent.wheel.x;
+			if(!m_enableGUI || !m_guiHandler->isMouseCaptured())
+			{
+				if(p_SDLEvent.wheel.x != 0)
+				{
+					m_mouseInfo.m_wheelX = p_SDLEvent.wheel.x;
 
-			if(p_SDLEvent.wheel.x > 0)
-				m_binds[Scancode::Mouse_wheelup].activate();
-			else
-				m_binds[Scancode::Mouse_wheeldown].activate();
+					if(p_SDLEvent.wheel.x > 0)
+						m_binds[Scancode::Mouse_wheelup].activate();
+					else
+						m_binds[Scancode::Mouse_wheeldown].activate();
+				}
+				else
+				{
+					m_mouseInfo.m_wheelY = p_SDLEvent.wheel.y;
+
+					if(p_SDLEvent.wheel.y > 0)
+						m_binds[Scancode::Mouse_wheelright].activate();
+					else
+						m_binds[Scancode::Mouse_wheelleft].activate();
+				}
+			}
+
+			break;
 		}
-		else
-		{
-			m_mouseInfo.m_wheelY = p_SDLEvent.wheel.y;
-
-			if(p_SDLEvent.wheel.y > 0)
-				m_binds[Scancode::Mouse_wheelright].activate();
-			else
-				m_binds[Scancode::Mouse_wheelleft].activate();
-		}
-
-		break;
-	}
 
 	case SDL_MOUSEBUTTONDOWN:
-	{
-		switch(p_SDLEvent.button.button)
 		{
-		case(SDL_BUTTON_LEFT) :
-			m_binds[Scancode::Mouse_left].activate();
-			break;
-		case(SDL_BUTTON_RIGHT) :
-			m_binds[Scancode::Mouse_right].activate();
-			break;
-		case(SDL_BUTTON_MIDDLE) :
-			m_binds[Scancode::Mouse_middle].activate();
-			break;
-		case(SDL_BUTTON_X1) :
-			m_binds[Scancode::Mouse_x1].activate();
-			break;
-		case(SDL_BUTTON_X2) :
-			m_binds[Scancode::Mouse_x2].activate();
-			break;
+			if(!m_enableGUI || !m_guiHandler->isMouseCaptured())
+			{
+				switch(p_SDLEvent.button.button)
+				{
+					case(SDL_BUTTON_LEFT):
+						m_binds[Scancode::Mouse_left].activate();
+						break;
+					case(SDL_BUTTON_RIGHT):
+						m_binds[Scancode::Mouse_right].activate();
+						break;
+					case(SDL_BUTTON_MIDDLE):
+						m_binds[Scancode::Mouse_middle].activate();
+						break;
+					case(SDL_BUTTON_X1):
+						m_binds[Scancode::Mouse_x1].activate();
+						break;
+					case(SDL_BUTTON_X2):
+						m_binds[Scancode::Mouse_x2].activate();
+						break;
+				}
+				break;
+			}
 		}
-		break;
-	}
 
 	case SDL_MOUSEBUTTONUP:
 	{
@@ -344,23 +353,24 @@ void Window::handleSDLEvent(const SDL_Event &p_SDLEvent)
 	}
 
 	case SDL_KEYDOWN:
-	{
-		// If the key's scancode is in the range of scancode enum, activate it
-		if(p_SDLEvent.key.keysym.scancode < Scancode::NumberOfScancodes)
-			m_binds[p_SDLEvent.key.keysym.scancode].activate();
-		
-		break;
-	}
+		{
+			if(!m_enableGUI || !m_guiHandler->isKeyboardCaptured())
+			{
+				// If the key's scancode is in the range of scancode enum, activate it
+				if(p_SDLEvent.key.keysym.scancode < Scancode::NumberOfScancodes)
+					m_binds[p_SDLEvent.key.keysym.scancode].activate();
+			}
+			break;
+		}
 
 	case SDL_KEYUP:
-	{
-		// If the key's scancode is in the range of scancode enum, deactivate it
-		if(p_SDLEvent.key.keysym.scancode < Scancode::NumberOfScancodes)
-			m_binds[p_SDLEvent.key.keysym.scancode].deactivate();
-		
-		break;
-	}
+		{
+			// If the key's scancode is in the range of scancode enum, deactivate it
+			if(p_SDLEvent.key.keysym.scancode < Scancode::NumberOfScancodes)
+				m_binds[p_SDLEvent.key.keysym.scancode].deactivate();
 
+			break;
+		}
 	}
 }
 

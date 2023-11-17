@@ -49,6 +49,21 @@ void LuaScript::setDefinitions()
 	// Create a table for user types that are supported by Lua scripts
 	m_userTypesTable = m_luaState[Config::scriptVar().userTypeTableName].get_or_create<sol::table>();
 
+	// Create a table for error types
+	sol::table errorTypes = m_luaState["ErrorType"].get_or_create<sol::table>();
+	for(unsigned int i = 0; i < ErrorType::NumberOfErrorTypes; i++)
+		errorTypes[sol::update_if_empty][GetString(static_cast<ErrorType>(i))] = i;
+
+	// Create a table for error codes
+	sol::table errorCodes = m_luaState["ErrorCode"].get_or_create<sol::table>();
+	for(unsigned int i = 0; i < ErrorCode::NumberOfErrorCodes; i++)
+		errorCodes[sol::update_if_empty][GetString(static_cast<ErrorCode>(i))] = i;
+
+	// Create a table for error sources
+	sol::table errorSources = m_luaState["ErrorSource"].get_or_create<sol::table>();
+	for(unsigned int i = 0; i < ErrorSource::Source_NumberOfErrorSources; i++)
+		errorSources[sol::update_if_empty][GetString(static_cast<ErrorSource>(i))] = i;
+
 	// Create a table for ImGUI window flags
 	sol::table imGuiWindowFlag = m_luaState["ImGuiWindowFlags"].get_or_create<sol::table>();
 
@@ -227,6 +242,19 @@ void LuaScript::setDefinitions()
 
 void LuaScript::setFunctions()
 {
+	// Error handler functions
+	auto errorTable = m_luaState.create_table("ErrHandlerLoc");
+	errorTable.set_function("log", sol::overload(
+		[this](const ErrorCode p_v1) -> const void { ErrHandlerLoc::get().log(p_v1); },
+		[this](const ErrorCode p_v1, const ErrorSource p_v2) -> const void { ErrHandlerLoc::get().log(p_v1, p_v2); },
+		[this](const ErrorCode p_v1, const std::string p_v2, const ErrorSource p_v3) -> const void { ErrHandlerLoc::get().log(p_v1, p_v2, p_v3); }));
+	errorTable.set_function("logErrorType", sol::overload(
+		[this](const ErrorType p_v1, const std::string p_v2) -> const void { ErrHandlerLoc::get().log(p_v1, ErrorSource::Source_LuaScript, p_v2); },
+		[this](const ErrorType p_v1, const ErrorSource p_v2, const std::string p_v3) -> const void { ErrHandlerLoc::get().log(p_v1, p_v2, p_v3); }));
+	errorTable.set_function("logErrorCode", sol::overload(
+		[this](const ErrorCode p_v1, const std::string p_v2) -> const void { ErrHandlerLoc::get().log(p_v1, ErrorSource::Source_LuaScript, p_v2); },
+		[this](const ErrorCode p_v1, const ErrorSource p_v2, const std::string p_v3) -> const void { ErrHandlerLoc::get().log(p_v1, p_v2, p_v3); }));
+
 	// Math functions
 	m_luaState.set_function("toRadianF", sol::resolve<float(const float)>(&glm::radians));
 	m_luaState.set_function("toRadianVec3", sol::resolve<glm::vec3(const glm::vec3 &)>(&glm::radians));
@@ -306,6 +334,7 @@ void LuaScript::setFunctions()
 	m_luaState.set_function("loadTexture2D", [](const std::string &p_v1) -> TextureLoader2D::Texture2DHandle { return Loaders::texture2D().load(p_v1); });
 
 	// LuaScript callbacks
+	m_luaState.set_function("getLuaFilename", &LuaScript::getLuaScriptFilename, this);
 	m_luaState.set_function("postChanges", &LuaScript::registerChange, this);
 	m_luaState.set_function(Config::scriptVar().createObjectFunctionName, &LuaScript::createObjectInLua, this);
 }
@@ -502,7 +531,7 @@ void LuaScript::setUsertypes()
 		"update", &SpatialDataManager::update,
 		"getLocalSpaceData", &SpatialDataManager::getLocalSpaceData,
 		"getLocalTransform", &SpatialDataManager::getLocalTransform,
-		"getParemtTransform", &SpatialDataManager::getParemtTransform,
+		"getParemtTransform", &SpatialDataManager::getParentTransform,
 		"getWorldTransform", &SpatialDataManager::getWorldTransform,
 		"setLocalPosition", &SpatialDataManager::setLocalPosition,
 		"setLocalRotationEuler", sol::resolve<const void(const glm::vec3)>(&SpatialDataManager::setLocalRotation),
@@ -510,7 +539,9 @@ void LuaScript::setUsertypes()
 		"setLocalScale", &SpatialDataManager::setLocalScale,
 		"setLocalTransform", &SpatialDataManager::setLocalTransform,
 		"setParentTransform", &SpatialDataManager::setParentTransform,
-		"setWorldTransform", &SpatialDataManager::setWorldTransform);
+		"setWorldTransform", &SpatialDataManager::setWorldTransform,
+		"calculateLocalRotationEuler", &SpatialDataManager::calculateLocalRotationEuler,
+		"calculateLocalRotationQuaternion", &SpatialDataManager::calculateLocalRotationQuaternion);
 
 	// Input types
 	m_luaState.new_usertype<Window::MouseInfo>("MouseInfo",

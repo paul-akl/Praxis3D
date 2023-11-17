@@ -41,7 +41,7 @@ function init ()
 		movementSpeedMultF = 1.0
 	end
 	
-	print('Camera_free.lua script initialized.')
+	ErrHandlerLoc.logErrorCode(ErrorCode.Initialize_success, getLuaFilename())
 end
 
 function update (p_deltaTime)

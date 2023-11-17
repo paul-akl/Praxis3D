@@ -13,10 +13,10 @@ AudioScene::AudioScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : Syste
 	m_coreSystem = nullptr;
 	m_studioSystem = nullptr;
 
-	volume_ambient = 0.0f;
-	volume_master = 0.0f;
-	volume_music = 0.0f;
-	volume_sfx = 0.0f;
+	m_volumeAmbient = Config::audioVar().volume_ambient;
+	m_volumeMaster = Config::audioVar().volume_master;
+	m_volumeMusic = Config::audioVar().volume_music;
+	m_volumeSoundEffects = Config::audioVar().volume_sfx;
 
 	for(unsigned int i = 0; i < ObjectMaterialType::NumberOfMaterialTypes; i++)
 		m_impactEvents[i] = nullptr;
@@ -41,6 +41,12 @@ ErrorCode AudioScene::init()
 	m_studioSystem = m_audioSystem->getStudioSystem();
 	m_coreSystem = m_audioSystem->getCoreSystem();
 
+	// Assign audio channel groups to sound types
+	m_soundTypeChannelGroups[SoundComponent::SoundType::SoundType_Null] = m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Master);
+	m_soundTypeChannelGroups[SoundComponent::SoundType::SoundType_Music] = m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Music);
+	m_soundTypeChannelGroups[SoundComponent::SoundType::SoundType_Ambient] = m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Ambient);
+	m_soundTypeChannelGroups[SoundComponent::SoundType::SoundType_SoundEffect] = m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_SFX);
+
 	return returnError;
 }
 
@@ -56,6 +62,7 @@ ErrorCode AudioScene::setup(const PropertySet &p_properties)
 	worldScene->reserve<SoundComponent>(std::max(Config::objectPoolVar().sound_component_default_pool_size, objectPoolSizeProperty.getPropertyByID(Properties::SoundComponent).getInt()));
 	worldScene->reserve<SoundListenerComponent>(std::max(Config::objectPoolVar().sound_listener_component_default_pool_size, objectPoolSizeProperty.getPropertyByID(Properties::SoundListenerComponent).getInt()));
 
+	// Process banks
 	auto const &banksProperty = p_properties.getPropertySetByID(Properties::Banks);
 	if(banksProperty)
 	{
@@ -76,6 +83,34 @@ ErrorCode AudioScene::setup(const PropertySet &p_properties)
 
 					m_bankFilenames.push_back(std::make_pair(filename, soundBank));
 				}
+			}
+		}
+	}
+
+	// Process volume
+	auto const &volumeProperty = p_properties.getPropertySetByID(Properties::Volume);
+	if(volumeProperty)
+	{
+		for(decltype(volumeProperty.getNumProperties()) i = 0, size = volumeProperty.getNumProperties(); i < size; i++)
+		{
+			switch(volumeProperty[i].getPropertyID())
+			{
+				case Properties::Ambient:
+					m_volumeAmbient = volumeProperty[i].getFloat();
+					Config::m_audioVar.volume_ambient = m_volumeAmbient;
+					break;
+				case Properties::Master:
+					m_volumeMaster = volumeProperty[i].getFloat();
+					Config::m_audioVar.volume_master = m_volumeMaster;
+					break;
+				case Properties::Music:
+					m_volumeMusic = volumeProperty[i].getFloat();
+					Config::m_audioVar.volume_music = m_volumeMusic;
+					break;
+				case Properties::SoundEffect:
+					m_volumeSoundEffects = volumeProperty[i].getFloat();
+					Config::m_audioVar.volume_sfx = m_volumeSoundEffects;
+					break;
 			}
 		}
 	}
@@ -125,10 +160,29 @@ void AudioScene::exportSetup(PropertySet &p_propertySet)
 	{
 		banksPropertySet.addPropertySet(Properties::ArrayEntry).addProperty(Properties::Filename, filenameAndBank.first);
 	}
+
+	// Add volume settings
+	auto &volumePropertySet = p_propertySet.addPropertySet(Properties::Volume);
+	volumePropertySet.addProperty(Properties::Ambient, m_volumeAmbient);
+	volumePropertySet.addProperty(Properties::Master, m_volumeMaster);
+	volumePropertySet.addProperty(Properties::Music, m_volumeMusic);
+	volumePropertySet.addProperty(Properties::SoundEffect, m_volumeSoundEffects);
+
 }
 
 void AudioScene::activate()
 {
+	// Set volume of all buses
+	m_audioSystem->getBus(AudioBusType::AudioBusType_Ambient)->setVolume(m_volumeAmbient);
+	m_audioSystem->getBus(AudioBusType::AudioBusType_Master)->setVolume(m_volumeMaster);
+	m_audioSystem->getBus(AudioBusType::AudioBusType_Music)->setVolume(m_volumeMusic);
+	m_audioSystem->getBus(AudioBusType::AudioBusType_SFX)->setVolume(m_volumeSoundEffects);
+
+	// Set volume of all channel groups
+	m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Ambient)->setVolume(m_volumeAmbient);
+	m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Master)->setVolume(m_volumeMaster);
+	m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Music)->setVolume(m_volumeMusic);
+	m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_SFX)->setVolume(m_volumeSoundEffects);
 }
 
 void AudioScene::deactivate()
@@ -230,12 +284,40 @@ void AudioScene::update(const float p_deltaTime)
 
 		if(component.isObjectActive())
 		{
+			if(component.m_changePending)
+			{
+				if(component.m_reloadSound)
+				{
+					createSound(component);
+				}
+				else
+				{
+					if(component.m_volumeChanged)
+						component.m_channel->setVolume(component.m_volume);
+
+					if(component.m_loopChanged)
+						if(component.m_loop)
+							component.m_channel->setMode(FMOD_LOOP_NORMAL);
+						else
+							component.m_channel->setMode(FMOD_LOOP_OFF);
+
+					if(component.m_spatializedChanged)
+						if(component.m_spatialized)
+							component.m_channel->setMode(FMOD_3D);
+						else
+							component.m_channel->setMode(FMOD_2D);
+				}
+
+				component.resetChanges();
+			}
+
 			if(!component.m_playing)
 			{
-				if(component.m_startPlaying)
+				if(component.m_startPlaying && component.m_sound != nullptr)
 				{
 					component.m_playing = true;
-					m_coreSystem->playSound(component.m_sound, 0, true, &component.m_channel);
+
+					AudioSystem::fmodErrorLog(m_coreSystem->playSound(component.m_sound, m_soundTypeChannelGroups[component.m_soundType], true, &component.m_channel), component.m_soundFilename);
 					component.m_channel->setVolume(component.m_volume);
 
 					if(component.m_spatialized)
@@ -323,35 +405,38 @@ void AudioScene::update(const float p_deltaTime)
 		}
 	}
 
-
 	//	 ___________________________
 	//	|							|
 	//	|	   VOLUME CHANGES		|
 	//	|___________________________|
 	//
 	// Ambient volume
-	if(volume_ambient != Config::audioVar().volume_ambient)
+	if(m_volumeAmbient != Config::audioVar().volume_ambient)
 	{
-		volume_ambient = Config::audioVar().volume_ambient;
-		m_audioSystem->getBus(AudioBusType::AudioBusType_Ambient)->setVolume(volume_ambient);
+		m_volumeAmbient = Config::audioVar().volume_ambient;
+		m_audioSystem->getBus(AudioBusType::AudioBusType_Ambient)->setVolume(m_volumeAmbient);
+		m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Ambient)->setVolume(m_volumeAmbient);
 	}
 	// Master volume
-	if(volume_master != Config::audioVar().volume_master)
+	if(m_volumeMaster != Config::audioVar().volume_master)
 	{
-		volume_master = Config::audioVar().volume_master;
-		m_audioSystem->getBus(AudioBusType::AudioBusType_Master)->setVolume(volume_master);
+		m_volumeMaster = Config::audioVar().volume_master;
+		m_audioSystem->getBus(AudioBusType::AudioBusType_Master)->setVolume(m_volumeMaster);
+		m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Master)->setVolume(m_volumeMaster);
 	}
 	// Music volume
-	if(volume_music != Config::audioVar().volume_music)
+	if(m_volumeMusic != Config::audioVar().volume_music)
 	{
-		volume_music = Config::audioVar().volume_music;
-		m_audioSystem->getBus(AudioBusType::AudioBusType_Music)->setVolume(volume_music);
+		m_volumeMusic = Config::audioVar().volume_music;
+		m_audioSystem->getBus(AudioBusType::AudioBusType_Music)->setVolume(m_volumeMusic);
+		m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Music)->setVolume(m_volumeMusic);
 	}
 	// SFX volume
-	if(volume_sfx != Config::audioVar().volume_sfx)
+	if(m_volumeSoundEffects != Config::audioVar().volume_sfx)
 	{
-		volume_sfx = Config::audioVar().volume_sfx;
-		m_audioSystem->getBus(AudioBusType::AudioBusType_SFX)->setVolume(volume_sfx);
+		m_volumeSoundEffects = Config::audioVar().volume_sfx;
+		m_audioSystem->getBus(AudioBusType::AudioBusType_SFX)->setVolume(m_volumeSoundEffects);
+		m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_SFX)->setVolume(m_volumeSoundEffects);
 	}
 
 	// Update the sound system
@@ -429,39 +514,7 @@ SystemObject *AudioScene::createComponent(const EntityID &p_entityID, const Soun
 		component.m_objectType = Properties::PropertyID::SoundComponent;
 		component.setActive(p_constructionInfo.m_active);
 
-		FMOD_MODE mode = 0;
-
-		if(component.m_loop)
-			mode |= FMOD_LOOP_NORMAL;
-		else
-			mode |= FMOD_LOOP_OFF;
-
-		if(component.m_spatialized)
-			mode |= FMOD_3D | FMOD_3D_WORLDRELATIVE | FMOD_3D_INVERSEROLLOFF;
-		else
-			mode |= FMOD_2D;
-
-
-		switch(component.m_soundType)
-		{
-			case SoundComponent::SoundType::SoundType_Music:
-			{
-				m_coreSystem->createStream((Config::filepathVar().sound_path + component.m_soundFilename).c_str(), mode, component.m_soundExInfo, &component.m_sound);
-			}
-			break;
-
-			case SoundComponent::SoundType::SoundType_Ambient:
-			{
-				m_coreSystem->createStream((Config::filepathVar().sound_path + component.m_soundFilename).c_str(), mode, component.m_soundExInfo, &component.m_sound);
-			}
-			break;
-
-			case SoundComponent::SoundType::SoundType_SoundEffect:
-			{
-				m_coreSystem->createSound((Config::filepathVar().sound_path + component.m_soundFilename).c_str(), mode, component.m_soundExInfo, &component.m_sound);
-			}
-			break;
-		}
+		createSound(component);
 
 		returnObject = &component;
 	}
@@ -506,6 +559,63 @@ ErrorCode AudioScene::destroyObject(SystemObject *p_systemObject)
 {
 	// If this point is reached, no object was found, return an appropriate error
 	return ErrorCode::Destroy_obj_not_found;
+}
+
+void AudioScene::createSound(SoundComponent &p_soundComponent)
+{
+	if(p_soundComponent.m_sound != nullptr)
+	{
+		if(p_soundComponent.m_playing)
+		{
+			p_soundComponent.m_channel->stop();
+			p_soundComponent.m_playing = false;
+		}
+
+		p_soundComponent.m_sound->release(); 
+		p_soundComponent.m_sound = nullptr;
+	}
+
+	FMOD_MODE mode = 0;
+
+	if(p_soundComponent.m_loop)
+		mode |= FMOD_LOOP_NORMAL;
+	else
+		mode |= FMOD_LOOP_OFF;
+
+	if(p_soundComponent.m_spatialized)
+		mode |= FMOD_3D | FMOD_3D_WORLDRELATIVE | FMOD_3D_INVERSEROLLOFF;
+	else
+		mode |= FMOD_2D;
+
+
+	switch(p_soundComponent.m_soundType)
+	{
+		case SoundComponent::SoundType::SoundType_Music:
+			{
+				m_coreSystem->createStream((Config::filepathVar().sound_path + p_soundComponent.m_soundFilename).c_str(), mode, p_soundComponent.m_soundExInfo, &p_soundComponent.m_sound);
+			}
+			break;
+
+		case SoundComponent::SoundType::SoundType_Ambient:
+			{
+				m_coreSystem->createStream((Config::filepathVar().sound_path + p_soundComponent.m_soundFilename).c_str(), mode, p_soundComponent.m_soundExInfo, &p_soundComponent.m_sound);
+			}
+			break;
+
+		case SoundComponent::SoundType::SoundType_SoundEffect:
+			{
+				m_coreSystem->createSound((Config::filepathVar().sound_path + p_soundComponent.m_soundFilename).c_str(), mode, p_soundComponent.m_soundExInfo, &p_soundComponent.m_sound);
+			}
+			break;
+
+		case SoundComponent::SoundType::SoundType_Null:
+		default:
+			break;
+	}
+}
+
+void AudioScene::playSound(SoundComponent &p_soundComponent)
+{
 }
 
 void AudioScene::loadParameterGUIDs()

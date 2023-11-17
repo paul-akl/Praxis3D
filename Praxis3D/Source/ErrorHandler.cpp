@@ -144,13 +144,13 @@ void ErrorHandler::log(ErrorType p_errorType, ErrorSource p_errorSource, std::st
 		{
 		case ErrorType::Info:
 		{
-			m_console->displayMessage(m_errorTypeStrings[p_errorType] + ": " + m_errorSources[p_errorSource] + ": " + p_error + ".");
+			m_console->displayMessage("\033[1;32m[" + m_errorTypeStrings[p_errorType] + "] \033[1;36m[" + m_errorSources[p_errorSource] + "]\033[0;37m: " + p_error + ".\033[0m");
 			break;
 		}
 
 		case ErrorType::Warning:
 		{
-			m_console->displayMessage(m_errorTypeStrings[p_errorType] + ": " + m_errorSources[p_errorSource] + ": " + p_error + ".");
+			m_console->displayMessage("\033[31m[" + m_errorTypeStrings[p_errorType] + "] \033[1;36m[" + m_errorSources[p_errorSource] + "]\033[0;37m: " + p_error + ".\033[0m");
 			break;
 		}
 
@@ -164,6 +164,7 @@ void ErrorHandler::log(ErrorType p_errorType, ErrorSource p_errorSource, std::st
 			if(!WindowLocator().get().spawnYesNoErrorBox(m_errorTypeStrings[p_errorType] + ": " + m_errorSources[p_errorSource], m_errorSources[p_errorSource] + ": " + p_error + ".\n\nWould you like to continue?"))
 				Config::m_engineVar.running = false;
 
+			m_console->displayMessage("\033[31m[" + m_errorTypeStrings[p_errorType] + "] [" + m_errorSources[p_errorSource] + "]: " + p_error + ".\033[0m");
 			break;
 		}
 
@@ -191,10 +192,10 @@ void ErrorHandler::log(ErrorCode p_errorCode, ErrorSource p_errorSource, std::st
 		}
 	}
 	else
-		log(m_errorData[p_errorCode].m_errorType, p_errorSource, m_errorData[p_errorCode].m_errorString + ": " + p_error);
+		log(m_errorData[p_errorCode].m_errorType, p_errorSource, "\033[1;33m" + m_errorData[p_errorCode].m_errorString + "\033[0m: " + p_error);
 }
 
 void ErrorHandler::log(const ErrorCode p_errorCode, const std::string &p_objectName, const ErrorSource p_errorSource)
 {
-	log(m_errorData[p_errorCode].m_errorType, p_errorSource, "\'" + p_objectName + "\': " + m_errorData[p_errorCode].m_errorString);
+	log(m_errorData[p_errorCode].m_errorType, p_errorSource, "\033[1;33m\'" + p_objectName + "\'\033[0m: " + m_errorData[p_errorCode].m_errorString);
 }

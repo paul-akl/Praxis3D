@@ -17,6 +17,7 @@ public:
 		SoundType_Ambient,
 		SoundType_SoundEffect
 	};
+	constexpr static unsigned int SoundType_NumOfTypes = 4;
 
 	struct SoundComponentConstructionInfo : public SystemObject::SystemObjectConstructionInfo
 	{
@@ -50,6 +51,8 @@ public:
 
 		m_soundExInfo = new FMOD_CREATESOUNDEXINFO();
 		m_soundExInfo->cbsize = sizeof(FMOD_CREATESOUNDEXINFO);
+
+		resetChanges();
 	}
 	~SoundComponent()
 	{
@@ -70,6 +73,15 @@ public:
 
 	}
 
+	void resetChanges()
+	{
+		m_changePending = false;
+		m_loopChanged = false;
+		m_reloadSound = false;
+		m_spatializedChanged = false;
+		m_volumeChanged = false;
+	}
+
 	BitMask getSystemType() final override { return Systems::Audio; }
 
 	BitMask getDesiredSystemChanges() final override { return Systems::Changes::Audio::All; }
@@ -77,8 +89,63 @@ public:
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
+		if(CheckBitmask(p_changeType, Systems::Changes::Audio::Filename))
+		{
+			m_soundFilename = p_subject->getString(this, Systems::Changes::Audio::Filename);
+			m_changePending = true;
+			m_reloadSound = true;
+			std::cout << m_soundFilename << std::endl;
+		}
 
+		if(CheckBitmask(p_changeType, Systems::Changes::Audio::Loop))
+		{
+			m_loop = p_subject->getBool(this, Systems::Changes::Audio::Loop);
+			m_changePending = true;
+			m_loopChanged = true;
+		}
+
+		if(CheckBitmask(p_changeType, Systems::Changes::Audio::Reload))
+		{
+			m_changePending = true;
+			m_reloadSound = true;
+		}
+
+		if(CheckBitmask(p_changeType, Systems::Changes::Audio::SoundType))
+		{
+			m_soundType = static_cast<SoundType>(p_subject->getUnsignedInt(this, Systems::Changes::Audio::SoundType));
+			m_changePending = true;
+			m_reloadSound = true;
+		}
+
+		if(CheckBitmask(p_changeType, Systems::Changes::Audio::Spatialized))
+		{
+			m_spatialized = p_subject->getBool(this, Systems::Changes::Audio::Spatialized);
+			m_changePending = true;
+			m_spatializedChanged = true;
+		}
+
+		if(CheckBitmask(p_changeType, Systems::Changes::Audio::StartPlaying))
+		{
+			m_startPlaying = p_subject->getBool(this, Systems::Changes::Audio::StartPlaying);
+			m_changePending = true;
+		}
+
+		if(CheckBitmask(p_changeType, Systems::Changes::Audio::Volume))
+		{
+			m_volume = p_subject->getFloat(this, Systems::Changes::Audio::Volume);
+			m_changePending = true;
+			m_volumeChanged = true;
+		}
 	}
+
+	const inline SoundType getSoundType() const { return m_soundType; }
+	const inline std::string &getSoundFilename() const { return m_soundFilename; }
+	const inline float getVolume() const { return m_volume; }
+	const inline bool getLoop() const { return m_loop; }
+	const inline bool getSpatialized() const { return m_spatialized; }
+	const inline bool getStartPlaying() const { return m_startPlaying; }
+	const inline bool getPlaying() const { return m_playing; }
+	const inline std::vector<const char *> &getSoundTypeText() const { return m_soundTypeText; }
 
 private:
 	FMOD::Sound *m_sound;
@@ -92,4 +159,12 @@ private:
 		 m_spatialized,
 		 m_startPlaying,
 		 m_playing;
+
+	bool	m_changePending,
+			m_loopChanged,
+			m_reloadSound,
+			m_spatializedChanged,
+			m_volumeChanged;
+
+	std::vector<const char *> m_soundTypeText{ "null", "Music", "Ambient", "Sound effect" };
 };

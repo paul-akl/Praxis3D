@@ -116,7 +116,7 @@ function init ()
 	
 	fileBrowserLoadMapOpened = false
 	
-	print('MainMenu_image_buttons.lua script initialized.')
+	ErrHandlerLoc.logErrorCode(ErrorCode.Initialize_success, getLuaFilename())
 end
 	
 function update (p_deltaTime)

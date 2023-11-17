@@ -18,7 +18,9 @@ class EditorWindow : public SystemObject
 public:
 	EditorWindow(SystemScene *p_systemScene, std::string p_name, const EntityID p_entityID, std::size_t p_id = 0) : 
 		SystemObject(p_systemScene, p_name, Properties::PropertyID::EditorWindow, p_entityID),
-		m_selectedEntity(*this)
+		m_selectedEntity(*this),
+		m_imguiStyle(ImGui::GetStyle()),
+		m_playPauseButtonSize(Config::GUIVar().editor_play_button_size, Config::GUIVar().editor_play_button_size)
 	{
 		m_renderSceneToTexture = true;
 		m_GUISequenceEnabled = false;
@@ -37,6 +39,9 @@ public:
 
 		for(unsigned int i = 0; i < ObjectMaterialType::NumberOfMaterialTypes; i++)
 			m_physicalMaterialProperties.push_back(GetString(static_cast<ObjectMaterialType>(i)));
+
+		m_fontSize = ImGui::GetFontSize();
+		m_buttonSizedByFont = ImVec2(m_fontSize, m_fontSize);
 	}
 	~EditorWindow();
 
@@ -115,52 +120,70 @@ public:
 	{ 
 		switch(p_changedBits)
 		{
+			case Systems::Changes::Generic::Active:
+				{
+					switch(p_observer->getObjectType())
+					{
+						case Properties::PropertyID::SoundComponent:
+							return m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_active;
+						case Properties::PropertyID::SoundListenerComponent:
+							return m_selectedEntity.m_componentData.m_audioComponents.m_soundListenerConstructionInfo->m_active;
+
+						case Properties::PropertyID::CameraComponent:
+							return m_selectedEntity.m_componentData.m_graphicsComponents.m_cameraConstructionInfo->m_active;
+						case Properties::PropertyID::LightComponent:
+							return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_active;
+						case Properties::PropertyID::ModelComponent:
+							return m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_active;
+						case Properties::PropertyID::ShaderComponent:
+							return m_selectedEntity.m_componentData.m_graphicsComponents.m_shaderConstructionInfo->m_active;
+
+						case Properties::PropertyID::GUISequenceComponent:
+							return m_selectedEntity.m_componentData.m_guiComponents.m_guiSequenceConstructionInfo->m_active;
+
+						case Properties::PropertyID::RigidBodyComponent:
+							return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_active;
+
+						case Properties::PropertyID::LuaComponent:
+							return m_selectedEntity.m_componentData.m_scriptComponents.m_luaConstructionInfo->m_active;
+
+						case Properties::PropertyID::ObjectMaterialComponent:
+							return m_selectedEntity.m_componentData.m_worldComponents.m_objectMaterialConstructionInfo->m_active;
+						case Properties::PropertyID::SpatialComponent:
+							return m_selectedEntity.m_componentData.m_worldComponents.m_spatialConstructionInfo->m_active;
+					}
+				}
+				break;
+
+			case Systems::Changes::Audio::Loop:
+				{
+					return m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_loop;
+				}
+				break;
+
+			case Systems::Changes::Audio::Spatialized:
+				{
+					return m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_spatialized;
+				}
+				break;
+
+			case Systems::Changes::Audio::StartPlaying:
+				{
+					return m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_startPlaying;
+				}
+				break;
+
 			case Systems::Changes::Physics::Kinematic:
-			{
-				return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_kinematic;
-			}
-			break;
+				{
+					return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_kinematic;
+				}
+				break;
 
 			case Systems::Changes::GUI::StaticSequence:
-			{
-				return m_selectedEntity.m_componentData.m_guiComponents.m_guiSequenceConstructionInfo->m_staticSequence;
-			}
-			break;
-
-			case Systems::Changes::Generic::Active:
-			{
-				switch(p_observer->getObjectType())
 				{
-					case Properties::PropertyID::SoundComponent:
-						return m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_active;
-					case Properties::PropertyID::SoundListenerComponent:
-						return m_selectedEntity.m_componentData.m_audioComponents.m_soundListenerConstructionInfo->m_active;
-
-					case Properties::PropertyID::CameraComponent:
-						return m_selectedEntity.m_componentData.m_graphicsComponents.m_cameraConstructionInfo->m_active;
-					case Properties::PropertyID::LightComponent:
-						return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_active;
-					case Properties::PropertyID::ModelComponent:
-						return m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_active;
-					case Properties::PropertyID::ShaderComponent:
-						return m_selectedEntity.m_componentData.m_graphicsComponents.m_shaderConstructionInfo->m_active;
-
-					case Properties::PropertyID::GUISequenceComponent:
-						return m_selectedEntity.m_componentData.m_guiComponents.m_guiSequenceConstructionInfo->m_active;
-
-					case Properties::PropertyID::RigidBodyComponent:
-						return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_active;
-
-					case Properties::PropertyID::LuaComponent:
-						return m_selectedEntity.m_componentData.m_scriptComponents.m_luaConstructionInfo->m_active;
-
-					case Properties::PropertyID::ObjectMaterialComponent:
-						return m_selectedEntity.m_componentData.m_worldComponents.m_objectMaterialConstructionInfo->m_active;
-					case Properties::PropertyID::SpatialComponent:
-						return m_selectedEntity.m_componentData.m_worldComponents.m_spatialConstructionInfo->m_active;
+					return m_selectedEntity.m_componentData.m_guiComponents.m_guiSequenceConstructionInfo->m_staticSequence;
 				}
-			}
-			break;
+				break;
 		}
 
 		return NullObjects::NullBool; 
@@ -186,64 +209,77 @@ public:
 
 		return NullObjects::NullInt; 
 	}
-	const unsigned int getUnsignedInt(const Observer *p_observer, BitMask p_changedBits) const 
-	{ 
-		switch(p_changedBits)
-		{
-		case Systems::Changes::World::ObjectMaterialType:
-			{
-				if(m_selectedEntity.m_objectMaterialType >= 0 && m_selectedEntity.m_objectMaterialType < ObjectMaterialType::NumberOfMaterialTypes)
-					return (unsigned int)m_selectedEntity.m_objectMaterialType;
-			}
-			break;
-		}
-
-		return NullObjects::NullUnsignedInt; 
-	}
-	const float getFloat(const Observer *p_observer, BitMask p_changedBits) const 
+	const unsigned int getUnsignedInt(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		switch(p_changedBits)
 		{
-			case Systems::Changes::Graphics::CutoffAngle:
-			{
-				if(m_selectedEntity.m_lightType == LightComponent::LightComponentType::LightComponentType_spot)
-					return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_cutoffAngle;
-			}
-			break;
-
-			case Systems::Changes::Graphics::Intensity:
-			{
-				switch(m_selectedEntity.m_lightType)
+			case Systems::Changes::Audio::SoundType:
 				{
-					case LightComponent::LightComponentType::LightComponentType_directional:
-					case LightComponent::LightComponentType::LightComponentType_point:
-					case LightComponent::LightComponentType::LightComponentType_spot:
-						return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_intensity;
-					break;
+					if(m_selectedEntity.m_soundType >= 0 && m_selectedEntity.m_soundType < SoundComponent::SoundType_NumOfTypes)
+						return (unsigned int)m_selectedEntity.m_soundType;
 				}
-			}
-			break;
+				break;
 
-			case Systems::Changes::Physics::Friction:
-			{
-				return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_friction;
-			}
-			break;
-
-			case Systems::Changes::Physics::Mass:
-			{
-				return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_mass;
-			}
-			break;
-
-			case Systems::Changes::Physics::Restitution:
-			{
-				return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_restitution;
-			}
-			break;
+			case Systems::Changes::World::ObjectMaterialType:
+				{
+					if(m_selectedEntity.m_objectMaterialType >= 0 && m_selectedEntity.m_objectMaterialType < ObjectMaterialType::NumberOfMaterialTypes)
+						return (unsigned int)m_selectedEntity.m_objectMaterialType;
+				}
+				break;
 		}
 
-		return NullObjects::NullFloat; 
+		return NullObjects::NullUnsignedInt;
+	}
+	const float getFloat(const Observer *p_observer, BitMask p_changedBits) const
+	{
+		switch(p_changedBits)
+		{
+			case Systems::Changes::Audio::Volume:
+				{
+					return m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_volume;
+				}
+				break;
+
+			case Systems::Changes::Graphics::CutoffAngle:
+				{
+					if(m_selectedEntity.m_lightType == LightComponent::LightComponentType::LightComponentType_spot)
+						return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_cutoffAngle;
+				}
+				break;
+
+			case Systems::Changes::Graphics::Intensity:
+				{
+					switch(m_selectedEntity.m_lightType)
+					{
+						case LightComponent::LightComponentType::LightComponentType_directional:
+						case LightComponent::LightComponentType::LightComponentType_point:
+						case LightComponent::LightComponentType::LightComponentType_spot:
+							return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_intensity;
+							break;
+					}
+				}
+				break;
+
+			case Systems::Changes::Physics::Friction:
+				{
+					return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_friction;
+				}
+				break;
+
+			case Systems::Changes::Physics::Mass:
+				{
+					return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_mass;
+				}
+				break;
+
+			case Systems::Changes::Physics::Restitution:
+				{
+					return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_restitution;
+				}
+				break;
+		}
+
+		return NullObjects::NullFloat;
 	}
 	const std::string &getString(const Observer *p_observer, BitMask p_changedBits)	const 
 	{
@@ -252,6 +288,12 @@ public:
 			case Systems::Changes::Generic::Name:
 				{
 					return m_selectedEntity.m_componentData.m_name;
+				}
+				break;
+
+			case Systems::Changes::Audio::Filename:
+				{
+					return m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_soundFilename;
 				}
 				break;
 
@@ -354,8 +396,12 @@ private:
 		SelectedEntity(const Observer &p_parent) : m_spatialDataManager(p_parent)
 		{ 
 			m_entityID = NULL_ENTITY_ID;
+			m_playing = false;
+			m_soundFilenameModified = false;
+			m_soundType = SoundComponent::SoundType::SoundType_Null;
 			m_objectMaterialType = ObjectMaterialType::Concrete;
 			m_lightType = LightComponent::LightComponentType::LightComponentType_null;
+			m_modelDataPointer = nullptr;
 			m_collisionShapeType = RigidBodyComponent::CollisionShapeType::CollisionShapeType_Null;
 
 			m_luaVariablesModified = false;
@@ -384,6 +430,7 @@ private:
 		void setEntity(const EntityID p_entityID)
 		{
 			m_entityID = p_entityID;
+			m_soundFilenameModified = false;
 			m_luaVariablesModified = false;
 			m_luaScriptFilenameModified = false;
 		}
@@ -391,6 +438,7 @@ private:
 		void unselect()
 		{
 			m_entityID = NULL_ENTITY_ID;
+			m_soundFilenameModified = false;
 			m_luaVariablesModified = false;
 			m_luaScriptFilenameModified = false;
 		}
@@ -398,6 +446,11 @@ private:
 		EntityID m_entityID;
 
 		ComponentsConstructionInfo m_componentData;
+
+		// SoundComponent data
+		bool m_playing;
+		bool m_soundFilenameModified;
+		int m_soundType;
 
 		// SpatialComponent data
 		SpatialDataManager m_spatialDataManager;
@@ -407,6 +460,11 @@ private:
 
 		// LightComponent data
 		int m_lightType;
+
+		// ModelComponent data
+		std::vector<ModelData> m_modelData;
+		std::vector<ModelData> const *m_modelDataPointer;
+		std::vector<std::string> m_modelFilenames;
 
 		// RigidBodyComponent data
 		int m_collisionShapeType;
@@ -441,7 +499,10 @@ private:
 		FileBrowserActivated_None,
 		FileBrowserActivated_LuaScript,
 		FileBrowserActivated_LoadScene,
-		FileBrowserActivated_SaveScene
+		FileBrowserActivated_SaveScene,
+		FileBrowserActivated_SoundFile,
+		FileBrowserActivated_ModelFile,
+		FileBrowserActivated_TextureFile
 	};
 
 	void drawEntityHierarchyEntry(EntityHierarchyEntry &p_entityEntry);
@@ -461,7 +522,38 @@ private:
 		ImGui::SetCursorPosX(p_nextWidgetOffset);
 		ImGui::SetNextItemWidth(p_nextItemWidth);
 	}
-	//void getComponentsOfEntity(std::vector<ComponentListEntry> &p_componentList, EntityID p_entityID);
+	inline bool drawTextSizedButton(const TextureLoader2D::Texture2DHandle &p_texture, const std::string &p_buttonLabel, const std::string p_tooltipText = "")
+	{
+		bool returnBool = false;
+
+		// Draw the open button
+		if(ImGui::ImageButton(p_buttonLabel.c_str(),
+			(ImTextureID)p_texture.getHandle(),
+			m_buttonSizedByFont,
+			ImVec2(0, 1),
+			ImVec2(1, 0),
+			ImVec4(0.0f, 0.0f, 0.0f, 0.0f)))
+		{
+			returnBool = true;
+		}
+
+		// Draw the tooltip if the tooltip text is not empty and button is hovered over
+		if(!p_tooltipText.empty() && ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay))
+			ImGui::SetTooltip(p_tooltipText.c_str(), ImGui::GetStyle().HoverDelayShort);
+
+		return returnBool;
+	}
+
+	// Calculates the offset for a square text-sized button from the right side of the edge 
+	// (p_buttonIndex is the button count from the right side)
+	inline float calcTextSizedButtonOffset(const int p_buttonIndex = 0)
+	{
+		return ImGui::GetContentRegionAvail().x - m_buttonSizedByFont.x - m_imguiStyle.FramePadding.x - (m_buttonSizedByFont.x + m_imguiStyle.FramePadding.x * 3) * p_buttonIndex;
+	}	
+	inline float calcTextSizedButtonSize(const unsigned int p_buttonIndex = 0)
+	{
+		return m_buttonSizedByFont.x + m_imguiStyle.FramePadding.x + (m_buttonSizedByFont.x + m_imguiStyle.FramePadding.x * 3) * p_buttonIndex;
+	}
 
 	void updateEntityList();
 	void updateHierarchyList();
@@ -592,6 +684,7 @@ private:
 	float m_browseButtonWidth;
 	FileBrowserActivated m_currentlyOpenedFileBrowser;
 	FileBrowserDialog m_fileBrowserDialog;
+	const ImVec2 m_playPauseButtonSize;
 
 	// LUA variables editor data
 	std::vector<const char *> m_luaVariableTypeStrings;
@@ -609,4 +702,10 @@ private:
 
 	// Button textures
 	std::vector<TextureLoader2D::Texture2DHandle> m_buttonTextures;
+
+	ImGuiStyle &m_imguiStyle;
+	float m_fontSize;
+
+	// Square button size that is the same height as text
+	ImVec2 m_buttonSizedByFont;
 };

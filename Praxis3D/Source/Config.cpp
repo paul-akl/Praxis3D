@@ -62,14 +62,15 @@ void Config::init()
 	AddVariablePredef(m_audioVar, volume_ambient);
 	AddVariablePredef(m_audioVar, volume_master);
 	AddVariablePredef(m_audioVar, volume_music);
-	AddVariablePredef(m_audioVar, volume_sfx);
+	AddVariablePredef(m_audioVar, volume_sfx); 
 	AddVariablePredef(m_audioVar, num_audio_channels);
 	AddVariablePredef(m_audioVar, bus_name_ambient);
 	AddVariablePredef(m_audioVar, bus_name_master);
 	AddVariablePredef(m_audioVar, bus_name_music);
 	AddVariablePredef(m_audioVar, bus_name_prefix);
 	AddVariablePredef(m_audioVar, bus_name_sfx);
-	AddVariablePredef(m_audioVar, default_sound_bank);
+	AddVariablePredef(m_audioVar, channel_name_master);
+	AddVariablePredef(m_audioVar, default_sound_bank); 
 	AddVariablePredef(m_audioVar, default_sound_bank_string);
 	AddVariablePredef(m_audioVar, default_impact_sound_bank);
 	AddVariablePredef(m_audioVar, pathDelimiter);
@@ -200,6 +201,7 @@ void Config::init()
 	AddVariablePredef(m_GUIVar, gui_sequence_array_reserve_size);
 	AddVariablePredef(m_GUIVar, editor_float_slider_speed); 
 	AddVariablePredef(m_GUIVar, editor_lua_variables_max_height);
+	AddVariablePredef(m_GUIVar, editor_play_button_size);
 	AddVariablePredef(m_GUIVar, gui_file_dialog_min_size_x);
 	AddVariablePredef(m_GUIVar, gui_file_dialog_min_size_y);
 	AddVariablePredef(m_GUIVar, gui_file_dialog_dir_color_R);

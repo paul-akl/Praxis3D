@@ -211,9 +211,16 @@ namespace Systems
 		}
 		namespace Audio
 		{
-			static constexpr BitMask ListenerID				= Changes::Type::Audio + Changes::Common::Shared1;
+			static constexpr BitMask Filename				= Changes::Type::Audio + Changes::Common::Shared1;
+			static constexpr BitMask ListenerID				= Changes::Type::Audio + Changes::Common::Shared2;
+			static constexpr BitMask Loop					= Changes::Type::Audio + Changes::Common::Shared3;
+			static constexpr BitMask Reload					= Changes::Type::Audio + Changes::Common::Shared4;
+			static constexpr BitMask SoundType				= Changes::Type::Audio + Changes::Common::Shared5;
+			static constexpr BitMask Spatialized			= Changes::Type::Audio + Changes::Common::Shared6;
+			static constexpr BitMask StartPlaying			= Changes::Type::Audio + Changes::Common::Shared7;
+			static constexpr BitMask Volume					= Changes::Type::Audio + Changes::Common::Shared8;
 
-			static constexpr BitMask All					= ListenerID;
+			static constexpr BitMask All					= Filename | ListenerID | Loop | Reload | SoundType | Spatialized | StartPlaying | Volume;
 		}
 		namespace Graphics
 		{
@@ -309,6 +316,7 @@ namespace Properties
 	Code(Audio,) \
 	Code(Banks,) \
 	Code(Loop,) \
+	Code(Master,) \
 	Code(Music,) \
 	Code(SoundComponent,) \
 	Code(SoundEffect,) \
@@ -557,6 +565,7 @@ namespace Properties
 class Config
 {
 	// These friend classes are the only objects allowed to modify config variables:
+	friend class AudioScene;
 	friend class DebugUIScript;
 	friend class DeferredRenderer;
 	friend class EditorState;
@@ -577,7 +586,7 @@ public:
 			impact_soft_hard_threshold = 30.0f;
 			max_impact_volume = 2.0f;
 			volume_ambient = 1.0f;
-			volume_master = 1.0f;
+			volume_master = 0.5f;
 			volume_music = 1.0f;
 			volume_sfx = 1.0f;
 			num_audio_channels = 32;
@@ -586,6 +595,7 @@ public:
 			bus_name_music = "Music";
 			bus_name_prefix = "bus:/";
 			bus_name_sfx = "SFX";
+			channel_name_master = "Master";
 			default_sound_bank = "Master.bank";
 			default_sound_bank_string = "Master.strings.bank";
 			default_impact_sound_bank = "Impact.bank";
@@ -607,6 +617,7 @@ public:
 		std::string bus_name_music;
 		std::string bus_name_prefix;
 		std::string bus_name_sfx;
+		std::string channel_name_master;
 		std::string default_sound_bank;
 		std::string default_sound_bank_string;
 		std::string default_impact_sound_bank;
@@ -934,6 +945,7 @@ public:
 			gui_sequence_array_reserve_size = 50;
 			editor_float_slider_speed = 0.01f;
 			editor_lua_variables_max_height = 200.0f;
+			editor_play_button_size = 30.0f;
 			gui_file_dialog_min_size_x = 400.0f;
 			gui_file_dialog_min_size_y = 200.0f;
 			gui_file_dialog_dir_color_R = 0.905f;
@@ -956,6 +968,7 @@ public:
 		int gui_sequence_array_reserve_size;
 		float editor_float_slider_speed;
 		float editor_lua_variables_max_height;
+		float editor_play_button_size;
 		float gui_file_dialog_min_size_x;
 		float gui_file_dialog_min_size_y;
 		float gui_file_dialog_dir_color_R;

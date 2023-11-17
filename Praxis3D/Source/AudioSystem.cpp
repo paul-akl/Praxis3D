@@ -42,6 +42,31 @@ ErrorCode AudioSystem::init()
 			// Load default string bank
 			if(fmodErrorLog(m_studioSystem->loadBankFile((Config::filepathVar().sound_path + Config::audioVar().default_sound_bank_string).c_str(), FMOD_STUDIO_LOAD_BANK_NORMAL, &defaultSoundBank), Config::audioVar().default_sound_bank_string))
 				fmodErrorLog(defaultSoundBank->loadSampleData(), Config::audioVar().default_sound_bank_string);
+
+			// Create channel groups
+			for(unsigned int i = 0; i < AudioBusType::AudioBusType_NumOfTypes; i++)
+			{
+				switch(i)
+				{
+					case AudioBusType_Ambient:
+						m_coreSystem->createChannelGroup(Config::audioVar().bus_name_ambient.c_str(), &m_channelGroups[i]);
+						break;
+					case AudioBusType_Master:
+						m_coreSystem->createChannelGroup(Config::audioVar().channel_name_master.c_str(), &m_channelGroups[i]);
+						break;
+					case AudioBusType_Music:
+						m_coreSystem->createChannelGroup(Config::audioVar().bus_name_music.c_str(), &m_channelGroups[i]);
+						break;
+					case AudioBusType_SFX:
+						m_coreSystem->createChannelGroup(Config::audioVar().bus_name_sfx.c_str(), &m_channelGroups[i]);
+						break;
+				}
+			}
+
+			// Add all channel groups (other than master) to the master channel group as a nested group
+			//for(unsigned int i = 0; i < AudioBusType::AudioBusType_NumOfTypes; i++)
+			//	if(i != AudioBusType::AudioBusType_Master)
+			//		m_channelGroups[AudioBusType::AudioBusType_Master]->addGroup(m_channelGroups[i]);
 		}
 	}
 

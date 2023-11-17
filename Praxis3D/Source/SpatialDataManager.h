@@ -121,7 +121,9 @@ public:
 				m_localTransformUpToDate = true;
 
 				if(m_trackLocalChanges)
-					m_changes |= Systems::Changes::Spatial::LocalTransform;
+				{
+					m_changes |= Systems::Changes::Spatial::LocalTransformNoScale;
+				}
 			}
 
 			m_localEverythingUpToDate = true;
@@ -136,7 +138,9 @@ public:
 			m_worldTransformUpToDate = true;
 
 			incrementUpdateCount();
-			m_changes |= Systems::Changes::Spatial::WorldTransform;
+
+			if(!m_trackLocalChanges)
+				m_changes |= Systems::Changes::Spatial::WorldTransform;
 		}
 	}
 
@@ -245,7 +249,7 @@ public:
 	const inline glm::mat4 &getLocalTransform() const { return m_localSpace.m_transformMatNoScale; }
 
 	// Get world-space transform of the parent
-	const inline glm::mat4 &getParemtTransform() const { return m_parentTransform; }
+	const inline glm::mat4 &getParentTransform() const { return m_parentTransform; }
 
 	// Get world-space transform (combination of the local-space and the parent objects world-space)
 	const inline glm::mat4 &getWorldTransform() const { return m_worldTransformNoScale; }
@@ -372,14 +376,15 @@ public:
 	}
 	const inline void setLocalRotation(const glm::vec3 p_rotation)
 	{
-		m_localSpace.m_spatialData.m_rotationEuler = p_rotation;
+		m_localSpace.m_spatialData.m_rotationEuler = p_rotation; 
+		m_localSpace.m_spatialData.m_rotationQuat = Math::eulerDegreesToQuaterion(m_localSpace.m_spatialData.m_rotationEuler);
 
 		// Updated variables
 		m_localEulerUpToDate = true;
+		m_localQuaternionUpToDate = true;
 
 		// Variables that became outdated
 		m_localEverythingUpToDate = false;
-		m_localQuaternionUpToDate = false;
 		m_localTransformUpToDate = false;
 		m_worldTransformUpToDate = false;
 
@@ -506,13 +511,13 @@ public:
 		m_changes |= Systems::Changes::Spatial::WorldTransformNoScale;
 	}
 
-	const inline void calculateLocalTransform() 
-	{ 
-		updateTransformMatrix(m_localSpace); 
-	}
+	//const inline void calculateLocalTransform() 
+	//{ 
+	//	//updateTransformMatrix(m_localSpace); 
+	//}
 
 	// Manually updates the local rotation Euler angles, as they are not automatically updated
-	const inline void calculateLocalRotationEuler()
+	inline void calculateLocalRotationEuler()
 	{
 		if(!m_localQuaternionUpToDate)
 		{
@@ -529,6 +534,24 @@ public:
 		m_localEulerUpToDate = true;
 	}
 
+	// Manually updates the local rotation quaternion
+	inline void calculateLocalRotationQuaternion()
+	{
+		if(m_localTransformUpToDate)
+		{
+			m_localSpace.m_spatialData.m_rotationQuat = glm::toQuat(m_localSpace.m_transformMatNoScale);
+			const glm::mat3 rotMtx(
+				glm::vec3(m_localSpace.m_transformMatNoScale[0]),
+				glm::vec3(m_localSpace.m_transformMatNoScale[1]),
+				glm::vec3(m_localSpace.m_transformMatNoScale[2]));
+			m_localSpace.m_spatialData.m_rotationQuat = glm::quat_cast(rotMtx);
+		}
+		else
+			m_localSpace.m_spatialData.m_rotationQuat = Math::eulerDegreesToQuaterion(m_localSpace.m_spatialData.m_rotationEuler);
+
+		m_localQuaternionUpToDate = true;
+	}
+
 private:
 	const inline void localDataChanged()
 	{
@@ -537,11 +560,11 @@ private:
 	}
 
 	// Recalculates the model transform matrix in the world-space
-	void updateTransformMatrix(SpatialTransformData &p_spacialTransformData)
-	{
-		p_spacialTransformData.m_transformMatNoScale = Math::createTransformMat(p_spacialTransformData.m_spatialData.m_position, 
-																				p_spacialTransformData.m_spatialData.m_rotationEuler);
-	}
+	//void updateTransformMatrix(SpatialTransformData &p_spacialTransformData)
+	//{
+	//	p_spacialTransformData.m_transformMatNoScale = Math::createTransformMat(p_spacialTransformData.m_spatialData.m_position, 
+	//																			p_spacialTransformData.m_spatialData.m_rotationEuler);
+	//}
 
 	// Increments the update count; should be called after any data has been changed
 	inline void incrementUpdateCount() { m_updateCount++; }

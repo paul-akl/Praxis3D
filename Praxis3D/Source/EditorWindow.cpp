@@ -125,7 +125,10 @@ void EditorWindow::update(const float p_deltaTime)
         colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
     }
 
-    ImVec2 playPauseButtonSize(30.0f, 30.0f);
+    // Update ImGui style
+    //m_imguiStyle = ImGui::GetStyle();
+    //const float fontSize = ImGui::GetFontSize();
+    //const ImVec2 openReloadButtonSize = ImVec2(fontSize, fontSize);
     ImVec2 mainMenuBarSize;
     ImGuiViewport *mainViewport = ImGui::GetMainViewport();
 
@@ -139,9 +142,8 @@ void EditorWindow::update(const float p_deltaTime)
 
     ImGui::PopStyleColor();
 
-    ImGuiStyle &style = ImGui::GetStyle();
 
-    style.TabRounding = 0.0f;
+    m_imguiStyle.TabRounding = 0.0f;
 
     ImGuiWindowClass windowClassWithNoTabBar;
     windowClassWithNoTabBar.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoTabBar;
@@ -255,7 +257,7 @@ void EditorWindow::update(const float p_deltaTime)
             // Draw ENABLE GUI SEQUENCE button
             if(ImGui::ImageButton("##GUISequenceButton",
                 (ImTextureID)m_buttonTextures[ButtonTextureType::ButtonTextureType_GUISequence].getHandle(),
-                playPauseButtonSize,
+                m_playPauseButtonSize,
                 ImVec2(0, 1),
                 ImVec2(1, 0),
                 m_GUISequenceEnabled ? ImVec4(0.26f, 0.26f, 0.26f, 1.0f) : ImVec4(0.0f, 0.0f, 0.0f, 0.0f)))
@@ -272,7 +274,7 @@ void EditorWindow::update(const float p_deltaTime)
             // Draw ENABLE SCRIPTING button
             if(ImGui::ImageButton("##ScriptingEnableButton",
                 (ImTextureID)m_buttonTextures[ButtonTextureType::ButtonTextureType_ScriptingEnable].getHandle(),
-                playPauseButtonSize,
+                m_playPauseButtonSize,
                 ImVec2(0, 1),
                 ImVec2(1, 0),
                 m_LUAScriptingEnabled ? ImVec4(0.26f, 0.26f, 0.26f, 1.0f) : ImVec4(0.0f, 0.0f, 0.0f, 0.0f)))
@@ -284,13 +286,12 @@ void EditorWindow::update(const float p_deltaTime)
             }
             if(ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay))
                 ImGui::SetTooltip(m_LUAScriptingEnabled ? "Click to disable LUA scripting components" : "Click to enable LUA scripting components", ImGui::GetStyle().HoverDelayShort);
-            //ImGui::SameLine();
 
             // Get the secondary menu bar style, required for retrieving size information
             ImGuiStyle &secondaryMenuBarStyle = ImGui::GetStyle();
 
             // Calculate the combined size of a single button (including the inner spacing)
-            float playPauseButtonCombinedSize = playPauseButtonSize.x + secondaryMenuBarStyle.ItemInnerSpacing.x * 2.0f;
+            float playPauseButtonCombinedSize = m_playPauseButtonSize.x + secondaryMenuBarStyle.ItemInnerSpacing.x * 2.0f;
 
             // Calculate the offset of all buttons to the center
             float offsetToCenter = (playPauseButtonCombinedSize * 3) / 2;
@@ -302,7 +303,7 @@ void EditorWindow::update(const float p_deltaTime)
             ImGui::PushStyleColor(ImGuiCol_Button, m_sceneState == EditorSceneState::EditorSceneState_Play ? ImVec4(0.26f, 0.26f, 0.26f, 1.0f) : ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
             if(ImGui::ImageButton("##PlayButton", 
                 (ImTextureID)m_buttonTextures[ButtonTextureType::ButtonTextureType_Play].getHandle(), 
-                playPauseButtonSize,
+                m_playPauseButtonSize,
                 ImVec2(0, 1),
                 ImVec2(1, 0),
                 m_sceneState == EditorSceneState::EditorSceneState_Play ? ImVec4(0.26f, 0.26f, 0.26f, 1.0f) : ImVec4(0.0f, 0.0f, 0.0f, 0.0f)))
@@ -319,7 +320,7 @@ void EditorWindow::update(const float p_deltaTime)
             ImGui::SameLine();
             if(ImGui::ImageButton("##PauseButton", 
                 (ImTextureID)m_buttonTextures[ButtonTextureType::ButtonTextureType_Pause].getHandle(), 
-                playPauseButtonSize,
+                m_playPauseButtonSize,
                 ImVec2(0, 1),
                 ImVec2(1, 0),
                 m_sceneState == EditorSceneState::EditorSceneState_Pause ? ImVec4(0.26f, 0.26f, 0.26f, 1.0f) : ImVec4(0.0f, 0.0f, 0.0f, 0.0f)))
@@ -335,7 +336,7 @@ void EditorWindow::update(const float p_deltaTime)
             ImGui::SameLine();
             if(ImGui::ImageButton("##RestartButton", 
                 (ImTextureID)m_buttonTextures[ButtonTextureType::ButtonTextureType_Restart].getHandle(), 
-                playPauseButtonSize,
+                m_playPauseButtonSize,
                 ImVec2(0, 1),
                 ImVec2(1, 0)))
             {
@@ -438,7 +439,7 @@ void EditorWindow::update(const float p_deltaTime)
 
         ImGui::Begin("##RightWindow", (bool *)0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove);
 
-        if(ImGui::BeginTabBar("##LeftWindowTabBar", ImGuiTabBarFlags_None))
+        if(ImGui::BeginTabBar("##RightWindowTabBar", ImGuiTabBarFlags_None))
         {
             if(ImGui::BeginTabItem("Inspector"))
             {
@@ -496,9 +497,7 @@ void EditorWindow::update(const float p_deltaTime)
                                 // If the rotation vector was changed, set the new rotation in the spatial data manager (so it can set the appropriate dirty flags internally)
                                 m_selectedEntity.m_spatialDataManager.setLocalRotation(m_selectedEntity.m_spatialDataManager.getLocalSpaceDataNonConst().m_spatialData.m_rotationEuler);
                                 // Update the spatial data manager (so it updates the rotation quaternion internally)
-                                m_selectedEntity.m_spatialDataManager.update();
-                                // Send a notification to the spatial component about the change in rotation
-                                //m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, spatialComponent, Systems::Changes::Spatial::LocalRotation);                                
+                                m_selectedEntity.m_spatialDataManager.update();                             
                                 
                                 // If the rotation vector was changed, send a notification to the either the Spatial Component or Rigid Body Component (if the Rigid Body Component is present, it takes control over the spatial data)
                                 if(rigidBodyComponent != nullptr)
@@ -668,7 +667,155 @@ void EditorWindow::update(const float p_deltaTime)
                     {
                         if(ImGui::CollapsingHeader(GetString(Properties::PropertyID::ModelComponent), ImGuiTreeNodeFlags_DefaultOpen))
                         {
-                            //modelComponent->
+                            auto &currentModelData = modelComponent->getModelData();
+                            if(m_selectedEntity.m_modelDataPointer != &currentModelData)
+                            {
+                                m_selectedEntity.m_modelData.clear();
+                                m_selectedEntity.m_modelData = currentModelData;
+                                m_selectedEntity.m_modelDataPointer = &currentModelData;
+
+                                m_selectedEntity.m_modelFilenames.clear();
+                                for(decltype(m_selectedEntity.m_modelData.size()) modelSize = m_selectedEntity.m_modelData.size(), modelIndex = 0; modelIndex < modelSize; modelIndex++)
+                                {
+                                    m_selectedEntity.m_modelFilenames.push_back(m_selectedEntity.m_modelData[modelIndex].m_model.getFilename());
+                                }
+                            }
+
+                            // Go over each model
+                            for(decltype(m_selectedEntity.m_modelData.size()) modelSize = m_selectedEntity.m_modelData.size(), modelIndex = 0; modelIndex < modelSize; modelIndex++)
+                            {
+                                // Draw MODEL FILENAME
+                                drawLeftAlignedLabelText("Filename:", inputWidgetOffset, calcTextSizedButtonOffset(1) - inputWidgetOffset - m_imguiStyle.FramePadding.x);
+                                if(ImGui::InputText(("##" + Utilities::toString(modelIndex) + "ModelFileInput").c_str(), &m_selectedEntity.m_modelFilenames[modelIndex], ImGuiInputTextFlags_EnterReturnsTrue))
+                                {
+                                    // If the sound filename was changed, send a notification to the Sound Component
+                                }
+
+                                // Draw MODEL OPEN button
+                                ImGui::SameLine(calcTextSizedButtonOffset(1));
+                                if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenFile], "##" + Utilities::toString(modelIndex) + "ModelFileOpenButton", "Open a model file"))
+                                {
+                                    // Only open the file browser if it's not opened already
+                                    if(m_currentlyOpenedFileBrowser == FileBrowserActivated::FileBrowserActivated_None)
+                                    {
+                                        // Set the file browser activation to Lua Script
+                                        m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_ModelFile;
+
+                                        // Define file browser variables
+                                        m_fileBrowserDialog.m_filter = "Model files (.obj .3ds .fbx){.obj,.3ds,.fbx},All files{.*}";
+                                        m_fileBrowserDialog.m_title = "Open a model file";
+                                        m_fileBrowserDialog.m_name = "OpenModelFileFileDialog";
+                                        m_fileBrowserDialog.m_rootPath = Config::filepathVar().model_path;
+
+                                        // Tell the GUI scene to open the file browser
+                                        m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
+                                    }
+                                }
+
+                                // Draw MODEL RELOAD button
+                                ImGui::SameLine(calcTextSizedButtonOffset(0));
+                                if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_Reload], "##" + Utilities::toString(modelIndex) + "ModelFileReloadButton", "Reload the model file"))
+                                {
+                                    // Send a reload notification to the Sound Component
+                                    //m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Audio::Reload);
+                                }
+
+                                ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextAlign, ImVec2(0.5f, 0.5f));
+                                for(decltype(m_selectedEntity.m_modelData[modelIndex].m_meshes.size()) meshSize = m_selectedEntity.m_modelData[modelIndex].m_meshes.size(), meshIndex = 0; meshIndex < meshSize; meshIndex++)
+                                {
+                                    //ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf
+
+                                    if(ImGui::TreeNodeEx(("Mesh " + Utilities::toString(meshIndex) + ":").c_str(), ImGuiTreeNodeFlags_SpanAvailWidth))
+                                    {
+                                        ImGui::SeparatorText("Mesh settings:");
+
+                                        // Draw HEIGHT SCALE
+                                        drawLeftAlignedLabelText("Height scale:", inputWidgetOffset);
+                                        if(ImGui::DragFloat(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "HeightScaleDrag").c_str(), &m_selectedEntity.m_modelData[modelIndex].m_meshes[meshIndex].m_heightScale, Config::GUIVar().editor_float_slider_speed, 0.0f, 100000.0f))
+                                        {
+                                            // If the sound volume was changed, send a notification to the Sound Component
+                                        }
+
+                                        // Draw ALPHA THRESHOLD
+                                        drawLeftAlignedLabelText("Alpha Threshold:", inputWidgetOffset);
+                                        if(ImGui::DragFloat(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "AlphaThresholdDrag").c_str(), &m_selectedEntity.m_modelData[modelIndex].m_meshes[meshIndex].m_alphaThreshold, Config::GUIVar().editor_float_slider_speed, 0.0f, 1.0f))
+                                        {
+                                            // If the sound volume was changed, send a notification to the Sound Component
+                                        }
+
+                                        for(unsigned int materialIndex = 0; materialIndex < MaterialType::MaterialType_NumOfTypes; materialIndex++)
+                                        {
+                                            // Convert material type to text
+                                            std::string materialTypeName;
+                                            switch(materialIndex)
+                                            {
+                                                case MaterialType_Diffuse:
+                                                    materialTypeName = "Diffuse texture:";
+                                                    break;
+                                                case MaterialType_Normal:
+                                                    materialTypeName = "Normal texture:";
+                                                    break;
+                                                case MaterialType_Emissive:
+                                                    materialTypeName = "Emissive texture:";
+                                                    break;
+                                                case MaterialType_Combined:
+                                                    materialTypeName = "RMHAO texture:";
+                                                    break;
+                                            }
+
+                                            //ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextPadding, ImVec2(20.0f, 4.0f));
+                                            ImGui::SeparatorText(materialTypeName.c_str());
+
+                                            // Draw TEXTURE FILENAME
+                                            std::string filename = m_selectedEntity.m_modelData[modelIndex].m_meshes[meshIndex].m_materials[materialIndex].m_texture.getFilename();
+                                            drawLeftAlignedLabelText("Filename:", inputWidgetOffset, calcTextSizedButtonOffset(1) - inputWidgetOffset - m_imguiStyle.FramePadding.x + m_imguiStyle.IndentSpacing);
+                                            if(ImGui::InputText(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureFilenameInput").c_str(), &filename, ImGuiInputTextFlags_EnterReturnsTrue))
+                                            {
+                                                // If the sound filename was changed, send a notification to the Sound Component
+                                            }                                
+                                            
+                                            // Draw TEXTURE OPEN button
+                                            ImGui::SameLine(calcTextSizedButtonOffset(1) + m_imguiStyle.IndentSpacing);
+                                            if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenFile], "##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureOpenButton", "Open a texture file"))
+                                            {
+                                                // Only open the file browser if it's not opened already
+                                                //if(m_currentlyOpenedFileBrowser == FileBrowserActivated::FileBrowserActivated_None)
+                                                //{
+                                                //    // Set the file browser activation to Lua Script
+                                                //    m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_ModelFile;
+
+                                                //    // Define file browser variables
+                                                //    m_fileBrowserDialog.m_filter = "Model files (.obj .3ds .fbx){.obj,.3ds,.fbx},All files{.*}";
+                                                //    m_fileBrowserDialog.m_title = "Open a model file";
+                                                //    m_fileBrowserDialog.m_name = "OpenModelFileFileDialog";
+                                                //    m_fileBrowserDialog.m_rootPath = Config::filepathVar().model_path;
+
+                                                //    // Tell the GUI scene to open the file browser
+                                                //    m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
+                                                //}
+                                            }
+
+                                            // Draw TEXTURE RELOAD button
+                                            ImGui::SameLine(calcTextSizedButtonOffset(0) + m_imguiStyle.IndentSpacing);
+                                            //ImGui::SameLine(ImGui::GetWindowWidth());// -m_buttonSizedByFont.x - m_imguiStyle.FramePadding.x - (m_buttonSizedByFont.x + m_imguiStyle.FramePadding.x * 3) * 0);
+                                            if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_Reload], "##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureReloadButton", "Reload the texture file"))
+                                            {
+                                                // Send a reload notification to the Sound Component
+                                                //m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Audio::Reload);
+                                            }
+
+                                            drawLeftAlignedLabelText("Texture scale:", inputWidgetOffset);
+                                            if(ImGui::DragFloat2(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureScaleDrag").c_str(), glm::value_ptr(m_selectedEntity.m_modelData[modelIndex].m_meshes[meshIndex].m_materials[materialIndex].m_textureScale), Config::GUIVar().editor_float_slider_speed))
+                                            {
+
+                                            }
+                                        }
+                                        ImGui::SeparatorText("");
+                                        ImGui::TreePop();
+                                    }
+                                }
+                                ImGui::PopStyleVar(); // ImGuiStyleVar_SeparatorTextAlign
+                            }
                         }
                     }                    
                     auto *shaderComponent = entityRegistry.try_get<ShaderComponent>(m_selectedEntity.m_entityID);
@@ -813,7 +960,102 @@ void EditorWindow::update(const float p_deltaTime)
                     {
                         if(ImGui::CollapsingHeader(GetString(Properties::PropertyID::SoundComponent), ImGuiTreeNodeFlags_DefaultOpen))
                         {
+                            // Get Sound Component data
+                            m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_active = soundComponent->isObjectActive();
+                            m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_volume = soundComponent->getVolume();
+                            m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_loop = soundComponent->getLoop();
+                            m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_spatialized = soundComponent->getSpatialized();
+                            m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_startPlaying = soundComponent->getStartPlaying();
+                            m_selectedEntity.m_soundType = soundComponent->getSoundType();
+                            m_selectedEntity.m_playing = soundComponent->getPlaying();
 
+                            // If the sound filename was changed (by file browser), send a notification to the Sound Component
+                            // Otherwise just get the current sound filename
+                            if(m_selectedEntity.m_soundFilenameModified)
+                            {
+                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Audio::Filename);
+                                m_selectedEntity.m_soundFilenameModified = false;
+                            }
+                            else
+                                m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_soundFilename = soundComponent->getSoundFilename();
+
+                            // Draw SOUND FILENAME
+                            //drawLeftAlignedLabelText("Filename:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset - (openReloadButtonSize.x + m_imguiStyle.FramePadding.x * 2) * 2);
+                            drawLeftAlignedLabelText("Filename:", inputWidgetOffset, calcTextSizedButtonOffset(1) - inputWidgetOffset - m_imguiStyle.FramePadding.x);
+                            if(ImGui::InputText("##SoundFilenameInput", &m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_soundFilename, ImGuiInputTextFlags_EnterReturnsTrue))
+                            {
+                                // If the sound filename was changed, send a notification to the Sound Component
+                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Audio::Filename);
+                            }
+
+                            // Draw OPEN button
+                            ImGui::SameLine(calcTextSizedButtonOffset(1));
+                            if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenFile], "##SoundFileOpenFileButton", "Open an audio file"))
+                            {
+                                // Only open the file browser if it's not opened already
+                                if(m_currentlyOpenedFileBrowser == FileBrowserActivated::FileBrowserActivated_None)
+                                {
+                                    // Set the file browser activation to Lua Script
+                                    m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_SoundFile;
+
+                                    // Define file browser variables
+                                    m_fileBrowserDialog.m_filter = "Audio files (.wav .flac .mp3 .ogg){.wav,.flac,.mp3,.ogg},All files{.*}";
+                                    m_fileBrowserDialog.m_title = "Open an audio file";
+                                    m_fileBrowserDialog.m_name = "OpenAudioFileFileDialog";
+                                    m_fileBrowserDialog.m_rootPath = Config::filepathVar().sound_path;
+
+                                    // Tell the GUI scene to open the file browser
+                                    m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
+                                }
+                            }
+
+                            // Draw RELOAD button
+                            ImGui::SameLine(calcTextSizedButtonOffset(0));
+                            if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_Reload], "##SoundFileReloadButton", "Reload the audio file"))
+                            {
+                                // Send a reload notification to the Sound Component
+                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Audio::Reload);
+                            }
+
+                            // Draw SOUND TYPE
+                            drawLeftAlignedLabelText("Sound type:", inputWidgetOffset);
+                            if(ImGui::Combo("##SoundTypePicker", &m_selectedEntity.m_soundType, &(soundComponent->getSoundTypeText()[0]), SoundComponent::SoundType_NumOfTypes))
+                            {
+                                // If the sound type was changed, send a notification to the Sound Component
+                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Audio::SoundType);
+                            }
+
+                            // Draw VOLUME
+                            drawLeftAlignedLabelText("Volume:", inputWidgetOffset);
+                            if(ImGui::DragFloat("##SoundVolumeDrag", &m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_volume, Config::GUIVar().editor_float_slider_speed, 0.0f, 1.0f))
+                            {
+                                // If the sound volume was changed, send a notification to the Sound Component
+                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Audio::Volume);
+                            }
+
+                            // Draw LOOP
+                            drawLeftAlignedLabelText("Loop:", inputWidgetOffset);
+                            if(ImGui::Checkbox("##SoundLoopCheckbox", &m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_loop))
+                            {
+                                // If the loop flag was changed, send a notification to the Sound Component
+                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Audio::Loop);
+                            }
+
+                            // Draw SPATIALIZED
+                            drawLeftAlignedLabelText("Spatialized:", inputWidgetOffset);
+                            if(ImGui::Checkbox("##SoundSpatializedCheckbox", &m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_spatialized))
+                            {
+                                // If the spatialized flag was changed, send a notification to the Sound Component
+                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Audio::Spatialized);
+                            }
+
+                            // Draw START PLAYING
+                            drawLeftAlignedLabelText("Start playing:", inputWidgetOffset);
+                            if(ImGui::Checkbox("##SoundStartPlayingCheckbox", &m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_startPlaying))
+                            {
+                                // If the start-playing flag was changed, send a notification to the Sound Component
+                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Audio::StartPlaying);
+                            }
                         }
                     }
                     auto *soundListenerComponent = entityRegistry.try_get<SoundListenerComponent>(m_selectedEntity.m_entityID);
@@ -853,24 +1095,16 @@ void EditorWindow::update(const float p_deltaTime)
                                 else
                                     m_selectedEntity.m_componentData.m_scriptComponents.m_luaConstructionInfo->m_luaScriptFilename = luaScript->getLuaScriptFilename();
 
-                                const float fontSize = ImGui::GetFontSize(); 
-                                const ImVec2 openReloadButtonSize = ImVec2(fontSize, fontSize);
-
                                 // Draw LUA FILENAME
-                                drawLeftAlignedLabelText("Filename:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset - (openReloadButtonSize.x + style.FramePadding.x * 2) * 2);
+                                drawLeftAlignedLabelText("Filename:", inputWidgetOffset, calcTextSizedButtonOffset(1) - inputWidgetOffset - m_imguiStyle.FramePadding.x);
                                 if(ImGui::InputText("##LuaScriptFilenameInput", &m_selectedEntity.m_componentData.m_scriptComponents.m_luaConstructionInfo->m_luaScriptFilename, ImGuiInputTextFlags_EnterReturnsTrue))
                                 {
                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, luaComponent, Systems::Changes::Script::Filename);
                                 }
 
                                 // Draw OPEN button
-                                ImGui::SameLine(ImGui::GetContentRegionAvail().x - style.FramePadding.x - (openReloadButtonSize.x + style.FramePadding.x) * 2);
-                                if(ImGui::ImageButton("##LuaScriptOpenFileButton",
-                                    (ImTextureID)m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenFile].getHandle(),
-                                    openReloadButtonSize,
-                                    ImVec2(0, 1),
-                                    ImVec2(1, 0),
-                                    ImVec4(0.0f, 0.0f, 0.0f, 0.0f)))
+                                ImGui::SameLine(calcTextSizedButtonOffset(1));
+                                if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenFile], "##LuaScriptOpenFileButton", "Open a Lua file script"))
                                 {
                                     // Only open the file browser if it's not opened already
                                     if(m_currentlyOpenedFileBrowser == FileBrowserActivated::FileBrowserActivated_None)
@@ -879,7 +1113,7 @@ void EditorWindow::update(const float p_deltaTime)
                                         m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_LuaScript;
 
                                         // Define file browser variables
-                                        m_fileBrowserDialog.m_filter = ".lua,.*";
+                                        m_fileBrowserDialog.m_filter = "LUA script files (.lua){.lua},All files{.*}";
                                         m_fileBrowserDialog.m_title = "Open LUA script file";
                                         m_fileBrowserDialog.m_name = "OpenLuaScriptFileDialog";
                                         m_fileBrowserDialog.m_rootPath = Config::filepathVar().script_path;
@@ -888,41 +1122,32 @@ void EditorWindow::update(const float p_deltaTime)
                                         m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
                                     }
                                 }
-                                if(ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay))
-                                    ImGui::SetTooltip("Open a Lua file script", ImGui::GetStyle().HoverDelayShort);
 
                                 // Draw RELOAD button
-                                ImGui::SameLine(ImGui::GetWindowWidth() - openReloadButtonSize.x - style.FramePadding.x * 2);
-                                if(ImGui::ImageButton("##LuaScriptOpenFileButton",
-                                    (ImTextureID)m_buttonTextures[ButtonTextureType::ButtonTextureType_Reload].getHandle(),
-                                    openReloadButtonSize,
-                                    ImVec2(0, 1),
-                                    ImVec2(1, 0),
-                                    ImVec4(0.0f, 0.0f, 0.0f, 0.0f)))
+                                ImGui::SameLine(calcTextSizedButtonOffset(0));
+                                if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_Reload], "##LuaScriptReloadButton", "Reload the Lua file script"))
                                 {
                                     // Send a reload notification to the LUA Component
                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, luaComponent, Systems::Changes::Script::Reload);
                                 }
-                                if(ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay))
-                                    ImGui::SetTooltip("Reload the Lua file script", ImGui::GetStyle().HoverDelayShort);
 
                                 // Update lua variables from the LUA Component only if the previous variables haven't been modified
                                 if(!m_selectedEntity.m_luaVariablesModified)
                                     m_selectedEntity.m_luaVariables = luaScript->getLuaVariables();
 
                                 // Calculate lua variables window height and cap it to a max height value
-                                float childWindowHeight = (fontSize + style.FramePadding.y * 2 + style.ItemSpacing.y) * (m_selectedEntity.m_luaVariables.size() + 2);
+                                float childWindowHeight = (m_fontSize + m_imguiStyle.FramePadding.y * 2 + m_imguiStyle.ItemSpacing.y) * (m_selectedEntity.m_luaVariables.size() + 2);
                                 childWindowHeight = childWindowHeight > Config::GUIVar().editor_lua_variables_max_height ? Config::GUIVar().editor_lua_variables_max_height : childWindowHeight;
 
                                 ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0.0f);
                                 if(!m_selectedEntity.m_luaVariables.empty() && ImGui::BeginChild("##LuaVariables", ImVec2(0, childWindowHeight), true, ImGuiWindowFlags_None))
                                 {
                                     // Calculate item sizes and offsets
-                                    const ImVec2 deleteButtonSize = ImVec2(fontSize * ((float)m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry].getTextureWidth() / (float)m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry].getTextureHeight()), fontSize);
-                                    const ImVec2 addButtonSize = ImVec2(fontSize, fontSize);
-                                    const float itemSpacing = style.ItemInnerSpacing.x;
+                                    //const ImVec2 deleteButtonSize = ImVec2(m_fontSize * ((float)m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry].getTextureWidth() / (float)m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry].getTextureHeight()), fontSize);
+                                    //const ImVec2 addButtonSize = ImVec2(fontSize, fontSize);
+                                    const float itemSpacing = m_imguiStyle.ItemInnerSpacing.x;
                                     const float windowWidth = ImGui::GetContentRegionAvail().x;
-                                    const float itemSpace = windowWidth - (itemSpacing * 3) - deleteButtonSize.x - style.FramePadding.x * 2;
+                                    const float itemSpace = windowWidth - (itemSpacing * 3) - m_buttonSizedByFont.x - m_imguiStyle.FramePadding.x * 2;
                                     const float itemSizes[3] = { itemSpace / 2.5f, itemSpace / 5.0f, itemSpace / 2.5f };
                                     const float offsets[2] = { itemSizes[0] + itemSpacing, itemSizes[0] + itemSizes[1] + (itemSpacing * 2) };
 
@@ -961,7 +1186,7 @@ void EditorWindow::update(const float p_deltaTime)
                                         ImGui::SetCursorPosX(offsets[0]);
                                         ImGui::SetNextItemWidth(itemSizes[1]);
                                         int variableType = m_selectedEntity.m_luaVariables[i].second.getVariableType();
-                                        if(ImGui::Combo((widgetName + "LuaVariableTypeCombo").c_str(), &variableType, &m_luaVariableTypeStrings[0], m_luaVariableTypeStrings.size()))
+                                        if(ImGui::Combo((widgetName + "LuaVariableTypeCombo").c_str(), &variableType, &m_luaVariableTypeStrings[0], (int)m_luaVariableTypeStrings.size()))
                                         {
                                             m_selectedEntity.m_luaVariablesModified = true;
                                             switch(variableType)
@@ -1009,7 +1234,7 @@ void EditorWindow::update(const float p_deltaTime)
                                         {
                                             case Property::PropertyVariableType::Type_null:
                                                 {
-
+                                                    ImGui::Text("");
                                                 }
                                                 break;
                                             case Property::PropertyVariableType::Type_bool:
@@ -1116,38 +1341,23 @@ void EditorWindow::update(const float p_deltaTime)
                                         }
 
                                         // Draw DELETE button
-                                        ImGui::SameLine(windowWidth - deleteButtonSize.x - style.FramePadding.x * 2);
-                                        if(ImGui::ImageButton((widgetName + "LuaVariablesDeleteButton").c_str(),
-                                            (ImTextureID)m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry].getHandle(),
-                                            deleteButtonSize,
-                                            ImVec2(0, 1),
-                                            ImVec2(1, 0),
-                                            ImVec4(0.0f, 0.0f, 0.0f, 0.0f)))
+                                        ImGui::SameLine(calcTextSizedButtonOffset(0) - m_imguiStyle.FramePadding.x);
+                                        if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry], widgetName + "LuaVariablesDeleteButton", "Delete Lua variable"))
                                         {
                                             m_selectedEntity.m_luaVariablesModified = true;
                                             m_selectedEntity.m_luaVariables.erase(m_selectedEntity.m_luaVariables.begin() + i);
                                             size = m_selectedEntity.m_luaVariables.size();
                                             i--;
                                         }
-                                        if(ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay))
-                                            ImGui::SetTooltip("Delete Lua variable", ImGui::GetStyle().HoverDelayShort);
-
                                     }
 
                                     // Draw ADD button
-                                    ImGui::SetCursorPosX(windowWidth - addButtonSize.x - style.FramePadding.x * 2);
-                                    if(ImGui::ImageButton("##AddLuaVariableButton",
-                                        (ImTextureID)m_buttonTextures[ButtonTextureType::ButtonTextureType_Add].getHandle(),
-                                        addButtonSize,
-                                        ImVec2(0, 1),
-                                        ImVec2(1, 0),
-                                        ImVec4(0.0f, 0.0f, 0.0f, 0.0f)))
+                                    ImGui::SetCursorPosX(calcTextSizedButtonOffset(0) - m_imguiStyle.FramePadding.x);
+                                    if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_Add], "##AddLuaVariableButton", "Add a new Lua variable"))
                                     {
                                         m_selectedEntity.m_luaVariablesModified = true;
                                         m_selectedEntity.m_luaVariables.push_back(std::make_pair(std::string(), Property()));
                                     }
-                                    if(ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay))
-                                        ImGui::SetTooltip("Add a new Lua variable", ImGui::GetStyle().HoverDelayShort);
 
                                     ImGui::EndChild();
                                 }
@@ -1281,14 +1491,32 @@ void EditorWindow::update(const float p_deltaTime)
                     // Get the handle to the buffer that the scene is rendered into
                     const unsigned int sceneRenderBufferHandle = rendererScene->getUnsignedInt(this, Systems::Changes::Graphics::RenderToTextureBuffer);
 
-                    // Fill the whole window with the rendered scene
-                    ImGui::GetWindowDrawList()->AddImage(
-                        (void *)sceneRenderBufferHandle,
-                        windowPosition,
-                        ImVec2(windowPosition.x + contentRegionSize.x, windowPosition.y + contentRegionSize.y),
+                    //// Fill the whole window with the rendered scene
+                    //ImGui::GetWindowDrawList()->AddImage(
+                    //    (ImTextureID)sceneRenderBufferHandle,
+                    //    windowPosition,
+                    //    ImVec2(windowPosition.x + contentRegionSize.x, windowPosition.y + contentRegionSize.y),
+                    //    ImVec2(0, 1),
+                    //    ImVec2(1, 0)
+                    //);
+
+                    // Fill the whole window with the rendered scene, use an ImageButton with no border, so we can check if the mouse is hovering over it
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                    ImGui::ImageButton(
+                        (ImTextureID)sceneRenderBufferHandle,
+                        contentRegionSize,
                         ImVec2(0, 1),
                         ImVec2(1, 0)
                     );
+                    ImGui::PopStyleVar();
+
+                    // If the mouse is hovering over the viewport, stop capturing it, so the engine can handle mouse events
+                    if(ImGui::IsItemHovered())
+                        ImGui::CaptureMouseFromApp(false);
+
+                    // If the viewport is focused, stop capturing key presses, so the engine can handle keyboard events
+                    if(ImGui::IsItemFocused())
+                        ImGui::CaptureKeyboardFromApp(false);
 
                     ImGui::EndTabItem();
                 }
@@ -1319,7 +1547,7 @@ void EditorWindow::update(const float p_deltaTime)
                                         //}
                                         if(ImGui::BeginTabItem("Texture inspector"))
                                         {
-                                            ImVec2 textureSize = ImVec2(m_selectedTexture->getTextureWidth(), m_selectedTexture->getTextureHeight());
+                                            ImVec2 textureSize = ImVec2((float)m_selectedTexture->getTextureWidth(), (float)m_selectedTexture->getTextureHeight());
 
                                             ImGuiTexInspect::BeginInspectorPanel("Inspector", (ImTextureID)m_selectedTexture->getHandle(), textureSize, ImGuiTexInspect::InspectorFlags_FlipY, ImGuiTexInspect::SizeIncludingBorder(ImGui::GetContentRegionAvail()));
                                             ImGuiTexInspect::DrawAnnotations(ImGuiTexInspect::ValueText(ImGuiTexInspect::ValueText::Floats));
@@ -1410,6 +1638,35 @@ void EditorWindow::update(const float p_deltaTime)
                     if(m_fileBrowserDialog.m_success)
                     {
                         m_systemScene->getSceneLoader()->saveToFile(m_fileBrowserDialog.m_filePathName);
+                    }
+
+                    // Reset the file browser and mark the file browser as not opened
+                    m_fileBrowserDialog.reset();
+                    m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_None;
+                }
+            }
+            break;
+        case EditorWindow::FileBrowserActivated_SoundFile:
+            {
+                // If the file browser was activated and it is now closed, process the result
+                if(m_fileBrowserDialog.m_closed)
+                {
+                    if(m_fileBrowserDialog.m_success)
+                    {
+                        // Get the current directory path
+                        const std::string currentDirectory = Filesystem::getCurrentDirectory() + "\\" + Config::filepathVar().sound_path;
+
+                        // Check if the selected file is within the current directory
+                        if(m_fileBrowserDialog.m_filePathName.rfind(currentDirectory, 0) == 0)
+                        {
+                            // Set the selected file path as a relative path from current directory
+                            m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_soundFilename = m_fileBrowserDialog.m_filePathName.substr(currentDirectory.size());
+
+                            // If the Lua script filename was changed, send a notification to the LUA Component
+                            m_selectedEntity.m_soundFilenameModified = true;
+                        }
+                        else
+                            ErrHandlerLoc::get().log(ErrorCode::Editor_path_outside_current_dir, ErrorSource::Source_GUIEditor);
                     }
 
                     // Reset the file browser and mark the file browser as not opened

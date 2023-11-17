@@ -48,7 +48,7 @@ function init ()
 		spawnObject.m_worldComponents:createSpatial()
 	end
 		
-	print('Camera_free.lua script initialized.')
+	ErrHandlerLoc.logErrorCode(ErrorCode.Initialize_success, getLuaFilename())
 end
 
 function update (p_deltaTime)

@@ -22,7 +22,7 @@ function init ()
 	mouseCaptureBool = windowVariables.mouse_captured
 	vsyncBool = windowVariables.vertical_sync
 	
-	print('Window_controls.lua script initialized.')
+	ErrHandlerLoc.logErrorCode(ErrorCode.Initialize_success, getLuaFilename())
 end
 
 function update (p_deltaTime)
