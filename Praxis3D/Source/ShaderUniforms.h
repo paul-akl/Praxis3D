@@ -330,10 +330,10 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		// Check if the same value is not already assigned (a small optimization)
-		if(m_currentEmissiveMultiplier != Config::graphicsVar().emissive_multiplier)
+		// Check if the same value is not already assigned (a small optimization)		
+		if(m_currentEmissiveMultiplier != p_uniformData.m_objectData.m_emissiveIntensity)
 		{
-			m_currentEmissiveMultiplier = Config::graphicsVar().emissive_multiplier;
+			m_currentEmissiveMultiplier = p_uniformData.m_objectData.m_emissiveIntensity;
 
 			glUniform1f(m_uniformHandle, m_currentEmissiveMultiplier);
 		}
@@ -350,9 +350,9 @@ public:
 	void update(const UniformData &p_uniformData)
 	{
 		// Check if the same value is not already assigned (a small optimization)
-		if(m_currentEmissiveThreshold != p_uniformData.m_objectData.m_emissiveThreshold)
+		if(m_currentEmissiveThreshold != Config::graphicsVar().emissive_threshold)
 		{
-			m_currentEmissiveThreshold = p_uniformData.m_objectData.m_emissiveThreshold;
+			m_currentEmissiveThreshold = Config::graphicsVar().emissive_threshold;
 
 			glUniform1f(m_uniformHandle, m_currentEmissiveThreshold);
 		}

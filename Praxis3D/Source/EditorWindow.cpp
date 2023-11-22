@@ -60,6 +60,9 @@ void EditorWindow::update(const float p_deltaTime)
     // Update the hierarchy list
     updateHierarchyList();
 
+    // Update the asset lists
+    updateAssetLists();
+
     static float f = 0.0f;
     static int counter = 0;
     ImGui::ShowDemoWindow();
@@ -159,6 +162,9 @@ void EditorWindow::update(const float p_deltaTime)
 
         if(ImGui::BeginMenu("File"))
         {
+            if(ImGui::MenuItem("New"))
+            {
+            }
             if(ImGui::MenuItem("Open...")) 
             {
                 // Only open the file browser if it's not opened already
@@ -173,6 +179,7 @@ void EditorWindow::update(const float p_deltaTime)
                     m_fileBrowserDialog.m_title = "Open scene";
                     m_fileBrowserDialog.m_name = "OpenSceneFileDialog";
                     m_fileBrowserDialog.m_rootPath = Config::filepathVar().map_path;
+                    m_fileBrowserDialog.m_flags = FileBrowserDialog::FileBrowserDialogFlags::FileBrowserDialogFlags_None;
 
                     // Tell the GUI scene to open the file browser
                     m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
@@ -190,11 +197,11 @@ void EditorWindow::update(const float p_deltaTime)
 
                     // Define file browser variables
                     m_fileBrowserDialog.m_definedFilename = m_systemScene->getSceneLoader()->getSceneFilename();
-                    m_fileBrowserDialog.m_flags = FileBrowserDialog::FileBrowserDialogFlags::FileBrowserDialogFlags_ConfirmOverwrite;
                     m_fileBrowserDialog.m_filter = ".pmap,.*";
                     m_fileBrowserDialog.m_title = "Save scene";
                     m_fileBrowserDialog.m_name = "SaveSceneFileDialog";
                     m_fileBrowserDialog.m_rootPath = Config::filepathVar().map_path;
+                    m_fileBrowserDialog.m_flags = FileBrowserDialog::FileBrowserDialogFlags::FileBrowserDialogFlags_ConfirmOverwrite;
                     
                     // Tell the GUI scene to open the file browser
                     m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
@@ -667,38 +674,67 @@ void EditorWindow::update(const float p_deltaTime)
                     {
                         if(ImGui::CollapsingHeader(GetString(Properties::PropertyID::ModelComponent), ImGuiTreeNodeFlags_DefaultOpen))
                         {
-                            auto &currentModelData = modelComponent->getModelData();
-                            if(m_selectedEntity.m_modelDataPointer != &currentModelData)
-                            {
-                                m_selectedEntity.m_modelData.clear();
-                                m_selectedEntity.m_modelData = currentModelData;
-                                m_selectedEntity.m_modelDataPointer = &currentModelData;
+                            bool modelComponentDataNeedsUpdating = false;
 
-                                m_selectedEntity.m_modelFilenames.clear();
-                                for(decltype(m_selectedEntity.m_modelData.size()) modelSize = m_selectedEntity.m_modelData.size(), modelIndex = 0; modelIndex < modelSize; modelIndex++)
+                            // If the model data was modified, send the new data to the ModelComponent
+                            if(m_selectedEntity.m_modelDataModified)
+                            {
+                                m_systemScene->getSceneLoader()->getChangeController()->sendData(modelComponent, DataType::DataType_ModelsProperties, (void *)&m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_modelsProperties);
+                                m_selectedEntity.m_modelDataModified = false;
+                            }
+                            else
+                            {
+                                // If the model data was recreated (meaning model data was changed), update the ModelComponent data
+                                auto &currentModelData = modelComponent->getModelData();
+                                if(m_selectedEntity.m_modelDataPointer != &currentModelData)
                                 {
-                                    m_selectedEntity.m_modelFilenames.push_back(m_selectedEntity.m_modelData[modelIndex].m_model.getFilename());
+                                    m_selectedEntity.m_modelDataPointer = &currentModelData;
+                                    modelComponentDataNeedsUpdating = true;
+                                }
+                                else
+                                {
+                                    // If ModelComponent has been loaded after sending it new data, update the ModelComponent data
+                                    if(m_selectedEntity.m_modelDataUpdateAfterLoading)
+                                        if(modelComponent->isLoadedToMemory())
+                                        {
+                                            m_selectedEntity.m_modelDataUpdateAfterLoading = false;
+                                            modelComponentDataNeedsUpdating = true;
+                                        }
                                 }
                             }
 
-                            // Go over each model
-                            for(decltype(m_selectedEntity.m_modelData.size()) modelSize = m_selectedEntity.m_modelData.size(), modelIndex = 0; modelIndex < modelSize; modelIndex++)
+                            // Update the Models Properties of the currently selected ModelComponent
+                            if(modelComponentDataNeedsUpdating)
                             {
+                                m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_modelsProperties.m_models.clear();
+                                modelComponent->getModelsProperties(m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_modelsProperties);
+                            }
+
+                            // Go over each model
+                            for(decltype(m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_modelsProperties.m_models.size()) modelSize = m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_modelsProperties.m_models.size(), 
+                                modelIndex = 0; modelIndex < modelSize; modelIndex++)
+                            {
+                                auto &modelEntry = m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_modelsProperties.m_models[modelIndex];
+
                                 // Draw MODEL FILENAME
-                                drawLeftAlignedLabelText("Filename:", inputWidgetOffset, calcTextSizedButtonOffset(1) - inputWidgetOffset - m_imguiStyle.FramePadding.x);
-                                if(ImGui::InputText(("##" + Utilities::toString(modelIndex) + "ModelFileInput").c_str(), &m_selectedEntity.m_modelFilenames[modelIndex], ImGuiInputTextFlags_EnterReturnsTrue))
+                                drawLeftAlignedLabelText("Filename:", inputWidgetOffset, calcTextSizedButtonOffset(2) - inputWidgetOffset - m_imguiStyle.FramePadding.x);
+                                if(ImGui::InputText(("##" + Utilities::toString(modelIndex) + "ModelFileInput").c_str(), &modelEntry.m_modelName, ImGuiInputTextFlags_EnterReturnsTrue))
                                 {
-                                    // If the sound filename was changed, send a notification to the Sound Component
+                                    // If the model filename was changed, set the modified flag
+                                    m_selectedEntity.m_modelDataModified = true;
                                 }
 
                                 // Draw MODEL OPEN button
-                                ImGui::SameLine(calcTextSizedButtonOffset(1));
-                                if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenFile], "##" + Utilities::toString(modelIndex) + "ModelFileOpenButton", "Open a model file"))
+                                ImGui::SameLine(calcTextSizedButtonOffset(2));
+                                if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenFile], "##ModelFileOpenButton", "Open a model file"))
                                 {
                                     // Only open the file browser if it's not opened already
                                     if(m_currentlyOpenedFileBrowser == FileBrowserActivated::FileBrowserActivated_None)
                                     {
-                                        // Set the file browser activation to Lua Script
+                                        // Set the selected model filename handle
+                                        m_selectedEntity.m_selectedModelName = &modelEntry.m_modelName;
+
+                                        // Set the file browser activation to Model File
                                         m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_ModelFile;
 
                                         // Define file browser variables
@@ -706,41 +742,93 @@ void EditorWindow::update(const float p_deltaTime)
                                         m_fileBrowserDialog.m_title = "Open a model file";
                                         m_fileBrowserDialog.m_name = "OpenModelFileFileDialog";
                                         m_fileBrowserDialog.m_rootPath = Config::filepathVar().model_path;
+                                        m_fileBrowserDialog.m_flags = FileBrowserDialog::FileBrowserDialogFlags::FileBrowserDialogFlags_None;
 
                                         // Tell the GUI scene to open the file browser
                                         m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
                                     }
                                 }
 
+                                const std::string modelSelectionPopupName = "##" + Utilities::toString(modelIndex) + "ModelSelectionPopup";
+
+                                // Draw OPEN ASSET LIST button
+                                ImGui::SameLine(calcTextSizedButtonOffset(1));
+                                if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenAssetList], "##" + Utilities::toString(modelIndex) + "ModelOpenAssetListButton", "Choose a model from the loaded assets"))
+                                {
+                                    // Open the pop-up with the model asset list
+                                    ImGui::OpenPopup(modelSelectionPopupName.c_str());
+                                }
+
                                 // Draw MODEL RELOAD button
                                 ImGui::SameLine(calcTextSizedButtonOffset(0));
                                 if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_Reload], "##" + Utilities::toString(modelIndex) + "ModelFileReloadButton", "Reload the model file"))
                                 {
-                                    // Send a reload notification to the Sound Component
-                                    //m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Audio::Reload);
+                                    // Set the modified flag
+                                    m_selectedEntity.m_modelDataModified = true;
+                                }
+
+                                // Draw MODEL ASSET LIST
+                                if(ImGui::BeginPopup(modelSelectionPopupName.c_str()))
+                                {
+                                    // Calculate the text size based on the longest model asset name
+                                    ImVec2 nameTextSize(ImGui::CalcTextSize(m_modelAssetLongestName.c_str()).x + m_imguiStyle.FramePadding.x * 2.0f, m_assetSelectionPopupImageSize.y);
+
+                                    // Remove selection border and align text vertically
+                                    ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.0f, 0.5f));
+                                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+
+                                    for(decltype(m_modelAssets.size()) i = 0, size = m_modelAssets.size(); i < size; i++)
+                                    {
+                                        // Draw MODEL NAME selection
+                                        // Set the text height to the texture image button height
+                                        if(ImGui::Selectable(m_modelAssets[i].second.c_str(), (modelEntry.m_modelName == m_modelAssets[i].second), 0, nameTextSize))
+                                        {
+                                            // Set the selected model
+                                            modelEntry.m_modelName = m_modelAssets[i].second;
+
+                                            // Set the modified flag
+                                            m_selectedEntity.m_modelDataModified = true;
+                                        }
+                                    }
+                                    ImGui::PopStyleVar(2); //ImGuiStyleVar_SelectableTextAlign, ImGuiStyleVar_FramePadding
+                                    ImGui::EndPopup();
                                 }
 
                                 ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextAlign, ImVec2(0.5f, 0.5f));
-                                for(decltype(m_selectedEntity.m_modelData[modelIndex].m_meshes.size()) meshSize = m_selectedEntity.m_modelData[modelIndex].m_meshes.size(), meshIndex = 0; meshIndex < meshSize; meshIndex++)
+                                for(decltype(modelEntry.m_numOfMeshes) meshSize = modelEntry.m_numOfMeshes, meshIndex = 0; meshIndex < meshSize; meshIndex++)
                                 {
-                                    //ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf
+                                    // Get the mesh name
+                                    std::string meshName = modelEntry.m_meshNames[meshIndex];
+                                    if(!meshName.empty())
+                                        meshName = " (" + meshName + ")";
 
-                                    if(ImGui::TreeNodeEx(("Mesh " + Utilities::toString(meshIndex) + ":").c_str(), ImGuiTreeNodeFlags_SpanAvailWidth))
+                                    // Draw MESH
+                                    if(ImGui::TreeNodeEx(("Mesh " + Utilities::toString(meshIndex) + meshName + ":").c_str(), ImGuiTreeNodeFlags_SpanAvailWidth)) // ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf
                                     {
                                         ImGui::SeparatorText("Mesh settings:");
 
                                         // Draw HEIGHT SCALE
                                         drawLeftAlignedLabelText("Height scale:", inputWidgetOffset);
-                                        if(ImGui::DragFloat(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "HeightScaleDrag").c_str(), &m_selectedEntity.m_modelData[modelIndex].m_meshes[meshIndex].m_heightScale, Config::GUIVar().editor_float_slider_speed, 0.0f, 100000.0f))
+                                        if(ImGui::DragFloat(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "HeightScaleDrag").c_str(), &modelEntry.m_heightScale[meshIndex], Config::GUIVar().editor_float_slider_speed, 0.0f, 100000.0f))
                                         {
-                                            // If the sound volume was changed, send a notification to the Sound Component
+                                            // If the height scale was changed, set the modified flag
+                                            m_selectedEntity.m_modelDataModified = true;
                                         }
 
                                         // Draw ALPHA THRESHOLD
                                         drawLeftAlignedLabelText("Alpha Threshold:", inputWidgetOffset);
-                                        if(ImGui::DragFloat(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "AlphaThresholdDrag").c_str(), &m_selectedEntity.m_modelData[modelIndex].m_meshes[meshIndex].m_alphaThreshold, Config::GUIVar().editor_float_slider_speed, 0.0f, 1.0f))
+                                        if(ImGui::DragFloat(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "AlphaThresholdDrag").c_str(), &modelEntry.m_alphaThreshold[meshIndex], Config::GUIVar().editor_float_slider_speed, 0.0f, 1.0f))
                                         {
-                                            // If the sound volume was changed, send a notification to the Sound Component
+                                            // If the alpha threshold was changed, set the modified flag
+                                            m_selectedEntity.m_modelDataModified = true;
+                                        }
+
+                                        // Draw EMISSIVE INTENSITY
+                                        drawLeftAlignedLabelText("Emissive intensity:", inputWidgetOffset);
+                                        if(ImGui::DragFloat(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "EmissiveIntensityDrag").c_str(), &modelEntry.m_emissiveIntensity[meshIndex], Config::GUIVar().editor_float_slider_speed, 0.0f, 100000.0f))
+                                        {
+                                            // If the emissive intensity was changed, set the modified flag
+                                            m_selectedEntity.m_modelDataModified = true;
                                         }
 
                                         for(unsigned int materialIndex = 0; materialIndex < MaterialType::MaterialType_NumOfTypes; materialIndex++)
@@ -767,47 +855,112 @@ void EditorWindow::update(const float p_deltaTime)
                                             ImGui::SeparatorText(materialTypeName.c_str());
 
                                             // Draw TEXTURE FILENAME
-                                            std::string filename = m_selectedEntity.m_modelData[modelIndex].m_meshes[meshIndex].m_materials[materialIndex].m_texture.getFilename();
-                                            drawLeftAlignedLabelText("Filename:", inputWidgetOffset, calcTextSizedButtonOffset(1) - inputWidgetOffset - m_imguiStyle.FramePadding.x + m_imguiStyle.IndentSpacing);
-                                            if(ImGui::InputText(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureFilenameInput").c_str(), &filename, ImGuiInputTextFlags_EnterReturnsTrue))
+                                            drawLeftAlignedLabelText("Filename:", inputWidgetOffset, calcTextSizedButtonOffset(2) - inputWidgetOffset - m_imguiStyle.FramePadding.x + m_imguiStyle.IndentSpacing);
+                                            if(ImGui::InputText(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureFilenameInput").c_str(), &modelEntry.m_meshMaterials[meshIndex][materialIndex], ImGuiInputTextFlags_EnterReturnsTrue))
                                             {
-                                                // If the sound filename was changed, send a notification to the Sound Component
-                                            }                                
-                                            
+                                                // If the texture filename was changed, set the modified flag
+                                                m_selectedEntity.m_modelDataModified = true;
+                                            }
+
                                             // Draw TEXTURE OPEN button
-                                            ImGui::SameLine(calcTextSizedButtonOffset(1) + m_imguiStyle.IndentSpacing);
+                                            ImGui::SameLine(calcTextSizedButtonOffset(2) + m_imguiStyle.IndentSpacing);
                                             if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenFile], "##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureOpenButton", "Open a texture file"))
                                             {
                                                 // Only open the file browser if it's not opened already
-                                                //if(m_currentlyOpenedFileBrowser == FileBrowserActivated::FileBrowserActivated_None)
-                                                //{
-                                                //    // Set the file browser activation to Lua Script
-                                                //    m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_ModelFile;
+                                                if(m_currentlyOpenedFileBrowser == FileBrowserActivated::FileBrowserActivated_None)
+                                                {
+                                                    // Set the selected texture filename handle
+                                                    m_selectedEntity.m_selectedTextureName = &modelEntry.m_meshMaterials[meshIndex][materialIndex];
 
-                                                //    // Define file browser variables
-                                                //    m_fileBrowserDialog.m_filter = "Model files (.obj .3ds .fbx){.obj,.3ds,.fbx},All files{.*}";
-                                                //    m_fileBrowserDialog.m_title = "Open a model file";
-                                                //    m_fileBrowserDialog.m_name = "OpenModelFileFileDialog";
-                                                //    m_fileBrowserDialog.m_rootPath = Config::filepathVar().model_path;
+                                                    // Set the file browser activation to Texture File
+                                                    m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_TextureFile;
 
-                                                //    // Tell the GUI scene to open the file browser
-                                                //    m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
-                                                //}
+                                                    // Define file browser variables
+                                                    m_fileBrowserDialog.m_filter = "Texture files (.png .tga .tif .tiff .jpg .jpeg .bmp){.png,.tga,.tif,.tiff,.jpg,.jpeg,.bmp},All files{.*}";
+                                                    m_fileBrowserDialog.m_title = "Open a texture file";
+                                                    m_fileBrowserDialog.m_name = "OpenTextureFileFileDialog";
+                                                    m_fileBrowserDialog.m_rootPath = Config::filepathVar().texture_path;
+                                                    m_fileBrowserDialog.m_flags = FileBrowserDialog::FileBrowserDialogFlags::FileBrowserDialogFlags_None;
+
+                                                    // Tell the GUI scene to open the file browser
+                                                    m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
+                                                }
+                                            }
+
+                                            const std::string textureSelectionPopupName = "##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureSelectionPopup";
+
+                                            // Draw OPEN ASSET LIST button
+                                            ImGui::SameLine(calcTextSizedButtonOffset(1) + m_imguiStyle.IndentSpacing);
+                                            if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenAssetList], "##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureOpenAssetListButton", "Choose a texture from the loaded assets"))
+                                            {
+                                                // Open the pop-up with the texture asset list
+                                                ImGui::OpenPopup(textureSelectionPopupName.c_str());
                                             }
 
                                             // Draw TEXTURE RELOAD button
                                             ImGui::SameLine(calcTextSizedButtonOffset(0) + m_imguiStyle.IndentSpacing);
-                                            //ImGui::SameLine(ImGui::GetWindowWidth());// -m_buttonSizedByFont.x - m_imguiStyle.FramePadding.x - (m_buttonSizedByFont.x + m_imguiStyle.FramePadding.x * 3) * 0);
                                             if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_Reload], "##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureReloadButton", "Reload the texture file"))
                                             {
-                                                // Send a reload notification to the Sound Component
-                                                //m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Audio::Reload);
+                                                // Set the modified flag
+                                                m_selectedEntity.m_modelDataModified = true;
+                                            }
+
+                                            // Draw TEXTURE ASSET LIST
+                                            if(ImGui::BeginPopup(textureSelectionPopupName.c_str()))
+                                            {
+                                                // Calculate the text size based on the longest texture asset name and the height of the texture image
+                                                ImVec2 nameTextSize(ImGui::CalcTextSize(m_textureAssetLongestName.c_str()).x + m_imguiStyle.FramePadding.x * 2.0f, m_assetSelectionPopupImageSize.y);
+
+                                                // Make button background transparent, remove button and selection border and align selection text vertically
+                                                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+                                                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                                                ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.0f, 0.5f));
+
+                                                for(decltype(m_textureAssets.size()) i = 0, size = m_textureAssets.size(); i < size; i++)
+                                                {
+                                                    if(m_textureAssets[i].first->isLoadedFromFile())
+                                                    {
+                                                        // Draw TEXTURE IMAGE
+                                                        if(ImGui::ImageButton((textureSelectionPopupName + "Image").c_str(),
+                                                            (ImTextureID)m_textureAssets[i].first->getHandle(),
+                                                            m_assetSelectionPopupImageSize,
+                                                            ImVec2(0, 1),
+                                                            ImVec2(1, 0),
+                                                            ImVec4(0.0f, 0.0f, 0.0f, 0.0f)))
+                                                        {
+                                                            // Set the selected texture
+                                                            modelEntry.m_meshMaterials[meshIndex][materialIndex] = m_textureAssets[i].second;
+
+                                                            // Set the modified flag
+                                                            m_selectedEntity.m_modelDataModified = true;
+
+                                                            ImGui::CloseCurrentPopup();
+                                                        }
+
+                                                        ImGui::SameLine();
+
+                                                        // Draw TEXTURE NAME selection
+                                                        // Set the text height to the texture image button height
+                                                        if(ImGui::Selectable(m_textureAssets[i].second.c_str(), (modelEntry.m_meshMaterials[meshIndex][materialIndex] == m_textureAssets[i].second), 0, nameTextSize))
+                                                        {
+                                                            // Set the selected texture
+                                                            modelEntry.m_meshMaterials[meshIndex][materialIndex] = m_textureAssets[i].second;
+
+                                                            // Set the modified flag
+                                                            m_selectedEntity.m_modelDataModified = true;
+                                                        }
+                                                    }
+                                                }
+                                                ImGui::PopStyleVar(2); //ImGuiStyleVar_FramePadding, ImGuiStyleVar_SelectableTextAlign
+                                                ImGui::PopStyleColor(); //ImGuiCol_Button
+                                                ImGui::EndPopup();
                                             }
 
                                             drawLeftAlignedLabelText("Texture scale:", inputWidgetOffset);
-                                            if(ImGui::DragFloat2(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureScaleDrag").c_str(), glm::value_ptr(m_selectedEntity.m_modelData[modelIndex].m_meshes[meshIndex].m_materials[materialIndex].m_textureScale), Config::GUIVar().editor_float_slider_speed))
+                                            if(ImGui::DragFloat2(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureScaleDrag").c_str(), glm::value_ptr(modelEntry.m_meshMaterialsScale[meshIndex][materialIndex]), Config::GUIVar().editor_float_slider_speed))
                                             {
-
+                                                // If the texture scale was changed, set the modified flag
+                                                m_selectedEntity.m_modelDataModified = true;
                                             }
                                         }
                                         ImGui::SeparatorText("");
@@ -817,7 +970,11 @@ void EditorWindow::update(const float p_deltaTime)
                                 ImGui::PopStyleVar(); // ImGuiStyleVar_SeparatorTextAlign
                             }
                         }
-                    }                    
+                    }
+
+                    {
+                    }
+
                     auto *shaderComponent = entityRegistry.try_get<ShaderComponent>(m_selectedEntity.m_entityID);
                     if(shaderComponent != nullptr)
                     {
@@ -1003,6 +1160,7 @@ void EditorWindow::update(const float p_deltaTime)
                                     m_fileBrowserDialog.m_title = "Open an audio file";
                                     m_fileBrowserDialog.m_name = "OpenAudioFileFileDialog";
                                     m_fileBrowserDialog.m_rootPath = Config::filepathVar().sound_path;
+                                    m_fileBrowserDialog.m_flags = FileBrowserDialog::FileBrowserDialogFlags::FileBrowserDialogFlags_None;
 
                                     // Tell the GUI scene to open the file browser
                                     m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
@@ -1117,6 +1275,7 @@ void EditorWindow::update(const float p_deltaTime)
                                         m_fileBrowserDialog.m_title = "Open LUA script file";
                                         m_fileBrowserDialog.m_name = "OpenLuaScriptFileDialog";
                                         m_fileBrowserDialog.m_rootPath = Config::filepathVar().script_path;
+                                        m_fileBrowserDialog.m_flags = FileBrowserDialog::FileBrowserDialogFlags::FileBrowserDialogFlags_None;
 
                                         // Tell the GUI scene to open the file browser
                                         m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
@@ -1409,19 +1568,17 @@ void EditorWindow::update(const float p_deltaTime)
             {
                 if(ImGui::BeginTabItem("Assets"))
                 {
-                    auto texturePool = Loaders::texture2D().getObjectPool();
-
                     // Draw each texture in the 2D texture loader pool
-                    for(decltype(texturePool.size()) i = 0, size = texturePool.size(); i < size; i++)
+                    for(decltype(m_textureAssets.size()) i = 0, size = m_textureAssets.size(); i < size; i++)
                     {
                         // Set each entry to be drawn on the same line (except the first entry)
                         if(i > 0)
                             ImGui::SameLine();
 
                         // Draw the texture
-                        if(ImGui::ImageButton((ImTextureID)texturePool[i]->getHandle(), ImVec2(60.0f, 60.0f), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f), 0))
+                        if(ImGui::ImageButton((ImTextureID)m_textureAssets[i].first->getHandle(), ImVec2(60.0f, 60.0f), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f), 0))
                         {
-                            m_selectedTexture = texturePool[i];
+                            m_selectedTexture = m_textureAssets[i].first;
 
                             // Set the texture inspector tab flag to be selected (bring to focus), because a texture has just been selected
                             m_textureInspectorTabFlags = ImGuiTabItemFlags_SetSelected;
@@ -1439,16 +1596,16 @@ void EditorWindow::update(const float p_deltaTime)
                             ImGui::PopStyleVar();
                             ImGui::Separator();
 
-                            ImGui::Text(("Filename: " + texturePool[i]->getFilename()).c_str());
-                            ImGui::Text(("Size: " + Utilities::toString(texturePool[i]->getTextureWidth()) + "x" + Utilities::toString(texturePool[i]->getTextureHeight())).c_str());
+                            ImGui::Text(("Filename: " + m_textureAssets[i].second).c_str());
+                            ImGui::Text(("Size: " + Utilities::toString(m_textureAssets[i].first->getTextureWidth()) + "x" + Utilities::toString(m_textureAssets[i].first->getTextureHeight())).c_str());
 
-                            ImGui::Text(("Texture format: " + getTextureFormatString(texturePool[i]->getTextureFormat())).c_str());
-                            ImGui::Text(("Texture data type: " + getTextureDataTypeString(texturePool[i]->getTextureDataType())).c_str());
-                            ImGui::Text(("Texture data format: " + getTextureDataFormat(texturePool[i]->getTextureDataFormat())).c_str());
+                            ImGui::Text(("Texture format: " + getTextureFormatString(m_textureAssets[i].first->getTextureFormat())).c_str());
+                            ImGui::Text(("Texture data type: " + getTextureDataTypeString(m_textureAssets[i].first->getTextureDataType())).c_str());
+                            ImGui::Text(("Texture data format: " + getTextureDataFormat(m_textureAssets[i].first->getTextureDataFormat())).c_str());
 
-                            ImGui::Text(texturePool[i]->getMipmapEnabled() ? "Mipmap enabled" : "Mipmap disabled");
-                            if(texturePool[i]->getMipmapEnabled())
-                                ImGui::Text(("Mipmap level: " + Utilities::toString(texturePool[i]->getMipmapLevel())).c_str());
+                            ImGui::Text(m_textureAssets[i].first->getMipmapEnabled() ? "Mipmap enabled" : "Mipmap disabled");
+                            if(m_textureAssets[i].first->getMipmapEnabled())
+                                ImGui::Text(("Mipmap level: " + Utilities::toString(m_textureAssets[i].first->getMipmapLevel())).c_str());
 
                             ImGui::Separator();
 
@@ -1617,11 +1774,9 @@ void EditorWindow::update(const float p_deltaTime)
                 {
                     if(m_fileBrowserDialog.m_success)
                     {
-                        //m_systemScene->getSceneLoader()->loadFromFile(m_fileBrowserDialog.m_filename);
                         // Send a notification to the engine to reload the current engine state
                         m_systemScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_SceneFilename, EngineStateType::EngineStateType_Editor, m_fileBrowserDialog.m_filename));
                         m_systemScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_SceneReload));
-
                     }
 
                     // Reset the file browser and mark the file browser as not opened
@@ -1662,8 +1817,72 @@ void EditorWindow::update(const float p_deltaTime)
                             // Set the selected file path as a relative path from current directory
                             m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_soundFilename = m_fileBrowserDialog.m_filePathName.substr(currentDirectory.size());
 
-                            // If the Lua script filename was changed, send a notification to the LUA Component
+                            // If the Lua script filename was changed, set a flag for it
                             m_selectedEntity.m_soundFilenameModified = true;
+                        }
+                        else
+                            ErrHandlerLoc::get().log(ErrorCode::Editor_path_outside_current_dir, ErrorSource::Source_GUIEditor);
+                    }
+
+                    // Reset the file browser and mark the file browser as not opened
+                    m_fileBrowserDialog.reset();
+                    m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_None;
+                }
+            }
+            break;
+        case EditorWindow::FileBrowserActivated_ModelFile:
+            {
+                // If the file browser was activated and it is now closed, process the result
+                if(m_fileBrowserDialog.m_closed)
+                {
+                    if(m_fileBrowserDialog.m_success)
+                    {
+                        // Get the current directory path
+                        const std::string currentDirectory = Filesystem::getCurrentDirectory() + "\\" + Config::filepathVar().model_path;
+
+                        // Check if the selected file is within the current directory
+                        if(m_fileBrowserDialog.m_filePathName.rfind(currentDirectory, 0) == 0)
+                        {
+                            if(m_selectedEntity.m_selectedModelName != nullptr)
+                            {
+                                *m_selectedEntity.m_selectedModelName = m_fileBrowserDialog.m_filePathName.substr(currentDirectory.size());
+
+                                // If the model filename was changed, set a flag for it
+                                m_selectedEntity.m_modelDataModified = true;
+                                m_selectedEntity.m_modelDataUpdateAfterLoading = true;
+                            }
+                        }
+                        else
+                            ErrHandlerLoc::get().log(ErrorCode::Editor_path_outside_current_dir, ErrorSource::Source_GUIEditor);
+                    }
+
+                    // Reset the file browser and mark the file browser as not opened
+                    m_fileBrowserDialog.reset();
+                    m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_None;
+                }
+            }
+            break;
+        case EditorWindow::FileBrowserActivated_TextureFile:
+            {
+                // If the file browser was activated and it is now closed, process the result
+                if(m_fileBrowserDialog.m_closed)
+                {
+                    if(m_fileBrowserDialog.m_success)
+                    {
+                        // Get the current directory path
+                        const std::string currentDirectory = Filesystem::getCurrentDirectory() + "\\" + Config::filepathVar().texture_path;
+
+                        // Check if the selected file is within the current directory
+                        if(m_fileBrowserDialog.m_filePathName.rfind(currentDirectory, 0) == 0)
+                        {
+                            if(m_selectedEntity.m_selectedTextureName != nullptr)
+                            {
+                                *m_selectedEntity.m_selectedTextureName = m_fileBrowserDialog.m_filePathName.substr(currentDirectory.size());
+
+                                // If the texture filename was changed, set a flag for it
+                                m_selectedEntity.m_modelDataModified = true;
+                                m_selectedEntity.m_modelDataUpdateAfterLoading = true;
+                            }
                         }
                         else
                             ErrHandlerLoc::get().log(ErrorCode::Editor_path_outside_current_dir, ErrorSource::Source_GUIEditor);
@@ -1706,6 +1925,9 @@ void EditorWindow::setup(EditorWindowSettings &p_editorWindowSettings)
     m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_add_texture));
     m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_open_file_texture));
     m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_reload_texture));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_open_asset_list_texture));
+
+    assert(m_buttonTextures.size() == ButtonTextureType::ButtonTextureType_NumOfTypes && "m_buttonTextures array is different size than the number of button textures, in EditorWindow.cpp");
 
     // Load button textures to memory
     for(decltype(m_buttonTextures.size()) size = m_buttonTextures.size(), i = 0; i < size; i++)
@@ -1966,5 +2188,47 @@ void EditorWindow::updateComponentList()
             m_componentList.emplace_back(m_entityList[i].m_entityID, metadataComp->getName(), Utilities::toString(m_entityList[i].m_entityID) + Config::componentVar().component_name_separator + metadataComp->getName() + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::MetadataComponent));
             m_entityList[i].m_componentFlag |= Systems::AllComponentTypes::WorldMetadataComponent;
         }
+    }
+}
+
+void EditorWindow::updateAssetLists()
+{    
+    //	 ____________________________
+    //	|							 |
+    //	|	   TEXTURE ASSETS        |
+    //	|____________________________|
+    //
+    // Clear texture asset array
+    m_textureAssets.clear();
+
+    // Go over each texture in the loaders texture pool
+    auto texturePool = Loaders::texture2D().getObjectPool();
+    for(decltype(texturePool.size()) i = 0, size = texturePool.size(); i < size; i++)
+    {
+        m_textureAssets.push_back(std::make_pair(texturePool[i], texturePool[i]->getFilename()));
+
+        // Set the longest texture name from all loaded texture assets, required for setting popup sizes when showing the list of textures
+        if(m_textureAssetLongestName.size() < texturePool[i]->getFilename().size())
+            m_textureAssetLongestName = texturePool[i]->getFilename();
+    }
+
+
+    //	 ____________________________
+    //	|							 |
+    //	|	    MODEL ASSETS         |
+    //	|____________________________|
+    //
+    // Clear model asset array
+    m_modelAssets.clear();
+
+    // Go over each model in the loaders model pool
+    auto modelPool = Loaders::model().getObjectPool();
+    for(decltype(modelPool.size()) i = 0, size = modelPool.size(); i < size; i++)
+    {
+        m_modelAssets.push_back(std::make_pair(modelPool[i], modelPool[i]->getFilename()));
+
+        // Set the longest model name from all loaded model assets, required for setting popup sizes when showing the list of model
+        if(m_modelAssetLongestName.size() < modelPool[i]->getFilename().size())
+            m_modelAssetLongestName = modelPool[i]->getFilename();
     }
 }

@@ -612,6 +612,7 @@ void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_con
 				default:
 
 					ErrHandlerLoc().get().log(ErrorType::Warning, ErrorSource::Source_LightComponent, p_name + " - missing \'Type\' identifier");
+
 					delete p_constructionInfo.m_lightConstructionInfo;
 					p_constructionInfo.m_lightConstructionInfo = nullptr;
 
@@ -627,6 +628,8 @@ void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_con
 
 				p_constructionInfo.m_modelConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::ModelComponent);
 
+				bool modelDataPresent = false;
+
 				auto &modelsProperty = p_properties.getPropertySetByID(Properties::Models);
 
 				if(modelsProperty)
@@ -637,76 +640,92 @@ void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_con
 						// Get model filename
 						auto modelName = modelsProperty.getPropertySet(iModel).getPropertyByID(Properties::Filename).getString();
 
-						// Add a new model data entry, and get a reference to it
-						p_constructionInfo.m_modelConstructionInfo->m_modelsProperties.m_modelNames.push_back(modelName);
-
-						auto &meshesProperty = modelsProperty.getPropertySet(iModel).getPropertySetByID(Properties::Meshes);
-
-						// Check if the meshes array node is present;
-						// If it is present, only add the meshes included in the meshes node
-						// If it is not present, add all the meshes included in the model
-						if(meshesProperty)
+						// Continue only of the model filename is not empty
+						if(!modelName.empty())
 						{
-							if(meshesProperty.getNumPropertySets() > 0)
+							modelDataPresent = true;
+
+							// Add a new model data entry, and get a reference to it
+							p_constructionInfo.m_modelConstructionInfo->m_modelsProperties.m_models.push_back(ModelComponent::MeshProperties());
+							auto &newModelEntry = p_constructionInfo.m_modelConstructionInfo->m_modelsProperties.m_models.back();
+
+							// Assign the model filename
+							newModelEntry.m_modelName = modelName;
+
+							// Get meshes property
+							auto &meshesProperty = modelsProperty.getPropertySet(iModel).getPropertySetByID(Properties::Meshes);
+
+							// Check if the meshes array node is present;
+							// If it is present, only add the meshes included in the meshes node
+							// If it is not present, add all the meshes included in the model
+							if(meshesProperty)
 							{
-								// Loop over each mesh entry in the model node
-								for(decltype(meshesProperty.getNumPropertySets()) iMesh = 0, numMeshes = meshesProperty.getNumPropertySets(); iMesh < numMeshes; iMesh++)
+								if(meshesProperty.getNumPropertySets() > 0)
 								{
-									// Try to get the mesh index property node and check if it is present
-									auto &meshIndexProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::Index);
-									if(meshIndexProperty)
+									// Loop over each mesh entry in the model node
+									for(decltype(meshesProperty.getNumPropertySets()) iMesh = 0, numMeshes = meshesProperty.getNumPropertySets(); iMesh < numMeshes; iMesh++)
 									{
-										// Get the mesh index, check if it is valid and within the range of mesh array that was loaded from the model
-										const int meshDataIndex = meshIndexProperty.getInt();
-
-										// Make sure the meshMaterials vector can fit the given mesh index
-										if(meshDataIndex >= p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_meshMaterials.size())
+										// Try to get the mesh index property node and check if it is present
+										auto &meshIndexProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::Index);
+										if(meshIndexProperty)
 										{
-											p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.resize(meshDataIndex + 1);
-											p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_present[meshDataIndex] = true;
-										}
+											// Get the mesh index, check if it is valid and within the range of mesh array that was loaded from the model
+											const int meshDataIndex = meshIndexProperty.getInt();
 
-										// Get material alpha threshold value, if it is present
-										auto alphaThresholdProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::AlphaThreshold);
-										if(alphaThresholdProperty)
-											p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_alphaThreshold[meshDataIndex] = alphaThresholdProperty.getFloat();
-
-										// Get material height scale value, if it is present
-										auto heightScaleProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::HeightScale);
-										if(heightScaleProperty)
-											p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_heightScale[meshDataIndex] = heightScaleProperty.getFloat();
-
-										// Get material properties
-										auto materialsProperty = meshesProperty.getPropertySet(iMesh).getPropertySetByID(Properties::Materials);
-
-										// Define material data and material properties
-										MaterialData materials[MaterialType::MaterialType_NumOfTypes];
-										PropertySet materialProperties[MaterialType::MaterialType_NumOfTypes] =
-										{
-											materialsProperty.getPropertySetByID(Properties::Diffuse),
-											materialsProperty.getPropertySetByID(Properties::Normal),
-											materialsProperty.getPropertySetByID(Properties::Emissive),
-											materialsProperty.getPropertySetByID(Properties::RMHAO)
-										};
-
-										// Go over each material type
-										for(unsigned int iMatType = 0; iMatType < MaterialType::MaterialType_NumOfTypes; iMatType++)
-										{
-											// Check if an entry for the current material type was present within the properties
-											if(materialProperties[iMatType])
+											// Make sure the meshMaterials vector can fit the given mesh index
+											if(meshDataIndex >= newModelEntry.m_meshMaterials.size())
 											{
-												// Get texture filename property, check if it is valid
-												auto filenameProperty = materialProperties[iMatType].getPropertyByID(Properties::Filename);
-												if(filenameProperty.isVariableTypeString())
-												{
-													// Get texture filename string, check if it is valid
-													p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_meshMaterials[meshDataIndex][iMatType] = filenameProperty.getString();
-												}
+												newModelEntry.resize(meshDataIndex + 1);
+												newModelEntry.m_present[meshDataIndex] = true;
+											}
 
-												// Get texture scale property, check if it is valid
-												auto scaleProperty = materialProperties[iMatType].getPropertyByID(Properties::TextureScale);
-												if(scaleProperty)
-													p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_meshMaterialsScale[meshDataIndex][iMatType] = scaleProperty.getVec2f();
+											// Get material alpha threshold value, if it is present
+											auto alphaThresholdProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::AlphaThreshold);
+											if(alphaThresholdProperty)
+												newModelEntry.m_alphaThreshold[meshDataIndex] = alphaThresholdProperty.getFloat();
+
+											// Get emissive intensity, if it is present
+											auto emissiveIntensityProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::EmissiveIntensity);
+											if(emissiveIntensityProperty)
+												newModelEntry.m_emissiveIntensity[meshDataIndex] = emissiveIntensityProperty.getFloat();
+
+											// Get material height scale value, if it is present
+											auto heightScaleProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::HeightScale);
+											if(heightScaleProperty)
+												newModelEntry.m_heightScale[meshDataIndex] = heightScaleProperty.getFloat();
+
+											// Get material properties
+											auto materialsProperty = meshesProperty.getPropertySet(iMesh).getPropertySetByID(Properties::Materials);
+
+											// Define material data and material properties
+											MaterialData materials[MaterialType::MaterialType_NumOfTypes];
+											PropertySet materialProperties[MaterialType::MaterialType_NumOfTypes] =
+											{
+												materialsProperty.getPropertySetByID(Properties::Diffuse),
+												materialsProperty.getPropertySetByID(Properties::Normal),
+												materialsProperty.getPropertySetByID(Properties::Emissive),
+												materialsProperty.getPropertySetByID(Properties::RMHAO)
+											};
+
+											// Go over each material type
+											for(unsigned int iMatType = 0; iMatType < MaterialType::MaterialType_NumOfTypes; iMatType++)
+											{
+												// Check if an entry for the current material type was present within the properties
+												if(materialProperties[iMatType])
+												{
+													// Get texture filename property, check if it is valid
+													auto filenameProperty = materialProperties[iMatType].getPropertyByID(Properties::Filename);
+													if(filenameProperty.isVariableTypeString())
+													{
+														// Get texture filename string, check if it is valid
+														newModelEntry.m_meshMaterials[meshDataIndex][iMatType] = filenameProperty.getString();
+													}
+
+													// Get texture scale property, check if it is valid
+													auto scaleProperty = materialProperties[iMatType].getPropertyByID(Properties::TextureScale);
+													if(scaleProperty)
+														newModelEntry.m_meshMaterialsScale[meshDataIndex][iMatType] = scaleProperty.getVec2f();
+												}
 											}
 										}
 									}
@@ -716,8 +735,13 @@ void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_con
 					}
 				}
 
-				if(p_properties.getNumPropertySets() == 0)
+				if(p_properties.getNumPropertySets() == 0 || !modelDataPresent)
+				{
 					ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_ModelComponent, p_name + " - missing model data");
+
+					delete p_constructionInfo.m_modelConstructionInfo;
+					p_constructionInfo.m_modelConstructionInfo = nullptr;
+				}
 			}
 			break;
 
@@ -1143,69 +1167,76 @@ void SceneLoader::exportToProperties(const GraphicsComponentsConstructionInfo &p
 			auto &modelsPropertySet = componentPropertySet.addPropertySet(Properties::PropertyID::Models);
 
 			// Go over each model
-			for(auto &model : p_constructionInfo.m_modelConstructionInfo->m_modelsProperties.m_modelNames)
+			for(auto &model : p_constructionInfo.m_modelConstructionInfo->m_modelsProperties.m_models)
 			{
-				auto &modelPropertyArrayEntry = modelsPropertySet.addPropertySet(Properties::ArrayEntry);
-
-				// Add model data
-				modelPropertyArrayEntry.addProperty(Properties::PropertyID::Filename, model);
-
-				auto &meshesPropertySet = modelPropertyArrayEntry.addPropertySet(Properties::PropertyID::Meshes);
-
-				// Go over each mesh
-				for(decltype(p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_numOfMeshes) i = 0; i < p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_numOfMeshes; i++)
+				// Make sure the number of meshes is not bigger than any of the property arrays
+				if(	model.m_numOfMeshes <= model.m_meshMaterials.size() &&
+					model.m_numOfMeshes <= model.m_meshMaterialsScale.size() &&
+					model.m_numOfMeshes <= model.m_alphaThreshold.size() &&
+					model.m_numOfMeshes <= model.m_heightScale.size() &&
+					model.m_numOfMeshes <= model.m_present.size())
 				{
-					// Make sure the mesh data is present
-					if(p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_present[i])
+					auto &modelPropertyArrayEntry = modelsPropertySet.addPropertySet(Properties::ArrayEntry);
+
+					// Add model data
+					modelPropertyArrayEntry.addProperty(Properties::PropertyID::Filename, model.m_modelName);
+
+					auto &meshesPropertySet = modelPropertyArrayEntry.addPropertySet(Properties::PropertyID::Meshes);
+
+					// Go over each mesh
+					for(decltype(model.m_numOfMeshes) i = 0; i < model.m_numOfMeshes; i++)
 					{
-						auto &meshPropertyArrayEntry = meshesPropertySet.addPropertySet(Properties::ArrayEntry);
-
-						// Add mesh data
-						meshPropertyArrayEntry.addProperty(Properties::PropertyID::Index, (int)i);
-						meshPropertyArrayEntry.addProperty(Properties::PropertyID::AlphaThreshold, p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_alphaThreshold[i]);
-						meshPropertyArrayEntry.addProperty(Properties::PropertyID::HeightScale, p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_heightScale[i]);
-
-						auto &materialsPropertySet = meshPropertyArrayEntry.addPropertySet(Properties::Materials);
-
-						// Go over each material
-						for(unsigned int materialType = 0; materialType < MaterialType::MaterialType_NumOfTypes; materialType++)
+						// Make sure the mesh data is present
+						if(model.m_present[i])
 						{
-							// Make sure the material filename is not empty
-							if(!p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_meshMaterials[i][materialType].empty())
+							auto &meshPropertyArrayEntry = meshesPropertySet.addPropertySet(Properties::ArrayEntry);
+
+							// Add mesh data
+							meshPropertyArrayEntry.addProperty(Properties::PropertyID::Index, (int)i);
+							meshPropertyArrayEntry.addProperty(Properties::PropertyID::AlphaThreshold, model.m_alphaThreshold[i]);
+							meshPropertyArrayEntry.addProperty(Properties::PropertyID::HeightScale, model.m_heightScale[i]);
+
+							auto &materialsPropertySet = meshPropertyArrayEntry.addPropertySet(Properties::Materials);
+
+							// Go over each material
+							for(unsigned int materialType = 0; materialType < MaterialType::MaterialType_NumOfTypes; materialType++)
 							{
-								Properties::PropertyID materialPropertyID = Properties::Null;
-
-								// Convert MaterialType to PropertyID
-								switch(materialType)
+								// Make sure the material filename is not empty
+								if(!model.m_meshMaterials[i][materialType].empty())
 								{
-									case MaterialType_Diffuse:
-										materialPropertyID = Properties::Diffuse;
-										break;
-									case MaterialType_Normal:
-										materialPropertyID = Properties::Normal;
-										break;
-									case MaterialType_Emissive:
-										materialPropertyID = Properties::Emissive;
-										break;
-									case MaterialType_Combined:
-										materialPropertyID = Properties::RMHAO;
-										break;
-								}
-								auto &materialPropertySet = materialsPropertySet.addPropertySet(materialPropertyID);
+									Properties::PropertyID materialPropertyID = Properties::Null;
 
-								// Add material data
-								materialPropertySet.addProperty(Properties::PropertyID::Filename, p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_meshMaterials[i][materialType]);
-								materialPropertySet.addProperty(Properties::PropertyID::TextureScale, p_constructionInfo.m_modelConstructionInfo->m_materialsFromProperties.m_meshMaterialsScale[i][materialType]);
+									// Convert MaterialType to PropertyID
+									switch(materialType)
+									{
+										case MaterialType_Diffuse:
+											materialPropertyID = Properties::Diffuse;
+											break;
+										case MaterialType_Normal:
+											materialPropertyID = Properties::Normal;
+											break;
+										case MaterialType_Emissive:
+											materialPropertyID = Properties::Emissive;
+											break;
+										case MaterialType_Combined:
+											materialPropertyID = Properties::RMHAO;
+											break;
+									}
+									auto &materialPropertySet = materialsPropertySet.addPropertySet(materialPropertyID);
+
+									// Add material data
+									materialPropertySet.addProperty(Properties::PropertyID::Filename, model.m_meshMaterials[i][materialType]);
+									materialPropertySet.addProperty(Properties::PropertyID::TextureScale, model.m_meshMaterialsScale[i][materialType]);
+								}
 							}
 						}
 					}
 				}
-
-
-
+				else
+				{
+					ErrHandlerLoc::get().log(ErrorCode::Number_of_meshes_missmatch, ErrorSource::Source_SceneLoader, model.m_modelName);
+				}
 			}
-
-			modelsPropertySet.addPropertySet(Properties::ArrayEntry);
 		}
 
 		// Export ShaderComponent

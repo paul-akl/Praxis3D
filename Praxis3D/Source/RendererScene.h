@@ -187,7 +187,6 @@ public:
 		p_constructionInfo.m_active = p_component.isObjectActive();
 		p_constructionInfo.m_name = p_component.getName();
 
-		p_component.getMeshMaterialsProperties(p_constructionInfo.m_materialsFromProperties);
 		p_component.getModelsProperties(p_constructionInfo.m_modelsProperties);
 	}
 	void exportComponent(ShaderComponent::ShaderComponentConstructionInfo &p_constructionInfo, const ShaderComponent &p_component)

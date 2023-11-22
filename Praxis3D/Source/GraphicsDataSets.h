@@ -26,10 +26,11 @@ struct MaterialData
 // Contains data of a single mesh and its materials
 struct MeshData
 {
-	MeshData(const Model::Mesh &p_mesh, MaterialData p_materials[MaterialType::MaterialType_NumOfTypes], const float p_heightScale, const float p_alphaThreshold) : 
+	MeshData(const Model::Mesh &p_mesh, MaterialData p_materials[MaterialType::MaterialType_NumOfTypes], const float p_heightScale, const float p_alphaThreshold, const float p_emissiveIntensity) :
 		m_mesh(&p_mesh), 
 		m_heightScale(p_heightScale),
-		m_alphaThreshold(p_alphaThreshold) 
+		m_alphaThreshold(p_alphaThreshold),
+		m_emissiveIntensity(p_emissiveIntensity)
 	{
 		std::copy(p_materials, p_materials + MaterialType::MaterialType_NumOfTypes, m_materials);
 	}
@@ -38,6 +39,8 @@ struct MeshData
 	float m_heightScale;
 	// Transparency threshold after which the fragment is discarded
 	float m_alphaThreshold;
+	// Multiplier for emissive texture color
+	float m_emissiveIntensity;
 
 	// Handle to a mesh
 	const Model::Mesh *m_mesh;

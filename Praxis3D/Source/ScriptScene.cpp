@@ -236,7 +236,7 @@ void ScriptScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeTyp
 {
 }
 
-void ScriptScene::receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving)
+void ScriptScene::receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving = false)
 {
 	switch(p_dataType)
 	{

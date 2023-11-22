@@ -26,6 +26,7 @@ public:
 		m_GUISequenceEnabled = false;
 		m_LUAScriptingEnabled = true;
 		m_sceneState = EditorSceneState::EditorSceneState_Pause;
+		m_centerWindowSize = glm::ivec2(0);
 
 		m_selectedTexture = nullptr;
 		m_textureInspectorTabFlags = 0;
@@ -42,6 +43,7 @@ public:
 
 		m_fontSize = ImGui::GetFontSize();
 		m_buttonSizedByFont = ImVec2(m_fontSize, m_fontSize);
+		m_assetSelectionPopupImageSize = ImVec2(m_fontSize, m_fontSize) * Config::GUIVar().editor_asset_selection_button_size_multiplier;
 	}
 	~EditorWindow();
 
@@ -395,17 +397,12 @@ private:
 	{
 		SelectedEntity(const Observer &p_parent) : m_spatialDataManager(p_parent)
 		{ 
-			m_entityID = NULL_ENTITY_ID;
+			setEntity(NULL_ENTITY_ID);
 			m_playing = false;
-			m_soundFilenameModified = false;
 			m_soundType = SoundComponent::SoundType::SoundType_Null;
 			m_objectMaterialType = ObjectMaterialType::Concrete;
 			m_lightType = LightComponent::LightComponentType::LightComponentType_null;
-			m_modelDataPointer = nullptr;
 			m_collisionShapeType = RigidBodyComponent::CollisionShapeType::CollisionShapeType_Null;
-
-			m_luaVariablesModified = false;
-			m_luaScriptFilenameModified = false;
 
 			m_componentData.m_audioComponents.m_soundConstructionInfo = new SoundComponent::SoundComponentConstructionInfo();
 			m_componentData.m_audioComponents.m_soundListenerConstructionInfo = new SoundListenerComponent::SoundListenerComponentConstructionInfo();
@@ -430,9 +427,14 @@ private:
 		void setEntity(const EntityID p_entityID)
 		{
 			m_entityID = p_entityID;
-			m_soundFilenameModified = false;
 			m_luaVariablesModified = false;
 			m_luaScriptFilenameModified = false;
+			m_modelDataModified = false;
+			m_soundFilenameModified = false;
+			m_selectedModelName = nullptr;
+			m_selectedTextureName = nullptr;
+			m_modelDataPointer = nullptr;
+			m_modelDataUpdateAfterLoading = false;
 		}
 
 		void unselect()
@@ -449,7 +451,6 @@ private:
 
 		// SoundComponent data
 		bool m_playing;
-		bool m_soundFilenameModified;
 		int m_soundType;
 
 		// SpatialComponent data
@@ -462,9 +463,10 @@ private:
 		int m_lightType;
 
 		// ModelComponent data
-		std::vector<ModelData> m_modelData;
+		std::string *m_selectedModelName;
+		std::string *m_selectedTextureName;
 		std::vector<ModelData> const *m_modelDataPointer;
-		std::vector<std::string> m_modelFilenames;
+		bool m_modelDataUpdateAfterLoading;
 
 		// RigidBodyComponent data
 		int m_collisionShapeType;
@@ -474,6 +476,8 @@ private:
 
 		bool m_luaVariablesModified;
 		bool m_luaScriptFilenameModified;
+		bool m_modelDataModified;
+		bool m_soundFilenameModified;
 	};
 
 	enum ButtonTextureType : unsigned int
@@ -487,6 +491,7 @@ private:
 		ButtonTextureType_Add,
 		ButtonTextureType_OpenFile,
 		ButtonTextureType_Reload,
+		ButtonTextureType_OpenAssetList,
 		ButtonTextureType_NumOfTypes
 	};
 	enum EditorSceneState : unsigned int
@@ -558,6 +563,7 @@ private:
 	void updateEntityList();
 	void updateHierarchyList();
 	void updateComponentList();
+	void updateAssetLists();
 
 	inline std::string getTextureFormatString(const TextureFormat p_textureFormat) const
 	{
@@ -685,9 +691,16 @@ private:
 	FileBrowserActivated m_currentlyOpenedFileBrowser;
 	FileBrowserDialog m_fileBrowserDialog;
 	const ImVec2 m_playPauseButtonSize;
+	ImVec2 m_assetSelectionPopupImageSize;
 
 	// LUA variables editor data
 	std::vector<const char *> m_luaVariableTypeStrings;
+
+	// Assets variables
+	std::vector<std::pair<Texture2D *, std::string>> m_textureAssets;
+	std::vector<std::pair<Model *, std::string>> m_modelAssets;
+	std::string m_textureAssetLongestName;
+	std::string m_modelAssetLongestName;
 
 	// Texture inspector variables
 	Texture2D *m_selectedTexture;

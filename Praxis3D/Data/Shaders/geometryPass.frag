@@ -365,18 +365,20 @@ void main(void)
 	// Get roughness and metalness values, and emissive color
 	float roughness = getRoughness(newCoords);
 	float metalness = getMetalness(newCoords);
-	//vec4 emissiveColor = pow(texture(emissiveTexture, newCoords), vec4(gamma, gamma, gamma, 1.0));
 	vec4 emissiveColor = texture(emissiveTexture, newCoords).rgba;
+	//vec4 emissiveColor = pow(texture(emissiveTexture, newCoords), vec4(gamma, gamma, gamma, 1.0));
 	
+	// Use emissive alpha channel as an intensity multiplier
+	emissiveColor *= emissiveMultiplier;
 	// Apply emissive color only if it's above the threshold
 	if(emissiveColor.a > emissiveThreshold)
 	{
 		// Use emissive alpha channel as an intensity multiplier
-		emissiveColor *= emissiveColor.a * emissiveMultiplier;
+		//emissiveColor *= emissiveColor.a * emissiveMultiplier;
 	}
 	else
 	{
-		emissiveColor = vec4(0.0);
+		//emissiveColor = vec4(0.0);
 	}
 	
 	// Write diffuse color to the diffuse buffer

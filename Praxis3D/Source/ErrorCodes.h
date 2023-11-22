@@ -38,6 +38,10 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
     Code(Failure,) \
     Code(Initialize_success,) \
     Code(Initialize_failure,) \
+    Code(Load_success,) \
+    Code(Load_failure,) \
+    Code(Load_to_memory_success,) \
+    Code(Load_to_memory_failure,) \
     Code(File_not_found,) \
     Code(Filename_empty,) \
 	/* Audio system errors */\
@@ -81,6 +85,7 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
 	Code(Shader_loading_failed,) \
 	/* Scene loader errors */ \
 	Code(GameObjects_missing,) \
+	Code(Number_of_meshes_missmatch,) \
 	/* Texture loader errors */ \
 	Code(Texture_not_found,) \
 	Code(Texture_empty,) \

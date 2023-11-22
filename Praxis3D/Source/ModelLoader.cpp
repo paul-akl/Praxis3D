@@ -125,6 +125,7 @@ ErrorCode Model::loadFromScene(const aiScene &p_assimpScene)
 
 	// Reserve space in the vectors for every mesh
 	m_meshPool.resize(p_assimpScene.mNumMeshes);
+	m_meshNames.resize(p_assimpScene.mNumMeshes);
 	m_numMeshes = p_assimpScene.mNumMeshes;
 
 	unsigned int numIndicesTotal = 0;
@@ -173,6 +174,9 @@ ErrorCode Model::loadMeshes(const aiScene &p_assimpScene)
 
 	for(size_t meshIndex = 0, verticeIndex = 0, indicesIndex = 0; meshIndex < p_assimpScene.mNumMeshes; meshIndex++)
 	{
+		// Set the mesh name
+		m_meshNames[meshIndex] = p_assimpScene.mMeshes[meshIndex]->mName.C_Str();
+
 		// Make sure that the texture coordinates array exist (by checking if the first member of the array does)
 		bool textureCoordsExist = p_assimpScene.mMeshes[meshIndex]->mTextureCoords[0] ? true : false;
 
@@ -264,8 +268,7 @@ ErrorCode Model::loadMeshes(const aiScene &p_assimpScene)
 			{
 				m_indices[indicesIndex] = p_assimpScene.mMeshes[meshIndex]->mFaces[i].mIndices[0];
 				m_indices[indicesIndex + 1] = p_assimpScene.mMeshes[meshIndex]->mFaces[i].mIndices[1];
-				m_indices[indicesIndex + 2] = 
-					p_assimpScene.mMeshes[meshIndex]->mFaces[i].mIndices[2];
+				m_indices[indicesIndex + 2] = p_assimpScene.mMeshes[meshIndex]->mFaces[i].mIndices[2];
 
 				indicesIndex += 3;
 			}

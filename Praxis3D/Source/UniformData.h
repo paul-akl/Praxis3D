@@ -53,27 +53,24 @@ struct UniformObjectData
 	{
 		m_heightScale = 0.0f;
 		m_alphaThreshold = 0.0f;
-		m_emissiveThreshold = 0.0f;
+		m_emissiveIntensity = 0.0f;
 		m_textureTilingFactor = 1.0f;
 	}
 
 	UniformObjectData(const glm::mat4 &p_modelMat,
 					  const glm::mat4 &p_modelViewProjMatrix,
-					  //const unsigned int (&p_materials)[MaterialType_NumOfTypes],
 					  float	p_heightScale = 0.0f,
 					  float p_alphaThreshold = 0.0f,
-					  float p_emissiveThreshold = 0.0f,
+					  float p_emissiveIntensity = 0.0f,
 					  float p_textureTilingFactor = 1.0f)
 	{
 		m_heightScale = p_heightScale;
 		m_alphaThreshold = p_alphaThreshold;
-		m_emissiveThreshold = p_emissiveThreshold;
+		m_emissiveIntensity = p_emissiveIntensity;
 		m_textureTilingFactor = p_textureTilingFactor;
 
 		m_modelMat = p_modelMat;
 		m_modelViewProjMatrix = p_modelViewProjMatrix;
-
-		//memcpy(m_materials, p_materials, sizeof(m_materials));
 	}
 
 	glm::mat4	m_modelMat,
@@ -81,10 +78,8 @@ struct UniformObjectData
 
 	float	m_heightScale,
 			m_alphaThreshold,
-			m_emissiveThreshold,
+			m_emissiveIntensity,
 			m_textureTilingFactor;
-
-	//unsigned int m_materials[MaterialType_NumOfTypes];
 };
 
 struct UniformData

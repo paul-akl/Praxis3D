@@ -94,6 +94,9 @@ public:
 
 		for(int i = 0; i < ModelBuffer_NumAllTypes; i++)
 			m_buffers[i] = 0;
+
+		for(int i = 0; i < ModelBuffer_NumAllTypes; i++)
+			m_bufferSize[i] = 0;
 	}
 
 	// Loads data from HDD to RAM and restructures it to be used to fill buffers later
@@ -135,6 +138,7 @@ public:
 	int64_t m_bufferSize[ModelBuffer_NumAllTypes];
 
 	std::vector<Mesh> m_meshPool;
+	std::vector<std::string> m_meshNames;
 	
 	std::vector<unsigned int> m_indices;
 	std::vector<glm::vec3> m_positions;
@@ -263,6 +267,13 @@ public:
 		inline std::string getFilename() const						{ return m_model->m_filename;				}
 		inline const bool isLoadedToMemory() const					{ return m_model->isLoadedToMemory();		}
 		inline const bool isLoadedToVideoMemory() const				{ return m_model->isLoadedToVideoMemory();	}
+		inline std::string getMeshName(size_t p_meshIndex) const
+		{
+			if(p_meshIndex < m_model->m_meshNames.size())
+				return m_model->m_meshNames[p_meshIndex];
+
+			return std::string();
+		}
 
 	private:
 		ModelHandle(Model &p_model) : m_model(&p_model) { m_model->incRefCounter(); }

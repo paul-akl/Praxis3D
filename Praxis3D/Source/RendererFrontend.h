@@ -77,14 +77,6 @@ protected:
 		// Calculate model-view-projection matrix
 		const glm::mat4 modelViewProjMatrix = p_viewProjMatrix * p_modelMatrix;
 
-		// Unused for now
-		//unsigned int materials[MaterialType_NumOfTypes];
-
-		//for(decltype(p_modelData.m_materials[0].size()) i = 0; i < MaterialType_NumOfTypes; i++)
-		//{
-			//materials[i] = p_object.m_materials[i]
-		//}
-
 		// Calculate the sort key
 		RendererBackend::DrawCommands::value_type::first_type sortKey = 0;
 		
@@ -97,7 +89,7 @@ protected:
 				modelViewProjMatrix,
 				p_modelData.m_meshes[meshIndex].m_heightScale,
 				p_modelData.m_meshes[meshIndex].m_alphaThreshold,
-				p_modelData.m_meshes[meshIndex].m_alphaThreshold,
+				p_modelData.m_meshes[meshIndex].m_emissiveIntensity,
 				p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Diffuse].m_textureScale.x);
 
 			m_drawCommands.emplace_back(

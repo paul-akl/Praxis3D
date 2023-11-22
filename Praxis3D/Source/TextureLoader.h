@@ -60,10 +60,14 @@ public:
 	inline int getMipmapLevel()						const { return m_mipmapLevel; }
 	inline const unsigned char *getPixelData()		const { return m_pixelData; }
 
+	// Returns true of the texture was loaded from file
+	const inline bool isLoadedFromFile() const { return m_loadedFromFile; }
+
 protected:
 	Texture2D(LoaderBase<TextureLoader2D, Texture2D> *p_loaderBase, std::string p_filename, size_t p_uniqueID, unsigned int p_handle) : UniqueObject(p_loaderBase, p_uniqueID, p_filename), m_handle(p_handle)
 	{
 		m_size = 0;
+		m_loadedFromFile = false;
 		m_enableMipmap = Config::textureVar().generate_mipmaps;
 		m_mipmapLevel = 0;
 		m_textureWidth = 0;
@@ -137,6 +141,7 @@ protected:
 				}
 
 				setLoadedToMemory(true);
+				m_loadedFromFile = true;
 			}
 			else
 			{
@@ -214,6 +219,7 @@ protected:
 	TextureFormat m_textureFormat;
 	TextureDataFormat m_textureDataFormat;
 	TextureDataType m_textureDataType;
+	bool m_loadedFromFile;
 	bool m_enableMipmap;
 	int m_mipmapLevel;
 
@@ -290,6 +296,7 @@ public:
 		inline TextureDataType getTextureDataType() const { return m_textureData->m_textureDataType; }
 		inline bool getEnableMipmap() const { return m_textureData->m_enableMipmap; }
 		inline const unsigned char *getPixelData() const { return m_textureData->m_pixelData; }
+		const inline bool isLoadedFromFile() const { return m_textureData->m_loadedFromFile; }
 
 	private:
 		// Increment the reference counter when creating a handle

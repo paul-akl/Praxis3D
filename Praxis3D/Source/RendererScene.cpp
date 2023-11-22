@@ -186,6 +186,62 @@ void RendererScene::update(const float p_deltaTime)
 
 	//	 _______________________________
 	//	|							    |
+	//	|	 CHECK FOR LOAD PENDING		|
+	//	|_______________________________|
+	//
+	// Go over each not-loading components and check whether they have anything that needs to be loaded
+	auto modelNoLoadView = entityRegistry.view<ModelComponent, SpatialComponent>(entt::exclude<ShaderComponent, GraphicsLoadToMemoryComponent, GraphicsLoadToVideoMemoryComponent>);
+	for(auto entity : modelNoLoadView)
+	{
+		// Get the component
+		auto &component = modelNoLoadView.get<ModelComponent>(entity);
+
+		// Check if there is anything that needs to be loaded
+		if(component.getLoadPending())
+		{
+			component.importModels();
+			if(!component.getModelsNeedsLoading())
+			{
+				component.importTextures();
+				if(!component.getTexturesNeedsLoading())
+				{
+					// Reset load pending flag
+					component.resetLoadPending();
+					component.setLoadedToMemory(true);
+					component.setLoadedToVideoMemory(true);
+				}
+				else
+				{
+					// Add load to memory component, to mark the entity as loading
+					worldScene->addComponent<GraphicsLoadToMemoryComponent>(entity, entity);
+
+					// Reset load pending flag
+					component.resetLoadPending();
+					component.setLoadedToMemory(false);
+					component.setLoadedToVideoMemory(false);
+
+					// Start loading the component to memory in the background
+					TaskManagerLocator::get().startBackgroundThread(std::bind(&ModelComponent::loadTexturesToMemory, &component));
+				}
+			}
+			else
+			{
+				// Add load to memory component, to mark the entity as loading
+				worldScene->addComponent<GraphicsLoadToMemoryComponent>(entity, entity);
+
+				// Reset load pending flag
+				component.resetLoadPending();
+				component.setLoadedToMemory(false);
+				component.setLoadedToVideoMemory(false);
+
+				// Start loading the component to memory in the background
+				TaskManagerLocator::get().startBackgroundThread(std::bind(&ModelComponent::loadModelsToMemory, &component));
+			}
+		}
+	}
+
+	//	 _______________________________
+	//	|							    |
 	//	| CURRENTLY LOADING COMPONENTS	|
 	//	|		TO VIDEO MEMORY			|
 	//	|_______________________________|
@@ -218,42 +274,6 @@ void RendererScene::update(const float p_deltaTime)
 	//	|		   TO MEMORY			|
 	//	|_______________________________|
 	//
-	// Check the entities that are being loaded to memory
-	// If they have already been loaded, remove the load-to-memory component and add the load-to-video-memory component, so they can be loaded to GPU in the renderer
-	/*auto modelAndLoadView = entityRegistry.view<ModelComponent, GraphicsLoadToMemoryComponent>(entt::exclude<ShaderComponent>);
-	for(auto entity : modelAndLoadView)
-	{
-		auto &modelComponent = modelAndLoadView.get<ModelComponent>(entity);
-
-		// Perform a check that marks an object if it is loaded to memory
-		modelComponent.performCheckIsLoadedToMemory();
-
-		// If the object has loaded to memory already, add to load queue
-		if(modelComponent.isLoadedToMemory())
-		{
-			// Remove the load-to-memory component, signifying that it has already been loaded to memory
-			worldScene->removeComponent<GraphicsLoadToMemoryComponent>(entity);
-
-			// Make the component active, so it is processed in the renderer
-			modelComponent.setActive(modelComponent.m_setActiveAfterLoading);
-
-			// Do not add the load-to-video-memory component if the object is already loaded to GPU
-			modelComponent.performCheckIsLoadedToVideoMemory();
-			if(!modelComponent.isLoadedToVideoMemory())
-			{
-				auto &loadToVideoMemoryComponent = worldScene->addComponent<GraphicsLoadToVideoMemoryComponent>(entity, entity);
-
-				// Get all loadable objects from the model component
-				auto loadableObjectsFromModel = modelComponent.getLoadableObjects();
-
-				// Iterate over all loadable objects from the model component, and if any of them are not loaded to video memory already, add them to the to-load list
-				for(decltype(loadableObjectsFromModel.size()) size = loadableObjectsFromModel.size(), i = 0; i < size; i++)
-					if(!loadableObjectsFromModel[i].isLoadedToVideoMemory())
-						loadToVideoMemoryComponent.m_objectsToLoad.emplace(loadableObjectsFromModel[i]);
-			}
-		}
-	}*/
-
 	// Check the entities that are being loaded to memory
 	// If they have already been loaded, remove the load-to-memory component and add the load-to-video-memory component, so they can be loaded to GPU in the renderer
 	auto modelAndLoadView = entityRegistry.view<ModelComponent, GraphicsLoadToMemoryComponent>();
@@ -527,7 +547,7 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const L
 				component.m_lightComponent.m_directional.m_intensity = p_constructionInfo.m_intensity;
 				component.setLoadedToMemory(true);
 
-				ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_LightComponent, p_constructionInfo.m_name + " - Directional light loaded");
+				ErrHandlerLoc().get().log(ErrorCode::Load_success, ErrorSource::Source_LightComponent, p_constructionInfo.m_name);
 				break;
 
 			case LightComponent::LightComponentType::LightComponentType_point:
@@ -537,7 +557,7 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const L
 				component.m_lightComponent.m_point.m_intensity = p_constructionInfo.m_intensity;
 				component.setLoadedToMemory(true);
 
-				ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_LightComponent, p_constructionInfo.m_name + " - Point light loaded");
+				ErrHandlerLoc().get().log(ErrorCode::Load_success, ErrorSource::Source_LightComponent, p_constructionInfo.m_name);
 				break;
 
 			case LightComponent::LightComponentType::LightComponentType_spot:
@@ -548,12 +568,12 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const L
 				component.m_lightComponent.m_spot.m_intensity = p_constructionInfo.m_intensity;
 				component.setLoadedToMemory(true);
 
-				ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_LightComponent, p_constructionInfo.m_name + " - Spot light loaded");
+				ErrHandlerLoc().get().log(ErrorCode::Load_success, ErrorSource::Source_LightComponent, p_constructionInfo.m_name);
 				break;
 
 			case LightComponent::LightComponentType::LightComponentType_null:
 			default:
-				ErrHandlerLoc().get().log(ErrorType::Warning, ErrorSource::Source_LightComponent, p_constructionInfo.m_name + " - missing \'Type\' identifier");
+				ErrHandlerLoc().get().log(ErrorCode::Property_missing_type, ErrorSource::Source_LightComponent, p_constructionInfo.m_name);
 				worldScene->removeComponent<LightComponent>(p_entityID);
 				break;
 			}
@@ -576,7 +596,7 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const M
 	SystemObject *returnObject = g_nullSystemBase.getScene(EngineStateType::EngineStateType_Default)->getNullObject();
 
 	// Make sure there are models present
-	if(!p_constructionInfo.m_modelsProperties.m_modelNames.empty())
+	if(!p_constructionInfo.m_modelsProperties.m_models.empty())
 	{
 		// Get the world scene required for attaching components to the entity
 		WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
@@ -591,7 +611,6 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const M
 			component.setActive(false);
 
 			component.m_modelsProperties = new ModelComponent::ModelsProperties(p_constructionInfo.m_modelsProperties);
-			component.m_materialsFromProperties = new ModelComponent::MeshMaterialsProperties(p_constructionInfo.m_materialsFromProperties);
 
 			// Add the load-to-memory component signifying that it is currently being loaded to memory
 			//m_componentsLoadingToMemory.emplace_back(component);

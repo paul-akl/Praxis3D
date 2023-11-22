@@ -25,7 +25,11 @@ ErrorHandler::ErrorHandler()
 	AssignErrorType(Success, Info);
 	AssignErrorType(Failure, Warning);
 	AssignErrorType(Initialize_success, Info);
-	AssignErrorType(Initialize_failure, Info);
+	AssignErrorType(Initialize_failure, Warning);
+	AssignErrorType(Load_success, Info);
+	AssignErrorType(Load_failure, Warning);
+	AssignErrorType(Load_to_memory_success, Info);
+	AssignErrorType(Load_to_memory_failure, Warning);
 	AssignErrorType(File_not_found, Warning);
 	AssignErrorType(Filename_empty, Warning);
 	AssignErrorType(Audio_invalid_bus_type, Warning);
@@ -57,7 +61,8 @@ ErrorHandler::ErrorHandler()
 	AssignErrorType(Shader_link_failed, Error);
 	AssignErrorType(Shader_loading_failed, Error);
 	AssignErrorType(GameObjects_missing, Error);
-	AssignErrorType(Texture_not_found, Warning);
+	AssignErrorType(Number_of_meshes_missmatch, Warning);
+	AssignErrorType(Texture_not_found, Warning); 
 	AssignErrorType(Texture_empty, Warning);
 	AssignErrorType(Invalid_num_vid_displays, Warning);
 	AssignErrorType(SDL_video_init_failed, FatalError);
@@ -132,7 +137,7 @@ void ErrorHandler::log(ErrorCode p_errorCode, ErrorSource p_errorSource)
 		}
 	}
 	else
-		log(m_errorData[p_errorCode].m_errorType, p_errorSource, m_errorData[p_errorCode].m_errorString);
+		log(m_errorData[p_errorCode].m_errorType, p_errorSource, "\033[1;33m" + m_errorData[p_errorCode].m_errorString + "\033[0m");
 }
 void ErrorHandler::log(ErrorType p_errorType, ErrorSource p_errorSource, std::string p_error)
 {

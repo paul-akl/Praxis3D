@@ -199,6 +199,7 @@ void Config::init()
 	AddVariablePredef(m_GUIVar, gui_render);
 	AddVariablePredef(m_GUIVar, gui_dark_style);
 	AddVariablePredef(m_GUIVar, gui_sequence_array_reserve_size);
+	AddVariablePredef(m_GUIVar, editor_asset_selection_button_size_multiplier);
 	AddVariablePredef(m_GUIVar, editor_float_slider_speed); 
 	AddVariablePredef(m_GUIVar, editor_lua_variables_max_height);
 	AddVariablePredef(m_GUIVar, editor_play_button_size);
@@ -208,10 +209,12 @@ void Config::init()
 	AddVariablePredef(m_GUIVar, gui_file_dialog_dir_color_G);
 	AddVariablePredef(m_GUIVar, gui_file_dialog_dir_color_B); 
 	AddVariablePredef(m_GUIVar, editor_button_add_texture);
-	AddVariablePredef(m_GUIVar, editor_button_delete_entry_texture);
+	AddVariablePredef(m_GUIVar, editor_button_add_list_texture);
+	AddVariablePredef(m_GUIVar, editor_button_delete_entry_texture); 
 	AddVariablePredef(m_GUIVar, editor_button_gui_sequence_texture);
 	AddVariablePredef(m_GUIVar, editor_button_open_file_texture);
-	AddVariablePredef(m_GUIVar, editor_button_pause_texture);
+	AddVariablePredef(m_GUIVar, editor_button_open_asset_list_texture);
+	AddVariablePredef(m_GUIVar, editor_button_pause_texture); 
 	AddVariablePredef(m_GUIVar, editor_button_play_texture);
 	AddVariablePredef(m_GUIVar, editor_button_reload_texture);
 	AddVariablePredef(m_GUIVar, editor_button_restart_texture);

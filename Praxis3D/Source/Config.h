@@ -33,6 +33,7 @@ enum DataType : uint32_t
 	DataType_RenderToTextureResolution,
 	DataType_Texture2D,
 	DataType_Texture3D,
+	DataType_ModelsProperties,
 	// GUI
 	DataType_EnableGUISequence,
 	DataType_EditorWindow,
@@ -349,6 +350,7 @@ namespace Properties
 	Code(Direction,) \
 	Code(DirectionalLight,) \
 	Code(Emissive,) \
+	Code(EmissiveIntensity,) \
 	Code(EnvironmentMapDynamic,) \
 	Code(EnvironmentMapObject,) \
 	Code(FragmentShader,) \
@@ -842,7 +844,7 @@ public:
 			bloom_knee = 0.1f;
 			bloom_threshold = 1.5f;
 			bloom_dirt_intensity = 1.0f;
-			emissive_multiplier = 10.0f;
+			emissive_multiplier = 0.0f;
 			emissive_threshold = 0.01f;
 			eye_adaption_rate = 0.25f;
 			eye_adaption_intended_brightness = 0.5f;
@@ -943,6 +945,7 @@ public:
 			gui_render = true;
 			gui_dark_style = true;
 			gui_sequence_array_reserve_size = 50;
+			editor_asset_selection_button_size_multiplier = 2.0f;
 			editor_float_slider_speed = 0.01f;
 			editor_lua_variables_max_height = 200.0f;
 			editor_play_button_size = 30.0f;
@@ -952,9 +955,11 @@ public:
 			gui_file_dialog_dir_color_G = 0.623f;
 			gui_file_dialog_dir_color_B = 0.314f;
 			editor_button_add_texture = "buttons\\button_add_3.png";
+			editor_button_add_list_texture = "buttons\\button_add_from_list_1.png";
 			editor_button_delete_entry_texture = "buttons\\button_delete_5.png";
 			editor_button_gui_sequence_texture = "buttons\\button_gui_sequence_1.png";
 			editor_button_open_file_texture = "buttons\\button_open_file_1.png";
+			editor_button_open_asset_list_texture = "buttons\\button_add_from_list_1.png";
 			editor_button_pause_texture = "buttons\\button_editor_pause_2.png";
 			editor_button_play_texture = "buttons\\button_editor_play_2.png";
 			editor_button_reload_texture = "buttons\\button_reload_3.png";
@@ -966,6 +971,7 @@ public:
 		bool gui_render;
 		bool gui_dark_style;
 		int gui_sequence_array_reserve_size;
+		float editor_asset_selection_button_size_multiplier;
 		float editor_float_slider_speed;
 		float editor_lua_variables_max_height;
 		float editor_play_button_size;
@@ -975,9 +981,11 @@ public:
 		float gui_file_dialog_dir_color_G;
 		float gui_file_dialog_dir_color_B;
 		std::string editor_button_add_texture;
+		std::string editor_button_add_list_texture;
 		std::string editor_button_delete_entry_texture;
 		std::string editor_button_gui_sequence_texture;
 		std::string editor_button_open_file_texture;
+		std::string editor_button_open_asset_list_texture;
 		std::string editor_button_pause_texture;
 		std::string editor_button_play_texture;
 		std::string editor_button_reload_texture;

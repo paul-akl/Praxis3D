@@ -72,7 +72,6 @@ void RendererBackend::processDrawing(const DrawCommands &p_drawCommands, const U
 	{
 		// Get uniform data
 		const UniformObjectData &uniformObjectData = p_drawCommands[i].second.m_uniformObjectData;
-		//UniformData uniformData(p_drawCommands[i].second.m_uniformObjectData, p_frameData);
 
 		// Get various handles
 		const auto shaderHandle = p_drawCommands[i].second.m_shaderHandle;
