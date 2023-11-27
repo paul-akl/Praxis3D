@@ -4,6 +4,7 @@
 
 #include "CommonDefinitions.h"
 #include "Math.h"
+#include "PropertySet.h"
 
 // Stores all spatial data (position, rotation, scale)
 struct SpatialData
@@ -172,8 +173,9 @@ struct DoubleBufferedContainer
 // Stores an engine change type and all associated data needed for that change
 struct EngineChangeData
 {
-	EngineChangeData() : m_changeType(EngineChangeType::EngineChangeType_None), m_engineStateType(EngineStateType::EngineStateType_Default) { }
-	EngineChangeData(EngineChangeType p_changeType, EngineStateType p_engineStateType = EngineStateType::EngineStateType_Default, std::string p_filename = "") : m_changeType(p_changeType), m_engineStateType(p_engineStateType), m_filename(p_filename) { }
+	EngineChangeData(const EngineChangeType p_changeType = EngineChangeType::EngineChangeType_None, const EngineStateType p_engineStateType = EngineStateType::EngineStateType_Default) : m_changeType(p_changeType), m_engineStateType(p_engineStateType) { }
+	EngineChangeData(const EngineChangeType p_changeType, const EngineStateType p_engineStateType, const std::string &p_filename) : m_changeType(p_changeType), m_engineStateType(p_engineStateType), m_filename(p_filename) { }
+	EngineChangeData(const EngineChangeType p_changeType, const EngineStateType p_engineStateType, const PropertySet &p_sceneProperties) : m_changeType(p_changeType), m_engineStateType(p_engineStateType), m_sceneProperties(p_sceneProperties) { }
 	~EngineChangeData() { }
 
 	void setChangeType(const EngineChangeType p_changeType) { m_changeType = p_changeType; }
@@ -183,4 +185,5 @@ struct EngineChangeData
 	EngineChangeType m_changeType;
 	EngineStateType m_engineStateType;
 	std::string m_filename;
+	PropertySet m_sceneProperties;
 };

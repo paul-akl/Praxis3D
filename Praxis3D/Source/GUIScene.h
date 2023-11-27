@@ -43,6 +43,7 @@ struct FileBrowserDialog
 
 	FileBrowserDialog()
 	{
+		m_userStringPointer = nullptr;
 		m_opened = false;
 		m_closed = false;
 		m_success = false;
@@ -55,12 +56,35 @@ struct FileBrowserDialog
 	// This prepares the dialog to be opened again, without affecting the starting data
 	void reset()
 	{
+		m_userStringPointer = nullptr;
 		m_opened = false;
 		m_closed = false;
 		m_success = false;
 		m_filePath.clear();
 		m_filename.clear();
 		m_filePathName.clear();
+	}
+
+	// Reset all values
+	void resetAll()
+	{
+		m_name.clear();
+		m_title.clear();
+		m_filter.clear();
+		m_rootPath.clear();
+		m_definedFilename.clear();
+		m_filePath.clear();
+		m_filename.clear();
+		m_filePathName.clear();
+
+		m_userStringPointer = nullptr;
+
+		m_numOfSelectableFiles = 1;
+		m_flags = FileBrowserDialogFlags_None;
+
+		m_opened = false;
+		m_closed = false;
+		m_success = false;
 	}
 
 	std::string m_name,
@@ -71,6 +95,8 @@ struct FileBrowserDialog
 				m_filePath,
 				m_filename,
 				m_filePathName;
+
+	std::string *m_userStringPointer;
 
 	int m_numOfSelectableFiles;
 	unsigned int m_flags;

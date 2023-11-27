@@ -107,6 +107,8 @@ void RendererScene::exportSetup(PropertySet &p_propertySet)
 	objectPoolSizePropertySet.addProperty(Properties::LightComponent, (int)worldScene->getPoolSize<LightComponent>());
 	objectPoolSizePropertySet.addProperty(Properties::ModelComponent, (int)worldScene->getPoolSize<ModelComponent>());
 	objectPoolSizePropertySet.addProperty(Properties::ShaderComponent, (int)worldScene->getPoolSize<ShaderComponent>());
+
+	exportRenderingPasses(p_propertySet, m_renderingPasses);
 }
 
 void RendererScene::activate()
@@ -706,7 +708,7 @@ ErrorCode RendererScene::destroyObject(SystemObject *p_systemObject)
 
 void RendererScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 {
-	//std::cout << "change occurred" << std::endl;
+
 }
 
 void RendererScene::receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving)

@@ -109,7 +109,7 @@
 					"Mass": "0.0f"
 				}
 			},
-			"Rendering":
+			"Graphics":
 			{
 				"ModelComponent":
 				{
@@ -255,7 +255,7 @@
 					"LocalScale": "0.05f, 0.05f, 0.05f"
 				}
 			},
-			"Rendering":
+			"Graphics":
 			{
 				"ModelComponent":
 				{
@@ -317,7 +317,7 @@
 					"LocalRotation": "0.0f, 0.0f, 0.0f"
 				}
 			},
-			"Rendering":
+			"Graphics":
 			{
 				"ModelComponent":
 				{
@@ -364,7 +364,7 @@
 					"LocalScale": "4.0f, 4.0f, 4.0f"
 				}
 			},
-			"Rendering":
+			"Graphics":
 			{
 				"ModelComponent":
 				{
@@ -411,7 +411,7 @@
 					"LocalScale": "4.0f, 4.0f, 4.0f"
 				}
 			},
-			"Rendering":
+			"Graphics":
 			{
 				"ModelComponent":
 				{
@@ -464,7 +464,7 @@
 					"LocalRotation": "30.0f, 0.0f, 0.0f"
 				}
 			},
-			"Rendering":
+			"Graphics":
 			{
 				"CameraComponent":
 				{
@@ -501,7 +501,7 @@
 					"LocalRotation": "-40.0f, 0.0f, 0.0f"
 				}
 			},
-			"Rendering":
+			"Graphics":
 			{
 				"LightComponent":
 				{
@@ -529,7 +529,7 @@
 					"LocalPosition": "20.0f, 2.0f, 20.0f"
 				}
 			},
-			"Rendering":
+			"Graphics":
 			{
 				"LightComponent":
 				{
@@ -550,7 +550,7 @@
 					"LocalPosition": "-20.0f, 2.0f, 20.0f"
 				}
 			},
-			"Rendering":
+			"Graphics":
 			{
 				"LightComponent":
 				{
@@ -571,7 +571,7 @@
 					"LocalPosition": "20.0f, 2.0f, -20.0f"
 				}
 			},
-			"Rendering":
+			"Graphics":
 			{
 				"LightComponent":
 				{
@@ -592,7 +592,7 @@
 					"LocalPosition": "-20.0f, 2.0f, -20.0f"
 				}
 			},
-			"Rendering":
+			"Graphics":
 			{
 				"LightComponent":
 				{

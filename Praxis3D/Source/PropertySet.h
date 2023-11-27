@@ -508,7 +508,7 @@ public:
 	const inline bool operator<(const Property &p_property) const noexcept { return (m_propertyID < p_property.m_propertyID); }
 
 	// Assignment operator
-	Property &operator=(const Property &p_property) noexcept
+	inline Property &operator=(const Property &p_property) noexcept
 	{
 		m_propertyID = p_property.m_propertyID;
 		m_variableType = p_property.m_variableType;
@@ -753,6 +753,26 @@ public:
 		return combinedSet;
 	}
 
+	// Assignment operator, simply copies everything from the passed PropertySet
+	inline PropertySet &operator=(const PropertySet &p_propertySet) noexcept
+	{
+		// Copy variables
+		m_optimizedForSearch = p_propertySet.m_optimizedForSearch;
+		m_propertyID = p_propertySet.m_propertyID;
+		m_numProperties = p_propertySet.m_numProperties;
+		m_numPropertySets = p_propertySet.m_numPropertySets;
+
+		// Clear the old property vectors
+		m_properties.clear();
+		m_propertySets.clear();
+
+		// Copy the new property vectors
+		m_properties = p_propertySet.m_properties;
+		m_propertySets = p_propertySet.m_propertySets;
+
+		return *this;
+	}
+
 	// Setters
 	const inline void setPropertyID(const Properties::PropertyID p_propertyID) { m_propertyID = p_propertyID; }
 
@@ -853,7 +873,10 @@ public:
 private:
 	struct PropertyContainer
 	{
-		PropertyContainer() : m_type(PropertyContainerType::Type_Null) { }
+		PropertyContainer() : m_type(PropertyContainerType::Type_Null)
+		{
+			m_propertySet.m_property = nullptr;
+		}
 		PropertyContainer(Property *p_property) : m_type(PropertyContainerType::Type_SingleProperty) 
 		{ 
 			m_propertySet.m_property = p_property; 

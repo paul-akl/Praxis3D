@@ -220,8 +220,15 @@ namespace Systems
 			static constexpr BitMask Spatialized			= Changes::Type::Audio + Changes::Common::Shared6;
 			static constexpr BitMask StartPlaying			= Changes::Type::Audio + Changes::Common::Shared7;
 			static constexpr BitMask Volume					= Changes::Type::Audio + Changes::Common::Shared8;
+			
+			static constexpr BitMask VolumeAmbient			= Changes::Type::Audio + Changes::Common::Shared9;
+			static constexpr BitMask VolumeMaster			= Changes::Type::Audio + Changes::Common::Shared10;
+			static constexpr BitMask VolumeMusic			= Changes::Type::Audio + Changes::Common::Shared11;
+			static constexpr BitMask VolumeSFX				= Changes::Type::Audio + Changes::Common::Shared12;
+			static constexpr BitMask AllVolume				= VolumeAmbient | VolumeMaster | VolumeMusic | VolumeSFX;
 
-			static constexpr BitMask All					= Filename | ListenerID | Loop | Reload | SoundType | Spatialized | StartPlaying | Volume;
+			static constexpr BitMask All					= Filename | ListenerID | Loop | Reload | SoundType | Spatialized | StartPlaying | 
+																Volume | AllVolume;
 		}
 		namespace Graphics
 		{
@@ -248,7 +255,8 @@ namespace Systems
 			static constexpr BitMask IntermediateBuffer		= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared13;
 			static constexpr BitMask FinalBuffer			= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared14;
 			static constexpr BitMask RenderToTextureBuffer	= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared15;
-			static constexpr BitMask AllBuffers				= PositionBuffer | DiffuseBuffer | NormalBuffer | EmissiveBuffer | MatPropertiesBuffer | IntermediateBuffer | FinalBuffer | RenderToTextureBuffer;
+			static constexpr BitMask AllBuffers				= PositionBuffer | DiffuseBuffer | NormalBuffer | EmissiveBuffer | MatPropertiesBuffer | 
+																IntermediateBuffer | FinalBuffer | RenderToTextureBuffer;
 
 			static constexpr BitMask All					= AllCamera | AllLighting | AllBuffers;
 		}
@@ -266,9 +274,9 @@ namespace Systems
 			static constexpr BitMask Mass					= Changes::Type::Physics + Changes::Common::Shared4;
 			static constexpr BitMask Restitution			= Changes::Type::Physics + Changes::Common::Shared5;
 			static constexpr BitMask Kinematic				= Changes::Type::Physics + Changes::Common::Shared6;
-			//static constexpr BitMask LinearVelocity			= Changes::Type::Physics + Changes::Common::Shared7;
+			static constexpr BitMask Gravity				= Changes::Type::Physics + Changes::Common::Shared7;
 
-			static constexpr BitMask All					= CollisionShapeType | CollisionShapeSize | Friction | Mass | Restitution | Kinematic;
+			static constexpr BitMask All					= CollisionShapeType | CollisionShapeSize | Friction | Mass | Restitution | Kinematic | Gravity;
 		}
 		namespace Script
 		{
@@ -946,9 +954,13 @@ public:
 			gui_dark_style = true;
 			gui_sequence_array_reserve_size = 50;
 			editor_asset_selection_button_size_multiplier = 2.0f;
+			editor_asset_texture_button_size_x = 60.0f;
+			editor_asset_texture_button_size_y = 60.0f;
+			editor_audio_banks_max_height = 100.0f;
 			editor_float_slider_speed = 0.01f;
 			editor_lua_variables_max_height = 200.0f;
 			editor_play_button_size = 30.0f;
+			editor_render_pass_max_height = 250.0f;
 			gui_file_dialog_min_size_x = 400.0f;
 			gui_file_dialog_min_size_y = 200.0f;
 			gui_file_dialog_dir_color_R = 0.905f;
@@ -956,6 +968,8 @@ public:
 			gui_file_dialog_dir_color_B = 0.314f;
 			editor_button_add_texture = "buttons\\button_add_3.png";
 			editor_button_add_list_texture = "buttons\\button_add_from_list_1.png";
+			editor_button_arrow_down_texture = "buttons\\button_arrow_down_1.png";
+			editor_button_arrow_up_texture = "buttons\\button_arrow_up_1.png";
 			editor_button_delete_entry_texture = "buttons\\button_delete_5.png";
 			editor_button_gui_sequence_texture = "buttons\\button_gui_sequence_1.png";
 			editor_button_open_file_texture = "buttons\\button_open_file_1.png";
@@ -972,9 +986,13 @@ public:
 		bool gui_dark_style;
 		int gui_sequence_array_reserve_size;
 		float editor_asset_selection_button_size_multiplier;
+		float editor_asset_texture_button_size_x;
+		float editor_asset_texture_button_size_y;
+		float editor_audio_banks_max_height;
 		float editor_float_slider_speed;
 		float editor_lua_variables_max_height;
 		float editor_play_button_size;
+		float editor_render_pass_max_height;
 		float gui_file_dialog_min_size_x;
 		float gui_file_dialog_min_size_y;
 		float gui_file_dialog_dir_color_R;
@@ -982,6 +1000,8 @@ public:
 		float gui_file_dialog_dir_color_B;
 		std::string editor_button_add_texture;
 		std::string editor_button_add_list_texture;
+		std::string editor_button_arrow_down_texture;
+		std::string editor_button_arrow_up_texture;
 		std::string editor_button_delete_entry_texture;
 		std::string editor_button_gui_sequence_texture;
 		std::string editor_button_open_file_texture;

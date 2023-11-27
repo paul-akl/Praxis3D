@@ -20,6 +20,8 @@ public:
 
 	virtual ErrorCode load() = 0;
 
+	virtual ErrorCode load(const PropertySet &p_sceneProperty) = 0;
+
 	virtual void update(Engine &p_engine) = 0;
 
 	virtual void activate();
@@ -38,6 +40,7 @@ public:
 
 protected:
 	bool m_initialized;
+	bool m_loaded;
 	EngineStateType m_engineStateType;
 
 	// Reference to engine, used for getting systems

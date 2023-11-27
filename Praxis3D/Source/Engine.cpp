@@ -141,47 +141,71 @@ void Engine::processEngineChanges()
 	if(changeControllerScene->getEngineChangePending())
 	{
 		// Go over each engine change
-		auto &engineChanges = changeControllerScene->getEngineChangeQueue();
+		auto engineChanges = changeControllerScene->getEngineChangeQueue();
 		for(auto const &change : engineChanges)
 		{
 			switch(change.m_changeType)
 			{
 				case EngineChangeType_SceneFilename:
 					{
+						// Create the state if it hasn't been created already
+						if(m_engineStates[change.m_engineStateType] == nullptr)
+							createState(&m_engineStates[change.m_engineStateType], change.m_engineStateType);
+
 						m_engineStates[change.m_engineStateType]->setSceneFilename(change.m_filename);
 					}
 					break;
 				case EngineChangeType_SceneLoad:
 					{
-						if(m_engineStates[change.m_engineStateType] != nullptr)
+						if(initializeState(change.m_engineStateType))
 						{
-							// Load the scene
-							ErrorCode loadError = m_engineStates[change.m_engineStateType]->load();
+							bool stateLoaded = false;
 
-							// If it failed to load, log an error
-							if(loadError != ErrorCode::Success)
-								ErrHandlerLoc::get().log(loadError, getEngineStateTypeString(change.m_engineStateType), ErrorSource::Source_Engine);
+							if(change.m_sceneProperties)
+								loadState(change.m_engineStateType, change.m_sceneProperties);
+							else
+								loadState(change.m_engineStateType, change.m_filename);
 						}
-						else
-							ErrHandlerLoc::get().log(ErrorCode::Initialize_failure, getEngineStateTypeString(change.m_engineStateType), ErrorSource::Source_Engine);
 					}
 					break;
 				case EngineChangeType_SceneReload:
 					{
 						// Delete the current scene
-						if(m_engineStates[m_currentStateType] != nullptr)
+						if(m_engineStates[change.m_engineStateType] != nullptr)
 						{
-							delete m_engineStates[m_currentStateType];
-							m_engineStates[m_currentStateType] = nullptr;
+							delete m_engineStates[change.m_engineStateType];
+							m_engineStates[change.m_engineStateType] = nullptr;
 						}
 
-						setCurrentStateType(m_currentStateType);
+						if(initializeState(change.m_engineStateType))
+						{
+							bool stateLoaded = false;
+
+							if(change.m_sceneProperties)
+								stateLoaded = loadState(change.m_engineStateType, change.m_sceneProperties);
+							else
+								stateLoaded = loadState(change.m_engineStateType, change.m_filename);
+
+							if(stateLoaded)
+								setCurrentState(change.m_engineStateType);
+						}
 						return;
 					}
 					break;
 				case EngineChangeType_StateChange:
 					{
-						setCurrentStateType(change.m_engineStateType);
+						if(initializeState(change.m_engineStateType))
+						{
+							bool stateLoaded = false;
+
+							if(change.m_sceneProperties)
+								stateLoaded = loadState(change.m_engineStateType, change.m_sceneProperties);
+							else
+								stateLoaded = loadState(change.m_engineStateType, change.m_filename);
+
+							if(stateLoaded)
+								setCurrentState(change.m_engineStateType);
+						}
 					}
 					break;
 			}

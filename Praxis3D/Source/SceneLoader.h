@@ -36,6 +36,9 @@ public:
 	inline SystemScene *getSystemScene(Systems::TypeID p_systemType) const { return m_systemScenes[p_systemType]; }
 	inline UniversalScene *getChangeController() const { return m_changeController; }
 
+	// Load a scene from properties, pass it along to every system scene and create every entity
+	ErrorCode loadFromProperties(const PropertySet &p_sceneProperties);
+
 	// Load a scene from file, pass it along to every system scene and create every entity
 	ErrorCode loadFromFile(const std::string &p_filename);
 
@@ -53,6 +56,12 @@ public:
 
 	// Set the scene filename that is used when loading from file
 	inline void setSceneFilename(const std::string &p_filename) { m_filename = p_filename; }
+
+	// Returns the load-in-background flag
+	inline bool getLoadInBackground() const { return m_loadInBackground; }
+
+	// Set the load-in-background flag
+	inline void setLoadInBackground(const bool p_loadInBackground) { m_loadInBackground = p_loadInBackground; }
 
 private:
 	ErrorCode importFromFile(ComponentsConstructionInfo &p_constructionInfo, const std::string &p_filename);

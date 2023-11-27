@@ -13,14 +13,33 @@ public:
 
 	ErrorCode load()
 	{
-		ErrorCode returnError = ErrorCode::Initialize_failure;
+		ErrorCode returnError = ErrorCode::Success;
 
-		if(m_initialized)
+		if(m_initialized && !m_loaded)
 		{
 			// Load the scene map, and log an error if it wasn't successful
 			returnError = m_sceneLoader.loadFromFile(m_sceneFilename);
 			if(returnError != ErrorCode::Success)
 				ErrHandlerLoc::get().log(returnError, ErrorSource::Source_SceneLoader);
+			else
+				m_loaded = true;
+		}
+
+		return returnError;
+	}
+
+	ErrorCode load(const PropertySet &p_sceneProperty)
+	{
+		ErrorCode returnError = ErrorCode::Success;
+
+		if(m_initialized && !m_loaded)
+		{
+			// Load the scene map, and log an error if it wasn't successful
+			returnError = m_sceneLoader.loadFromProperties(p_sceneProperty);
+			if(returnError != ErrorCode::Success)
+				ErrHandlerLoc::get().log(returnError, ErrorSource::Source_SceneLoader);
+			else
+				m_loaded = true;
 		}
 
 		return returnError;

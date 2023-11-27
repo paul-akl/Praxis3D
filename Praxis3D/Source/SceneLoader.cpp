@@ -19,6 +19,89 @@ SceneLoader::~SceneLoader()
 {
 }
 
+ErrorCode SceneLoader::loadFromProperties(const PropertySet &p_sceneProperties)
+{
+	ErrorCode returnError = ErrorCode::Success;
+
+	EntitiesConstructionInfo constructionInfo;
+
+	// Get systems property set
+	auto &systemProperties = p_sceneProperties.getPropertySetByID(Properties::Systems);
+
+	// Iterate over all systems scenes
+	for(int sysIndex = 0; sysIndex < Systems::NumberOfSystems; sysIndex++)
+	{
+		// Create an empty property set, in case there is none in the loaded file, because a system scene setup must be called either way
+		PropertySet scenePropertySet;
+		PropertySet systemropertySet;
+
+		// Iterate over each system property set
+		for(decltype(systemProperties.getNumPropertySets()) propIndex = 0, propSize = systemProperties.getNumPropertySets(); propIndex < propSize; propIndex++)
+		{
+			// If the system scene property matches in the loaded file, retrieve it so it can be passed to the corresponding scene
+			if(Systems::SystemNames[m_systemScenes[sysIndex]->getSystemType()] == GetString(systemProperties.getPropertySetUnsafe(propIndex).getPropertyID()))
+			{
+				scenePropertySet = systemProperties.getPropertySetUnsafe(propIndex).getPropertySetByID(Properties::Scene);
+				systemropertySet = systemProperties.getPropertySetUnsafe(propIndex).getPropertySetByID(Properties::System);
+			}
+		}
+
+		// Pass the scene and system propertySet parameters
+		m_systemScenes[sysIndex]->getSystem()->setup(systemropertySet);
+		m_systemScenes[sysIndex]->setup(scenePropertySet);
+	}
+
+	// Get Game Objects
+	auto &gameObjects = p_sceneProperties.getPropertySetByID(Properties::GameObject);
+	if(gameObjects)
+	{
+		// Reserve enough room for all the game objects
+		constructionInfo.resize(gameObjects.getNumPropertySets());
+
+		// Iterate over all game objects
+		for(decltype(gameObjects.getNumPropertySets()) objIndex = 0, objSize = gameObjects.getNumPropertySets(); objIndex < objSize; objIndex++)
+		{
+			// Import the game object data from PropertySets to EntitiesConstructionInfo
+			importFromProperties(constructionInfo[objIndex], gameObjects.getPropertySetUnsafe(objIndex));
+		}
+
+		// Get the world scene required for creating entities
+		WorldScene *worldScene = static_cast<WorldScene *>(m_systemScenes[Systems::World]);
+
+		// Go over each entity and create it
+		for(decltype(constructionInfo.size()) i = 0, size = constructionInfo.size(); i < size; i++)
+		{
+			worldScene->createEntity(constructionInfo[i], false);
+		}
+	}
+	else
+	{
+		// GameObject property set is missing
+		returnError = ErrorCode::GameObjects_missing;
+		ErrHandlerLoc().get().log(ErrorCode::GameObjects_missing, ErrorSource::Source_SceneLoader);
+	}
+
+	// Check if the scene should be loaded in background
+	if(p_sceneProperties.getPropertyByID(Properties::LoadInBackground).getBool())
+	{
+		// Start loading in background threads in all scenes
+		for(int i = 0; i < Systems::NumberOfSystems; i++)
+			m_systemScenes[i]->loadInBackground();
+	}
+	else
+	{
+		// Preload all scenes sequentially
+		for(int i = 0; i < Systems::NumberOfSystems; i++)
+			m_systemScenes[i]->preload();
+	}
+
+	// Make sure to clear the memory of contructionInfo
+	for(decltype(constructionInfo.size()) i = 0, size = constructionInfo.size(); i < size; i++)
+		constructionInfo[i].deleteConstructionInfo();
+
+	return returnError;
+}
+
 ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 {
 	ErrorCode returnError = ErrorCode::Success;
@@ -37,122 +120,8 @@ ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 	}
 	else
 	{
-		// Get systems property set
-		auto &systemProperties = loadedProperties.getPropertySet().getPropertySetByID(Properties::Systems);
-
-		// Iterate over all systems scenes
-		for(int sysIndex = 0; sysIndex < Systems::NumberOfSystems; sysIndex++)
-		{
-			// Create an empty property set, in case there is none in the loaded file, because a system scene setup must be called either way
-			PropertySet scenePropertySet;
-			PropertySet systemropertySet;
-
-			// Iterate over each system property set
-			for(decltype(systemProperties.getNumPropertySets()) propIndex = 0, propSize = systemProperties.getNumPropertySets(); propIndex < propSize; propIndex++)
-			{
-				// If the system scene property matches in the loaded file, retrieve it so it can be passed to the corresponding scene
-				if(Systems::SystemNames[m_systemScenes[sysIndex]->getSystemType()] == GetString(systemProperties.getPropertySetUnsafe(propIndex).getPropertyID()))
-				{
-					scenePropertySet = systemProperties.getPropertySetUnsafe(propIndex).getPropertySetByID(Properties::Scene);
-					systemropertySet = systemProperties.getPropertySetUnsafe(propIndex).getPropertySetByID(Properties::System);
-				}
-			}
-
-			// Pass the scene and system propertySet parameters
-			m_systemScenes[sysIndex]->getSystem()->setup(systemropertySet);
-			m_systemScenes[sysIndex]->setup(scenePropertySet);
-		}
-
-		// Get Game Objects
-		auto &gameObjects = loadedProperties.getPropertySet().getPropertySetByID(Properties::GameObject);
-		if(gameObjects)
-		{
-			// Reserve enough room for all the game objects
-			constructionInfo.resize(gameObjects.getNumPropertySets());
-
-			// Iterate over all game objects
-			for(decltype(gameObjects.getNumPropertySets()) objIndex = 0, objSize = gameObjects.getNumPropertySets(); objIndex < objSize; objIndex++)
-			{
-				// Import the game object data from PropertySets to EntitiesConstructionInfo
-				importFromProperties(constructionInfo[objIndex], gameObjects.getPropertySetUnsafe(objIndex));
-			}
-
-			// Get the world scene required for creating entities
-			WorldScene *worldScene = static_cast<WorldScene*>(m_systemScenes[Systems::World]);
-
-			// Go over each entity and create it
-			for(decltype(constructionInfo.size()) i = 0, size = constructionInfo.size(); i < size; i++)
-			{
-				worldScene->createEntity(constructionInfo[i], false);
-			}
-		}
-		else
-		{
-			// GameObject property set is missing
-			returnError = ErrorCode::GameObjects_missing;
-			ErrHandlerLoc().get().log(ErrorCode::GameObjects_missing, ErrorSource::Source_SceneLoader);
-		}
-
-		/*/ Get the object link property sets
-		auto &objLinkProperties = loadedProperties.getPropertySet().getPropertySetByID(Properties::ObjectLinks);
-
-		// Iterate over all object link property sets
-		for(decltype(objLinkProperties.getNumPropertySets()) linkIndex = 0, linkSize = objLinkProperties.getNumPropertySets(); linkIndex < linkSize; linkIndex++)
-		{
-			// Get subject name
-			const auto &subjectName = objLinkProperties.getPropertySetUnsafe(linkIndex).getPropertyByID(Properties::Subject).getString();
-			if(subjectName.empty()) // Make sure subject's name is not empty
-				continue;
-
-			// Get observer name
-			const auto &observerName = objLinkProperties.getPropertySetUnsafe(linkIndex).getPropertyByID(Properties::Observer).getString();
-			if(observerName.empty()) // Make sure observer's name is not empty
-				continue;
-
-			// Iterate over created objects and match subject's name
-			for(decltype(createdObjects.size()) subjIndex = 0, subjSize = createdObjects.size(); subjIndex < subjSize; subjIndex++)
-			{
-				// Compare subject name
-				if(createdObjects[subjIndex].first == subjectName)
-				{
-					// Iterate over created objects and match observer's name
-					for(decltype(createdObjects.size()) observIndex = 0, observSize = createdObjects.size(); observIndex < observSize; observIndex++)
-					{
-						// Compare observer name
-						if(createdObjects[observIndex].first == observerName)
-						{
-							// Create object link between subject and observer in the change controller
-							m_changeController->createObjectLink(createdObjects[subjIndex].second, createdObjects[observIndex].second);
-
-							// Exit the inner loop
-							break;
-						}
-					}
-
-					// Exit the outer loop
-					break;
-				}
-			}
-		}*/
-
-		// Check if the scene should be loaded in background
-		if(loadedProperties.getPropertySet().getPropertyByID(Properties::LoadInBackground).getBool())
-		{
-			// Start loading in background threads in all scenes
-			for(int i = 0; i < Systems::NumberOfSystems; i++)
-				m_systemScenes[i]->loadInBackground();
-		}
-		else
-		{
-			// Preload all scenes sequentially
-			for(int i = 0; i < Systems::NumberOfSystems; i++)
-				m_systemScenes[i]->preload();
-		}
+		returnError = loadFromProperties(loadedProperties.getPropertySet());
 	}
-
-	// Make sure to clear the memory of contructionInfo
-	for(decltype(constructionInfo.size()) i = 0, size = constructionInfo.size(); i < size; i++)
-		constructionInfo[i].deleteConstructionInfo();
 
 	return returnError;
 }
@@ -399,7 +368,7 @@ void SceneLoader::importFromProperties(ComponentsConstructionInfo &p_constructio
 
 	// Load graphics components
 	{
-		auto &sceneProperty = p_properties.getPropertySetByID(Properties::Rendering);
+		auto &sceneProperty = p_properties.getPropertySetByID(Properties::Graphics);
 		if(sceneProperty)
 		{
 			for(decltype(sceneProperty.getNumPropertySets()) i = 0, size = sceneProperty.getNumPropertySets(); i < size; i++)
@@ -1027,7 +996,7 @@ void SceneLoader::importFromProperties(WorldComponentsConstructionInfo &p_constr
 						p_constructionInfo.m_spatialConstructionInfo->m_localRotationEuler = p_properties[i].getVec3f();
 						break;
 					case Properties::LocalRotationQuaternion:
-						p_constructionInfo.m_spatialConstructionInfo->m_localRotationQuaternion = glm::quat(p_properties[i].getVec4f());
+						p_constructionInfo.m_spatialConstructionInfo->m_localRotationQuaternion = Math::toGlmQuat(p_properties[i].getVec4f());
 						break;
 					case Properties::LocalScale:
 						p_constructionInfo.m_spatialConstructionInfo->m_localScale = p_properties[i].getVec3f();

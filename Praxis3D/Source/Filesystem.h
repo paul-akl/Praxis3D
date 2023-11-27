@@ -63,6 +63,7 @@ public:
 		return std::filesystem::exists(p_file);
 	}
 
+	// Returns the current working directory
 	static std::string getCurrentDirectory()
 	{
 		std::filesystem::path path = std::filesystem::current_path();

@@ -48,22 +48,21 @@ enum MemoryBarrierType : unsigned int
 	MemoryBarrierType_AccessAndFetchBarrier,
 	MemoryBarrierType_ShaderStorageBarrier
 };
-enum RenderPassType : unsigned int
-{
-	RenderPassType_Geometry,
-	RenderPassType_Lighting,
-	RenderPassType_AtmScattering,
-	RenderPassType_HdrMapping,
-	RenderPassType_Blur,
-	RenderPassType_Bloom,
-	RenderPassType_BloomComposite,
-	RenderPassType_LenseFlare,
-	RenderPassType_LenseFlareComposite,
-	RenderPassType_Luminance,
-	RenderPassType_Final,
-	RenderPassType_GUI,
-	RenderPassType_NumOfTypes
-};
+#define RENDER_PASS_TYPE(Code) \
+	Code(RenderPassType_Geometry, = 0) \
+	Code(RenderPassType_Lighting,) \
+	Code(RenderPassType_AtmScattering,) \
+	Code(RenderPassType_HdrMapping,) \
+	Code(RenderPassType_Blur,) \
+	Code(RenderPassType_Bloom,) \
+	Code(RenderPassType_BloomComposite,) \
+	Code(RenderPassType_LenseFlare,) \
+	Code(RenderPassType_LenseFlareComposite,) \
+	Code(RenderPassType_Luminance,) \
+	Code(RenderPassType_Final,) \
+	Code(RenderPassType_GUI,) \
+	Code(RenderPassType_NumOfTypes,)
+DECLARE_ENUM(RenderPassType, RENDER_PASS_TYPE)
 typedef std::vector<RenderPassType> RenderingPasses;
 
 enum BufferType : unsigned int

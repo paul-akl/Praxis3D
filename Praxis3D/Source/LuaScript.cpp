@@ -284,6 +284,10 @@ void LuaScript::setFunctions()
 	m_luaState.set_function("setEngineRunning", [](const bool p_v1) -> const void {Config::m_engineVar.running = p_v1; });
 	m_luaState.set_function("setEngineState", [this](const EngineStateType p_v1) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_StateChange, p_v1)); });
 
+	m_luaState.set_function("sendEngineChange", sol::overload([this](const EngineChangeType p_v1) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(p_v1)); },
+		[this](const EngineChangeType p_v1, const EngineStateType p_v2) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(p_v1, p_v2)); },
+		[this](const EngineChangeType p_v1, const EngineStateType p_v2, const std::string p_v3) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(p_v1, p_v2, p_v3)); }));
+
 	// GUI functions
 	auto GUITable = m_luaState.create_table("GUI");
 	GUITable.set_function("Begin", sol::overload([this](const std::string &p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::Begin(p_v1.c_str()); }); },
@@ -346,6 +350,13 @@ void LuaScript::setUsertypes()
 		"MainMenu", EngineStateType::EngineStateType_MainMenu,
 		"Play", EngineStateType::EngineStateType_Play,
 		"Editor", EngineStateType::EngineStateType_Editor);
+
+	m_luaState.new_enum("EngineChangeType",
+		"None", EngineChangeType::EngineChangeType_None,
+		"SceneFilename", EngineChangeType::EngineChangeType_SceneFilename,
+		"SceneLoad", EngineChangeType::EngineChangeType_SceneLoad,
+		"SceneReload", EngineChangeType::EngineChangeType_SceneReload,
+		"StateChange", EngineChangeType::EngineChangeType_StateChange);
 
 	// Config variables
 	m_luaState.new_usertype<Config::EngineVariables>("EngineVariables",

@@ -14,7 +14,7 @@
 			"LocalScale": "2.0f, 2.0f, 2.0f"
 		}
 	},
-	"Rendering":
+	"Graphics":
 	{
 		"ModelComponent":
 		{

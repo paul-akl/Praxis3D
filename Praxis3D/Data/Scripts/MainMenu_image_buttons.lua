@@ -245,7 +245,7 @@ function update (p_deltaTime)
 	
 	-- Check if the EXIT button is pressed; close the engine if it is
 	if exitButtonPressed:isChecked() then
-		print('Exit called from MainMenu.lua')
+		ErrHandlerLoc.logErrorType(ErrorType.Info, 'Exit called from MainMenu.lua')
 		setEngineRunning(false)
 	end
 	
@@ -261,13 +261,13 @@ function update (p_deltaTime)
 	
 	-- Check if the EDITOR button is pressed; change the current engine state to EDITOR, if it is
 	if editorButtonPressed:isChecked() then
-		setEngineState(EngineStateType.Editor)
+		sendEngineChange(EngineChangeType.StateChange, EngineStateType.Editor)
 		--setMouseCapture(true)
 	end
 	
 	-- Check if the PLAY button is pressed; change the current engine state to PLAY, if it is
 	if playButtonPressed:isChecked() then
-		setEngineState(EngineStateType.Play)
+		sendEngineChange(EngineChangeType.StateChange, EngineStateType.Play)
 		setMouseCapture(true)
 	end
 	
@@ -281,7 +281,13 @@ function update (p_deltaTime)
 	
 	if fileBrowserLoadMap.m_closed then
 		if fileBrowserLoadMap.m_success then
-			print(fileBrowserLoadMap.m_filename)
+			infoText = 'Loading map: "' .. fileBrowserLoadMap.m_filename .. '"'
+			ErrHandlerLoc.logErrorType(ErrorType.Info, infoText)
+			
+			sendEngineChange(EngineChangeType.SceneFilename, EngineStateType.Play, fileBrowserLoadMap.m_filename)
+			sendEngineChange(EngineChangeType.StateChange, EngineStateType.Play)
+			
+			setMouseCapture(true)
 		end
 		fileBrowserLoadMapOpened = false
 		fileBrowserLoadMap:reset()

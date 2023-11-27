@@ -13,10 +13,10 @@ AudioScene::AudioScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : Syste
 	m_coreSystem = nullptr;
 	m_studioSystem = nullptr;
 
-	m_volumeAmbient = Config::audioVar().volume_ambient;
-	m_volumeMaster = Config::audioVar().volume_master;
-	m_volumeMusic = Config::audioVar().volume_music;
-	m_volumeSoundEffects = Config::audioVar().volume_sfx;
+	m_volume[AudioBusType::AudioBusType_Ambient] = Config::audioVar().volume_ambient;
+	m_volume[AudioBusType::AudioBusType_Master] = Config::audioVar().volume_master;
+	m_volume[AudioBusType::AudioBusType_Music] = Config::audioVar().volume_music;
+	m_volume[AudioBusType::AudioBusType_SFX] = Config::audioVar().volume_sfx;
 
 	for(unsigned int i = 0; i < ObjectMaterialType::NumberOfMaterialTypes; i++)
 		m_impactEvents[i] = nullptr;
@@ -66,23 +66,22 @@ ErrorCode AudioScene::setup(const PropertySet &p_properties)
 	auto const &banksProperty = p_properties.getPropertySetByID(Properties::Banks);
 	if(banksProperty)
 	{
-		// Iterate over all game objects
+		// Iterate over all audio banks
 		for(decltype(banksProperty.getNumPropertySets()) objIndex = 0, objSize = banksProperty.getNumPropertySets(); objIndex < objSize; objIndex++)
 		{
+			// Get audio bank filename property
 			auto const &filenameProperty = banksProperty.getPropertySetUnsafe(objIndex).getPropertyByID(Properties::Filename);
 			if(filenameProperty)
 			{
+				// Get audio bank filename
 				auto filename = filenameProperty.getString();
 
-				FMOD::Studio::Bank *soundBank = nullptr;
+				// Try to load the audio bank
+				FMOD::Studio::Bank *soundBank = m_audioSystem->loadBankFile(Config::filepathVar().sound_path + filename, FMOD_STUDIO_LOAD_BANK_NORMAL);
 
-				if(AudioSystem::fmodErrorLog(m_studioSystem->loadBankFile((Config::filepathVar().sound_path + filename).c_str(), FMOD_STUDIO_LOAD_BANK_NORMAL, &soundBank), filename))
-				{
-					if(AudioSystem::fmodErrorLog(soundBank->loadSampleData(), filename))
-						m_audioSystem->addImpactSoundBank(soundBank);
-
+				// If the audio bank was loaded, add it to the banks-and-filenames array
+				if(soundBank != nullptr)
 					m_bankFilenames.push_back(std::make_pair(filename, soundBank));
-				}
 			}
 		}
 	}
@@ -96,50 +95,41 @@ ErrorCode AudioScene::setup(const PropertySet &p_properties)
 			switch(volumeProperty[i].getPropertyID())
 			{
 				case Properties::Ambient:
-					m_volumeAmbient = volumeProperty[i].getFloat();
-					Config::m_audioVar.volume_ambient = m_volumeAmbient;
+					m_volume[AudioBusType::AudioBusType_Ambient] = volumeProperty[i].getFloat();
+					Config::m_audioVar.volume_ambient = m_volume[AudioBusType::AudioBusType_Ambient];
 					break;
 				case Properties::Master:
-					m_volumeMaster = volumeProperty[i].getFloat();
-					Config::m_audioVar.volume_master = m_volumeMaster;
+					m_volume[AudioBusType::AudioBusType_Master] = volumeProperty[i].getFloat();
+					Config::m_audioVar.volume_master = m_volume[AudioBusType::AudioBusType_Master];
 					break;
 				case Properties::Music:
-					m_volumeMusic = volumeProperty[i].getFloat();
-					Config::m_audioVar.volume_music = m_volumeMusic;
+					m_volume[AudioBusType::AudioBusType_Music] = volumeProperty[i].getFloat();
+					Config::m_audioVar.volume_music = m_volume[AudioBusType::AudioBusType_Music];
 					break;
 				case Properties::SoundEffect:
-					m_volumeSoundEffects = volumeProperty[i].getFloat();
-					Config::m_audioVar.volume_sfx = m_volumeSoundEffects;
+					m_volume[AudioBusType::AudioBusType_SFX] = volumeProperty[i].getFloat();
+					Config::m_audioVar.volume_sfx = m_volume[AudioBusType::AudioBusType_SFX];
 					break;
 			}
 		}
 	}
 
+	// Find an impact sound event for each object material type
 	for(unsigned int materialTypeIndex = 0; materialTypeIndex < ObjectMaterialType::NumberOfMaterialTypes; materialTypeIndex++)
 	{
-		std::string materialTypeString = GetString(static_cast<ObjectMaterialType>(materialTypeIndex));
+		// Convert object material type to text string
+		const std::string materialTypeString = GetString(static_cast<ObjectMaterialType>(materialTypeIndex));
 
-		for(auto &sound : m_audioSystem->m_impactSounds)
+		// Try to find a matching audio event
+		auto soundEvent = m_audioSystem->getEvent(materialTypeString);
+
+		// If the impact event was found, add it to the impact events array entry for this object material type
+		if(soundEvent != nullptr)
 		{
-			if(sound.first == materialTypeString)
-			{
-				std::cout << "found sound: " << sound.first << std::endl;
-				m_impactEvents[materialTypeIndex] = sound.second;
-				break;
-			}
+			ErrHandlerLoc::get().log(ErrorType::Info, ErrorSource::Source_AudioScene, "Impact sound found: \"" + materialTypeString + "\"");
+			m_impactEvents[materialTypeIndex] = soundEvent;
 		}
 	}
-	
-	//FMOD::Studio::Bank *soundBank = nullptr;
-	//if(AudioSystem::fmodErrorLog(m_studioSystem->loadBankFile((Config::filepathVar().sound_path + "Music.bank").c_str(), FMOD_STUDIO_LOAD_BANK_NORMAL, &soundBank), "Music.bank"))
-	//{
-	//	if(AudioSystem::fmodErrorLog(soundBank->loadSampleData(), "Music.bank"))
-	//	{
-	//		std::cout << "Music.bank loaded" << std::endl;
-	//	}
-	//}
-
-	//loadParameterGUIDs();
 
 	return ErrorCode::Success;
 }
@@ -163,26 +153,26 @@ void AudioScene::exportSetup(PropertySet &p_propertySet)
 
 	// Add volume settings
 	auto &volumePropertySet = p_propertySet.addPropertySet(Properties::Volume);
-	volumePropertySet.addProperty(Properties::Ambient, m_volumeAmbient);
-	volumePropertySet.addProperty(Properties::Master, m_volumeMaster);
-	volumePropertySet.addProperty(Properties::Music, m_volumeMusic);
-	volumePropertySet.addProperty(Properties::SoundEffect, m_volumeSoundEffects);
+	volumePropertySet.addProperty(Properties::Ambient, m_volume[AudioBusType::AudioBusType_Ambient]);
+	volumePropertySet.addProperty(Properties::Master, m_volume[AudioBusType::AudioBusType_Master]);
+	volumePropertySet.addProperty(Properties::Music, m_volume[AudioBusType::AudioBusType_Music]);
+	volumePropertySet.addProperty(Properties::SoundEffect, m_volume[AudioBusType::AudioBusType_SFX]);
 
 }
 
 void AudioScene::activate()
 {
 	// Set volume of all buses
-	m_audioSystem->getBus(AudioBusType::AudioBusType_Ambient)->setVolume(m_volumeAmbient);
-	m_audioSystem->getBus(AudioBusType::AudioBusType_Master)->setVolume(m_volumeMaster);
-	m_audioSystem->getBus(AudioBusType::AudioBusType_Music)->setVolume(m_volumeMusic);
-	m_audioSystem->getBus(AudioBusType::AudioBusType_SFX)->setVolume(m_volumeSoundEffects);
+	m_audioSystem->getBus(AudioBusType::AudioBusType_Ambient)->setVolume(m_volume[AudioBusType::AudioBusType_Ambient]);
+	m_audioSystem->getBus(AudioBusType::AudioBusType_Master)->setVolume(m_volume[AudioBusType::AudioBusType_Master]);
+	m_audioSystem->getBus(AudioBusType::AudioBusType_Music)->setVolume(m_volume[AudioBusType::AudioBusType_Music]);
+	m_audioSystem->getBus(AudioBusType::AudioBusType_SFX)->setVolume(m_volume[AudioBusType::AudioBusType_SFX]);
 
 	// Set volume of all channel groups
-	m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Ambient)->setVolume(m_volumeAmbient);
-	m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Master)->setVolume(m_volumeMaster);
-	m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Music)->setVolume(m_volumeMusic);
-	m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_SFX)->setVolume(m_volumeSoundEffects);
+	m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Ambient)->setVolume(m_volume[AudioBusType::AudioBusType_Ambient]);
+	m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Master)->setVolume(m_volume[AudioBusType::AudioBusType_Master]);
+	m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Music)->setVolume(m_volume[AudioBusType::AudioBusType_Music]);
+	m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_SFX)->setVolume(m_volume[AudioBusType::AudioBusType_SFX]);
 }
 
 void AudioScene::deactivate()
@@ -411,32 +401,32 @@ void AudioScene::update(const float p_deltaTime)
 	//	|___________________________|
 	//
 	// Ambient volume
-	if(m_volumeAmbient != Config::audioVar().volume_ambient)
+	if(m_volume[AudioBusType::AudioBusType_Ambient] != Config::audioVar().volume_ambient)
 	{
-		m_volumeAmbient = Config::audioVar().volume_ambient;
-		m_audioSystem->getBus(AudioBusType::AudioBusType_Ambient)->setVolume(m_volumeAmbient);
-		m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Ambient)->setVolume(m_volumeAmbient);
+		m_volume[AudioBusType::AudioBusType_Ambient] = Config::audioVar().volume_ambient;
+		m_audioSystem->getBus(AudioBusType::AudioBusType_Ambient)->setVolume(m_volume[AudioBusType::AudioBusType_Ambient]);
+		m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Ambient)->setVolume(m_volume[AudioBusType::AudioBusType_Ambient]);
 	}
 	// Master volume
-	if(m_volumeMaster != Config::audioVar().volume_master)
+	if(m_volume[AudioBusType::AudioBusType_Master] != Config::audioVar().volume_master)
 	{
-		m_volumeMaster = Config::audioVar().volume_master;
-		m_audioSystem->getBus(AudioBusType::AudioBusType_Master)->setVolume(m_volumeMaster);
-		m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Master)->setVolume(m_volumeMaster);
+		m_volume[AudioBusType::AudioBusType_Master] = Config::audioVar().volume_master;
+		m_audioSystem->getBus(AudioBusType::AudioBusType_Master)->setVolume(m_volume[AudioBusType::AudioBusType_Master]);
+		m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Master)->setVolume(m_volume[AudioBusType::AudioBusType_Master]);
 	}
 	// Music volume
-	if(m_volumeMusic != Config::audioVar().volume_music)
+	if(m_volume[AudioBusType::AudioBusType_Music] != Config::audioVar().volume_music)
 	{
-		m_volumeMusic = Config::audioVar().volume_music;
-		m_audioSystem->getBus(AudioBusType::AudioBusType_Music)->setVolume(m_volumeMusic);
-		m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Music)->setVolume(m_volumeMusic);
+		m_volume[AudioBusType::AudioBusType_Music] = Config::audioVar().volume_music;
+		m_audioSystem->getBus(AudioBusType::AudioBusType_Music)->setVolume(m_volume[AudioBusType::AudioBusType_Music]);
+		m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Music)->setVolume(m_volume[AudioBusType::AudioBusType_Music]);
 	}
 	// SFX volume
-	if(m_volumeSoundEffects != Config::audioVar().volume_sfx)
+	if(m_volume[AudioBusType::AudioBusType_SFX] != Config::audioVar().volume_sfx)
 	{
-		m_volumeSoundEffects = Config::audioVar().volume_sfx;
-		m_audioSystem->getBus(AudioBusType::AudioBusType_SFX)->setVolume(m_volumeSoundEffects);
-		m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_SFX)->setVolume(m_volumeSoundEffects);
+		m_volume[AudioBusType::AudioBusType_SFX] = Config::audioVar().volume_sfx;
+		m_audioSystem->getBus(AudioBusType::AudioBusType_SFX)->setVolume(m_volume[AudioBusType::AudioBusType_SFX]);
+		m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_SFX)->setVolume(m_volume[AudioBusType::AudioBusType_SFX]);
 	}
 
 	// Update the sound system
@@ -559,6 +549,45 @@ ErrorCode AudioScene::destroyObject(SystemObject *p_systemObject)
 {
 	// If this point is reached, no object was found, return an appropriate error
 	return ErrorCode::Destroy_obj_not_found;
+}
+
+void AudioScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
+{
+	if(CheckBitmask(p_changeType, Systems::Changes::Audio::VolumeAmbient))
+	{
+		m_volume[AudioBusType::AudioBusType_Ambient] = p_subject->getFloat(this, Systems::Changes::Audio::VolumeAmbient);
+
+		Config::m_audioVar.volume_ambient = m_volume[AudioBusType::AudioBusType_Ambient];
+		m_audioSystem->getBus(AudioBusType::AudioBusType_Ambient)->setVolume(m_volume[AudioBusType::AudioBusType_Ambient]);
+		m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Ambient)->setVolume(m_volume[AudioBusType::AudioBusType_Ambient]);
+	}
+
+	if(CheckBitmask(p_changeType, Systems::Changes::Audio::VolumeMaster))
+	{
+		m_volume[AudioBusType::AudioBusType_Master] = p_subject->getFloat(this, Systems::Changes::Audio::VolumeMaster);
+
+		Config::m_audioVar.volume_master = m_volume[AudioBusType::AudioBusType_Master];
+		m_audioSystem->getBus(AudioBusType::AudioBusType_Master)->setVolume(m_volume[AudioBusType::AudioBusType_Master]);
+		m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Master)->setVolume(m_volume[AudioBusType::AudioBusType_Master]);
+	}
+
+	if(CheckBitmask(p_changeType, Systems::Changes::Audio::VolumeMusic))
+	{
+		m_volume[AudioBusType::AudioBusType_Music] = p_subject->getFloat(this, Systems::Changes::Audio::VolumeMusic);
+
+		Config::m_audioVar.volume_music = m_volume[AudioBusType::AudioBusType_Music];
+		m_audioSystem->getBus(AudioBusType::AudioBusType_Music)->setVolume(m_volume[AudioBusType::AudioBusType_Music]);
+		m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_Music)->setVolume(m_volume[AudioBusType::AudioBusType_Music]);
+	}
+
+	if(CheckBitmask(p_changeType, Systems::Changes::Audio::VolumeSFX))
+	{
+		m_volume[AudioBusType::AudioBusType_SFX] = p_subject->getFloat(this, Systems::Changes::Audio::VolumeSFX);
+
+		Config::m_audioVar.volume_sfx = m_volume[AudioBusType::AudioBusType_SFX];
+		m_audioSystem->getBus(AudioBusType::AudioBusType_SFX)->setVolume(m_volume[AudioBusType::AudioBusType_SFX]);
+		m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_SFX)->setVolume(m_volume[AudioBusType::AudioBusType_SFX]);
+	}
 }
 
 void AudioScene::createSound(SoundComponent &p_soundComponent)

@@ -133,7 +133,7 @@ public:
 
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
-	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
+	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType);
 
 	void receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving)
 	{
@@ -149,6 +149,8 @@ public:
 	Systems::TypeID getSystemType() { return Systems::TypeID::Physics; };
 	BitMask getDesiredSystemChanges() { return Systems::Changes::Generic::CreateObject || Systems::Changes::Generic::DeleteObject; }
 	BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
+
+	const glm::vec3 getGravity() const { return Math::toGlmVec3(m_dynamicsWorld->getGravity()); }
 
 	// Fluch the collision contacts of a rigid body (used after changing the collision shape dimensions)
 	void cleanProxyFromPairs(btRigidBody &p_rigidBody)

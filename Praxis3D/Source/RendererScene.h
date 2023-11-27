@@ -213,7 +213,54 @@ public:
 	SystemTask *getSystemTask() { return m_renderTask; }
 	Systems::TypeID getSystemType() { return Systems::Graphics; }
 	inline SceneObjects &getSceneObjects() { return m_sceneObjects; }
-	
+	const inline RenderingPasses &getRenderingPasses() const { return m_renderingPasses; }
+
+	static void exportRenderingPasses(PropertySet &p_propertySet, const RenderingPasses &p_renderingPasses)
+	{
+		// Create the render passes Property Set entry
+		auto &RenderPassesPropertySet = p_propertySet.addPropertySet(Properties::RenderPasses);
+
+		// Go over each rendering pass
+		for(auto renderPassType : p_renderingPasses)
+		{
+			// Convert RenderPassType to PropertyID
+			Properties::PropertyID renderPassTypeProperty = Properties::Null;
+			switch(renderPassType)
+			{
+				case RenderPassType::RenderPassType_AtmScattering:
+					renderPassTypeProperty = Properties::AtmScatteringRenderPass;
+					break;
+				case RenderPassType::RenderPassType_Bloom:
+					renderPassTypeProperty = Properties::BloomRenderPass;
+					break;
+				case RenderPassType::RenderPassType_Geometry:
+					renderPassTypeProperty = Properties::GeometryRenderPass;
+					break;
+				case RenderPassType::RenderPassType_GUI:
+					renderPassTypeProperty = Properties::GUIRenderPass;
+					break;
+				case RenderPassType::RenderPassType_Lighting:
+					renderPassTypeProperty = Properties::LightingRenderPass;
+					break;
+				case RenderPassType::RenderPassType_Luminance:
+					renderPassTypeProperty = Properties::LuminanceRenderPass;
+					break;
+				case RenderPassType::RenderPassType_Final:
+					renderPassTypeProperty = Properties::FinalRenderPass;
+					break;
+			}
+
+			// Add the rendering pass array entry and rendering pass type
+			RenderPassesPropertySet.addPropertySet(Properties::ArrayEntry).addProperty(Properties::Type, renderPassTypeProperty);
+		}
+	}
+	static std::string getRenderingPassString(const RenderPassType p_renderPassType)
+	{
+		std::string returnString;
+
+
+	}
+
 private:
 	MaterialData loadMaterialData(PropertySet &p_materialProperty, Model::MaterialArrays &p_materialArraysFromModel, MaterialType p_materialType, std::size_t p_meshIndex);
 

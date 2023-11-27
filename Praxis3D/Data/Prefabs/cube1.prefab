@@ -7,7 +7,7 @@
 			"Type": "Wood"
 		}
 	},
-	"Rendering":
+	"Graphics":
 	{
 		"ModelComponent":
 		{
@@ -48,20 +48,6 @@
 					]
 				}
 			]
-		}
-	},
-	"Physics":
-	{
-		"RigidBodyComponent":
-		{
-			"Mass": "10.0f",
-			"Restitution": "0.5f",
-			"Friction": "0.5f",
-			"CollisionShape":
-			{
-				"Type": "Box",
-				"Size": "1.0f, 1.0f, 1.0f"
-			}
 		}
 	}
 }

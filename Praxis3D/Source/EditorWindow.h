@@ -25,6 +25,7 @@ public:
 		m_renderSceneToTexture = true;
 		m_GUISequenceEnabled = false;
 		m_LUAScriptingEnabled = true;
+		m_showNewMapWindow = false;
 		m_sceneState = EditorSceneState::EditorSceneState_Pause;
 		m_centerWindowSize = glm::ivec2(0);
 
@@ -38,12 +39,22 @@ public:
 
 		m_luaVariableTypeStrings = { "null", "bool", "int", "float", "double", "vec2i", "vec2f", "vec3f", "vec4f", "string", "propertyID" };
 
+		m_shaderTypeStrings = { "Compute", "Fragment", "Geometry", "Vertex", "Tessellation control", "Tessellation evaluation" };
+		m_selectedProgramShader = -1;
+		m_selectedShader = -1;
+
 		for(unsigned int i = 0; i < ObjectMaterialType::NumberOfMaterialTypes; i++)
 			m_physicalMaterialProperties.push_back(GetString(static_cast<ObjectMaterialType>(i)));
+
+		for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
+			m_renderingPassesTypeText.push_back(GetString(static_cast<RenderPassType>(i)));
+
+		m_newSceneSettingsTabFlags = 0;
 
 		m_fontSize = ImGui::GetFontSize();
 		m_buttonSizedByFont = ImVec2(m_fontSize, m_fontSize);
 		m_assetSelectionPopupImageSize = ImVec2(m_fontSize, m_fontSize) * Config::GUIVar().editor_asset_selection_button_size_multiplier;
+		m_textureAssetImageSize = ImVec2(Config::GUIVar().editor_asset_texture_button_size_x, Config::GUIVar().editor_asset_texture_button_size_y);
 	}
 	~EditorWindow();
 
@@ -108,6 +119,11 @@ public:
 					return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeSize;
 				}
 				break;
+				case Systems::Changes::Physics::Gravity:
+					{
+						return m_currentSceneData.m_gravity;
+					}
+					break;
 			}
 		}
 
@@ -239,6 +255,30 @@ public:
 			case Systems::Changes::Audio::Volume:
 				{
 					return m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_volume;
+				}
+				break;
+
+			case Systems::Changes::Audio::VolumeAmbient:
+				{
+					return m_currentSceneData.m_volume[AudioBusType::AudioBusType_Ambient];
+				}
+				break;
+
+			case Systems::Changes::Audio::VolumeMaster:
+				{
+					return m_currentSceneData.m_volume[AudioBusType::AudioBusType_Master];
+				}
+				break;
+
+			case Systems::Changes::Audio::VolumeMusic:
+				{
+					return m_currentSceneData.m_volume[AudioBusType::AudioBusType_Music];
+				}
+				break;
+
+			case Systems::Changes::Audio::VolumeSFX:
+				{
+					return m_currentSceneData.m_volume[AudioBusType::AudioBusType_SFX];
 				}
 				break;
 
@@ -479,6 +519,35 @@ private:
 		bool m_modelDataModified;
 		bool m_soundFilenameModified;
 	};
+	struct SceneData
+	{
+		SceneData()
+		{
+			m_renderingPasses.push_back(RenderPassType::RenderPassType_Geometry);
+			m_renderingPasses.push_back(RenderPassType::RenderPassType_AtmScattering);
+			m_renderingPasses.push_back(RenderPassType::RenderPassType_Lighting);
+			m_renderingPasses.push_back(RenderPassType::RenderPassType_AtmScattering);
+			m_renderingPasses.push_back(RenderPassType::RenderPassType_Bloom);
+			m_renderingPasses.push_back(RenderPassType::RenderPassType_Luminance);
+			m_renderingPasses.push_back(RenderPassType::RenderPassType_Final);
+			m_renderingPasses.push_back(RenderPassType::RenderPassType_GUI);
+
+			for(unsigned int i = 0; i < AudioBusType::AudioBusType_NumOfTypes; i++)
+				m_volume[i] = 1.0f;
+
+			m_gravity = glm::vec3(0.0f, -9.8f, 0.0f);
+			m_loadInBackground = false;
+			m_modified = true;
+		}
+
+		RenderingPasses m_renderingPasses;
+		std::vector<std::string> m_audioBanks;
+
+		float m_volume[AudioBusType::AudioBusType_NumOfTypes];
+		glm::vec3 m_gravity;
+		bool m_loadInBackground;
+		bool m_modified;
+	};
 
 	enum ButtonTextureType : unsigned int
 	{
@@ -492,6 +561,7 @@ private:
 		ButtonTextureType_OpenFile,
 		ButtonTextureType_Reload,
 		ButtonTextureType_OpenAssetList,
+		ButtonTextureType_ArrowUp,
 		ButtonTextureType_NumOfTypes
 	};
 	enum EditorSceneState : unsigned int
@@ -507,9 +577,11 @@ private:
 		FileBrowserActivated_SaveScene,
 		FileBrowserActivated_SoundFile,
 		FileBrowserActivated_ModelFile,
-		FileBrowserActivated_TextureFile
+		FileBrowserActivated_TextureFile,
+		FileBrowserActivated_AudioBankFile
 	};
 
+	void drawSceneData(SceneData &p_sceneData, const bool p_sendChanges = false);
 	void drawEntityHierarchyEntry(EntityHierarchyEntry &p_entityEntry);
 	inline void drawLeftAlignedLabelText(const char *p_labelText, float p_nextWidgetOffset)
 	{
@@ -548,6 +620,27 @@ private:
 
 		return returnBool;
 	}
+	inline bool drawTextSizedButtonInverted(const TextureLoader2D::Texture2DHandle &p_texture, const std::string &p_buttonLabel, const std::string p_tooltipText = "")
+	{
+		bool returnBool = false;
+
+		// Draw the open button
+		if(ImGui::ImageButton(p_buttonLabel.c_str(),
+			(ImTextureID)p_texture.getHandle(),
+			m_buttonSizedByFont,
+			ImVec2(1, 0),
+			ImVec2(0, 1),
+			ImVec4(0.0f, 0.0f, 0.0f, 0.0f)))
+		{
+			returnBool = true;
+		}
+
+		// Draw the tooltip if the tooltip text is not empty and button is hovered over
+		if(!p_tooltipText.empty() && ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay))
+			ImGui::SetTooltip(p_tooltipText.c_str(), ImGui::GetStyle().HoverDelayShort);
+
+		return returnBool;
+	}
 
 	// Calculates the offset for a square text-sized button from the right side of the edge 
 	// (p_buttonIndex is the button count from the right side)
@@ -560,10 +653,13 @@ private:
 		return m_buttonSizedByFont.x + m_imguiStyle.FramePadding.x + (m_buttonSizedByFont.x + m_imguiStyle.FramePadding.x * 3) * p_buttonIndex;
 	}
 
+	void updateSceneData(SceneData &p_sceneData);
 	void updateEntityList();
 	void updateHierarchyList();
 	void updateComponentList();
 	void updateAssetLists();
+
+	void generateNewMap(PropertySet &p_newSceneProperties, SceneData &p_sceneData);
 
 	inline std::string getTextureFormatString(const TextureFormat p_textureFormat) const
 	{
@@ -681,6 +777,7 @@ private:
 	bool m_renderSceneToTexture;
 	bool m_GUISequenceEnabled;
 	bool m_LUAScriptingEnabled;
+	bool m_showNewMapWindow;
 	EditorSceneState m_sceneState;
 	glm::ivec2 m_centerWindowSize;
 	std::vector<const char *> m_physicalMaterialProperties;
@@ -692,18 +789,24 @@ private:
 	FileBrowserDialog m_fileBrowserDialog;
 	const ImVec2 m_playPauseButtonSize;
 	ImVec2 m_assetSelectionPopupImageSize;
+	ImVec2 m_textureAssetImageSize;
 
 	// LUA variables editor data
 	std::vector<const char *> m_luaVariableTypeStrings;
 
 	// Assets variables
-	std::vector<std::pair<Texture2D *, std::string>> m_textureAssets;
-	std::vector<std::pair<Model *, std::string>> m_modelAssets;
+	std::vector<const char *> m_shaderTypeStrings;
+	std::vector<std::pair<const Texture2D *, std::string>> m_textureAssets;
+	std::vector<std::pair<const Model *, std::string>> m_modelAssets;
+	std::vector<std::pair<const ShaderLoader::ShaderProgram *, std::string>> m_shaderAssets;
 	std::string m_textureAssetLongestName;
 	std::string m_modelAssetLongestName;
+	std::string m_shaderAssetLongestName;
+	int m_selectedProgramShader;
+	int m_selectedShader;
 
 	// Texture inspector variables
-	Texture2D *m_selectedTexture;
+	Texture2D const * m_selectedTexture;
 	ImGuiTabItemFlags m_textureInspectorTabFlags;
 	DoubleBufferedContainer<FunctorSequence> m_textureInspectorSequence;
 
@@ -712,10 +815,17 @@ private:
 	std::vector<EntityListEntry> m_entityList;
 	std::vector<EntityHierarchyEntry> m_entityHierarchy;
 	SelectedEntity m_selectedEntity;
+	SceneData m_currentSceneData;
+
+	// New scene settings
+	SceneData m_newSceneData;
+	ImGuiTabItemFlags m_newSceneSettingsTabFlags;
+	std::vector<const char *> m_renderingPassesTypeText;
 
 	// Button textures
 	std::vector<TextureLoader2D::Texture2DHandle> m_buttonTextures;
 
+	// ImGui properties
 	ImGuiStyle &m_imguiStyle;
 	float m_fontSize;
 

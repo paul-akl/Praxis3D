@@ -224,7 +224,7 @@ public:
 		}
 
 		// Returns a filename of a shader of specific type
-		const inline std::string getShaderFilename(const unsigned int p_shaderType)
+		const inline std::string &getShaderFilename(const unsigned int p_shaderType) const
 		{
 			return m_shaderFilename[p_shaderType];
 
@@ -284,6 +284,8 @@ public:
 	// Returns a default (empty) shader
 	inline ShaderProgram *load() { return &m_defaultProgram; }
 	ShaderProgram *load(const PropertySet &p_properties);
+
+	const inline std::vector<ShaderProgram *> &getObjectPool() const { return m_shaderPrograms; }
 
 private:
 	SpinWait	m_vertFragMutex,

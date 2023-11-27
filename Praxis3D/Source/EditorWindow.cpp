@@ -5,6 +5,7 @@
 #include "EditorWindow.h"
 #include "imgui_internal.h"
 #include "RendererScene.h"
+#include "ShaderUniformUpdater.h"
 #include "WorldScene.h"
 
 // Include every component
@@ -145,7 +146,6 @@ void EditorWindow::update(const float p_deltaTime)
 
     ImGui::PopStyleColor();
 
-
     m_imguiStyle.TabRounding = 0.0f;
 
     ImGuiWindowClass windowClassWithNoTabBar;
@@ -164,6 +164,9 @@ void EditorWindow::update(const float p_deltaTime)
         {
             if(ImGui::MenuItem("New"))
             {
+                // Set the new scene settings tab flag to be selected (bring to focus)
+                m_newSceneSettingsTabFlags = ImGuiTabItemFlags_SetSelected;
+                m_showNewMapWindow = true;
             }
             if(ImGui::MenuItem("Open...")) 
             {
@@ -186,7 +189,34 @@ void EditorWindow::update(const float p_deltaTime)
                 }
             }
             ImGui::Separator();
-            if(ImGui::MenuItem("Save")) {}
+            if(ImGui::MenuItem("Save")) 
+            {
+                // If the scene filename is empty (meaning the scene wasn't loaded from a file), launch the save-as file browser window
+                if(m_systemScene->getSceneLoader()->getSceneFilename().empty())
+                {
+                    // Only open the file browser if it's not opened already
+                    if(m_currentlyOpenedFileBrowser == FileBrowserActivated::FileBrowserActivated_None)
+                    {
+                        // Set the file browser activation to Save Scene
+                        m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_SaveScene;
+
+                        // Define file browser variables
+                        m_fileBrowserDialog.m_definedFilename = m_systemScene->getSceneLoader()->getSceneFilename();
+                        m_fileBrowserDialog.m_filter = ".pmap,.*";
+                        m_fileBrowserDialog.m_title = "Save scene";
+                        m_fileBrowserDialog.m_name = "SaveSceneFileDialog";
+                        m_fileBrowserDialog.m_rootPath = Config::filepathVar().map_path;
+                        m_fileBrowserDialog.m_flags = FileBrowserDialog::FileBrowserDialogFlags::FileBrowserDialogFlags_ConfirmOverwrite;
+
+                        // Tell the GUI scene to open the file browser
+                        m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
+                    }
+                }
+                else
+                {
+                    m_systemScene->getSceneLoader()->saveToFile(m_systemScene->getSceneLoader()->getSceneFilename());
+                }
+            }
             if(ImGui::MenuItem("Save as..."))
             {
                 // Only open the file browser if it's not opened already
@@ -210,7 +240,7 @@ void EditorWindow::update(const float p_deltaTime)
             if(ImGui::MenuItem("Reload scene")) 
             {
                 // Send a notification to the engine to reload the current engine state
-                m_systemScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_SceneReload));
+                m_systemScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_SceneReload, EngineStateType::EngineStateType_Editor));
             }
 
             ImGui::Separator();
@@ -972,9 +1002,6 @@ void EditorWindow::update(const float p_deltaTime)
                         }
                     }
 
-                    {
-                    }
-
                     auto *shaderComponent = entityRegistry.try_get<ShaderComponent>(m_selectedEntity.m_entityID);
                     if(shaderComponent != nullptr)
                     {
@@ -1548,6 +1575,18 @@ void EditorWindow::update(const float p_deltaTime)
                 ImGui::EndTabItem();
             }
             
+            if(ImGui::BeginTabItem("Scene settings"))
+            {
+                if(m_currentSceneData.m_modified)
+                {
+                    updateSceneData(m_currentSceneData);
+                    m_currentSceneData.m_modified = false;
+                }
+                drawSceneData(m_currentSceneData, true);
+
+                ImGui::EndTabItem();
+            }
+
             ImGui::EndTabBar();
         }
 
@@ -1566,17 +1605,18 @@ void EditorWindow::update(const float p_deltaTime)
         {
             if(ImGui::BeginTabBar("##BottomWindowTabBar", ImGuiTabBarFlags_None))
             {
-                if(ImGui::BeginTabItem("Assets"))
+                if(ImGui::BeginTabItem("Textures"))
                 {
+                    // Calculate the available window size
+                    float visibleWindowSize = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+
                     // Draw each texture in the 2D texture loader pool
                     for(decltype(m_textureAssets.size()) i = 0, size = m_textureAssets.size(); i < size; i++)
                     {
-                        // Set each entry to be drawn on the same line (except the first entry)
-                        if(i > 0)
-                            ImGui::SameLine();
+                        ImGui::PushID((int)i);
 
                         // Draw the texture
-                        if(ImGui::ImageButton((ImTextureID)m_textureAssets[i].first->getHandle(), ImVec2(60.0f, 60.0f), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f), 0))
+                        if(ImGui::ImageButton((ImTextureID)m_textureAssets[i].first->getHandle(), m_textureAssetImageSize, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f), 0))
                         {
                             m_selectedTexture = m_textureAssets[i].first;
 
@@ -1592,8 +1632,7 @@ void EditorWindow::update(const float p_deltaTime)
                             ImGui::Text("");
                             ImGui::SeparatorText("Click to open in Texture Inspector");
                             ImGui::Text("");
-                            ImGui::PopStyleVar();
-                            ImGui::PopStyleVar();
+                            ImGui::PopStyleVar(2); // ImGuiStyleVar_ItemSpacing, ImGuiStyleVar_SeparatorTextAlign
                             ImGui::Separator();
 
                             ImGui::Text(("Filename: " + m_textureAssets[i].second).c_str());
@@ -1611,10 +1650,229 @@ void EditorWindow::update(const float p_deltaTime)
 
                             ImGui::EndTooltip();
                         }
+
+                        // Calculate expected position if the next texture was on the same line
+                        float nextTextureSize = ImGui::GetItemRectMax().x + m_imguiStyle.ItemSpacing.x + m_textureAssetImageSize.x;
+
+                        // If this is not the last texture and the next text will fit on the same line, set next draw to be on the same line
+                        if(i + 1 < size && nextTextureSize < visibleWindowSize)
+                            ImGui::SameLine();
+
+                        ImGui::PopID();
                     }
+                    ImGui::EndTabItem();
+                }
+
+                if(ImGui::BeginTabItem("Models"))
+                {
+                    for(decltype(m_modelAssets.size()) i = 0, size = m_modelAssets.size(); i < size; i++)
+                    {
+                        ImGui::Text(m_modelAssets[i].second.c_str());
+                    }
+                    ImGui::EndTabItem();
+                }
+
+                if(ImGui::BeginTabItem("Shaders"))
+                {
+                    auto contentRegionWidth = ImGui::GetContentRegionAvail().x;
+                    auto singleWindowWidth = contentRegionWidth / 3.0f;
+
+                    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.26f, 0.26f, 0.26f, 1.0f));
+                    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f);
+                    ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextAlign, ImVec2(0.5f, 0.5f));
+
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, m_imguiStyle.FramePadding.y));
+                    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, m_imguiStyle.ItemSpacing.y));
+
+                    if(ImGui::BeginChild("##ShaderAssetsProgramSelection", ImVec2(contentRegionWidth * 0.25f, 0), true))
+                    {
+                        ImGui::SeparatorText("Shader programs:");
+                        for(decltype(m_shaderAssets.size()) shaderIndex = 0, size = m_shaderAssets.size(); shaderIndex < size; shaderIndex++)
+                        {
+                            if(ImGui::Selectable(m_shaderAssets[shaderIndex].second.c_str(), m_selectedProgramShader == shaderIndex))
+                            {
+                                m_selectedProgramShader = (int)shaderIndex;
+                                m_selectedShader = -1;
+                            }
+                        }
+                    }
+                    ImGui::EndChild();
+
+                    ImGui::SameLine();
+
+                    if(m_selectedProgramShader >= 0 && m_selectedProgramShader < m_shaderAssets.size())
+                    {
+                        if(ImGui::BeginChild("##ShaderAssetsShaderSelection", ImVec2(contentRegionWidth * 0.25f, 0), true))
+                        {
+                            ImGui::SeparatorText("Shaders:");
+                            for(unsigned int shaderType = 0; shaderType < ShaderType::ShaderType_NumOfTypes; shaderType++)
+                            {
+                                if(!m_shaderAssets[m_selectedProgramShader].first->getShaderFilename(shaderType).empty())
+                                {
+                                    if(ImGui::Selectable(m_shaderAssets[m_selectedProgramShader].first->getShaderFilename(shaderType).c_str(), m_selectedShader == shaderType))
+                                    {
+                                        m_selectedShader = (int)shaderType;
+                                    }
+                                }
+                            }
+                        }
+                        ImGui::EndChild();
+                    }
+
+                    ImGui::SameLine();
+
+                    ImGui::PopStyleVar(2); // ImGuiStyleVar_FramePadding, ImGuiStyleVar_ItemSpacing
+
+                    if(m_selectedShader >= 0 && m_selectedShader < ShaderType::ShaderType_NumOfTypes)
+                    {
+                        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, m_imguiStyle.FramePadding.y));
+                        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, m_imguiStyle.ItemSpacing.y));
+
+                        if(ImGui::BeginChild("##ShaderAssetsSettings", ImVec2(contentRegionWidth * 0.5f, 0), true))
+                        {
+                            ImGui::PopStyleVar(2); // ImGuiStyleVar_FramePadding, ImGuiStyleVar_ItemSpacing
+                            ImGui::SeparatorText("Shader settings:");
+
+                            // Calculate widget offset used to draw a label on the left and a widget on the right (opposite of how ImGui draws it)
+                            float inputWidgetOffset = ImGui::GetCursorPosX() + ImGui::CalcItemWidth() * 0.5f + ImGui::GetStyle().ItemInnerSpacing.x;                
+
+                            // Calculate button width so they span across the whole window width
+                            auto buttonWidth = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x * 2.0f) / 3.0f;
+
+                            if(ImGui::Button("Open in text editor", ImVec2(buttonWidth, 0)))
+                            {
+
+                            }
+
+                            ImGui::SameLine();
+
+                            if(ImGui::Button("Open in file explorer", ImVec2(buttonWidth, 0)))
+                            {
+                                ShellExecuteA(NULL, "explore", (Filesystem::getCurrentDirectory() + "\\" + Config::filepathVar().shader_path + Utilities::stripFilePath(m_shaderAssets[m_selectedProgramShader].first->getShaderFilename(m_selectedShader))).c_str(), NULL, NULL, SW_SHOWDEFAULT);
+                            }
+
+                            ImGui::SameLine();
+
+                            if(ImGui::Button("Reload shader program", ImVec2(buttonWidth, 0)))
+                            {
+
+                            }
+
+                            ImGui::Separator();
+
+                            // Draw SHADER FILENAME
+                            auto shaderFilename = m_shaderAssets[m_selectedProgramShader].first->getShaderFilename(m_selectedShader);
+                            drawLeftAlignedLabelText("Filename:", inputWidgetOffset, calcTextSizedButtonOffset(1) - inputWidgetOffset - m_imguiStyle.FramePadding.x);
+                            if(ImGui::InputText("##ShaderFilenameInput", &shaderFilename, ImGuiInputTextFlags_EnterReturnsTrue))
+                            {
+                            }
+
+                            // Draw OPEN button
+                            ImGui::SameLine(calcTextSizedButtonOffset(1));
+                            if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenFile], "##ShaderFileOpenFileButton", "Open a shader file"))
+                            {
+                            }
+
+                            // Draw RELOAD button
+                            ImGui::SameLine(calcTextSizedButtonOffset(0));
+                            if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_Reload], "##ShaderFileReloadButton", "Reload the shader"))
+                            {
+                            }
+
+                            // Draw SHADER TYPE
+                            auto shaderType = m_selectedShader;
+                            drawLeftAlignedLabelText("Shader type:", inputWidgetOffset);
+                            if(ImGui::Combo("##ShaderTypePicker", &shaderType, &m_shaderTypeStrings[0], (int)m_shaderTypeStrings.size()))
+                            {
+                            }
+
+                            // Draw DEFAULT SHADER
+                            auto defaultShader = m_shaderAssets[m_selectedProgramShader].first->isDefaultProgram();
+                            drawLeftAlignedLabelText("Default shader:", inputWidgetOffset);
+                            if(ImGui::Checkbox("##DefaultShaderCheck", &defaultShader))
+                            {
+                            }                           
+                            
+                            // Draw LOADED-TO-VIDEO-MEMORY
+                            auto loadedToVideoMemory = m_shaderAssets[m_selectedProgramShader].first->isLoadedToVideoMemory();
+                            drawLeftAlignedLabelText("Loaded to video memory:", inputWidgetOffset);
+                            if(ImGui::Checkbox("##LoadedToVideoMemoryCheck", &loadedToVideoMemory))
+                            {
+                            }
+
+                            // Draw UNIFORM UPDATER SETTINGS
+                            if(ImGui::TreeNodeEx("Uniform updater settings:", ImGuiTreeNodeFlags_Framed)) // ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf
+                            {
+                                // Get uniform updater
+                                auto const &uniformUpdater = m_shaderAssets[m_selectedProgramShader].first->getUniformUpdater();
+
+                                // Draw UPDATES PER FRAME
+                                auto numUpdatesPerFrame = uniformUpdater.getNumUpdatesPerFrame();
+                                drawLeftAlignedLabelText("Updates per frame:", inputWidgetOffset);
+                                if(numUpdatesPerFrame > 0)
+                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(numUpdatesPerFrame).c_str());
+                                else
+                                    ImGui::TextDisabled(Utilities::toString(numUpdatesPerFrame).c_str());
+
+                                // Draw UPDATES PER MODEL
+                                auto numUpdatesPerModel = uniformUpdater.getNumUpdatesPerModel();
+                                drawLeftAlignedLabelText("Updates per model:", inputWidgetOffset);
+                                if(numUpdatesPerModel > 0)
+                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(numUpdatesPerModel).c_str());
+                                else
+                                    ImGui::TextDisabled(Utilities::toString(numUpdatesPerModel).c_str());
+
+                                // Draw UPDATES PER MESH
+                                auto numUpdatesPerMesh = uniformUpdater.getNumUpdatesPerMesh();
+                                drawLeftAlignedLabelText("Updates per mesh:", inputWidgetOffset);
+                                if(numUpdatesPerMesh > 0)
+                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(numUpdatesPerMesh).c_str());
+                                else
+                                    ImGui::TextDisabled(Utilities::toString(numUpdatesPerMesh).c_str());
+
+                                // Draw TEXTURE UPDATES
+                                auto numTextureUpdates = uniformUpdater.getNumTextureUpdates();
+                                drawLeftAlignedLabelText("Texture updates:", inputWidgetOffset);
+                                if(numTextureUpdates > 0)
+                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(numTextureUpdates).c_str());
+                                else
+                                    ImGui::TextDisabled(Utilities::toString(numTextureUpdates).c_str());
+
+                                // Draw UNIFORM BLOCKS
+                                auto numUniformBlocks = uniformUpdater.getNumUniformBlocks();
+                                drawLeftAlignedLabelText("Uniform blocks:", inputWidgetOffset);
+                                if(numUniformBlocks > 0)
+                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(numUniformBlocks).c_str());
+                                else
+                                    ImGui::TextDisabled(Utilities::toString(numUniformBlocks).c_str());
+
+                                // Draw SSB BLOCKS
+                                auto numSSBBlocks = uniformUpdater.getNumSSBBufferBlocks();
+                                drawLeftAlignedLabelText("SSB blocks:", inputWidgetOffset);
+                                if(numSSBBlocks > 0)
+                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(numSSBBlocks).c_str());
+                                else
+                                    ImGui::TextDisabled(Utilities::toString(numSSBBlocks).c_str());
+
+                                ImGui::TreePop();
+                            }
+                        }
+                        else
+                            ImGui::PopStyleVar(2); // ImGuiStyleVar_FramePadding, ImGuiStyleVar_ItemSpacing
+                        ImGui::EndChild();
+                    }
+
+                    ImGui::PopStyleVar(2); // ImGuiStyleVar_ChildBorderSize, ImGuiStyleVar_SeparatorTextAlign
+                    ImGui::PopStyleColor(); // ImGuiCol_Border
 
                     ImGui::EndTabItem();
                 }
+
+                if(ImGui::BeginTabItem("Scripts"))
+                {
+                    ImGui::EndTabItem();
+                }
+
                 ImGui::EndTabBar();
             }
             ImGui::End();
@@ -1698,10 +1956,6 @@ void EditorWindow::update(const float p_deltaTime)
                                 {
                                     if(ImGui::BeginTabBar("##CenterWindowTabBar", ImGuiTabBarFlags_None))
                                     {
-                                        //if(ImGui::BeginTabItem("Scene viewport"))
-                                        //{
-                                        //    ImGui::EndTabItem();
-                                        //}
                                         if(ImGui::BeginTabItem("Texture inspector"))
                                         {
                                             ImVec2 textureSize = ImVec2((float)m_selectedTexture->getTextureWidth(), (float)m_selectedTexture->getTextureHeight());
@@ -1721,6 +1975,85 @@ void EditorWindow::update(const float p_deltaTime)
 
                         // Send the functor sequence to the Graphics scene so it can be further sent to GUI Pass
                         m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_GUIPassFunctors, (void *)&functorSequence);
+
+                        ImGui::EndTabItem();
+                    }
+                }
+
+                if(m_showNewMapWindow)
+                {
+                    if(ImGui::BeginTabItem("New scene settings", 0, m_newSceneSettingsTabFlags))
+                    {
+                        // Reset the tab flags (that previously been set to focus the window, when the new scene button was pressed), so it doesn't get continuously focused
+                        m_newSceneSettingsTabFlags = 0;
+
+                        auto contentRegionSize = ImGui::GetContentRegionAvail();
+
+                        ImGui::NewLine();
+
+                        ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.26f, 0.26f, 0.26f, 1.0f));
+                        ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f);
+                        if(ImGui::BeginChild("##NewSceneSettingsWindow", ImVec2(contentRegionSize.x * 0.6f, contentRegionSize.y * 0.9f), true))
+                        {
+                            ImGui::PopStyleVar(); // ImGuiStyleVar_ChildBorderSize
+                            ImGui::PopStyleColor(); // ImGuiCol_Border
+
+                            ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextAlign, ImVec2(0.5f, 0.5f));
+                            ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextBorderSize, 5.0f);
+                            ImGui::PopStyleVar(2); //ImGuiStyleVar_SeparatorTextAlign, ImGuiStyleVar_SeparatorTextBorderSize
+
+                            ImGui::NewLine();
+
+                            //ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.0f, 10.0f));
+                            //if(ImGui::BeginChild("##NewSceneSettingsWindow2"))
+                            //{
+                                drawSceneData(m_newSceneData);
+                            //    ImGui::EndChild();
+                            //}
+                            //ImGui::PopStyleVar(); // ImGuiStyleVar_FramePadding
+                            ImGui::EndChild();
+                        }
+                        else
+                        {
+                            ImGui::PopStyleVar(); // ImGuiStyleVar_ChildBorderSize
+                            ImGui::PopStyleColor(); // ImGuiCol_Border
+                        }
+
+                        ImGui::SameLine();
+
+                        if(ImGui::BeginChild("##NewSceneButtonsWindow"))
+                        {
+                            const ImVec2 buttonSize(contentRegionSize.x * 0.2f, ImGui::GetFrameHeight() * 1.5f);
+                            const float centerButtonOffset = (ImGui::GetContentRegionAvail().x / 2.0f) - (buttonSize.x / 2.0f);
+
+                            //ImGui::NewLine();
+                            ImGui::SetCursorPosX(centerButtonOffset);
+                            if(ImGui::Button("Create scene", buttonSize))
+                            {
+                                PropertySet sceneProperties(Properties::Default);
+
+                                generateNewMap(sceneProperties, m_newSceneData);
+
+                                // Send a notification to the engine to reload the current engine state
+                                m_systemScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_SceneReload, EngineStateType::EngineStateType_Editor, sceneProperties));
+                            }
+
+                            ImGui::SetCursorPosX(centerButtonOffset);
+                            if(ImGui::Button("Cancel", buttonSize))
+                            {
+                                m_newSceneData = SceneData();
+                                m_showNewMapWindow = false;
+                            }
+
+                            ImGui::NewLine();
+                            ImGui::SetCursorPosX(centerButtonOffset);
+                            if(ImGui::Button("Reload to default", buttonSize))
+                            {
+                                m_newSceneData = SceneData();
+                            }
+
+                            ImGui::EndChild();
+                        }
 
                         ImGui::EndTabItem();
                     }
@@ -1894,6 +2227,35 @@ void EditorWindow::update(const float p_deltaTime)
                 }
             }
             break;
+        case EditorWindow::FileBrowserActivated_AudioBankFile:
+            {
+                // If the file browser was activated and it is now closed, process the result
+                if(m_fileBrowserDialog.m_closed)
+                {
+                    if(m_fileBrowserDialog.m_success)
+                    {
+                        // Get the current directory path
+                        const std::string currentDirectory = Filesystem::getCurrentDirectory() + "\\" + Config::filepathVar().sound_path;
+
+                        // Check if the selected file is within the current directory
+                        if(m_fileBrowserDialog.m_filePathName.rfind(currentDirectory, 0) == 0)
+                        {
+                            if(m_fileBrowserDialog.m_userStringPointer != nullptr)
+                            {
+                                *m_fileBrowserDialog.m_userStringPointer = m_fileBrowserDialog.m_filePathName.substr(currentDirectory.size());
+                            }
+                        }
+                        else
+                            ErrHandlerLoc::get().log(ErrorCode::Editor_path_outside_current_dir, ErrorSource::Source_GUIEditor);
+                    }
+
+                    // Reset the file browser and mark the file browser as not opened
+                    m_fileBrowserDialog.resetAll();
+                    m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_None;
+                }
+            }
+            break;
+            
     }
 }
 
@@ -1926,6 +2288,7 @@ void EditorWindow::setup(EditorWindowSettings &p_editorWindowSettings)
     m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_open_file_texture));
     m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_reload_texture));
     m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_open_asset_list_texture));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_arrow_up_texture));
 
     assert(m_buttonTextures.size() == ButtonTextureType::ButtonTextureType_NumOfTypes && "m_buttonTextures array is different size than the number of button textures, in EditorWindow.cpp");
 
@@ -1953,6 +2316,246 @@ void EditorWindow::setup(EditorWindowSettings &p_editorWindowSettings)
         m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Physics), DataType::DataType_SimulationActive, (void *)false);
 }
 
+void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChanges)
+{
+    // Calculate widget offset used to draw a label on the left and a widget on the right (opposite of how ImGui draws it)
+    float inputWidgetOffset = ImGui::GetCursorPosX() + ImGui::CalcItemWidth() * 0.5f + ImGui::GetStyle().ItemInnerSpacing.x;
+
+    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.26f, 0.26f, 0.26f, 1.0f));
+
+    // Center the separator text
+    ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextAlign, ImVec2(0.5f, 0.5f));
+    ImGui::SeparatorText("Scene settings:");
+
+    // Draw LOAD IN BACKGROUND
+    drawLeftAlignedLabelText("Load in background:", inputWidgetOffset);
+    if(ImGui::Checkbox("##LoadInBackgroundCheckbox", &p_sceneData.m_loadInBackground) && p_sendChanges)
+    {
+        p_sceneData.m_modified = true;
+        m_systemScene->getSceneLoader()->setLoadInBackground(p_sceneData.m_loadInBackground);
+    }
+
+    // Draw GRAVITY
+    drawLeftAlignedLabelText("Gravity:", inputWidgetOffset);
+    if(ImGui::DragFloat3("##GravityDrag", glm::value_ptr(p_sceneData.m_gravity), Config::GUIVar().editor_float_slider_speed) && p_sendChanges)
+    {
+        p_sceneData.m_modified = true;
+        m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, m_systemScene->getSceneLoader()->getSystemScene(Systems::Physics), Systems::Changes::Physics::Gravity);
+    }
+
+    ImGui::SeparatorText("Audio scene settings:");
+
+    // Create a duplicate variable for each volume type and multiply it by 100, so it can be shown as percentage
+    float volumeMult[AudioBusType::AudioBusType_NumOfTypes];
+    for(unsigned int i = 0; i < AudioBusType::AudioBusType_NumOfTypes; i++)
+        volumeMult[i] = p_sceneData.m_volume[i] * 100.0f;
+
+    ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextBorderSize, 0.0f);
+    ImGui::SeparatorText("Volume control:");
+    ImGui::PopStyleVar(); //ImGuiStyleVar_SeparatorTextBorderSize
+
+    // Draw MASTER VOLUME
+    drawLeftAlignedLabelText("Master volume:", inputWidgetOffset);
+    if(ImGui::SliderFloat("##MasterVolumeSlider", &volumeMult[AudioBusType::AudioBusType_Master], 0.0f, 100.0f, "%.0f%%", ImGuiSliderFlags_None))
+    {
+        p_sceneData.m_volume[AudioBusType::AudioBusType_Master] = volumeMult[AudioBusType::AudioBusType_Master] / 100.0f;
+        if(p_sendChanges)
+        {
+            p_sceneData.m_modified = true;
+            m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, m_systemScene->getSceneLoader()->getSystemScene(Systems::Audio), Systems::Changes::Audio::VolumeMaster);
+        }
+    }
+
+    // Draw AMBIENT VOLUME
+    drawLeftAlignedLabelText("Ambient volume:", inputWidgetOffset);
+    if(ImGui::SliderFloat("##AmbientVolumeSlider", &volumeMult[AudioBusType::AudioBusType_Ambient], 0.0f, 100.0f, "%.0f%%", ImGuiSliderFlags_None))
+    {
+        p_sceneData.m_volume[AudioBusType::AudioBusType_Ambient] = volumeMult[AudioBusType::AudioBusType_Ambient] / 100.0f;
+        if(p_sendChanges)
+        {
+            p_sceneData.m_modified = true;
+            m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, m_systemScene->getSceneLoader()->getSystemScene(Systems::Audio), Systems::Changes::Audio::VolumeAmbient);
+        }
+    }
+
+    // Draw MUSIC VOLUME
+    drawLeftAlignedLabelText("Music volume:", inputWidgetOffset);
+    if(ImGui::SliderFloat("##MusicVolumeSlider", &volumeMult[AudioBusType::AudioBusType_Music], 0.0f, 100.0f, "%.0f%%", ImGuiSliderFlags_None))
+    {
+        p_sceneData.m_volume[AudioBusType::AudioBusType_Music] = volumeMult[AudioBusType::AudioBusType_Music] / 100.0f;
+        if(p_sendChanges)
+        {
+            p_sceneData.m_modified = true;
+            m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, m_systemScene->getSceneLoader()->getSystemScene(Systems::Audio), Systems::Changes::Audio::VolumeMusic);
+        }
+    }
+
+    // Draw SFX VOLUME
+    drawLeftAlignedLabelText("Sound effect volume:", inputWidgetOffset);
+    if(ImGui::SliderFloat("##SFXVolumeSlider", &volumeMult[AudioBusType::AudioBusType_SFX], 0.0f, 100.0f, "%.0f%%", ImGuiSliderFlags_None))
+    {
+        p_sceneData.m_volume[AudioBusType::AudioBusType_SFX] = volumeMult[AudioBusType::AudioBusType_SFX] / 100.0f;
+        if(p_sendChanges)
+        {
+            p_sceneData.m_modified = true;
+            m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, m_systemScene->getSceneLoader()->getSystemScene(Systems::Audio), Systems::Changes::Audio::VolumeSFX);
+        }
+    }
+
+    // Calculate rendering passes window height and cap it to a max height value
+    float audioBanksWindowHeight = (m_fontSize + m_imguiStyle.FramePadding.y * 2 + m_imguiStyle.ItemSpacing.y) * (p_sceneData.m_audioBanks.size() + 2);
+    audioBanksWindowHeight = audioBanksWindowHeight > Config::GUIVar().editor_audio_banks_max_height ? Config::GUIVar().editor_audio_banks_max_height : audioBanksWindowHeight;
+
+    if(ImGui::BeginChild("##AudioBanks", ImVec2(0, audioBanksWindowHeight), true))
+    {
+        ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextBorderSize, 0.0f);
+        ImGui::SeparatorText("Audio banks:");
+        ImGui::PopStyleVar(); //ImGuiStyleVar_SeparatorTextBorderSize
+
+        for(decltype(p_sceneData.m_audioBanks.size()) size = p_sceneData.m_audioBanks.size(), i = 0; i < size; i++)
+        {
+            // Draw BANK FILENAME
+            drawLeftAlignedLabelText("Filename:", inputWidgetOffset, calcTextSizedButtonOffset(2) - inputWidgetOffset - m_imguiStyle.FramePadding.x);
+            if(ImGui::InputText(("##AudioBankFilenameInput" + Utilities::toString(i)).c_str(), &p_sceneData.m_audioBanks[i], ImGuiInputTextFlags_EnterReturnsTrue))
+            {
+            }
+
+            // Draw OPEN button
+            ImGui::SameLine(calcTextSizedButtonOffset(2));
+            if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenFile], "##" + Utilities::toString(i) + "AudioBankOpenButton", "Browse for an Audio Bank file"))
+            {
+                // Only open the file browser if it's not opened already
+                if(m_currentlyOpenedFileBrowser == FileBrowserActivated::FileBrowserActivated_None)
+                {
+                    // Set the file browser activation to Lua Script
+                    m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_AudioBankFile;
+
+                    // Define file browser variables
+                    m_fileBrowserDialog.m_filter = "Audio Bank files (.bank){.bank},All files{.*}";
+                    m_fileBrowserDialog.m_title = "Select an Audio Bank file";
+                    m_fileBrowserDialog.m_name = "OpenAudioBankFileDialog";
+                    m_fileBrowserDialog.m_rootPath = Config::filepathVar().sound_path;
+                    m_fileBrowserDialog.m_flags = FileBrowserDialog::FileBrowserDialogFlags::FileBrowserDialogFlags_None;
+                    m_fileBrowserDialog.m_userStringPointer = &p_sceneData.m_audioBanks[i];
+
+                    // Tell the GUI scene to open the file browser
+                    m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
+                }
+            }
+
+            // Draw DELETE button
+            ImGui::SameLine(calcTextSizedButtonOffset(1));
+            if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry], "##" + Utilities::toString(i) + "AudioBanksDeleteButton", "Remove this Audio Bank entry"))
+            {
+                p_sceneData.m_audioBanks.erase(p_sceneData.m_audioBanks.begin() + i);
+                size = p_sceneData.m_audioBanks.size();
+                i--;
+            }
+
+            // Draw ADD button
+            ImGui::SameLine(calcTextSizedButtonOffset(0));
+            if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_Add], "##" + Utilities::toString(i) + "AudioBanksAddButton", "Add a new Audio Bank entry"))
+            {
+                p_sceneData.m_audioBanks.insert(p_sceneData.m_audioBanks.begin() + i + 1, "");
+                size = p_sceneData.m_audioBanks.size();
+            }
+        }
+
+        // Draw ADD button
+        ImGui::SetCursorPosX(calcTextSizedButtonOffset(0));
+        if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_Add], "##AudioBanksAddAtEndButton", "Add a new Audio Bank entry"))
+        {
+            p_sceneData.m_audioBanks.push_back("");
+        }
+
+    }
+    ImGui::EndChild();
+
+    ImGui::SeparatorText("Graphics scene settings:");
+
+    // Calculate rendering passes window height and cap it to a max height value
+    float renderPassWindowHeight = (m_fontSize + m_imguiStyle.FramePadding.y * 2 + m_imguiStyle.ItemSpacing.y) * (p_sceneData.m_renderingPasses.size() + 2);
+    renderPassWindowHeight = renderPassWindowHeight > Config::GUIVar().editor_render_pass_max_height ? Config::GUIVar().editor_render_pass_max_height : renderPassWindowHeight;
+
+    if(ImGui::BeginChild("##RenderingPasses", ImVec2(0, renderPassWindowHeight), true))//, ImVec2(0, childWindowHeight), true, ImGuiWindowFlags_None)
+    {
+        ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextBorderSize, 0.0f);
+        ImGui::SeparatorText("Rendering passes:");
+        ImGui::PopStyleVar(); //ImGuiStyleVar_SeparatorTextBorderSize
+
+        for(decltype(p_sceneData.m_renderingPasses.size()) size = p_sceneData.m_renderingPasses.size(), i = 0; i < size; i++)
+        {
+            // Draw RENDERING PASS COMBO
+            int renderType = (int)p_sceneData.m_renderingPasses[i];		
+            ImGui::AlignTextToFramePadding();
+            ImGui::Text((Utilities::toString(i + 1) + ". Render Pass type:").c_str());
+
+            // Draw UP button
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(inputWidgetOffset);
+            if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_ArrowUp], "##" + Utilities::toString(i) + "RenderingPassUpButton", "Move up"))
+            {
+                if(i > 0)
+                {
+                    auto tempRenderType = p_sceneData.m_renderingPasses[i];
+                    p_sceneData.m_renderingPasses[i] = p_sceneData.m_renderingPasses[i - 1];
+                    p_sceneData.m_renderingPasses[i - 1] = tempRenderType;
+                }
+            }
+
+            // Draw DOWN button
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(inputWidgetOffset + m_buttonSizedByFont.x + m_imguiStyle.FramePadding.x * 3);
+            if(drawTextSizedButtonInverted(m_buttonTextures[ButtonTextureType::ButtonTextureType_ArrowUp], "##" + Utilities::toString(i) + "RenderingPassDownButton", "Move down"))
+            {
+                if(i < size - 1)
+                {
+                    auto tempRenderType = p_sceneData.m_renderingPasses[i];
+                    p_sceneData.m_renderingPasses[i] = p_sceneData.m_renderingPasses[i + 1];
+                    p_sceneData.m_renderingPasses[i + 1] = tempRenderType;
+                }
+            }
+
+            // Draw RENDER PASSES
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(inputWidgetOffset + (m_buttonSizedByFont.x + m_imguiStyle.FramePadding.x * 3) * 2);
+            ImGui::SetNextItemWidth(calcTextSizedButtonOffset(1) - m_imguiStyle.FramePadding.x * 2);
+            if(ImGui::Combo(("##RenderingPassCombo" + Utilities::toString(i)).c_str(), &renderType, &m_renderingPassesTypeText[0], (int)m_renderingPassesTypeText.size()))
+            {
+                p_sceneData.m_renderingPasses[i] = static_cast<RenderPassType>(renderType);
+            }
+
+            // Draw DELETE button
+            ImGui::SameLine(calcTextSizedButtonOffset(1));
+            if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry], "##" + Utilities::toString(i) + "RenderingPassDeleteButton", "Remove this Render Pass entry"))
+            {
+                p_sceneData.m_renderingPasses.erase(p_sceneData.m_renderingPasses.begin() + i);
+                size = p_sceneData.m_renderingPasses.size();
+                i--;
+            }
+
+            // Draw ADD button
+            ImGui::SameLine(calcTextSizedButtonOffset(0));
+            if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_Add], "##" + Utilities::toString(i) + "RenderingPassAddButton", "Add a new Render Pass entry"))
+            {
+                p_sceneData.m_renderingPasses.insert(p_sceneData.m_renderingPasses.begin() + i + 1, RenderPassType::RenderPassType_AtmScattering);
+                size = p_sceneData.m_renderingPasses.size();
+            }
+        }
+
+        // Draw ADD button
+        ImGui::SetCursorPosX(calcTextSizedButtonOffset(0));
+        if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_Add], "##RenderingPassAddAtEndButton", "Add a new Render Pass entry"))
+        {
+            p_sceneData.m_renderingPasses.push_back(RenderPassType::RenderPassType_AtmScattering);
+        }
+    }
+    ImGui::EndChild();
+
+    ImGui::PopStyleVar(); //ImGuiStyleVar_SeparatorTextAlign
+    ImGui::PopStyleColor(); // ImGuiCol_Border
+}
+
 void EditorWindow::drawEntityHierarchyEntry(EntityHierarchyEntry &p_entityEntry)
 {
     static ImGuiTreeNodeFlags baseNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
@@ -1972,6 +2575,34 @@ void EditorWindow::drawEntityHierarchyEntry(EntityHierarchyEntry &p_entityEntry)
 
         ImGui::TreePop();
     }
+}
+
+void EditorWindow::updateSceneData(SceneData &p_sceneData)
+{
+    // Get the required system scenes
+    const auto *audioScene = static_cast<AudioScene *>(m_systemScene->getSceneLoader()->getSystemScene(Systems::Audio));
+    const auto *graphicsScene = static_cast<RendererScene *>(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics));
+    const auto *physicsScene = static_cast<PhysicsScene *>(m_systemScene->getSceneLoader()->getSystemScene(Systems::Physics));
+
+    // Set load-in-background flag
+    p_sceneData.m_loadInBackground = m_systemScene->getSceneLoader()->getLoadInBackground();
+
+    // Add audio bank filenames
+    p_sceneData.m_audioBanks.clear();
+    const auto &bankFilenames = audioScene->getBankFilenames();
+    for(const auto &bank : bankFilenames)
+        p_sceneData.m_audioBanks.push_back(bank.first);
+
+    // Set audio volume
+    for(unsigned int i = 0; i < AudioBusType::AudioBusType_NumOfTypes; i++)
+        p_sceneData.m_volume[i] = audioScene->getVolume(static_cast<AudioBusType>(i));
+
+    // Add rendering passes
+    p_sceneData.m_renderingPasses.clear();
+    p_sceneData.m_renderingPasses = graphicsScene->getRenderingPasses();
+
+    // Set gravity
+    p_sceneData.m_gravity = physicsScene->getGravity();
 }
 
 void EditorWindow::updateEntityList()
@@ -2202,9 +2833,10 @@ void EditorWindow::updateAssetLists()
     m_textureAssets.clear();
 
     // Go over each texture in the loaders texture pool
-    auto texturePool = Loaders::texture2D().getObjectPool();
+    const auto &texturePool = Loaders::texture2D().getObjectPool();
     for(decltype(texturePool.size()) i = 0, size = texturePool.size(); i < size; i++)
     {
+        // Add the texture and name entry
         m_textureAssets.push_back(std::make_pair(texturePool[i], texturePool[i]->getFilename()));
 
         // Set the longest texture name from all loaded texture assets, required for setting popup sizes when showing the list of textures
@@ -2222,13 +2854,112 @@ void EditorWindow::updateAssetLists()
     m_modelAssets.clear();
 
     // Go over each model in the loaders model pool
-    auto modelPool = Loaders::model().getObjectPool();
+    const auto &modelPool = Loaders::model().getObjectPool();
     for(decltype(modelPool.size()) i = 0, size = modelPool.size(); i < size; i++)
     {
+        // Add the model and name entry
         m_modelAssets.push_back(std::make_pair(modelPool[i], modelPool[i]->getFilename()));
 
-        // Set the longest model name from all loaded model assets, required for setting popup sizes when showing the list of model
+        // Set the longest model name from all loaded model assets, required for setting popup sizes when showing the list of models
         if(m_modelAssetLongestName.size() < modelPool[i]->getFilename().size())
             m_modelAssetLongestName = modelPool[i]->getFilename();
     }
+
+
+    //	 ____________________________
+    //	|							 |
+    //	|	    SHADER ASSETS        |
+    //	|____________________________|
+    //
+    // Clear shader asset array
+    m_shaderAssets.clear();
+
+    // Go over each shader in the loaders shader pool
+    const auto &shaderPool = Loaders::shader().getObjectPool();
+    for(decltype(shaderPool.size()) i = 0, size = shaderPool.size(); i < size; i++)
+    {
+        // Set the shader name based on the types of shader present
+        std::string shaderName = shaderPool[i]->getShaderFilename(ShaderType::ShaderType_Fragment);
+        if(shaderName.empty())
+        {
+            shaderName = shaderPool[i]->getShaderFilename(ShaderType::ShaderType_Vertex);
+            if(shaderName.empty())
+            {
+                shaderName = shaderPool[i]->getShaderFilename(ShaderType::ShaderType_Compute);
+                if(shaderName.empty())
+                {
+                    shaderName = shaderPool[i]->getShaderFilename(ShaderType::ShaderType_Geometry);
+                    if(shaderName.empty())
+                    {
+                        shaderName = shaderPool[i]->getShaderFilename(ShaderType::ShaderType_TessControl);
+                        if(shaderName.empty())
+                        {
+                            shaderName = shaderPool[i]->getShaderFilename(ShaderType::ShaderType_TessEvaluation);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Remove the extension from the shader filename
+        shaderName = Utilities::removeExtension(shaderName);
+
+        // Add the shader and name entry
+        m_shaderAssets.push_back(std::make_pair(shaderPool[i], shaderName));
+
+        // Set the longest shader name from all loaded shader assets, required for setting popup sizes when showing the list of shaders
+        if(m_shaderAssetLongestName.size() < shaderName.size())
+            m_shaderAssetLongestName = shaderName;
+    }
+}
+
+void EditorWindow::generateNewMap(PropertySet &p_newSceneProperties, SceneData &p_sceneData)
+{
+    // Add load in background flag
+    p_newSceneProperties.addProperty(Properties::LoadInBackground, p_sceneData.m_loadInBackground);
+
+    // Add root property set game objects
+    auto &gameObjects = p_newSceneProperties.addPropertySet(Properties::GameObject);
+
+    // Create an array entry for root entity
+    auto &rootObjectEntry = gameObjects.addPropertySet(Properties::ArrayEntry);
+    rootObjectEntry.addProperty(Properties::PropertyID::Name, std::string("root"));
+    rootObjectEntry.addProperty(Properties::PropertyID::ID, 0);
+    rootObjectEntry.addProperty(Properties::PropertyID::Parent, 0);
+
+    // Create sun directional light
+    auto &dirLightObjectEntry = gameObjects.addPropertySet(Properties::ArrayEntry);
+    dirLightObjectEntry.addProperty(Properties::PropertyID::Name, std::string("Sun"));
+    dirLightObjectEntry.addProperty(Properties::PropertyID::ID, 1);
+    dirLightObjectEntry.addProperty(Properties::PropertyID::Parent, 0);
+    dirLightObjectEntry.addPropertySet(Properties::PropertyID::World).addPropertySet(Properties::PropertyID::SpatialComponent);
+    auto &lightComponentEntry = dirLightObjectEntry.addPropertySet(Properties::PropertyID::Graphics).addPropertySet(Properties::PropertyID::LightComponent);
+    lightComponentEntry.addProperty(Properties::PropertyID::Type, Properties::PropertyID::DirectionalLight);
+    lightComponentEntry.addProperty(Properties::PropertyID::Intensity, 10.0f);
+
+    auto &editorCameraObjectEntry = gameObjects.addPropertySet(Properties::ArrayEntry);
+    editorCameraObjectEntry.addProperty(Properties::PropertyID::Name, std::string("EditorCamera"));
+    editorCameraObjectEntry.addProperty(Properties::PropertyID::ID, 2000000000);
+    editorCameraObjectEntry.addProperty(Properties::PropertyID::Parent, 0);
+    editorCameraObjectEntry.addPropertySet(Properties::PropertyID::Graphics).addPropertySet(Properties::PropertyID::CameraComponent);
+    editorCameraObjectEntry.addPropertySet(Properties::PropertyID::World).addPropertySet(Properties::PropertyID::SpatialComponent);
+    editorCameraObjectEntry.addPropertySet(Properties::PropertyID::Script).addPropertySet(Properties::PropertyID::LuaComponent).addProperty(Properties::PropertyID::Filename, std::string("Camera_free_object_spawn.lua"));
+
+    // Add root property set for systems
+    auto &rootSystemsPropertySet = p_newSceneProperties.addPropertySet(Properties::Systems);
+
+    // Add audio banks
+    if(!p_sceneData.m_audioBanks.empty())
+    {
+        auto &audioBanksPropertySet = rootSystemsPropertySet.addPropertySet(Properties::Audio).addPropertySet(Properties::Scene).addPropertySet(Properties::Banks);
+        for(auto &bankFilename : p_sceneData.m_audioBanks)
+        {
+            if(!bankFilename.empty())
+                audioBanksPropertySet.addPropertySet(Properties::ArrayEntry).addProperty(Properties::PropertyID::Filename, bankFilename);
+        }
+    }
+
+    // Add rendering passes
+    auto &graphicsScenePropertySet = rootSystemsPropertySet.addPropertySet(Properties::Graphics).addPropertySet(Properties::Scene);
+    RendererScene::exportRenderingPasses(graphicsScenePropertySet, p_sceneData.m_renderingPasses);
 }

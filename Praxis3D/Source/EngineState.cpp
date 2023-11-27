@@ -8,7 +8,7 @@
 #include "ScriptSystem.h"
 #include "WorldSystem.h"
 
-EngineState::EngineState(Engine &p_engine, EngineStateType p_engineState) : m_engine(p_engine), m_engineStateType(p_engineState), m_initialized(false)
+EngineState::EngineState(Engine &p_engine, EngineStateType p_engineState) : m_engine(p_engine), m_engineStateType(p_engineState), m_initialized(false), m_loaded(false)
 {
 	m_sceneChangeController = nullptr;
 	m_objectChangeController = nullptr;

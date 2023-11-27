@@ -81,6 +81,86 @@ private:
 		}
 	}
 
+	bool initializeState(const EngineStateType p_newStateType)
+	{
+		bool stateInitialized = true;
+
+		// Create the state if it hasn't been created already
+		if(m_engineStates[p_newStateType] == nullptr)
+			createState(&m_engineStates[p_newStateType], p_newStateType);
+
+		if(!m_engineStates[p_newStateType]->isInitialized())
+		{
+			// Initialize the current state
+			ErrorCode stateInitError = m_engineStates[p_newStateType]->init(m_taskManager);
+
+			// If it failed to initialize, log an error
+			if(stateInitError != ErrorCode::Success)
+			{
+				ErrHandlerLoc::get().log(stateInitError, ErrorSource::Source_Engine);
+				stateInitialized = false;
+			}
+		}
+
+		return stateInitialized;
+	}
+
+	bool loadState(const EngineStateType p_stateType, const std::string &p_sceneFilename = "")
+	{
+		bool stateLoaded = true;
+
+		// Check if the scene has been created and initialized
+		if(m_engineStates[p_stateType] != nullptr && m_engineStates[p_stateType]->isInitialized())
+		{
+			if(!p_sceneFilename.empty())
+				m_engineStates[p_stateType]->setSceneFilename(p_sceneFilename);
+
+			// Load the scene
+			ErrorCode loadError = m_engineStates[p_stateType]->load();
+
+			// If it failed to load, log an error
+			if(loadError != ErrorCode::Success)
+			{
+				ErrHandlerLoc::get().log(loadError, getEngineStateTypeString(p_stateType), ErrorSource::Source_Engine);
+				stateLoaded = false;
+			}
+		}
+
+		return stateLoaded;
+	}
+	bool loadState(const EngineStateType p_stateType, const PropertySet &p_propertySet)
+	{
+		bool stateLoaded = true;
+
+		// Check if the scene has been created and initialized
+		if(m_engineStates[p_stateType] != nullptr && m_engineStates[p_stateType]->isInitialized())
+		{
+			// Load the scene
+			ErrorCode loadError = m_engineStates[p_stateType]->load(p_propertySet);
+
+			// If it failed to load, log an error
+			if(loadError != ErrorCode::Success)
+			{
+				ErrHandlerLoc::get().log(loadError, getEngineStateTypeString(p_stateType), ErrorSource::Source_Engine);
+				stateLoaded = false;
+			}
+		}
+
+		return stateLoaded;
+	}
+
+	void setCurrentState(const EngineStateType p_newStateType)
+	{
+		if(m_engineStates[m_currentStateType] != nullptr)
+			m_engineStates[m_currentStateType]->deactivate();
+
+		if(m_engineStates[p_newStateType] != nullptr)
+			m_engineStates[p_newStateType]->activate();
+
+		m_currentStateType = p_newStateType;
+		Config::m_engineVar.engineState = m_currentStateType;
+	}
+
 	// Creates and initializes all the services and their locators
 	ErrorCode initServices();
 

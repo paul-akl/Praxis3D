@@ -18,9 +18,9 @@ EditorState::~EditorState()
 
 ErrorCode EditorState::load()
 {
-	ErrorCode returnError = ErrorCode::Initialize_failure;
+	ErrorCode returnError = ErrorCode::Success;
 
-	if(m_initialized)
+	if(m_initialized && !m_loaded)
 	{
 		// Load the scene map, and log an error if it wasn't successful
 		returnError = m_sceneLoader.loadFromFile(m_sceneFilename);
@@ -32,6 +32,30 @@ ErrorCode EditorState::load()
 		{
 			// Tell the GUI scene to create the editor window
 			m_sceneLoader.getChangeController()->sendData(static_cast<GUIScene *>(m_sceneLoader.getSystemScene(Systems::GUI)), DataType::DataType_EditorWindow, (void *)&m_editorWindowSettings);
+			m_loaded = true;
+		}
+	}
+
+	return returnError;
+}
+
+ErrorCode EditorState::load(const PropertySet &p_sceneProperty)
+{
+	ErrorCode returnError = ErrorCode::Success;
+
+	if(m_initialized && !m_loaded && p_sceneProperty)
+	{
+		// Load the scene map, and log an error if it wasn't successful
+		returnError = m_sceneLoader.loadFromProperties(p_sceneProperty);
+		if(returnError != ErrorCode::Success)
+		{
+			ErrHandlerLoc::get().log(returnError, ErrorSource::Source_SceneLoader);
+		}
+		else
+		{
+			// Tell the GUI scene to create the editor window
+			m_sceneLoader.getChangeController()->sendData(static_cast<GUIScene *>(m_sceneLoader.getSystemScene(Systems::GUI)), DataType::DataType_EditorWindow, (void *)&m_editorWindowSettings);
+			m_loaded = true;
 		}
 	}
 

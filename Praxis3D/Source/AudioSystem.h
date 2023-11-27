@@ -119,7 +119,7 @@ protected:
 			return true;
 	}
 
-	void addImpactSoundBank(FMOD::Studio::Bank *p_soundBank)
+	inline void registerEvents(FMOD::Studio::Bank *p_soundBank)
 	{
 		// Get the number of sound events
 		int numOfEvents = 0;
@@ -138,14 +138,27 @@ protected:
 				char path[512];
 				events[eventIndex]->getPath(path, 512, nullptr);
 
-				// Extract the sound event name from the path, and assign the event itself to the event name entry in the impact sound map
-				m_impactSounds[Utilities::splitStringAfterDelimiter(Config::audioVar().pathDelimiter, std::string(path))] = events[eventIndex];
+				// Extract the sound event name from the path, and assign the event itself to the event name entry in the sound event map
+				m_soundEvents[Utilities::splitStringAfterDelimiter(Config::audioVar().pathDelimiter, std::string(path))] = events[eventIndex];
 			}
 
 			// Delete the pointer to an array of pointers that was created
 			delete events;
 		}
 	}
+
+	// Search through all loaded sound events and return a match; if no match is found, return a nullptr
+	inline FMOD::Studio::EventDescription *getEvent(const std::string &p_eventName)
+	{
+		auto event = m_soundEvents.find(p_eventName);
+
+		if(event == m_soundEvents.end())
+			return nullptr;
+		else
+			return event->second;
+	}
+
+	FMOD::Studio::Bank *loadBankFile(const std::string p_filename, FMOD_STUDIO_LOAD_BANK_FLAGS p_flags);
 
 	// Load all the audio buses from the studio system into a buses array
 	void assignBusses()
@@ -178,9 +191,14 @@ protected:
 
 	AudioScene *m_audioScenes[EngineStateType::EngineStateType_NumOfTypes];
 
-	// Sound effects for object impacts
+	// Sound banks for object impacts
 	FMOD::Studio::Bank *m_impactBank;
-	std::unordered_map<std::string, FMOD::Studio::EventDescription *> m_impactSounds;
+
+	// All loaded sound events
+	std::unordered_map<std::string, FMOD::Studio::EventDescription *> m_soundEvents;
+
+	// All banks that have been loaded
+	std::vector<std::pair<std::string, FMOD::Studio::Bank *>> m_loadedBanks;
 
 	// FMOD studio and core system handles
 	FMOD::Studio::System *m_studioSystem;

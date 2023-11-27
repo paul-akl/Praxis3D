@@ -113,12 +113,14 @@ public:
 
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
-	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
+	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType);
 
 	SystemTask *getSystemTask() { return m_audioTask; };
 	Systems::TypeID getSystemType() { return Systems::TypeID::Audio; };
-	BitMask getDesiredSystemChanges() { return Systems::Changes::Generic::CreateObject || Systems::Changes::Generic::DeleteObject; }
+	BitMask getDesiredSystemChanges() { return Systems::Changes::Generic::CreateObject || Systems::Changes::Generic::DeleteObject || Systems::Changes::Audio::AllVolume; }
 	BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
+	const std::vector<std::pair<std::string, FMOD::Studio::Bank *>> &getBankFilenames() const { return m_bankFilenames; }
+	const float getVolume(const AudioBusType p_audioBusType) const { return m_volume[p_audioBusType]; }
 
 private:
 	void createSound(SoundComponent &p_soundComponent);
@@ -139,10 +141,7 @@ private:
 	SingleSound m_collisionSounds[ObjectMaterialType::NumberOfMaterialTypes];
 
 	// Volume values of different buses
-	float m_volumeAmbient;
-	float m_volumeMaster;
-	float m_volumeMusic;
-	float m_volumeSoundEffects;
+	float m_volume[AudioBusType::AudioBusType_NumOfTypes];
 
 	FMOD::ChannelGroup *m_soundTypeChannelGroups[SoundComponent::SoundType_NumOfTypes];
 

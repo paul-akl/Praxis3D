@@ -13,6 +13,8 @@ public:
 
 	ErrorCode load();
 
+	ErrorCode load(const PropertySet &p_sceneProperty);
+
 	void update(Engine &p_engine);
 
 	void activate();

@@ -516,3 +516,11 @@ ErrorCode PhysicsScene::destroyObject(SystemObject *p_systemObject)
 	// If this point is reached, no object was found, return an appropriate error
 	return ErrorCode::Destroy_obj_not_found;
 }
+
+void PhysicsScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
+{
+	if(CheckBitmask(p_changeType, Systems::Changes::Physics::Gravity))
+	{
+		m_dynamicsWorld->setGravity(Math::toBtVector3(p_subject->getVec3(this, Systems::Changes::Physics::Gravity)));
+	}
+}

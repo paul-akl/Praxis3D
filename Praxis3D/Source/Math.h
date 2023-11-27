@@ -97,9 +97,11 @@ namespace Math
 
 	const inline glm::vec3 toGlmVec3(const btVector3 &p_vec) noexcept { return glm::vec3(p_vec.getX(), p_vec.getY(), p_vec.getZ()); }
 
-	const inline glm::vec4 toGlmVec4(const glm::quat &p_quat) noexcept { return glm::vec4(p_quat.x, p_quat.y, p_quat.z, p_quat.w); }
+	const inline glm::vec4 toGlmVec4(const glm::quat &p_quat) noexcept { return glm::vec4(p_quat.w, p_quat.x, p_quat.y, p_quat.z); }
 
 	const inline glm::quat toGlmQuat(const btQuaternion &p_quat) noexcept { return glm::quat(p_quat.getW(), p_quat.getX(), p_quat.getY(), p_quat.getZ()); }
+
+	const inline glm::quat toGlmQuat(const glm::vec4 &p_vec) noexcept { return glm::quat(p_vec.x, p_vec.y, p_vec.z, p_vec.w); }
 
 	const inline btQuaternion toBtQuaternion(const glm::quat &p_quat) noexcept { return btQuaternion(p_quat.x, p_quat.y, p_quat.z, p_quat.w); }
 
@@ -146,7 +148,4 @@ namespace Math
 			p_mat[8], p_mat[9], p_mat[10], p_mat[11],
 			p_mat[12], p_mat[13], p_mat[14], p_mat[15]);
 	}
-
-	//float toRadian(const float p_degrees) { return glm::radians(p_degrees); }
-	//glm::quat test;
 }

@@ -129,7 +129,7 @@ namespace Utilities
 	// Strip and return the directory path from a full file path in Windows environment
 	static std::string stripFilePath(const std::string &p_fullPath)
 	{
-		std::string returnFilename = p_fullPath;
+		std::string returnFilename = "";
 
 		// Make sure full path string is not empty
 		if(!p_fullPath.empty())

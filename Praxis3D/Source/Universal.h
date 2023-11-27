@@ -33,10 +33,30 @@ public:
 	void removeObjectLink(ObservedSubject *p_subject, SystemObject *p_observer);
 
 	// Queues an engine change that is processed before the next frame by the Engine
-	void sendEngineChange(EngineChangeData &p_engineChangeData);
+	//void sendEngineChange(EngineChangeData &p_engineChangeData)
+	//{
+	//	// Make sure calls from other threads are locked, while current call is in progress
+	//	// This is needed so the changes list isn't being written to simultaneously from different threads
+	//	SpinWait::Lock lock(m_mutex);
+
+	//	m_engineChangeQueue.push_back(p_engineChangeData);
+	//	m_engineChangePending = true;
+	//}
+
+	// Queues an engine change that is processed before the next frame by the Engine
+	template<class... T_Args>
+	void sendEngineChange(T_Args&&... p_args)
+	{
+		// Make sure calls from other threads are locked, while current call is in progress
+		// This is needed so the changes list isn't being written to simultaneously from different threads
+		SpinWait::Lock lock(m_mutex);
+
+		m_engineChangeQueue.emplace_back(std::forward<T_Args>(p_args)...);
+		m_engineChangePending = true;
+	}
 
 	// Sends a one-off notification about a change, without requiring the object linking
-	void sendChange(SystemObject *p_subject, SystemObject *p_observer, BitMask p_changedBits)
+	void sendChange(ObservedSubject *p_subject, Observer *p_observer, BitMask p_changedBits)
 	{
 		// Check if any changes have been done
 		//if(p_changedBits)
