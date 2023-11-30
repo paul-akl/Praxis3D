@@ -29,7 +29,7 @@ struct UniformFrameData
 				m_atmScatProjMatrix,
 				m_transposeViewMatrix;
 
-	// Parameters of direction light, since there can be only one of it
+	// Parameters of directional light, since there can be only one of it
 	DirectionalLightDataSet m_directionalLight;
 
 	// Delta time of the last frame

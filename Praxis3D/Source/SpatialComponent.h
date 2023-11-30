@@ -74,6 +74,12 @@ public:
 		// Track what data has been modified
 		BitMask newChanges = Systems::Changes::None;
 
+		if(CheckBitmask(p_changeType, Systems::Changes::Generic::Active))
+		{
+			// Get the active flag from the subject and set the active flag accordingly
+			setActive(p_subject->getBool(this, Systems::Changes::Generic::Active));
+		}
+
 		// Process the spatial changes and record the world-space changes
 		/*newChanges = */m_spatialData.changeOccurred(*p_subject, p_changeType & Systems::Changes::Spatial::All);
 

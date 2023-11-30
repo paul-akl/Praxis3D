@@ -14,8 +14,12 @@ Window::Window()
 
 	m_numDisplays = 0;
 
+	m_mousePositionBeforeSetRelativeX = 0;
+	m_mousePositionBeforeSetRelativeY = 0;
+
 	m_SDLWindow = nullptr;
-	m_SDLWindow = nullptr;
+	m_GLContext = nullptr;
+	m_guiHandler = nullptr;
 
 	// Reserve the space, since we know the number of supported scancodes
 	m_scancodeNames.reserve(Scancode::NumberOfScancodes);
@@ -161,7 +165,7 @@ void Window::handleEvents()
 		else
 		{
 			// If GUI is enabled, send the event to it
-			if(m_enableGUI)
+			if(m_enableGUI && !Config::m_windowVar.mouse_captured)
 				m_guiHandler->processSDLEvent(SDLEvent);
 				
 			handleSDLEvent(SDLEvent);

@@ -300,12 +300,17 @@ public:
 	// Sets relative mouse mode (cursor becomes hidden and clipped inside the window)
 	void setMouseRelativeMode(const bool p_relativeMode)
 	{
+		// If the mouse is going into relative mode, save the current mouse position for later
+		// If the mouse is going out of relative mode, restore its position to what it was before going into relative mode
+		if(p_relativeMode)
+			SDL_GetMouseState(&m_mousePositionBeforeSetRelativeX, &m_mousePositionBeforeSetRelativeY);
+		else
+			SDL_WarpMouseInWindow(m_SDLWindow, m_mousePositionBeforeSetRelativeX, m_mousePositionBeforeSetRelativeY);
+
 		// SDL implementation of bool is "0" or "1", so we need to "convert" the regular bool
 		SDL_SetRelativeMouseMode(p_relativeMode ? SDL_TRUE : SDL_FALSE);
 
-		ErrHandlerLoc::get().log(ErrorType::Info, ErrorSource::Source_Window, p_relativeMode ?
-								 "Mouse captured"
-								 : "Mouse released");
+		//ErrHandlerLoc::get().log(ErrorType::Info, ErrorSource::Source_Window, p_relativeMode ? "Mouse captured" : "Mouse released");
 	}
 
 	// Sets the vertical synchronization
@@ -502,11 +507,12 @@ private:
 	}
 
 	int m_numDisplays;
-	//int m_screenWidth;
-	//int m_screenHeight;
 
 	bool m_mouseCapturedBeforeLostFocus;
 	bool m_inFullscreen;
+
+	int m_mousePositionBeforeSetRelativeX;
+	int m_mousePositionBeforeSetRelativeY;
 
 	// Handles to window and OpenGL contexts
 	SDL_Window *m_SDLWindow;

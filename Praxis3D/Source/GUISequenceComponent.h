@@ -124,6 +124,9 @@ public:
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) 
 	{
+		if(CheckBitmask(p_changeType, Systems::Changes::Generic::Active))
+			setActive(p_subject->getBool(this, Systems::Changes::Generic::Active));
+
 		if(CheckBitmask(p_changeType, Systems::Changes::GUI::Sequence))
 			m_guiSequence = p_subject->getFunctors(this, Systems::Changes::GUI::Sequence);
 

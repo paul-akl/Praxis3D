@@ -200,6 +200,20 @@ void GUIScene::loadInBackground()
 {
 }
 
+std::vector<SystemObject *> GUIScene::getComponents(const EntityID p_entityID)
+{
+	std::vector<SystemObject *> returnVector;
+
+	// Get the entity registry 
+	auto &entityRegistry = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World))->getEntityRegistry();
+
+	auto *guiSequenceComponent = entityRegistry.try_get<GUISequenceComponent>(p_entityID);
+	if(guiSequenceComponent != nullptr)
+		returnVector.push_back(guiSequenceComponent);
+
+	return returnVector;
+}
+
 std::vector<SystemObject*> GUIScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	return createComponents(p_entityID, p_constructionInfo.m_guiComponents, p_startLoading);
@@ -282,47 +296,79 @@ void GUIScene::receiveData(const DataType p_dataType, void *p_data, const bool p
 {
 	switch(p_dataType)
 	{
-	case DataType_EnableGUISequence:
-		setGUISequenceEnabled(static_cast<bool>(p_data));
-		break;
-
-	case DataType_FileBrowserDialog:
-		// Cast the sent data into the intended type and add it to the file-browser dialog queue
-		m_fileBrowserDialogs.push(static_cast<FileBrowserDialog*>(p_data));
-		break;
-
-	case DataType_EditorWindow:
-		// Cast the sent data into the intended type
-		EditorWindowSettings *editorWindowSettings = static_cast<EditorWindowSettings*>(p_data);
-
-		// If the editor window should be enabled
-		if(editorWindowSettings->m_enabled)
-		{
-			// If the editor window doesn't exist, create it
-			if(m_editorWindow == nullptr)
+		case DataType::DataType_DeleteComponent:
 			{
-				m_editorWindow = new EditorWindow(this, Config::GUIVar().gui_editor_window_name, 0);
-				m_editorWindow->init();
-				m_editorWindow->setup(*editorWindowSettings);
-			}
-			else // If the editor window does exist, just send the settings to it
-				m_editorWindow->setup(*editorWindowSettings);
+				// Get the world scene required for getting the entity registry and deleting components
+				WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
 
-			GUIHandlerLocator::get().enableDocking();
-		}
-		else // If the editor should be disabled
-		{
-			// If the editor window exist, delete it
-			if(m_editorWindow != nullptr)
+				// Get the entity registry 
+				auto &entityRegistry = worldScene->getEntityRegistry();
+
+				// Get entity and component data
+				auto const *componentData = static_cast<EntityAndComponent *>(p_data);
+
+				// Delete the component based on its type
+				switch(componentData->m_componentType)
+				{
+					case ComponentType::ComponentType_GUISequenceComponent:
+						{
+							// Check if the component exists
+							auto *component = entityRegistry.try_get<GUISequenceComponent>(componentData->m_entityID);
+							if(component != nullptr)
+							{
+								// Delete component
+								worldScene->removeComponent<GUISequenceComponent>(componentData->m_entityID);
+							}
+						}
+						break;
+				}
+
+				// Delete the sent data if the ownership of it was transfered
+				if(p_deleteAfterReceiving)
+					delete componentData;
+			}
+			break;
+		case DataType_EnableGUISequence:
+			setGUISequenceEnabled(static_cast<bool>(p_data));
+			break;
+
+		case DataType_FileBrowserDialog:
+			// Cast the sent data into the intended type and add it to the file-browser dialog queue
+			m_fileBrowserDialogs.push(static_cast<FileBrowserDialog *>(p_data));
+			break;
+
+		case DataType_EditorWindow:
+			// Cast the sent data into the intended type
+			EditorWindowSettings *editorWindowSettings = static_cast<EditorWindowSettings *>(p_data);
+
+			// If the editor window should be enabled
+			if(editorWindowSettings->m_enabled)
 			{
-				delete m_editorWindow;
-				m_editorWindow = nullptr;
-			}
-		}
+				// If the editor window doesn't exist, create it
+				if(m_editorWindow == nullptr)
+				{
+					m_editorWindow = new EditorWindow(this, Config::GUIVar().gui_editor_window_name, 0);
+					m_editorWindow->init();
+					m_editorWindow->setup(*editorWindowSettings);
+				}
+				else // If the editor window does exist, just send the settings to it
+					m_editorWindow->setup(*editorWindowSettings);
 
-		// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
-		if(p_deleteAfterReceiving)
-			delete editorWindowSettings;
-		break;
+				GUIHandlerLocator::get().enableDocking();
+			}
+			else // If the editor should be disabled
+			{
+				// If the editor window exist, delete it
+				if(m_editorWindow != nullptr)
+				{
+					delete m_editorWindow;
+					m_editorWindow = nullptr;
+				}
+			}
+
+			// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
+			if(p_deleteAfterReceiving)
+				delete editorWindowSettings;
+			break;
 	}
 }

@@ -56,7 +56,189 @@ void WorldScene::update(const float p_deltaTime)
 
 		component.update(p_deltaTime);
 	}
+}
 
+std::vector<SystemObject *> WorldScene::getComponents(const EntityID p_entityID)
+{
+	std::vector<SystemObject *> returnVector;
+
+	// Get the entity registry 
+	auto &entityRegistry = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World))->getEntityRegistry();
+
+	auto *metadataComponent = m_entityRegistry.try_get<MetadataComponent>(p_entityID);
+	if(metadataComponent != nullptr)
+		returnVector.push_back(metadataComponent);
+
+	auto *spatialComponent = m_entityRegistry.try_get<SpatialComponent>(p_entityID);
+	if(spatialComponent != nullptr)
+		returnVector.push_back(spatialComponent);
+
+	auto *objectMaterialComponent = m_entityRegistry.try_get<ObjectMaterialComponent>(p_entityID);
+	if(objectMaterialComponent != nullptr)
+		returnVector.push_back(objectMaterialComponent);
+
+	return returnVector;
+}
+
+ErrorCode WorldScene::addComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
+{
+	ErrorCode returnError = ErrorCode::Success;
+
+	if(m_entityRegistry.valid(p_entityID))
+	{
+		// Add WORLD components
+		std::vector<SystemObject *> worldComponents = createComponents(p_entityID, p_constructionInfo.m_worldComponents, p_startLoading);
+
+		SystemObject *newSpatialComponent = nullptr;
+		SystemObject *oldSpatialComponent = nullptr;
+
+		// Find a spatial component within the world components array
+		for(decltype(worldComponents.size()) i = 0, size = worldComponents.size(); i < size; i++)
+			if(worldComponents[i]->getObjectType() == Properties::SpatialComponent)
+			{
+				newSpatialComponent = worldComponents[i];
+				break;
+			}
+
+		if(newSpatialComponent != nullptr)
+			oldSpatialComponent = m_entityRegistry.try_get<MetadataComponent>(p_entityID);
+
+		// Add AUDIO components
+		std::vector<SystemObject *> newAudioComponents = m_sceneLoader->getSystemScene(Systems::Audio)->createComponents(p_entityID, p_constructionInfo, p_startLoading);
+		std::vector<SystemObject *> oldAudioComponents = m_sceneLoader->getSystemScene(Systems::Audio)->getComponents(p_entityID);
+
+		// Add RENDERING components
+		std::vector<SystemObject *> newRenderingComponents = m_sceneLoader->getSystemScene(Systems::Graphics)->createComponents(p_entityID, p_constructionInfo, p_startLoading);
+		std::vector<SystemObject *> oldRenderingComponents = m_sceneLoader->getSystemScene(Systems::Graphics)->getComponents(p_entityID);
+
+		// Add GUI components
+		std::vector<SystemObject *> newGuiComponents = m_sceneLoader->getSystemScene(Systems::GUI)->createComponents(p_entityID, p_constructionInfo, p_startLoading);
+		std::vector<SystemObject *> oldGuiComponents = m_sceneLoader->getSystemScene(Systems::GUI)->getComponents(p_entityID);
+
+		// Add PHYSICS components
+		std::vector<SystemObject *> newPhysicsComponents = m_sceneLoader->getSystemScene(Systems::Physics)->createComponents(p_entityID, p_constructionInfo, p_startLoading);
+		std::vector<SystemObject *> oldPhysicsComponents = m_sceneLoader->getSystemScene(Systems::Physics)->getComponents(p_entityID);
+
+		// Add SCRIPTING components
+		std::vector<SystemObject *> newScriptingComponents = m_sceneLoader->getSystemScene(Systems::Script)->createComponents(p_entityID, p_constructionInfo, p_startLoading);
+		std::vector<SystemObject *> oldScriptingComponents = m_sceneLoader->getSystemScene(Systems::Script)->getComponents(p_entityID);
+
+		// Link subjects and observers of different components
+		// Link NEW components to both NEW and OLD components
+		// Link OLD components to NEW components only (to avoid duplicate linking)
+
+		if(newSpatialComponent != nullptr)
+		{
+			// Link PHYSICS -> SPATIAL
+			// NEW components -> NEW and OLD
+			for(decltype(newPhysicsComponents.size()) i = 0, size = newPhysicsComponents.size(); i < size; i++)
+			{
+				m_sceneLoader->getChangeController()->createObjectLink(newPhysicsComponents[i], newSpatialComponent);
+			}
+			for(decltype(oldScriptingComponents.size()) i = 0, size = oldScriptingComponents.size(); i < size; i++)
+			{
+				m_sceneLoader->getChangeController()->createObjectLink(oldScriptingComponents[i], newSpatialComponent);
+			}
+		}
+		else
+			if(oldSpatialComponent != nullptr)
+			{
+				// Link PHYSICS -> SPATIAL
+				// OLD components -> NEW
+				for(decltype(newPhysicsComponents.size()) i = 0, size = newPhysicsComponents.size(); i < size; i++)
+				{
+					m_sceneLoader->getChangeController()->createObjectLink(newPhysicsComponents[i], oldSpatialComponent);
+				}
+			}
+
+
+		// Link SCRIPTING
+		// NEW components -> NEW and OLD
+		for(decltype(newScriptingComponents.size()) scriptingIndex = 0, scriptingSize = newScriptingComponents.size(); scriptingIndex < scriptingSize; scriptingIndex++)
+		{
+			// If there are no physics components, link to spatial directly. If there are physics components, link to physics components instead
+			if(newPhysicsComponents.empty())
+			{
+				// Link SCRIPTING -> SPATIAL
+				// NEW -> NEW
+				if(newSpatialComponent != nullptr)
+					m_sceneLoader->getChangeController()->createObjectLink(newScriptingComponents[scriptingIndex], newSpatialComponent);
+				else
+					// NEW -> OLD
+					if(oldSpatialComponent != nullptr)
+						m_sceneLoader->getChangeController()->createObjectLink(newScriptingComponents[scriptingIndex], oldSpatialComponent);
+			}
+			else
+			{
+				// Link SCRIPTING -> PHYSICS
+				// NEW -> NEW
+				for(decltype(newPhysicsComponents.size()) physicsIndex = 0, physicsSize = newPhysicsComponents.size(); physicsIndex < physicsSize; physicsIndex++)
+					m_sceneLoader->getChangeController()->createObjectLink(newScriptingComponents[scriptingIndex], newPhysicsComponents[physicsIndex]);
+				// NEW -> OLD
+				for(decltype(oldPhysicsComponents.size()) physicsIndex = 0, physicsSize = oldPhysicsComponents.size(); physicsIndex < physicsSize; physicsIndex++)
+					m_sceneLoader->getChangeController()->createObjectLink(newScriptingComponents[scriptingIndex], oldPhysicsComponents[physicsIndex]);
+			}
+
+			// Link SCRIPTING -> AUDIO
+			// NEW -> NEW
+			for(decltype(newAudioComponents.size()) audioIndex = 0, audioSize = newAudioComponents.size(); audioIndex < audioSize; audioIndex++)
+			{
+				m_sceneLoader->getChangeController()->createObjectLink(newScriptingComponents[scriptingIndex], newAudioComponents[audioIndex]);
+			}
+			// NEW -> OLD
+			for(decltype(oldAudioComponents.size()) audioIndex = 0, audioSize = oldAudioComponents.size(); audioIndex < audioSize; audioIndex++)
+			{
+				m_sceneLoader->getChangeController()->createObjectLink(newScriptingComponents[scriptingIndex], oldAudioComponents[audioIndex]);
+			}
+
+			// Link SCRIPTING -> GUI
+			// NEW -> NEW
+			for(decltype(newGuiComponents.size()) guiIndex = 0, guiSize = newGuiComponents.size(); guiIndex < guiSize; guiIndex++)
+			{
+				m_sceneLoader->getChangeController()->createObjectLink(newScriptingComponents[scriptingIndex], newGuiComponents[guiIndex]);
+			}
+			// NEW -> OLD
+			for(decltype(oldGuiComponents.size()) guiIndex = 0, guiSize = oldGuiComponents.size(); guiIndex < guiSize; guiIndex++)
+			{
+				m_sceneLoader->getChangeController()->createObjectLink(newScriptingComponents[scriptingIndex], oldGuiComponents[guiIndex]);
+			}
+		}
+
+		// Link SCRIPTING
+		// OLD components -> NEW
+		for(decltype(oldScriptingComponents.size()) scriptingIndex = 0, scriptingSize = oldScriptingComponents.size(); scriptingIndex < scriptingSize; scriptingIndex++)
+		{
+			// If there are no physics components, link to spatial directly. If there are physics components, link to physics components instead
+			if(newPhysicsComponents.empty())
+			{
+				// Link SCRIPTING -> SPATIAL
+				if(newSpatialComponent != nullptr)
+					m_sceneLoader->getChangeController()->createObjectLink(oldScriptingComponents[scriptingIndex], newSpatialComponent);
+			}
+			else
+			{
+				// Link SCRIPTING -> PHYSICS
+				for(decltype(newPhysicsComponents.size()) physicsIndex = 0, physicsSize = newPhysicsComponents.size(); physicsIndex < physicsSize; physicsIndex++)
+					m_sceneLoader->getChangeController()->createObjectLink(oldScriptingComponents[scriptingIndex], newPhysicsComponents[physicsIndex]);
+			}
+
+			// Link SCRIPTING -> AUDIO
+			for(decltype(newAudioComponents.size()) audioIndex = 0, audioSize = newAudioComponents.size(); audioIndex < audioSize; audioIndex++)
+			{
+				m_sceneLoader->getChangeController()->createObjectLink(oldScriptingComponents[scriptingIndex], newAudioComponents[audioIndex]);
+			}
+
+			// Link SCRIPTING -> GUI
+			for(decltype(newGuiComponents.size()) guiIndex = 0, guiSize = newGuiComponents.size(); guiIndex < guiSize; guiIndex++)
+			{
+				m_sceneLoader->getChangeController()->createObjectLink(oldScriptingComponents[scriptingIndex], newGuiComponents[guiIndex]);
+			}
+		}
+	}
+	else
+		returnError = ErrorCode::Nonexistent_object_id;
+
+	return returnError;
 }
 
 EntityID WorldScene::createEntity(const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
@@ -273,4 +455,59 @@ SystemObject *WorldScene::createComponent(const EntityID p_entityID, const Compo
 	metadataComponent->init();
 
 	return metadataComponent;
+}
+
+void WorldScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
+{
+}
+
+void WorldScene::receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving)
+{
+	switch(p_dataType)
+	{
+		case DataType::DataType_DeleteComponent:
+			{
+				// Get the world scene required for getting the entity registry and deleting components
+				WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+				// Get the entity registry 
+				auto &entityRegistry = worldScene->getEntityRegistry();
+
+				// Get entity and component data
+				auto const *componentData = static_cast<EntityAndComponent *>(p_data);
+
+				// Delete the component based on its type
+				switch(componentData->m_componentType)
+				{
+					case ComponentType::ComponentType_ObjectMaterialComponent:
+						{
+							// Check if the component exists
+							auto *component = entityRegistry.try_get<ObjectMaterialComponent>(componentData->m_entityID);
+							if(component != nullptr)
+							{
+								// Delete component
+								worldScene->removeComponent<ObjectMaterialComponent>(componentData->m_entityID);
+							}
+						}
+						break;
+
+					case ComponentType::ComponentType_SpatialComponent:
+						{
+							// Check if the component exists
+							auto *component = entityRegistry.try_get<SpatialComponent>(componentData->m_entityID);
+							if(component != nullptr)
+							{
+								// Delete component
+								worldScene->removeComponent<SpatialComponent>(componentData->m_entityID);
+							}
+						}
+						break;
+				}
+
+				// Delete the sent data if the ownership of it was transfered
+				if(p_deleteAfterReceiving)
+					delete componentData;
+			}
+			break;
+	}
 }

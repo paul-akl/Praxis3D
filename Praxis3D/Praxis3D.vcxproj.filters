@@ -202,6 +202,9 @@
     <Filter Include="3rd Party\ImGuiFileDialog">
       <UniqueIdentifier>{64b58db8-35ed-4a66-b8c7-bab40e593fb2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="3rd Party\ImGuizmo">
+      <UniqueIdentifier>{35332447-1f2e-4c5e-84ae-3e83c20e317d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -446,6 +449,9 @@
     </ClCompile>
     <ClCompile Include="Source\AudioSystem.cpp">
       <Filter>Audio\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\ImGuizmo\ImGuizmo.cpp">
+      <Filter>3rd Party\ImGuizmo</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -928,6 +934,9 @@
     </ClInclude>
     <ClInclude Include="..\Dependencies\include\imgui\imgui_stdlib.h">
       <Filter>3rd Party\imgui\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\ImGuizmo\ImGuizmo.h">
+      <Filter>3rd Party\ImGuizmo</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

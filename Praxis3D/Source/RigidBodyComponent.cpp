@@ -9,6 +9,12 @@ void RigidBodyComponent::changeOccurred(ObservedSubject *p_subject, BitMask p_ch
 	// Track whether any spatial data was modified, so that the transform matrix can be recreated
 	bool transformModifed = false;
 
+	if(CheckBitmask(p_changeType, Systems::Changes::Generic::Active))
+	{
+		// Get the active flag from the subject and set the active flag accordingly
+		setActive(p_subject->getBool(this, Systems::Changes::Generic::Active));
+	}
+
 	// Consider ignoring LocalTransform change, as Bullet can only accept a transform matrix that does not have scale applied to it. LocalTransform however includes scaling.
 	// To avoid scaled transform, only the position is retrieved from the LocalTransform, and the rotation is retrieved by getting a LocalRotation quaternion.
 	// This might cause a problem of getting an out-of-date rotation, as it is not certain if the LocalRotation quaternion has been updated.

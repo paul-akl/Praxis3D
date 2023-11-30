@@ -201,6 +201,12 @@ public:
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) 
 	{
+		if(CheckBitmask(p_changeType, Systems::Changes::Generic::Active))
+		{
+			// Get the active flag from the subject and set the active flag accordingly
+			setActive(p_subject->getBool(this, Systems::Changes::Generic::Active));
+		}
+
 		if(CheckBitmask(p_changeType, Systems::Changes::Script::Filename))
 		{
 			if(m_luaScript != nullptr)

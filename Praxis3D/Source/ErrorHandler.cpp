@@ -68,8 +68,9 @@ ErrorHandler::ErrorHandler()
 	AssignErrorType(SDL_video_init_failed, FatalError);
 	AssignErrorType(SDL_vsync_failed, Warning);
 	AssignErrorType(Window_creation_failed, FatalError);
-	AssignErrorType(Invalid_object_id, Warning);
 	AssignErrorType(Duplicate_object_id, Warning);
+	AssignErrorType(Invalid_object_id, Warning);
+	AssignErrorType(Nonexistent_object_id, Warning);
 
 	// Add error sources to the hash map, and offset them by number of error codes, because they share the same hash map
 	for(unsigned int i = 0; i < Source_NumberOfErrorSources; i++)

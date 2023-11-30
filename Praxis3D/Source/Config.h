@@ -27,6 +27,9 @@ constexpr bool CheckBitmask(const BitMask p_bitmask, const BitMask p_flag) { ret
 enum DataType : uint32_t
 {
 	DataType_Null = 0,
+	// General
+	DataType_CreateComponent,
+	DataType_DeleteComponent,
 	// Graphics
 	DataType_GUIPassFunctors,
 	DataType_RenderToTexture,
@@ -958,6 +961,7 @@ public:
 			editor_asset_texture_button_size_y = 60.0f;
 			editor_audio_banks_max_height = 100.0f;
 			editor_float_slider_speed = 0.01f;
+			editor_inspector_button_width_multiplier = 1.5f;
 			editor_lua_variables_max_height = 200.0f;
 			editor_play_button_size = 30.0f;
 			editor_render_pass_max_height = 250.0f;
@@ -971,14 +975,16 @@ public:
 			editor_button_arrow_down_texture = "buttons\\button_arrow_down_1.png";
 			editor_button_arrow_up_texture = "buttons\\button_arrow_up_1.png";
 			editor_button_delete_entry_texture = "buttons\\button_delete_5.png";
-			editor_button_gui_sequence_texture = "buttons\\button_gui_sequence_1.png";
+			editor_button_gui_sequence_texture = "buttons\\button_gui_sequence_5.png";
+			editor_button_guizmo_rotate_texture = "buttons\\button_guizmo_rotate_1.png";
+			editor_button_guizmo_translate_texture = "buttons\\button_guizmo_translate_2.png";
 			editor_button_open_file_texture = "buttons\\button_open_file_1.png";
 			editor_button_open_asset_list_texture = "buttons\\button_add_from_list_1.png";
 			editor_button_pause_texture = "buttons\\button_editor_pause_2.png";
 			editor_button_play_texture = "buttons\\button_editor_play_2.png";
 			editor_button_reload_texture = "buttons\\button_reload_3.png";
 			editor_button_restart_texture = "buttons\\button_editor_restart_2.png";
-			editor_button_scripting_enabled_texture = "buttons\\button_scripting_1.png";
+			editor_button_scripting_enabled_texture = "buttons\\button_scripting_3.png";
 			gui_editor_window_name = "Editor window";
 		}
 		bool gui_docking_enabled;
@@ -990,6 +996,7 @@ public:
 		float editor_asset_texture_button_size_y;
 		float editor_audio_banks_max_height;
 		float editor_float_slider_speed;
+		float editor_inspector_button_width_multiplier;
 		float editor_lua_variables_max_height;
 		float editor_play_button_size;
 		float editor_render_pass_max_height;
@@ -1004,6 +1011,8 @@ public:
 		std::string editor_button_arrow_up_texture;
 		std::string editor_button_delete_entry_texture;
 		std::string editor_button_gui_sequence_texture;
+		std::string editor_button_guizmo_rotate_texture;
+		std::string editor_button_guizmo_translate_texture;
 		std::string editor_button_open_file_texture;
 		std::string editor_button_open_asset_list_texture;
 		std::string editor_button_pause_texture;

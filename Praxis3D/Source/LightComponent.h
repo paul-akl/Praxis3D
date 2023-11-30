@@ -165,9 +165,9 @@ public:
 
 	virtual void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
-		// Track what data has been modified
-		//BitMask newChanges = Systems::Changes::None;
-		//BitMask processedChange = 0;
+		// Get the active flag from the subject and set the active flag accordingly
+		if(CheckBitmask(p_changeType, Systems::Changes::Generic::Active))
+			setActive(p_subject->getBool(this, Systems::Changes::Generic::Active));
 
 		// Check if the light should be enabled/disabled
 		if(CheckBitmask(p_changeType, Systems::Changes::Graphics::LightEnabled))

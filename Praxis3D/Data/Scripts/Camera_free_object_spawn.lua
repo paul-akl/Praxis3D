@@ -74,6 +74,12 @@ function update (p_deltaTime)
 		-- Rotate camera left/right on a fixed Y direction (up/down) to not introduce any roll
 		localTransformMat4 = localTransformMat4:rotate(toRadianF(horizontalAngleF), Vec3.new(0.0, 1.0, 0.0))
 	end
+	
+	if mouseRightKey:isActivated() then
+		setMouseCapture(true)
+	else
+		setMouseCapture(false)
+	end
 		
 	-- Get the view direction that is facing forward
 	forwardDirectionVec3 = localTransformInverseMat4:getRotZVec3()
@@ -133,7 +139,7 @@ function update (p_deltaTime)
 	
 	-- Set the new position of the camera, and keep the W variable the same
 	localTransformMat4:setPosVec4(Vec4.new(positionVec3, localTransformMat4:getPosVec4().w))
-	
+		
 	-- Update the camera with the new matrix
 	spatialData:setLocalTransform(localTransformMat4)
 end

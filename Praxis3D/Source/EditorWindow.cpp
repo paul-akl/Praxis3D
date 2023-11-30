@@ -4,6 +4,7 @@
 #include "EngineDefinitions.h"
 #include "EditorWindow.h"
 #include "imgui_internal.h"
+#include "ImGuizmo.h"
 #include "RendererScene.h"
 #include "ShaderUniformUpdater.h"
 #include "WorldScene.h"
@@ -40,6 +41,8 @@ EditorWindow::~EditorWindow()
 
 ErrorCode EditorWindow::init()
 {
+    ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
+    ImGuizmo::SetOrthographic(false);
     return ErrorCode::Success;
 }
 
@@ -51,6 +54,10 @@ void EditorWindow::update(const float p_deltaTime)
     // Clear the texture inspector functor sequence from the last frame
     m_textureInspectorSequence.swapBuffer();
     m_textureInspectorSequence.getFront().clear();
+
+    // Clear the entity and component creation / deletion pools left from the previous frame
+    clearEntityAndComponentPool();
+    clearConstructionInfoPool();
 
     // Update the entity list
     updateEntityList(); 
@@ -297,7 +304,7 @@ void EditorWindow::update(const float p_deltaTime)
                 m_playPauseButtonSize,
                 ImVec2(0, 1),
                 ImVec2(1, 0),
-                m_GUISequenceEnabled ? ImVec4(0.26f, 0.26f, 0.26f, 1.0f) : ImVec4(0.0f, 0.0f, 0.0f, 0.0f)))
+                m_GUISequenceEnabled ? m_buttonBackgroundEnabled : m_buttonBackgroundDisabled))
             {
                 m_GUISequenceEnabled = !m_GUISequenceEnabled;
 
@@ -306,15 +313,15 @@ void EditorWindow::update(const float p_deltaTime)
             }
             if(ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay))
                 ImGui::SetTooltip(m_GUISequenceEnabled ? "Click to disable GUI Sequence components drawing on screen" : "Click to enable GUI Sequence components drawing on screen", ImGui::GetStyle().HoverDelayShort);
-            ImGui::SameLine();
 
             // Draw ENABLE SCRIPTING button
+            ImGui::SameLine();
             if(ImGui::ImageButton("##ScriptingEnableButton",
                 (ImTextureID)m_buttonTextures[ButtonTextureType::ButtonTextureType_ScriptingEnable].getHandle(),
                 m_playPauseButtonSize,
                 ImVec2(0, 1),
                 ImVec2(1, 0),
-                m_LUAScriptingEnabled ? ImVec4(0.26f, 0.26f, 0.26f, 1.0f) : ImVec4(0.0f, 0.0f, 0.0f, 0.0f)))
+                m_LUAScriptingEnabled ? m_buttonBackgroundEnabled : m_buttonBackgroundDisabled))
             {
                 m_LUAScriptingEnabled = !m_LUAScriptingEnabled;
 
@@ -323,6 +330,34 @@ void EditorWindow::update(const float p_deltaTime)
             }
             if(ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay))
                 ImGui::SetTooltip(m_LUAScriptingEnabled ? "Click to disable LUA scripting components" : "Click to enable LUA scripting components", ImGui::GetStyle().HoverDelayShort);
+
+            // Draw GUIZMO TRANSLATE button
+            ImGui::SameLine();
+            if(ImGui::ImageButton("##GuizmoTranslateEnableButton",
+                (ImTextureID)m_buttonTextures[ButtonTextureType::ButtonTextureType_GuizmoTranslate].getHandle(),
+                m_playPauseButtonSize,
+                ImVec2(0, 1),
+                ImVec2(1, 0),
+                m_translateGuizmoEnabled ? m_buttonBackgroundEnabled : m_buttonBackgroundDisabled))
+            {
+                m_translateGuizmoEnabled = !m_translateGuizmoEnabled;
+            }
+            if(ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay))
+                ImGui::SetTooltip(m_translateGuizmoEnabled ? "Click to stop showing position control" : "Click to show position control", ImGui::GetStyle().HoverDelayShort);
+
+            // Draw GUIZMO ROTATE button
+            ImGui::SameLine();
+            if(ImGui::ImageButton("##GuizmoRotateEnableButton",
+                (ImTextureID)m_buttonTextures[ButtonTextureType::ButtonTextureType_GuizmoRotate].getHandle(),
+                m_playPauseButtonSize,
+                ImVec2(0, 1),
+                ImVec2(1, 0),
+                m_rotateGuizmoEnabled ? m_buttonBackgroundEnabled : m_buttonBackgroundDisabled))
+            {
+                m_rotateGuizmoEnabled = !m_rotateGuizmoEnabled;
+            }
+            if(ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay))
+                ImGui::SetTooltip(m_rotateGuizmoEnabled ? "Click to stop showing rotation control" : "Click to show rotation control", ImGui::GetStyle().HoverDelayShort);
 
             // Get the secondary menu bar style, required for retrieving size information
             ImGuiStyle &secondaryMenuBarStyle = ImGui::GetStyle();
@@ -337,13 +372,13 @@ void EditorWindow::update(const float p_deltaTime)
             ImGui::SameLine(ImGui::GetContentRegionAvail().x / 2 - offsetToCenter);
 
             // Draw PLAY button
-            ImGui::PushStyleColor(ImGuiCol_Button, m_sceneState == EditorSceneState::EditorSceneState_Play ? ImVec4(0.26f, 0.26f, 0.26f, 1.0f) : ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+            ImGui::PushStyleColor(ImGuiCol_Button, m_sceneState == EditorSceneState::EditorSceneState_Play ? m_buttonBackgroundEnabled : m_buttonBackgroundDisabled);
             if(ImGui::ImageButton("##PlayButton", 
                 (ImTextureID)m_buttonTextures[ButtonTextureType::ButtonTextureType_Play].getHandle(), 
                 m_playPauseButtonSize,
                 ImVec2(0, 1),
                 ImVec2(1, 0),
-                m_sceneState == EditorSceneState::EditorSceneState_Play ? ImVec4(0.26f, 0.26f, 0.26f, 1.0f) : ImVec4(0.0f, 0.0f, 0.0f, 0.0f)))
+                m_sceneState == EditorSceneState::EditorSceneState_Play ? m_buttonBackgroundEnabled : m_buttonBackgroundDisabled))
             {
                 m_sceneState = EditorSceneState::EditorSceneState_Play;
 
@@ -353,14 +388,14 @@ void EditorWindow::update(const float p_deltaTime)
             ImGui::PopStyleColor();
 
             // Draw PAUSE button
-            ImGui::PushStyleColor(ImGuiCol_Button, m_sceneState == EditorSceneState::EditorSceneState_Pause ? ImVec4(0.26f, 0.26f, 0.26f, 1.0f) : ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+            ImGui::PushStyleColor(ImGuiCol_Button, m_sceneState == EditorSceneState::EditorSceneState_Pause ? m_buttonBackgroundEnabled : m_buttonBackgroundDisabled);
             ImGui::SameLine();
             if(ImGui::ImageButton("##PauseButton", 
                 (ImTextureID)m_buttonTextures[ButtonTextureType::ButtonTextureType_Pause].getHandle(), 
                 m_playPauseButtonSize,
                 ImVec2(0, 1),
                 ImVec2(1, 0),
-                m_sceneState == EditorSceneState::EditorSceneState_Pause ? ImVec4(0.26f, 0.26f, 0.26f, 1.0f) : ImVec4(0.0f, 0.0f, 0.0f, 0.0f)))
+                m_sceneState == EditorSceneState::EditorSceneState_Pause ? m_buttonBackgroundEnabled : m_buttonBackgroundDisabled))
             {
                 m_sceneState = EditorSceneState::EditorSceneState_Pause;
 
@@ -482,8 +517,14 @@ void EditorWindow::update(const float p_deltaTime)
             {
                 if(m_selectedEntity)
                 {
+                    // Clear the component exist flags as they are reset every frame
+                    m_selectedEntity.clearComponentExistFlags();
+
                     // Calculate widget offset used to draw a label on the left and a widget on the right (opposite of how ImGui draws it)
                     float inputWidgetOffset = ImGui::GetCursorPosX() + ImGui::CalcItemWidth() * 0.5f + ImGui::GetStyle().ItemInnerSpacing.x;
+
+                    // Calculate the offset for the collapsing header that is drawn after the delete component button of each component type
+                    const float headerOffsetAfterDeleteButton = m_buttonSizedByFont.x + m_imguiStyle.FramePadding.x * 4.0f;
 
                     // WORLD COMPONENTS
                     auto *metadataComponent = entityRegistry.try_get<MetadataComponent>(m_selectedEntity.m_entityID);
@@ -503,16 +544,37 @@ void EditorWindow::update(const float p_deltaTime)
                             }
                         }
                     }
-
                     auto *spatialComponent = entityRegistry.try_get<SpatialComponent>(m_selectedEntity.m_entityID);
                     if(spatialComponent != nullptr)
                     {
+                        // Set the corresponding component type to be existing
+                        m_selectedEntity.m_componentTypeText[ComponentType::ComponentType_SpatialComponent].second = true;
+
+                        // Draw DELETE COMPONENT button
+                        if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry], "##SpatialComponentDeleteButton", "Delete the Spatial component"))
+                        {
+                            // Create a container with the entity ID and the component type, add it to the pool (so it can be deleted next frame) and send a Delete Component change with the attached container
+                            EntityAndComponent *deleteComponentData = new EntityAndComponent(m_selectedEntity.m_entityID, ComponentType::ComponentType_SpatialComponent);
+                            m_entityAndComponentPool.push_back(deleteComponentData);
+                            m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::World), DataType::DataType_DeleteComponent, (void *)deleteComponentData, false);
+                        }
+                        ImGui::SameLine(headerOffsetAfterDeleteButton);
+
                         if(ImGui::CollapsingHeader(GetString(Properties::PropertyID::SpatialComponent), ImGuiTreeNodeFlags_DefaultOpen))
                         {
                             auto *rigidBodyComponent = entityRegistry.try_get<RigidBodyComponent>(m_selectedEntity.m_entityID);
 
                             // Get the current spatial data from the selected entity spatial component
                             m_selectedEntity.m_spatialDataManager = spatialComponent->getSpatialDataChangeManager();
+
+                            // Draw ACTIVE
+                            m_selectedEntity.m_componentData.m_worldComponents.m_spatialConstructionInfo->m_active = spatialComponent->isObjectActive();
+                            drawLeftAlignedLabelText("Active:", inputWidgetOffset);
+                            if(ImGui::Checkbox("##SpatialComponentActive", &m_selectedEntity.m_componentData.m_worldComponents.m_spatialConstructionInfo->m_active))
+                            {
+                                // If the active flag was changed, send a notification to the Spatial Component
+                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, spatialComponent, Systems::Changes::Generic::Active);
+                            }
 
                             // Draw POSITION
                             drawLeftAlignedLabelText("Position:", inputWidgetOffset);
@@ -552,15 +614,36 @@ void EditorWindow::update(const float p_deltaTime)
                             }
                         }
                     }
-
                     auto *objectMaterialComponent = entityRegistry.try_get<ObjectMaterialComponent>(m_selectedEntity.m_entityID);
                     if(objectMaterialComponent != nullptr)
                     {
+                        // Set the corresponding component type to be existing
+                        m_selectedEntity.m_componentTypeText[ComponentType::ComponentType_ObjectMaterialComponent].second = true;
+
+                        // Draw DELETE COMPONENT button
+                        if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry], "##ObjectMaterialComponentDeleteButton", "Delete the Object Material component"))
+                        {
+                            // Create a container with the entity ID and the component type, add it to the pool (so it can be deleted next frame) and send a Delete Component change with the attached container
+                            EntityAndComponent *deleteComponentData = new EntityAndComponent(m_selectedEntity.m_entityID, ComponentType::ComponentType_ObjectMaterialComponent);
+                            m_entityAndComponentPool.push_back(deleteComponentData);
+                            m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::World), DataType::DataType_DeleteComponent, (void *)deleteComponentData, false);
+                        }
+                        ImGui::SameLine(headerOffsetAfterDeleteButton);
+
                         if(ImGui::CollapsingHeader(GetString(Properties::PropertyID::ObjectMaterialComponent), ImGuiTreeNodeFlags_DefaultOpen))
                         {
                             // Get the current object material type from the selected entity Object Material Component
                             m_selectedEntity.m_objectMaterialType = objectMaterialComponent->getObjectMaterialType();
-                            
+
+                            // Draw ACTIVE
+                            m_selectedEntity.m_componentData.m_worldComponents.m_objectMaterialConstructionInfo->m_active = objectMaterialComponent->isObjectActive();
+                            drawLeftAlignedLabelText("Active:", inputWidgetOffset);
+                            if(ImGui::Checkbox("##ObjectMaterialComponentActive", &m_selectedEntity.m_componentData.m_worldComponents.m_objectMaterialConstructionInfo->m_active))
+                            {
+                                // If the active flag was changed, send a notification to the Object Material Component
+                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, objectMaterialComponent, Systems::Changes::Generic::Active);
+                            }
+
                             // Draw OBJECT MATERIAL TYPE
                             drawLeftAlignedLabelText("Material type:", inputWidgetOffset);
                             if(ImGui::Combo("##ObjectMaterialTypePicker", &m_selectedEntity.m_objectMaterialType, &m_physicalMaterialProperties[0], ObjectMaterialType::NumberOfMaterialTypes))
@@ -575,6 +658,19 @@ void EditorWindow::update(const float p_deltaTime)
                     auto *cameraComponent = entityRegistry.try_get<CameraComponent>(m_selectedEntity.m_entityID);
                     if(cameraComponent != nullptr)
                     {
+                        // Set the corresponding component type to be existing
+                        m_selectedEntity.m_componentTypeText[ComponentType::ComponentType_CameraComponent].second = true;
+
+                        // Draw DELETE COMPONENT button
+                        if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry], "##CameraComponentDeleteButton", "Delete the Camera component"))
+                        {
+                            // Create a container with the entity ID and the component type, add it to the pool (so it can be deleted next frame) and send a Delete Component change with the attached container
+                            EntityAndComponent *deleteComponentData = new EntityAndComponent(m_selectedEntity.m_entityID, ComponentType::ComponentType_CameraComponent);
+                            m_entityAndComponentPool.push_back(deleteComponentData);
+                            m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_DeleteComponent, (void *)deleteComponentData, false);
+                        }
+                        ImGui::SameLine(headerOffsetAfterDeleteButton);
+
                         if(ImGui::CollapsingHeader(GetString(Properties::PropertyID::CameraComponent), ImGuiTreeNodeFlags_DefaultOpen))
                         {
                             m_selectedEntity.m_componentData.m_graphicsComponents.m_cameraConstructionInfo->m_active = cameraComponent->isObjectActive();
@@ -591,10 +687,32 @@ void EditorWindow::update(const float p_deltaTime)
                     auto *lightComponent = entityRegistry.try_get<LightComponent>(m_selectedEntity.m_entityID);
                     if(lightComponent != nullptr)
                     {
+                        // Set the corresponding component type to be existing
+                        m_selectedEntity.m_componentTypeText[ComponentType::ComponentType_LightComponent].second = true;
+
+                        // Draw DELETE COMPONENT button
+                        if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry], "##LightComponentDeleteButton", "Delete the Light component"))
+                        {
+                            // Create a container with the entity ID and the component type, add it to the pool (so it can be deleted next frame) and send a Delete Component change with the attached container
+                            EntityAndComponent *deleteComponentData = new EntityAndComponent(m_selectedEntity.m_entityID, ComponentType::ComponentType_LightComponent);
+                            m_entityAndComponentPool.push_back(deleteComponentData);
+                            m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_DeleteComponent, (void *)deleteComponentData, false);
+                        }
+                        ImGui::SameLine(headerOffsetAfterDeleteButton);
+
                         if(ImGui::CollapsingHeader(GetString(Properties::PropertyID::LightComponent), ImGuiTreeNodeFlags_DefaultOpen))
                         {
                             const char *lightTypeStrings[] = { "null", "Directional", "Point", "Spot" };
                             m_selectedEntity.m_lightType = lightComponent->getLightType();
+
+                            // Draw ACTIVE
+                            m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_active = lightComponent->isObjectActive();
+                            drawLeftAlignedLabelText("Active:", inputWidgetOffset);
+                            if(ImGui::Checkbox("##LightComponentActive", &m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_active))
+                            {
+                                // If the active flag was changed, send a notification to the Light Component
+                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, lightComponent, Systems::Changes::Generic::Active);
+                            }
 
                             // Draw LIGHT TYPE
                             drawLeftAlignedLabelText("Light type:", inputWidgetOffset);
@@ -702,6 +820,19 @@ void EditorWindow::update(const float p_deltaTime)
                     auto *modelComponent = entityRegistry.try_get<ModelComponent>(m_selectedEntity.m_entityID);
                     if(modelComponent != nullptr)
                     {
+                        // Set the corresponding component type to be existing
+                        m_selectedEntity.m_componentTypeText[ComponentType::ComponentType_ModelComponent].second = true;
+
+                        // Draw DELETE COMPONENT button
+                        if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry], "##ModelComponentDeleteButton", "Delete the Model component"))
+                        {
+                            // Create a container with the entity ID and the component type, add it to the pool (so it can be deleted next frame) and send a Delete Component change with the attached container
+                            EntityAndComponent *deleteComponentData = new EntityAndComponent(m_selectedEntity.m_entityID, ComponentType::ComponentType_ModelComponent);
+                            m_entityAndComponentPool.push_back(deleteComponentData);
+                            m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_DeleteComponent, (void *)deleteComponentData, false);
+                        }
+                        ImGui::SameLine(headerOffsetAfterDeleteButton);
+
                         if(ImGui::CollapsingHeader(GetString(Properties::PropertyID::ModelComponent), ImGuiTreeNodeFlags_DefaultOpen))
                         {
                             bool modelComponentDataNeedsUpdating = false;
@@ -740,6 +871,15 @@ void EditorWindow::update(const float p_deltaTime)
                                 modelComponent->getModelsProperties(m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_modelsProperties);
                             }
 
+                            // Draw ACTIVE
+                            m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_active = modelComponent->isObjectActive();
+                            drawLeftAlignedLabelText("Active:", inputWidgetOffset);
+                            if(ImGui::Checkbox("##ModelComponentActive", &m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_active))
+                            {
+                                // If the active flag was changed, send a notification to the Model Component
+                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, modelComponent, Systems::Changes::Generic::Active);
+                            }
+
                             // Go over each model
                             for(decltype(m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_modelsProperties.m_models.size()) modelSize = m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_modelsProperties.m_models.size(), 
                                 modelIndex = 0; modelIndex < modelSize; modelIndex++)
@@ -756,7 +896,7 @@ void EditorWindow::update(const float p_deltaTime)
 
                                 // Draw MODEL OPEN button
                                 ImGui::SameLine(calcTextSizedButtonOffset(2));
-                                if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenFile], "##ModelFileOpenButton", "Open a model file"))
+                                if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenFile], "##" + Utilities::toString(modelIndex) + "ModelFileOpenButton", "Open a model file"))
                                 {
                                     // Only open the file browser if it's not opened already
                                     if(m_currentlyOpenedFileBrowser == FileBrowserActivated::FileBrowserActivated_None)
@@ -999,15 +1139,51 @@ void EditorWindow::update(const float p_deltaTime)
                                 }
                                 ImGui::PopStyleVar(); // ImGuiStyleVar_SeparatorTextAlign
                             }
+
+                            // Calculate button size
+                            const char *addModelButtonLabel = "Add model";
+                            float addModelButtonWidth = ImGui::CalcTextSize(addModelButtonLabel).x * Config::GUIVar().editor_inspector_button_width_multiplier;
+
+                            // Set the button position to the right-most side
+                            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - addModelButtonWidth);
+
+                            // Draw ADD MODEL button
+                            if(ImGui::Button(addModelButtonLabel, ImVec2(addModelButtonWidth, 0.0f)))
+                            {
+                                // Add an empty model entry
+                                m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_modelsProperties.m_models.push_back(ModelComponent::MeshProperties());
+
+                                // Set the modified flag
+                                m_selectedEntity.m_modelDataModified = true;
+                            }
                         }
                     }
-
                     auto *shaderComponent = entityRegistry.try_get<ShaderComponent>(m_selectedEntity.m_entityID);
                     if(shaderComponent != nullptr)
                     {
+                        // Set the corresponding component type to be existing
+                        m_selectedEntity.m_componentTypeText[ComponentType::ComponentType_ShaderComponent].second = true;
+
+                        // Draw DELETE COMPONENT button
+                        if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry], "##ShaderComponentDeleteButton", "Delete the Shader component"))
+                        {
+                            // Create a container with the entity ID and the component type, add it to the pool (so it can be deleted next frame) and send a Delete Component change with the attached container
+                            EntityAndComponent *deleteComponentData = new EntityAndComponent(m_selectedEntity.m_entityID, ComponentType::ComponentType_ShaderComponent);
+                            m_entityAndComponentPool.push_back(deleteComponentData);
+                            m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_DeleteComponent, (void *)deleteComponentData, false);
+                        }
+                        ImGui::SameLine(headerOffsetAfterDeleteButton);
+
                         if(ImGui::CollapsingHeader(GetString(Properties::PropertyID::ShaderComponent), ImGuiTreeNodeFlags_DefaultOpen))
                         {
-
+                            // Draw ACTIVE
+                            m_selectedEntity.m_componentData.m_graphicsComponents.m_shaderConstructionInfo->m_active = shaderComponent->isObjectActive();
+                            drawLeftAlignedLabelText("Active:", inputWidgetOffset);
+                            if(ImGui::Checkbox("##ShaderComponentActive", &m_selectedEntity.m_componentData.m_graphicsComponents.m_shaderConstructionInfo->m_active))
+                            {
+                                // If the active flag was changed, send a notification to the Shader Component
+                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, shaderComponent, Systems::Changes::Generic::Active);
+                            }
                         }
                     }
 
@@ -1023,6 +1199,19 @@ void EditorWindow::update(const float p_deltaTime)
                     auto *rigidBodyComponent = entityRegistry.try_get<RigidBodyComponent>(m_selectedEntity.m_entityID);
                     if(rigidBodyComponent != nullptr)
                     {
+                        // Set the corresponding component type to be existing
+                        m_selectedEntity.m_componentTypeText[ComponentType::ComponentType_RigidBodyComponent].second = true;
+
+                        // Draw DELETE COMPONENT button
+                        if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry], "##RigidBodyComponentDeleteButton", "Delete the Rigid Body component"))
+                        {
+                            // Create a container with the entity ID and the component type, add it to the pool (so it can be deleted next frame) and send a Delete Component change with the attached container
+                            EntityAndComponent *deleteComponentData = new EntityAndComponent(m_selectedEntity.m_entityID, ComponentType::ComponentType_RigidBodyComponent);
+                            m_entityAndComponentPool.push_back(deleteComponentData);
+                            m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Physics), DataType::DataType_DeleteComponent, (void *)deleteComponentData, false);
+                        }
+                        ImGui::SameLine(headerOffsetAfterDeleteButton);
+
                         if(ImGui::CollapsingHeader(GetString(Properties::PropertyID::RigidBodyComponent), ImGuiTreeNodeFlags_DefaultOpen))
                         {
                             // Get the bullet physics rigid body object
@@ -1034,6 +1223,15 @@ void EditorWindow::update(const float p_deltaTime)
                             m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_mass = rigidBody->getMass();
                             m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_restitution = rigidBody->getRestitution();
                             m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_kinematic = rigidBody->isKinematicObject();
+
+                            // Draw ACTIVE
+                            m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_active = rigidBodyComponent->isObjectActive();
+                            drawLeftAlignedLabelText("Active:", inputWidgetOffset);
+                            if(ImGui::Checkbox("##RigidBodyComponentActive", &m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_active))
+                            {
+                                // If the active flag was changed, send a notification to the Rigid Body Component
+                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Generic::Active);
+                            }
 
                             // Draw KINEMATIC
                             drawLeftAlignedLabelText("Kinematic:", inputWidgetOffset);
@@ -1142,6 +1340,19 @@ void EditorWindow::update(const float p_deltaTime)
                     auto *soundComponent = entityRegistry.try_get<SoundComponent>(m_selectedEntity.m_entityID);
                     if(soundComponent != nullptr)
                     {
+                        // Set the corresponding component type to be existing
+                        m_selectedEntity.m_componentTypeText[ComponentType::ComponentType_SoundComponent].second = true;
+
+                        // Draw DELETE COMPONENT button
+                        if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry], "##SoundComponentDeleteButton", "Delete the Sound component"))
+                        {
+                            // Create a container with the entity ID and the component type, add it to the pool (so it can be deleted next frame) and send a Delete Component change with the attached container
+                            EntityAndComponent *deleteComponentData = new EntityAndComponent(m_selectedEntity.m_entityID, ComponentType::ComponentType_SoundComponent);
+                            m_entityAndComponentPool.push_back(deleteComponentData);
+                            m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Audio), DataType::DataType_DeleteComponent, (void *)deleteComponentData, false);
+                        }
+                        ImGui::SameLine(headerOffsetAfterDeleteButton);
+
                         if(ImGui::CollapsingHeader(GetString(Properties::PropertyID::SoundComponent), ImGuiTreeNodeFlags_DefaultOpen))
                         {
                             // Get Sound Component data
@@ -1163,8 +1374,16 @@ void EditorWindow::update(const float p_deltaTime)
                             else
                                 m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_soundFilename = soundComponent->getSoundFilename();
 
+                            // Draw ACTIVE
+                            m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_active = soundComponent->isObjectActive();
+                            drawLeftAlignedLabelText("Active:", inputWidgetOffset);
+                            if(ImGui::Checkbox("##SoundComponentActive", &m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_active))
+                            {
+                                // If the active flag was changed, send a notification to the Sound Component
+                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Generic::Active);
+                            }
+
                             // Draw SOUND FILENAME
-                            //drawLeftAlignedLabelText("Filename:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset - (openReloadButtonSize.x + m_imguiStyle.FramePadding.x * 2) * 2);
                             drawLeftAlignedLabelText("Filename:", inputWidgetOffset, calcTextSizedButtonOffset(1) - inputWidgetOffset - m_imguiStyle.FramePadding.x);
                             if(ImGui::InputText("##SoundFilenameInput", &m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_soundFilename, ImGuiInputTextFlags_EnterReturnsTrue))
                             {
@@ -1246,9 +1465,31 @@ void EditorWindow::update(const float p_deltaTime)
                     auto *soundListenerComponent = entityRegistry.try_get<SoundListenerComponent>(m_selectedEntity.m_entityID);
                     if(soundListenerComponent != nullptr)
                     {
+                        // Set the corresponding component type to be existing
+                        m_selectedEntity.m_componentTypeText[ComponentType::ComponentType_SoundListenerComponent].second = true;
+
+                        // Draw DELETE COMPONENT button
+                        if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry], "##SoundListenerComponentDeleteButton", "Delete the Sound Listener component"))
+                        {
+                            // Create a container with the entity ID and the component type, add it to the pool (so it can be deleted next frame) and send a Delete Component change with the attached container
+                            EntityAndComponent *deleteComponentData = new EntityAndComponent(m_selectedEntity.m_entityID, ComponentType::ComponentType_SoundListenerComponent);
+                            m_entityAndComponentPool.push_back(deleteComponentData);
+                            m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Audio), DataType::DataType_DeleteComponent, (void *)deleteComponentData, false);
+                        }
+                        ImGui::SameLine(headerOffsetAfterDeleteButton);
+
                         if(ImGui::CollapsingHeader(GetString(Properties::PropertyID::SoundListenerComponent), ImGuiTreeNodeFlags_DefaultOpen))
                         {
                             m_selectedEntity.m_componentData.m_audioComponents.m_soundListenerConstructionInfo->m_listenerID = soundListenerComponent->getListenerID();
+
+                            // Draw ACTIVE
+                            m_selectedEntity.m_componentData.m_audioComponents.m_soundListenerConstructionInfo->m_active = soundListenerComponent->isObjectActive();
+                            drawLeftAlignedLabelText("Active:", inputWidgetOffset);
+                            if(ImGui::Checkbox("##SoundListenerComponentActive", &m_selectedEntity.m_componentData.m_audioComponents.m_soundListenerConstructionInfo->m_active))
+                            {
+                                // If the active flag was changed, send a notification to the Sound Listener Component
+                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundListenerComponent, Systems::Changes::Generic::Active);
+                            }
 
                             // Draw SOUND LISTENER ID
                             drawLeftAlignedLabelText("Listener ID:", inputWidgetOffset);
@@ -1264,6 +1505,19 @@ void EditorWindow::update(const float p_deltaTime)
                     auto *luaComponent = entityRegistry.try_get<LuaComponent>(m_selectedEntity.m_entityID);
                     if(luaComponent != nullptr)
                     {
+                        // Set the corresponding component type to be existing
+                        m_selectedEntity.m_componentTypeText[ComponentType::ComponentType_LuaComponent].second = true;
+
+                        // Draw DELETE COMPONENT button
+                        if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry], "##LUAComponentDeleteButton", "Delete the LUA component"))
+                        {
+                            // Create a container with the entity ID and the component type, add it to the pool (so it can be deleted next frame) and send a Delete Component change with the attached container
+                            EntityAndComponent *deleteComponentData = new EntityAndComponent(m_selectedEntity.m_entityID, ComponentType::ComponentType_LuaComponent);
+                            m_entityAndComponentPool.push_back(deleteComponentData);
+                            m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Script), DataType::DataType_DeleteComponent, (void *)deleteComponentData, false);
+                        }
+                        ImGui::SameLine(headerOffsetAfterDeleteButton);
+
                         if(ImGui::CollapsingHeader(GetString(Properties::PropertyID::LuaComponent), ImGuiTreeNodeFlags_DefaultOpen))
                         {
                             auto luaScript = luaComponent->getLuaScript();
@@ -1279,6 +1533,15 @@ void EditorWindow::update(const float p_deltaTime)
                                 }
                                 else
                                     m_selectedEntity.m_componentData.m_scriptComponents.m_luaConstructionInfo->m_luaScriptFilename = luaScript->getLuaScriptFilename();
+
+                                // Draw ACTIVE
+                                m_selectedEntity.m_componentData.m_scriptComponents.m_luaConstructionInfo->m_active = luaComponent->isObjectActive();
+                                drawLeftAlignedLabelText("Active:", inputWidgetOffset);
+                                if(ImGui::Checkbox("##LUAComponentActive", &m_selectedEntity.m_componentData.m_scriptComponents.m_luaConstructionInfo->m_active))
+                                {
+                                    // If the active flag was changed, send a notification to the LUA Component
+                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, luaComponent, Systems::Changes::Generic::Active);
+                                }
 
                                 // Draw LUA FILENAME
                                 drawLeftAlignedLabelText("Filename:", inputWidgetOffset, calcTextSizedButtonOffset(1) - inputWidgetOffset - m_imguiStyle.FramePadding.x);
@@ -1556,10 +1819,32 @@ void EditorWindow::update(const float p_deltaTime)
                     auto *guiSequenceComponent = entityRegistry.try_get<GUISequenceComponent>(m_selectedEntity.m_entityID);
                     if(guiSequenceComponent != nullptr)
                     {
+                        // Set the corresponding component type to be existing
+                        m_selectedEntity.m_componentTypeText[ComponentType::ComponentType_GUISequenceComponent].second = true;
+
+                        // Draw DELETE COMPONENT button
+                        if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry], "##GUISequenceDeleteButton", "Delete the GUI Sequence component"))
+                        {
+                            // Create a container with the entity ID and the component type, add it to the pool (so it can be deleted next frame) and send a Delete Component change with the attached container
+                            EntityAndComponent *deleteComponentData = new EntityAndComponent(m_selectedEntity.m_entityID, ComponentType::ComponentType_GUISequenceComponent);
+                            m_entityAndComponentPool.push_back(deleteComponentData);
+                            m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::GUI), DataType::DataType_DeleteComponent, (void *)deleteComponentData, false);
+                        }
+                        ImGui::SameLine(headerOffsetAfterDeleteButton);
+
                         if(ImGui::CollapsingHeader(GetString(Properties::PropertyID::GUISequenceComponent), ImGuiTreeNodeFlags_DefaultOpen))
                         {
                             // Get the current GUI Sequence data
                             m_selectedEntity.m_componentData.m_guiComponents.m_guiSequenceConstructionInfo->m_staticSequence = guiSequenceComponent->isStaticSequence();
+
+                            // Draw ACTIVE
+                            m_selectedEntity.m_componentData.m_guiComponents.m_guiSequenceConstructionInfo->m_active = guiSequenceComponent->isObjectActive();
+                            drawLeftAlignedLabelText("Active:", inputWidgetOffset);
+                            if(ImGui::Checkbox("##GUISequenceComponentActive", &m_selectedEntity.m_componentData.m_guiComponents.m_guiSequenceConstructionInfo->m_active))
+                            {
+                                // If the active flag was changed, send a notification to the GUI Sequence Component
+                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, guiSequenceComponent, Systems::Changes::Generic::Active);
+                            }
 
                             // Draw STATIC
                             drawLeftAlignedLabelText("Static sequence:", inputWidgetOffset);
@@ -1570,7 +1855,131 @@ void EditorWindow::update(const float p_deltaTime)
                             }
                         }
                     }
-                    
+
+                    const std::string componentTypeSelectionPopupName = "##ComponentTypeSelectionPopup";
+
+                    ImGui::NewLine();
+                    ImGui::Separator();
+
+                    // Calculate button size
+                    const char *addComponentButtonLabel = "Add component";
+                    float addComponentButtonWidth = ImGui::CalcTextSize(addComponentButtonLabel).x * Config::GUIVar().editor_inspector_button_width_multiplier;
+
+                    // Set the button position to the right-most side
+                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - addComponentButtonWidth);
+
+                    // Draw ADD COMPONENT button
+                    if(ImGui::Button(addComponentButtonLabel, ImVec2(addComponentButtonWidth, 0.0f)))
+                    {
+                        // Open the pop-up with the component type list
+                        ImGui::OpenPopup(componentTypeSelectionPopupName.c_str());
+                    }
+
+                    // Draw COMPONENT TYPE LIST
+                    if(ImGui::BeginPopup(componentTypeSelectionPopupName.c_str()))
+                    {
+                        // Make an array of component types and type text
+                        std::vector<std::pair<std::string, ComponentType>> componentTypes;
+
+                        // Populate the array with component types that aren't present in this entity
+                        for(unsigned int i = 0; i < ComponentType::ComponentType_NumOfTypes; i++)
+                            if(!m_selectedEntity.m_componentTypeText[i].second)
+                                componentTypes.push_back(std::make_pair(m_selectedEntity.m_componentTypeText[i].first, static_cast<ComponentType>(i)));
+
+                        // Sort the array alphabetically (based on component type text)
+                        std::sort(componentTypes.begin(), componentTypes.end());
+
+                        // Remove selection border and align text vertically
+                        ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.0f, 0.5f));
+                        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+
+                        // Go over each non-present component type
+                        for(decltype(componentTypes.size()) i = 0, size = componentTypes.size(); i < size; i++)
+                        {
+                            if(ImGui::Selectable(componentTypes[i].first.c_str(), false, 0, ImVec2(0.0f, m_fontSize * 2.0f)))
+                            {
+                                std::cout << componentTypes[i].first << std::endl;
+
+                                ComponentsConstructionInfo *newComponentInfo = new ComponentsConstructionInfo();
+                                bool newComponentInfoSet = true;
+
+                                switch(componentTypes[i].second)
+                                {
+                                    case ComponentType::ComponentType_SoundComponent:
+                                        {
+                                            newComponentInfo->m_audioComponents.m_soundConstructionInfo = new SoundComponent::SoundComponentConstructionInfo();
+                                        }
+                                        break;
+                                    case ComponentType::ComponentType_SoundListenerComponent:
+                                        {
+                                            newComponentInfo->m_audioComponents.m_soundListenerConstructionInfo = new SoundListenerComponent::SoundListenerComponentConstructionInfo();
+                                        }
+                                        break;
+                                    case ComponentType::ComponentType_CameraComponent:
+                                        {
+                                            newComponentInfo->m_graphicsComponents.m_cameraConstructionInfo = new CameraComponent::CameraComponentConstructionInfo();
+                                        }
+                                        break;
+                                    case ComponentType::ComponentType_LightComponent:
+                                        {
+                                            newComponentInfo->m_graphicsComponents.m_lightConstructionInfo = new LightComponent::LightComponentConstructionInfo();
+                                        }
+                                        break;
+                                    case ComponentType::ComponentType_ModelComponent:
+                                        {
+                                            newComponentInfo->m_graphicsComponents.m_modelConstructionInfo = new ModelComponent::ModelComponentConstructionInfo();
+                                        }
+                                        break;
+                                    case ComponentType::ComponentType_ShaderComponent:
+                                        {
+                                            newComponentInfo->m_graphicsComponents.m_shaderConstructionInfo = new ShaderComponent::ShaderComponentConstructionInfo();
+                                        }
+                                        break;
+                                    case ComponentType::ComponentType_GUISequenceComponent:
+                                        {
+                                            newComponentInfo->m_guiComponents.m_guiSequenceConstructionInfo = new GUISequenceComponent::GUISequenceComponentConstructionInfo();
+                                        }
+                                        break;
+                                    case ComponentType::ComponentType_RigidBodyComponent:
+                                        {
+                                            newComponentInfo->m_physicsComponents.m_rigidBodyConstructionInfo = new RigidBodyComponent::RigidBodyComponentConstructionInfo();
+                                        }
+                                        break;
+                                    case ComponentType::ComponentType_LuaComponent:
+                                        {
+                                            newComponentInfo->m_scriptComponents.m_luaConstructionInfo = new LuaComponent::LuaComponentConstructionInfo();
+                                        }
+                                        break;
+                                    case ComponentType::ComponentType_ObjectMaterialComponent:
+                                        {
+                                            newComponentInfo->m_worldComponents.m_objectMaterialConstructionInfo = new ObjectMaterialComponent::ObjectMaterialComponentConstructionInfo();
+                                        }
+                                        break;
+                                    case ComponentType::ComponentType_SpatialComponent:
+                                        {
+                                            newComponentInfo->m_worldComponents.m_spatialConstructionInfo = new SpatialComponent::SpatialComponentConstructionInfo();
+                                        }
+                                        break;
+                                    default:
+                                        {
+                                            newComponentInfoSet = false;
+                                        }
+                                        break;
+                                }
+
+                                if(newComponentInfoSet)
+                                {
+                                    if(worldScene->addComponents(m_selectedEntity.m_entityID, *newComponentInfo) == ErrorCode::Success)
+                                        std::cout << "success" << std::endl;
+                                }
+                                else
+                                    delete newComponentInfo;
+                            }
+                        }
+                        
+                        ImGui::PopStyleVar(2); //ImGuiStyleVar_SelectableTextAlign, ImGuiStyleVar_FramePadding
+                        ImGui::EndPopup();
+                    }
                 }
                 ImGui::EndTabItem();
             }
@@ -1893,6 +2302,11 @@ void EditorWindow::update(const float p_deltaTime)
             {
                 if(ImGui::BeginTabItem("Scene viewport"))
                 {
+                    //	 ____________________________
+                    //	|							 |
+                    //	|	     DRAW SCENE          |
+                    //	|____________________________|
+                    //
                     // Get window starting position and the size of available space inside the window
                     auto windowPosition = ImGui::GetCursorScreenPos();
                     auto contentRegionSize = ImGui::GetContentRegionAvail();
@@ -1924,6 +2338,59 @@ void EditorWindow::update(const float p_deltaTime)
                         ImVec2(1, 0)
                     );
                     ImGui::PopStyleVar();
+
+                    //	 ____________________________
+                    //	|							 |
+                    //	|  DRAW MANIPULATION GUIZMO  |
+                    //	|____________________________|
+                    //
+                    // Tell ImGuizmo to render inside the current window
+                    ImGuizmo::SetDrawlist();
+
+                    // Set the screen size for ImGuizmo
+                    ImGuizmo::SetRect(windowPosition.x, windowPosition.y, contentRegionSize.x, contentRegionSize.y);
+
+                    // Draw ImGuizmo only if there's an entity selected
+                    if(m_selectedEntity)
+                    {
+                        // Draw ImGuizmo only if the selected entity has a spatial component
+                        auto *spatialComponent = entityRegistry.try_get<SpatialComponent>(m_selectedEntity.m_entityID);
+                        if(spatialComponent != nullptr)
+                        {
+                            ImGuizmo::Enable(true);
+
+                            // Get the renderer scene (required for view and projection matrices)
+                            auto const *rendererScene = static_cast<RendererScene*>(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics));
+
+                            // Try to get the rigid body component for sending spatial changes
+                            auto *rigidBodyComponent = entityRegistry.try_get<RigidBodyComponent>(m_selectedEntity.m_entityID);
+
+                            // Get the current local transform matrix of the selected entity
+                            m_selectedEntity.m_spatialDataManager.getLocalSpaceDataNonConst().m_transformMatNoScale = spatialComponent->getSpatialDataChangeManager().getLocalTransform();
+
+                            // Draw TRANSLATE MANIPULATION ImGuizmo
+                            if(m_translateGuizmoEnabled && ImGuizmo::Manipulate(glm::value_ptr(rendererScene->getViewMatrix()[0]), glm::value_ptr(rendererScene->getProjectionMatrix()[0]), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::LOCAL, glm::value_ptr(m_selectedEntity.m_spatialDataManager.getLocalSpaceDataNonConst().m_transformMatNoScale[0])))
+                            {
+                                // If the model transform matrix was changed, send a notification to the either the Spatial Component or Rigid Body Component (if the Rigid Body Component is present, it takes control over the spatial data)
+                                if(rigidBodyComponent != nullptr)
+                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Spatial::LocalTransformNoScale);
+                                else
+                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, spatialComponent, Systems::Changes::Spatial::LocalTransformNoScale);
+                            }
+
+                            // Draw ROTATE MANIPULATION ImGuizmo
+                            if(m_rotateGuizmoEnabled && ImGuizmo::Manipulate(glm::value_ptr(rendererScene->getViewMatrix()[0]), glm::value_ptr(rendererScene->getProjectionMatrix()[0]), ImGuizmo::OPERATION::ROTATE, ImGuizmo::MODE::LOCAL, glm::value_ptr(m_selectedEntity.m_spatialDataManager.getLocalSpaceDataNonConst().m_transformMatNoScale[0])))
+                            {
+                                // If the model transform matrix was changed, send a notification to the either the Spatial Component or Rigid Body Component (if the Rigid Body Component is present, it takes control over the spatial data)
+                                if(rigidBodyComponent != nullptr)
+                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Spatial::LocalTransformNoScale);
+                                else
+                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, spatialComponent, Systems::Changes::Spatial::LocalTransformNoScale);
+                            }
+                        }
+                        else
+                            ImGuizmo::Enable(false);
+                    }
 
                     // If the mouse is hovering over the viewport, stop capturing it, so the engine can handle mouse events
                     if(ImGui::IsItemHovered())
@@ -1980,6 +2447,7 @@ void EditorWindow::update(const float p_deltaTime)
                     }
                 }
 
+                // Show the New Scene Settings tab only when New Scene button was pressed
                 if(m_showNewMapWindow)
                 {
                     if(ImGui::BeginTabItem("New scene settings", 0, m_newSceneSettingsTabFlags))
@@ -2026,7 +2494,7 @@ void EditorWindow::update(const float p_deltaTime)
                             const ImVec2 buttonSize(contentRegionSize.x * 0.2f, ImGui::GetFrameHeight() * 1.5f);
                             const float centerButtonOffset = (ImGui::GetContentRegionAvail().x / 2.0f) - (buttonSize.x / 2.0f);
 
-                            //ImGui::NewLine();
+                            // Draw CREATE SCENE button
                             ImGui::SetCursorPosX(centerButtonOffset);
                             if(ImGui::Button("Create scene", buttonSize))
                             {
@@ -2038,6 +2506,7 @@ void EditorWindow::update(const float p_deltaTime)
                                 m_systemScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_SceneReload, EngineStateType::EngineStateType_Editor, sceneProperties));
                             }
 
+                            // Draw CANCEL button
                             ImGui::SetCursorPosX(centerButtonOffset);
                             if(ImGui::Button("Cancel", buttonSize))
                             {
@@ -2045,6 +2514,7 @@ void EditorWindow::update(const float p_deltaTime)
                                 m_showNewMapWindow = false;
                             }
 
+                            // Draw RELOAD TO DEFAULT button
                             ImGui::NewLine();
                             ImGui::SetCursorPosX(centerButtonOffset);
                             if(ImGui::Button("Reload to default", buttonSize))
@@ -2289,6 +2759,8 @@ void EditorWindow::setup(EditorWindowSettings &p_editorWindowSettings)
     m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_reload_texture));
     m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_open_asset_list_texture));
     m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_arrow_up_texture));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_guizmo_rotate_texture));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_guizmo_translate_texture));
 
     assert(m_buttonTextures.size() == ButtonTextureType::ButtonTextureType_NumOfTypes && "m_buttonTextures array is different size than the number of button textures, in EditorWindow.cpp");
 
@@ -2725,12 +3197,6 @@ void EditorWindow::updateComponentList()
     for(decltype(m_entityList.size()) size = m_entityList.size(), i = 0; i < size; i++)
     {
         // AUDIO components
-        //auto impactSoundComp = entityRegistry.try_get<ImpactSoundComponent>(m_entityList[i].m_entityID);
-        //if(impactSoundComp != nullptr)
-        //{
-        //    m_componentList.emplace_back(m_entityList[i].m_entityID, impactSoundComp->getName(), Utilities::toString(m_entityList[i].m_entityID) + Config::componentVar().component_name_separator + impactSoundComp->getName());
-        //    m_entityList[i].m_componentFlag |= Systems::AllComponentTypes::AudioImpactSoundComponent;
-        //}
         auto soundComp = entityRegistry.try_get<SoundComponent>(m_entityList[i].m_entityID);
         if(soundComp != nullptr)
         {

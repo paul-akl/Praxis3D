@@ -71,6 +71,9 @@ public:
 
 	void loadInBackground();
 
+	// Get all the created components of the given entity that belong to this scene
+	std::vector<SystemObject *> getComponents(const EntityID p_entityID);
+
 	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const AudioComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true)
 	{
@@ -115,9 +118,11 @@ public:
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType);
 
+	void receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving);
+
 	SystemTask *getSystemTask() { return m_audioTask; };
 	Systems::TypeID getSystemType() { return Systems::TypeID::Audio; };
-	BitMask getDesiredSystemChanges() { return Systems::Changes::Generic::CreateObject || Systems::Changes::Generic::DeleteObject || Systems::Changes::Audio::AllVolume; }
+	BitMask getDesiredSystemChanges() { return Systems::Changes::Generic::CreateObject | Systems::Changes::Generic::DeleteObject | Systems::Changes::Audio::AllVolume; }
 	BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
 	const std::vector<std::pair<std::string, FMOD::Studio::Bank *>> &getBankFilenames() const { return m_bankFilenames; }
 	const float getVolume(const AudioBusType p_audioBusType) const { return m_volume[p_audioBusType]; }

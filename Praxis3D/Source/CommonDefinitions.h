@@ -11,6 +11,27 @@ typedef std::vector<std::function<void()>> Functors;
 
 constexpr EntityID NULL_ENTITY_ID = std::numeric_limits<EntityID>::max();
 
+#define COMPONENT_TYPE(Code) \
+	/* Audio components */ \
+	Code(ComponentType_SoundComponent, = 0) \
+	Code(ComponentType_SoundListenerComponent, ) \
+	/* Graphics components */ \
+	Code(ComponentType_CameraComponent, ) \
+	Code(ComponentType_LightComponent, ) \
+	Code(ComponentType_ModelComponent, ) \
+	Code(ComponentType_ShaderComponent, ) \
+	/* GUI components */ \
+	Code(ComponentType_GUISequenceComponent, ) \
+	/* Physics components */ \
+	Code(ComponentType_RigidBodyComponent, ) \
+	/* Scripting components */ \
+	Code(ComponentType_LuaComponent, ) \
+	/* World components */ \
+	Code(ComponentType_ObjectMaterialComponent, ) \
+	Code(ComponentType_SpatialComponent, ) \
+	Code(ComponentType_NumOfTypes, )
+DECLARE_ENUM(ComponentType, COMPONENT_TYPE)
+
 enum EngineChangeType : unsigned int
 {
 	EngineChangeType_None = 0,

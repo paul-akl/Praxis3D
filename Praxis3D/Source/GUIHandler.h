@@ -7,6 +7,8 @@
 #include "ErrorHandlerLocator.h"
 #include "WindowLocator.h"
 
+#include "ImGuizmo.h"
+
 class GUIHandlerBase
 {
 	friend class Engine;
@@ -173,6 +175,9 @@ protected:
 
 		// Begin new GUI frame (prepares frame to receive new GUI calls)
 		ImGui::NewFrame();
+
+		// Mark the beginning of ImGuizmo frame
+		ImGuizmo::BeginFrame();
 	}
 
 	void render();

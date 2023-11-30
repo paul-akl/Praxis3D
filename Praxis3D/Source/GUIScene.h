@@ -128,6 +128,9 @@ public:
 
 	void loadInBackground();
 
+	// Get all the created components of the given entity that belong to this scene
+	std::vector<SystemObject *> getComponents(const EntityID p_entityID);
+
 	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const GUIComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true)
 	{

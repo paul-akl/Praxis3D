@@ -25,6 +25,8 @@ public:
 		m_renderSceneToTexture = true;
 		m_GUISequenceEnabled = false;
 		m_LUAScriptingEnabled = true;
+		m_translateGuizmoEnabled = true;
+		m_rotateGuizmoEnabled = false;
 		m_showNewMapWindow = false;
 		m_sceneState = EditorSceneState::EditorSceneState_Pause;
 		m_centerWindowSize = glm::ivec2(0);
@@ -55,6 +57,9 @@ public:
 		m_buttonSizedByFont = ImVec2(m_fontSize, m_fontSize);
 		m_assetSelectionPopupImageSize = ImVec2(m_fontSize, m_fontSize) * Config::GUIVar().editor_asset_selection_button_size_multiplier;
 		m_textureAssetImageSize = ImVec2(Config::GUIVar().editor_asset_texture_button_size_x, Config::GUIVar().editor_asset_texture_button_size_y);
+
+		m_buttonBackgroundEnabled = ImVec4(0.26f, 0.26f, 0.26f, 1.0f);
+		m_buttonBackgroundDisabled = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
 	}
 	~EditorWindow();
 
@@ -150,6 +155,9 @@ public:
 						case Properties::PropertyID::CameraComponent:
 							return m_selectedEntity.m_componentData.m_graphicsComponents.m_cameraConstructionInfo->m_active;
 						case Properties::PropertyID::LightComponent:
+						case Properties::PropertyID::DirectionalLight:
+						case Properties::PropertyID::PointLight:
+						case Properties::PropertyID::SpotLight:
 							return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_active;
 						case Properties::PropertyID::ModelComponent:
 							return m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_active;
@@ -169,6 +177,8 @@ public:
 							return m_selectedEntity.m_componentData.m_worldComponents.m_objectMaterialConstructionInfo->m_active;
 						case Properties::PropertyID::SpatialComponent:
 							return m_selectedEntity.m_componentData.m_worldComponents.m_spatialConstructionInfo->m_active;
+						default:
+							return true;
 					}
 				}
 				break;
@@ -460,6 +470,17 @@ private:
 
 			m_componentData.m_worldComponents.m_objectMaterialConstructionInfo = new ObjectMaterialComponent::ObjectMaterialComponentConstructionInfo();
 			m_componentData.m_worldComponents.m_spatialConstructionInfo = new SpatialComponent::SpatialComponentConstructionInfo();
+
+			// Populate the component type text array and also strip the prefix and suffix of ComponentType string
+			std::string componentTypePrefix = "ComponentType_";
+			std::string componentTypeSuffix = "Component";
+			for(unsigned int i = 0; i < ComponentType::ComponentType_NumOfTypes; i++)
+			{
+				m_componentTypeText[i].first = GetString(static_cast<ComponentType>(i));
+				m_componentTypeText[i].first = m_componentTypeText[i].first.substr(componentTypePrefix.size());
+				m_componentTypeText[i].first = Utilities::splitStringBeforeDelimiter(componentTypeSuffix, m_componentTypeText[i].first);
+				m_componentTypeText[i].first += " component";
+			}
 		}
 
 		inline operator bool() const { return m_entityID != NULL_ENTITY_ID; }
@@ -475,6 +496,8 @@ private:
 			m_selectedTextureName = nullptr;
 			m_modelDataPointer = nullptr;
 			m_modelDataUpdateAfterLoading = false;
+
+			clearComponentExistFlags();
 		}
 
 		void unselect()
@@ -483,6 +506,12 @@ private:
 			m_soundFilenameModified = false;
 			m_luaVariablesModified = false;
 			m_luaScriptFilenameModified = false;
+		}
+
+		void clearComponentExistFlags()
+		{
+			for(unsigned int i = 0; i < ComponentType::ComponentType_NumOfTypes; i++)
+				m_componentTypeText[i].second = false;
 		}
 
 		EntityID m_entityID;
@@ -513,6 +542,9 @@ private:
 
 		// An array of external lua variables
 		std::vector<std::pair<std::string, Property>> m_luaVariables;
+
+		// An array containing component type text and flags marking whether a component type exists for the selected entity
+		std::pair<std::string, bool> m_componentTypeText[ComponentType::ComponentType_NumOfTypes];
 
 		bool m_luaVariablesModified;
 		bool m_luaScriptFilenameModified;
@@ -562,6 +594,8 @@ private:
 		ButtonTextureType_Reload,
 		ButtonTextureType_OpenAssetList,
 		ButtonTextureType_ArrowUp,
+		ButtonTextureType_GuizmoRotate,
+		ButtonTextureType_GuizmoTranslate,
 		ButtonTextureType_NumOfTypes
 	};
 	enum EditorSceneState : unsigned int
@@ -653,6 +687,26 @@ private:
 		return m_buttonSizedByFont.x + m_imguiStyle.FramePadding.x + (m_buttonSizedByFont.x + m_imguiStyle.FramePadding.x * 3) * p_buttonIndex;
 	}
 
+	void clearEntityAndComponentPool()
+	{
+		if(!m_entityAndComponentPool.empty())
+		{
+			for(decltype(m_entityAndComponentPool.size()) i = 0, size = m_entityAndComponentPool.size(); i < size; i++)
+				delete m_entityAndComponentPool[i];
+
+			m_entityAndComponentPool.clear();
+		}
+	}
+	void clearConstructionInfoPool()
+	{
+		if(!m_componentConstructionInfoPool.empty())
+		{
+			for(decltype(m_componentConstructionInfoPool.size()) i = 0, size = m_componentConstructionInfoPool.size(); i < size; i++)
+				delete m_componentConstructionInfoPool[i];
+
+			m_componentConstructionInfoPool.clear();
+		}
+	}
 	void updateSceneData(SceneData &p_sceneData);
 	void updateEntityList();
 	void updateHierarchyList();
@@ -777,6 +831,8 @@ private:
 	bool m_renderSceneToTexture;
 	bool m_GUISequenceEnabled;
 	bool m_LUAScriptingEnabled;
+	bool m_translateGuizmoEnabled;
+	bool m_rotateGuizmoEnabled;
 	bool m_showNewMapWindow;
 	EditorSceneState m_sceneState;
 	glm::ivec2 m_centerWindowSize;
@@ -790,6 +846,8 @@ private:
 	const ImVec2 m_playPauseButtonSize;
 	ImVec2 m_assetSelectionPopupImageSize;
 	ImVec2 m_textureAssetImageSize;
+	ImVec4 m_buttonBackgroundEnabled;
+	ImVec4 m_buttonBackgroundDisabled;
 
 	// LUA variables editor data
 	std::vector<const char *> m_luaVariableTypeStrings;
@@ -816,6 +874,10 @@ private:
 	std::vector<EntityHierarchyEntry> m_entityHierarchy;
 	SelectedEntity m_selectedEntity;
 	SceneData m_currentSceneData;
+
+	// Used to hold entity and component data for component creation / deletion until the next frame, after sending the data as a change
+	std::vector<EntityAndComponent*> m_entityAndComponentPool;
+	std::vector<ComponentsConstructionInfo*> m_componentConstructionInfoPool;
 
 	// New scene settings
 	SceneData m_newSceneData;

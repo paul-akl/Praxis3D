@@ -187,3 +187,13 @@ struct EngineChangeData
 	std::string m_filename;
 	PropertySet m_sceneProperties;
 };
+
+// Stores an entity ID and a component type, used for sending data to create / delete components
+struct EntityAndComponent
+{
+	//EntityAndComponent() : m_entityID(NULL_ENTITY_ID), m_componentType(ComponentType::ComponentType_None) { }
+	EntityAndComponent(const EntityID p_entityID, const ComponentType p_componentType) : m_entityID(p_entityID), m_componentType(p_componentType) { }
+
+	EntityID m_entityID;
+	ComponentType m_componentType;
+};

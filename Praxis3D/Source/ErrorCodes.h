@@ -95,8 +95,9 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
 	Code(SDL_vsync_failed,) \
 	Code(Window_creation_failed,) \
 	/* World scene errors */ \
-	Code(Invalid_object_id,) \
 	Code(Duplicate_object_id,) \
+	Code(Invalid_object_id,) \
+	Code(Nonexistent_object_id,) \
 	/* Error management */ \
 	Code(NumberOfErrorCodes,) \
 	Code(CachedError,)

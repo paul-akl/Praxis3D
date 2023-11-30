@@ -123,6 +123,9 @@ public:
 	// Processes all the objects and puts them in the separate vectors
 	void update(const float p_deltaTime);
 
+	// Get all the created components of the given entity that belong to this scene
+	std::vector<SystemObject *> getComponents(const EntityID p_entityID);
+
 	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const GraphicsComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true)
 	{
@@ -214,6 +217,8 @@ public:
 	Systems::TypeID getSystemType() { return Systems::Graphics; }
 	inline SceneObjects &getSceneObjects() { return m_sceneObjects; }
 	const inline RenderingPasses &getRenderingPasses() const { return m_renderingPasses; }
+	const glm::mat4 &getViewMatrix() const;
+	const glm::mat4 &getProjectionMatrix() const;
 
 	static void exportRenderingPasses(PropertySet &p_propertySet, const RenderingPasses &p_renderingPasses)
 	{

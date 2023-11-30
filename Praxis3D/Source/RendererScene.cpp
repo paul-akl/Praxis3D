@@ -430,6 +430,32 @@ void RendererScene::update(const float p_deltaTime)
 	}
 }
 
+std::vector<SystemObject *> RendererScene::getComponents(const EntityID p_entityID)
+{
+	std::vector<SystemObject *> returnVector;
+
+	// Get the entity registry 
+	auto &entityRegistry = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World))->getEntityRegistry();
+
+	auto *cameraComponent = entityRegistry.try_get<CameraComponent>(p_entityID);
+	if(cameraComponent != nullptr)
+		returnVector.push_back(cameraComponent);
+
+	auto *lightComponent = entityRegistry.try_get<LightComponent>(p_entityID);
+	if(lightComponent != nullptr)
+		returnVector.push_back(lightComponent);
+
+	auto *modelComponent = entityRegistry.try_get<ModelComponent>(p_entityID);
+	if(modelComponent != nullptr)
+		returnVector.push_back(modelComponent);
+
+	auto *shaderComponent = entityRegistry.try_get<ShaderComponent>(p_entityID);
+	if(shaderComponent != nullptr)
+		returnVector.push_back(shaderComponent);
+
+	return returnVector;
+}
+
 std::vector<SystemObject*> RendererScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	return createComponents(p_entityID, p_constructionInfo.m_graphicsComponents, p_startLoading);
@@ -598,8 +624,8 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const M
 	SystemObject *returnObject = g_nullSystemBase.getScene(EngineStateType::EngineStateType_Default)->getNullObject();
 
 	// Make sure there are models present
-	if(!p_constructionInfo.m_modelsProperties.m_models.empty())
-	{
+	//if(!p_constructionInfo.m_modelsProperties.m_models.empty())
+	//{
 		// Get the world scene required for attaching components to the entity
 		WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
 
@@ -629,9 +655,9 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const M
 			worldScene->removeComponent<ModelComponent>(p_entityID);
 			ErrHandlerLoc().get().log(componentInitError, ErrorSource::Source_ModelComponent, p_constructionInfo.m_name);
 		}
-	}
-	else
-		ErrHandlerLoc().get().log(ErrorCode::Initialize_failure, ErrorSource::Source_ModelComponent, p_constructionInfo.m_name);
+	//}
+	//else
+	//	ErrHandlerLoc().get().log(ErrorCode::Initialize_failure, ErrorSource::Source_ModelComponent, p_constructionInfo.m_name);
 
 	return returnObject;
 }
@@ -715,42 +741,117 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 {
 	switch(p_dataType)
 	{
-	case DataType_GUIPassFunctors:
-		m_renderTask->m_renderer.setGUIPassFunctorSequence(static_cast<FunctorSequence *>(p_data));
-		break;
+		case DataType::DataType_CreateComponent:
+			{
 
-	case DataType_RenderToTexture:
-		m_renderToTexture = static_cast<bool>(p_data);
-		m_renderTask->m_renderer.setRenderFinalToTexture(m_renderToTexture);
-		break;
+			}
+			break;
 
-	case DataType_RenderToTextureResolution:
-		{
-			auto renderToTextureResolution = static_cast<glm::ivec2 *>(p_data);
-			m_renderToTextureResolution = *renderToTextureResolution;
-			m_renderTask->m_renderer.setRenderToTextureResolution(m_renderToTextureResolution);
+		case DataType::DataType_DeleteComponent:
+			{
+				// Get the world scene required for getting the entity registry and deleting components
+				WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
 
-			// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
-			if(p_deleteAfterReceiving)
-				delete renderToTextureResolution;
-		}
-		break;
+				// Get the entity registry 
+				auto &entityRegistry = worldScene->getEntityRegistry();
 
-	case DataType_Texture2D:
-		{
-			TextureLoader2D::Texture2DHandle *textureHandle = static_cast<TextureLoader2D::Texture2DHandle *>(p_data);
-			if(textureHandle->isLoadedToMemory())
-				m_sceneObjects.m_loadToVideoMemory.emplace_back(*textureHandle);
+				// Get entity and component data
+				auto const *componentData = static_cast<EntityAndComponent *>(p_data);
 
-			// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
-			if(p_deleteAfterReceiving)
-				delete textureHandle;
-		}
-		break;
+				// Delete the component based on its type
+				switch(componentData->m_componentType)
+				{
+					case ComponentType::ComponentType_CameraComponent:
+						{
+							// Check if the component exists
+							auto *component = entityRegistry.try_get<CameraComponent>(componentData->m_entityID);
+							if(component != nullptr)
+							{
+								// Delete component
+								worldScene->removeComponent<CameraComponent>(componentData->m_entityID);
+							}
+						}
+						break;
 
-	case DataType_Texture3D:
+					case ComponentType::ComponentType_LightComponent:
+						{
+							// Check if the component exists
+							auto *component = entityRegistry.try_get<LightComponent>(componentData->m_entityID);
+							if(component != nullptr)
+							{
+								// Delete component
+								worldScene->removeComponent<LightComponent>(componentData->m_entityID);
+							}
+						}
+						break;
 
-		break;
+					case ComponentType::ComponentType_ModelComponent:
+						{
+							// Check if the component exists
+							auto *component = entityRegistry.try_get<ModelComponent>(componentData->m_entityID);
+							if(component != nullptr)
+							{
+								// Delete component
+								worldScene->removeComponent<ModelComponent>(componentData->m_entityID);
+							}
+						}
+						break;
+
+					case ComponentType::ComponentType_ShaderComponent:
+						{
+							// Check if the component exists
+							auto *component = entityRegistry.try_get<ShaderComponent>(componentData->m_entityID);
+							if(component != nullptr)
+							{
+								// Delete component
+								worldScene->removeComponent<ShaderComponent>(componentData->m_entityID);
+							}
+						}
+						break;
+				}
+
+				// Delete the sent data if the ownership of it was transfered
+				if(p_deleteAfterReceiving)
+					delete componentData;
+			}
+			break;
+
+		case DataType::DataType_GUIPassFunctors:
+			m_renderTask->m_renderer.setGUIPassFunctorSequence(static_cast<FunctorSequence *>(p_data));
+			break;
+
+		case DataType::DataType_RenderToTexture:
+			m_renderToTexture = static_cast<bool>(p_data);
+			m_renderTask->m_renderer.setRenderFinalToTexture(m_renderToTexture);
+			break;
+
+		case DataType::DataType_RenderToTextureResolution:
+			{
+				auto renderToTextureResolution = static_cast<glm::ivec2 *>(p_data);
+				m_renderToTextureResolution = *renderToTextureResolution;
+				m_renderTask->m_renderer.setRenderToTextureResolution(m_renderToTextureResolution);
+
+				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
+				if(p_deleteAfterReceiving)
+					delete renderToTextureResolution;
+			}
+			break;
+
+		case DataType::DataType_Texture2D:
+			{
+				TextureLoader2D::Texture2DHandle *textureHandle = static_cast<TextureLoader2D::Texture2DHandle *>(p_data);
+				if(textureHandle->isLoadedToMemory())
+					m_sceneObjects.m_loadToVideoMemory.emplace_back(*textureHandle);
+
+				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
+				if(p_deleteAfterReceiving)
+					delete textureHandle;
+			}
+			break;
+
+		case DataType::DataType_Texture3D:
+
+			break;
 	}
 }
 
@@ -781,6 +882,16 @@ const unsigned int RendererScene::getUnsignedInt(const Observer *p_observer, Bit
 		return m_renderTask->m_renderer.getFramebufferTextureHandle(GBufferTextureType::GBufferFinal);
 
 	return NullObjects::NullUnsignedInt;
+}
+
+const glm::mat4 &RendererScene::getViewMatrix() const
+{
+	return static_cast<RendererSystem *>(m_system)->getRenderer().getFrameData().m_viewMatrix;
+}
+
+const glm::mat4 &RendererScene::getProjectionMatrix() const
+{
+	return static_cast<RendererSystem *>(m_system)->getRenderer().getFrameData().m_projMatrix;
 }
 
 MaterialData RendererScene::loadMaterialData(PropertySet &p_materialProperty, Model::MaterialArrays &p_materialArraysFromModel, MaterialType p_materialType, std::size_t p_meshIndex)

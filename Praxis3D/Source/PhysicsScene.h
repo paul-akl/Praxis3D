@@ -96,6 +96,9 @@ public:
 
 	void loadInBackground();
 
+	// Get all the created components of the given entity that belong to this scene
+	std::vector<SystemObject *> getComponents(const EntityID p_entityID);
+
 	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const PhysicsComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true)
 	{
@@ -135,15 +138,7 @@ public:
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType);
 
-	void receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving)
-	{
-		switch(p_dataType)
-		{
-			case DataType_SimulationActive:
-				m_simulationRunning = static_cast<bool>(p_data);
-				break;
-		}
-	}
+	void receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving);
 
 	SystemTask *getSystemTask() { return m_physicsTask; };
 	Systems::TypeID getSystemType() { return Systems::TypeID::Physics; };

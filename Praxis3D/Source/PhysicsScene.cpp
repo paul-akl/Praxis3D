@@ -346,6 +346,20 @@ void PhysicsScene::loadInBackground()
 {
 }
 
+std::vector<SystemObject *> PhysicsScene::getComponents(const EntityID p_entityID)
+{
+	std::vector<SystemObject *> returnVector;
+
+	// Get the entity registry 
+	auto &entityRegistry = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World))->getEntityRegistry();
+
+	auto *rigidBodyComponent = entityRegistry.try_get<RigidBodyComponent>(p_entityID);
+	if(rigidBodyComponent != nullptr)
+		returnVector.push_back(rigidBodyComponent);
+
+	return returnVector;
+}
+
 std::vector<SystemObject*> PhysicsScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	return createComponents(p_entityID, p_constructionInfo.m_physicsComponents, p_startLoading);
@@ -522,5 +536,56 @@ void PhysicsScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeTy
 	if(CheckBitmask(p_changeType, Systems::Changes::Physics::Gravity))
 	{
 		m_dynamicsWorld->setGravity(Math::toBtVector3(p_subject->getVec3(this, Systems::Changes::Physics::Gravity)));
+	}
+}
+
+void PhysicsScene::receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving)
+{
+	switch(p_dataType)
+	{
+		case DataType::DataType_DeleteComponent:
+			{
+				// Get the world scene required for getting the entity registry and deleting components
+				WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+				// Get the entity registry 
+				auto &entityRegistry = worldScene->getEntityRegistry();
+
+				// Get entity and component data
+				auto const *componentData = static_cast<EntityAndComponent *>(p_data);
+
+				// Delete the component based on its type
+				switch(componentData->m_componentType)
+				{
+					case ComponentType::ComponentType_RigidBodyComponent:
+						{
+							// Check if the component exists
+							auto *component = entityRegistry.try_get<RigidBodyComponent>(componentData->m_entityID);
+							if(component != nullptr)
+							{
+								// Remove rigid body from the world
+								if(component->m_rigidBody != nullptr)
+								{
+									delete component->m_rigidBody->getMotionState();
+									delete component->m_rigidBody->getCollisionShape();
+									m_dynamicsWorld->removeRigidBody(component->m_rigidBody);
+								}
+
+								// Delete component
+								worldScene->removeComponent<RigidBodyComponent>(componentData->m_entityID);
+							}
+						}
+						break;
+				}
+
+				// Delete the sent data if the ownership of it was transfered
+				if(p_deleteAfterReceiving)
+					delete componentData;
+			}
+			break;
+
+		case DataType_SimulationActive:
+			m_simulationRunning = static_cast<bool>(p_data);
+			break;
 	}
 }

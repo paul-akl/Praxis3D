@@ -67,6 +67,8 @@ public:
 	void renderFrame(SceneObjects &p_sceneObjects, const float p_deltaTime);
 
 	unsigned int getFramebufferTextureHandle(GBufferTextureType p_bufferType) const;
+
+	const inline UniformFrameData &getFrameData() const { return m_frameData; }
 	
 protected:
 	inline void queueForDrawing(const ModelData &p_modelData, const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_modelMatrix, const glm::mat4 &p_viewProjMatrix)

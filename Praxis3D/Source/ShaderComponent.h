@@ -20,8 +20,8 @@ public:
 		std::string m_fragmentShaderFilename;
 	};
 
-	ShaderComponent(SystemScene *p_systemScene, std::string p_name, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::Shaders, p_entityID), m_shaderData(nullptr) { }
-	ShaderComponent(SystemScene *p_systemScene, std::string p_name, ShaderLoader::ShaderProgram &p_shader, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::Shaders, p_entityID), m_shaderData(new ShaderData(p_shader)) { }
+	ShaderComponent(SystemScene *p_systemScene, std::string p_name, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::ShaderComponent, p_entityID), m_shaderData(nullptr) { }
+	ShaderComponent(SystemScene *p_systemScene, std::string p_name, ShaderLoader::ShaderProgram &p_shader, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::ShaderComponent, p_entityID), m_shaderData(new ShaderData(p_shader)) { }
 	~ShaderComponent() 
 	{ 
 		delete m_shaderData;
@@ -39,7 +39,11 @@ public:
 
 	BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
 
-	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
+	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
+	{
+		if(CheckBitmask(p_changeType, Systems::Changes::Generic::Active))
+			setActive(p_subject->getBool(this, Systems::Changes::Generic::Active));
+	}
 
 	ErrorCode importObject(const PropertySet &p_properties)
 	{ 

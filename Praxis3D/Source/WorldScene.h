@@ -59,6 +59,11 @@ public:
 
 	void loadInBackground() { }
 
+	// Get all the created components of the given entity that belong to this scene
+	std::vector<SystemObject *> getComponents(const EntityID p_entityID);
+
+	// Add a components to an existing entity. Fails if the entity doesn't exist
+	ErrorCode addComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 	EntityID createEntity(const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 	void exportEntity(const EntityID p_entityID, ComponentsConstructionInfo &p_constructionInfo);
 
@@ -129,7 +134,9 @@ public:
 		p_constructionInfo.m_localScale = p_component.getSpatialDataChangeManager().getLocalSpaceData().m_spatialData.m_scale;
 	}
 
-	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
+	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType);
+
+	void receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving);
 
 	SystemTask *getSystemTask() { return m_worldTask; };
 	Systems::TypeID getSystemType() { return Systems::TypeID::World; };

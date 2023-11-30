@@ -92,7 +92,7 @@ public:
 		ModelsProperties m_modelsProperties;
 	};
 
-	ModelComponent(SystemScene *p_systemScene, std::string p_name, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::Models, p_entityID)
+	ModelComponent(SystemScene *p_systemScene, std::string p_name, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::ModelComponent, p_entityID)
 	{
 		m_modelsProperties = nullptr;
 		m_modelsNeedLoading = false;
@@ -374,7 +374,11 @@ public:
 
 	BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
 
-	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) { }
+	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
+	{
+		if(CheckBitmask(p_changeType, Systems::Changes::Generic::Active))
+			setActive(p_subject->getBool(this, Systems::Changes::Generic::Active));
+	}
 
 	void receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving = false)
 	{

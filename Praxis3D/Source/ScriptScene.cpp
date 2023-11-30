@@ -129,6 +129,20 @@ ErrorCode ScriptScene::preload()
 	return ErrorCode::Success;
 }
 
+std::vector<SystemObject *> ScriptScene::getComponents(const EntityID p_entityID)
+{
+	std::vector<SystemObject *> returnVector;
+
+	// Get the entity registry 
+	auto &entityRegistry = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World))->getEntityRegistry();
+
+	auto *luaComponent = entityRegistry.try_get<LuaComponent>(p_entityID);
+	if(luaComponent != nullptr)
+		returnVector.push_back(luaComponent);
+
+	return returnVector;
+}
+
 std::vector<SystemObject*> ScriptScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	return createComponents(p_entityID, p_constructionInfo.m_scriptComponents, p_startLoading);
@@ -240,6 +254,39 @@ void ScriptScene::receiveData(const DataType p_dataType, void *p_data, const boo
 {
 	switch(p_dataType)
 	{
+		case DataType::DataType_DeleteComponent:
+			{
+				// Get the world scene required for getting the entity registry and deleting components
+				WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+				// Get the entity registry 
+				auto &entityRegistry = worldScene->getEntityRegistry();
+
+				// Get entity and component data
+				auto const *componentData = static_cast<EntityAndComponent *>(p_data);
+
+				// Delete the component based on its type
+				switch(componentData->m_componentType)
+				{
+					case ComponentType::ComponentType_LuaComponent:
+						{
+							// Check if the component exists
+							auto *component = entityRegistry.try_get<LuaComponent>(componentData->m_entityID);
+							if(component != nullptr)
+							{
+								// Delete component
+								worldScene->removeComponent<LuaComponent>(componentData->m_entityID);
+							}
+						}
+						break;
+				}
+
+				// Delete the sent data if the ownership of it was transfered
+				if(p_deleteAfterReceiving)
+					delete componentData;
+			}
+			break;
+
 	case DataType_EnableLuaScripting:
 		m_luaScriptsEnabled = static_cast<bool>(p_data);
 		break;

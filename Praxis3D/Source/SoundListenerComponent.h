@@ -49,6 +49,9 @@ public:
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 	{
+		if(CheckBitmask(p_changeType, Systems::Changes::Generic::Active))
+			setActive(p_subject->getBool(this, Systems::Changes::Generic::Active));
+
 		if(CheckBitmask(p_changeType, Systems::Changes::Audio::ListenerID))
 			m_listenerID = p_subject->getInt(this, Systems::Changes::Audio::ListenerID);
 	}

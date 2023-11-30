@@ -92,6 +92,9 @@ public:
 	// Start loading all the scene objects in the background threads and return (without waiting)
 	virtual void loadInBackground() = 0;
 
+	// Get all the created components of the given entity that belong to this scene
+	virtual std::vector<SystemObject*> getComponents(const EntityID p_entityID);
+
 	// Create all the components that belong to this scene, that are contained in ComponentsConstructionInfo; return a vector of all created components
 	virtual std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 

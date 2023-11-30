@@ -204,6 +204,7 @@ void Config::init()
 	AddVariablePredef(m_GUIVar, editor_asset_texture_button_size_y);
 	AddVariablePredef(m_GUIVar, editor_audio_banks_max_height);
 	AddVariablePredef(m_GUIVar, editor_float_slider_speed);
+	AddVariablePredef(m_GUIVar, editor_inspector_button_width_multiplier);
 	AddVariablePredef(m_GUIVar, editor_lua_variables_max_height);
 	AddVariablePredef(m_GUIVar, editor_play_button_size);
 	AddVariablePredef(m_GUIVar, editor_render_pass_max_height);
@@ -218,6 +219,8 @@ void Config::init()
 	AddVariablePredef(m_GUIVar, editor_button_arrow_up_texture);
 	AddVariablePredef(m_GUIVar, editor_button_delete_entry_texture); 
 	AddVariablePredef(m_GUIVar, editor_button_gui_sequence_texture);
+	AddVariablePredef(m_GUIVar, editor_button_guizmo_rotate_texture);
+	AddVariablePredef(m_GUIVar, editor_button_guizmo_translate_texture);
 	AddVariablePredef(m_GUIVar, editor_button_open_file_texture);
 	AddVariablePredef(m_GUIVar, editor_button_open_asset_list_texture);
 	AddVariablePredef(m_GUIVar, editor_button_pause_texture); 

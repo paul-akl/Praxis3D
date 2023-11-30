@@ -1,7 +1,7 @@
 #pragma once
 
 //#define _USE_MATH_DEFINES
-#define GLM_FORCE_CTOR_INIT
+//#define GLM_FORCE_CTOR_INIT
 
 #include <algorithm>
 #include <bullet3/LinearMath/btMatrix3x3.h>

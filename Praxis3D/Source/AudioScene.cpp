@@ -442,6 +442,24 @@ void AudioScene::loadInBackground()
 {
 }
 
+std::vector<SystemObject *> AudioScene::getComponents(const EntityID p_entityID)
+{
+	std::vector<SystemObject *> returnVector;
+
+	// Get the entity registry 
+	auto &entityRegistry = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World))->getEntityRegistry();
+
+	auto *soundComponent = entityRegistry.try_get<SoundComponent>(p_entityID);
+	if(soundComponent != nullptr)
+		returnVector.push_back(soundComponent);
+
+	auto *soundListenerComponent = entityRegistry.try_get<SoundListenerComponent>(p_entityID);
+	if(soundListenerComponent != nullptr)
+		returnVector.push_back(soundListenerComponent);
+
+	return returnVector;
+}
+
 std::vector<SystemObject*> AudioScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	return createComponents(p_entityID, p_constructionInfo.m_audioComponents, p_startLoading);
@@ -587,6 +605,71 @@ void AudioScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeType
 		Config::m_audioVar.volume_sfx = m_volume[AudioBusType::AudioBusType_SFX];
 		m_audioSystem->getBus(AudioBusType::AudioBusType_SFX)->setVolume(m_volume[AudioBusType::AudioBusType_SFX]);
 		m_audioSystem->getChannelGroup(AudioBusType::AudioBusType_SFX)->setVolume(m_volume[AudioBusType::AudioBusType_SFX]);
+	}
+}
+
+void AudioScene::receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving)
+{
+	switch(p_dataType)
+	{
+		case DataType::DataType_DeleteComponent:
+			{
+				// Get the world scene required for getting the entity registry and deleting components
+				WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+				// Get the entity registry 
+				auto &entityRegistry = worldScene->getEntityRegistry();
+
+				// Get entity and component data
+				auto const *componentData = static_cast<EntityAndComponent *>(p_data);
+
+				// Delete the component based on its type
+				switch(componentData->m_componentType)
+				{
+					case ComponentType::ComponentType_SoundComponent:
+						{
+							// Check if the component exists
+							auto *component = entityRegistry.try_get<SoundComponent>(componentData->m_entityID);
+							if(component != nullptr)
+							{
+								// If component is active and sound is playing, stop the sound
+								if(component->isObjectActive())
+								{
+									if(component->m_playing)
+									{
+										component->m_channel->stop();
+										component->m_playing = false;
+									}
+								}
+
+								// If sound exists, release its memory
+								if(component->m_sound != nullptr)
+									component->m_sound->release();
+
+								// Delete component
+								worldScene->removeComponent<SoundComponent>(componentData->m_entityID);
+							}
+						}
+						break;
+
+					case ComponentType::ComponentType_SoundListenerComponent:
+						{
+							// Check if the component exists
+							auto *component = entityRegistry.try_get<SoundListenerComponent>(componentData->m_entityID);
+							if(component != nullptr)
+							{
+								// Delete component
+								worldScene->removeComponent<SoundListenerComponent>(componentData->m_entityID);
+							}
+						}
+						break;
+				}
+
+				// Delete the sent data if the ownership of it was transfered
+				if(p_deleteAfterReceiving)
+					delete componentData;
+			}
+			break;
 	}
 }
 
