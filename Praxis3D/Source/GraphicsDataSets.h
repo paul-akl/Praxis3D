@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <variant>
 
 #include "Math.h"
 #include "Loaders.h"
@@ -159,74 +160,108 @@ struct RenderableObjectData
 // A simple container storing a union which contains one of the loadable objects; uses an enum to distinguish which object is currently being stored
 struct LoadableObjectsContainer
 {
-	enum LoadableObjectType
+	enum LoadableObjectType : unsigned int
 	{
+		LoadableObjectType_Shader = 0,
 		LoadableObjectType_Model,
-		LoadableObjectType_Shader,
 		LoadableObjectType_Texture
 	};
 
-	LoadableObjectsContainer(ModelLoader::ModelHandle p_model)				: m_loadableObject(p_model), m_objectType(LoadableObjectType::LoadableObjectType_Model) { }
-	LoadableObjectsContainer(ShaderLoader::ShaderProgram *p_shader)			: m_loadableObject(p_shader), m_objectType(LoadableObjectType::LoadableObjectType_Shader) { }
-	LoadableObjectsContainer(TextureLoader2D::Texture2DHandle p_texture)	: m_loadableObject(p_texture), m_objectType(LoadableObjectType::LoadableObjectType_Texture) { }
-	~LoadableObjectsContainer() { }
-
-	union m_loadableObject
+	LoadableObjectsContainer(const LoadableObjectsContainer &p_arg) noexcept
 	{
-		m_loadableObject(ModelLoader::ModelHandle p_model)				: m_model(p_model)  { }
-		m_loadableObject(ShaderLoader::ShaderProgram *p_shader)			: m_shader(p_shader) { }
-		m_loadableObject(TextureLoader2D::Texture2DHandle p_texture)	: m_texture(p_texture) { }
-		~m_loadableObject() { }
-
-		ModelLoader::ModelHandle m_model;
-		ShaderLoader::ShaderProgram *m_shader;
-		TextureLoader2D::Texture2DHandle m_texture;
-	} m_loadableObject;
+		switch(p_arg.m_loadableObject.index())
+		{
+			case LoadableObjectsContainer::LoadableObjectType_Shader:
+				m_loadableObject = std::get<ShaderLoader::ShaderProgram *>(p_arg.m_loadableObject);
+				break;
+			case LoadableObjectsContainer::LoadableObjectType_Model:
+				m_loadableObject = std::get<ModelLoader::ModelHandle>(p_arg.m_loadableObject);
+				break;
+			case LoadableObjectsContainer::LoadableObjectType_Texture:
+				m_loadableObject = std::get<TextureLoader2D::Texture2DHandle>(p_arg.m_loadableObject);
+				break;
+		}
+	}
+	LoadableObjectsContainer(LoadableObjectsContainer &&p_arg) noexcept
+	{
+		m_loadableObject = std::move(p_arg.m_loadableObject);
+	}
+	LoadableObjectsContainer(ModelLoader::ModelHandle p_model)				: m_loadableObject(p_model) {}//, m_objectType(LoadableObjectType::LoadableObjectType_Model) { }
+	LoadableObjectsContainer(ShaderLoader::ShaderProgram *p_shader)			: m_loadableObject(p_shader) {}//, m_objectType(LoadableObjectType::LoadableObjectType_Shader) { }
+	LoadableObjectsContainer(TextureLoader2D::Texture2DHandle p_texture)	: m_loadableObject(p_texture) {}//, m_objectType(LoadableObjectType::LoadableObjectType_Texture) { }
+	~LoadableObjectsContainer() { }
 
 	inline const bool isLoadedToVideoMemory() const
 	{
-		switch(m_objectType)
-		{
-		case LoadableObjectsContainer::LoadableObjectType_Model:
-			return m_loadableObject.m_model.isLoadedToVideoMemory();
-			break;
-		case LoadableObjectsContainer::LoadableObjectType_Shader:
-			return m_loadableObject.m_shader->isLoadedToVideoMemory();
-			break;
-		case LoadableObjectsContainer::LoadableObjectType_Texture:
-			return m_loadableObject.m_texture.isLoadedToVideoMemory();
-			break;
-		}
+		return std::visit([](auto &&p_arg) { return isLoadedToVideoMemory(p_arg); }, m_loadableObject);
 
-		return true;
+		//switch(m_loadableObject.index())
+		//{
+		//	case LoadableObjectsContainer::LoadableObjectType_Shader:
+		//		return std::get<ShaderLoader::ShaderProgram *>(m_loadableObject)->isLoadedToVideoMemory();
+		//		break;
+		//	case LoadableObjectsContainer::LoadableObjectType_Model:
+		//		return std::get<ModelLoader::ModelHandle>(m_loadableObject).isLoadedToVideoMemory();
+		//		break;
+		//	case LoadableObjectsContainer::LoadableObjectType_Texture:
+		//		return std::get<TextureLoader2D::Texture2DHandle>(m_loadableObject).isLoadedToVideoMemory();
+		//		break;
+		//}
+
+		//return true;
 	}
 
-	// copy assignment
-	LoadableObjectsContainer &operator=(const LoadableObjectsContainer &p_arg)
+	static const bool isLoadedToVideoMemory(const ShaderLoader::ShaderProgram *p_shader) { return p_shader->isLoadedToVideoMemory(); }
+	static const bool isLoadedToVideoMemory(const ModelLoader::ModelHandle &p_model) { return p_model.isLoadedToVideoMemory(); }
+	static const bool isLoadedToVideoMemory(const TextureLoader2D::Texture2DHandle &p_texture) { return p_texture.isLoadedToVideoMemory(); }
+
+	inline const LoadableObjectType getType() const { return static_cast<LoadableObjectType>(m_loadableObject.index()); }
+
+	// Get shader program; UNSAFE: MUST make sure the underlying variant is of ShaderProgram* type
+	inline ShaderLoader::ShaderProgram *getShaderProgram() { return std::get<ShaderLoader::ShaderProgram *>(m_loadableObject); }
+
+	// Get model handle; UNSAFE: MUST make sure the underlying variant is of ModelHandle type
+	inline ModelLoader::ModelHandle &getModelHandle() { return std::get<ModelLoader::ModelHandle>(m_loadableObject); }
+
+	// Get texture handle; UNSAFE: MUST make sure the underlying variant is of Texture2DHandle type
+	inline TextureLoader2D::Texture2DHandle &getTextureHandle() { return std::get<TextureLoader2D::Texture2DHandle>(m_loadableObject); }
+
+	// Copy assignment
+	LoadableObjectsContainer &operator=(const LoadableObjectsContainer &p_arg) noexcept
 	{
-		// Guard self assignment
+		// Guard for self assignment
 		if(this == &p_arg)
 			return *this;
 
-		m_objectType = p_arg.m_objectType;
-
-		switch(p_arg.m_objectType)
+		//m_objectType = p_arg.m_objectType;
+		m_loadableObject = p_arg.m_loadableObject;
+		switch(p_arg.m_loadableObject.index())
 		{
-		case LoadableObjectsContainer::LoadableObjectType_Model:
-			m_loadableObject.m_model = p_arg.m_loadableObject.m_model;
-			break;
-		case LoadableObjectsContainer::LoadableObjectType_Shader:
-			m_loadableObject.m_shader = p_arg.m_loadableObject.m_shader;
-			break;
-		case LoadableObjectsContainer::LoadableObjectType_Texture:
-			m_loadableObject.m_texture = p_arg.m_loadableObject.m_texture;
-			break;
+			case LoadableObjectsContainer::LoadableObjectType_Shader:
+				m_loadableObject = std::get<ShaderLoader::ShaderProgram *>(p_arg.m_loadableObject);
+				break;
+			case LoadableObjectsContainer::LoadableObjectType_Model:
+				m_loadableObject = std::get<ModelLoader::ModelHandle>(p_arg.m_loadableObject);
+				break;
+			case LoadableObjectsContainer::LoadableObjectType_Texture:
+				m_loadableObject = std::get<TextureLoader2D::Texture2DHandle>(p_arg.m_loadableObject);
+				break;
 		}
 
 		return *this;
 	}
 
-	LoadableObjectType m_objectType;
+	LoadableObjectsContainer &operator=(LoadableObjectsContainer &&p_arg) noexcept
+	{
+		// Guard for self assignment
+		if(this == &p_arg)
+			return *this;
+
+		m_loadableObject = std::move(p_arg.m_loadableObject);
+		return *this;
+	}
+
+	std::variant<ShaderLoader::ShaderProgram *, ModelLoader::ModelHandle, TextureLoader2D::Texture2DHandle> m_loadableObject;
 };
 
 struct RenderableMeshData

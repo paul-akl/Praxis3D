@@ -670,6 +670,10 @@ void AudioScene::receiveData(const DataType p_dataType, void *p_data, const bool
 					delete componentData;
 			}
 			break;
+
+		default:
+			assert(p_deleteAfterReceiving == true && "Memory leak - unhandled orphaned void data pointer in receiveData");
+			break;
 	}
 }
 

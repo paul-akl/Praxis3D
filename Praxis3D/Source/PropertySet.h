@@ -111,6 +111,11 @@ public:
 			break;
 		}
 	}
+	~Property()
+	{
+		if(m_variableType == PropertyVariableType::Type_string)
+			m_variable.m_string.~basic_string();
+	}
 
 	// Getters for each type
 	const inline bool getBool() const noexcept
@@ -507,7 +512,7 @@ public:
 	const inline bool operator==(const Property &p_property) const noexcept { return (m_propertyID == p_property.m_propertyID); }
 	const inline bool operator<(const Property &p_property) const noexcept { return (m_propertyID < p_property.m_propertyID); }
 
-	// Assignment operator
+	// Cope assignment operator
 	inline Property &operator=(const Property &p_property) noexcept
 	{
 		m_propertyID = p_property.m_propertyID;

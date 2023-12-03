@@ -329,46 +329,56 @@ void GUIScene::receiveData(const DataType p_dataType, void *p_data, const bool p
 			}
 			break;
 		case DataType_EnableGUISequence:
-			setGUISequenceEnabled(static_cast<bool>(p_data));
+			{
+				setGUISequenceEnabled(static_cast<bool>(p_data));
+			}
 			break;
 
 		case DataType_FileBrowserDialog:
-			// Cast the sent data into the intended type and add it to the file-browser dialog queue
-			m_fileBrowserDialogs.push(static_cast<FileBrowserDialog *>(p_data));
+			{
+				// Cast the sent data into the intended type and add it to the file-browser dialog queue
+				m_fileBrowserDialogs.push(static_cast<FileBrowserDialog *>(p_data));
+			}
 			break;
 
 		case DataType_EditorWindow:
-			// Cast the sent data into the intended type
-			EditorWindowSettings *editorWindowSettings = static_cast<EditorWindowSettings *>(p_data);
-
-			// If the editor window should be enabled
-			if(editorWindowSettings->m_enabled)
 			{
-				// If the editor window doesn't exist, create it
-				if(m_editorWindow == nullptr)
-				{
-					m_editorWindow = new EditorWindow(this, Config::GUIVar().gui_editor_window_name, 0);
-					m_editorWindow->init();
-					m_editorWindow->setup(*editorWindowSettings);
-				}
-				else // If the editor window does exist, just send the settings to it
-					m_editorWindow->setup(*editorWindowSettings);
+				// Cast the sent data into the intended type
+				EditorWindowSettings *editorWindowSettings = static_cast<EditorWindowSettings *>(p_data);
 
-				GUIHandlerLocator::get().enableDocking();
-			}
-			else // If the editor should be disabled
-			{
-				// If the editor window exist, delete it
-				if(m_editorWindow != nullptr)
+				// If the editor window should be enabled
+				if(editorWindowSettings->m_enabled)
 				{
-					delete m_editorWindow;
-					m_editorWindow = nullptr;
-				}
-			}
+					// If the editor window doesn't exist, create it
+					if(m_editorWindow == nullptr)
+					{
+						m_editorWindow = new EditorWindow(this, Config::GUIVar().gui_editor_window_name, 0);
+						m_editorWindow->init();
+						m_editorWindow->setup(*editorWindowSettings);
+					}
+					else // If the editor window does exist, just send the settings to it
+						m_editorWindow->setup(*editorWindowSettings);
 
-			// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
-			if(p_deleteAfterReceiving)
-				delete editorWindowSettings;
+					GUIHandlerLocator::get().enableDocking();
+				}
+				else // If the editor should be disabled
+				{
+					// If the editor window exist, delete it
+					if(m_editorWindow != nullptr)
+					{
+						delete m_editorWindow;
+						m_editorWindow = nullptr;
+					}
+				}
+
+				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
+				if(p_deleteAfterReceiving)
+					delete editorWindowSettings;
+			}
+			break;
+
+		default:
+			assert(p_deleteAfterReceiving == true && "Memory leak - unhandled orphaned void data pointer in receiveData");
 			break;
 	}
 }

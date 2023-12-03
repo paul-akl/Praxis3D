@@ -33,7 +33,7 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
 
 #define ERROR_CODES(Code) \
 	/* General errors */ \
-    Code(Undefined,) \
+    Code(Undefined, = 0) \
     Code(Success,) \
     Code(Failure,) \
     Code(Initialize_success,) \

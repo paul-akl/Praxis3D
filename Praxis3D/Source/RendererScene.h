@@ -97,6 +97,9 @@ struct SceneObjects
 
 	// Objects that need to be loaded to VRAM
 	std::vector<LoadableObjectsContainer> m_loadToVideoMemory;
+
+	// Objects that need to be removed from VRAM
+	std::vector<LoadableObjectsContainer> m_unloadFromVideoMemory;
 };
 
 class RendererScene : public SystemScene

@@ -678,7 +678,7 @@ void LuaScript::setUsertypes()
 	// Graphics types
 	m_luaState.new_usertype<TextureLoader2D::Texture2DHandle>("Texture2DHandle",
 		"loadToMemory", &TextureLoader2D::Texture2DHandle::loadToMemory,
-		"loadToVideoMemory", [this](TextureLoader2D::Texture2DHandle &p_v1) -> void { m_scriptScene->getSceneLoader()->getChangeController()->sendData(m_scriptScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_Texture2D, (void*)&p_v1); },
+		"loadToVideoMemory", [this](TextureLoader2D::Texture2DHandle &p_v1) -> void { m_scriptScene->getSceneLoader()->getChangeController()->sendData(m_scriptScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_LoadTexture2D, (void*)&p_v1); },
 		"isLoadedToMemory", &TextureLoader2D::Texture2DHandle::isLoadedToMemory,
 		"isLoadedToVideoMemory", &TextureLoader2D::Texture2DHandle::isLoadedToVideoMemory,
 		"getTextureHeight", &TextureLoader2D::Texture2DHandle::getTextureHeight,

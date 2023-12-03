@@ -587,5 +587,9 @@ void PhysicsScene::receiveData(const DataType p_dataType, void *p_data, const bo
 		case DataType_SimulationActive:
 			m_simulationRunning = static_cast<bool>(p_data);
 			break;
+
+		default:
+			assert(p_deleteAfterReceiving == true && "Memory leak - unhandled orphaned void data pointer in receiveData");
+			break;
 	}
 }

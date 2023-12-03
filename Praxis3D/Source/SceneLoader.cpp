@@ -649,18 +649,15 @@ void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_con
 											}
 
 											// Get material alpha threshold value, if it is present
-											auto alphaThresholdProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::AlphaThreshold);
-											if(alphaThresholdProperty)
+											if(auto alphaThresholdProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::AlphaThreshold); alphaThresholdProperty)
 												newModelEntry.m_alphaThreshold[meshDataIndex] = alphaThresholdProperty.getFloat();
 
 											// Get emissive intensity, if it is present
-											auto emissiveIntensityProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::EmissiveIntensity);
-											if(emissiveIntensityProperty)
+											if(auto emissiveIntensityProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::EmissiveIntensity); emissiveIntensityProperty)
 												newModelEntry.m_emissiveIntensity[meshDataIndex] = emissiveIntensityProperty.getFloat();
 
 											// Get material height scale value, if it is present
-											auto heightScaleProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::HeightScale);
-											if(heightScaleProperty)
+											if(auto heightScaleProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::HeightScale); heightScaleProperty)
 												newModelEntry.m_heightScale[meshDataIndex] = heightScaleProperty.getFloat();
 
 											// Get material properties

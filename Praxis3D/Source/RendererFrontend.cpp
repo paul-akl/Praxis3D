@@ -329,17 +329,34 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 	// array might have been also added to objects-to-render arrays, so they need to be loaded first
 	for(decltype(p_sceneObjects.m_loadToVideoMemory.size()) i = 0, size = p_sceneObjects.m_loadToVideoMemory.size(); i < size; i++)
 	{
-		switch(p_sceneObjects.m_loadToVideoMemory[i].m_objectType)
+		switch(p_sceneObjects.m_loadToVideoMemory[i].getType())
 		{
 		case LoadableObjectsContainer::LoadableObjectType_Model:
-			queueForLoading(p_sceneObjects.m_loadToVideoMemory[i].m_loadableObject.m_model);
+			queueForLoading(p_sceneObjects.m_loadToVideoMemory[i].getModelHandle());
 			break;
 		case LoadableObjectsContainer::LoadableObjectType_Shader:
-			queueForLoading(*p_sceneObjects.m_loadToVideoMemory[i].m_loadableObject.m_shader);
+			queueForLoading(*p_sceneObjects.m_loadToVideoMemory[i].getShaderProgram());
 			break;
 		case LoadableObjectsContainer::LoadableObjectType_Texture:
-			queueForLoading(p_sceneObjects.m_loadToVideoMemory[i].m_loadableObject.m_texture);
+			queueForLoading(p_sceneObjects.m_loadToVideoMemory[i].getTextureHandle());
 			break;
+		}
+	}
+
+	// Release all objects from video memory that are in the unload-from-GPU queue
+	for(decltype(p_sceneObjects.m_unloadFromVideoMemory.size()) i = 0, size = p_sceneObjects.m_unloadFromVideoMemory.size(); i < size; i++)
+	{
+		switch(p_sceneObjects.m_unloadFromVideoMemory[i].getType())
+		{
+			case LoadableObjectsContainer::LoadableObjectType_Model:
+				queueForUnloading(p_sceneObjects.m_unloadFromVideoMemory[i].getModelHandle());
+				break;
+			case LoadableObjectsContainer::LoadableObjectType_Shader:
+				queueForUnloading(*p_sceneObjects.m_unloadFromVideoMemory[i].getShaderProgram());
+				break;
+			case LoadableObjectsContainer::LoadableObjectType_Texture:
+				queueForUnloading(p_sceneObjects.m_unloadFromVideoMemory[i].getTextureHandle());
+				break;
 		}
 	}
 
@@ -357,21 +374,21 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 
 			LoadableObjectsContainer &loadableObject = component.m_objectsToLoad.front();
 
-			switch(loadableObject.m_objectType)
+			switch(loadableObject.getType())
 			{
 			case LoadableObjectsContainer::LoadableObjectType_Model:
-				queueForLoading(loadableObject.m_loadableObject.m_model);
-				loadableObject.m_loadableObject.m_model.setLoadedToVideoMemory(true);
+				queueForLoading(loadableObject.getModelHandle());
+				loadableObject.getModelHandle().setLoadedToVideoMemory(true);
 				break;
 
 			case LoadableObjectsContainer::LoadableObjectType_Shader:
-				queueForLoading(*loadableObject.m_loadableObject.m_shader);
-				loadableObject.m_loadableObject.m_shader->setLoadedToVideoMemory(true);
+				queueForLoading(*loadableObject.getShaderProgram());
+				loadableObject.getShaderProgram()->setLoadedToVideoMemory(true);
 				break;
 
 			case LoadableObjectsContainer::LoadableObjectType_Texture:
-				queueForLoading(loadableObject.m_loadableObject.m_texture);
-				loadableObject.m_loadableObject.m_texture.setLoadedToVideoMemory(true);
+				queueForLoading(loadableObject.getTextureHandle());
+				loadableObject.getTextureHandle().setLoadedToVideoMemory(true);
 				break;
 			}
 
@@ -388,6 +405,12 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 
 	// Clear the load-to-GPU queue, since everything in it has been processed
 	p_sceneObjects.m_loadToVideoMemory.clear();
+
+	// Handle object unloading
+	passUnloadCommandsToBackend();
+
+	// Clear the unload-from-GPU queue
+	p_sceneObjects.m_unloadFromVideoMemory.clear();
 	
 	// Calculate the view rotation matrix
 	const glm::quat orientation = glm::normalize(glm::toQuat(p_sceneObjects.m_cameraViewMatrix));

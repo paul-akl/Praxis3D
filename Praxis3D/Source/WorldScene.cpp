@@ -250,8 +250,8 @@ EntityID WorldScene::createEntity(const ComponentsConstructionInfo &p_constructi
 		// Add entity to the registry and assign its entity ID
 		newEntity = addEntity(p_constructionInfo.m_id);
 
-		// Log an error if the desired ID couldn't be assigned
-		if(p_constructionInfo.m_id != newEntity)
+		// Log an error if the desired ID couldn't be assigned, unless desired ID was 0
+		if(p_constructionInfo.m_id != 0 && p_constructionInfo.m_id != newEntity)
 			ErrHandlerLoc::get().log(ErrorCode::Duplicate_object_id, ErrorSource::Source_WorldScene, p_constructionInfo.m_name + " - Entity ID \'" + Utilities::toString(p_constructionInfo.m_id) + "\' is already taken. Replaced with: \'" + Utilities::toString(newEntity) + "\'");
 	}
 	else // Do not request a specific entity ID if the requested ID is null
@@ -465,14 +465,24 @@ void WorldScene::receiveData(const DataType p_dataType, void *p_data, const bool
 {
 	switch(p_dataType)
 	{
+		case DataType::DataType_CreateComponent:
+			{
+				// Get entity and component data
+				auto const *componentConstructionInfo = static_cast<ComponentsConstructionInfo *>(p_data);
+
+				auto addComponentError = addComponents(componentConstructionInfo->m_id, *componentConstructionInfo);
+
+				if(addComponentError == ErrorCode::Success)
+					ErrHandlerLoc::get().log(addComponentError, "EntityID: " + Utilities::toString(componentConstructionInfo->m_id), ErrorSource::Source_WorldScene);
+
+				// Delete the sent data if the ownership of it was transfered
+				if(p_deleteAfterReceiving)
+					delete componentConstructionInfo;
+			}
+			break;
+
 		case DataType::DataType_DeleteComponent:
 			{
-				// Get the world scene required for getting the entity registry and deleting components
-				WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
-
-				// Get the entity registry 
-				auto &entityRegistry = worldScene->getEntityRegistry();
-
 				// Get entity and component data
 				auto const *componentData = static_cast<EntityAndComponent *>(p_data);
 
@@ -482,11 +492,11 @@ void WorldScene::receiveData(const DataType p_dataType, void *p_data, const bool
 					case ComponentType::ComponentType_ObjectMaterialComponent:
 						{
 							// Check if the component exists
-							auto *component = entityRegistry.try_get<ObjectMaterialComponent>(componentData->m_entityID);
+							auto *component = m_entityRegistry.try_get<ObjectMaterialComponent>(componentData->m_entityID);
 							if(component != nullptr)
 							{
 								// Delete component
-								worldScene->removeComponent<ObjectMaterialComponent>(componentData->m_entityID);
+								removeComponent<ObjectMaterialComponent>(componentData->m_entityID);
 							}
 						}
 						break;
@@ -494,11 +504,11 @@ void WorldScene::receiveData(const DataType p_dataType, void *p_data, const bool
 					case ComponentType::ComponentType_SpatialComponent:
 						{
 							// Check if the component exists
-							auto *component = entityRegistry.try_get<SpatialComponent>(componentData->m_entityID);
+							auto *component = m_entityRegistry.try_get<SpatialComponent>(componentData->m_entityID);
 							if(component != nullptr)
 							{
 								// Delete component
-								worldScene->removeComponent<SpatialComponent>(componentData->m_entityID);
+								removeComponent<SpatialComponent>(componentData->m_entityID);
 							}
 						}
 						break;
@@ -508,6 +518,65 @@ void WorldScene::receiveData(const DataType p_dataType, void *p_data, const bool
 				if(p_deleteAfterReceiving)
 					delete componentData;
 			}
+			break;
+
+		case DataType::DataType_CreateEntity:
+			{
+				// Get entity and component data
+				auto const *componentConstructionInfo = static_cast<ComponentsConstructionInfo *>(p_data);
+
+				auto entityID = createEntity(*componentConstructionInfo);
+
+				//if(addComponentError == ErrorCode::Success)
+				//	ErrHandlerLoc::get().log(addComponentError, "EntityID: " + Utilities::toString(componentConstructionInfo->m_id), ErrorSource::Source_WorldScene);
+
+				// Delete the sent data if the ownership of it was transfered
+				if(p_deleteAfterReceiving)
+					delete componentConstructionInfo;
+			}
+			break;
+
+		case DataType::DataType_DeleteEntity:
+			{
+				// Get entity and component data
+				auto const *componentData = static_cast<EntityAndComponent *>(p_data);
+
+				// Delete the component based on its type
+				switch(componentData->m_componentType)
+				{
+					case ComponentType::ComponentType_ObjectMaterialComponent:
+						{
+							// Check if the component exists
+							auto *component = m_entityRegistry.try_get<ObjectMaterialComponent>(componentData->m_entityID);
+							if(component != nullptr)
+							{
+								// Delete component
+								removeComponent<ObjectMaterialComponent>(componentData->m_entityID);
+							}
+						}
+						break;
+
+					case ComponentType::ComponentType_SpatialComponent:
+						{
+							// Check if the component exists
+							auto *component = m_entityRegistry.try_get<SpatialComponent>(componentData->m_entityID);
+							if(component != nullptr)
+							{
+								// Delete component
+								removeComponent<SpatialComponent>(componentData->m_entityID);
+							}
+						}
+						break;
+				}
+
+				// Delete the sent data if the ownership of it was transfered
+				if(p_deleteAfterReceiving)
+					delete componentData;
+			}
+			break;
+
+		default:
+			assert(p_deleteAfterReceiving == true && "Memory leak - unhandled orphaned void data pointer in receiveData");
 			break;
 	}
 }

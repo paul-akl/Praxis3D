@@ -94,6 +94,7 @@ void Config::init()
 	AddVariablePredef(m_engineVar, glsl_version);
 	AddVariablePredef(m_engineVar, gl_context_major_version);
 	AddVariablePredef(m_engineVar, gl_context_minor_version);
+	AddVariablePredef(m_engineVar, loaders_num_of_unload_per_frame);
 	AddVariablePredef(m_engineVar, object_directory_init_pool_size);
 	AddVariablePredef(m_engineVar, smoothing_tick_samples);
 	AddVariablePredef(m_engineVar, task_scheduler_clock_frequency);

@@ -28,23 +28,28 @@ enum DataType : uint32_t
 {
 	DataType_Null = 0,
 	// General
-	DataType_CreateComponent,
-	DataType_DeleteComponent,
+	DataType_CreateComponent,			// ComponentsConstructionInfo
+	DataType_DeleteComponent,			// EntityAndComponent
+	DataType_CreateEntity,				// ComponentsConstructionInfo
+	DataType_DeleteEntity,				// EntityAndComponent
 	// Graphics
-	DataType_GUIPassFunctors,
-	DataType_RenderToTexture,
-	DataType_RenderToTextureResolution,
-	DataType_Texture2D,
-	DataType_Texture3D,
-	DataType_ModelsProperties,
+	DataType_GUIPassFunctors,			// FunctorSequence
+	DataType_RenderToTexture,			// bool
+	DataType_RenderToTextureResolution, // glm::ivec2
+	DataType_LoadTexture2D,				// TextureLoader2D::Texture2DHandle
+	DataType_UnloadTexture2D,			// TextureLoader2D::Texture2DHandle
+	DataType_LoadTexture3D,
+	DataType_UnloadTexture3D,
+	DataType_UnloadModel,
+	DataType_ModelsProperties,			// ModelComponent::ModelsProperties
 	// GUI
-	DataType_EnableGUISequence,
-	DataType_EditorWindow,
-	DataType_FileBrowserDialog,
+	DataType_EnableGUISequence,			// bool
+	DataType_EditorWindow,				// EditorWindowSettings
+	DataType_FileBrowserDialog,			// FileBrowserDialog
 	// Physics
-	DataType_SimulationActive,
+	DataType_SimulationActive,			// bool
 	// Scripting
-	DataType_EnableLuaScripting
+	DataType_EnableLuaScripting			// bool
 };
 
 namespace Systems
@@ -680,6 +685,7 @@ public:
 			glsl_version = 430;
 			gl_context_major_version = 3;
 			gl_context_minor_version = 3;
+			loaders_num_of_unload_per_frame = 1;
 			object_directory_init_pool_size = 1000;
 			smoothing_tick_samples = 100;
 			task_scheduler_clock_frequency = 120;
@@ -699,6 +705,7 @@ public:
 		int glsl_version;
 		int gl_context_major_version;
 		int gl_context_minor_version;
+		int loaders_num_of_unload_per_frame;
 		int object_directory_init_pool_size;
 		int smoothing_tick_samples;
 		int task_scheduler_clock_frequency;

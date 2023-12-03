@@ -231,6 +231,27 @@ protected:
 			p_shaderBuffer.m_data);
 	}
 
+	inline void queueForUnloading(ShaderLoader::ShaderProgram &p_shader)
+	{
+		m_unloadCommands.emplace_back(std::make_pair(UnloadObjectType::UnloadObjectType_Shader, p_shader.getShaderHandle()));
+	}
+	inline void queueForUnloading(ModelLoader::ModelHandle &p_model)
+	{
+		m_unloadCommands.emplace_back(std::make_pair(UnloadObjectType::UnloadObjectType_VAO, p_model.getHandle()));
+
+		for(unsigned int i = 0; i < ModelBuffer_NumAllTypes; i++)
+			m_unloadCommands.emplace_back(std::make_pair(UnloadObjectType::UnloadObjectType_Buffer, p_model.m_model->m_buffers[i]));
+
+	}
+	inline void queueForUnloading(TextureLoader2D::Texture2DHandle &p_texture)
+	{
+		m_unloadCommands.emplace_back(std::make_pair(UnloadObjectType::UnloadObjectType_Texture, p_texture.getHandle()));
+	}
+	inline void queueForUnloading(TextureLoaderCubemap::TextureCubemapHandle p_texture)
+	{
+		m_unloadCommands.emplace_back(std::make_pair(UnloadObjectType::UnloadObjectType_Texture, p_texture.getHandle()));
+	}
+
 	inline void queueForUpdate(ShaderBuffer &p_shaderBuffer)
 	{
 		m_bufferUpdateCommands.emplace_back(p_shaderBuffer.m_handle,
@@ -250,6 +271,14 @@ protected:
 
 		// Clear load commands, since they have already been passed to backend
 		m_loadCommands.clear();
+	}
+	inline void passUnloadCommandsToBackend()
+	{
+		// Pass the queued unload commands to the backend to be released from GPU memory
+		m_backend.processUnloading(m_unloadCommands);
+
+		// Clear unload commands, since they have already been passed to backend
+		m_unloadCommands.clear();
 	}
 	inline void passDrawCommandsToBackend()
 	{
@@ -321,6 +350,7 @@ protected:
 	// Renderer commands
 	RendererBackend::DrawCommands m_drawCommands;
 	RendererBackend::LoadCommands m_loadCommands;
+	RendererBackend::UnloadCommands m_unloadCommands;
 	RendererBackend::BufferUpdateCommands m_bufferUpdateCommands;
 	RendererBackend::ScreenSpaceDrawCommands m_screenSpaceDrawCommands;
 	RendererBackend::ComputeDispatchCommands m_computeDispatchCommands;

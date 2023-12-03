@@ -64,6 +64,21 @@ void RendererBackend::processLoading(LoadCommands &p_loadCommands, const Uniform
 	}
 }
 
+void RendererBackend::processUnloading(UnloadCommands &p_unloadCommands)
+{
+	// Declare an array for each type of unloadable object
+	std::vector<unsigned int> unloadArrays[UnloadObjectType::UnloadObjectType_NumOfTypes];
+
+	// Go over each unload command and put them inside the corresponding array
+	for(decltype(p_unloadCommands.size()) i = 0, size = p_unloadCommands.size(); i < size; i++)
+		unloadArrays[p_unloadCommands[i].first].push_back(p_unloadCommands[i].second);
+
+	// Go over each type of unloadable object arrays, and if it contains any elements, pass the whole array to be unloaded in a batch
+	for(unsigned int i = 0; i < UnloadObjectType::UnloadObjectType_NumOfTypes; i++)
+		if(!unloadArrays[i].empty())
+			processCommand(static_cast<UnloadObjectType>(i), (int)unloadArrays[i].size(), unloadArrays[i].data());
+}
+
 void RendererBackend::processDrawing(const DrawCommands &p_drawCommands, const UniformFrameData &p_frameData)
 {
 	resetVAO();

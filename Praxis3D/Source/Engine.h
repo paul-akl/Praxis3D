@@ -29,6 +29,9 @@ private:
 	// Gets engine changes (if there are any) from the Universal scene of the current Engine State and process them
 	void processEngineChanges();
 
+	// Update all loaders that are derived from LoaderBase and track their objects with reference counters
+	void updateLoaders();
+
 	// Get all engine systems. Return a pointer to an array the size of Systems::NumberOfSystems
 	SystemBase **getSystems() { return m_systems; }
 
@@ -244,4 +247,3 @@ private:
 	// Make sure there is only one instance running
 	static int m_instances;
 };
-

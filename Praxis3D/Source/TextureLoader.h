@@ -240,6 +240,9 @@ public:
 		friend class TextureLoader2D;
 		friend class RendererFrontend;
 	public:
+		// Increment the reference counter when creating a handle
+		Texture2DHandle(const Texture2DHandle &p_textureHandle) : m_textureData(p_textureHandle.m_textureData) { m_textureData->incRefCounter(); }
+		Texture2DHandle(Texture2DHandle &&p_textureHandle) noexcept : m_textureData(p_textureHandle.m_textureData) { m_textureData->incRefCounter(); }
 		~Texture2DHandle() { m_textureData->decRefCounter(); }
 
 		// Loads data from HDD to RAM and restructures it to be used to fill buffers later
@@ -270,10 +273,17 @@ public:
 			}
 		}
 
-		// Assignment operator
+		// Copy assignment operator
 		Texture2DHandle &operator=(const Texture2DHandle &p_textureHandle)
 		{
-			m_textureData->decRefCounter();
+			m_textureData = p_textureHandle.m_textureData;
+			m_textureData->incRefCounter();
+			return *this;
+		}		
+		
+		// Move assignment operator
+		Texture2DHandle &operator=(Texture2DHandle &&p_textureHandle) noexcept
+		{
 			m_textureData = p_textureHandle.m_textureData;
 			m_textureData->incRefCounter();
 			return *this;
@@ -327,17 +337,17 @@ public:
 
 	Texture2DHandle getDefaultTexture(MaterialType p_materialType = MaterialType::MaterialType_Diffuse)
 	{
-		Texture2D *returnTexture = m_default2DTexture;
+		Texture2D *returnTexture = m_defaultTextures[DefaultTextureType::DefaultTextureType_Diffuse];
 
 		switch(p_materialType)
 		{
 		case MaterialType_Diffuse:
 			break;
 		case MaterialType_Normal:
-			returnTexture = m_defaultNormal;
+			returnTexture = m_defaultTextures[DefaultTextureType::DefaultTextureType_Normal];
 			break;
 		case MaterialType_Emissive:
-			returnTexture = m_defaultEmissive;
+			returnTexture = m_defaultTextures[DefaultTextureType::DefaultTextureType_Emissive];
 			break;
 		case MaterialType_Combined:
 			break;
@@ -346,7 +356,7 @@ public:
 		case MaterialType_Metalness:
 			break;
 		case MaterialType_Height:
-			returnTexture = m_defaultHeight;
+			returnTexture = m_defaultTextures[DefaultTextureType::DefaultTextureType_Height];
 			break;
 		case MaterialType_AmbientOcclusion:
 			break;
@@ -360,19 +370,25 @@ public:
 	}
 
 	inline bool isTextureDefault(const Texture2DHandle &p_textureHandle) const 
-	{ 
-		return p_textureHandle.m_textureData == m_default2DTexture ||
-			p_textureHandle.m_textureData == m_defaultEmissive ||
-			p_textureHandle.m_textureData == m_defaultHeight ||
-			p_textureHandle.m_textureData == m_defaultNormal;
+	{
+		for(unsigned int i = 0; i < DefaultTextureType::DefaultTextureType_NumOfTypes; i++)
+			if(p_textureHandle.m_textureData == m_defaultTextures[i])
+				return true;
+
+		return false;
 	}
 
 protected:
-	// Default textures used in place of missing ones when loading textures
-	Texture2D *m_default2DTexture;
-	Texture2D *m_defaultEmissive;
-	Texture2D *m_defaultHeight;
-	Texture2D *m_defaultNormal;
+	enum DefaultTextureType : unsigned int
+	{
+		DefaultTextureType_Diffuse = 0,
+		DefaultTextureType_Emissive,
+		DefaultTextureType_Height,
+		DefaultTextureType_Normal,
+		DefaultTextureType_NumOfTypes
+	};
+
+	void unload(Texture2D &p_object, SceneLoader &p_sceneLoader);
 
 	// Returns a vector with all default 2D textures
 	// Meant to be called during initialization to load the 
@@ -382,17 +398,26 @@ protected:
 		std::vector<TextureLoader2D::Texture2DHandle> returnVector;
 
 		// Make sure to only return the textures that haven't been loaded
-		if(!m_default2DTexture->handleAssigned())
-			returnVector.push_back(m_default2DTexture);
-		if(!m_defaultEmissive->handleAssigned())
-			returnVector.push_back(m_defaultEmissive);
-		if(!m_defaultHeight->handleAssigned())
-			returnVector.push_back(m_defaultHeight);
-		if(!m_defaultNormal->handleAssigned())
-			returnVector.push_back(m_defaultNormal);
+		if(!m_defaultTextureHandles[DefaultTextureType::DefaultTextureType_Diffuse]->m_textureData->handleAssigned())
+			returnVector.push_back(*m_defaultTextureHandles[DefaultTextureType::DefaultTextureType_Diffuse]);
+
+		if(!m_defaultTextureHandles[DefaultTextureType::DefaultTextureType_Emissive]->m_textureData->handleAssigned())
+			returnVector.push_back(*m_defaultTextureHandles[DefaultTextureType::DefaultTextureType_Emissive]);
+
+		if(!m_defaultTextureHandles[DefaultTextureType::DefaultTextureType_Height]->m_textureData->handleAssigned())
+			returnVector.push_back(*m_defaultTextureHandles[DefaultTextureType::DefaultTextureType_Height]);
+
+		if(!m_defaultTextureHandles[DefaultTextureType::DefaultTextureType_Normal]->m_textureData->handleAssigned())
+			returnVector.push_back(*m_defaultTextureHandles[DefaultTextureType::DefaultTextureType_Normal]);
 
 		return returnVector;
 	}
+
+	// Default textures used in place of missing ones when loading textures
+	Texture2D *m_defaultTextures[DefaultTextureType::DefaultTextureType_NumOfTypes];
+
+	// Handles for the default textures are held so that the reference counter for the default texture do not reach 0
+	Texture2DHandle *m_defaultTextureHandles[DefaultTextureType::DefaultTextureType_NumOfTypes];
 };
 
 class TextureCubemap : public LoaderBase<TextureLoaderCubemap, TextureCubemap>::UniqueObject
@@ -781,4 +806,9 @@ public:
 	TextureCubemapHandle load(const std::string (&p_filenames)[CubemapFace_NumOfFaces], bool p_startBackgroundLoading = true);
 
 	TextureCubemapHandle load(const std::string &p_filename, unsigned int p_textureHandle);
+
+protected:
+	void unload(TextureCubemap &p_object)
+	{
+	}
 };

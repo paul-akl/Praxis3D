@@ -379,23 +379,6 @@ void RendererScene::update(const float p_deltaTime)
 	//	|	  COMPONENT UPDATES		|
 	//	|___________________________|
 	//
-	/*auto modelView = entityRegistry.view<ModelComponent>();
-	for(auto entity : modelView)
-	{
-		auto &component = modelView.get<ModelComponent>(entity);
-
-		if(!component.isLoadedToVideoMemory())
-			component.performCheckIsLoadedToVideoMemory();
-	}
-
-	auto shaderView = entityRegistry.view<ShaderComponent>();
-	for(auto entity : shaderView)
-	{
-		auto &component = shaderView.get<ShaderComponent>(entity);
-
-		if(!component.isLoadedToVideoMemory())
-			component.performCheckIsLoadedToVideoMemory();
-	}*/
 
 	//	 ___________________________
 	//	|							|
@@ -743,7 +726,11 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 	{
 		case DataType::DataType_CreateComponent:
 			{
+				auto *componentInfo = static_cast<ComponentsConstructionInfo *>(p_data);
 
+				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
+				if(p_deleteAfterReceiving)
+					delete componentInfo;
 			}
 			break;
 
@@ -817,7 +804,14 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 			break;
 
 		case DataType::DataType_GUIPassFunctors:
-			m_renderTask->m_renderer.setGUIPassFunctorSequence(static_cast<FunctorSequence *>(p_data));
+			{
+				auto *functors = static_cast<FunctorSequence *>(p_data);
+				m_renderTask->m_renderer.setGUIPassFunctorSequence(functors);
+
+				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
+				if(p_deleteAfterReceiving)
+					delete functors;
+			}
 			break;
 
 		case DataType::DataType_RenderToTexture:
@@ -837,7 +831,7 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 			}
 			break;
 
-		case DataType::DataType_Texture2D:
+		case DataType::DataType_LoadTexture2D:
 			{
 				TextureLoader2D::Texture2DHandle *textureHandle = static_cast<TextureLoader2D::Texture2DHandle *>(p_data);
 				if(textureHandle->isLoadedToMemory())
@@ -849,8 +843,30 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 			}
 			break;
 
-		case DataType::DataType_Texture3D:
+		case DataType::DataType_UnloadTexture2D:
+			{
+				TextureLoader2D::Texture2DHandle *textureHandle = static_cast<TextureLoader2D::Texture2DHandle *>(p_data);
+				if(textureHandle->isLoadedToVideoMemory())
+					m_sceneObjects.m_unloadFromVideoMemory.emplace_back(*textureHandle);
+				
+				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
+				if(p_deleteAfterReceiving)
+					delete textureHandle;
+			}
+			break;
 
+		case DataType::DataType_LoadTexture3D:
+			{
+				TextureLoaderCubemap::TextureCubemapHandle *textureHandle = static_cast<TextureLoaderCubemap::TextureCubemapHandle *>(p_data);
+
+				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
+				if(p_deleteAfterReceiving)
+					delete textureHandle;
+			}
+			break;
+
+		default:
+			assert(p_deleteAfterReceiving == true && "Memory leak - unhandled orphaned void data pointer in receiveData");
 			break;
 	}
 }

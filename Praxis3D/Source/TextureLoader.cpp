@@ -4,6 +4,7 @@
 #include "ErrorHandlerLocator.h"
 #include "Filesystem.h"
 #include "ModelLoader.h"
+#include "SceneLoader.h"
 #include "TaskManagerLocator.h"
 #include "TextureLoader.h"
 #include "Utilities.h"
@@ -11,58 +12,56 @@
 
 TextureLoader2D::TextureLoader2D()
 {
-	m_default2DTexture = new Texture2D(this, Config::textureVar().default_texture, m_objectPool.size(), 0);
-	m_defaultEmissive = new Texture2D(this, Config::textureVar().default_emissive_texture, m_objectPool.size(), 0);
-	m_defaultHeight = new Texture2D(this, Config::textureVar().default_height_texture, m_objectPool.size(), 0);
-	m_defaultNormal = new Texture2D(this, Config::textureVar().default_normal_texture, m_objectPool.size(), 0);
+	m_defaultTextures[DefaultTextureType::DefaultTextureType_Diffuse] = new Texture2D(this, Config::textureVar().default_texture, m_objectPool.size(), 0);
+	m_defaultTextures[DefaultTextureType::DefaultTextureType_Emissive] = new Texture2D(this, Config::textureVar().default_emissive_texture, m_objectPool.size(), 0);
+	m_defaultTextures[DefaultTextureType::DefaultTextureType_Height] = new Texture2D(this, Config::textureVar().default_height_texture, m_objectPool.size(), 0);
+	m_defaultTextures[DefaultTextureType::DefaultTextureType_Normal] = new Texture2D(this, Config::textureVar().default_normal_texture, m_objectPool.size(), 0);
+
+	for(unsigned int i = 0; i < DefaultTextureType::DefaultTextureType_NumOfTypes; i++)
+		m_defaultTextureHandles[i] = nullptr;
 }
 
 TextureLoader2D::~TextureLoader2D()
 {
+	for(unsigned int i = 0; i < DefaultTextureType::DefaultTextureType_NumOfTypes; i++)
+	{
+		delete m_defaultTextures[i];
+		delete m_defaultTextureHandles[i];
+	}
 }
 
 ErrorCode TextureLoader2D::init()
 {
 	// If the default texture filename changed upon loading the configuration
-	if(m_default2DTexture->m_filename != Config::textureVar().default_texture)
+	if(m_defaultTextures[DefaultTextureType::DefaultTextureType_Diffuse]->m_filename != Config::textureVar().default_texture)
 	{
-		delete m_default2DTexture;
-		m_default2DTexture = new Texture2D(this, Config::textureVar().default_texture, m_objectPool.size(), 0);
+		delete m_defaultTextures[DefaultTextureType::DefaultTextureType_Diffuse];
+		m_defaultTextures[DefaultTextureType::DefaultTextureType_Diffuse] = new Texture2D(this, Config::textureVar().default_texture, m_objectPool.size(), 0);
 	}
-	if(m_defaultEmissive->m_filename != Config::textureVar().default_emissive_texture)
+	if(m_defaultTextures[DefaultTextureType::DefaultTextureType_Emissive]->m_filename != Config::textureVar().default_emissive_texture)
 	{
-		delete m_defaultEmissive;
-		m_defaultEmissive = new Texture2D(this, Config::textureVar().default_emissive_texture, m_objectPool.size(), 0);
+		delete m_defaultTextures[DefaultTextureType::DefaultTextureType_Emissive];
+		m_defaultTextures[DefaultTextureType::DefaultTextureType_Emissive] = new Texture2D(this, Config::textureVar().default_emissive_texture, m_objectPool.size(), 0);
 	}
-	if(m_defaultHeight->m_filename != Config::textureVar().default_height_texture)
+	if(m_defaultTextures[DefaultTextureType::DefaultTextureType_Height]->m_filename != Config::textureVar().default_height_texture)
 	{
-		delete m_defaultHeight;
-		m_defaultHeight = new Texture2D(this, Config::textureVar().default_height_texture, m_objectPool.size(), 0);
+		delete m_defaultTextures[DefaultTextureType::DefaultTextureType_Height];
+		m_defaultTextures[DefaultTextureType::DefaultTextureType_Height] = new Texture2D(this, Config::textureVar().default_height_texture, m_objectPool.size(), 0);
 	}
-	if(m_defaultNormal->m_filename != Config::textureVar().default_normal_texture)
+	if(m_defaultTextures[DefaultTextureType::DefaultTextureType_Normal]->m_filename != Config::textureVar().default_normal_texture)
 	{
-		delete m_defaultNormal;
-		m_defaultNormal = new Texture2D(this, Config::textureVar().default_normal_texture, m_objectPool.size(), 0);
+		delete m_defaultTextures[DefaultTextureType::DefaultTextureType_Normal];
+		m_defaultTextures[DefaultTextureType::DefaultTextureType_Normal] = new Texture2D(this, Config::textureVar().default_normal_texture, m_objectPool.size(), 0);
 	}
 	
-	// Load default textures to memory and video memory
-	m_default2DTexture->loadToMemory();
-	//m_default2DTexture->loadToVideoMemory();
+	// Load default textures
+	for(unsigned int i = 0; i < DefaultTextureType::DefaultTextureType_NumOfTypes; i++)
+		if(const auto error = m_defaultTextures[i]->loadToMemory(); error != ErrorCode::Success)
+			ErrHandlerLoc::get().log(error, m_defaultTextures[i]->getFilename(), ErrorSource::Source_TextureLoader);
 
-	m_defaultEmissive->loadToMemory();
-	//m_defaultEmissive->loadToVideoMemory();
-
-	m_defaultHeight->loadToMemory();
-	//m_defaultHeight->loadToVideoMemory();
-
-	m_defaultNormal->loadToMemory();
-	//m_defaultNormal->loadToVideoMemory();
-
-	// Add default textures to the texture pool
-	m_objectPool.push_back(m_default2DTexture);
-	m_objectPool.push_back(m_defaultEmissive);
-	m_objectPool.push_back(m_defaultHeight);
-	m_objectPool.push_back(m_defaultNormal);
+	// Create texture handles for the default textures
+	for(unsigned int i = 0; i < DefaultTextureType::DefaultTextureType_NumOfTypes; i++)
+		m_defaultTextureHandles[i] = new Texture2DHandle(m_defaultTextures[i]);
 
 	return ErrorCode::Success;
 }
@@ -86,13 +85,13 @@ TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string &p_file
 		switch(p_materialType)
 		{
 		case MaterialType_Normal:
-			returnTexture = m_defaultNormal;
+			returnTexture = m_defaultTextures[DefaultTextureType::DefaultTextureType_Normal];
 			break;
 		case MaterialType_Emissive:
-			returnTexture = m_defaultEmissive;
+			returnTexture = m_defaultTextures[DefaultTextureType::DefaultTextureType_Emissive];
 			break;
 		case MaterialType_Height:
-			returnTexture = m_defaultHeight;
+			returnTexture = m_defaultTextures[DefaultTextureType::DefaultTextureType_Height];
 			break;
 		case MaterialType_Diffuse:
 		case MaterialType_Combined:
@@ -100,24 +99,24 @@ TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string &p_file
 		case MaterialType_Metalness:
 		case MaterialType_AmbientOcclusion:
 		default:
-			returnTexture = m_default2DTexture;
+			returnTexture = m_defaultTextures[DefaultTextureType::DefaultTextureType_Diffuse];
 			break;
 		}
 	}
 	else
 	{
 		// Assign an appropriate default texture
-		unsigned int defaultTextureHandle = m_default2DTexture->m_handle;
+		unsigned int defaultTextureHandle = m_defaultTextures[DefaultTextureType::DefaultTextureType_Diffuse]->m_handle;
 		switch(p_materialType)
 		{
 		case MaterialType_Normal:
-			defaultTextureHandle = m_defaultNormal->m_handle;
+			defaultTextureHandle = m_defaultTextures[DefaultTextureType::DefaultTextureType_Normal]->m_handle;
 			break;
 		case MaterialType_Emissive:
-			defaultTextureHandle = m_defaultEmissive->m_handle;
+			defaultTextureHandle = m_defaultTextures[DefaultTextureType::DefaultTextureType_Emissive]->m_handle;
 			break;
 		case MaterialType_Height:
-			defaultTextureHandle = m_defaultHeight->m_handle;
+			defaultTextureHandle = m_defaultTextures[DefaultTextureType::DefaultTextureType_Height]->m_handle;
 			break;
 		}
 
@@ -165,7 +164,7 @@ TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string &p_file
 		if(!p_filename.empty())
 			ErrHandlerLoc::get().log(ErrorCode::Texture_not_found, ErrorSource::Source_TextureLoader, p_filename);
 
-		returnTexture = m_default2DTexture;
+		returnTexture = m_defaultTextures[DefaultTextureType::DefaultTextureType_Diffuse];
 	}
 	else
 	{
@@ -205,7 +204,7 @@ TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string &p_file
 		if(!p_filename.empty())
 			ErrHandlerLoc::get().log(ErrorCode::Texture_not_found, ErrorSource::Source_TextureLoader, p_filename);
 
-		returnTexture = m_default2DTexture;
+		returnTexture = m_defaultTextures[DefaultTextureType::DefaultTextureType_Diffuse];
 	}
 	else
 	{
@@ -218,7 +217,7 @@ TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string &p_file
 
 		// Texture wasn't loaded before, so create a new one
 		// Assign default handle (as a placeholder to be used before the texture is loaded from HDD)
-		returnTexture = new Texture2D(this, p_filename, m_objectPool.size(), m_default2DTexture->m_handle);
+		returnTexture = new Texture2D(this, p_filename, m_objectPool.size(), m_defaultTextures[DefaultTextureType::DefaultTextureType_Diffuse]->m_handle);
 
 		// Set the loaded flag to true, because we have already provided the texture handle
 		returnTexture->setLoadedToVideoMemory(true);
@@ -249,7 +248,7 @@ TextureLoader2D::Texture2DHandle TextureLoader2D::create(const std::string &p_na
 
 	// Texture wasn't loaded before, so create a new one
 	// Assign default handle (as a placeholder to be used before the texture is loaded from HDD)
-	returnTexture = new Texture2D(this, p_name, m_objectPool.size(), m_default2DTexture->m_handle);
+	returnTexture = new Texture2D(this, p_name, m_objectPool.size(), m_defaultTextures[DefaultTextureType::DefaultTextureType_Diffuse]->m_handle);
 
 	returnTexture->m_textureWidth = p_width;
 	returnTexture->m_textureHeight = p_height;
@@ -266,6 +265,15 @@ TextureLoader2D::Texture2DHandle TextureLoader2D::create(const std::string &p_na
 
 	// Return the new texture
 	return Texture2DHandle(returnTexture);
+}
+
+void TextureLoader2D::unload(Texture2D &p_object, SceneLoader &p_sceneLoader)
+{
+	// Create new texture handle
+	Texture2DHandle *textureHandle = new Texture2DHandle(&p_object);
+
+	// Send a notification to graphics scene to unload the texture; set deleteAfterReceiving flag to true, to transfer the ownership of the texture handle pointer to the graphics scene (so it will be responsible for deleting it)
+	p_sceneLoader.getChangeController()->sendData(p_sceneLoader.getSystemScene(Systems::Graphics), DataType::DataType_UnloadTexture2D, (void*)textureHandle, true);
 }
 
 TextureLoaderCubemap::TextureLoaderCubemap()

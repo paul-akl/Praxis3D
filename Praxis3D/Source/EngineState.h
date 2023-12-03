@@ -34,6 +34,8 @@ public:
 
 	inline UniversalScene *getChangeControllerScene() { return m_changeCtrlScene; }
 
+	inline SceneLoader &getSceneLoader() { return m_sceneLoader; }
+
 	const inline bool isInitialized() const { return m_initialized; }
 
 	inline void setSceneFilename(const std::string &p_filename) { m_sceneFilename = p_filename; }

@@ -38,15 +38,15 @@ public:
 
 				// Resize mesh material alpha threshold and initialize each element to 0.0f
 				if(p_size > m_alphaThreshold.size())
-					m_alphaThreshold.resize(p_size, 0.0f);
+					m_alphaThreshold.resize(p_size, Config::graphicsVar().alpha_threshold);
 
 				// Resize mesh material emissive intensity initialize each element to 0.0f
 				if(p_size > m_emissiveIntensity.size())
-					m_emissiveIntensity.resize(p_size, 0.0f);
+					m_emissiveIntensity.resize(p_size, Config::graphicsVar().emissive_multiplier);
 
 				// Resize mesh material height scale and initialize each element to 1.0f
 				if(p_size > m_heightScale.size())
-					m_heightScale.resize(p_size, 1.0f);
+					m_heightScale.resize(p_size, Config::graphicsVar().height_scale);
 
 				// Resize the "mesh is present" array and initialize each element to false
 				if(p_size > m_present.size())
@@ -247,7 +247,7 @@ public:
 				// Go over each mesh
 				for(decltype(newModelData.m_model.getMeshSize()) meshIndex = 0, meshSize = newModelData.m_model.getMeshSize(); meshIndex < meshSize; meshIndex++)
 				{
-					if(m_modelsProperties->m_models[modelIndex].m_meshMaterials.size() > meshIndex && m_modelsProperties->m_models[modelIndex].m_present[meshIndex] == true)
+					if(m_modelsProperties->m_models[modelIndex].m_meshMaterials.size() > meshIndex)// && m_modelsProperties->m_models[modelIndex].m_present[meshIndex] == true)
 					{
 						MaterialData materials[MaterialType::MaterialType_NumOfTypes];
 
@@ -267,15 +267,30 @@ public:
 								m_texturesNeedLoading = true;
 
 							materials[iMatType].m_textureScale = m_modelsProperties->m_models[modelIndex].m_meshMaterialsScale[meshIndex][iMatType];
+
+							if(materials[iMatType].m_textureScale == glm::vec2(0.0f, 0.0f))
+								materials[iMatType].m_textureScale = glm::vec2(Config::graphicsVar().texture_tiling_factor, Config::graphicsVar().texture_tiling_factor);
 						}
+
+						float heightScale = Config::graphicsVar().height_scale;
+						if(m_modelsProperties->m_models[modelIndex].m_heightScale.size() > meshIndex)
+							heightScale = m_modelsProperties->m_models[modelIndex].m_heightScale[meshIndex];
+
+						float alphaThreshold = Config::graphicsVar().alpha_threshold;
+						if(m_modelsProperties->m_models[modelIndex].m_alphaThreshold.size() > meshIndex)
+							alphaThreshold = m_modelsProperties->m_models[modelIndex].m_alphaThreshold[meshIndex];
+
+						float emissiveIntensity = Config::graphicsVar().emissive_multiplier;
+						if(m_modelsProperties->m_models[modelIndex].m_emissiveIntensity.size() > meshIndex)
+							emissiveIntensity = m_modelsProperties->m_models[modelIndex].m_emissiveIntensity[meshIndex];
 
 						// Add the data for this mesh. Include materials loaded from the model itself, if they were present, otherwise, include default textures instead
 						newModelData.m_meshes.push_back(MeshData(
 							newModelData.m_model.getMeshArray()[meshIndex],
 							materials,
-							m_modelsProperties->m_models[modelIndex].m_heightScale[meshIndex],
-							m_modelsProperties->m_models[modelIndex].m_alphaThreshold[meshIndex],
-							m_modelsProperties->m_models[modelIndex].m_emissiveIntensity[meshIndex]));
+							heightScale,
+							alphaThreshold,
+							emissiveIntensity));
 					}
 					else
 					{
@@ -393,6 +408,10 @@ public:
 
 					m_loadPending = true;
 				}
+				break;
+
+			default:
+				assert(p_deleteAfterReceiving == true && "Memory leak - unhandled orphaned void data pointer in receiveData");
 				break;
 		}
 	}

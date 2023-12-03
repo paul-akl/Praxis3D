@@ -137,9 +137,6 @@ void EditorWindow::update(const float p_deltaTime)
     }
 
     // Update ImGui style
-    //m_imguiStyle = ImGui::GetStyle();
-    //const float fontSize = ImGui::GetFontSize();
-    //const ImVec2 openReloadButtonSize = ImVec2(fontSize, fontSize);
     ImVec2 mainMenuBarSize;
     ImGuiViewport *mainViewport = ImGui::GetMainViewport();
 
@@ -254,7 +251,8 @@ void EditorWindow::update(const float p_deltaTime)
 
             if(ImGui::MenuItem("Close editor"))
             {
-                Config::m_engineVar.engineState = EngineStateType::EngineStateType_MainMenu;
+                // Send a notification to the engine to change the current engine state back to MainMenu
+                m_systemScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_StateChange, EngineStateType::EngineStateType_MainMenu));
             }
 
             if(ImGui::MenuItem("Exit"))
@@ -442,13 +440,125 @@ void EditorWindow::update(const float p_deltaTime)
                 ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 8.0f);
 
                 // Draw every entry from the hierarchy list
-                for(decltype(m_entityHierarchy.size()) size = m_entityHierarchy.size(), i = 0; i < size; i++)
-                {
-                    drawEntityHierarchyEntry(m_entityHierarchy[i]);
-                }
+                if(m_rootEntityHierarchyEntry.m_entityID != NULL_ENTITY_ID)
+                    drawEntityHierarchyEntry(&m_rootEntityHierarchyEntry);
+                else
+                    ImGui::Text("No root entity");
 
                 // Pop indent spacing
                 ImGui::PopStyleVar();
+
+                //ImGui::NewLine();
+                ImGui::Separator();
+
+                const std::string componentTypeSelectionPopupName = "##AddEntityPopup";
+
+                // Calculate button size
+                const char *buttonLabel = "Add entity";
+                float buttonWidth = ImGui::CalcTextSize(buttonLabel).x * Config::GUIVar().editor_inspector_button_width_multiplier;
+
+                // Set the button position to the right-most side
+                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - buttonWidth);
+
+                // Draw ADD ENTITY button
+                if(ImGui::Button(buttonLabel, ImVec2(buttonWidth, 0.0f)))
+                {
+                    if(m_newEntityConstructionInfo == nullptr)
+                    {
+                        m_newEntityConstructionInfo = new ComponentsConstructionInfo();
+                        m_newEntityConstructionInfo->m_name = "New entity";
+                        m_newEntityConstructionInfo->m_id = 0;
+
+                        // Open the pop-up with the new entity settings
+                        m_openNewEntityPopup = true;
+                    }
+                }
+
+                if(m_openNewEntityPopup)
+                {
+                    ImGui::OpenPopup(componentTypeSelectionPopupName.c_str());
+                    m_openNewEntityPopup = false;
+                }
+
+
+                // Draw COMPONENT TYPE LIST
+                if(ImGui::BeginPopup(componentTypeSelectionPopupName.c_str()))
+                {
+                    // Calculate widget offset used to draw a label on the left and a widget on the right (opposite of how ImGui draws it)
+                    float inputWidgetOffset = ImGui::GetCursorPosX() + ImGui::CalcItemWidth() * 0.5f + ImGui::GetStyle().ItemInnerSpacing.x;
+
+                    // Draw NAME
+                    ImGui::Text("Name:");
+                    ImGui::SameLine();
+                    ImGui::SetCursorPosX(inputWidgetOffset);
+                    if(ImGui::InputText("##NewEntityNameStringInput", &m_newEntityConstructionInfo->m_name, ImGuiInputTextFlags_EnterReturnsTrue))
+                    {
+                    }
+
+                    // Draw ENTITY ID
+                    ImGui::Text("Entity ID:");
+                    ImGui::SameLine();
+                    ImGui::SetCursorPosX(inputWidgetOffset);
+                    if(ImGui::InputScalar("##NewEntityEntityIDInput", ImGuiDataType_U32, &m_newEntityConstructionInfo->m_id))
+                    {
+                    }
+
+                    // Draw PARENT
+                    ImGui::Text("Parent ID:");
+                    ImGui::SameLine();
+                    ImGui::SetCursorPosX(inputWidgetOffset);
+                    if(ImGui::BeginCombo("##NewEntityParentIDCombo", Utilities::toString(m_newEntityConstructionInfo->m_parent).c_str()))
+                    {
+                        // Go over all existing entities
+                        for(decltype(m_entityList.size()) i = 0, size = m_entityList.size(); i < size; i++)
+                        {
+                            // Mark which parent ID is selected
+                            const bool is_selected = (m_newEntityConstructionInfo->m_parent == m_entityList[i].m_entityID);
+
+                            // Don't show entities own ID as a parent ID selection
+                            if(m_entityList[i].m_entityID != m_newEntityConstructionInfo->m_id)
+                            {
+                                if(ImGui::Selectable(Utilities::toString(m_entityList[i].m_entityID).c_str(), is_selected))
+                                {
+                                    m_newEntityConstructionInfo->m_parent = m_entityList[i].m_entityID;
+                                }
+                            }
+
+                            // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+                            if(is_selected)
+                                ImGui::SetItemDefaultFocus();
+                        }
+                        ImGui::EndCombo();
+                    }
+
+                    // Draw CREATE button
+                    if(ImGui::Button("Create"))
+                    {
+                        m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::World), DataType::DataType_CreateEntity, (void *)m_newEntityConstructionInfo, false);
+
+                        m_componentConstructionInfoPool.push_back(m_newEntityConstructionInfo);
+                        m_newEntityConstructionInfo = nullptr;
+                        ImGui::CloseCurrentPopup();
+                    }
+
+                    // Draw CANCEL button
+                    if(ImGui::Button("Cancel"))
+                    {
+                        delete m_newEntityConstructionInfo;
+                        m_newEntityConstructionInfo = nullptr;
+                        ImGui::CloseCurrentPopup();
+                    }
+
+                    ImGui::EndPopup();
+                }
+                else
+                {
+                    if(m_newEntityConstructionInfo != nullptr)
+                    {
+                        delete m_newEntityConstructionInfo;
+                        m_newEntityConstructionInfo = nullptr;
+                    }
+                }
 
                 ImGui::EndTabItem();
             }
@@ -534,6 +644,10 @@ void EditorWindow::update(const float p_deltaTime)
                         {
                             // Get the current entity name
                             m_selectedEntity.m_componentData.m_name = metadataComponent->getName();
+                            m_selectedEntity.m_componentData.m_id = metadataComponent->getEntityID();
+                            m_selectedEntity.m_componentData.m_parent = metadataComponent->getParentEntityID();
+
+                            const std::string parentSelectionPopupName = "##ParentSelectionPopup";
 
                             // Draw NAME
                             drawLeftAlignedLabelText("Name:", inputWidgetOffset);
@@ -541,6 +655,39 @@ void EditorWindow::update(const float p_deltaTime)
                             {
                                 // If the entity name was changed, send a notification to the Metadata Component
                                 m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, metadataComponent, Systems::Changes::Generic::Name);
+                            }
+
+                            // Draw ENTITY ID
+                            drawLeftAlignedLabelText("Entity ID:", inputWidgetOffset);
+                            if(ImGui::InputScalar("##EntityIDInput", ImGuiDataType_U32, &m_selectedEntity.m_componentData.m_id))
+                            {
+
+                            }
+
+                            // Draw PARENT
+                            drawLeftAlignedLabelText("Parent ID:", inputWidgetOffset);        
+                            if(ImGui::BeginCombo("##ParentIDCombo", Utilities::toString(m_selectedEntity.m_componentData.m_parent).c_str()))
+                            {
+                                // Go over all existing entities
+                                for(decltype(m_entityList.size()) i = 0, size = m_entityList.size(); i < size; i++)
+                                {
+                                    // Mark which parent ID is selected
+                                    const bool is_selected = (m_selectedEntity.m_componentData.m_parent == m_entityList[i].m_entityID);
+
+                                    // Don't show entities own ID as a parent ID selection
+                                    if(m_entityList[i].m_entityID != m_selectedEntity.m_componentData.m_id)
+                                    {
+                                        if(ImGui::Selectable(Utilities::toString(m_entityList[i].m_entityID).c_str(), is_selected))
+                                        {
+                                            m_selectedEntity.m_componentData.m_parent = m_entityList[i].m_entityID;
+                                        }
+                                    }
+
+                                    // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+                                    if(is_selected)
+                                        ImGui::SetItemDefaultFocus();
+                                }
+                                ImGui::EndCombo();
                             }
                         }
                     }
@@ -1030,6 +1177,7 @@ void EditorWindow::update(const float p_deltaTime)
                                             {
                                                 // If the texture filename was changed, set the modified flag
                                                 m_selectedEntity.m_modelDataModified = true;
+                                                modelEntry.m_present[meshIndex] = true;
                                             }
 
                                             // Draw TEXTURE OPEN button
@@ -1115,6 +1263,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                         {
                                                             // Set the selected texture
                                                             modelEntry.m_meshMaterials[meshIndex][materialIndex] = m_textureAssets[i].second;
+                                                            modelEntry.m_present[meshIndex] = true;
 
                                                             // Set the modified flag
                                                             m_selectedEntity.m_modelDataModified = true;
@@ -1139,6 +1288,8 @@ void EditorWindow::update(const float p_deltaTime)
                                 }
                                 ImGui::PopStyleVar(); // ImGuiStyleVar_SeparatorTextAlign
                             }
+
+                            ImGui::Separator();
 
                             // Calculate button size
                             const char *addModelButtonLabel = "Add model";
@@ -1856,10 +2007,10 @@ void EditorWindow::update(const float p_deltaTime)
                         }
                     }
 
-                    const std::string componentTypeSelectionPopupName = "##ComponentTypeSelectionPopup";
-
                     ImGui::NewLine();
                     ImGui::Separator();
+
+                    const std::string componentTypeSelectionPopupName = "##ComponentTypeSelectionPopup";
 
                     // Calculate button size
                     const char *addComponentButtonLabel = "Add component";
@@ -1901,6 +2052,8 @@ void EditorWindow::update(const float p_deltaTime)
                                 std::cout << componentTypes[i].first << std::endl;
 
                                 ComponentsConstructionInfo *newComponentInfo = new ComponentsConstructionInfo();
+                                newComponentInfo->m_id = m_selectedEntity.m_entityID;
+                                newComponentInfo->m_name = m_selectedEntity.m_componentData.m_name;
                                 bool newComponentInfoSet = true;
 
                                 switch(componentTypes[i].second)
@@ -1969,8 +2122,9 @@ void EditorWindow::update(const float p_deltaTime)
 
                                 if(newComponentInfoSet)
                                 {
-                                    if(worldScene->addComponents(m_selectedEntity.m_entityID, *newComponentInfo) == ErrorCode::Success)
-                                        std::cout << "success" << std::endl;
+                                    m_componentConstructionInfoPool.push_back(newComponentInfo);
+
+                                    m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::World), DataType::DataType_CreateComponent, (void *)newComponentInfo, false);
                                 }
                                 else
                                     delete newComponentInfo;
@@ -2770,7 +2924,7 @@ void EditorWindow::setup(EditorWindowSettings &p_editorWindowSettings)
 
     // Load button textures to GPU
     for(decltype(m_buttonTextures.size()) size = m_buttonTextures.size(), i = 0; i < size; i++)
-        m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_Texture2D, (void *)&m_buttonTextures[i]);
+        m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_LoadTexture2D, (void *)&m_buttonTextures[i]);
 
     // Tell the renderer to draw the scene to a texture instead of the screen
     m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_RenderToTexture, (void *)true);
@@ -3028,21 +3182,59 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
     ImGui::PopStyleColor(); // ImGuiCol_Border
 }
 
-void EditorWindow::drawEntityHierarchyEntry(EntityHierarchyEntry &p_entityEntry)
+void EditorWindow::drawEntityHierarchyEntry(EntityHierarchyEntry *p_entityEntry)
 {
     static ImGuiTreeNodeFlags baseNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
 
-    ImGuiTreeNodeFlags flags = p_entityEntry.m_children.empty() ? baseNodeFlags | ImGuiTreeNodeFlags_Leaf : baseNodeFlags;
+    ImGuiTreeNodeFlags flags = p_entityEntry->m_children.empty() ? baseNodeFlags | ImGuiTreeNodeFlags_Leaf : baseNodeFlags;
 
-    if(ImGui::TreeNodeEx(p_entityEntry.m_combinedEntityIdAndName.c_str(), 
-        m_selectedEntity.m_entityID == p_entityEntry.m_entityID ? flags | ImGuiTreeNodeFlags_Selected : flags))
+    // Calculate the offset for the collapsing header that is drawn after the delete component button of each component type
+    const float headerOffsetAfterDeleteButton = m_buttonSizedByFont.x * 2.0f + m_imguiStyle.FramePadding.x * 6.0f;
+
+    ImGui::SetNextItemAllowOverlap();
+    if(ImGui::TreeNodeEx(p_entityEntry->m_combinedEntityIdAndName.c_str(), 
+        m_selectedEntity.m_entityID == p_entityEntry->m_entityID ? flags | ImGuiTreeNodeFlags_Selected : flags))
     {
         if(ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
-            m_selectedEntity.setEntity(p_entityEntry.m_entityID);
+            m_selectedEntity.setEntity(p_entityEntry->m_entityID);
 
-        for(decltype(p_entityEntry.m_children.size()) size = p_entityEntry.m_children.size(), i = 0; i < size; i++)
+        // Make button background transparent and remove frame padding to make the buttons smaller
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
+
+        // Draw ENTITY ADD CHILD button
+        ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - m_buttonSizedByFont.x * 2.0f - m_imguiStyle.ItemInnerSpacing.x);
+        if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_Add], ("##" + Utilities::toString(p_entityEntry->m_entityID) + "EntityAddChildButton").c_str(), ("Add child entity to \"" + p_entityEntry->m_combinedEntityIdAndName + "\"").c_str()))
         {
-            drawEntityHierarchyEntry(p_entityEntry.m_children[i]);
+            if(m_newEntityConstructionInfo == nullptr)
+            {
+                m_newEntityConstructionInfo = new ComponentsConstructionInfo();
+                m_newEntityConstructionInfo->m_name = "New entity";
+                m_newEntityConstructionInfo->m_id = 0;
+                m_newEntityConstructionInfo->m_parent = p_entityEntry->m_entityID;
+
+                // Open the pop-up with the new entity settings
+                m_openNewEntityPopup = true;
+            }
+        }
+
+        // Do not allow the deletion of root entity
+        if(p_entityEntry->m_entityID != 0)
+        {
+            // Draw ENTITY DELETE button
+            ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - m_buttonSizedByFont.x);
+            if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry], ("##" + Utilities::toString(p_entityEntry->m_entityID) + "EntityDeleteButton").c_str(), ("Delete \"" + p_entityEntry->m_combinedEntityIdAndName + "\" entity").c_str()))
+            {
+
+            }
+        }
+
+        ImGui::PopStyleVar(); // ImGuiStyleVar_FramePadding
+        ImGui::PopStyleColor(); // ImGuiCol_Button
+
+        for(decltype(p_entityEntry->m_children.size()) size = p_entityEntry->m_children.size(), i = 0; i < size; i++)
+        {
+            drawEntityHierarchyEntry(p_entityEntry->m_children[i]);
         }
 
         ImGui::TreePop();
@@ -3107,58 +3299,58 @@ void EditorWindow::updateEntityList()
 void EditorWindow::updateHierarchyList()
 {
     // Clear the old hierarchy list
-    m_entityHierarchy.clear();
+    m_rootEntityHierarchyEntry.clear();
 
-    // Define a root entity and a temp entity list
-    EntityHierarchyEntry *rootEntity = nullptr;
-    std::list<EntityListEntry> parentlessEntityList;
+    // Define a root entity flag and a temp entity list
+    bool rootEntryPresent = false;
+    std::list<EntityListEntry*> parentlessEntityList;
 
     // Find the root entity and add all non-root entities to the temp entity list
     for(decltype(m_entityList.size()) size = m_entityList.size(), i = 0; i < size; i++)
     {
         if(m_entityList[i].m_entityID == 0 && m_entityList[i].m_parentEntityID == 0)
         {
-            m_entityHierarchy.emplace_back(m_entityList[i].m_entityID, m_entityList[i].m_parentEntityID, m_entityList[i].m_name, m_entityList[i].m_combinedEntityIdAndName, m_entityList[i].m_componentFlag);
-            rootEntity = &m_entityHierarchy.front();
+            m_rootEntityHierarchyEntry.init(m_entityList[i].m_entityID, m_entityList[i].m_parentEntityID, m_entityList[i].m_name, m_entityList[i].m_combinedEntityIdAndName, m_entityList[i].m_componentFlag);
+            rootEntryPresent = true;
         }
         else
         {
-            parentlessEntityList.push_back(m_entityList[i]);
+            parentlessEntityList.push_back(&m_entityList[i]);
         }
     }
 
     // Check if the root entity is present
-    if(rootEntity != nullptr)
+    if(rootEntryPresent)
     {
         // Define a list that hold all the children that have been added during the last loop
         // and add the root entity to it
         std::vector<EntityHierarchyEntry*> newlyAddedChildren;
-        newlyAddedChildren.push_back(rootEntity);
+        newlyAddedChildren.push_back(&m_rootEntityHierarchyEntry);
 
         // Continue the loop until there are no newly added children
         while(!newlyAddedChildren.empty())
         {
             // Save a copy of the children list that have been generated during the last loop
             // and clear the children list for the current loop
-            auto newChildrenFromPreviousRun = newlyAddedChildren;
+            std::vector<EntityHierarchyEntry *> newChildrenFromPreviousRun = newlyAddedChildren;
             newlyAddedChildren.clear();
 
             // Go over each new children from the previous loop
             for(decltype(newChildrenFromPreviousRun.size()) childrenSize = newChildrenFromPreviousRun.size(), childrenIndex = 0; childrenIndex < childrenSize; childrenIndex++)
             {
                 // Go over each entity left, that haven't been added as children
-                auto parentlessEntity = parentlessEntityList.begin();
+                auto &parentlessEntity = parentlessEntityList.begin();
                 while(parentlessEntity != parentlessEntityList.end())
                 {
                     // If the entity ID of the current child and the parent entity ID of the parent-less entity matches, add the parent-less entity as a child
                     // if it doesn't match, continue to the next entity
-                    if(newChildrenFromPreviousRun[childrenIndex]->m_entityID == parentlessEntity->m_parentEntityID)
+                    if(newChildrenFromPreviousRun[childrenIndex]->m_entityID == (*parentlessEntity)->m_parentEntityID)
                     {
                         // Add the parent-less entity as a child
-                        newChildrenFromPreviousRun[childrenIndex]->m_children.emplace_back(parentlessEntity->m_entityID, parentlessEntity->m_parentEntityID, parentlessEntity->m_name, parentlessEntity->m_combinedEntityIdAndName, parentlessEntity->m_componentFlag);
+                        newChildrenFromPreviousRun[childrenIndex]->addChild((*parentlessEntity)->m_entityID, (*parentlessEntity)->m_parentEntityID, (*parentlessEntity)->m_name, (*parentlessEntity)->m_combinedEntityIdAndName, (*parentlessEntity)->m_componentFlag);
 
                         // Add the newly created child to the child list for the next loop
-                        newlyAddedChildren.push_back(&newChildrenFromPreviousRun[childrenIndex]->m_children.back());
+                        newlyAddedChildren.push_back(newChildrenFromPreviousRun[childrenIndex]->m_children.back());
 
                         // Remove the former parent-less entity, as it has been added as a child
                         parentlessEntityList.erase(parentlessEntity++);
@@ -3176,12 +3368,15 @@ void EditorWindow::updateHierarchyList()
 
             for(auto const &i : parentlessEntityList)
             {
-                std::cout << i.m_entityID << std::endl;
+                std::cout << i->m_entityID << std::endl;
             }
         }
     }
     else
-        std::cout << "NO ROOT ENTRY" << std::endl;
+    {
+        m_rootEntityHierarchyEntry.m_entityID = NULL_ENTITY_ID;
+        m_rootEntityHierarchyEntry.m_parent = NULL_ENTITY_ID;
+    }
 
     return;
 }

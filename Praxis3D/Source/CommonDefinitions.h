@@ -120,6 +120,14 @@ enum LoadObjectType : unsigned int
 	LoadObject_TextureCube,
 	LoadObject_Model
 };
+enum UnloadObjectType : unsigned int
+{
+	UnloadObjectType_VAO,
+	UnloadObjectType_Buffer,
+	UnloadObjectType_Shader,
+	UnloadObjectType_Texture,
+	UnloadObjectType_NumOfTypes
+};
 enum LoadableObjectType : unsigned int
 {
 	LoadableObj_Null,

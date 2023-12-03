@@ -29,20 +29,21 @@ public:
 		}
 		virtual ~UniqueObject()
 		{
-			unload();
+			//unload(*this);
 		}
 
 		// Increments reference counter
-		inline void incRefCounter() { m_refCounter++; }
+		inline void incRefCounter() noexcept { m_refCounter++; }
 
 		// Decrements reference counter, if it goes to 0, object is put into unload queue
-		inline void decRefCounter()
+		inline void decRefCounter() noexcept
 		{
+			assert(m_refCounter > 0 && "m_refCounter of UniqueObject of LoaderBase was set to below zero (constructor-destructor were not paired)");
+
 			m_refCounter--;
 			if(m_refCounter == 0)
 			{
-				// TODO: queue texture unload upon reference counter reaching zero
-				//m_loaderBase->queueUnload(*this);
+				m_loaderBase->queueUnload(*this);
 			}
 		}
 
@@ -52,16 +53,15 @@ public:
 		inline void setUniqueID(unsigned int p_uniqueID)	{ m_uniqueID = p_uniqueID;			}
 
 		// Getters
-		inline const bool isLoadedToMemory() const		{ return m_loadedToMemory;		}
-		inline const bool isLoadedToVideoMemory() const { return m_loadedToVideoMemory; }
-		inline const unsigned int getUniqueID()	const	{ return m_uniqueID;			}
-		inline const std::string &getFilename() const	{ return m_filename;			}
+		inline const bool isLoadedToMemory() const		{ return m_loadedToMemory;			}
+		inline const bool isLoadedToVideoMemory() const { return m_loadedToVideoMemory;		}
+		inline const unsigned int getUniqueID()	const	{ return (unsigned int)m_uniqueID;	}
+		inline const std::string &getFilename() const	{ return m_filename;				}
 
 		// Equality operator; compares filenames
 		inline bool operator==(std::string p_string) { return m_filename == p_string; }
 
-		inline ErrorCode unload()		 { return static_cast<TObject*>(this)->unloadMemory();		}
-
+		//inline ErrorCode unload() { return static_cast<TObject *>(this)->unloadMemory(); }
 	protected:
 		inline const bool isBeingLoaded() { return m_beingLoaded; }
 
@@ -79,7 +79,7 @@ public:
 		LoaderBase *m_loaderBase;
 	};
 
-	LoaderBase() : m_queueIsEmpty(false) { }
+	LoaderBase() : m_queueIsEmpty(true) { }
 	~LoaderBase()
 	{
 		// Swap the queue with an empty one, effectively clearing it
@@ -95,37 +95,54 @@ public:
 	}
 
 	// Unloads the oldest object in the queue (if there are any)
-	// Only process one object, and should be called once per frame, to level out performance
-	inline void processReleaseQueue()
+	// Only process one object, and should be called once per frame, to level out performance degradation
+	inline void processReleaseQueue(SceneLoader &p_sceneLoader)
 	{
 		// First check if the queue isn't empty
 		if(!m_queueIsEmpty)
 		{
-			// Check if the reference counter is less than 0. If it's not, that means that
-			// something is still using the object, therefore it got on the unload queue by mistake,
-			// so just remove it without deleting it
-			if(m_objectUnloadQueue.front()->m_refCounter < 1)
+			for(decltype(Config::engineVar().loaders_num_of_unload_per_frame) i = 0, max = Config::engineVar().loaders_num_of_unload_per_frame; i < max;)
 			{
-				// Unload the object from RAM and VRAM
-				m_objectUnloadQueue.front()->unloadMemory();
-				m_objectUnloadQueue.front()->unloadVideoMemory();
-				removeObject(m_objectUnloadQueue.front());
-				//delete m_objectUnloadQueue.front();
+				auto *object = m_objectUnloadQueue.front();
+
+				// Check if the reference counter is less than 0. If it's not, that means that
+				// something is still using the object, therefore it got on the unload queue by mistake,
+				// so just remove it without deleting it
+				if(object->m_refCounter < 1)
+				{
+					// Unload the object from RAM and VRAM
+					unload(*static_cast<TObject *>(object), p_sceneLoader);
+					//m_objectUnloadQueue.front()->unload();
+					//m_objectUnloadQueue.front()->unloadMemory();
+					//m_objectUnloadQueue.front()->unloadVideoMemory();
+					//removeObject(*object);
+					m_objectRemoveQueue.push_back(object);
+					i++;
+				}
+
+				// Remove object from queue
+				m_objectUnloadQueue.pop();
+
+				if(m_objectUnloadQueue.empty())
+				{
+					m_queueIsEmpty = true;
+					return;
+				}
 			}
+		}
 
-			// Remove object from queue
-			m_objectUnloadQueue.pop();
+		if(!m_objectRemoveQueue.empty())
+		{
+			for(decltype(m_objectRemoveQueue.size()) i = 0, size = m_objectRemoveQueue.size(); i < size; i++)
+				removeObject(*m_objectRemoveQueue[i]);
 
-			if(m_objectUnloadQueue.size() < 1)
-				m_queueIsEmpty = true;
+			m_objectRemoveQueue.clear();
 		}
 	}
 
 	// Preload all the objects to memory, in parallel; returns after the loading has been completed
 	void preloadAllToMemory()
 	{
-		//static_cast<TDerived*>(this)->preloadAllToMemory();
-
 		TaskManagerLocator::get().parallelFor(0, m_objectPool.size(), 1, [=](decltype(m_objectPool.size()) i)
 		{
 			// Increment the reference counter before loading the object, as a safety precaution
@@ -139,22 +156,15 @@ public:
 	// Retrieve a const reference to an internal object pool
 	const std::vector<TObject *> &getObjectPool() const { return m_objectPool; }
 
-	// Returns false if there are any objects in the LoadToVideoMemory queue
-	//const inline bool isLoadToVideoMemoryQueueEmpty() const { return m_objectLoadToVideoMemoryQueue.empty(); }
-
 protected:
+	virtual void unload(TObject &p_object, SceneLoader &p_sceneLoader) { }
+
 	// Queue and object to be removed from memory
 	inline void queueUnload(UniqueObject &p_object)
 	{
 		m_objectUnloadQueue.push(&p_object);
 		m_queueIsEmpty = false;
 	}
-
-	// Put an object into a queue for loading it into video memory
-	//inline void queueLoadToVideoMemory(TObject &p_object)
-	//{
-	//	m_objectLoadToVideoMemoryQueue.push(&p_object);
-	//}
 
 	// Swap the object with the last element of vector and pop_back
 	inline void removeObject(UniqueObject &p_object)
@@ -184,6 +194,6 @@ private:
 	// so checking a bool instead of .size() will be a bit faster
 	bool m_queueIsEmpty;
 	
-	std::queue<UniqueObject*> m_objectUnloadQueue;
-	//std::queue<TObject*> m_objectLoadToVideoMemoryQueue;
+	std::queue<UniqueObject *> m_objectUnloadQueue;
+	std::vector<UniqueObject *> m_objectRemoveQueue;
 };

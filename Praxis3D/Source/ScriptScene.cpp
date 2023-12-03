@@ -290,6 +290,10 @@ void ScriptScene::receiveData(const DataType p_dataType, void *p_data, const boo
 	case DataType_EnableLuaScripting:
 		m_luaScriptsEnabled = static_cast<bool>(p_data);
 		break;
+
+	default:
+		assert(p_deleteAfterReceiving == true && "Memory leak - unhandled orphaned void data pointer in receiveData");
+		break;
 	}
 }
 

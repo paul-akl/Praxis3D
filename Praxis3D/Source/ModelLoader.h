@@ -223,6 +223,9 @@ public:
 		friend class ModelLoader;
 		friend class RendererFrontend;
 	public:
+		// Increment the reference counter when creating a handle
+		ModelHandle(const ModelHandle &p_modelHandle) : m_model(p_modelHandle.m_model) { m_model->incRefCounter(); }
+		ModelHandle(ModelHandle &&p_modelHandle) noexcept : m_model(p_modelHandle.m_model) { m_model->incRefCounter(); }
 		~ModelHandle() { m_model->decRefCounter(); }
 		
 		// Loads data from HDD to RAM and restructures it to be used to fill buffers later
@@ -245,10 +248,17 @@ public:
 			return returnError;
 		}
 		
-		// Assignment operator
+		// Copy assignment operator
 		ModelHandle &operator=(const ModelHandle &p_modelHandle)
 		{
-			m_model->decRefCounter();
+			m_model = p_modelHandle.m_model;
+			m_model->incRefCounter();
+			return *this;
+		}
+
+		// Move assignment operator
+		ModelHandle &operator=(ModelHandle &&p_modelHandle) noexcept
+		{
 			m_model = p_modelHandle.m_model;
 			m_model->incRefCounter();
 			return *this;
@@ -290,4 +300,6 @@ public:
 
 	virtual ModelHandle load(std::string p_filename, bool p_startBackgroundLoading = true);
 
+	private:
+		void unload(Model &p_object, SceneLoader &p_sceneLoader);
 };

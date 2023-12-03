@@ -51,6 +51,9 @@ public:
 		for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
 			m_renderingPassesTypeText.push_back(GetString(static_cast<RenderPassType>(i)));
 
+		m_newEntityConstructionInfo = nullptr;
+		m_openNewEntityPopup = false;
+
 		m_newSceneSettingsTabFlags = 0;
 
 		m_fontSize = ImGui::GetFontSize();
@@ -392,6 +395,14 @@ private:
 	{
 		EntityHierarchyEntry() : m_entityID(NULL_ENTITY_ID), m_parent(NULL_ENTITY_ID), m_componentFlag(Systems::AllComponentTypes::None) { }
 		EntityHierarchyEntry(const EntityID p_entityID, const EntityID p_parent, const std::string &p_name, const std::string &p_combinedEntityIdAndName, const BitMask p_componentFlag) : m_entityID(p_entityID), m_parent(p_parent), m_name(p_name), m_combinedEntityIdAndName(p_combinedEntityIdAndName), m_componentFlag(p_componentFlag){ }
+		void init(const EntityID p_entityID, const EntityID p_parent, const std::string &p_name, const std::string &p_combinedEntityIdAndName, const BitMask p_componentFlag)
+		{
+			m_entityID = p_entityID;
+			m_parent = p_parent;
+			m_name = p_name;
+			m_combinedEntityIdAndName = p_combinedEntityIdAndName;
+			m_componentFlag = p_componentFlag;
+		}
 
 		bool operator==(const EntityHierarchyEntry &p_childEntityEntry) { return m_entityID == p_childEntityEntry.m_entityID; }
 
@@ -408,7 +419,7 @@ private:
 			{
 				for(decltype(m_children.size()) size = m_children.size(), i = 0; i < size; i++)
 				{
-					if(m_children[i].findParentAndAddChild(p_childEntityEntry))
+					if(m_children[i]->findParentAndAddChild(p_childEntityEntry))
 					{
 						parentFound = true;
 						break;
@@ -420,20 +431,34 @@ private:
 		}
 		void addChild(const EntityHierarchyEntry &p_childEntityEntry)
 		{
-			m_children.push_back(p_childEntityEntry);
+			m_children.push_back(new EntityHierarchyEntry(p_childEntityEntry));
+		}
+		void addChild(const EntityID p_entityID, const EntityID p_parent, const std::string &p_name, const std::string &p_combinedEntityIdAndName, const BitMask p_componentFlag)
+		{
+			m_children.push_back(new EntityHierarchyEntry(p_entityID, p_parent, p_name, p_combinedEntityIdAndName, p_componentFlag));
 		}
 		void removeChild(const EntityHierarchyEntry &p_childEntityEntry)
 		{
-			std::vector<EntityHierarchyEntry>::iterator childPosition = std::find(m_children.begin(), m_children.end(), p_childEntityEntry);
+			std::vector<EntityHierarchyEntry *>::iterator childPosition = std::find_if(m_children.begin(), m_children.end(), [&](EntityHierarchyEntry *e) { return *e == p_childEntityEntry; });// std::find(m_children.begin(), m_children.end(), p_childEntityEntry);
 			if(childPosition != m_children.end())
 				m_children.erase(childPosition);
 		}
 		bool containsChildren() const { return !m_children.empty(); }
-		void getEntries(std::vector<EntityHierarchyEntry *> &p_entriesList)
+		void getEntries(std::vector<EntityHierarchyEntry*> &p_entriesList)
 		{
 			p_entriesList.push_back(this);
 			for(decltype(m_children.size()) size = m_children.size(), i = 0; i < size; i++)
-				m_children[i].getEntries(p_entriesList);
+				m_children[i]->getEntries(p_entriesList);
+		}
+		void clear()
+		{
+			for(auto *child : m_children)
+			{
+				child->clear();
+				delete child;
+			}
+
+			m_children.clear();
 		}
 
 		EntityID m_entityID;
@@ -441,7 +466,7 @@ private:
 		BitMask m_componentFlag;
 		std::string m_name;
 		std::string m_combinedEntityIdAndName;
-		std::vector<EntityHierarchyEntry> m_children;
+		std::vector<EntityHierarchyEntry*> m_children;
 	};
 	struct SelectedEntity
 	{
@@ -616,7 +641,7 @@ private:
 	};
 
 	void drawSceneData(SceneData &p_sceneData, const bool p_sendChanges = false);
-	void drawEntityHierarchyEntry(EntityHierarchyEntry &p_entityEntry);
+	void drawEntityHierarchyEntry(EntityHierarchyEntry *p_entityEntry);
 	inline void drawLeftAlignedLabelText(const char *p_labelText, float p_nextWidgetOffset)
 	{
 		ImGui::AlignTextToFramePadding();
@@ -871,13 +896,15 @@ private:
 	// Scene entities
 	std::vector<ComponentListEntry> m_componentList;
 	std::vector<EntityListEntry> m_entityList;
-	std::vector<EntityHierarchyEntry> m_entityHierarchy;
+	EntityHierarchyEntry m_rootEntityHierarchyEntry;
 	SelectedEntity m_selectedEntity;
 	SceneData m_currentSceneData;
 
 	// Used to hold entity and component data for component creation / deletion until the next frame, after sending the data as a change
 	std::vector<EntityAndComponent*> m_entityAndComponentPool;
 	std::vector<ComponentsConstructionInfo*> m_componentConstructionInfoPool;
+	ComponentsConstructionInfo *m_newEntityConstructionInfo;
+	bool m_openNewEntityPopup;
 
 	// New scene settings
 	SceneData m_newSceneData;

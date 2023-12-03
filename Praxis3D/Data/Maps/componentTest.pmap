@@ -401,7 +401,7 @@
 		{
 			"ID": "5",
 			"Name": "Sphere 2",
-			"Parent": "0",
+			"Parent": "4",
 			"World":
 			{
 				"SpatialComponent":
@@ -542,7 +542,7 @@
 		{
 			"ID": "13",
 			"Name": "PointLight 2",
-			"Parent": "0",
+			"Parent": "12",
 			"World":
 			{
 				"SpatialComponent":
@@ -563,7 +563,7 @@
 		{
 			"ID": "14",
 			"Name": "PointLight 3",
-			"Parent": "0",
+			"Parent": "13",
 			"World":
 			{
 				"SpatialComponent":
@@ -584,7 +584,7 @@
 		{
 			"ID": "15",
 			"Name": "PointLight 4",
-			"Parent": "0",
+			"Parent": "13",
 			"World":
 			{
 				"SpatialComponent":

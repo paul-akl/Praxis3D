@@ -406,6 +406,7 @@ public:
 	typedef std::vector<std::pair<int64_t, ScreenSpaceDrawCommand>> ScreenSpaceDrawCommands;
 
 	typedef std::vector<LoadCommand> LoadCommands;
+	typedef std::vector<std::pair<UnloadObjectType, unsigned int>> UnloadCommands;
 	typedef std::vector<BufferUpdateCommand> BufferUpdateCommands;
 	typedef std::vector<ComputeDispatchCommand> ComputeDispatchCommands;
 
@@ -425,6 +426,7 @@ public:
 	
 	void processUpdate(const BufferUpdateCommands &p_updateCommands, const UniformFrameData &p_frameData);
 	void processLoading(LoadCommands &p_loadCommands, const UniformFrameData &p_frameData);
+	void processUnloading(UnloadCommands &p_unloadCommands);
 	void processDrawing(const DrawCommands &p_drawCommands, const UniformFrameData &p_frameData);
 	void processDrawing(const ScreenSpaceDrawCommands &p_screenSpaceDrawCommands, const UniformFrameData &p_frameData);
 	void processDrawing(const ComputeDispatchCommands &p_computeDispatchCommands, const UniformFrameData &p_frameData);
@@ -972,6 +974,23 @@ protected:
 
 		default:
 			break;
+		}
+	}
+	inline void processCommand(const UnloadObjectType p_objectType, const int p_count, unsigned int *p_handles)
+	{
+		switch(p_objectType)
+		{
+			case UnloadObjectType_VAO:
+				glDeleteVertexArrays(p_count, p_handles);
+				break;
+			case UnloadObjectType_Buffer:
+				glDeleteBuffers(p_count, p_handles);
+				break;
+			case UnloadObjectType_Shader:
+				break;
+			case UnloadObjectType_Texture:
+				glDeleteTextures(p_count, p_handles);
+				break;
 		}
 	}
 

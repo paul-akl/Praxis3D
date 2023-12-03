@@ -50,37 +50,6 @@ public:
 	}
 	~RigidBodyComponent()
 	{
-		switch(m_collisionShapeType)
-		{
-			case RigidBodyComponent::CollisionShapeType_Box:
-				if(m_collisionShape.m_boxShape != nullptr)
-					delete m_collisionShape.m_boxShape;
-				break;
-			case RigidBodyComponent::CollisionShapeType_Capsule:
-				if(m_collisionShape.m_capsuleShape != nullptr)
-					delete m_collisionShape.m_capsuleShape;
-				break;
-			case RigidBodyComponent::CollisionShapeType_Cone:
-				if(m_collisionShape.m_coneShape != nullptr)
-					delete m_collisionShape.m_coneShape;
-				break;
-			case RigidBodyComponent::CollisionShapeType_ConvexHull:
-				if(m_collisionShape.m_convexHullShape != nullptr)
-					delete m_collisionShape.m_convexHullShape;
-				break;
-			case RigidBodyComponent::CollisionShapeType_Cylinder:
-				if(m_collisionShape.m_cylinderShape != nullptr)
-					delete m_collisionShape.m_cylinderShape;
-				break;
-			case RigidBodyComponent::CollisionShapeType_Sphere:
-				if(m_collisionShape.m_sphereShape != nullptr)
-					delete m_collisionShape.m_sphereShape;
-				break;
-		}
-
-		if(m_rigidBody != nullptr)
-			delete m_rigidBody;
-
 		if(m_constructionInfo != nullptr)
 			delete m_constructionInfo;
 

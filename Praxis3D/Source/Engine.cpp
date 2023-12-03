@@ -105,17 +105,14 @@ void Engine::run()
 		// Handle window and input events
 		m_window->handleEvents();
 
+		// Update all loaders
+		updateLoaders();
+
 		// If engine is still running
 		if(Config::engineVar().running == true)
 		{
+			// Process any queued changes
 			processEngineChanges();
-
-			// Load a different engine state, if it has been changed
-			//if(m_currentStateType != Config::engineVar().engineState)
-			//{
-			//	m_currentStateType = Config::engineVar().engineState;
-			//	setCurrentStateType();
-			//}
 
 			// Call update on the current engine state
 			m_engineStates[m_currentStateType]->update(*this);
@@ -214,6 +211,14 @@ void Engine::processEngineChanges()
 		// Mark engine changes as being processed by clearing the queue
 		changeControllerScene->clearEngineChangeQueue();
 	}
+}
+
+void Engine::updateLoaders()
+{
+	Loaders::model().processReleaseQueue(m_engineStates[m_currentStateType]->getSceneLoader());
+	Loaders::texture2D().processReleaseQueue(m_engineStates[m_currentStateType]->getSceneLoader());
+	// Not in use for the moment
+	//Loaders::textureCubemap().processReleaseQueue(); 
 }
 
 ErrorCode Engine::initServices()
