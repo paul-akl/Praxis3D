@@ -134,6 +134,8 @@ public:
 		p_constructionInfo.m_linearVelocity = Math::toGlmVec3(p_component.getRigidBody()->getLinearVelocity());
 	}
 
+	void releaseObject(SystemObject *p_systemObject);
+
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType);

@@ -93,6 +93,9 @@ public:
 	{
 		if(m_audioScenes[p_engineState] != nullptr)
 		{
+			// Shutdown the scene before destroying it
+			m_audioScenes[p_engineState]->shutdown();
+
 			delete m_audioScenes[p_engineState];
 			m_audioScenes[p_engineState] = nullptr;
 		}

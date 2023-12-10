@@ -72,6 +72,9 @@ void ScriptSystem::deleteScene(EngineStateType p_engineState)
 {
 	if(m_scriptingScenes[p_engineState] != nullptr)
 	{
+		// Shutdown the scene before destroying it
+		m_scriptingScenes[p_engineState]->shutdown();
+
 		delete m_scriptingScenes[p_engineState];
 		m_scriptingScenes[p_engineState] = nullptr;
 	}

@@ -29,7 +29,8 @@ constexpr EntityID NULL_ENTITY_ID = std::numeric_limits<EntityID>::max();
 	/* World components */ \
 	Code(ComponentType_ObjectMaterialComponent, ) \
 	Code(ComponentType_SpatialComponent, ) \
-	Code(ComponentType_NumOfTypes, )
+	Code(ComponentType_NumOfTypes, ) \
+	Code(ComponentType_Entity, )
 DECLARE_ENUM(ComponentType, COMPONENT_TYPE)
 
 enum EngineChangeType : unsigned int

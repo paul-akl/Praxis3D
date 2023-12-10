@@ -3,6 +3,7 @@
 //#include <sstream>
 
 #include "ErrorHandlerLocator.h"
+#include "Filesystem.h"
 #include "PropertyLoader.h"
 
 ErrorCode PropertyLoader::loadFromFile(std::string p_filename)
@@ -100,11 +101,14 @@ ErrorCode PropertyLoader::saveToFile(PropertySet &p_propertySet, std::string p_f
 		if(m_filename.empty())
 			return ErrorCode::Property_no_filename;
 
+	// Create the file stream
 	std::ofstream file;
-	//std::string singleLine, parsedString, processedString;
 
-	// Open the file stream
-	file.open(m_filename, std::ios::out);
+	// If the file already exists, truncate it, otherwise, create a new file
+	if(Filesystem::exists(m_filename))
+		file.open(m_filename, std::ios::trunc);
+	else
+		file.open(m_filename, std::ios::out);
 
 	// If file is not valid, close it and return an error
 	if(file.fail())

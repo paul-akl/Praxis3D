@@ -74,6 +74,9 @@ public:
 	{
 		if(m_GUIScenes[p_engineState] != nullptr)
 		{
+			// Shutdown the scene before destroying it
+			m_GUIScenes[p_engineState]->shutdown();
+
 			delete m_GUIScenes[p_engineState];
 			m_GUIScenes[p_engineState] = nullptr;
 		}

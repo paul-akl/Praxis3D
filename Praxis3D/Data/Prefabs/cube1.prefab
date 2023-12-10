@@ -11,34 +11,36 @@
 	{
 		"ModelComponent":
 		{
-			"Models":
+			"Models": 
 			[
 				{
 					"Filename": "cube.obj",
-					"Meshes":
+					"Meshes": 
 					[
 						{
 							"Index": "0",
+							"Active": "true",
 							"AlphaThreshold": "0.0f",
+							"EmissiveIntensity": "0.0f",
 							"HeightScale": "0.0f",
-							"Materials":
+							"Materials": 
 							{
-								"Diffuse":
+								"Diffuse": 
 								{
 									"Filename": "badlands-boulders_albedo.png",
 									"TextureScale": "2.0f, 2.0f"
 								},
-								"Normal":
+								"Normal": 
 								{
 									"Filename": "badlands-boulders_normal-ogl.png",
 									"TextureScale": "2.0f, 2.0f"
 								},
-								"Emissive":
+								"Emissive": 
 								{
 									"Filename": "default_emissive.png",
 									"TextureScale": "1.0f, 1.0f"
 								},
-								"RMHAO":
+								"RMHAO": 
 								{
 									"Filename": "badlands-boulders_RMHAO.png",
 									"TextureScale": "2.0f, 2.0f"

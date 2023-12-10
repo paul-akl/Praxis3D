@@ -19,6 +19,11 @@ SystemObject::SystemObject(SystemScene *p_systemScene, const std::string &p_name
 SystemObject::~SystemObject()
 {
 	ObjectDirectory::unregisterObject(*this);
+	if(m_systemScene != nullptr)
+	{
+		m_systemScene->releaseObject(this);
+		m_systemScene->getSceneLoader()->getChangeController()->removeObjectLinks(this);
+	}
 }
 
 std::vector<SystemObject*> SystemScene::getComponents(const EntityID p_entityID)

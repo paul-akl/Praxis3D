@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <type_traits>
 #include <utility>
-#include "../config/config.h"
+#include "fwd.hpp"
 
 namespace entt {
 
@@ -110,7 +110,7 @@ class process {
         static_cast<Target *>(this)->aborted();
     }
 
-    void next(...) const ENTT_NOEXCEPT {}
+    void next(...) const noexcept {}
 
 protected:
     /**
@@ -119,7 +119,7 @@ protected:
      * The function is idempotent and it does nothing if the process isn't
      * alive.
      */
-    void succeed() ENTT_NOEXCEPT {
+    void succeed() noexcept {
         if(alive()) {
             current = state::succeeded;
         }
@@ -131,7 +131,7 @@ protected:
      * The function is idempotent and it does nothing if the process isn't
      * alive.
      */
-    void fail() ENTT_NOEXCEPT {
+    void fail() noexcept {
         if(alive()) {
             current = state::failed;
         }
@@ -143,7 +143,7 @@ protected:
      * The function is idempotent and it does nothing if the process isn't
      * running.
      */
-    void pause() ENTT_NOEXCEPT {
+    void pause() noexcept {
         if(current == state::running) {
             current = state::paused;
         }
@@ -155,7 +155,7 @@ protected:
      * The function is idempotent and it does nothing if the process isn't
      * paused.
      */
-    void unpause() ENTT_NOEXCEPT {
+    void unpause() noexcept {
         if(current == state::paused) {
             current = state::running;
         }
@@ -166,7 +166,7 @@ public:
     using delta_type = Delta;
 
     /*! @brief Default destructor. */
-    virtual ~process() {
+    virtual ~process() noexcept {
         static_assert(std::is_base_of_v<process, Derived>, "Incorrect use of the class template");
     }
 
@@ -176,13 +176,13 @@ public:
      * The function is idempotent and it does nothing if the process isn't
      * alive.
      *
-     * @param immediately Requests an immediate operation.
+     * @param immediate Requests an immediate operation.
      */
-    void abort(const bool immediately = false) {
+    void abort(const bool immediate = false) {
         if(alive()) {
             current = state::aborted;
 
-            if(immediately) {
+            if(immediate) {
                 tick({});
             }
         }
@@ -192,7 +192,7 @@ public:
      * @brief Returns true if a process is either running or paused.
      * @return True if the process is still alive, false otherwise.
      */
-    [[nodiscard]] bool alive() const ENTT_NOEXCEPT {
+    [[nodiscard]] bool alive() const noexcept {
         return current == state::running || current == state::paused;
     }
 
@@ -200,7 +200,7 @@ public:
      * @brief Returns true if a process is already terminated.
      * @return True if the process is terminated, false otherwise.
      */
-    [[nodiscard]] bool finished() const ENTT_NOEXCEPT {
+    [[nodiscard]] bool finished() const noexcept {
         return current == state::finished;
     }
 
@@ -208,7 +208,7 @@ public:
      * @brief Returns true if a process is currently paused.
      * @return True if the process is paused, false otherwise.
      */
-    [[nodiscard]] bool paused() const ENTT_NOEXCEPT {
+    [[nodiscard]] bool paused() const noexcept {
         return current == state::paused;
     }
 
@@ -216,7 +216,7 @@ public:
      * @brief Returns true if a process terminated with errors.
      * @return True if the process terminated with errors, false otherwise.
      */
-    [[nodiscard]] bool rejected() const ENTT_NOEXCEPT {
+    [[nodiscard]] bool rejected() const noexcept {
         return current == state::rejected;
     }
 

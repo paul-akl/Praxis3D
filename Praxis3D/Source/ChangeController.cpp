@@ -174,53 +174,71 @@ ErrorCode ChangeController::unregisterSubject(ObservedSubject *p_subject, Observ
 	return returnError;
 }
 
+ErrorCode ChangeController::removeSubject(ObservedSubject *p_subject)
+{
+	// TODO ERRORS
+	ErrorCode returnError = ErrorCode::Failure;
+
+	std::vector<ObserverRequest> observerList;
+	{
+		SpinWait::Lock lock(m_spinWaitUpdate);
+
+		const auto ID = p_subject->getID(this);
+		//_ASSERT(ID != unsigned int(-1));
+		//_ASSERT(m_subjectsList[ID].m_subject == p_subject);
+		if(ID != unsigned int(-1))
+		{
+			if(m_subjectsList.size() <= ID || m_subjectsList[ID].m_subject != p_subject)
+			{
+				return ErrorCode::Failure;
+				// TODO ERROR FAILURE
+			}
+			observerList = m_subjectsList[ID].m_observersList;
+			m_subjectsList[ID].m_subject = NULL;
+			m_freeIDsList.push_back(ID);
+			returnError = ErrorCode::Success;
+			// TODO ERROR SUCCESS
+		}
+	}
+
+	std::vector<ObserverRequest>::iterator listIterator = observerList.begin();
+	for(; listIterator != observerList.end(); listIterator++)
+	{
+		p_subject->detach(listIterator->m_observer);
+	}
+
+	return returnError;
+}
+
 ErrorCode ChangeController::distributeChanges(BitMask p_systemsToNotify, BitMask p_changesToDistribute)
 {
 	// Store the parameters so they can be used by multiple threads
 	m_systemsToNotify = p_systemsToNotify;
 	m_changesToDistribute = p_changesToDistribute;
 
+	// Iterate over every thread-specific one-time notification list
+	for(decltype(m_oneTimeNotifyLists)::iterator listIterator = m_oneTimeNotifyLists.begin(); listIterator != m_oneTimeNotifyLists.end(); listIterator++)
+	{
+		// Get the list of a single thread
+		auto &currentList = **listIterator;
+
+		// BUGFIX: compare the iterator to container size during every loop (instead of assigning the size to a variable once at start), 
+		// as observers upon receiving data might send out One Time notifications themselves, and the container size would increase during the iteration of the container
+		for(decltype(currentList.size()) i = 0; i < currentList.size(); i++)
+		{
+			// Notify the observer about the change. We cannot check if the change is desired, since the
+			// observer is not registered with the change controller in one-time changes.
+			currentList[i].m_observer->changeOccurred(currentList[i].m_subject, currentList[i].m_changedBits);
+		}
+
+		// Clear out the list before moving to the next one
+		currentList.clear();
+	}
+
 	// Loop through the notifications.
 	// Some of them might generate more notifications, so it might need to loop through multiple times
 	while(true)
 	{
-		// Iterate over every thread-specific one-time data list
-		for(decltype(m_oneTimeDataLists)::iterator listIterator = m_oneTimeDataLists.begin(); listIterator != m_oneTimeDataLists.end(); listIterator++)
-		{
-			// Get the list of a single thread
-			auto &currentList = **listIterator;
-
-			// Loop over ever notification in this list
-			for(decltype(currentList.size()) i = 0; i < currentList.size(); i++)
-			{
-				// Notify the observer about the change. We cannot check if the change is desired, since the
-				// observer is not registered with the change controller in one-time changes.
-				currentList[i].m_observer->receiveData(currentList[i].m_dataType, currentList[i].m_data, currentList[i].m_deleteAfterReceiving);
-			}
-
-			// Clear out the list before moving to the next one
-			currentList.clear();
-		}
-
-		// Iterate over every thread-specific one-time notification list
-		for(decltype(m_oneTimeNotifyLists)::iterator listIterator = m_oneTimeNotifyLists.begin(); listIterator != m_oneTimeNotifyLists.end(); listIterator++)
-		{
-			// Get the list of a single thread
-			auto &currentList = **listIterator;
-
-			// BUGFIX: compare the iterator to container size during every loop (instead of assigning the size to a variable once at start), 
-			// as observers upon receiving data might send out One Time notifications themselves, and the container size would increase during the iteration of the container
-			for(decltype(currentList.size()) i = 0; i < currentList.size(); i++)
-			{
-				// Notify the observer about the change. We cannot check if the change is desired, since the
-				// observer is not registered with the change controller in one-time changes.
-				currentList[i].m_observer->changeOccurred(currentList[i].m_subject, currentList[i].m_changedBits);
-			}
-
-			// Clear out the list before moving to the next one
-			currentList.clear();
-		}
-
 		// Make sure index list is big enough to contain all subjects
 		m_indexList.resize(m_subjectsList.size());
 
@@ -263,8 +281,6 @@ ErrorCode ChangeController::distributeChanges(BitMask p_systemsToNotify, BitMask
 				}
 			}
 
-			//std::cout << currentList->size() << "; ";
-
 			// Clear out the list before moving to the next one
 			currentList->clear();
 		}
@@ -302,6 +318,24 @@ ErrorCode ChangeController::distributeChanges(BitMask p_systemsToNotify, BitMask
 		}
 	}
 
+	// Iterate over every thread-specific one-time data list
+	for(decltype(m_oneTimeDataLists)::iterator listIterator = m_oneTimeDataLists.begin(); listIterator != m_oneTimeDataLists.end(); listIterator++)
+	{
+		// Get the list of a single thread
+		auto &currentList = **listIterator;
+
+		// Loop over ever notification in this list
+		for(decltype(currentList.size()) i = 0; i < currentList.size(); i++)
+		{
+			// Notify the observer about the change. We cannot check if the change is desired, since the
+			// observer is not registered with the change controller in one-time changes.
+			currentList[i].m_observer->receiveData(currentList[i].m_dataType, currentList[i].m_data, currentList[i].m_deleteAfterReceiving);
+		}
+
+		// Clear out the list before moving to the next one
+		currentList.clear();
+	}
+
 	return ErrorCode::Success;
 }
 void ChangeController::changeOccurred(ObservedSubject *p_subject, BitMask p_changedBits)
@@ -327,16 +361,10 @@ void ChangeController::changeOccurred(ObservedSubject *p_subject, BitMask p_chan
 			// Get thread local notification list
 			auto *notifyList = getNotifyList(m_tlsNotifyList);
 
-			//std::cout << "test ( ";
-
-			//std::cout << m_tlsNotifyList << " ";
-
 			if(notifyList != nullptr)
 			{
 				// Don't check for duplicates, for performance reasons
 				notifyList->push_back(Notification(p_subject, p_changedBits));
-
-				//std::cout << "size: " << notifyList->size() << " ";
 			}
 			else
 			{
@@ -345,8 +373,6 @@ void ChangeController::changeOccurred(ObservedSubject *p_subject, BitMask p_chan
 			}
 		}
 	}
-
-	//std::cout << ") test" << std::endl;
 }
 
 void ChangeController::oneTimeChange(ObservedSubject *p_subject, Observer *p_observer, BitMask p_changedBits)
@@ -544,40 +570,6 @@ void ChangeController::distributeRange(unsigned int p_begin, unsigned int p_end)
 			}
 		}
 	}
-}
-
-ErrorCode ChangeController::removeSubject(ObservedSubject *p_subject)
-{
-	// TODO ERRORS
-	ErrorCode returnError = ErrorCode::Failure;
-
-	std::vector<ObserverRequest> observerList;
-	{
-		SpinWait::Lock lock(m_spinWaitUpdate);
-
-		const auto ID = p_subject->getID(this);
-		_ASSERT(ID != unsigned int(-1));
-		_ASSERT(m_subjectsList[ID].m_subject == p_subject);
-
-		if(m_subjectsList.size() <= ID || m_subjectsList[ID].m_subject != p_subject)
-		{
-			return ErrorCode::Failure;
-			// TODO ERROR FAILURE
-		}
-		observerList = m_subjectsList[ID].m_observersList;
-		m_subjectsList[ID].m_subject = NULL;
-		m_freeIDsList.push_back(ID);
-		returnError = ErrorCode::Success;
-		// TODO ERROR SUCCESS
-	}
-
-	std::vector<ObserverRequest>::iterator listIterator = observerList.begin();
-	for(; listIterator != observerList.end(); listIterator++)
-	{
-		p_subject->detach(listIterator->m_observer);
-	}
-
-	return returnError;
 }
 
 inline std::vector<ChangeController::Notification> *ChangeController::getNotifyList(unsigned int p_tlsIndex)

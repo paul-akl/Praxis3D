@@ -4,6 +4,7 @@ out vec4 outputColor;
 
 uniform ivec2 screenSize;
 uniform float gamma;
+uniform float luminanceMultiplier;
 uniform int tonemapMethod;
 
 uniform sampler2D inputColorMap;
@@ -250,7 +251,7 @@ void main(void)
 	vec3 fragmentColor = texture2D(inputColorMap, texCoord).xyz;
 
 	// Get the average scene luminance
-	float luminance = texture2D(averageLuminanceTexture, vec2(0.0, 0.0)).r;
+	float luminance = texture2D(averageLuminanceTexture, vec2(0.0, 0.0)).r * luminanceMultiplier;
 	
 	// Perform exposure compensation by converting the color from RGB to Yxy color space and adjusting the luminosity component
 	vec3 colorYxy = convertRGB2Yxy(fragmentColor);

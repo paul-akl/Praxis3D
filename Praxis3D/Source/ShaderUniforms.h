@@ -445,9 +445,9 @@ public:
 	void update(const UniformData &p_uniformData)
 	{
 		// Check if the same value is not already assigned (a small optimization)
-		if(parallaxLOD != Config::graphicsVar().LOD_prallax_mapping)
+		if(parallaxLOD != Config::graphicsVar().LOD_parallax_mapping)
 		{
-			parallaxLOD = Config::graphicsVar().LOD_prallax_mapping;
+			parallaxLOD = Config::graphicsVar().LOD_parallax_mapping;
 
 			glUniform1f(m_uniformHandle, parallaxLOD);
 		}
@@ -1046,6 +1046,25 @@ public:
 private:
 	float	m_minLuminanceRange,
 			m_maxLuminanceRange;
+};
+class LuminanceMultiplierUniform : public BaseUniform
+{
+public:
+	LuminanceMultiplierUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().luminanceMultiplier, p_shaderHandle), m_luminanceMultiplier(-1.0f)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		if(m_luminanceMultiplier != Config::graphicsVar().luminance_multiplier)
+		{
+			m_luminanceMultiplier = Config::graphicsVar().luminance_multiplier;
+
+			glUniform1f(m_uniformHandle, m_luminanceMultiplier);
+		}
+	}
+private:
+	float m_luminanceMultiplier;
 };
 class MinLogLuminanceUniform : public BaseUniform
 {

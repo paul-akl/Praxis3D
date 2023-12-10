@@ -1,7 +1,6 @@
-#ifndef ENTT_CONTAINER_DENSE_HASH_MAP_HPP
-#define ENTT_CONTAINER_DENSE_HASH_MAP_HPP
+#ifndef ENTT_CONTAINER_DENSE_MAP_HPP
+#define ENTT_CONTAINER_DENSE_MAP_HPP
 
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <functional>
@@ -14,6 +13,7 @@
 #include <vector>
 #include "../config/config.h"
 #include "../core/compressed_pair.hpp"
+#include "../core/iterator.hpp"
 #include "../core/memory.hpp"
 #include "../core/type_traits.hpp"
 #include "fwd.hpp"
@@ -28,176 +28,202 @@ namespace entt {
 namespace internal {
 
 template<typename Key, typename Type>
-struct dense_hash_map_node final {
+struct dense_map_node final {
+    using value_type = std::pair<Key, Type>;
+
     template<typename... Args>
-    dense_hash_map_node(const std::size_t pos, Args &&...args)
+    dense_map_node(const std::size_t pos, Args &&...args)
         : next{pos},
           element{std::forward<Args>(args)...} {}
 
+    template<typename Allocator, typename... Args>
+    dense_map_node(std::allocator_arg_t, const Allocator &allocator, const std::size_t pos, Args &&...args)
+        : next{pos},
+          element{entt::make_obj_using_allocator<value_type>(allocator, std::forward<Args>(args)...)} {}
+
+    template<typename Allocator>
+    dense_map_node(std::allocator_arg_t, const Allocator &allocator, const dense_map_node &other)
+        : next{other.next},
+          element{entt::make_obj_using_allocator<value_type>(allocator, other.element)} {}
+
+    template<typename Allocator>
+    dense_map_node(std::allocator_arg_t, const Allocator &allocator, dense_map_node &&other)
+        : next{other.next},
+          element{entt::make_obj_using_allocator<value_type>(allocator, std::move(other.element))} {}
+
     std::size_t next;
-    std::pair<Key, Type> element;
+    value_type element;
 };
 
 template<typename It>
-class dense_hash_map_iterator {
-    friend dense_hash_map_iterator<const std::remove_pointer_t<It> *>;
+class dense_map_iterator final {
+    template<typename>
+    friend class dense_map_iterator;
 
-    using iterator_traits = std::iterator_traits<decltype(std::addressof(std::declval<It>()->element))>;
+    using first_type = decltype(std::as_const(std::declval<It>()->element.first));
+    using second_type = decltype((std::declval<It>()->element.second));
 
 public:
-    using value_type = typename iterator_traits::value_type;
-    using pointer = typename iterator_traits::pointer;
-    using reference = typename iterator_traits::reference;
-    using difference_type = typename iterator_traits::difference_type;
-    using iterator_category = std::random_access_iterator_tag;
+    using value_type = std::pair<first_type, second_type>;
+    using pointer = input_iterator_pointer<value_type>;
+    using reference = value_type;
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::input_iterator_tag;
+    using iterator_concept = std::random_access_iterator_tag;
 
-    dense_hash_map_iterator() ENTT_NOEXCEPT = default;
+    constexpr dense_map_iterator() noexcept
+        : it{} {}
 
-    dense_hash_map_iterator(const It iter) ENTT_NOEXCEPT
+    constexpr dense_map_iterator(const It iter) noexcept
         : it{iter} {}
 
-    template<bool Const = std::is_const_v<std::remove_pointer_t<It>>, typename = std::enable_if_t<Const>>
-    dense_hash_map_iterator(const dense_hash_map_iterator<std::remove_const_t<std::remove_pointer_t<It>> *> &other)
+    template<typename Other, typename = std::enable_if_t<!std::is_same_v<It, Other> && std::is_constructible_v<It, Other>>>
+    constexpr dense_map_iterator(const dense_map_iterator<Other> &other) noexcept
         : it{other.it} {}
 
-    dense_hash_map_iterator &operator++() ENTT_NOEXCEPT {
+    constexpr dense_map_iterator &operator++() noexcept {
         return ++it, *this;
     }
 
-    dense_hash_map_iterator operator++(int) ENTT_NOEXCEPT {
-        dense_hash_map_iterator orig = *this;
+    constexpr dense_map_iterator operator++(int) noexcept {
+        dense_map_iterator orig = *this;
         return ++(*this), orig;
     }
 
-    dense_hash_map_iterator &operator--() ENTT_NOEXCEPT {
+    constexpr dense_map_iterator &operator--() noexcept {
         return --it, *this;
     }
 
-    dense_hash_map_iterator operator--(int) ENTT_NOEXCEPT {
-        dense_hash_map_iterator orig = *this;
+    constexpr dense_map_iterator operator--(int) noexcept {
+        dense_map_iterator orig = *this;
         return operator--(), orig;
     }
 
-    dense_hash_map_iterator &operator+=(const difference_type value) ENTT_NOEXCEPT {
+    constexpr dense_map_iterator &operator+=(const difference_type value) noexcept {
         it += value;
         return *this;
     }
 
-    dense_hash_map_iterator operator+(const difference_type value) const ENTT_NOEXCEPT {
-        dense_hash_map_iterator copy = *this;
+    constexpr dense_map_iterator operator+(const difference_type value) const noexcept {
+        dense_map_iterator copy = *this;
         return (copy += value);
     }
 
-    dense_hash_map_iterator &operator-=(const difference_type value) ENTT_NOEXCEPT {
+    constexpr dense_map_iterator &operator-=(const difference_type value) noexcept {
         return (*this += -value);
     }
 
-    dense_hash_map_iterator operator-(const difference_type value) const ENTT_NOEXCEPT {
+    constexpr dense_map_iterator operator-(const difference_type value) const noexcept {
         return (*this + -value);
     }
 
-    [[nodiscard]] reference operator[](const difference_type value) const {
-        return it[value].element;
+    [[nodiscard]] constexpr reference operator[](const difference_type value) const noexcept {
+        return {it[value].element.first, it[value].element.second};
     }
 
-    [[nodiscard]] pointer operator->() const {
-        return std::addressof(it->element);
+    [[nodiscard]] constexpr pointer operator->() const noexcept {
+        return operator*();
     }
 
-    [[nodiscard]] reference operator*() const {
-        return *operator->();
+    [[nodiscard]] constexpr reference operator*() const noexcept {
+        return {it->element.first, it->element.second};
     }
 
-    template<typename ILhs, typename IRhs>
-    friend auto operator-(const dense_hash_map_iterator<ILhs> &, const dense_hash_map_iterator<IRhs> &) ENTT_NOEXCEPT;
+    template<typename Lhs, typename Rhs>
+    friend constexpr std::ptrdiff_t operator-(const dense_map_iterator<Lhs> &, const dense_map_iterator<Rhs> &) noexcept;
 
-    template<typename ILhs, typename IRhs>
-    friend bool operator==(const dense_hash_map_iterator<ILhs> &, const dense_hash_map_iterator<IRhs> &) ENTT_NOEXCEPT;
+    template<typename Lhs, typename Rhs>
+    friend constexpr bool operator==(const dense_map_iterator<Lhs> &, const dense_map_iterator<Rhs> &) noexcept;
 
-    template<typename ILhs, typename IRhs>
-    friend bool operator<(const dense_hash_map_iterator<ILhs> &, const dense_hash_map_iterator<IRhs> &) ENTT_NOEXCEPT;
+    template<typename Lhs, typename Rhs>
+    friend constexpr bool operator<(const dense_map_iterator<Lhs> &, const dense_map_iterator<Rhs> &) noexcept;
 
 private:
     It it;
 };
 
-template<typename ILhs, typename IRhs>
-[[nodiscard]] auto operator-(const dense_hash_map_iterator<ILhs> &lhs, const dense_hash_map_iterator<IRhs> &rhs) ENTT_NOEXCEPT {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr std::ptrdiff_t operator-(const dense_map_iterator<Lhs> &lhs, const dense_map_iterator<Rhs> &rhs) noexcept {
     return lhs.it - rhs.it;
 }
 
-template<typename ILhs, typename IRhs>
-[[nodiscard]] bool operator==(const dense_hash_map_iterator<ILhs> &lhs, const dense_hash_map_iterator<IRhs> &rhs) ENTT_NOEXCEPT {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator==(const dense_map_iterator<Lhs> &lhs, const dense_map_iterator<Rhs> &rhs) noexcept {
     return lhs.it == rhs.it;
 }
 
-template<typename ILhs, typename IRhs>
-[[nodiscard]] bool operator!=(const dense_hash_map_iterator<ILhs> &lhs, const dense_hash_map_iterator<IRhs> &rhs) ENTT_NOEXCEPT {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator!=(const dense_map_iterator<Lhs> &lhs, const dense_map_iterator<Rhs> &rhs) noexcept {
     return !(lhs == rhs);
 }
 
-template<typename ILhs, typename IRhs>
-[[nodiscard]] bool operator<(const dense_hash_map_iterator<ILhs> &lhs, const dense_hash_map_iterator<IRhs> &rhs) ENTT_NOEXCEPT {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator<(const dense_map_iterator<Lhs> &lhs, const dense_map_iterator<Rhs> &rhs) noexcept {
     return lhs.it < rhs.it;
 }
 
-template<typename ILhs, typename IRhs>
-[[nodiscard]] bool operator>(const dense_hash_map_iterator<ILhs> &lhs, const dense_hash_map_iterator<IRhs> &rhs) ENTT_NOEXCEPT {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator>(const dense_map_iterator<Lhs> &lhs, const dense_map_iterator<Rhs> &rhs) noexcept {
     return rhs < lhs;
 }
 
-template<typename ILhs, typename IRhs>
-[[nodiscard]] bool operator<=(const dense_hash_map_iterator<ILhs> &lhs, const dense_hash_map_iterator<IRhs> &rhs) ENTT_NOEXCEPT {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator<=(const dense_map_iterator<Lhs> &lhs, const dense_map_iterator<Rhs> &rhs) noexcept {
     return !(lhs > rhs);
 }
 
-template<typename ILhs, typename IRhs>
-[[nodiscard]] bool operator>=(const dense_hash_map_iterator<ILhs> &lhs, const dense_hash_map_iterator<IRhs> &rhs) ENTT_NOEXCEPT {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator>=(const dense_map_iterator<Lhs> &lhs, const dense_map_iterator<Rhs> &rhs) noexcept {
     return !(lhs < rhs);
 }
 
 template<typename It>
-class dense_hash_map_local_iterator {
-    friend dense_hash_map_local_iterator<const std::remove_pointer_t<It> *>;
+class dense_map_local_iterator final {
+    template<typename>
+    friend class dense_map_local_iterator;
 
-    using iterator_traits = std::iterator_traits<decltype(std::addressof(std::declval<It>()->element))>;
+    using first_type = decltype(std::as_const(std::declval<It>()->element.first));
+    using second_type = decltype((std::declval<It>()->element.second));
 
 public:
-    using value_type = typename iterator_traits::value_type;
-    using pointer = typename iterator_traits::pointer;
-    using reference = typename iterator_traits::reference;
-    using difference_type = typename iterator_traits::difference_type;
-    using iterator_category = std::forward_iterator_tag;
+    using value_type = std::pair<first_type, second_type>;
+    using pointer = input_iterator_pointer<value_type>;
+    using reference = value_type;
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::input_iterator_tag;
+    using iterator_concept = std::forward_iterator_tag;
 
-    dense_hash_map_local_iterator() ENTT_NOEXCEPT = default;
+    constexpr dense_map_local_iterator() noexcept
+        : it{},
+          offset{} {}
 
-    dense_hash_map_local_iterator(It iter, const std::size_t pos) ENTT_NOEXCEPT
+    constexpr dense_map_local_iterator(It iter, const std::size_t pos) noexcept
         : it{iter},
           offset{pos} {}
 
-    template<bool Const = std::is_const_v<std::remove_pointer_t<It>>, typename = std::enable_if_t<Const>>
-    dense_hash_map_local_iterator(const dense_hash_map_local_iterator<std::remove_const_t<std::remove_pointer_t<It>> *> &other)
+    template<typename Other, typename = std::enable_if_t<!std::is_same_v<It, Other> && std::is_constructible_v<It, Other>>>
+    constexpr dense_map_local_iterator(const dense_map_local_iterator<Other> &other) noexcept
         : it{other.it},
           offset{other.offset} {}
 
-    dense_hash_map_local_iterator &operator++() ENTT_NOEXCEPT {
+    constexpr dense_map_local_iterator &operator++() noexcept {
         return offset = it[offset].next, *this;
     }
 
-    dense_hash_map_local_iterator operator++(int) ENTT_NOEXCEPT {
-        dense_hash_map_local_iterator orig = *this;
+    constexpr dense_map_local_iterator operator++(int) noexcept {
+        dense_map_local_iterator orig = *this;
         return ++(*this), orig;
     }
 
-    [[nodiscard]] pointer operator->() const {
-        return std::addressof(it[offset].element);
+    [[nodiscard]] constexpr pointer operator->() const noexcept {
+        return operator*();
     }
 
-    [[nodiscard]] reference operator*() const {
-        return *operator->();
+    [[nodiscard]] constexpr reference operator*() const noexcept {
+        return {it[offset].element.first, it[offset].element.second};
     }
 
-    [[nodiscard]] std::size_t index() const ENTT_NOEXCEPT {
+    [[nodiscard]] constexpr std::size_t index() const noexcept {
         return offset;
     }
 
@@ -206,13 +232,13 @@ private:
     std::size_t offset;
 };
 
-template<typename ILhs, typename IRhs>
-[[nodiscard]] bool operator==(const dense_hash_map_local_iterator<ILhs> &lhs, const dense_hash_map_local_iterator<IRhs> &rhs) ENTT_NOEXCEPT {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator==(const dense_map_local_iterator<Lhs> &lhs, const dense_map_local_iterator<Rhs> &rhs) noexcept {
     return lhs.index() == rhs.index();
 }
 
-template<typename ILhs, typename IRhs>
-[[nodiscard]] bool operator!=(const dense_hash_map_local_iterator<ILhs> &lhs, const dense_hash_map_local_iterator<IRhs> &rhs) ENTT_NOEXCEPT {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator!=(const dense_map_local_iterator<Lhs> &lhs, const dense_map_local_iterator<Rhs> &rhs) noexcept {
     return !(lhs == rhs);
 }
 
@@ -237,27 +263,26 @@ template<typename ILhs, typename IRhs>
  * @tparam Allocator Type of allocator used to manage memory and elements.
  */
 template<typename Key, typename Type, typename Hash, typename KeyEqual, typename Allocator>
-class dense_hash_map final {
+class dense_map {
     static constexpr float default_threshold = 0.875f;
     static constexpr std::size_t minimum_capacity = 8u;
 
-    using allocator_traits = std::allocator_traits<Allocator>;
-    using alloc = typename allocator_traits::template rebind_alloc<std::pair<const Key, Type>>;
-    using alloc_traits = typename std::allocator_traits<alloc>;
-
-    using node_type = internal::dense_hash_map_node<const Key, Type>;
+    using node_type = internal::dense_map_node<Key, Type>;
+    using alloc_traits = std::allocator_traits<Allocator>;
+    static_assert(std::is_same_v<typename alloc_traits::value_type, std::pair<const Key, Type>>, "Invalid value type");
     using sparse_container_type = std::vector<std::size_t, typename alloc_traits::template rebind_alloc<std::size_t>>;
     using packed_container_type = std::vector<node_type, typename alloc_traits::template rebind_alloc<node_type>>;
 
-    [[nodiscard]] std::size_t hash_to_bucket(const std::size_t hash) const ENTT_NOEXCEPT {
-        return fast_mod(hash, bucket_count());
+    template<typename Other>
+    [[nodiscard]] std::size_t key_to_bucket(const Other &key) const noexcept {
+        return fast_mod(static_cast<size_type>(sparse.second()(key)), bucket_count());
     }
 
     template<typename Other>
     [[nodiscard]] auto constrained_find(const Other &key, std::size_t bucket) {
         for(auto it = begin(bucket), last = end(bucket); it != last; ++it) {
             if(packed.second()(it->first, key)) {
-                return begin() + it.index();
+                return begin() + static_cast<typename iterator::difference_type>(it.index());
             }
         }
 
@@ -268,51 +293,59 @@ class dense_hash_map final {
     [[nodiscard]] auto constrained_find(const Other &key, std::size_t bucket) const {
         for(auto it = cbegin(bucket), last = cend(bucket); it != last; ++it) {
             if(packed.second()(it->first, key)) {
-                return cbegin() + it.index();
+                return cbegin() + static_cast<typename iterator::difference_type>(it.index());
             }
         }
 
         return cend();
     }
 
-    template<typename... Args>
-    [[nodiscard]] auto get_or_emplace(const Key &key, Args &&...args) {
-        const auto hash = sparse.second()(key);
-        auto index = hash_to_bucket(hash);
+    template<typename Other, typename... Args>
+    [[nodiscard]] auto insert_or_do_nothing(Other &&key, Args &&...args) {
+        const auto index = key_to_bucket(key);
 
         if(auto it = constrained_find(key, index); it != end()) {
             return std::make_pair(it, false);
         }
 
-        if(const auto count = size() + 1u; count > (bucket_count() * max_load_factor())) {
-            rehash(bucket_count() * 2u);
-            index = hash_to_bucket(hash);
+        packed.first().emplace_back(sparse.first()[index], std::piecewise_construct, std::forward_as_tuple(std::forward<Other>(key)), std::forward_as_tuple(std::forward<Args>(args)...));
+        sparse.first()[index] = packed.first().size() - 1u;
+        rehash_if_required();
+
+        return std::make_pair(--end(), true);
+    }
+
+    template<typename Other, typename Arg>
+    [[nodiscard]] auto insert_or_overwrite(Other &&key, Arg &&value) {
+        const auto index = key_to_bucket(key);
+
+        if(auto it = constrained_find(key, index); it != end()) {
+            it->second = std::forward<Arg>(value);
+            return std::make_pair(it, false);
         }
 
-        packed.first().emplace_back(sparse.first()[index], std::forward<Args>(args)...);
-        // update goes after emplace to enforce exception guarantees
-        sparse.first()[index] = size() - 1u;
+        packed.first().emplace_back(sparse.first()[index], std::forward<Other>(key), std::forward<Arg>(value));
+        sparse.first()[index] = packed.first().size() - 1u;
+        rehash_if_required();
 
         return std::make_pair(--end(), true);
     }
 
     void move_and_pop(const std::size_t pos) {
         if(const auto last = size() - 1u; pos != last) {
-            size_type *curr = sparse.first().data() + bucket(packed.first().back().element.first);
+            size_type *curr = sparse.first().data() + key_to_bucket(packed.first().back().element.first);
+            packed.first()[pos] = std::move(packed.first().back());
             for(; *curr != last; curr = &packed.first()[*curr].next) {}
             *curr = pos;
-
-            using node_allocator_traits = typename alloc_traits::template rebind_traits<decltype(node_type::element)>;
-            typename node_allocator_traits::allocator_type allocator = packed.first().get_allocator();
-            auto *ptr = std::addressof(packed.first()[pos].element);
-
-            std::destroy_at(ptr);
-            packed.first()[pos].next = packed.first().back().next;
-            // no exception guarantees when mapped type has a throwing move constructor (we're technically doomed)
-            node_allocator_traits::construct(allocator, ptr, std::move(packed.first().back().element));
         }
 
         packed.first().pop_back();
+    }
+
+    void rehash_if_required() {
+        if(size() > (bucket_count() * max_load_factor())) {
+            rehash(bucket_count() * 2u);
+        }
     }
 
 public:
@@ -330,180 +363,151 @@ public:
     using key_equal = KeyEqual;
     /*! @brief Allocator type. */
     using allocator_type = Allocator;
-    /*! @brief Random access iterator type. */
-    using iterator = internal::dense_hash_map_iterator<typename packed_container_type::pointer>;
-    /*! @brief Constant random access iterator type. */
-    using const_iterator = internal::dense_hash_map_iterator<typename packed_container_type::const_pointer>;
-    /*! @brief Forward iterator type. */
-    using local_iterator = internal::dense_hash_map_local_iterator<typename packed_container_type::pointer>;
-    /*! @brief Constant forward iterator type. */
-    using const_local_iterator = internal::dense_hash_map_local_iterator<typename packed_container_type::const_pointer>;
+    /*! @brief Input iterator type. */
+    using iterator = internal::dense_map_iterator<typename packed_container_type::iterator>;
+    /*! @brief Constant input iterator type. */
+    using const_iterator = internal::dense_map_iterator<typename packed_container_type::const_iterator>;
+    /*! @brief Input iterator type. */
+    using local_iterator = internal::dense_map_local_iterator<typename packed_container_type::iterator>;
+    /*! @brief Constant input iterator type. */
+    using const_local_iterator = internal::dense_map_local_iterator<typename packed_container_type::const_iterator>;
 
     /*! @brief Default constructor. */
-    dense_hash_map()
-        : dense_hash_map(minimum_capacity) {}
+    dense_map()
+        : dense_map{minimum_capacity} {}
 
     /**
      * @brief Constructs an empty container with a given allocator.
      * @param allocator The allocator to use.
      */
-    explicit dense_hash_map(const allocator_type &allocator)
-        : dense_hash_map{minimum_capacity, hasher{}, key_equal{}, allocator} {}
+    explicit dense_map(const allocator_type &allocator)
+        : dense_map{minimum_capacity, hasher{}, key_equal{}, allocator} {}
 
     /**
      * @brief Constructs an empty container with a given allocator and user
      * supplied minimal number of buckets.
-     * @param bucket_count Minimal number of buckets.
+     * @param cnt Minimal number of buckets.
      * @param allocator The allocator to use.
      */
-    dense_hash_map(const size_type bucket_count, const allocator_type &allocator)
-        : dense_hash_map{bucket_count, hasher{}, key_equal{}, allocator} {}
+    dense_map(const size_type cnt, const allocator_type &allocator)
+        : dense_map{cnt, hasher{}, key_equal{}, allocator} {}
 
     /**
      * @brief Constructs an empty container with a given allocator, hash
      * function and user supplied minimal number of buckets.
-     * @param bucket_count Minimal number of buckets.
+     * @param cnt Minimal number of buckets.
      * @param hash Hash function to use.
      * @param allocator The allocator to use.
      */
-    dense_hash_map(const size_type bucket_count, const hasher &hash, const allocator_type &allocator)
-        : dense_hash_map{bucket_count, hash, key_equal{}, allocator} {}
+    dense_map(const size_type cnt, const hasher &hash, const allocator_type &allocator)
+        : dense_map{cnt, hash, key_equal{}, allocator} {}
 
     /**
      * @brief Constructs an empty container with a given allocator, hash
      * function, compare function and user supplied minimal number of buckets.
-     * @param bucket_count Minimal number of buckets.
+     * @param cnt Minimal number of buckets.
      * @param hash Hash function to use.
      * @param equal Compare function to use.
      * @param allocator The allocator to use.
      */
-    explicit dense_hash_map(const size_type bucket_count, const hasher &hash = hasher{}, const key_equal &equal = key_equal{}, const allocator_type &allocator = allocator_type())
+    explicit dense_map(const size_type cnt, const hasher &hash = hasher{}, const key_equal &equal = key_equal{}, const allocator_type &allocator = allocator_type{})
         : sparse{allocator, hash},
           packed{allocator, equal},
           threshold{default_threshold} {
-        rehash(bucket_count);
+        rehash(cnt);
     }
 
-    /**
-     * @brief Copy constructor.
-     * @param other The instance to copy from.
-     */
-    dense_hash_map(const dense_hash_map &other)
-        : dense_hash_map{other, alloc_traits::select_on_container_copy_construction(other.get_allocator())} {}
+    /*! @brief Default copy constructor. */
+    dense_map(const dense_map &) = default;
 
     /**
      * @brief Allocator-extended copy constructor.
      * @param other The instance to copy from.
      * @param allocator The allocator to use.
      */
-    dense_hash_map(const dense_hash_map &other, const allocator_type &allocator)
-        : sparse{sparse_container_type{other.sparse.first(), allocator}, other.sparse.second()},
-          // cannot copy the container directly due to a nasty issue of apple clang :(
-          packed{packed_container_type{other.packed.first().begin(), other.packed.first().end(), allocator}, other.packed.second()},
-          threshold{other.threshold} {
-    }
+    dense_map(const dense_map &other, const allocator_type &allocator)
+        : sparse{std::piecewise_construct, std::forward_as_tuple(other.sparse.first(), allocator), std::forward_as_tuple(other.sparse.second())},
+          packed{std::piecewise_construct, std::forward_as_tuple(other.packed.first(), allocator), std::forward_as_tuple(other.packed.second())},
+          threshold{other.threshold} {}
 
-    /**
-     * @brief Default move constructor.
-     * @param other The instance to move from.
-     */
-    dense_hash_map(dense_hash_map &&other) ENTT_NOEXCEPT = default;
+    /*! @brief Default move constructor. */
+    dense_map(dense_map &&) noexcept(std::is_nothrow_move_constructible_v<compressed_pair<sparse_container_type, hasher>> &&std::is_nothrow_move_constructible_v<compressed_pair<packed_container_type, key_equal>>) = default;
 
     /**
      * @brief Allocator-extended move constructor.
      * @param other The instance to move from.
      * @param allocator The allocator to use.
      */
-    dense_hash_map(dense_hash_map &&other, const allocator_type &allocator) ENTT_NOEXCEPT
-        : sparse{sparse_container_type{std::move(other.sparse.first()), allocator}, std::move(other.sparse.second())},
-          // cannot move the container directly due to a nasty issue of apple clang :(
-          packed{packed_container_type{std::make_move_iterator(other.packed.first().begin()), std::make_move_iterator(other.packed.first().end()), allocator}, std::move(other.packed.second())},
+    dense_map(dense_map &&other, const allocator_type &allocator)
+        : sparse{std::piecewise_construct, std::forward_as_tuple(std::move(other.sparse.first()), allocator), std::forward_as_tuple(std::move(other.sparse.second()))},
+          packed{std::piecewise_construct, std::forward_as_tuple(std::move(other.packed.first()), allocator), std::forward_as_tuple(std::move(other.packed.second()))},
           threshold{other.threshold} {}
 
-    /*! @brief Default destructor. */
-    ~dense_hash_map() = default;
-
     /**
-     * @brief Copy assignment operator.
-     * @param other The instance to copy from.
+     * @brief Default copy assignment operator.
      * @return This container.
      */
-    dense_hash_map &operator=(const dense_hash_map &other) {
-        threshold = other.threshold;
-        sparse.first().clear();
-        packed.first().clear();
-        rehash(other.bucket_count());
-        packed.first().reserve(other.packed.first().size());
-        insert(other.cbegin(), other.cend());
-        return *this;
-    }
+    dense_map &operator=(const dense_map &) = default;
 
     /**
      * @brief Default move assignment operator.
-     * @param other The instance to move from.
      * @return This container.
      */
-    dense_hash_map &operator=(dense_hash_map &&other) ENTT_NOEXCEPT = default;
+    dense_map &operator=(dense_map &&) noexcept(std::is_nothrow_move_assignable_v<compressed_pair<sparse_container_type, hasher>> &&std::is_nothrow_move_assignable_v<compressed_pair<packed_container_type, key_equal>>) = default;
 
     /**
      * @brief Returns the associated allocator.
      * @return The associated allocator.
      */
-    [[nodiscard]] constexpr allocator_type get_allocator() const ENTT_NOEXCEPT {
+    [[nodiscard]] constexpr allocator_type get_allocator() const noexcept {
         return sparse.first().get_allocator();
     }
 
     /**
      * @brief Returns an iterator to the beginning.
      *
-     * The returned iterator points to the first instance of the internal array.
      * If the array is empty, the returned iterator will be equal to `end()`.
      *
      * @return An iterator to the first instance of the internal array.
      */
-    [[nodiscard]] const_iterator cbegin() const ENTT_NOEXCEPT {
-        return packed.first().data();
+    [[nodiscard]] const_iterator cbegin() const noexcept {
+        return packed.first().begin();
     }
 
     /*! @copydoc cbegin */
-    [[nodiscard]] const_iterator begin() const ENTT_NOEXCEPT {
+    [[nodiscard]] const_iterator begin() const noexcept {
         return cbegin();
     }
 
     /*! @copydoc begin */
-    [[nodiscard]] iterator begin() ENTT_NOEXCEPT {
-        return packed.first().data();
+    [[nodiscard]] iterator begin() noexcept {
+        return packed.first().begin();
     }
 
     /**
      * @brief Returns an iterator to the end.
-     *
-     * The returned iterator points to the element following the last instance
-     * of the internal array. Attempting to dereference the returned iterator
-     * results in undefined behavior.
-     *
      * @return An iterator to the element following the last instance of the
      * internal array.
      */
-    [[nodiscard]] const_iterator cend() const ENTT_NOEXCEPT {
-        return packed.first().data() + size();
+    [[nodiscard]] const_iterator cend() const noexcept {
+        return packed.first().end();
     }
 
     /*! @copydoc cend */
-    [[nodiscard]] const_iterator end() const ENTT_NOEXCEPT {
+    [[nodiscard]] const_iterator end() const noexcept {
         return cend();
     }
 
     /*! @copydoc end */
-    [[nodiscard]] iterator end() ENTT_NOEXCEPT {
-        return packed.first().data() + size();
+    [[nodiscard]] iterator end() noexcept {
+        return packed.first().end();
     }
 
     /**
      * @brief Checks whether a container is empty.
      * @return True if the container is empty, false otherwise.
      */
-    [[nodiscard]] bool empty() const ENTT_NOEXCEPT {
+    [[nodiscard]] bool empty() const noexcept {
         return packed.first().empty();
     }
 
@@ -511,12 +515,20 @@ public:
      * @brief Returns the number of elements in a container.
      * @return Number of elements in a container.
      */
-    [[nodiscard]] size_type size() const ENTT_NOEXCEPT {
+    [[nodiscard]] size_type size() const noexcept {
         return packed.first().size();
     }
 
+    /**
+     * @brief Returns the maximum possible number of elements.
+     * @return Maximum possible number of elements.
+     */
+    [[nodiscard]] size_type max_size() const noexcept {
+        return packed.first().max_size();
+    }
+
     /*! @brief Clears the container. */
-    void clear() ENTT_NOEXCEPT {
+    void clear() noexcept {
         sparse.first().clear();
         packed.first().clear();
         rehash(0u);
@@ -530,12 +542,12 @@ public:
      * insertion took place.
      */
     std::pair<iterator, bool> insert(const value_type &value) {
-        return emplace(value);
+        return insert_or_do_nothing(value.first, value.second);
     }
 
     /*! @copydoc insert */
     std::pair<iterator, bool> insert(value_type &&value) {
-        return emplace(std::move(value));
+        return insert_or_do_nothing(std::move(value.first), std::move(value.second));
     }
 
     /**
@@ -545,7 +557,7 @@ public:
     template<typename Arg>
     std::enable_if_t<std::is_constructible_v<value_type, Arg &&>, std::pair<iterator, bool>>
     insert(Arg &&value) {
-        return emplace(std::forward<Arg>(value));
+        return insert_or_do_nothing(std::forward<Arg>(value).first, std::forward<Arg>(value).second);
     }
 
     /**
@@ -557,7 +569,7 @@ public:
     template<typename It>
     void insert(It first, It last) {
         for(; first != last; ++first) {
-            emplace(*first);
+            insert(*first);
         }
     }
 
@@ -572,29 +584,21 @@ public:
      */
     template<typename Arg>
     std::pair<iterator, bool> insert_or_assign(const key_type &key, Arg &&value) {
-        auto result = try_emplace(key, std::forward<Arg>(value));
-
-        if(!result.second) {
-            result.first->second = std::forward<Arg>(value);
-        }
-
-        return result;
+        return insert_or_overwrite(key, std::forward<Arg>(value));
     }
 
     /*! @copydoc insert_or_assign */
     template<typename Arg>
     std::pair<iterator, bool> insert_or_assign(key_type &&key, Arg &&value) {
-        auto result = try_emplace(std::move(key), std::forward<Arg>(value));
-
-        if(!result.second) {
-            result.first->second = std::forward<Arg>(value);
-        }
-
-        return result;
+        return insert_or_overwrite(std::move(key), std::forward<Arg>(value));
     }
 
     /**
      * @brief Constructs an element in-place, if the key does not exist.
+     *
+     * The element is also constructed when the container already has the key,
+     * in which case the newly constructed object is destroyed immediately.
+     *
      * @tparam Args Types of arguments to forward to the constructor of the
      * element.
      * @param args Arguments to forward to the constructor of the element.
@@ -603,16 +607,26 @@ public:
      * insertion took place.
      */
     template<typename... Args>
-    std::pair<iterator, bool> emplace(Args &&...args) {
+    std::pair<iterator, bool> emplace([[maybe_unused]] Args &&...args) {
         if constexpr(sizeof...(Args) == 0u) {
-            return get_or_emplace(key_type{});
+            return insert_or_do_nothing(key_type{});
         } else if constexpr(sizeof...(Args) == 1u) {
-            return get_or_emplace(args.first..., std::forward<Args>(args)...);
+            return insert_or_do_nothing(std::forward<Args>(args).first..., std::forward<Args>(args).second...);
         } else if constexpr(sizeof...(Args) == 2u) {
-            return get_or_emplace(std::get<0u>(std::tie(args...)), std::forward<Args>(args)...);
+            return insert_or_do_nothing(std::forward<Args>(args)...);
         } else {
-            static_assert(sizeof...(Args) == 3u, "Invalid arguments");
-            return emplace(std::pair<key_type, mapped_type>{std::forward<Args>(args)...});
+            auto &node = packed.first().emplace_back(packed.first().size(), std::forward<Args>(args)...);
+            const auto index = key_to_bucket(node.element.first);
+
+            if(auto it = constrained_find(node.element.first, index); it != end()) {
+                packed.first().pop_back();
+                return std::make_pair(it, false);
+            }
+
+            std::swap(node.next, sparse.first()[index]);
+            rehash_if_required();
+
+            return std::make_pair(--end(), true);
         }
     }
 
@@ -629,13 +643,13 @@ public:
      */
     template<typename... Args>
     std::pair<iterator, bool> try_emplace(const key_type &key, Args &&...args) {
-        return get_or_emplace(key, std::piecewise_construct, std::forward_as_tuple(key), std::forward_as_tuple(std::forward<Args>(args)...));
+        return insert_or_do_nothing(key, std::forward<Args>(args)...);
     }
 
     /*! @copydoc try_emplace */
     template<typename... Args>
     std::pair<iterator, bool> try_emplace(key_type &&key, Args &&...args) {
-        return get_or_emplace(key, std::piecewise_construct, std::forward_as_tuple(std::move(key)), std::forward_as_tuple(std::forward<Args>(args)...));
+        return insert_or_do_nothing(std::move(key), std::forward<Args>(args)...);
     }
 
     /**
@@ -644,9 +658,9 @@ public:
      * @return An iterator following the removed element.
      */
     iterator erase(const_iterator pos) {
-        const auto dist = std::distance(cbegin(), pos);
+        const auto diff = pos - cbegin();
         erase(pos->first);
-        return begin() + dist;
+        return begin() + diff;
     }
 
     /**
@@ -656,13 +670,13 @@ public:
      * @return An iterator following the last removed element.
      */
     iterator erase(const_iterator first, const_iterator last) {
-        const auto dist = std::distance(cbegin(), first);
+        const auto dist = first - cbegin();
 
-        for(auto rfirst = std::make_reverse_iterator(last), rlast = std::make_reverse_iterator(first); rfirst != rlast; ++rfirst) {
-            erase(rfirst->first);
+        for(auto from = last - cbegin(); from != dist; --from) {
+            erase(packed.first()[from - 1u].element.first);
         }
 
-        return dist > static_cast<decltype(dist)>(size()) ? end() : (begin() + dist);
+        return (begin() + dist);
     }
 
     /**
@@ -671,23 +685,23 @@ public:
      * @return Number of elements removed (either 0 or 1).
      */
     size_type erase(const key_type &key) {
-        for(size_type *curr = sparse.first().data() + bucket(key); *curr != std::numeric_limits<size_type>::max(); curr = &packed.first()[*curr].next) {
+        for(size_type *curr = sparse.first().data() + key_to_bucket(key); *curr != (std::numeric_limits<size_type>::max)(); curr = &packed.first()[*curr].next) {
             if(packed.second()(packed.first()[*curr].element.first, key)) {
                 const auto index = *curr;
                 *curr = packed.first()[*curr].next;
                 move_and_pop(index);
-                return true;
+                return 1u;
             }
         }
 
-        return false;
+        return 0u;
     }
 
     /**
      * @brief Exchanges the contents with those of a given container.
      * @param other Container to exchange the content with.
      */
-    void swap(dense_hash_map &other) {
+    void swap(dense_map &other) {
         using std::swap;
         swap(sparse, other.sparse);
         swap(packed, other.packed);
@@ -699,14 +713,14 @@ public:
      * @param key A key of an element to find.
      * @return A reference to the mapped value of the requested element.
      */
-    [[nodiscard]] Type &at(const key_type &key) {
+    [[nodiscard]] mapped_type &at(const key_type &key) {
         auto it = find(key);
         ENTT_ASSERT(it != end(), "Invalid key");
         return it->second;
     }
 
     /*! @copydoc at */
-    [[nodiscard]] const Type &at(const key_type &key) const {
+    [[nodiscard]] const mapped_type &at(const key_type &key) const {
         auto it = find(key);
         ENTT_ASSERT(it != cend(), "Invalid key");
         return it->second;
@@ -717,8 +731,8 @@ public:
      * @param key A key of an element to find or insert.
      * @return A reference to the mapped value of the requested element.
      */
-    [[nodiscard]] Type &operator[](const key_type &key) {
-        return try_emplace(key).first->second;
+    [[nodiscard]] mapped_type &operator[](const key_type &key) {
+        return insert_or_do_nothing(key).first->second;
     }
 
     /**
@@ -726,8 +740,29 @@ public:
      * @param key A key of an element to find or insert.
      * @return A reference to the mapped value of the requested element.
      */
-    [[nodiscard]] Type &operator[](key_type &&key) {
-        return try_emplace(std::move(key)).first->second;
+    [[nodiscard]] mapped_type &operator[](key_type &&key) {
+        return insert_or_do_nothing(std::move(key)).first->second;
+    }
+
+    /**
+     * @brief Returns the number of elements matching a key (either 1 or 0).
+     * @param key Key value of an element to search for.
+     * @return Number of elements matching the key (either 1 or 0).
+     */
+    [[nodiscard]] size_type count(const key_type &key) const {
+        return find(key) != end();
+    }
+
+    /**
+     * @brief Returns the number of elements matching a key (either 1 or 0).
+     * @tparam Other Type of the key value of an element to search for.
+     * @param key Key value of an element to search for.
+     * @return Number of elements matching the key (either 1 or 0).
+     */
+    template<typename Other>
+    [[nodiscard]] std::enable_if_t<is_transparent_v<hasher> && is_transparent_v<key_equal>, std::conditional_t<false, Other, size_type>>
+    count(const Other &key) const {
+        return find(key) != end();
     }
 
     /**
@@ -737,17 +772,17 @@ public:
      * is found, a past-the-end iterator is returned.
      */
     [[nodiscard]] iterator find(const key_type &key) {
-        return constrained_find(key, bucket(key));
+        return constrained_find(key, key_to_bucket(key));
     }
 
     /*! @copydoc find */
     [[nodiscard]] const_iterator find(const key_type &key) const {
-        return constrained_find(key, bucket(key));
+        return constrained_find(key, key_to_bucket(key));
     }
 
     /**
      * @brief Finds an element with a key that compares _equivalent_ to a given
-     * value.
+     * key.
      * @tparam Other Type of the key value of an element to search for.
      * @param key Key value of an element to search for.
      * @return An iterator to an element with the given key. If no such element
@@ -756,14 +791,54 @@ public:
     template<typename Other>
     [[nodiscard]] std::enable_if_t<is_transparent_v<hasher> && is_transparent_v<key_equal>, std::conditional_t<false, Other, iterator>>
     find(const Other &key) {
-        return constrained_find(key, bucket(key));
+        return constrained_find(key, key_to_bucket(key));
     }
 
     /*! @copydoc find */
     template<typename Other>
     [[nodiscard]] std::enable_if_t<is_transparent_v<hasher> && is_transparent_v<key_equal>, std::conditional_t<false, Other, const_iterator>>
     find(const Other &key) const {
-        return constrained_find(key, bucket(key));
+        return constrained_find(key, key_to_bucket(key));
+    }
+
+    /**
+     * @brief Returns a range containing all elements with a given key.
+     * @param key Key value of an element to search for.
+     * @return A pair of iterators pointing to the first element and past the
+     * last element of the range.
+     */
+    [[nodiscard]] std::pair<iterator, iterator> equal_range(const key_type &key) {
+        const auto it = find(key);
+        return {it, it + !(it == end())};
+    }
+
+    /*! @copydoc equal_range */
+    [[nodiscard]] std::pair<const_iterator, const_iterator> equal_range(const key_type &key) const {
+        const auto it = find(key);
+        return {it, it + !(it == cend())};
+    }
+
+    /**
+     * @brief Returns a range containing all elements that compare _equivalent_
+     * to a given key.
+     * @tparam Other Type of an element to search for.
+     * @param key Key value of an element to search for.
+     * @return A pair of iterators pointing to the first element and past the
+     * last element of the range.
+     */
+    template<typename Other>
+    [[nodiscard]] std::enable_if_t<is_transparent_v<hasher> && is_transparent_v<key_equal>, std::conditional_t<false, Other, std::pair<iterator, iterator>>>
+    equal_range(const Other &key) {
+        const auto it = find(key);
+        return {it, it + !(it == end())};
+    }
+
+    /*! @copydoc equal_range */
+    template<typename Other>
+    [[nodiscard]] std::enable_if_t<is_transparent_v<hasher> && is_transparent_v<key_equal>, std::conditional_t<false, Other, std::pair<const_iterator, const_iterator>>>
+    equal_range(const Other &key) const {
+        const auto it = find(key);
+        return {it, it + !(it == cend())};
     }
 
     /**
@@ -794,7 +869,7 @@ public:
      * @return An iterator to the beginning of the given bucket.
      */
     [[nodiscard]] const_local_iterator cbegin(const size_type index) const {
-        return {packed.first().data(), sparse.first()[index]};
+        return {packed.first().begin(), sparse.first()[index]};
     }
 
     /**
@@ -812,7 +887,7 @@ public:
      * @return An iterator to the beginning of the given bucket.
      */
     [[nodiscard]] local_iterator begin(const size_type index) {
-        return {packed.first().data(), sparse.first()[index]};
+        return {packed.first().begin(), sparse.first()[index]};
     }
 
     /**
@@ -821,7 +896,7 @@ public:
      * @return An iterator to the end of the given bucket.
      */
     [[nodiscard]] const_local_iterator cend([[maybe_unused]] const size_type index) const {
-        return {packed.first().data(), std::numeric_limits<size_type>::max()};
+        return {packed.first().begin(), (std::numeric_limits<size_type>::max)()};
     }
 
     /**
@@ -829,7 +904,7 @@ public:
      * @param index An index of a bucket to access.
      * @return An iterator to the end of the given bucket.
      */
-    [[nodiscard]] const_local_iterator end([[maybe_unused]] const size_type index) const {
+    [[nodiscard]] const_local_iterator end(const size_type index) const {
         return cend(index);
     }
 
@@ -839,7 +914,7 @@ public:
      * @return An iterator to the end of the given bucket.
      */
     [[nodiscard]] local_iterator end([[maybe_unused]] const size_type index) {
-        return {packed.first().data(), std::numeric_limits<size_type>::max()};
+        return {packed.first().begin(), (std::numeric_limits<size_type>::max)()};
     }
 
     /**
@@ -873,7 +948,7 @@ public:
      * @return The bucket for the given key.
      */
     [[nodiscard]] size_type bucket(const key_type &key) const {
-        return hash_to_bucket(sparse.second()(key));
+        return key_to_bucket(key);
     }
 
     /**
@@ -905,18 +980,22 @@ public:
     /**
      * @brief Reserves at least the specified number of buckets and regenerates
      * the hash table.
-     * @param count New number of buckets.
+     * @param cnt New number of buckets.
      */
-    void rehash(const size_type count) {
-        auto value = (std::max)(count, minimum_capacity);
-        value = (std::max)(value, static_cast<size_type>(size() / max_load_factor()));
+    void rehash(const size_type cnt) {
+        auto value = cnt > minimum_capacity ? cnt : minimum_capacity;
+        const auto cap = static_cast<size_type>(size() / max_load_factor());
+        value = value > cap ? value : cap;
 
         if(const auto sz = next_power_of_two(value); sz != bucket_count()) {
             sparse.first().resize(sz);
-            std::fill(sparse.first().begin(), sparse.first().end(), std::numeric_limits<size_type>::max());
+
+            for(auto &&elem: sparse.first()) {
+                elem = (std::numeric_limits<size_type>::max)();
+            }
 
             for(size_type pos{}, last = size(); pos < last; ++pos) {
-                const auto index = bucket(packed.first()[pos].element.first);
+                const auto index = key_to_bucket(packed.first()[pos].element.first);
                 packed.first()[pos].next = std::exchange(sparse.first()[index], pos);
             }
         }
@@ -925,11 +1004,11 @@ public:
     /**
      * @brief Reserves space for at least the specified number of elements and
      * regenerates the hash table.
-     * @param count New number of elements.
+     * @param cnt New number of elements.
      */
-    void reserve(const size_type count) {
-        packed.first().reserve(count);
-        rehash(static_cast<size_type>(std::ceil(count / max_load_factor())));
+    void reserve(const size_type cnt) {
+        packed.first().reserve(cnt);
+        rehash(static_cast<size_type>(std::ceil(cnt / max_load_factor())));
     }
 
     /**
@@ -955,5 +1034,23 @@ private:
 };
 
 } // namespace entt
+
+/**
+ * @cond TURN_OFF_DOXYGEN
+ * Internal details not to be documented.
+ */
+
+namespace std {
+
+template<typename Key, typename Value, typename Allocator>
+struct uses_allocator<entt::internal::dense_map_node<Key, Value>, Allocator>
+    : std::true_type {};
+
+} // namespace std
+
+/**
+ * Internal details not to be documented.
+ * @endcond
+ */
 
 #endif

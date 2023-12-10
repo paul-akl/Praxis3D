@@ -36,7 +36,7 @@ public:
 		return returnCode;
 	}
 
-	virtual ErrorCode preload()
+	ErrorCode preload()
 	{
 		ErrorCode returnCode = ErrorCode::Success;
 
@@ -75,6 +75,9 @@ public:
 	{
 		if(m_worldScenes[p_engineState] != nullptr)
 		{
+			// Shutdown the scene before destroying it
+			m_worldScenes[p_engineState]->shutdown();
+
 			delete m_worldScenes[p_engineState];
 			m_worldScenes[p_engineState] = nullptr;
 		}

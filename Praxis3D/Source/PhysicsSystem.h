@@ -71,6 +71,9 @@ public:
 	{
 		if(m_physicsScenes[p_engineState] != nullptr)
 		{
+			// Shutdown the scene before destroying it
+			m_physicsScenes[p_engineState]->shutdown();
+
 			delete m_physicsScenes[p_engineState];
 			m_physicsScenes[p_engineState] = nullptr;
 		}

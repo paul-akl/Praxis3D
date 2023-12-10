@@ -32,16 +32,7 @@ public:
 	// Removes the link between the subject and the observer, so that the observer will no longer be notified of any data changes within the subject
 	void removeObjectLink(ObservedSubject *p_subject, SystemObject *p_observer);
 
-	// Queues an engine change that is processed before the next frame by the Engine
-	//void sendEngineChange(EngineChangeData &p_engineChangeData)
-	//{
-	//	// Make sure calls from other threads are locked, while current call is in progress
-	//	// This is needed so the changes list isn't being written to simultaneously from different threads
-	//	SpinWait::Lock lock(m_mutex);
-
-	//	m_engineChangeQueue.push_back(p_engineChangeData);
-	//	m_engineChangePending = true;
-	//}
+	void removeObjectLinks(SystemObject *p_object);
 
 	// Queues an engine change that is processed before the next frame by the Engine
 	template<class... T_Args>

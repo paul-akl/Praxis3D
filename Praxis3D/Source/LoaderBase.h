@@ -57,6 +57,7 @@ public:
 		inline const bool isLoadedToVideoMemory() const { return m_loadedToVideoMemory;		}
 		inline const unsigned int getUniqueID()	const	{ return (unsigned int)m_uniqueID;	}
 		inline const std::string &getFilename() const	{ return m_filename;				}
+		inline size_t getReferenceCounter() const		{ return m_refCounter;				}
 
 		// Equality operator; compares filenames
 		inline bool operator==(std::string p_string) { return m_filename == p_string; }

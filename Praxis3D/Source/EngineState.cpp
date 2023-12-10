@@ -103,6 +103,23 @@ void EngineState::shutdown()
 		//m_objectChangeController->resetTaskManager();
 		//m_sceneChangeController->resetTaskManager();
 
+		// Get all engine systems
+		auto systems = m_engine.getSystems();
+
+		// Delete the World scene first, as it contains the entity registry, and components need their scene to still be available when destructing
+		m_changeCtrlScene->unextend(systems[Systems::World]->getScene(m_engineStateType));
+		systems[Systems::World]->deleteScene(m_engineStateType);
+
+		// Delete all system scenes that belong to this engine state
+		for(int i = 0; i < Systems::NumberOfSystems; i++)
+		{
+			if(i != Systems::World)
+			{
+				m_changeCtrlScene->unextend(systems[i]->getScene(m_engineStateType));
+				systems[i]->deleteScene(m_engineStateType);
+			}
+		}
+
 		if(m_scheduler != nullptr)
 			delete m_scheduler;
 		if(m_changeCtrlScene != nullptr)
@@ -111,15 +128,6 @@ void EngineState::shutdown()
 			delete m_sceneChangeController;
 		if(m_objectChangeController != nullptr)
 			delete m_objectChangeController;
-
-		// Get all engine systems
-		auto systems = m_engine.getSystems();
-
-		// Delete all system scenes that belong to this engine state
-		for(int i = 0; i < Systems::NumberOfSystems; i++)
-		{
-			systems[i]->deleteScene(m_engineStateType);
-		}
 
 		m_initialized = false;
 	}

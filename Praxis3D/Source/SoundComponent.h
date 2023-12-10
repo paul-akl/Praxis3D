@@ -56,7 +56,7 @@ public:
 	}
 	~SoundComponent()
 	{
-
+		m_systemScene->destroyObject(this);
 	}
 	ErrorCode init() final override
 	{

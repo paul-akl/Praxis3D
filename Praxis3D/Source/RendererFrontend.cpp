@@ -27,6 +27,9 @@ RendererFrontend::RendererFrontend() : m_renderPassData(nullptr)
 	for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
 		m_allRenderPasses[i] = nullptr;
 
+	m_zFar = Config::graphicsVar().z_far;
+	m_zNear = Config::graphicsVar().z_near;
+
 	/*/ Set up the order of the rendering passes
 	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Geometry);
 	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_AtmScattering);
@@ -288,6 +291,8 @@ const RenderingPasses RendererFrontend::getRenderingPasses()
 
 void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_deltaTime)
 {
+	bool projectionMatrixNeedsUpdating = false;
+
 	// Adjust rendering resolution if the screen size has changed
 	if(m_renderPassData->m_renderFinalToTexture)
 	{
@@ -299,7 +304,7 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 			m_frameData.m_screenSize.y = Config::graphicsVar().render_to_texture_resolution_y;
 
 			// Update the projection matrix because it is dependent on the screen size
-			updateProjectionMatrix();
+			projectionMatrixNeedsUpdating = true;
 
 			// Set screen size in the backend
 			m_backend.setScreenSize(m_frameData);
@@ -315,12 +320,24 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 			m_frameData.m_screenSize.y = Config::graphicsVar().current_resolution_y;
 
 			// Update the projection matrix because it is dependent on the screen size
-			updateProjectionMatrix();
+			projectionMatrixNeedsUpdating = true;
 
 			// Set screen size in the backend
 			m_backend.setScreenSize(m_frameData);
 		}
 	}
+
+	// If Z-buffer near or far values have changed, flag projection matrix for updating
+	if(m_zFar != Config::graphicsVar().z_far || m_zNear != Config::graphicsVar().z_near)
+	{
+		m_zFar = Config::graphicsVar().z_far;
+		m_zNear = Config::graphicsVar().z_near;
+		projectionMatrixNeedsUpdating = true;
+	}
+
+	// Update the projection matrix if it was flagged
+	if(projectionMatrixNeedsUpdating)
+		updateProjectionMatrix();
 
 	// Clear draw commands at the beginning of each frame
 	m_drawCommands.clear();
@@ -361,6 +378,7 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 	}
 
 	unsigned int numLoadedObjectsThisFrame = 0;
+	const unsigned int maxLoadedObjectsThisFrame = Config::rendererVar().objects_loaded_per_frame;
 
 	// Iterate over all objects to be rendered with geometry shader
 	for(auto entity : p_sceneObjects.m_objectsToLoadToVideoMemory)
@@ -369,7 +387,7 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 
 		while(!component.m_objectsToLoad.empty())
 		{
-			if(numLoadedObjectsThisFrame++ >= 1)
+			if(numLoadedObjectsThisFrame++ >= maxLoadedObjectsThisFrame)
 				goto jumpAfterLoading;
 
 			LoadableObjectsContainer &loadableObject = component.m_objectsToLoad.front();

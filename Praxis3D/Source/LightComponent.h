@@ -128,17 +128,11 @@ public:
 
 	ErrorCode init()
 	{
-		// Mark the object as loaded, because there is nothing to be specifically loaded, at least for now
-		//setLoadedToMemory(true);
-		//setLoadedToVideoMemory(true);
-
 		return ErrorCode::Success;
 	}
 
 	void loadToMemory() 
 	{
-		//updatePosition(glm::vec3(m_spatialData->getWorldTransform()[3]));
-		//updateRotation(glm::vec3(m_spatialData->getWorldTransform()[2]));
 	}
 
 	// System type is Graphics
@@ -146,13 +140,6 @@ public:
 
 	void update(const float p_deltaTime)
 	{
-		// If the spatial data has changed, update the spatial data in light datasets
-		//if(hasSpatialDataUpdated())
-		//{
-		//	updatePosition(glm::vec3(m_spatialData->getWorldTransform()[3]));
-		//	updateRotation(glm::vec3(m_spatialData->getWorldTransform()[2]));
-		//}
-
 		if(isUpdateNeeded())
 		{
 			// Mark as updated
@@ -169,10 +156,7 @@ public:
 		if(CheckBitmask(p_changeType, Systems::Changes::Generic::Active))
 			setActive(p_subject->getBool(this, Systems::Changes::Generic::Active));
 
-		// Check if the light should be enabled/disabled
-		if(CheckBitmask(p_changeType, Systems::Changes::Graphics::LightEnabled))
-			m_active = p_subject->getBool(this, Systems::Changes::Graphics::LightEnabled);
-
+		// Check individual light data changes based on light type
 		switch(getLightType())
 		{
 			case LightComponent::LightComponentType_point:
@@ -212,6 +196,64 @@ public:
 					m_lightComponent.m_directional.m_intensity = p_subject->getFloat(this, Systems::Changes::Graphics::Intensity);
 			}
 			break;
+		}
+
+		// Check if the light type is changed
+		if(CheckBitmask(p_changeType, Systems::Changes::Graphics::LightType))
+		{
+			// Store the current light values
+			glm::vec3 color = glm::vec3(1.0f);
+			float intensity = 1.0f;
+			float cutoffAngle = 1.0f;
+
+			switch(getLightType())
+			{
+				case LightComponent::LightComponentType_point:
+					{
+						color = m_lightComponent.m_point.m_color;
+						intensity = m_lightComponent.m_point.m_intensity;
+					}
+					break;
+				case LightComponent::LightComponentType_spot:
+					{
+						color = m_lightComponent.m_spot.m_color;
+						intensity = m_lightComponent.m_spot.m_intensity;
+						cutoffAngle = m_lightComponent.m_spot.m_cutoffAngle;
+					}
+					break;
+				case LightComponent::LightComponentType_directional:
+					{
+						color = m_lightComponent.m_directional.m_color;
+						intensity = m_lightComponent.m_directional.m_intensity;
+					}
+					break;
+			}
+
+			// Get the new light type
+			auto newLightType = p_subject->getUnsignedInt(this, Systems::Changes::Graphics::LightType);
+
+			// Set the light data based on the new light type
+			switch(newLightType)
+			{
+				case LightComponent::LightComponentType_point:
+					{
+						m_lightComponent.m_point = PointLightDataSet(color, glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f), intensity);
+						m_lightComponentType = LightComponent::LightComponentType::LightComponentType_point;
+					}
+					break;
+				case LightComponent::LightComponentType_spot:
+					{
+						m_lightComponent.m_spot = SpotLightDataSet(color, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), intensity, cutoffAngle);
+						m_lightComponentType = LightComponent::LightComponentType::LightComponentType_spot;
+					}
+					break;
+				case LightComponent::LightComponentType_directional:
+					{
+						m_lightComponent.m_directional = DirectionalLightDataSet(color, glm::vec3(0.0f, 1.0f, 0.0f), intensity);
+						m_lightComponentType = LightComponent::LightComponentType::LightComponentType_directional;
+					}
+					break;
+			}
 		}
 
 		// Remove the processed change mask from the bit mask value, and reset the processed change value

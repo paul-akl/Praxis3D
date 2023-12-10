@@ -227,6 +227,11 @@ void UniversalScene::removeObjectLink(ObservedSubject *p_subject, SystemObject *
 	m_objectChangeController->unregisterSubject(p_subject, p_observer);
 }
 
+void UniversalScene::removeObjectLinks(SystemObject *p_object)
+{
+	m_objectChangeController->removeSubject(p_object);
+}
+
 void UniversalScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changes)
 {
 	switch(p_changes)

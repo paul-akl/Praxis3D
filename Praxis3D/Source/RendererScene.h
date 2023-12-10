@@ -87,10 +87,18 @@ struct SceneObjects
 	SceneObjects() { }
 
 	// ECS registry views
-	ModelSpatialView m_models;
-	ModelShaderSpatialView m_modelsWithShaders;
-	LightSpatialView m_lights;
-	LoadToVideoMemoryView m_objectsToLoadToVideoMemory;
+	//ModelSpatialView m_models;
+
+	decltype(std::declval<entt::basic_registry<EntityID>>().view<ModelComponent, SpatialComponent>(entt::exclude<ShaderComponent, GraphicsLoadToMemoryComponent, GraphicsLoadToVideoMemoryComponent>)) m_models;
+	decltype(std::declval<entt::basic_registry<EntityID>>().view<ModelComponent, ShaderComponent, SpatialComponent>(entt::exclude<GraphicsLoadToMemoryComponent, GraphicsLoadToVideoMemoryComponent>)) m_modelsWithShaders;
+	decltype(std::declval<entt::basic_registry<EntityID>>().view<GraphicsLoadToVideoMemoryComponent>(entt::exclude<GraphicsLoadToMemoryComponent>)) m_objectsToLoadToVideoMemory;
+	decltype(std::declval<entt::basic_registry<EntityID>>().view<LightComponent, SpatialComponent>(entt::exclude<>)) m_lights;
+
+
+	//decltype(entt::basic_registry<EntityID>::view<ModelComponent, SpatialComponent>(entt::exclude<ShaderComponent, GraphicsLoadToMemoryComponent, GraphicsLoadToVideoMemoryComponent>)) m_models;
+	//ModelShaderSpatialView m_modelsWithShaders;
+	//LightSpatialView m_lights;
+	//LoadToVideoMemoryView m_objectsToLoadToVideoMemory;
 
 	// Camera
 	glm::mat4 m_cameraViewMatrix;
@@ -184,7 +192,7 @@ public:
 			case LightComponent::LightComponentType_spot:
 				p_constructionInfo.m_color = p_component.m_lightComponent.m_spot.m_color;
 				p_constructionInfo.m_intensity = p_component.m_lightComponent.m_spot.m_intensity;
-				p_constructionInfo.m_cutoffAngle = p_component.m_lightComponent.m_spot.m_cutoffAngle;
+				p_constructionInfo.m_cutoffAngle = glm::degrees(p_component.m_lightComponent.m_spot.m_cutoffAngle);
 				break;
 		}
 	}
@@ -204,6 +212,8 @@ public:
 		p_constructionInfo.m_geometryShaderFilename = p_component.getShaderData()->m_shader.getShaderFilename(ShaderType::ShaderType_Geometry);
 		p_constructionInfo.m_vetexShaderFilename = p_component.getShaderData()->m_shader.getShaderFilename(ShaderType::ShaderType_Vertex);
 	}
+
+	void releaseObject(SystemObject *p_systemObject);
 
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 

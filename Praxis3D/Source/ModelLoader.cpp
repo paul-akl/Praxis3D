@@ -101,14 +101,6 @@ ErrorCode Model::unloadMemory()
 
 	return returnError;
 }
-/*ErrorCode Model::unloadVideoMemory()
-{
-	ErrorCode returnError = ErrorCode::Success;
-
-	glDeleteBuffers(NumBufferTypes, m_buffers);
-
-	return returnError;
-}*/
 
 void Model::loadFromFile()
 {
@@ -329,10 +321,12 @@ ErrorCode Model::loadTextures(aiTexture **p_assimpTextures, size_t p_numTextures
 ModelLoader::ModelLoader()
 {
 	m_defaultModel = new Model(this, "null_model", 0, 0);
+	m_defaultModelHandle = new ModelHandle(*m_defaultModel);
 }
 
 ModelLoader::~ModelLoader()
 {
+	delete m_defaultModelHandle;
 }
 
 ErrorCode ModelLoader::init()

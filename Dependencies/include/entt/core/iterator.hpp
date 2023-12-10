@@ -3,8 +3,8 @@
 
 #include <iterator>
 #include <memory>
+#include <type_traits>
 #include <utility>
-#include "../config/config.h"
 
 namespace entt {
 
@@ -14,40 +14,34 @@ namespace entt {
  */
 template<typename Type>
 struct input_iterator_pointer final {
+    /*! @brief Value type. */
+    using value_type = Type;
     /*! @brief Pointer type. */
-    using pointer = decltype(std::addressof(std::declval<Type &>()));
-
-    /*! @brief Default copy constructor, deleted on purpose. */
-    input_iterator_pointer(const input_iterator_pointer &) = delete;
-
-    /*! @brief Default move constructor. */
-    input_iterator_pointer(input_iterator_pointer &&) = default;
+    using pointer = Type *;
+    /*! @brief Reference type. */
+    using reference = Type &;
 
     /**
      * @brief Constructs a proxy object by move.
      * @param val Value to use to initialize the proxy object.
      */
-    input_iterator_pointer(Type &&val)
+    constexpr input_iterator_pointer(value_type &&val) noexcept(std::is_nothrow_move_constructible_v<value_type>)
         : value{std::move(val)} {}
-
-    /**
-     * @brief Default copy assignment operator, deleted on purpose.
-     * @return This proxy object.
-     */
-    input_iterator_pointer &operator=(const input_iterator_pointer &) = delete;
-
-    /**
-     * @brief Default move assignment operator.
-     * @return This proxy object.
-     */
-    input_iterator_pointer &operator=(input_iterator_pointer &&) = default;
 
     /**
      * @brief Access operator for accessing wrapped values.
      * @return A pointer to the wrapped value.
      */
-    [[nodiscard]] pointer operator->() ENTT_NOEXCEPT {
+    [[nodiscard]] constexpr pointer operator->() noexcept {
         return std::addressof(value);
+    }
+
+    /**
+     * @brief Dereference operator for accessing wrapped values.
+     * @return A reference to the wrapped value.
+     */
+    [[nodiscard]] constexpr reference operator*() noexcept {
+        return value;
     }
 
 private:
@@ -55,35 +49,122 @@ private:
 };
 
 /**
- * @brief Utility class to create an iterable object from a pair of iterators.
- * @tparam It Type of iterators.
+ * @brief Plain iota iterator (waiting for C++20).
+ * @tparam Type Value type.
  */
-template<typename It>
+template<typename Type>
+class iota_iterator final {
+    static_assert(std::is_integral_v<Type>, "Not an integral type");
+
+public:
+    /*! @brief Value type, likely an integral one. */
+    using value_type = Type;
+    /*! @brief Invalid pointer type. */
+    using pointer = void;
+    /*! @brief Non-reference type, same as value type. */
+    using reference = value_type;
+    /*! @brief Difference type. */
+    using difference_type = std::ptrdiff_t;
+    /*! @brief Iterator category. */
+    using iterator_category = std::input_iterator_tag;
+
+    /*! @brief Default constructor. */
+    constexpr iota_iterator() noexcept
+        : current{} {}
+
+    /**
+     * @brief Constructs an iota iterator from a given value.
+     * @param init The initial value assigned to the iota iterator.
+     */
+    constexpr iota_iterator(const value_type init) noexcept
+        : current{init} {}
+
+    /**
+     * @brief Pre-increment operator.
+     * @return This iota iterator.
+     */
+    constexpr iota_iterator &operator++() noexcept {
+        return ++current, *this;
+    }
+
+    /**
+     * @brief Post-increment operator.
+     * @return This iota iterator.
+     */
+    constexpr iota_iterator operator++(int) noexcept {
+        iota_iterator orig = *this;
+        return ++(*this), orig;
+    }
+
+    /**
+     * @brief Dereference operator.
+     * @return The underlying value.
+     */
+    [[nodiscard]] constexpr reference operator*() const noexcept {
+        return current;
+    }
+
+private:
+    value_type current;
+};
+
+/**
+ * @brief Comparison operator.
+ * @tparam Type Value type of the iota iterator.
+ * @param lhs A properly initialized iota iterator.
+ * @param rhs A properly initialized iota iterator.
+ * @return True if the two iterators are identical, false otherwise.
+ */
+template<typename Type>
+[[nodiscard]] constexpr bool operator==(const iota_iterator<Type> &lhs, const iota_iterator<Type> &rhs) noexcept {
+    return *lhs == *rhs;
+}
+
+/**
+ * @brief Comparison operator.
+ * @tparam Type Value type of the iota iterator.
+ * @param lhs A properly initialized iota iterator.
+ * @param rhs A properly initialized iota iterator.
+ * @return True if the two iterators differ, false otherwise.
+ */
+template<typename Type>
+[[nodiscard]] constexpr bool operator!=(const iota_iterator<Type> &lhs, const iota_iterator<Type> &rhs) noexcept {
+    return !(lhs == rhs);
+}
+
+/**
+ * @brief Utility class to create an iterable object from a pair of iterators.
+ * @tparam It Type of iterator.
+ * @tparam Sentinel Type of sentinel.
+ */
+template<typename It, typename Sentinel = It>
 struct iterable_adaptor final {
-    /*! @brief Type of the objects returned during iteration. */
+    /*! @brief Value type. */
     using value_type = typename std::iterator_traits<It>::value_type;
     /*! @brief Iterator type. */
     using iterator = It;
-    /*! @brief Const iterator type. */
-    using const_iterator = iterator;
+    /*! @brief Sentinel type. */
+    using sentinel = Sentinel;
 
     /*! @brief Default constructor. */
-    iterable_adaptor() = default;
+    constexpr iterable_adaptor() noexcept(std::is_nothrow_default_constructible_v<iterator> &&std::is_nothrow_default_constructible_v<sentinel>)
+        : first{},
+          last{} {}
 
     /**
      * @brief Creates an iterable object from a pair of iterators.
      * @param from Begin iterator.
      * @param to End iterator.
      */
-    iterable_adaptor(It from, It to)
-        : first{from},
-          last{to} {}
+    constexpr iterable_adaptor(iterator from, sentinel to) noexcept(std::is_nothrow_move_constructible_v<iterator> &&std::is_nothrow_move_constructible_v<sentinel>)
+        : first{std::move(from)},
+          last{std::move(to)} {}
 
     /**
      * @brief Returns an iterator to the beginning.
      * @return An iterator to the first element of the range.
      */
-    [[nodiscard]] const_iterator begin() const ENTT_NOEXCEPT {
+    [[nodiscard]] constexpr iterator begin() const noexcept {
         return first;
     }
 
@@ -92,23 +173,23 @@ struct iterable_adaptor final {
      * @return An iterator to the element following the last element of the
      * range.
      */
-    [[nodiscard]] const_iterator end() const ENTT_NOEXCEPT {
+    [[nodiscard]] constexpr sentinel end() const noexcept {
         return last;
     }
 
     /*! @copydoc begin */
-    [[nodiscard]] const_iterator cbegin() const ENTT_NOEXCEPT {
+    [[nodiscard]] constexpr iterator cbegin() const noexcept {
         return begin();
     }
 
     /*! @copydoc end */
-    [[nodiscard]] const_iterator cend() const ENTT_NOEXCEPT {
+    [[nodiscard]] constexpr sentinel cend() const noexcept {
         return end();
     }
 
 private:
     It first;
-    It last;
+    Sentinel last;
 };
 
 } // namespace entt

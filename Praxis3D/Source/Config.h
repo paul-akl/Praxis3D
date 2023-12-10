@@ -248,12 +248,12 @@ namespace Systems
 			static constexpr BitMask UpVector				= Changes::Type::Graphics + Changes::Graphics::Camera + Changes::Common::Shared2;
 			static constexpr BitMask AllCamera				= Target | UpVector;
 
-			static constexpr BitMask LightEnabled			= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared3;
+			static constexpr BitMask LightType				= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared3;
 			static constexpr BitMask Color					= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared4;
 			static constexpr BitMask CutoffAngle			= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared5;
 			static constexpr BitMask Direction				= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared6;
 			static constexpr BitMask Intensity				= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared7;
-			static constexpr BitMask AllLighting			= LightEnabled | Color | CutoffAngle | Direction | Intensity;
+			static constexpr BitMask AllLighting			= LightType | Color | CutoffAngle | Direction | Intensity;
 
 			static constexpr BitMask PositionBuffer			= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared8;
 			static constexpr BitMask DiffuseBuffer			= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared9;
@@ -295,7 +295,8 @@ namespace Systems
 		namespace World
 		{
 			static constexpr BitMask ObjectMaterialType		= Changes::Type::World + Changes::Common::Shared1;
-			static constexpr BitMask All					= ObjectMaterialType;
+			static constexpr BitMask PrefabName				= Changes::Type::World + Changes::Common::Shared2;
+			static constexpr BitMask All					= ObjectMaterialType | PrefabName;
 		}
 
 		static constexpr BitMask None = 0;
@@ -886,7 +887,8 @@ public:
 			light_color_r = 1.0f;
 			light_color_g = 1.0f;
 			light_color_b = 1.0f;
-			LOD_prallax_mapping = 100.0f;
+			LOD_parallax_mapping = 100.0f;
+			luminance_multiplier = 0.5f;
 			luminance_range_min = 0.004f;
 			luminance_range_max = 11.3f;
 			height_scale = 0.0f;
@@ -947,7 +949,8 @@ public:
 		float light_color_r;
 		float light_color_g;
 		float light_color_b;
-		float LOD_prallax_mapping;
+		float LOD_parallax_mapping;
+		float luminance_multiplier;
 		float luminance_range_min;
 		float luminance_range_max;
 		float height_scale;
@@ -992,6 +995,7 @@ public:
 			editor_button_reload_texture = "buttons\\button_reload_3.png";
 			editor_button_restart_texture = "buttons\\button_editor_restart_2.png";
 			editor_button_scripting_enabled_texture = "buttons\\button_scripting_3.png";
+			editor_new_entity_name = "New Entity";
 			gui_editor_window_name = "Editor window";
 		}
 		bool gui_docking_enabled;
@@ -1027,6 +1031,7 @@ public:
 		std::string editor_button_reload_texture;
 		std::string editor_button_restart_texture;
 		std::string editor_button_scripting_enabled_texture;
+		std::string editor_new_entity_name;
 		std::string gui_editor_window_name;
 	};
 	struct InputVariables
@@ -1438,6 +1443,7 @@ public:
 
 			inverseLogLuminanceRange = "inverseLogLuminanceRange";
 			logLuminanceRange = "logLuminanceRange";
+			luminanceMultiplier = "luminanceMultiplier";
 			minLogLuminance = "minLogLuminance";
 			tonemapMethod = "tonemapMethod";
 
@@ -1541,6 +1547,7 @@ public:
 
 		std::string inverseLogLuminanceRange;
 		std::string logLuminanceRange;
+		std::string luminanceMultiplier;
 		std::string minLogLuminance;
 		std::string tonemapMethod;
 

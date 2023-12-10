@@ -155,6 +155,8 @@ public:
 		p_constructionInfo.m_staticSequence = p_component.isStaticSequence();
 	}
 
+	void releaseObject(SystemObject *p_systemObject);
+
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
 	void changeOccurred(ObservedSubject* p_subject, BitMask p_changeType) { }

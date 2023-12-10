@@ -36,8 +36,8 @@ PhysicsScene::~PhysicsScene()
 	for(int i = 0; i < m_collisionShapes.size(); i++)
 	{
 		btCollisionShape *shape = m_collisionShapes[i];
-		m_collisionShapes[i] = 0;
-		delete shape;
+		m_collisionShapes[i] = nullptr;
+		//delete shape;
 	}
 
 	// Delete dynamics world
@@ -514,21 +514,51 @@ void PhysicsScene::createCollisionEventComponent(const EntityID &p_entityID)
 	worldScene->addComponent<CollisionEventComponent>(p_entityID, p_entityID);
 }
 
-ErrorCode PhysicsScene::destroyObject(SystemObject *p_systemObject)
-{	
-	// Check if object is valid and belongs to the physics system
-	if(p_systemObject != nullptr && p_systemObject->getSystemType() == Systems::Physics)
+void PhysicsScene::releaseObject(SystemObject *p_systemObject)
+{
+	switch(p_systemObject->getObjectType())
 	{
-		// Cast the system object to physics object, as it belongs to the renderer scene
-		PhysicsObject *objectToDestroy = static_cast<PhysicsObject *>(p_systemObject);
+		case Properties::PropertyID::RigidBodyComponent:
+			{
+				auto *component = static_cast<RigidBodyComponent *>(p_systemObject);
 
-		// Try to destroy the object; return success if it succeeds
-		if(removeObjectFromPool(*objectToDestroy))
-			return ErrorCode::Success;
+				// Remove rigid body from the world
+				if(component->m_rigidBody != nullptr)
+				{
+					//delete component->m_rigidBody->getMotionState();
+					delete component->m_rigidBody->getCollisionShape();
+					m_dynamicsWorld->removeRigidBody(component->m_rigidBody);
+				}
+			}
+			break;
+	}
+}
+
+ErrorCode PhysicsScene::destroyObject(SystemObject *p_systemObject)
+{
+	ErrorCode returnError = ErrorCode::Success;
+
+	// Get the world scene required for deleting components
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	switch(p_systemObject->getObjectType())
+	{
+		case Properties::PropertyID::RigidBodyComponent:
+			{
+				// Delete component
+				worldScene->removeComponent<RigidBodyComponent>(p_systemObject->getEntityID());
+			}
+			break;
+
+		default:
+			{
+				// If this point is reached, no object was found, return an appropriate error
+				returnError = ErrorCode::Destroy_obj_not_found;
+			}
+			break;
 	}
 
-	// If this point is reached, no object was found, return an appropriate error
-	return ErrorCode::Destroy_obj_not_found;
+	return returnError;
 }
 
 void PhysicsScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
@@ -562,18 +592,8 @@ void PhysicsScene::receiveData(const DataType p_dataType, void *p_data, const bo
 							// Check if the component exists
 							auto *component = entityRegistry.try_get<RigidBodyComponent>(componentData->m_entityID);
 							if(component != nullptr)
-							{
-								// Remove rigid body from the world
-								if(component->m_rigidBody != nullptr)
-								{
-									delete component->m_rigidBody->getMotionState();
-									delete component->m_rigidBody->getCollisionShape();
-									m_dynamicsWorld->removeRigidBody(component->m_rigidBody);
-								}
-
-								// Delete component
-								worldScene->removeComponent<RigidBodyComponent>(componentData->m_entityID);
-							}
+								if(auto error = destroyObject(component); error != ErrorCode::Success)
+									ErrHandlerLoc::get().log(error, component->getName(), ErrorSource::Source_Physics);
 						}
 						break;
 				}

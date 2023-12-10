@@ -53,6 +53,11 @@ public:
 		{
 			setName(p_subject->getString(this, Systems::Changes::Generic::Name));
 		}
+
+		if(CheckBitmask(p_changeType, Systems::Changes::World::PrefabName))
+		{
+			setPrefabName(p_subject->getString(this, Systems::Changes::World::PrefabName));
+		}
 	}
 
 private:

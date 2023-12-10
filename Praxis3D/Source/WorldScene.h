@@ -46,6 +46,11 @@ class WorldScene : public SystemScene
 {
 public:
 	WorldScene(SystemBase *p_system, SceneLoader *p_sceneLoader);
+	~WorldScene()
+	{
+		// Delete all entities
+		m_entityRegistry.clear();
+	}
 
 	ErrorCode init();
 
@@ -71,6 +76,8 @@ public:
 	std::vector<SystemObject*> createComponents(const EntityID p_entityID, const WorldComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 
 	void exportComponents(const EntityID p_entityID, ComponentsConstructionInfo &p_constructionInfo);
+
+	void releaseObject(SystemObject *p_systemObject);
 
 	ErrorCode destroyObject(SystemObject *p_systemObject);
 
@@ -152,9 +159,15 @@ public:
 
 	// Removes a component from the given entity
 	template <class T_Component>
-	void removeComponent(EntityID p_entity)
+	inline void removeComponent(const EntityID p_entity)
 	{
 		m_entityRegistry.remove<T_Component>(p_entity);
+	}
+
+	// Removes an entity with all its components
+	inline void removeEntity(const EntityID p_entity)
+	{
+		m_entityRegistry.destroy(p_entity);
 	}
 
 	// Increases the size of the pool for a given component type

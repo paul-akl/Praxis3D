@@ -52,7 +52,7 @@ public:
 				if(luaComponentProperty)
 				{
 					// Create the lua component
-					addComponent(new LuaComponent(m_systemScene, m_name + Config::componentVar().lua_component_name));
+					//addComponent(new LuaComponent(m_systemScene, m_name + Config::componentVar().lua_component_name));
 
 					// Try to initialize the lua component
 					auto componentInitError = m_luaComponent->init();

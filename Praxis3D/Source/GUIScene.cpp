@@ -271,20 +271,41 @@ SystemObject *GUIScene::createComponent(const EntityID p_entityID, const GUISequ
 	return returnObject;
 }
 
+void GUIScene::releaseObject(SystemObject *p_systemObject)
+{
+	switch(p_systemObject->getObjectType())
+	{
+		case Properties::PropertyID::GUISequenceComponent:
+			{
+				auto *component = static_cast<GUISequenceComponent *>(p_systemObject);
+
+				// Nothing to release
+			}
+			break;
+	}
+}
+
 ErrorCode GUIScene::destroyObject(SystemObject *p_systemObject)
 {	
 	ErrorCode returnError = ErrorCode::Success;
 
+	// Get the world scene required for deleting components
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
 	switch(p_systemObject->getObjectType())
 	{
 	case Properties::PropertyID::GUISequenceComponent:
-		//m_sceneLoader->getChangeController()->removeObjectLink(p_systemObject);
-		static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World))->removeComponent<GUISequenceComponent>(p_systemObject->getEntityID());
+		{
+			// Delete component
+			worldScene->removeComponent<GUISequenceComponent>(p_systemObject->getEntityID());
+		}
 		break;
 
 	default:
-		// No object was found, return an appropriate error
-		returnError = ErrorCode::Destroy_obj_not_found;
+		{
+			// No object was found, return an appropriate error
+			returnError = ErrorCode::Destroy_obj_not_found;
+		}
 		break;
 	}
 
@@ -315,10 +336,8 @@ void GUIScene::receiveData(const DataType p_dataType, void *p_data, const bool p
 							// Check if the component exists
 							auto *component = entityRegistry.try_get<GUISequenceComponent>(componentData->m_entityID);
 							if(component != nullptr)
-							{
-								// Delete component
-								worldScene->removeComponent<GUISequenceComponent>(componentData->m_entityID);
-							}
+								if(auto error = destroyObject(component); error != ErrorCode::Success)
+									ErrHandlerLoc::get().log(error, component->getName(), ErrorSource::Source_GUI);
 						}
 						break;
 				}
@@ -354,10 +373,11 @@ void GUIScene::receiveData(const DataType p_dataType, void *p_data, const bool p
 					{
 						m_editorWindow = new EditorWindow(this, Config::GUIVar().gui_editor_window_name, 0);
 						m_editorWindow->init();
-						m_editorWindow->setup(*editorWindowSettings);
 					}
-					else // If the editor window does exist, just send the settings to it
-						m_editorWindow->setup(*editorWindowSettings);
+
+					// Send the settings to the editor window
+					m_editorWindow->setup(*editorWindowSettings);
+					m_editorWindow->activate();
 
 					GUIHandlerLocator::get().enableDocking();
 				}

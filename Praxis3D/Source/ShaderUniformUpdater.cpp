@@ -149,6 +149,7 @@ ErrorCode ShaderUniformUpdater::generatePerFrameList()
 	// Luminance
 	uniformList.push_back(new InverseLogLuminanceRangeUniform(m_shaderHandle));
 	uniformList.push_back(new LogLuminanceRangeUniform(m_shaderHandle));
+	uniformList.push_back(new LuminanceMultiplierUniform(m_shaderHandle));
 	uniformList.push_back(new MinLogLuminanceUniform(m_shaderHandle));
 	uniformList.push_back(new TonemapMethodUniform(m_shaderHandle));
 

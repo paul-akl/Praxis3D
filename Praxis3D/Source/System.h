@@ -31,7 +31,6 @@ public:
 	SystemBase() : m_initialized(false) { }
 
 	virtual ErrorCode init() = 0;
-	//virtual ErrorCode destroyScene(SystemScene *p_systemScene) = 0;
 
 	// Internal system data-driven setup based on passed properties
 	virtual ErrorCode setup(const PropertySet &p_properties) = 0;
@@ -83,6 +82,9 @@ public:
 	// Deactivation is called when the engine play state changes and this scene isn't current anymore
 	virtual void deactivate() { }
 
+	// Notify the scene that is it being shutdown, must be called before the destructor
+	virtual void shutdown() { }
+
 	// Called every frame with the last frame's delta time
 	virtual void update(const float p_deltaTime) = 0;
 
@@ -98,8 +100,14 @@ public:
 	// Create all the components that belong to this scene, that are contained in ComponentsConstructionInfo; return a vector of all created components
 	virtual std::vector<SystemObject*> createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading = true);
 
+	// Delete all components of the given entity that belong to this scene
+	virtual void deleteComponents(const EntityID p_entityID) { }
+
 	// Exports all the components that belong to this scene into ComponentsConstructionInfo
 	virtual void exportComponents(const EntityID p_entityID, ComponentsConstructionInfo &p_constructionInfo) { }
+
+	// Process object destruction (for instance, in case system scene needs to release data)
+	virtual void releaseObject(SystemObject *p_systemObject) { }
 
 	// Destroy an object that belongs to this system scene
 	virtual ErrorCode destroyObject(SystemObject *p_systemObject) = 0;

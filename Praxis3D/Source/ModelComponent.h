@@ -48,6 +48,10 @@ public:
 				if(p_size > m_heightScale.size())
 					m_heightScale.resize(p_size, Config::graphicsVar().height_scale);
 
+				// Resize the "mesh is active" array and initialize each element to true
+				if(p_size > m_active.size())
+					m_active.resize(p_size, true);
+
 				// Resize the "mesh is present" array and initialize each element to false
 				if(p_size > m_present.size())
 					m_present.resize(p_size, false);
@@ -63,6 +67,7 @@ public:
 			m_alphaThreshold.clear();
 			m_emissiveIntensity.clear();
 			m_heightScale.clear();
+			m_active.clear();
 			m_present.clear();
 		}
 
@@ -75,6 +80,7 @@ public:
 		std::vector<float> m_alphaThreshold;
 		std::vector<float> m_emissiveIntensity;
 		std::vector<float> m_heightScale;
+		std::vector<bool> m_active;
 		std::vector<bool> m_present;
 	};
 	struct ModelsProperties
@@ -272,6 +278,10 @@ public:
 								materials[iMatType].m_textureScale = glm::vec2(Config::graphicsVar().texture_tiling_factor, Config::graphicsVar().texture_tiling_factor);
 						}
 
+						bool active = true;
+						if(m_modelsProperties->m_models[modelIndex].m_active.size() > meshIndex)
+							active = m_modelsProperties->m_models[modelIndex].m_active[meshIndex];
+
 						float heightScale = Config::graphicsVar().height_scale;
 						if(m_modelsProperties->m_models[modelIndex].m_heightScale.size() > meshIndex)
 							heightScale = m_modelsProperties->m_models[modelIndex].m_heightScale[meshIndex];
@@ -290,7 +300,8 @@ public:
 							materials,
 							heightScale,
 							alphaThreshold,
-							emissiveIntensity));
+							emissiveIntensity,
+							active));
 					}
 					else
 					{
@@ -310,7 +321,7 @@ public:
 							materials[iMatType].m_textureScale = glm::vec2(Config::graphicsVar().texture_tiling_factor, Config::graphicsVar().texture_tiling_factor);
 						}
 
-						newModelData.m_meshes.push_back(MeshData(newModelData.m_model.getMeshArray()[meshIndex], materials, Config::graphicsVar().height_scale, Config::graphicsVar().alpha_threshold, Config::graphicsVar().emissive_multiplier));
+						newModelData.m_meshes.push_back(MeshData(newModelData.m_model.getMeshArray()[meshIndex], materials, Config::graphicsVar().height_scale, Config::graphicsVar().alpha_threshold, Config::graphicsVar().emissive_multiplier, true));
 
 						//ErrHandlerLoc::get().log(ErrorCode::Load_to_memory_success, ErrorSource::Source_ModelComponent, m_modelsProperties->m_models[modelIndex].m_modelName);
 					}
@@ -506,6 +517,7 @@ public:
 				newModelEntry.m_alphaThreshold.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_alphaThreshold);
 				newModelEntry.m_emissiveIntensity.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_emissiveIntensity);
 				newModelEntry.m_heightScale.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_heightScale);
+				newModelEntry.m_active.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_active);
 				newModelEntry.m_present.push_back(materialPresent);
 				newModelEntry.m_numOfMeshes++;
 			}

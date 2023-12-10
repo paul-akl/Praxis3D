@@ -1,7 +1,7 @@
 #version 430 core
 
-#define MIN_LOD_PARALLAX 0.0
-#define MAX_LOD_PARALLAX 10.0
+#define MIN_LOD_PARALLAX 0.1
+#define MAX_LOD_PARALLAX 20.0
 #define LOD_PARALLAX_THRESHOLD 0.0
 #define PARALLAX_SCALE_THRESHOLD 0.001
 #define MIN_ROUGHNESS 0.001
@@ -271,7 +271,7 @@ vec2 parallaxOcclusionMapping(vec2 texCoords, vec3 viewDir, float p_LOD)
 	// number of depth layers
     const float minLayers = 15;
     const float maxLayers = 20;
-    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir))) * p_LOD;  
+    float numLayers = max(mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir))) * p_LOD, 1.0);  
     // calculate the size of each layer
     float layerDepth = 1.0 / numLayers;
     // depth of current layer
@@ -332,28 +332,12 @@ void main(void)
 		float distanceToFrag = length(viewDir);
 		viewDir = normalize(viewDir);
 		
-		float LOD = clamp(1.0 - ((distanceToFrag * distanceToFrag) / parallaxLOD), MIN_LOD_PARALLAX, MAX_LOD_PARALLAX);
+		float LOD = mix(MIN_LOD_PARALLAX, MAX_LOD_PARALLAX, 1.0 - ((distanceToFrag) / parallaxLOD));
 		
-		if(LOD > LOD_PARALLAX_THRESHOLD)
+		//if(LOD > LOD_PARALLAX_THRESHOLD)
 			newCoords = parallaxOcclusionMapping(texCoord, viewDir, LOD);
-			    
-		//if(newCoords.x > 1.0 || newCoords.y > 1.0 || newCoords.x < 0.0 || newCoords.y < 0.0)
-		//	discard;
+			
 	}
-	
-	//if(distanceToFrag < 9.90)
-	//{
-		//float LOD = min(((10.0 - distanceToFrag) / 10.0), 1.0);
-		//float LOD2 = clamp((distanceToFrag - 8.0) / 2.0, 0.0, 1.0);
-	
-		//if(parallaxScale > PARALLAX_SCALE_THRESHOLD)
-		//	newCoords = mix(parallaxOcclusionMapping(texCoord, viewDir, LOD), texCoord, 1.0 - LOD);
-	//}
-	
-	// discards a fragment when sampling outside default texture region (fixes border artifacts)
-    //if(newCoords.x > 1.0 || newCoords.y > 1.0 || newCoords.x < 0.0 || newCoords.y < 0.0)
-    //    discard;
-	//vec2 testColor = parallaxMappingNew(texCoord, eye);
 	
 	// Get diffuse color
 	vec4 diffuse = texture(diffuseTexture, newCoords).rgba;
@@ -366,7 +350,6 @@ void main(void)
 	float roughness = getRoughness(newCoords);
 	float metalness = getMetalness(newCoords);
 	vec4 emissiveColor = texture(emissiveTexture, newCoords).rgba;
-	//vec4 emissiveColor = pow(texture(emissiveTexture, newCoords), vec4(gamma, gamma, gamma, 1.0));
 	
 	// Use emissive alpha channel as an intensity multiplier
 	emissiveColor *= emissiveMultiplier;

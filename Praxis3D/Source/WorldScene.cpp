@@ -14,7 +14,7 @@ WorldScene::WorldScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : Syste
 ErrorCode WorldScene::init() 
 {
 	// Since this flag is modified by hand in the Entt code, check to see if it is still correct, because updating the Entt library will revert the flag back to default (false)
-	if(!entt::basic_component_traits::in_place_delete)
+	if(!entt::component_traits<SpatialComponent>::in_place_delete)
 		ErrHandlerLoc().get().log(ErrorType::Error, ErrorSource::Source_WorldScene, "entt::basic_component_traits::in_place_delete is switched off, disabling pointer stability upon component deletion");
 
 	return ErrorCode::Success; 
@@ -415,26 +415,54 @@ void WorldScene::exportComponents(const EntityID p_entityID, ComponentsConstruct
 	}
 }
 
+void WorldScene::releaseObject(SystemObject *p_systemObject)
+{
+	switch(p_systemObject->getObjectType())
+	{
+		case Properties::PropertyID::ObjectMaterialComponent:
+			{
+				auto *component = static_cast<ObjectMaterialComponent *>(p_systemObject);
+
+				// Nothing to release
+			}
+			break;
+
+		case Properties::PropertyID::SpatialComponent:
+			{
+				auto *component = static_cast<SpatialComponent *>(p_systemObject);
+
+				// Nothing to release
+			}
+			break;
+	}
+}
+
 ErrorCode WorldScene::destroyObject(SystemObject *p_systemObject)
 {
 	ErrorCode returnError = ErrorCode::Success;
 
 	switch(p_systemObject->getObjectType())
 	{
-	case Properties::PropertyID::ObjectMaterialComponent:
-		//m_sceneLoader->getChangeController()->removeObjectLink(p_systemObject);
-		removeComponent<ObjectMaterialComponent>(p_systemObject->getEntityID());
-		break;
+		case Properties::PropertyID::ObjectMaterialComponent:
+			{
+				// Delete component
+				removeComponent<ObjectMaterialComponent>(p_systemObject->getEntityID());
+			}
+			break;
 
-	case Properties::PropertyID::SpatialComponent:
-		//m_sceneLoader->getChangeController()->removeObjectLink(p_systemObject);
-		removeComponent<SpatialComponent>(p_systemObject->getEntityID());
-		break;
+		case Properties::PropertyID::SpatialComponent:
+			{
+				// Delete component
+				removeComponent<SpatialComponent>(p_systemObject->getEntityID());
+			}
+			break;
 
-	default:
-		// No object was found, return an appropriate error
-		returnError = ErrorCode::Destroy_obj_not_found;
-		break;
+		default:
+			{
+				// No object was found, return an appropriate error
+				returnError = ErrorCode::Destroy_obj_not_found;
+			}
+			break;
 	}
 
 	// If this point is reached, 
@@ -473,7 +501,7 @@ void WorldScene::receiveData(const DataType p_dataType, void *p_data, const bool
 				auto addComponentError = addComponents(componentConstructionInfo->m_id, *componentConstructionInfo);
 
 				if(addComponentError == ErrorCode::Success)
-					ErrHandlerLoc::get().log(addComponentError, "EntityID: " + Utilities::toString(componentConstructionInfo->m_id), ErrorSource::Source_WorldScene);
+					ErrHandlerLoc::get().log(ErrorCode::Load_success, componentConstructionInfo->m_name + " (ID: " + Utilities::toString(componentConstructionInfo->m_id) + ")", ErrorSource::Source_WorldScene);
 
 				// Delete the sent data if the ownership of it was transfered
 				if(p_deleteAfterReceiving)
@@ -494,10 +522,8 @@ void WorldScene::receiveData(const DataType p_dataType, void *p_data, const bool
 							// Check if the component exists
 							auto *component = m_entityRegistry.try_get<ObjectMaterialComponent>(componentData->m_entityID);
 							if(component != nullptr)
-							{
-								// Delete component
-								removeComponent<ObjectMaterialComponent>(componentData->m_entityID);
-							}
+								if(auto error = destroyObject(component); error != ErrorCode::Success)
+									ErrHandlerLoc::get().log(error, component->getName(), ErrorSource::Source_WorldScene);
 						}
 						break;
 
@@ -506,10 +532,8 @@ void WorldScene::receiveData(const DataType p_dataType, void *p_data, const bool
 							// Check if the component exists
 							auto *component = m_entityRegistry.try_get<SpatialComponent>(componentData->m_entityID);
 							if(component != nullptr)
-							{
-								// Delete component
-								removeComponent<SpatialComponent>(componentData->m_entityID);
-							}
+								if(auto error = destroyObject(component); error != ErrorCode::Success)
+									ErrHandlerLoc::get().log(error, component->getName(), ErrorSource::Source_WorldScene);
 						}
 						break;
 				}
@@ -541,33 +565,7 @@ void WorldScene::receiveData(const DataType p_dataType, void *p_data, const bool
 				// Get entity and component data
 				auto const *componentData = static_cast<EntityAndComponent *>(p_data);
 
-				// Delete the component based on its type
-				switch(componentData->m_componentType)
-				{
-					case ComponentType::ComponentType_ObjectMaterialComponent:
-						{
-							// Check if the component exists
-							auto *component = m_entityRegistry.try_get<ObjectMaterialComponent>(componentData->m_entityID);
-							if(component != nullptr)
-							{
-								// Delete component
-								removeComponent<ObjectMaterialComponent>(componentData->m_entityID);
-							}
-						}
-						break;
-
-					case ComponentType::ComponentType_SpatialComponent:
-						{
-							// Check if the component exists
-							auto *component = m_entityRegistry.try_get<SpatialComponent>(componentData->m_entityID);
-							if(component != nullptr)
-							{
-								// Delete component
-								removeComponent<SpatialComponent>(componentData->m_entityID);
-							}
-						}
-						break;
-				}
+				removeEntity(componentData->m_entityID);
 
 				// Delete the sent data if the ownership of it was transfered
 				if(p_deleteAfterReceiving)

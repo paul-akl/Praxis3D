@@ -131,7 +131,7 @@ ErrorCode SceneLoader::saveToFile(const std::string p_filename)
 	std::string filename;
 
 	if(!p_filename.empty())
-		filename = p_filename;
+		filename = Config::filepathVar().map_path + p_filename;
 	else
 		filename = m_filename;
 
@@ -153,10 +153,8 @@ ErrorCode SceneLoader::saveToFile(const std::string p_filename)
 		std::vector<EntityID> allEntities;
 
 		// Add all entities to the array
-		entityRegistry.each([&](auto entity)
-			{
-				allEntities.push_back(entity);
-			});
+		for(auto entity : entityRegistry.view<EntityID>())
+			allEntities.push_back(entity);
 
 		// Sort the entities so they are written to file in order
 		std::sort(allEntities.begin(), allEntities.end());
@@ -603,6 +601,9 @@ void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_con
 
 				if(modelsProperty)
 				{
+					if(modelsProperty.getNumPropertySets() > 0)
+						p_constructionInfo.m_modelConstructionInfo->m_modelsProperties.m_models.clear();
+
 					// Loop over each model entry in the node
 					for(decltype(modelsProperty.getNumPropertySets()) iModel = 0, numModels = modelsProperty.getNumPropertySets(); iModel < numModels; iModel++)
 					{
@@ -647,6 +648,10 @@ void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_con
 												newModelEntry.resize(meshDataIndex + 1);
 												newModelEntry.m_present[meshDataIndex] = true;
 											}
+
+											// Get the active flag, if it is present
+											if(auto activeProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::Active); activeProperty)
+												newModelEntry.m_active[meshDataIndex] = activeProperty.getBool();
 
 											// Get material alpha threshold value, if it is present
 											if(auto alphaThresholdProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::AlphaThreshold); alphaThresholdProperty)
@@ -1140,6 +1145,7 @@ void SceneLoader::exportToProperties(const GraphicsComponentsConstructionInfo &p
 					model.m_numOfMeshes <= model.m_meshMaterialsScale.size() &&
 					model.m_numOfMeshes <= model.m_alphaThreshold.size() &&
 					model.m_numOfMeshes <= model.m_heightScale.size() &&
+					model.m_numOfMeshes <= model.m_active.size() &&
 					model.m_numOfMeshes <= model.m_present.size())
 				{
 					auto &modelPropertyArrayEntry = modelsPropertySet.addPropertySet(Properties::ArrayEntry);
@@ -1159,7 +1165,9 @@ void SceneLoader::exportToProperties(const GraphicsComponentsConstructionInfo &p
 
 							// Add mesh data
 							meshPropertyArrayEntry.addProperty(Properties::PropertyID::Index, (int)i);
+							meshPropertyArrayEntry.addProperty(Properties::PropertyID::Active, model.m_active[i]);
 							meshPropertyArrayEntry.addProperty(Properties::PropertyID::AlphaThreshold, model.m_alphaThreshold[i]);
+							meshPropertyArrayEntry.addProperty(Properties::PropertyID::EmissiveIntensity, model.m_emissiveIntensity[i]);
 							meshPropertyArrayEntry.addProperty(Properties::PropertyID::HeightScale, model.m_heightScale[i]);
 
 							auto &materialsPropertySet = meshPropertyArrayEntry.addPropertySet(Properties::Materials);

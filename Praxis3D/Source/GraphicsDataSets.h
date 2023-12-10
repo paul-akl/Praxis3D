@@ -27,11 +27,12 @@ struct MaterialData
 // Contains data of a single mesh and its materials
 struct MeshData
 {
-	MeshData(const Model::Mesh &p_mesh, MaterialData p_materials[MaterialType::MaterialType_NumOfTypes], const float p_heightScale, const float p_alphaThreshold, const float p_emissiveIntensity) :
+	MeshData(const Model::Mesh &p_mesh, MaterialData p_materials[MaterialType::MaterialType_NumOfTypes], const float p_heightScale, const float p_alphaThreshold, const float p_emissiveIntensity, const bool p_active = true) :
 		m_mesh(&p_mesh), 
 		m_heightScale(p_heightScale),
 		m_alphaThreshold(p_alphaThreshold),
-		m_emissiveIntensity(p_emissiveIntensity)
+		m_emissiveIntensity(p_emissiveIntensity),
+		m_active(p_active)
 	{
 		std::copy(p_materials, p_materials + MaterialType::MaterialType_NumOfTypes, m_materials);
 	}
@@ -42,6 +43,8 @@ struct MeshData
 	float m_alphaThreshold;
 	// Multiplier for emissive texture color
 	float m_emissiveIntensity;
+	// Flag denoting whether to draw the mesh
+	bool m_active;
 
 	// Handle to a mesh
 	const Model::Mesh *m_mesh;

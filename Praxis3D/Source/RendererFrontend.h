@@ -85,30 +85,33 @@ protected:
 		// Add a draw command for each mesh, using the same object data
 		for(decltype(p_modelData.m_model.getNumMeshes()) meshIndex = 0, numMeshes = p_modelData.m_model.getNumMeshes(); meshIndex < numMeshes; meshIndex++)
 		{
-			// TODO: per-texture material parameters
-			// Assign the object data that is later passed to the shaders
-			const UniformObjectData objectData(p_modelMatrix,
-				modelViewProjMatrix,
-				p_modelData.m_meshes[meshIndex].m_heightScale,
-				p_modelData.m_meshes[meshIndex].m_alphaThreshold,
-				p_modelData.m_meshes[meshIndex].m_emissiveIntensity,
-				p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Diffuse].m_textureScale.x);
+			if(p_modelData.m_meshes[meshIndex].m_active)
+			{
+				// TODO: per-texture material parameters
+				// Assign the object data that is later passed to the shaders
+				const UniformObjectData objectData(p_modelMatrix,
+					modelViewProjMatrix,
+					p_modelData.m_meshes[meshIndex].m_heightScale,
+					p_modelData.m_meshes[meshIndex].m_alphaThreshold,
+					p_modelData.m_meshes[meshIndex].m_emissiveIntensity,
+					p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Diffuse].m_textureScale.x);
 
-			m_drawCommands.emplace_back(
-				sortKey,
-				RendererBackend::DrawCommand(
-					p_uniformUpdater,
-					objectData,
-					p_shaderHandle,
-					modelHandle,
-					p_modelData.m_model[meshIndex].m_numIndices,
-					p_modelData.m_model[meshIndex].m_baseVertex,
-					p_modelData.m_model[meshIndex].m_baseIndex,
-					p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Diffuse].m_texture.getHandle(),
-					p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Normal].m_texture.getHandle(),
-					p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Emissive].m_texture.getHandle(),
-					p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Combined].m_texture.getHandle())
+				m_drawCommands.emplace_back(
+					sortKey,
+					RendererBackend::DrawCommand(
+						p_uniformUpdater,
+						objectData,
+						p_shaderHandle,
+						modelHandle,
+						p_modelData.m_model[meshIndex].m_numIndices,
+						p_modelData.m_model[meshIndex].m_baseVertex,
+						p_modelData.m_model[meshIndex].m_baseIndex,
+						p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Diffuse].m_texture.getHandle(),
+						p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Normal].m_texture.getHandle(),
+						p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Emissive].m_texture.getHandle(),
+						p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Combined].m_texture.getHandle())
 				);
+			}
 		}
 	}
 	inline void queueForDrawing(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_viewProjMatrix)
@@ -340,6 +343,8 @@ protected:
 
 	bool m_renderingPassesSet;
 	bool m_guiRenderWasEnabled;
+	float m_zFar;
+	float m_zNear;
 
 	// Renderer backend, serves as an interface layer to GPU
 	RendererBackend m_backend;

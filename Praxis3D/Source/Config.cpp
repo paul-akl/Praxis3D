@@ -187,7 +187,8 @@ void Config::init()
 	AddVariablePredef(m_graphicsVar, light_color_r);
 	AddVariablePredef(m_graphicsVar, light_color_g);
 	AddVariablePredef(m_graphicsVar, light_color_b);
-	AddVariablePredef(m_graphicsVar, LOD_prallax_mapping);
+	AddVariablePredef(m_graphicsVar, LOD_parallax_mapping);
+	AddVariablePredef(m_graphicsVar, luminance_multiplier);
 	AddVariablePredef(m_graphicsVar, luminance_range_min);
 	AddVariablePredef(m_graphicsVar, luminance_range_max);
 	AddVariablePredef(m_graphicsVar, height_scale);
@@ -229,6 +230,7 @@ void Config::init()
 	AddVariablePredef(m_GUIVar, editor_button_reload_texture);
 	AddVariablePredef(m_GUIVar, editor_button_restart_texture);
 	AddVariablePredef(m_GUIVar, editor_button_scripting_enabled_texture);
+	AddVariablePredef(m_GUIVar, editor_new_entity_name);
 	AddVariablePredef(m_GUIVar, gui_editor_window_name);
 
 	// Input variables
@@ -458,6 +460,7 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, bloomDirtIntensity);
 	AddVariablePredef(m_shaderVar, inverseLogLuminanceRange);
 	AddVariablePredef(m_shaderVar, logLuminanceRange);
+	AddVariablePredef(m_shaderVar, luminanceMultiplier);
 	AddVariablePredef(m_shaderVar, minLogLuminance);
 	AddVariablePredef(m_shaderVar, tonemapMethod);
 	AddVariablePredef(m_shaderVar, lensFlareDirtTextureUniform);

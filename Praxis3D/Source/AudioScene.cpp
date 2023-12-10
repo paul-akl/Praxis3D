@@ -27,7 +27,7 @@ AudioScene::AudioScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : Syste
 
 AudioScene::~AudioScene()
 {
-	deactivate();
+	//deactivate();
 }
 
 ErrorCode AudioScene::init()
@@ -563,10 +563,72 @@ SystemObject *AudioScene::createComponent(const EntityID &p_entityID, const Soun
 	return returnObject;
 }
 
+void AudioScene::releaseObject(SystemObject *p_systemObject)
+{
+	switch(p_systemObject->getObjectType())
+	{
+		case Properties::PropertyID::SoundComponent:
+			{
+				auto *component = static_cast<SoundComponent *>(p_systemObject);
+
+				// If component is active and sound is playing, stop the sound
+				if(component->isObjectActive())
+				{
+					if(component->m_playing)
+					{
+						component->m_channel->stop();
+						component->m_playing = false;
+					}
+				}
+
+				// If sound exists, release its memory
+				if(component->m_sound != nullptr)
+					component->m_sound->release();
+			}
+			break;
+
+		case Properties::PropertyID::SoundListenerComponent:
+			{
+				auto *component = static_cast<SoundListenerComponent *>(p_systemObject);
+
+				// Nothing to release
+			}
+			break;
+	}
+}
+
 ErrorCode AudioScene::destroyObject(SystemObject *p_systemObject)
 {
-	// If this point is reached, no object was found, return an appropriate error
-	return ErrorCode::Destroy_obj_not_found;
+	ErrorCode returnError = ErrorCode::Success;
+
+	// Get the world scene required for deleting components
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	switch(p_systemObject->getObjectType())
+	{
+		case Properties::PropertyID::SoundComponent:
+			{
+				// Delete component
+				worldScene->removeComponent<SoundComponent>(p_systemObject->getEntityID());
+			}
+			break;
+
+		case Properties::PropertyID::SoundListenerComponent:
+			{
+				// Delete component
+				worldScene->removeComponent<SoundListenerComponent>(p_systemObject->getEntityID());
+			}
+			break;
+
+		default:
+			{
+				// If this point is reached, no object was found, return an appropriate error
+				returnError = ErrorCode::Destroy_obj_not_found;
+			}
+			break;
+	}
+
+	return returnError;
 }
 
 void AudioScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
@@ -631,24 +693,8 @@ void AudioScene::receiveData(const DataType p_dataType, void *p_data, const bool
 							// Check if the component exists
 							auto *component = entityRegistry.try_get<SoundComponent>(componentData->m_entityID);
 							if(component != nullptr)
-							{
-								// If component is active and sound is playing, stop the sound
-								if(component->isObjectActive())
-								{
-									if(component->m_playing)
-									{
-										component->m_channel->stop();
-										component->m_playing = false;
-									}
-								}
-
-								// If sound exists, release its memory
-								if(component->m_sound != nullptr)
-									component->m_sound->release();
-
-								// Delete component
-								worldScene->removeComponent<SoundComponent>(componentData->m_entityID);
-							}
+								if(auto error = destroyObject(component); error != ErrorCode::Success)
+									ErrHandlerLoc::get().log(error, component->getName(), ErrorSource::Source_AudioScene);
 						}
 						break;
 
@@ -657,10 +703,8 @@ void AudioScene::receiveData(const DataType p_dataType, void *p_data, const bool
 							// Check if the component exists
 							auto *component = entityRegistry.try_get<SoundListenerComponent>(componentData->m_entityID);
 							if(component != nullptr)
-							{
-								// Delete component
-								worldScene->removeComponent<SoundListenerComponent>(componentData->m_entityID);
-							}
+								if(auto error = destroyObject(component); error != ErrorCode::Success)
+									ErrHandlerLoc::get().log(error, component->getName(), ErrorSource::Source_AudioScene);
 						}
 						break;
 				}

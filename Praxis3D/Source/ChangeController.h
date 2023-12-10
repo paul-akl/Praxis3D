@@ -24,6 +24,8 @@ public:
 	ErrorCode registerSubject(ObservedSubject *p_subject, BitMask p_interestedBits, Observer *p_observer, BitMask p_observerBits = Systems::Types::All);
 	ErrorCode unregisterSubject(ObservedSubject *p_subject, Observer *p_observer);
 
+	ErrorCode removeSubject(ObservedSubject *p_subject);
+
 	ErrorCode distributeChanges(BitMask p_systemsToNotify = Systems::Types::All, BitMask p_changesToDistribute = Systems::Changes::All);
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType);
 
@@ -124,8 +126,6 @@ private:
 	static void distributionCallback(void *p_controller, unsigned int p_begin, unsigned int p_end);
 
 	void distributeRange(unsigned int p_begin, unsigned int p_end);
-
-	ErrorCode removeSubject(ObservedSubject *p_subject);
 
 	std::vector<Notification> *getNotifyList(unsigned int p_tlsIndex);
 	std::vector<OneTimeNotification> *getOneTimeNotifyList(unsigned int p_tlsIndex);

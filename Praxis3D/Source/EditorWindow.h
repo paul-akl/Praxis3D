@@ -28,8 +28,19 @@ public:
 		m_translateGuizmoEnabled = true;
 		m_rotateGuizmoEnabled = false;
 		m_showNewMapWindow = false;
+		m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_None;
 		m_sceneState = EditorSceneState::EditorSceneState_Pause;
 		m_centerWindowSize = glm::ivec2(0);
+
+		m_keys[KeyType::KeyType_Ctlr].bind(Scancode::Key_leftctrl);
+		m_keys[KeyType::KeyType_Shift].bind(Scancode::Key_leftshift);
+		m_keys[KeyType::KeyType_Alt].bind(Scancode::Key_leftalt);
+		m_keys[KeyType::KeyType_N].bind(Scancode::Key_N);
+		m_keys[KeyType::KeyType_O].bind(Scancode::Key_O);
+		m_keys[KeyType::KeyType_S].bind(Scancode::Key_S);
+		m_keys[KeyType::KeyType_R].bind(Scancode::Key_R);
+		m_keys[KeyType::KeyType_Esc].bind(Scancode::Key_esc);
+		m_keys[KeyType::KeyType_F4].bind(Scancode::Key_F4);
 
 		m_selectedTexture = nullptr;
 		m_textureInspectorTabFlags = 0;
@@ -51,6 +62,11 @@ public:
 		for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
 			m_renderingPassesTypeText.push_back(GetString(static_cast<RenderPassType>(i)));
 
+		m_tonemappingMethodText = { "None", "Simple reinhard", "Reinhard with white point", "Filmic tonemapping", "Uncharted 2", "Unreal 3", "ACES", "Lottes", "Uchimura" };
+
+		m_nextEntityToSelect = NULL_ENTITY_ID;
+		m_pendingEntityToSelect = false;
+
 		m_newEntityConstructionInfo = nullptr;
 		m_openNewEntityPopup = false;
 
@@ -63,6 +79,8 @@ public:
 
 		m_buttonBackgroundEnabled = ImVec4(0.26f, 0.26f, 0.26f, 1.0f);
 		m_buttonBackgroundDisabled = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+		m_mousePositionOnNewEntity = ImVec2(0.0f, 0.0f);
+		m_newEntityWindowInitialized = false;
 	}
 	~EditorWindow();
 
@@ -257,6 +275,13 @@ public:
 						return (unsigned int)m_selectedEntity.m_objectMaterialType;
 				}
 				break;
+
+			case Systems::Changes::Graphics::LightType:
+				{
+					if(m_selectedEntity.m_lightType >= 0 && m_selectedEntity.m_lightType < LightComponent::LightComponentType::LightComponentType_spot + 1)
+						return (unsigned int)m_selectedEntity.m_lightType;
+				}
+				break;
 		}
 
 		return NullObjects::NullUnsignedInt;
@@ -355,6 +380,12 @@ public:
 			case Systems::Changes::Script::Filename:
 				{
 					return m_selectedEntity.m_componentData.m_scriptComponents.m_luaConstructionInfo->m_luaScriptFilename;
+				}
+				break;
+
+			case Systems::Changes::World::PrefabName:
+				{
+					return m_selectedEntity.m_componentData.m_prefab;
 				}
 				break;
 		}
@@ -516,6 +547,7 @@ private:
 			m_luaVariablesModified = false;
 			m_luaScriptFilenameModified = false;
 			m_modelDataModified = false;
+			m_prefabNameModified = false;
 			m_soundFilenameModified = false;
 			m_selectedModelName = nullptr;
 			m_selectedTextureName = nullptr;
@@ -574,6 +606,7 @@ private:
 		bool m_luaVariablesModified;
 		bool m_luaScriptFilenameModified;
 		bool m_modelDataModified;
+		bool m_prefabNameModified;
 		bool m_soundFilenameModified;
 	};
 	struct SceneData
@@ -637,7 +670,32 @@ private:
 		FileBrowserActivated_SoundFile,
 		FileBrowserActivated_ModelFile,
 		FileBrowserActivated_TextureFile,
-		FileBrowserActivated_AudioBankFile
+		FileBrowserActivated_AudioBankFile,
+		FileBrowserActivated_PrefabFile
+	};
+	enum MainMenuButtonType : unsigned int
+	{
+		MainMenuButtonType_None = 0,
+		MainMenuButtonType_New,
+		MainMenuButtonType_Open,
+		MainMenuButtonType_Save,
+		MainMenuButtonType_SaveAs,
+		MainMenuButtonType_ReloadScene,
+		MainMenuButtonType_CloseEditor,
+		MainMenuButtonType_Exit
+	};
+	enum KeyType : unsigned int
+	{
+		KeyType_Ctlr,
+		KeyType_Shift,
+		KeyType_Alt,
+		KeyType_N,
+		KeyType_O,
+		KeyType_S,
+		KeyType_R,
+		KeyType_Esc,
+		KeyType_F4,
+		KeyType_NumOfKeys
 	};
 
 	void drawSceneData(SceneData &p_sceneData, const bool p_sendChanges = false);
@@ -732,6 +790,7 @@ private:
 			m_componentConstructionInfoPool.clear();
 		}
 	}
+	void processMainMenuButton(MainMenuButtonType &p_mainMenuButtonType);
 	void updateSceneData(SceneData &p_sceneData);
 	void updateEntityList();
 	void updateHierarchyList();
@@ -859,9 +918,11 @@ private:
 	bool m_translateGuizmoEnabled;
 	bool m_rotateGuizmoEnabled;
 	bool m_showNewMapWindow;
+	MainMenuButtonType m_activatedMainMenuButton;
 	EditorSceneState m_sceneState;
 	glm::ivec2 m_centerWindowSize;
 	std::vector<const char *> m_physicalMaterialProperties;
+	KeyCommand m_keys[KeyType::KeyType_NumOfKeys];
 
 	// GUI settings
 	ImGuiColorEditFlags m_colorEditFlags;
@@ -873,6 +934,8 @@ private:
 	ImVec2 m_textureAssetImageSize;
 	ImVec4 m_buttonBackgroundEnabled;
 	ImVec4 m_buttonBackgroundDisabled;
+	ImVec2 m_mousePositionOnNewEntity;
+	bool m_newEntityWindowInitialized;
 
 	// LUA variables editor data
 	std::vector<const char *> m_luaVariableTypeStrings;
@@ -899,6 +962,8 @@ private:
 	EntityHierarchyEntry m_rootEntityHierarchyEntry;
 	SelectedEntity m_selectedEntity;
 	SceneData m_currentSceneData;
+	EntityID m_nextEntityToSelect;
+	bool m_pendingEntityToSelect;
 
 	// Used to hold entity and component data for component creation / deletion until the next frame, after sending the data as a change
 	std::vector<EntityAndComponent*> m_entityAndComponentPool;
@@ -910,6 +975,7 @@ private:
 	SceneData m_newSceneData;
 	ImGuiTabItemFlags m_newSceneSettingsTabFlags;
 	std::vector<const char *> m_renderingPassesTypeText;
+	std::vector<const char *> m_tonemappingMethodText;
 
 	// Button textures
 	std::vector<TextureLoader2D::Texture2DHandle> m_buttonTextures;

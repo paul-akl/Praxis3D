@@ -10,6 +10,10 @@ class NullSystemBase : public SystemBase
 {
 public:
 	NullSystemBase() { }
+	~NullSystemBase()
+	{
+
+	}
 
 	ErrorCode init() { return ErrorCode::Success; }
 
@@ -34,6 +38,10 @@ class NullSystemScene : public SystemScene
 {
 public:
 	NullSystemScene(SystemBase *p_system);
+	~NullSystemScene()
+	{
+
+	}
 
 	ErrorCode init() { return ErrorCode::Success; }
 
@@ -68,6 +76,10 @@ class NullSystemObject : public SystemObject
 {
 public:
 	NullSystemObject() { }
+	~NullSystemObject() 
+	{
+
+	}
 
 	ErrorCode init() { return ErrorCode::Success; }
 

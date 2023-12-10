@@ -167,9 +167,6 @@ public:
 class ModelLoader : public LoaderBase<ModelLoader, Model>
 {
 	friend class Model;
-private:
-	Model *m_defaultModel;
-
 public:
 	class ModelHandle;
 
@@ -300,6 +297,9 @@ public:
 
 	virtual ModelHandle load(std::string p_filename, bool p_startBackgroundLoading = true);
 
-	private:
-		void unload(Model &p_object, SceneLoader &p_sceneLoader);
+private:
+	void unload(Model &p_object, SceneLoader &p_sceneLoader);
+
+	ModelHandle *m_defaultModelHandle;
+	Model *m_defaultModel;
 };

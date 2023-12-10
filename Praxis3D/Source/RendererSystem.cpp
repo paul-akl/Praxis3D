@@ -134,6 +134,9 @@ void RendererSystem::deleteScene(EngineStateType p_engineState)
 {
 	if(m_rendererScenes[p_engineState] != nullptr)
 	{
+		// Shutdown the scene before destroying it
+		m_rendererScenes[p_engineState]->shutdown();
+
 		delete m_rendererScenes[p_engineState];
 		m_rendererScenes[p_engineState] = nullptr;
 	}

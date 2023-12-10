@@ -1,11 +1,11 @@
 #ifndef ENTT_POLY_FWD_HPP
 #define ENTT_POLY_FWD_HPP
 
-#include <type_traits>
+#include <cstddef>
 
 namespace entt {
 
-template<typename, std::size_t Len, std::size_t = alignof(typename std::aligned_storage_t<Len + !Len>)>
+template<typename, std::size_t Len = sizeof(double[2]), std::size_t = alignof(double[2])>
 class basic_poly;
 
 /**
@@ -13,7 +13,7 @@ class basic_poly;
  * @tparam Concept Concept descriptor.
  */
 template<typename Concept>
-using poly = basic_poly<Concept, sizeof(double[2])>;
+using poly = basic_poly<Concept>;
 
 } // namespace entt
 

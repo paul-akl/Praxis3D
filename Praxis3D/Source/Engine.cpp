@@ -167,9 +167,12 @@ void Engine::processEngineChanges()
 					break;
 				case EngineChangeType_SceneReload:
 					{
+						std::string filename = change.m_filename;
+
 						// Delete the current scene
 						if(m_engineStates[change.m_engineStateType] != nullptr)
 						{
+							filename = m_engineStates[change.m_engineStateType]->getSceneFilename();
 							delete m_engineStates[change.m_engineStateType];
 							m_engineStates[change.m_engineStateType] = nullptr;
 						}
@@ -181,7 +184,7 @@ void Engine::processEngineChanges()
 							if(change.m_sceneProperties)
 								stateLoaded = loadState(change.m_engineStateType, change.m_sceneProperties);
 							else
-								stateLoaded = loadState(change.m_engineStateType, change.m_filename);
+								stateLoaded = loadState(change.m_engineStateType, filename);
 
 							if(stateLoaded)
 								setCurrentState(change.m_engineStateType);

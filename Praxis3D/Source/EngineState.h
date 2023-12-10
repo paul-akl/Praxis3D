@@ -38,6 +38,8 @@ public:
 
 	const inline bool isInitialized() const { return m_initialized; }
 
+	const inline std::string &getSceneFilename() const { return m_sceneFilename; }
+
 	inline void setSceneFilename(const std::string &p_filename) { m_sceneFilename = p_filename; }
 
 protected:

@@ -575,7 +575,7 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const L
 				component.m_objectType = Properties::PropertyID::SpotLight;
 
 				component.m_lightComponent.m_spot.m_color = p_constructionInfo.m_color;
-				component.m_lightComponent.m_spot.m_cutoffAngle = p_constructionInfo.m_cutoffAngle;
+				component.m_lightComponent.m_spot.m_cutoffAngle = glm::radians(p_constructionInfo.m_cutoffAngle);
 				component.m_lightComponent.m_spot.m_intensity = p_constructionInfo.m_intensity;
 				component.setLoadedToMemory(true);
 
@@ -709,10 +709,93 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const S
 	return returnObject;
 }
 
+void RendererScene::releaseObject(SystemObject *p_systemObject)
+{
+	switch(p_systemObject->getObjectType())
+	{
+		case Properties::PropertyID::CameraComponent:
+			{
+				auto *component = static_cast<CameraComponent *>(p_systemObject);
+
+				// Nothing to release
+			}
+			break;
+
+		case Properties::PropertyID::LightComponent:
+			{
+				auto *component = static_cast<LightComponent *>(p_systemObject);
+
+				// Nothing to release
+			}
+			break;
+
+		case Properties::PropertyID::ModelComponent:
+			{
+				auto *component = static_cast<ModelComponent *>(p_systemObject);
+
+				// Nothing to release
+			}
+			break;
+
+		case Properties::PropertyID::ShaderComponent:
+			{
+				auto *component = static_cast<ShaderComponent *>(p_systemObject);
+
+				// Nothing to release
+			}
+			break;
+	}
+}
+
 ErrorCode RendererScene::destroyObject(SystemObject *p_systemObject)
 {
-	// If this point is reached, no object was found, return an appropriate error
-	return ErrorCode::Destroy_obj_not_found;
+	ErrorCode returnError = ErrorCode::Success;
+
+	// Get the world scene required for deleting components
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	switch(p_systemObject->getObjectType())
+	{
+		case Properties::PropertyID::CameraComponent:
+			{
+				// Delete component
+				worldScene->removeComponent<CameraComponent>(p_systemObject->getEntityID());
+			}
+			break;
+
+		case Properties::PropertyID::LightComponent:
+		case Properties::PropertyID::DirectionalLight:
+		case Properties::PropertyID::PointLight:
+		case Properties::PropertyID::SpotLight:
+			{
+				// Delete component
+				worldScene->removeComponent<LightComponent>(p_systemObject->getEntityID());
+			}
+			break;
+
+		case Properties::PropertyID::ModelComponent:
+			{
+				// Delete component
+				worldScene->removeComponent<ModelComponent>(p_systemObject->getEntityID());
+			}
+			break;
+
+		case Properties::PropertyID::ShaderComponent:
+			{
+				// Delete component
+				worldScene->removeComponent<ShaderComponent>(p_systemObject->getEntityID());
+			}
+			break;
+
+		default:
+			{
+				// If this point is reached, no object was found, return an appropriate error
+				returnError = ErrorCode::Destroy_obj_not_found;
+			}
+			break;
+	}
+
+	return returnError;
 }
 
 void RendererScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
@@ -753,10 +836,8 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 							// Check if the component exists
 							auto *component = entityRegistry.try_get<CameraComponent>(componentData->m_entityID);
 							if(component != nullptr)
-							{
-								// Delete component
-								worldScene->removeComponent<CameraComponent>(componentData->m_entityID);
-							}
+								if(auto error = destroyObject(component); error != ErrorCode::Success)
+									ErrHandlerLoc::get().log(error, component->getName(), ErrorSource::Source_RendererScene);
 						}
 						break;
 
@@ -765,10 +846,8 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 							// Check if the component exists
 							auto *component = entityRegistry.try_get<LightComponent>(componentData->m_entityID);
 							if(component != nullptr)
-							{
-								// Delete component
-								worldScene->removeComponent<LightComponent>(componentData->m_entityID);
-							}
+								if(auto error = destroyObject(component); error != ErrorCode::Success)
+									ErrHandlerLoc::get().log(error, component->getName(), ErrorSource::Source_RendererScene);
 						}
 						break;
 
@@ -777,10 +856,8 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 							// Check if the component exists
 							auto *component = entityRegistry.try_get<ModelComponent>(componentData->m_entityID);
 							if(component != nullptr)
-							{
-								// Delete component
-								worldScene->removeComponent<ModelComponent>(componentData->m_entityID);
-							}
+								if(auto error = destroyObject(component); error != ErrorCode::Success)
+									ErrHandlerLoc::get().log(error, component->getName(), ErrorSource::Source_RendererScene);
 						}
 						break;
 
@@ -789,10 +866,8 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 							// Check if the component exists
 							auto *component = entityRegistry.try_get<ShaderComponent>(componentData->m_entityID);
 							if(component != nullptr)
-							{
-								// Delete component
-								worldScene->removeComponent<ShaderComponent>(componentData->m_entityID);
-							}
+								if(auto error = destroyObject(component); error != ErrorCode::Success)
+									ErrHandlerLoc::get().log(error, component->getName(), ErrorSource::Source_RendererScene);
 						}
 						break;
 				}

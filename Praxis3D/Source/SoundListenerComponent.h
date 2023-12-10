@@ -23,7 +23,7 @@ public:
 	}
 	~SoundListenerComponent()
 	{
-
+		m_systemScene->destroyObject(this);
 	}
 
 	ErrorCode init() final override

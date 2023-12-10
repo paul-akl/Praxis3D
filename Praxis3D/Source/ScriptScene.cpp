@@ -225,20 +225,41 @@ SystemObject *ScriptScene::createComponent(const EntityID &p_entityID, const Lua
 	return returnObject;
 }
 
+void ScriptScene::releaseObject(SystemObject *p_systemObject)
+{
+	switch(p_systemObject->getObjectType())
+	{
+		case Properties::PropertyID::LuaComponent:
+			{
+				auto *component = static_cast<LuaComponent *>(p_systemObject);
+
+				// Nothing to release
+			}
+			break;
+	}
+}
+
 ErrorCode ScriptScene::destroyObject(SystemObject *p_systemObject)
 {
 	ErrorCode returnError = ErrorCode::Success;
 
+	// Get the world scene required for deleting components
+	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
 	switch(p_systemObject->getObjectType())
 	{
 	case Properties::PropertyID::LuaComponent:
-		//m_sceneLoader->getChangeController()->removeObjectLink(p_systemObject);
-		static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World))->removeComponent<LuaComponent>(p_systemObject->getEntityID());
+		{
+			// Delete component
+			worldScene->removeComponent<LuaComponent>(p_systemObject->getEntityID());
+		}
 		break;
 
 	default:
-		// No object was found, return an appropriate error
-		returnError = ErrorCode::Destroy_obj_not_found;
+		{
+			// No object was found, return an appropriate error
+			returnError = ErrorCode::Destroy_obj_not_found;
+		}
 		break;
 	}
 
@@ -273,10 +294,8 @@ void ScriptScene::receiveData(const DataType p_dataType, void *p_data, const boo
 							// Check if the component exists
 							auto *component = entityRegistry.try_get<LuaComponent>(componentData->m_entityID);
 							if(component != nullptr)
-							{
-								// Delete component
-								worldScene->removeComponent<LuaComponent>(componentData->m_entityID);
-							}
+								if(auto error = destroyObject(component); error != ErrorCode::Success)
+									ErrHandlerLoc::get().log(error, component->getName(), ErrorSource::Source_Script);
 						}
 						break;
 				}
