@@ -84,21 +84,13 @@ struct LoadableComponentContainer
 // Used to store processed objects, so they can be sent to the renderer
 struct SceneObjects
 {
-	SceneObjects() { }
+	SceneObjects() : m_processDrawing(true) { }
 
 	// ECS registry views
-	//ModelSpatialView m_models;
-
 	decltype(std::declval<entt::basic_registry<EntityID>>().view<ModelComponent, SpatialComponent>(entt::exclude<ShaderComponent, GraphicsLoadToMemoryComponent, GraphicsLoadToVideoMemoryComponent>)) m_models;
 	decltype(std::declval<entt::basic_registry<EntityID>>().view<ModelComponent, ShaderComponent, SpatialComponent>(entt::exclude<GraphicsLoadToMemoryComponent, GraphicsLoadToVideoMemoryComponent>)) m_modelsWithShaders;
 	decltype(std::declval<entt::basic_registry<EntityID>>().view<GraphicsLoadToVideoMemoryComponent>(entt::exclude<GraphicsLoadToMemoryComponent>)) m_objectsToLoadToVideoMemory;
 	decltype(std::declval<entt::basic_registry<EntityID>>().view<LightComponent, SpatialComponent>(entt::exclude<>)) m_lights;
-
-
-	//decltype(entt::basic_registry<EntityID>::view<ModelComponent, SpatialComponent>(entt::exclude<ShaderComponent, GraphicsLoadToMemoryComponent, GraphicsLoadToVideoMemoryComponent>)) m_models;
-	//ModelShaderSpatialView m_modelsWithShaders;
-	//LightSpatialView m_lights;
-	//LoadToVideoMemoryView m_objectsToLoadToVideoMemory;
 
 	// Camera
 	glm::mat4 m_cameraViewMatrix;
@@ -108,6 +100,9 @@ struct SceneObjects
 
 	// Objects that need to be removed from VRAM
 	std::vector<LoadableObjectsContainer> m_unloadFromVideoMemory;
+
+	// Should the scene be drawn (otherwise only load commands are processed)
+	bool m_processDrawing;
 };
 
 class RendererScene : public SystemScene
@@ -297,4 +292,7 @@ private:
 	// Render-to-texture data
 	bool m_renderToTexture;
 	glm::ivec2 m_renderToTextureResolution;
+
+	// A flag tracking whether the first scene loading is done (to not trigger actions during loading after the scene was created)
+	bool m_firstLoadingDone;
 };

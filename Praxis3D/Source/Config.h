@@ -359,6 +359,8 @@ namespace Properties
 	Code(Attenuation,) \
 	Code(Camera,) \
 	Code(CameraComponent,) \
+	Code(ClampToBorder,) \
+	Code(ClampToEdge,) \
 	Code(Color,) \
 	Code(CombinedTexture,) \
 	Code(ComputeShader,) \
@@ -382,6 +384,8 @@ namespace Properties
 	Code(Materials,) \
 	Code(Metalness,) \
 	Code(Meshes,) \
+	Code(MirroredClampToEdge,) \
+	Code(MirroredRepeat,) \
 	Code(Models,) \
 	Code(ModelComponent,) \
 	Code(ModelObject,) \
@@ -400,6 +404,7 @@ namespace Properties
 	Code(Renderer,) \
 	Code(Rendering,) \
 	Code(RenderPasses,) \
+	Code(Repeat,) \
 	Code(RMHAO,) \
 	Code(Roughness,) \
 	Code(Shaders,) \
@@ -415,6 +420,7 @@ namespace Properties
 	Code(TextureTilingFactor,) \
 	Code(TextureScale,) \
 	Code(VertexShader,) \
+	Code(WrapMode,) \
 	/* Graphics rendering passes */ \
 	Code(AtmScatteringRenderPass,) \
 	Code(BloomRenderPass,) \
@@ -980,6 +986,9 @@ public:
 			gui_file_dialog_dir_color_R = 0.905f;
 			gui_file_dialog_dir_color_G = 0.623f;
 			gui_file_dialog_dir_color_B = 0.314f;
+			loading_spinner_radius = 24.0f;
+			loading_spinner_speed = 16.0f;
+			loading_spinner_thickness = 3.0f;
 			editor_button_add_texture = "buttons\\button_add_3.png";
 			editor_button_add_list_texture = "buttons\\button_add_from_list_1.png";
 			editor_button_arrow_down_texture = "buttons\\button_arrow_down_1.png";
@@ -1016,6 +1025,9 @@ public:
 		float gui_file_dialog_dir_color_R;
 		float gui_file_dialog_dir_color_G;
 		float gui_file_dialog_dir_color_B;
+		float loading_spinner_radius;
+		float loading_spinner_speed;
+		float loading_spinner_thickness;
 		std::string editor_button_add_texture;
 		std::string editor_button_add_list_texture;
 		std::string editor_button_arrow_down_texture;

@@ -140,7 +140,7 @@ public:
 			incrementUpdateCount();
 
 			if(!m_trackLocalChanges)
-				m_changes |= Systems::Changes::Spatial::WorldTransform;
+				m_changes |= Systems::Changes::Spatial::WorldTransformNoScale;
 		}
 	}
 
@@ -156,7 +156,7 @@ public:
 		{
 			// Update both the local-space and parent world-space data
 			setLocalSpatialTransformData(p_subject.getSpatialTransformData(&m_parent, Systems::Changes::Spatial::AllLocal));
-			setWorldTransform(p_subject.getMat4(&m_parent, Systems::Changes::Spatial::WorldTransform));
+			setWorldTransform(p_subject.getMat4(&m_parent, Systems::Changes::Spatial::WorldTransformNoScale));
 			localOrWorldTransformChanged = true;
 		}
 		else // If the "All" flag wasn't set, check each local and world (parent) change
@@ -210,14 +210,20 @@ public:
 			// Check if everything in world-space of the parent object has changed
 			if(CheckBitmask(p_changeType, Systems::Changes::Spatial::AllWorld))
 			{
-				setWorldTransform(p_subject.getMat4(&m_parent, Systems::Changes::Spatial::WorldTransform));
+				setWorldTransform(p_subject.getMat4(&m_parent, Systems::Changes::Spatial::WorldTransformNoScale));
 				localOrWorldTransformChanged = true;
 			}
 			else
 			{
-				if(CheckBitmask(p_changeType, Systems::Changes::Spatial::WorldTransform))
+				//if(CheckBitmask(p_changeType, Systems::Changes::Spatial::WorldTransform))
+				//{
+				//	setParentTransform(p_subject.getMat4(&m_parent, Systems::Changes::Spatial::WorldTransform));
+				//	localOrWorldTransformChanged = true;
+				//}
+
+				if(CheckBitmask(p_changeType, Systems::Changes::Spatial::WorldTransformNoScale))
 				{
-					setParentTransform(p_subject.getMat4(&m_parent, Systems::Changes::Spatial::WorldTransform));
+					setParentTransform(p_subject.getMat4(&m_parent, Systems::Changes::Spatial::WorldTransformNoScale));
 					localOrWorldTransformChanged = true;
 				}
 			}
@@ -229,13 +235,13 @@ public:
 		// Update the world-space data if any changes have been made
 		if(localOrWorldTransformChanged)
 		{
-			m_worldTransformNoScale = m_localSpace.m_transformMatNoScale * m_parentTransform;
+			m_worldTransformNoScale = m_parentTransform * m_localSpace.m_transformMatNoScale;
 			m_worldTransformWithScale = glm::scale(m_worldTransformNoScale, m_localSpace.m_spatialData.m_scale);
 
 			m_worldTransformUpToDate = true;
 
 			incrementUpdateCount();
-			m_changes |= Systems::Changes::Spatial::WorldTransform;
+			m_changes |= Systems::Changes::Spatial::WorldTransformNoScale;
 		}
 
 		return m_changes;
@@ -415,8 +421,8 @@ public:
 		m_localScaleUpToDate = true;
 
 		// Variables that became outdated
-		m_localEverythingUpToDate = false;
-		m_localTransformUpToDate = false;
+		//m_localEverythingUpToDate = false;
+		//m_localTransformUpToDate = false;
 		m_worldTransformUpToDate = false;
 
 		if(m_trackLocalChanges)

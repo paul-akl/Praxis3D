@@ -78,7 +78,7 @@ public:
 		}
 
 		// Process the spatial changes and record the world-space changes
-		/*newChanges = */m_spatialData.changeOccurred(*p_subject, p_changeType & Systems::Changes::Spatial::All);
+		newChanges = m_spatialData.changeOccurred(*p_subject, p_changeType & Systems::Changes::Spatial::All);
 
 		// Update spatial data
 		m_spatialData.update();

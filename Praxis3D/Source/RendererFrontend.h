@@ -56,6 +56,8 @@ public:
 
 	ErrorCode init();
 
+	const bool getRenderFinalToTexture() const;
+
 	void setGUIPassFunctorSequence(FunctorSequence *p_GUIPassFunctorSequence);
 	void setRenderFinalToTexture(const bool p_renderToTexture);
 	void setRenderToTextureResolution(const glm::ivec2 p_renderToTextureResolution);
@@ -109,7 +111,8 @@ protected:
 						p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Diffuse].m_texture.getHandle(),
 						p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Normal].m_texture.getHandle(),
 						p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Emissive].m_texture.getHandle(),
-						p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Combined].m_texture.getHandle())
+						p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Combined].m_texture.getHandle(),
+						p_modelData.m_meshes[meshIndex].m_textureWrapMode)
 				);
 			}
 		}

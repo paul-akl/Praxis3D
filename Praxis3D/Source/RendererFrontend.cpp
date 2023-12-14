@@ -155,6 +155,8 @@ ErrorCode RendererFrontend::init()
 	return returnCode;
 }
 
+const bool RendererFrontend::getRenderFinalToTexture() const { return (m_renderPassData != nullptr) ? m_renderPassData->getRenderFinalToTexture() : false; }
+
 void RendererFrontend::setGUIPassFunctorSequence(FunctorSequence *p_GUIPassFunctorSequence)
 {
 	m_renderPassData->setGUIPassFunctorSequence(p_GUIPassFunctorSequence);
@@ -380,7 +382,7 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 	unsigned int numLoadedObjectsThisFrame = 0;
 	const unsigned int maxLoadedObjectsThisFrame = Config::rendererVar().objects_loaded_per_frame;
 
-	// Iterate over all objects to be rendered with geometry shader
+	// Iterate over all objects that require to be loaded to video memory
 	for(auto entity : p_sceneObjects.m_objectsToLoadToVideoMemory)
 	{
 		GraphicsLoadToVideoMemoryComponent &component = p_sceneObjects.m_objectsToLoadToVideoMemory.get<GraphicsLoadToVideoMemoryComponent>(entity);

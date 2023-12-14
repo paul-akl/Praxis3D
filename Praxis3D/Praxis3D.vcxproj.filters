@@ -938,6 +938,9 @@
     <ClInclude Include="..\Dependencies\include\ImGuizmo\ImGuizmo.h">
       <Filter>3rd Party\ImGuizmo</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\config.ini" />

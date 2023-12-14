@@ -84,12 +84,16 @@ ErrorCode SceneLoader::loadFromProperties(const PropertySet &p_sceneProperties)
 	// Check if the scene should be loaded in background
 	if(p_sceneProperties.getPropertyByID(Properties::LoadInBackground).getBool())
 	{
+		m_loadInBackground = true;
+
 		// Start loading in background threads in all scenes
 		for(int i = 0; i < Systems::NumberOfSystems; i++)
 			m_systemScenes[i]->loadInBackground();
 	}
 	else
 	{
+		m_loadInBackground = false;
+
 		// Preload all scenes sequentially
 		for(int i = 0; i < Systems::NumberOfSystems; i++)
 			m_systemScenes[i]->preload();
@@ -665,6 +669,30 @@ void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_con
 											if(auto heightScaleProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::HeightScale); heightScaleProperty)
 												newModelEntry.m_heightScale[meshDataIndex] = heightScaleProperty.getFloat();
 
+											// Get material wrap mode
+											if(auto wrapModeProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::WrapMode); wrapModeProperty)
+											{
+												switch(wrapModeProperty.getID())
+												{
+													case Properties::ClampToBorder:
+														newModelEntry.m_textureWrapMode[meshDataIndex] = TextureWrapType::TextureWrapType_ClampToBorder;
+														break;
+													case Properties::ClampToEdge:
+														newModelEntry.m_textureWrapMode[meshDataIndex] = TextureWrapType::TextureWrapType_ClampToEdge;
+														break;
+													case Properties::MirroredClampToEdge:
+														newModelEntry.m_textureWrapMode[meshDataIndex] = TextureWrapType::TextureWrapType_MirroredClampToEdge;
+														break;
+													case Properties::MirroredRepeat:
+														newModelEntry.m_textureWrapMode[meshDataIndex] = TextureWrapType::TextureWrapType_MirroredRepeat;
+														break;
+													case Properties::Repeat:
+													default:
+														newModelEntry.m_textureWrapMode[meshDataIndex] = TextureWrapType::TextureWrapType_Repeat;
+														break;
+												}
+											}
+
 											// Get material properties
 											auto materialsProperty = meshesProperty.getPropertySet(iMesh).getPropertySetByID(Properties::Materials);
 
@@ -1169,6 +1197,25 @@ void SceneLoader::exportToProperties(const GraphicsComponentsConstructionInfo &p
 							meshPropertyArrayEntry.addProperty(Properties::PropertyID::AlphaThreshold, model.m_alphaThreshold[i]);
 							meshPropertyArrayEntry.addProperty(Properties::PropertyID::EmissiveIntensity, model.m_emissiveIntensity[i]);
 							meshPropertyArrayEntry.addProperty(Properties::PropertyID::HeightScale, model.m_heightScale[i]);
+
+							switch(model.m_textureWrapMode[i])
+							{
+								case TextureWrapType::TextureWrapType_ClampToBorder:
+									meshPropertyArrayEntry.addProperty(Properties::PropertyID::WrapMode, Properties::PropertyID::ClampToBorder);
+									break;
+								case TextureWrapType::TextureWrapType_ClampToEdge:
+									meshPropertyArrayEntry.addProperty(Properties::PropertyID::WrapMode, Properties::PropertyID::ClampToEdge);
+									break;
+								case TextureWrapType::TextureWrapType_MirroredClampToEdge:
+									meshPropertyArrayEntry.addProperty(Properties::PropertyID::WrapMode, Properties::PropertyID::MirroredClampToEdge);
+									break;
+								case TextureWrapType::TextureWrapType_MirroredRepeat:
+									meshPropertyArrayEntry.addProperty(Properties::PropertyID::WrapMode, Properties::PropertyID::MirroredRepeat);
+									break;
+								case TextureWrapType::TextureWrapType_Repeat:
+									meshPropertyArrayEntry.addProperty(Properties::PropertyID::WrapMode, Properties::PropertyID::Repeat);
+									break;
+							}
 
 							auto &materialsPropertySet = meshPropertyArrayEntry.addPropertySet(Properties::Materials);
 

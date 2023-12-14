@@ -55,6 +55,10 @@ public:
 				// Resize the "mesh is present" array and initialize each element to false
 				if(p_size > m_present.size())
 					m_present.resize(p_size, false);
+
+				// Resize the texture wrap mode array and initialize each element to Repeat
+				if(p_size > m_textureWrapMode.size())
+					m_textureWrapMode.resize(p_size, TextureWrapType::TextureWrapType_Repeat);
 			}
 		}
 
@@ -69,6 +73,7 @@ public:
 			m_heightScale.clear();
 			m_active.clear();
 			m_present.clear();
+			m_textureWrapMode.clear();
 		}
 
 		std::string m_modelName;
@@ -82,6 +87,7 @@ public:
 		std::vector<float> m_heightScale;
 		std::vector<bool> m_active;
 		std::vector<bool> m_present;
+		std::vector<TextureWrapType> m_textureWrapMode;
 	};
 	struct ModelsProperties
 	{
@@ -172,7 +178,8 @@ public:
 									materials, 
 									m_modelsProperties->m_models[modelIndex].m_heightScale[meshIndex], 
 									m_modelsProperties->m_models[modelIndex].m_alphaThreshold[meshIndex], 
-									m_modelsProperties->m_models[modelIndex].m_emissiveIntensity[meshIndex]));
+									m_modelsProperties->m_models[modelIndex].m_emissiveIntensity[meshIndex],
+									m_modelsProperties->m_models[modelIndex].m_textureWrapMode[meshIndex]));
 
 								ErrHandlerLoc::get().log(ErrorCode::Load_to_memory_success, ErrorSource::Source_ModelComponent, m_modelsProperties->m_models[modelIndex].m_modelName);
 							}
@@ -193,7 +200,7 @@ public:
 								materials[iMatType].m_textureScale = glm::vec2(Config::graphicsVar().texture_tiling_factor, Config::graphicsVar().texture_tiling_factor);
 							}
 
-							newModelData.m_meshes.push_back(MeshData(newModelData.m_model.getMeshArray()[meshIndex], materials, Config::graphicsVar().height_scale, Config::graphicsVar().alpha_threshold, Config::graphicsVar().emissive_multiplier));
+							newModelData.m_meshes.push_back(MeshData(newModelData.m_model.getMeshArray()[meshIndex], materials, Config::graphicsVar().height_scale, Config::graphicsVar().alpha_threshold, Config::graphicsVar().emissive_multiplier, TextureWrapType::TextureWrapType_Repeat));
 
 							ErrHandlerLoc::get().log(ErrorCode::Load_to_memory_success, ErrorSource::Source_ModelComponent, m_modelsProperties->m_models[modelIndex].m_modelName);
 						}
@@ -294,6 +301,10 @@ public:
 						if(m_modelsProperties->m_models[modelIndex].m_emissiveIntensity.size() > meshIndex)
 							emissiveIntensity = m_modelsProperties->m_models[modelIndex].m_emissiveIntensity[meshIndex];
 
+						TextureWrapType textureWrapMode = TextureWrapType::TextureWrapType_Repeat;
+						if(m_modelsProperties->m_models[modelIndex].m_textureWrapMode.size() > meshIndex)
+							textureWrapMode = m_modelsProperties->m_models[modelIndex].m_textureWrapMode[meshIndex];
+
 						// Add the data for this mesh. Include materials loaded from the model itself, if they were present, otherwise, include default textures instead
 						newModelData.m_meshes.push_back(MeshData(
 							newModelData.m_model.getMeshArray()[meshIndex],
@@ -301,6 +312,7 @@ public:
 							heightScale,
 							alphaThreshold,
 							emissiveIntensity,
+							textureWrapMode,
 							active));
 					}
 					else
@@ -321,7 +333,7 @@ public:
 							materials[iMatType].m_textureScale = glm::vec2(Config::graphicsVar().texture_tiling_factor, Config::graphicsVar().texture_tiling_factor);
 						}
 
-						newModelData.m_meshes.push_back(MeshData(newModelData.m_model.getMeshArray()[meshIndex], materials, Config::graphicsVar().height_scale, Config::graphicsVar().alpha_threshold, Config::graphicsVar().emissive_multiplier, true));
+						newModelData.m_meshes.push_back(MeshData(newModelData.m_model.getMeshArray()[meshIndex], materials, Config::graphicsVar().height_scale, Config::graphicsVar().alpha_threshold, Config::graphicsVar().emissive_multiplier, TextureWrapType::TextureWrapType_Repeat, true));
 
 						//ErrHandlerLoc::get().log(ErrorCode::Load_to_memory_success, ErrorSource::Source_ModelComponent, m_modelsProperties->m_models[modelIndex].m_modelName);
 					}
@@ -519,6 +531,7 @@ public:
 				newModelEntry.m_heightScale.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_heightScale);
 				newModelEntry.m_active.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_active);
 				newModelEntry.m_present.push_back(materialPresent);
+				newModelEntry.m_textureWrapMode.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_textureWrapMode);
 				newModelEntry.m_numOfMeshes++;
 			}
 		}

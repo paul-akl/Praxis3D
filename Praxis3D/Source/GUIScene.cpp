@@ -7,6 +7,7 @@
 #include "EditorWindow.h"
 #include "GUIHandlerLocator.h"
 #include "GUIScene.h"
+#include "imspinner.h"
 #include "NullSystemObjects.h"
 #include "TaskManagerLocator.h"
 
@@ -86,6 +87,49 @@ void GUIScene::update(const float p_deltaTime)
 
 		// Set the beginning of the GUI frame
 		GUIHandlerLocator::get().beginFrame();
+
+		//	 ____________________________
+		//	|							 |
+		//	|	   LOADING STATUS		 |
+		//	|____________________________|
+		//
+		// Check if any of the scenes are currently loading
+		bool loadingStatus = false;
+		for(unsigned int i = 0; i < Systems::TypeID::NumberOfSystems; i++)
+			if(m_sceneLoader->getSystemScene(static_cast<Systems::TypeID>(i))->getLoadingStatus())
+				loadingStatus = true;
+
+		// If any scenes are currently loading
+		if(loadingStatus)
+		{
+			auto &io = ImGui::GetIO();
+			ImVec2 sceneViewportCenter;
+
+			// If editor window is present, center the loading status to editor's scene viewport,
+			// otherwise center the loading status to the whole screen
+			if(m_editorWindow != nullptr)
+				sceneViewportCenter = m_editorWindow->m_sceneViewportSize * 0.5f + m_editorWindow->m_sceneViewportPosition;
+			else
+				sceneViewportCenter = ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f);
+
+			// Center the loading status window
+			ImGui::SetNextWindowPos(sceneViewportCenter, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+
+			// Draw the loading status window with no title bar and transparent background
+			if(ImGui::Begin("##LoadingStatusWindow", (bool *)0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize))
+			{
+				// Draw the loading spinner
+				ImSpinner::SpinnerAng("##ModelLoadingSpinner", Config::GUIVar().loading_spinner_radius, Config::GUIVar().loading_spinner_thickness, ImSpinner::white, ImColor(255, 255, 255, 0), Config::GUIVar().loading_spinner_speed);
+
+				if(m_editorWindow == nullptr)
+				{
+					ImGui::NewLine();
+					ImGui::Text("Loading");
+				}
+
+			}
+			ImGui::End();
+		}
 
 		//	 ____________________________
 		//	|							 |

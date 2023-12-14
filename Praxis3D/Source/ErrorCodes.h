@@ -98,6 +98,7 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
 	Code(Duplicate_object_id,) \
 	Code(Invalid_object_id,) \
 	Code(Nonexistent_object_id,) \
+	Code(Nonexistent_parent_entity,) \
 	/* Error management */ \
 	Code(NumberOfErrorCodes,) \
 	Code(CachedError,)

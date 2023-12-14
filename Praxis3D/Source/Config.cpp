@@ -214,7 +214,10 @@ void Config::init()
 	AddVariablePredef(m_GUIVar, gui_file_dialog_min_size_y);
 	AddVariablePredef(m_GUIVar, gui_file_dialog_dir_color_R);
 	AddVariablePredef(m_GUIVar, gui_file_dialog_dir_color_G);
-	AddVariablePredef(m_GUIVar, gui_file_dialog_dir_color_B); 
+	AddVariablePredef(m_GUIVar, gui_file_dialog_dir_color_B);
+	AddVariablePredef(m_GUIVar, loading_spinner_radius);
+	AddVariablePredef(m_GUIVar, loading_spinner_speed);
+	AddVariablePredef(m_GUIVar, loading_spinner_thickness);
 	AddVariablePredef(m_GUIVar, editor_button_add_texture);
 	AddVariablePredef(m_GUIVar, editor_button_add_list_texture);
 	AddVariablePredef(m_GUIVar, editor_button_arrow_down_texture);

@@ -236,6 +236,14 @@ enum TextureDataFormat : int
 	TextureDataFormat_R16UI		= GL_R16UI,
 	TextureDataFormat_R32UI		= GL_R32UI
 };
+enum TextureWrapType : int
+{
+	TextureWrapType_ClampToBorder		= GL_CLAMP_TO_BORDER,
+	TextureWrapType_ClampToEdge			= GL_CLAMP_TO_EDGE,
+	TextureWrapType_MirroredClampToEdge = GL_MIRROR_CLAMP_TO_EDGE,
+	TextureWrapType_MirroredRepeat		= GL_MIRRORED_REPEAT,
+	TextureWrapType_Repeat				= GL_REPEAT
+};
 enum UniformBufferBinding : unsigned int
 {
 	UniformBufferBinding_PointLights,

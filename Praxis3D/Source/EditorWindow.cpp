@@ -1,10 +1,12 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <ranges>
 
+#define IMSPINNER_DEMO
 #include "EngineDefinitions.h"
 #include "EditorWindow.h"
 #include "imgui_internal.h"
 #include "ImGuizmo.h"
+#include "imspinner.h"
 #include "RendererScene.h"
 #include "ShaderUniformUpdater.h"
 #include "WorldScene.h"
@@ -85,9 +87,8 @@ void EditorWindow::update(const float p_deltaTime)
         m_pendingEntityToSelect = false;
     }
 
-    static float f = 0.0f;
-    static int counter = 0;
-    ImGui::ShowDemoWindow();
+    if(m_showImGuiDemoWindow)
+        ImGui::ShowDemoWindow();
     {
         ImGuiStyle *style = &ImGui::GetStyle();
         ImVec4 *colors = style->Colors;
@@ -274,12 +275,24 @@ void EditorWindow::update(const float p_deltaTime)
         }
         if(ImGui::BeginMenu("Edit"))
         {
-            if(ImGui::MenuItem("Undo", "CTRL+Z")) {}
+            if(ImGui::MenuItem("Undo", "CTRL+Z", false, false)) {}  // Disabled item
             if(ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
             ImGui::Separator();
             if(ImGui::MenuItem("Cut", "CTRL+X")) {}
             if(ImGui::MenuItem("Copy", "CTRL+C")) {}
             if(ImGui::MenuItem("Paste", "CTRL+V")) {}
+            ImGui::EndMenu();
+        }        
+        if(ImGui::BeginMenu("Debug"))
+        {
+            if(ImGui::MenuItem("Show ImGui demo window", "", m_showImGuiDemoWindow)) 
+            {
+                m_showImGuiDemoWindow = !m_showImGuiDemoWindow;
+            }
+            if(ImGui::MenuItem("Show Imspinner demo window", "", m_showImspinnerDemoWindow))
+            {
+                m_showImspinnerDemoWindow = !m_showImspinnerDemoWindow;
+            }
             ImGui::EndMenu();
         }
 
@@ -500,8 +513,8 @@ void EditorWindow::update(const float p_deltaTime)
                             m_newEntityWindowInitialized = true;
                             m_mousePositionOnNewEntity = ImGui::GetMousePos();
 
-                            // Assign a next available entity ID
-                            EntityID newEntityID = 1;
+                            // Assign a next available entity ID (if the new entity has a non-root parent, start the available ID search from the next ID after the parent)
+                            EntityID newEntityID = m_newEntityConstructionInfo->m_parent == 0 ? 1 : m_newEntityConstructionInfo->m_parent + 1;
                             for(decltype(m_entityList.size()) i = 0, size = m_entityList.size(); i < size; i++)
                             {
                                 if(newEntityID == m_entityList[i].m_entityID)
@@ -926,41 +939,102 @@ void EditorWindow::update(const float p_deltaTime)
                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, spatialComponent, Systems::Changes::Generic::Active);
                                 }
 
-                                // Draw POSITION
-                                drawLeftAlignedLabelText("Position:", inputWidgetOffset);
-                                if(ImGui::DragFloat3("##PositionDrag", glm::value_ptr(m_selectedEntity.m_spatialDataManager.getLocalSpaceDataNonConst().m_spatialData.m_position), Config::GUIVar().editor_float_slider_speed))
+                                if(ImGui::BeginTabBar("##RightWindowTabBar", ImGuiTabBarFlags_None))
                                 {
-                                    // If the position vector was changed, send a notification to the either the Spatial Component or Rigid Body Component (if the Rigid Body Component is present, it takes control over the spatial data)
-                                    if(rigidBodyComponent != nullptr)
-                                        m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Spatial::LocalPosition);
-                                    else
-                                        m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, spatialComponent, Systems::Changes::Spatial::LocalPosition);
-                                }
+                                    if(ImGui::BeginTabItem("Local"))
+                                    {
+                                        // Draw POSITION
+                                        drawLeftAlignedLabelText("Position:", inputWidgetOffset);
+                                        if(ImGui::DragFloat3("##LocalPositionDrag", glm::value_ptr(m_selectedEntity.m_spatialDataManager.getLocalSpaceDataNonConst().m_spatialData.m_position), Config::GUIVar().editor_float_slider_speed))
+                                        {
+                                            // If the position vector was changed, set the new position in the spatial data manager (so it can set the appropriate dirty flags internally)
+                                            m_selectedEntity.m_spatialDataManager.setLocalPosition(m_selectedEntity.m_spatialDataManager.getLocalSpaceData().m_spatialData.m_position);
+                                            // Update the spatial data manager (so it updates the transform matrix internally)
+                                            m_selectedEntity.m_spatialDataManager.update();
 
-                                // Draw ROTATION
-                                // Make sure to get the current local rotation euler angles, as they are not automatically updated
-                                m_selectedEntity.m_spatialDataManager.calculateLocalRotationEuler();
-                                drawLeftAlignedLabelText("Rotation:", inputWidgetOffset);
-                                if(ImGui::DragFloat3("##RotationDrag", glm::value_ptr(m_selectedEntity.m_spatialDataManager.getLocalSpaceDataNonConst().m_spatialData.m_rotationEuler), Config::GUIVar().editor_float_slider_speed))
-                                {
-                                    // If the rotation vector was changed, set the new rotation in the spatial data manager (so it can set the appropriate dirty flags internally)
-                                    m_selectedEntity.m_spatialDataManager.setLocalRotation(m_selectedEntity.m_spatialDataManager.getLocalSpaceDataNonConst().m_spatialData.m_rotationEuler);
-                                    // Update the spatial data manager (so it updates the rotation quaternion internally)
-                                    m_selectedEntity.m_spatialDataManager.update();
+                                            // If the position vector was changed, send a notification to the either the Spatial Component or Rigid Body Component (if the Rigid Body Component is present, it takes control over the spatial data)
+                                            if(rigidBodyComponent != nullptr)
+                                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Spatial::LocalTransformNoScale);
+                                            else
+                                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, spatialComponent, Systems::Changes::Spatial::LocalTransformNoScale);
+                                        }
 
-                                    // If the rotation vector was changed, send a notification to the either the Spatial Component or Rigid Body Component (if the Rigid Body Component is present, it takes control over the spatial data)
-                                    if(rigidBodyComponent != nullptr)
-                                        m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Spatial::LocalRotation);
-                                    else
-                                        m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, spatialComponent, Systems::Changes::Spatial::LocalRotation);
-                                }
+                                        // Draw ROTATION
+                                        // Make sure to get the current local rotation euler angles, as they are not automatically updated
+                                        m_selectedEntity.m_spatialDataManager.calculateLocalRotationEuler();
+                                        drawLeftAlignedLabelText("Rotation:", inputWidgetOffset);
+                                        if(ImGui::DragFloat3("##LocalRotationDrag", glm::value_ptr(m_selectedEntity.m_spatialDataManager.getLocalSpaceDataNonConst().m_spatialData.m_rotationEuler), Config::GUIVar().editor_float_slider_speed))
+                                        {
+                                            // If the rotation vector was changed, set the new rotation in the spatial data manager (so it can set the appropriate dirty flags internally)
+                                            m_selectedEntity.m_spatialDataManager.setLocalRotation(m_selectedEntity.m_spatialDataManager.getLocalSpaceData().m_spatialData.m_rotationEuler);
+                                            // Update the spatial data manager (so it updates the transform matrix internally)
+                                            m_selectedEntity.m_spatialDataManager.update();
 
-                                // Draw SCALE
-                                drawLeftAlignedLabelText("Scale:", inputWidgetOffset);
-                                if(ImGui::DragFloat3("##ScaleDrag", glm::value_ptr(m_selectedEntity.m_spatialDataManager.getLocalSpaceDataNonConst().m_spatialData.m_scale), Config::GUIVar().editor_float_slider_speed, 0.01f, 10000.0f))
-                                {
-                                    // If the scale vector was changed, send a notification to the spatial component
-                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, spatialComponent, Systems::Changes::Spatial::LocalScale);
+                                            // If the rotation vector was changed, send a notification to the either the Spatial Component or Rigid Body Component (if the Rigid Body Component is present, it takes control over the spatial data)
+                                            if(rigidBodyComponent != nullptr)
+                                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Spatial::LocalTransformNoScale);
+                                            else
+                                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, spatialComponent, Systems::Changes::Spatial::LocalTransformNoScale);
+                                        }
+
+                                        // Draw SCALE
+                                        drawLeftAlignedLabelText("Scale:", inputWidgetOffset);
+                                        if(ImGui::DragFloat3("##LocalScaleDrag", glm::value_ptr(m_selectedEntity.m_spatialDataManager.getLocalSpaceDataNonConst().m_spatialData.m_scale), Config::GUIVar().editor_float_slider_speed, 0.01f, 10000.0f))
+                                        {
+                                            // If the scale vector was changed, send a notification to the spatial component
+                                            m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, spatialComponent, Systems::Changes::Spatial::LocalScale);
+                                        }
+                                        ImGui::EndTabItem();
+                                    }
+
+                                    // World spatial data is read-only, i.e. only used for viewing the data, as there is no useful need for modifying it
+                                    if(ImGui::BeginTabItem("World"))
+                                    {
+                                        auto worldTransformNoScale = m_selectedEntity.m_spatialDataManager.getWorldTransformWithScale();
+                                        auto rotationEuler = glm::degrees(glm::eulerAngles(glm::toQuat(worldTransformNoScale)));
+
+                                        // Draw POSITION
+                                        drawLeftAlignedLabelText("Position:", inputWidgetOffset);
+                                        if(ImGui::DragFloat3("##WorldPositionDrag", glm::value_ptr(worldTransformNoScale[3]), Config::GUIVar().editor_float_slider_speed))
+                                        {
+                                            /*/ If the position vector was changed, set the new world transform in the spatial data manager (so it can set the appropriate dirty flags internally)
+                                            m_selectedEntity.m_spatialDataManager.setWorldTransform(worldTransformNoScale);
+                                            // Update the spatial data manager (so it updates the transform matrix internally)
+                                            m_selectedEntity.m_spatialDataManager.update();
+
+                                            // If the position vector was changed, send a notification to the either the Spatial Component or Rigid Body Component (if the Rigid Body Component is present, it takes control over the spatial data)
+                                            if(rigidBodyComponent != nullptr)
+                                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Spatial::WorldTransformNoScale);
+                                            else
+                                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, spatialComponent, Systems::Changes::Spatial::WorldTransformNoScale);*/
+                                        }
+
+                                        // Draw ROTATION
+                                        drawLeftAlignedLabelText("Rotation:", inputWidgetOffset);
+                                        if(ImGui::DragFloat3("##WorldRotationDrag", glm::value_ptr(rotationEuler), Config::GUIVar().editor_float_slider_speed))
+                                        {
+                                            /*/ If the rotation vector was changed, set the new world transform in the spatial data manager (so it can set the appropriate dirty flags internally)
+                                            m_selectedEntity.m_spatialDataManager.setWorldTransform(Math::createTransformMat(worldTransformNoScale[3], Math::eulerDegreesToQuaterion(rotationEuler)));
+                                            // Update the spatial data manager (so it updates the transform matrix internally)
+                                            m_selectedEntity.m_spatialDataManager.update();
+
+                                            // If the rotation vector was changed, send a notification to the either the Spatial Component or Rigid Body Component (if the Rigid Body Component is present, it takes control over the spatial data)
+                                            if(rigidBodyComponent != nullptr)
+                                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Spatial::WorldTransformNoScale);
+                                            else
+                                                m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, spatialComponent, Systems::Changes::Spatial::WorldTransformNoScale);*/
+                                        }
+
+                                        // Draw SCALE
+                                        drawLeftAlignedLabelText("Scale:", inputWidgetOffset);
+                                        if(ImGui::DragFloat3("##WorldScaleDrag", glm::value_ptr(m_selectedEntity.m_spatialDataManager.getLocalSpaceDataNonConst().m_spatialData.m_scale), Config::GUIVar().editor_float_slider_speed, 0.01f, 10000.0f))
+                                        {
+                                            // If the scale vector was changed, send a notification to the spatial component
+                                            //m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, spatialComponent, Systems::Changes::Spatial::LocalScale);
+                                        }
+                                        ImGui::EndTabItem();
+                                    }
+                                    ImGui::EndTabBar();
                                 }
                             }
                         }
@@ -1394,6 +1468,28 @@ void EditorWindow::update(const float p_deltaTime)
                                                         m_selectedEntity.m_modelDataModified = true;
                                                     }
 
+                                                    // Get the current texture wrap mode
+                                                    int textureWrapMode = 0;
+                                                    for(decltype(m_textureWrapModeTypes.size()) i = 0, size = m_textureWrapModeTypes.size(); i < size; i++)
+                                                    {
+                                                        if(m_textureWrapModeTypes[i] == modelEntry.m_textureWrapMode[meshIndex])
+                                                        {
+                                                            textureWrapMode = (int)i;
+                                                            break;
+                                                        }
+                                                    }
+
+                                                    // Draw TEXTURE WRAP MODE
+                                                    drawLeftAlignedLabelText("Texture wrap mode:", inputWidgetOffset);
+                                                    if(ImGui::Combo(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "TextureWrapModeCombo").c_str(), &textureWrapMode, &m_textureWrapModeStrings[0], (int)m_textureWrapModeStrings.size()))
+                                                    {
+                                                        // Set the texture wrap mode
+                                                        modelEntry.m_textureWrapMode[meshIndex] = m_textureWrapModeTypes[textureWrapMode];
+
+                                                        // Set the modified flag
+                                                        m_selectedEntity.m_modelDataModified = true;
+                                                    }
+
                                                     for(unsigned int materialIndex = 0; materialIndex < MaterialType::MaterialType_NumOfTypes; materialIndex++)
                                                     {
                                                         // Convert material type to text
@@ -1554,6 +1650,11 @@ void EditorWindow::update(const float p_deltaTime)
                                         // Set the modified flag
                                         m_selectedEntity.m_modelDataModified = true;
                                     }
+                                }
+                                else
+                                {
+                                    ImGui::SetCursorPosX((ImGui::GetWindowWidth() - 32.0f) / 2.0f);
+                                    ImSpinner::SpinnerFadeDots("##ModelLoadingSpinner", 32.0f, 4.0f, ImSpinner::white, 16.0f, 8);
                                 }
                             }
                         }
@@ -2753,11 +2854,11 @@ void EditorWindow::update(const float p_deltaTime)
                     //	|____________________________|
                     //
                     // Get window starting position and the size of available space inside the window
-                    auto windowPosition = ImGui::GetCursorScreenPos();
-                    auto contentRegionSize = ImGui::GetContentRegionAvail();
+                    m_sceneViewportPosition = ImGui::GetCursorScreenPos();
+                    m_sceneViewportSize = ImGui::GetContentRegionAvail();
 
-                    m_centerWindowSize.x = (int)contentRegionSize.x;
-                    m_centerWindowSize.y = (int)contentRegionSize.y;
+                    m_centerWindowSize.x = (int)m_sceneViewportSize.x;
+                    m_centerWindowSize.y = (int)m_sceneViewportSize.y;
 
                     // Tell the renderer the size of available window space as a render to texture resolution, so that the rendered scene fill the whole window
                     m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_RenderToTextureResolution, (void *)&m_centerWindowSize);
@@ -2778,7 +2879,7 @@ void EditorWindow::update(const float p_deltaTime)
                     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                     ImGui::ImageButton(
                         (ImTextureID)sceneRenderBufferHandle,
-                        contentRegionSize,
+                        m_sceneViewportSize,
                         ImVec2(0, 1),
                         ImVec2(1, 0)
                     );
@@ -2793,7 +2894,7 @@ void EditorWindow::update(const float p_deltaTime)
                     ImGuizmo::SetDrawlist();
 
                     // Set the screen size for ImGuizmo
-                    ImGuizmo::SetRect(windowPosition.x, windowPosition.y, contentRegionSize.x, contentRegionSize.y);
+                    ImGuizmo::SetRect(m_sceneViewportPosition.x, m_sceneViewportPosition.y, m_sceneViewportSize.x, m_sceneViewportSize.y);
 
                     // Draw ImGuizmo only if there's an entity selected
                     if(m_selectedEntity)
@@ -2810,12 +2911,15 @@ void EditorWindow::update(const float p_deltaTime)
                             // Try to get the rigid body component for sending spatial changes
                             auto *rigidBodyComponent = entityRegistry.try_get<RigidBodyComponent>(m_selectedEntity.m_entityID);
 
-                            // Get the current local transform matrix of the selected entity
-                            m_selectedEntity.m_spatialDataManager.getLocalSpaceDataNonConst().m_transformMatNoScale = spatialComponent->getSpatialDataChangeManager().getLocalTransform();
+                            // Get the current world transform matrix of the selected entity
+                            glm::mat4 worldMatrix = spatialComponent->getSpatialDataChangeManager().getWorldTransform();
 
                             // Draw TRANSLATE MANIPULATION ImGuizmo
-                            if(m_translateGuizmoEnabled && ImGuizmo::Manipulate(glm::value_ptr(rendererScene->getViewMatrix()[0]), glm::value_ptr(rendererScene->getProjectionMatrix()[0]), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::LOCAL, glm::value_ptr(m_selectedEntity.m_spatialDataManager.getLocalSpaceDataNonConst().m_transformMatNoScale[0])))
+                            if(m_translateGuizmoEnabled && ImGuizmo::Manipulate(glm::value_ptr(rendererScene->getViewMatrix()[0]), glm::value_ptr(rendererScene->getProjectionMatrix()[0]), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::WORLD, glm::value_ptr(worldMatrix[0])))
                             {
+                                // Get the local transform from the world matrix by multiplying it with the inverse of the parent transform
+                                m_selectedEntity.m_spatialDataManager.getLocalSpaceDataNonConst().m_transformMatNoScale = glm::inverse(spatialComponent->getSpatialDataChangeManager().getParentTransform()) * worldMatrix;
+
                                 // If the model transform matrix was changed, send a notification to the either the Spatial Component or Rigid Body Component (if the Rigid Body Component is present, it takes control over the spatial data)
                                 if(rigidBodyComponent != nullptr)
                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Spatial::LocalTransformNoScale);
@@ -2824,8 +2928,11 @@ void EditorWindow::update(const float p_deltaTime)
                             }
 
                             // Draw ROTATE MANIPULATION ImGuizmo
-                            if(m_rotateGuizmoEnabled && ImGuizmo::Manipulate(glm::value_ptr(rendererScene->getViewMatrix()[0]), glm::value_ptr(rendererScene->getProjectionMatrix()[0]), ImGuizmo::OPERATION::ROTATE, ImGuizmo::MODE::LOCAL, glm::value_ptr(m_selectedEntity.m_spatialDataManager.getLocalSpaceDataNonConst().m_transformMatNoScale[0])))
+                            if(m_rotateGuizmoEnabled && ImGuizmo::Manipulate(glm::value_ptr(rendererScene->getViewMatrix()[0]), glm::value_ptr(rendererScene->getProjectionMatrix()[0]), ImGuizmo::OPERATION::ROTATE, ImGuizmo::MODE::LOCAL, glm::value_ptr(worldMatrix[0])))
                             {
+                                // Get the local transform from the world matrix by multiplying it with the inverse of the parent transform
+                                m_selectedEntity.m_spatialDataManager.getLocalSpaceDataNonConst().m_transformMatNoScale = glm::inverse(spatialComponent->getSpatialDataChangeManager().getParentTransform()) * worldMatrix;
+
                                 // If the model transform matrix was changed, send a notification to the either the Spatial Component or Rigid Body Component (if the Rigid Body Component is present, it takes control over the spatial data)
                                 if(rigidBodyComponent != nullptr)
                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Spatial::LocalTransformNoScale);
@@ -2970,6 +3077,15 @@ void EditorWindow::update(const float p_deltaTime)
                             ImGui::EndChild();
                         }
 
+                        ImGui::EndTabItem();
+                    }
+                }
+
+                if(m_showImspinnerDemoWindow)
+                {
+                    if(ImGui::BeginTabItem("Demo spinners", 0, m_textureInspectorTabFlags))
+                    {
+                        ImSpinner::demoSpinners();
                         ImGui::EndTabItem();
                     }
                 }

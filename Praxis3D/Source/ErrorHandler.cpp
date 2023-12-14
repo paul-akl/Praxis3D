@@ -71,6 +71,7 @@ ErrorHandler::ErrorHandler()
 	AssignErrorType(Duplicate_object_id, Warning);
 	AssignErrorType(Invalid_object_id, Warning);
 	AssignErrorType(Nonexistent_object_id, Warning);
+	AssignErrorType(Nonexistent_parent_entity, Warning);
 
 	// Add error sources to the hash map, and offset them by number of error codes, because they share the same hash map
 	for(unsigned int i = 0; i < Source_NumberOfErrorSources; i++)

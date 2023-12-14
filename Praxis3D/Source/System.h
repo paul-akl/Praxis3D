@@ -61,7 +61,7 @@ class SystemScene : public ObservedSubject, public Observer
 	friend SystemBase;
 public:
 	SystemScene(SystemBase *p_system, SceneLoader *p_sceneLoader, Properties::PropertyID p_objectType)
-		: Observer(p_objectType), m_initialized(false), m_system(p_system), m_sceneLoader(p_sceneLoader) { }
+		: Observer(p_objectType), m_initialized(false), m_loadingStatus(false), m_system(p_system), m_sceneLoader(p_sceneLoader) { }
 	//~SystemScene();
 
 	// Gets the parent system
@@ -130,8 +130,12 @@ public:
 	// Return the parent scene loader
 	inline SceneLoader *getSceneLoader() { return m_sceneLoader; }
 
+	// Returns true if the scene is currently performing any loading
+	inline bool getLoadingStatus() const { return m_loadingStatus; }
+
 protected:
 	bool m_initialized;
+	bool m_loadingStatus;
 	SystemBase *m_system;
 	SceneLoader *m_sceneLoader;
 };

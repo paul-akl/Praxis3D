@@ -10,7 +10,8 @@
 RendererScene::RendererScene(RendererSystem *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader, Properties::PropertyID::Renderer)
 {
 	m_renderTask = new RenderTask(this, p_system->getRenderer());
-	m_renderToTexture = false; 
+	m_renderToTexture = false;
+	m_firstLoadingDone = false;
 	m_renderToTextureResolution = glm::ivec2(Config::graphicsVar().current_resolution_x, Config::graphicsVar().current_resolution_y);
 }
 
@@ -186,6 +187,8 @@ void RendererScene::update(const float p_deltaTime)
 	// Get the entity registry 
 	auto &entityRegistry = worldScene->getEntityRegistry();
 
+	bool loadingStatus = false;
+
 	//	 _______________________________
 	//	|							    |
 	//	|	 CHECK FOR LOAD PENDING		|
@@ -217,6 +220,9 @@ void RendererScene::update(const float p_deltaTime)
 					// Add load to memory component, to mark the entity as loading
 					worldScene->addComponent<GraphicsLoadToMemoryComponent>(entity, entity);
 
+					// Set the loading status flag to true
+					loadingStatus = true;
+
 					// Reset load pending flag
 					component.resetLoadPending();
 					component.setLoadedToMemory(false);
@@ -230,6 +236,9 @@ void RendererScene::update(const float p_deltaTime)
 			{
 				// Add load to memory component, to mark the entity as loading
 				worldScene->addComponent<GraphicsLoadToMemoryComponent>(entity, entity);
+
+				// Set the loading status flag to true
+				loadingStatus = true;
 
 				// Reset load pending flag
 				component.resetLoadPending();
@@ -267,6 +276,11 @@ void RendererScene::update(const float p_deltaTime)
 
 			// Remove load-to-video-memory component to mark the entity as loaded to GPU
 			worldScene->removeComponent<GraphicsLoadToVideoMemoryComponent>(entity);
+		}
+		else
+		{
+			// Set the loading status flag to true
+			loadingStatus = true;
 		}
 	}
 
@@ -315,6 +329,11 @@ void RendererScene::update(const float p_deltaTime)
 						if(!loadableObjectsFromModel[i].isLoadedToVideoMemory())
 							loadToVideoMemoryComponent.m_objectsToLoad.emplace(loadableObjectsFromModel[i]);
 				}
+			}
+			else
+			{
+				// Set the loading status flag to true
+				loadingStatus = true;
 			}
 		}
 		else
@@ -371,6 +390,28 @@ void RendererScene::update(const float p_deltaTime)
 					}
 				}
 			}
+			else
+			{
+				// Set the loading status flag to true
+				loadingStatus = true;
+			}
+		}
+	}
+
+	m_loadingStatus = loadingStatus;
+
+	// If the render-to-texture is not set (i.e. no scene editor), do not process drawing while there are objects being loaded
+	// Perform only during the first initial scene loading
+	if(!m_firstLoadingDone && !m_renderTask->m_renderer.getRenderFinalToTexture())
+	{
+		if(m_loadingStatus)
+		{
+			m_sceneObjects.m_processDrawing = false;
+		}
+		else
+		{
+			m_sceneObjects.m_processDrawing = true;
+			m_firstLoadingDone = true;
 		}
 	}
 

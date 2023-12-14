@@ -48,8 +48,10 @@
 		"SDL_video_init_failed"							: "SDL Video has failed to initialize",
 		"SDL_vsync_failed"									: "Failed to change vertical synchronization mode",
 		"Window_creation_failed"						: "Unable to create a window",
+		"Duplicate_object_id"								: "Duplicate game object ID",
 		"Invalid_object_id"									: "Invalid game object ID",
-		"Duplicate_object_id"								: "Duplicate game object ID"
+		"Nonexistent_object_id"							: "Entity ID does not exist",
+		"Nonexistent_parent_entity"					: "Parent entity does not exist"
 	},
 	"Error Sources":
 	{

@@ -101,7 +101,7 @@ ErrorCode WorldScene::addComponents(const EntityID p_entityID, const ComponentsC
 			}
 
 		if(newSpatialComponent != nullptr)
-			oldSpatialComponent = m_entityRegistry.try_get<MetadataComponent>(p_entityID);
+			oldSpatialComponent = m_entityRegistry.try_get<SpatialComponent>(p_entityID);
 
 		// Add AUDIO components
 		std::vector<SystemObject *> newAudioComponents = m_sceneLoader->getSystemScene(Systems::Audio)->createComponents(p_entityID, p_constructionInfo, p_startLoading);
@@ -138,6 +138,22 @@ ErrorCode WorldScene::addComponents(const EntityID p_entityID, const ComponentsC
 			for(decltype(oldScriptingComponents.size()) i = 0, size = oldScriptingComponents.size(); i < size; i++)
 			{
 				m_sceneLoader->getChangeController()->createObjectLink(oldScriptingComponents[i], newSpatialComponent);
+			}
+
+			// Link PARENT SPATIAL -> CHILD SPATIAL
+			// Do not process the root node (Entity ID 0)
+			if(auto *metadataComponent = m_entityRegistry.try_get<MetadataComponent>(p_entityID); metadataComponent != nullptr)
+			{
+				if(auto *parentSpatialComponent = m_entityRegistry.try_get<SpatialComponent>(metadataComponent->m_parent); parentSpatialComponent != nullptr && p_entityID != 0)
+				{
+					// Set the parent transform
+					auto *spatialComponent = m_entityRegistry.try_get<SpatialComponent>(p_entityID);
+					spatialComponent->m_spatialData.setParentTransform(parentSpatialComponent->m_spatialData.getWorldTransform());
+					spatialComponent->m_spatialData.update();
+
+					// Link parent to child
+					m_sceneLoader->getChangeController()->createObjectLink(parentSpatialComponent, newSpatialComponent);
+				}
 			}
 		}
 		else
@@ -297,6 +313,24 @@ EntityID WorldScene::createEntity(const ComponentsConstructionInfo &p_constructi
 		{
 			m_sceneLoader->getChangeController()->createObjectLink(physicsComponents[i], spatialComponent);
 		}
+
+		// Link PARENT SPATIAL -> CHILD SPATIAL
+		// Do not process the root node (Entity ID 0)
+		if(auto *parentSpatialComponent = m_entityRegistry.try_get<SpatialComponent>(p_constructionInfo.m_parent); parentSpatialComponent != nullptr && newEntity != 0)
+		{
+			// Set the parent transform
+			auto *currentSpatialComponent = m_entityRegistry.try_get<SpatialComponent>(newEntity);
+			currentSpatialComponent->m_spatialData.setParentTransform(parentSpatialComponent->m_spatialData.getWorldTransform());
+			currentSpatialComponent->m_spatialData.update();
+
+			// Link parent to child
+			m_sceneLoader->getChangeController()->createObjectLink(parentSpatialComponent, spatialComponent);
+		}
+		else
+		{
+			if(p_constructionInfo.m_parent != 0)
+				ErrHandlerLoc::get().log(ErrorCode::Nonexistent_parent_entity, p_constructionInfo.m_name, ErrorSource::Source_WorldScene);
+		}
 	}
 
 	// Link SCRIPTING
@@ -431,7 +465,14 @@ void WorldScene::releaseObject(SystemObject *p_systemObject)
 			{
 				auto *component = static_cast<SpatialComponent *>(p_systemObject);
 
-				// Nothing to release
+				// Unlink parent to child
+				if(auto *metadataComponent = m_entityRegistry.try_get<MetadataComponent>(component->getEntityID()); metadataComponent != nullptr)
+				{
+					if(auto *parentSpatialComponent = m_entityRegistry.try_get<SpatialComponent>(metadataComponent->m_parent); parentSpatialComponent != nullptr)
+					{
+						m_sceneLoader->getChangeController()->removeObjectLink(parentSpatialComponent, component);
+					}
+				}
 			}
 			break;
 	}

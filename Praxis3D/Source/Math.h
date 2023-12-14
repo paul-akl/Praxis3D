@@ -16,24 +16,39 @@
 #include <glm/gtx/quaternion.hpp>
 #include <limits>
 
-#define E_CONST		2.71828182845904523536
-#define LOG2E		1.44269504088896340736
-#define LOG10E		0.434294481903251827651
-#define LN2			0.693147180559945309417
-#define LN10		2.30258509299404568402
-#define PI			3.14159265358979323846
-#define PI_2		1.57079632679489661923
-#define PI_4		0.785398163397448309616
-#define SQRTPI		1.12837916709551257390
-#define SQRT2		1.41421356237309504880
-#define SQRT1_2		0.707106781186547524401
-#define RAD			(PI / 180.0)
-#define DEG			(180.0 / PI)
-#define TWOPI		(PI * 2)
-#define RAD2DEG		(360/(PI*2))
 
 namespace Math
 {
+	constexpr float E_CONST			= 2.71828182845904523536f;
+	constexpr float LOG2E			= 1.44269504088896340736f;
+	constexpr float LOG10E			= 0.434294481903251827651f;
+	constexpr float LN2				= 0.693147180559945309417f;
+	constexpr float LN10			= 2.30258509299404568402f;
+	constexpr float PI				= 3.14159265358979323846f;
+	constexpr float PI_2			= 1.57079632679489661923f;
+	constexpr float PI_4			= 0.785398163397448309616f;
+	constexpr float SQRTPI			= 1.12837916709551257390f;
+	constexpr float SQRT2			= 1.41421356237309504880f;
+	constexpr float SQRT1_2			= 0.707106781186547524401f;
+	constexpr float RAD				= (PI / 180.0f);
+	constexpr float DEG				= (180.0f / PI);
+	constexpr float RAD2DEG			= (360.0f / (PI * 2.0f));
+
+	constexpr double E_CONST_DOUBLE = 2.71828182845904523536;
+	constexpr double LOG2E_DOUBLE	= 1.44269504088896340736;
+	constexpr double LOG10E_DOUBLE	= 0.434294481903251827651;
+	constexpr double LN2_DOUBLE		= 0.693147180559945309417;
+	constexpr double LN10_DOUBLE	= 2.30258509299404568402;
+	constexpr double PI_DOUBLE		= 3.14159265358979323846;
+	constexpr double PI_2_DOUBLE	= 1.57079632679489661923;
+	constexpr double PI_4_DOUBLE	= 0.785398163397448309616;
+	constexpr double SQRTPI_DOUBLE	= 1.12837916709551257390;
+	constexpr double SQRT2_DOUBLE	= 1.41421356237309504880;
+	constexpr double SQRT1_2_DOUBLE = 0.707106781186547524401;
+	constexpr double RAD_DOUBLE		= (PI_DOUBLE / 180.0);
+	constexpr double DEG_DOUBLE		= (180.0 / PI_DOUBLE);
+	constexpr double RAD2DEG_DOUBLE = (360.0 / (PI_DOUBLE * 2.0));
+
 	const glm::mat4 createTransformMat(const glm::vec3 &p_position, const glm::vec3 &p_rotation, const glm::vec3 &p_scale) noexcept;
 	const inline glm::mat4 createTransformMat(const glm::vec3 &p_position, const glm::quat &p_rotation) noexcept
 	{

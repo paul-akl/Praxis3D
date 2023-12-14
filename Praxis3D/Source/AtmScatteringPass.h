@@ -19,7 +19,7 @@ public:
 		kLengthUnitInMeters(1000.0),
 		m_atmParamBuffer(BufferType_Uniform, BufferBindTarget_Uniform, BufferUsageHint_DynamicDraw)
 	{
-		kSunSolidAngle = PI * kSunAngularRadius * kSunAngularRadius;
+		kSunSolidAngle = Math::PI_DOUBLE * kSunAngularRadius * kSunAngularRadius;
 
 		m_vertexShaderSource = R"(
 	#version 330
@@ -128,82 +128,85 @@ public:
 	{
 		glEnable(GL_DEPTH_TEST);
 
-		if(p_renderPassData.m_atmScatDoSkyPass)
+		if(p_sceneObjects.m_processDrawing)
 		{
-			//glDisable(GL_DEPTH_TEST);
-			//glEnable(GL_DEPTH_TEST);
-			glDepthFunc(GL_LEQUAL);
-			//glDepthMask(GL_FALSE);
+			if(p_renderPassData.m_atmScatDoSkyPass)
+			{
+				//glDisable(GL_DEPTH_TEST);
+				//glEnable(GL_DEPTH_TEST);
+				glDepthFunc(GL_LEQUAL);
+				//glDepthMask(GL_FALSE);
 
-			// Bind output color texture for writing to
-			m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
+				// Bind output color texture for writing to
+				m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
 
-			glUseProgram(m_skyShader->getShaderHandle());
+				glUseProgram(m_skyShader->getShaderHandle());
 
-			glActiveTexture(GL_TEXTURE0 + AtmScatteringTextureType::AtmScatteringTextureType_Irradiance);
-			glBindTexture(GL_TEXTURE_2D, m_atmScatteringModel->getIrradianceTexture());
-			glActiveTexture(GL_TEXTURE0 + AtmScatteringTextureType::AtmScatteringTextureType_Scattering);
-			glBindTexture(GL_TEXTURE_3D, m_atmScatteringModel->getScatteringTexture());
-			glActiveTexture(GL_TEXTURE0 + AtmScatteringTextureType::AtmScatteringTextureType_SingleMie);
-			glBindTexture(GL_TEXTURE_3D, m_atmScatteringModel->getSingleMieTexture());
-			glActiveTexture(GL_TEXTURE0 + AtmScatteringTextureType::AtmScatteringTextureType_Transmittance);
-			glBindTexture(GL_TEXTURE_2D, m_atmScatteringModel->getTransmittanceTexture());
+				glActiveTexture(GL_TEXTURE0 + AtmScatteringTextureType::AtmScatteringTextureType_Irradiance);
+				glBindTexture(GL_TEXTURE_2D, m_atmScatteringModel->getIrradianceTexture());
+				glActiveTexture(GL_TEXTURE0 + AtmScatteringTextureType::AtmScatteringTextureType_Scattering);
+				glBindTexture(GL_TEXTURE_3D, m_atmScatteringModel->getScatteringTexture());
+				glActiveTexture(GL_TEXTURE0 + AtmScatteringTextureType::AtmScatteringTextureType_SingleMie);
+				glBindTexture(GL_TEXTURE_3D, m_atmScatteringModel->getSingleMieTexture());
+				glActiveTexture(GL_TEXTURE0 + AtmScatteringTextureType::AtmScatteringTextureType_Transmittance);
+				glBindTexture(GL_TEXTURE_2D, m_atmScatteringModel->getTransmittanceTexture());
 
-			// Set atmosphere parameters buffer size and data
-			//m_atmParamBuffer.m_updateSize = sizeof(AtmScatteringParameters);
-			//m_atmParamBuffer.m_data = (void*)(&m_atmScatteringParam);
-			//m_renderer.queueForUpdate(m_atmParamBuffer);
+				// Set atmosphere parameters buffer size and data
+				//m_atmParamBuffer.m_updateSize = sizeof(AtmScatteringParameters);
+				//m_atmParamBuffer.m_data = (void*)(&m_atmScatteringParam);
+				//m_renderer.queueForUpdate(m_atmParamBuffer);
 
-			// Pass update commands so they are executed 
-			//m_renderer.passUpdateCommandsToBackend();
+				// Pass update commands so they are executed 
+				//m_renderer.passUpdateCommandsToBackend();
 
-			// Perform various visual effects in the post process shader
-			m_renderer.queueForDrawing(m_skyShader->getShaderHandle(), m_skyShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
-			
-		}
-		else
-		{
-			glDepthFunc(GL_GREATER);
-			//glDisable(GL_DEPTH_TEST);
-			//glEnable(GL_DEPTH_TEST);
-			//glDepthFunc(GL_LEQUAL);
-			//glDepthMask(GL_FALSE);
+				// Perform various visual effects in the post process shader
+				m_renderer.queueForDrawing(m_skyShader->getShaderHandle(), m_skyShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
 
-			// Bind output color texture for writing to
-			m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
+			}
+			else
+			{
+				glDepthFunc(GL_GREATER);
+				//glDisable(GL_DEPTH_TEST);
+				//glEnable(GL_DEPTH_TEST);
+				//glDepthFunc(GL_LEQUAL);
+				//glDepthMask(GL_FALSE);
 
-			glUseProgram(m_groundShader->getShaderHandle());
+				// Bind output color texture for writing to
+				m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
 
-			glActiveTexture(GL_TEXTURE0 + AtmScatteringTextureType::AtmScatteringTextureType_Irradiance);
-			glBindTexture(GL_TEXTURE_2D, m_atmScatteringModel->getIrradianceTexture());
-			glActiveTexture(GL_TEXTURE0 + AtmScatteringTextureType::AtmScatteringTextureType_Scattering);
-			glBindTexture(GL_TEXTURE_3D, m_atmScatteringModel->getScatteringTexture());
-			glActiveTexture(GL_TEXTURE0 + AtmScatteringTextureType::AtmScatteringTextureType_SingleMie);
-			glBindTexture(GL_TEXTURE_3D, m_atmScatteringModel->getSingleMieTexture());
-			glActiveTexture(GL_TEXTURE0 + AtmScatteringTextureType::AtmScatteringTextureType_Transmittance);
-			glBindTexture(GL_TEXTURE_2D, m_atmScatteringModel->getTransmittanceTexture());
-			
-			
-			auto tex1 = m_atmScatteringModel->getIrradianceTexture();
-			auto tex2 = m_atmScatteringModel->getScatteringTexture();
-			auto tex3 = m_atmScatteringModel->getSingleMieTexture();
-			auto tex4 = m_atmScatteringModel->getTransmittanceTexture();
+				glUseProgram(m_groundShader->getShaderHandle());
 
-			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GBufferTextureType::GBufferInputTexture);
-			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferPosition, GBufferTextureType::GBufferPosition);
-			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferNormal, GBufferTextureType::GBufferNormal);
-			
-			// Set atmosphere parameters buffer size and data
-			//m_atmParamBuffer.m_updateSize = sizeof(AtmScatteringParameters);
-			//m_atmParamBuffer.m_data = (void*)(&m_atmScatteringParam);
-			//m_renderer.queueForUpdate(m_atmParamBuffer);
+				glActiveTexture(GL_TEXTURE0 + AtmScatteringTextureType::AtmScatteringTextureType_Irradiance);
+				glBindTexture(GL_TEXTURE_2D, m_atmScatteringModel->getIrradianceTexture());
+				glActiveTexture(GL_TEXTURE0 + AtmScatteringTextureType::AtmScatteringTextureType_Scattering);
+				glBindTexture(GL_TEXTURE_3D, m_atmScatteringModel->getScatteringTexture());
+				glActiveTexture(GL_TEXTURE0 + AtmScatteringTextureType::AtmScatteringTextureType_SingleMie);
+				glBindTexture(GL_TEXTURE_3D, m_atmScatteringModel->getSingleMieTexture());
+				glActiveTexture(GL_TEXTURE0 + AtmScatteringTextureType::AtmScatteringTextureType_Transmittance);
+				glBindTexture(GL_TEXTURE_2D, m_atmScatteringModel->getTransmittanceTexture());
 
-			// Pass update commands so they are executed 
-			//m_renderer.passUpdateCommandsToBackend();
 
-			// Perform various visual effects in the post process shader
-			m_renderer.queueForDrawing(m_groundShader->getShaderHandle(), m_groundShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
-		
+				auto tex1 = m_atmScatteringModel->getIrradianceTexture();
+				auto tex2 = m_atmScatteringModel->getScatteringTexture();
+				auto tex3 = m_atmScatteringModel->getSingleMieTexture();
+				auto tex4 = m_atmScatteringModel->getTransmittanceTexture();
+
+				m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GBufferTextureType::GBufferInputTexture);
+				m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferPosition, GBufferTextureType::GBufferPosition);
+				m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferNormal, GBufferTextureType::GBufferNormal);
+
+				// Set atmosphere parameters buffer size and data
+				//m_atmParamBuffer.m_updateSize = sizeof(AtmScatteringParameters);
+				//m_atmParamBuffer.m_data = (void*)(&m_atmScatteringParam);
+				//m_renderer.queueForUpdate(m_atmParamBuffer);
+
+				// Pass update commands so they are executed 
+				//m_renderer.passUpdateCommandsToBackend();
+
+				// Perform various visual effects in the post process shader
+				m_renderer.queueForDrawing(m_groundShader->getShaderHandle(), m_groundShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
+
+			}
 		}
 		
 		// Pass the draw command so it is executed

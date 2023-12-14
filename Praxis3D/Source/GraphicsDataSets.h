@@ -27,11 +27,12 @@ struct MaterialData
 // Contains data of a single mesh and its materials
 struct MeshData
 {
-	MeshData(const Model::Mesh &p_mesh, MaterialData p_materials[MaterialType::MaterialType_NumOfTypes], const float p_heightScale, const float p_alphaThreshold, const float p_emissiveIntensity, const bool p_active = true) :
+	MeshData(const Model::Mesh &p_mesh, MaterialData p_materials[MaterialType::MaterialType_NumOfTypes], const float p_heightScale, const float p_alphaThreshold, const float p_emissiveIntensity, const TextureWrapType p_textureWrapMode, const bool p_active = true) :
 		m_mesh(&p_mesh), 
 		m_heightScale(p_heightScale),
 		m_alphaThreshold(p_alphaThreshold),
 		m_emissiveIntensity(p_emissiveIntensity),
+		m_textureWrapMode(p_textureWrapMode),
 		m_active(p_active)
 	{
 		std::copy(p_materials, p_materials + MaterialType::MaterialType_NumOfTypes, m_materials);
@@ -45,6 +46,8 @@ struct MeshData
 	float m_emissiveIntensity;
 	// Flag denoting whether to draw the mesh
 	bool m_active;
+	// Texture wrap mode
+	TextureWrapType m_textureWrapMode;
 
 	// Handle to a mesh
 	const Model::Mesh *m_mesh;
@@ -107,7 +110,7 @@ struct CameraData
 // All graphics objects contain an instance of this struct, which holds the necessary spacial and other data
 struct GraphicsData
 {
-	GraphicsData() : m_scale(1.0f, 1.0f, 1.0f), m_alphaThreshold(0.0f), m_emissiveThreshold(0.0f), m_heightScale(0.0f), m_textureTilingFactor(1.0f) { }
+	GraphicsData() : m_scale(1.0f, 1.0f, 1.0f), m_textureWrapMode(GL_REPEAT), m_alphaThreshold(0.0f), m_emissiveThreshold(0.0f), m_heightScale(0.0f), m_textureTilingFactor(1.0f) { }
 
 	glm::vec3 m_position,
 				m_rotation,
@@ -116,6 +119,8 @@ struct GraphicsData
 				m_offsetRotation;
 
 	glm::mat4 m_modelMat;
+
+	int m_textureWrapMode;
 
 	float	m_alphaThreshold,
 			m_emissiveThreshold,
@@ -326,7 +331,9 @@ struct PointLightDataSet
 		m_color(p_color), 
 		m_position(p_position), 
 		m_attenuation(p_attenuation), 
-		m_intensity(p_intensity) { }
+		m_intensity(p_intensity),
+		m_padding1(0.0f),
+		m_padding2(0.0f) { }
 
 	glm::vec3 m_color;
 	float m_padding1;	// Unused variable, declared for padding
@@ -349,7 +356,9 @@ struct SpotLightDataSet
 		m_direction(p_direction),
 		m_attenuation(p_attenuation), 
 		m_intensity(p_intensity),
-		m_cutoffAngle(p_cutoffAngle) { }
+		m_cutoffAngle(p_cutoffAngle),
+		m_padding1(0.0f),
+		m_padding2(0.0f) { }
 	
 	glm::vec3 m_color;
 	float m_padding1;	// Unused variable, declared for padding

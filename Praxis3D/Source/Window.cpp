@@ -1,6 +1,7 @@
 
 #include "ErrorHandlerLocator.h"
 #include "GUIHandler.h"
+#include "Version.h"
 #include "Window.h"
 
 Window::Window()
@@ -40,6 +41,9 @@ Window::~Window()
 ErrorCode Window::init()
 {
 	ErrorCode returnError = ErrorCode::Success;
+
+	// Add the current version number to the window name
+	Config::m_windowVar.name = Config::m_windowVar.name + " v" + PRAXIS3D_VERSION_STRING;
 
 	if(SDL_Init(SDL_INIT_VIDEO) < 0)
 		returnError = ErrorCode::SDL_video_init_failed;
@@ -116,7 +120,7 @@ ErrorCode Window::createWindow()
 	unsigned int flags = Config::windowVar().resizable ? flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE : SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
 
 	// Spawn a window
-	m_SDLWindow = SDL_CreateWindow(Config::windowVar().name.c_str(), 
+	m_SDLWindow = SDL_CreateWindow(Config::windowVar().name.c_str(),
 								   Config::windowVar().window_position_x, Config::windowVar().window_position_y,
 								   Config::graphicsVar().current_resolution_x, Config::graphicsVar().current_resolution_y, flags);
 

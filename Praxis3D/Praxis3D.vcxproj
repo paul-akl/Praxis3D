@@ -368,6 +368,7 @@
     <ClInclude Include="Source\ObjectRegister.h" />
     <ClInclude Include="Source\Universal.h" />
     <ClInclude Include="Source\Utilities.h" />
+    <ClInclude Include="Source\Version.h" />
     <ClInclude Include="Source\Window.h" />
     <ClInclude Include="Source\WindowLocator.h" />
     <ClInclude Include="Source\WorldEditObject.h" />

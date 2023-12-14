@@ -67,77 +67,59 @@ public:
 		// Initialize the geometry framebuffer for the geometry pass
 		m_renderer.m_backend.getGeometryBuffer()->initGeometryPass();
 
-		// Get known shader details
-		auto geomShaderHandle = m_shaderGeometry->getShaderHandle();
-		auto &geomUniformUpdater = m_shaderGeometry->getUniformUpdater();
-
-		// Iterate over all objects to be rendered with geometry shader
-		for(auto entity : p_sceneObjects.m_models)
+		if(p_sceneObjects.m_processDrawing)
 		{
-			ModelComponent &model = p_sceneObjects.m_models.get<ModelComponent>(entity);
-			if(model.isObjectActive())
-			{
-				SpatialComponent &spatialData = p_sceneObjects.m_models.get<SpatialComponent>(entity);
-				auto &modelData = model.getModelData();
+			// Get known shader details
+			auto geomShaderHandle = m_shaderGeometry->getShaderHandle();
+			auto &geomUniformUpdater = m_shaderGeometry->getUniformUpdater();
 
-				for(decltype(modelData.size()) i = 0, size = modelData.size(); i < size; i++)
-				{
-					m_renderer.queueForDrawing(modelData[i],
-						geomShaderHandle,
-						geomUniformUpdater,
-						spatialData.getSpatialDataChangeManager().getWorldTransformWithScale(),
-						m_renderer.m_viewProjMatrix);
-				}
-			}
-		}
-
-		// Iterate over all objects to be rendered with a custom shader
-		for(auto entity : p_sceneObjects.m_modelsWithShaders)
-		{
-			ModelComponent &model = p_sceneObjects.m_modelsWithShaders.get<ModelComponent>(entity);
-			if(model.isObjectActive())
+			// Iterate over all objects to be rendered with geometry shader
+			for(auto entity : p_sceneObjects.m_models)
 			{
-				SpatialComponent &spatialData = p_sceneObjects.m_modelsWithShaders.get<SpatialComponent>(entity);
-				ShaderComponent &shader = p_sceneObjects.m_modelsWithShaders.get<ShaderComponent>(entity);
-				if(shader.isLoadedToVideoMemory())
+				ModelComponent &model = p_sceneObjects.m_models.get<ModelComponent>(entity);
+				if(model.isObjectActive())
 				{
+					SpatialComponent &spatialData = p_sceneObjects.m_models.get<SpatialComponent>(entity);
 					auto &modelData = model.getModelData();
 
 					for(decltype(modelData.size()) i = 0, size = modelData.size(); i < size; i++)
 					{
 						m_renderer.queueForDrawing(modelData[i],
-							shader.getShaderData()->m_shader.getShaderHandle(),
-							shader.getShaderData()->m_shader.getUniformUpdater(),
+							geomShaderHandle,
+							geomUniformUpdater,
 							spatialData.getSpatialDataChangeManager().getWorldTransformWithScale(),
 							m_renderer.m_viewProjMatrix);
 					}
 				}
 			}
-		}
 
+			// Iterate over all objects to be rendered with a custom shader
+			for(auto entity : p_sceneObjects.m_modelsWithShaders)
+			{
+				ModelComponent &model = p_sceneObjects.m_modelsWithShaders.get<ModelComponent>(entity);
+				if(model.isObjectActive())
+				{
+					SpatialComponent &spatialData = p_sceneObjects.m_modelsWithShaders.get<SpatialComponent>(entity);
+					ShaderComponent &shader = p_sceneObjects.m_modelsWithShaders.get<ShaderComponent>(entity);
+					if(shader.isLoadedToVideoMemory())
+					{
+						auto &modelData = model.getModelData();
 
-		/*/ Iterate over all objects to be rendered with geometry shader
-		for(decltype(p_sceneObjects.m_modelData.size()) objIndex = 0, numObjects = p_sceneObjects.m_modelData.size(); objIndex < numObjects; objIndex++)
-		{
-			m_renderer.queueForDrawing(p_sceneObjects.m_modelData[objIndex].m_modelData,
-								geomShaderHandle, 
-								geomUniformUpdater,
-								p_sceneObjects.m_modelData[objIndex].m_modelMatrix,
+						for(decltype(modelData.size()) i = 0, size = modelData.size(); i < size; i++)
+						{
+							m_renderer.queueForDrawing(modelData[i],
+								shader.getShaderData()->m_shader.getShaderHandle(),
+								shader.getShaderData()->m_shader.getUniformUpdater(),
+								spatialData.getSpatialDataChangeManager().getWorldTransformWithScale(),
 								m_renderer.m_viewProjMatrix);
-		}*/
+						}
+					}
+				}
+			}
 
-		/*/ Iterate over all objects to be rendered with a custom shader
-		for(decltype(p_sceneObjects.m_modelDataWithShaders.size()) objIndex = 0, numObjects = p_sceneObjects.m_modelDataWithShaders.size(); objIndex < numObjects; objIndex++)
-		{
-			m_renderer.queueForDrawing(p_sceneObjects.m_modelDataWithShaders[objIndex].m_modelData,
-				p_sceneObjects.m_modelDataWithShaders[objIndex].m_shader->getShaderHandle(),
-				p_sceneObjects.m_modelDataWithShaders[objIndex].m_shader->getUniformUpdater(),
-				p_sceneObjects.m_modelDataWithShaders[objIndex].m_modelMatrix,
-				m_renderer.m_viewProjMatrix);
-		}*/
-
-		// Pass all the draw commands to be executed
-		m_renderer.passDrawCommandsToBackend();
+			// Pass all the draw commands to be executed
+			m_renderer.passDrawCommandsToBackend();
+		}
 	}
 	
 private:

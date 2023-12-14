@@ -70,7 +70,8 @@ public:
 					p_object.m_materials[MaterialType_Diffuse][meshIndex].getHandle(),
 					p_object.m_materials[MaterialType_Normal][meshIndex].getHandle(),
 					p_object.m_materials[MaterialType_Emissive][meshIndex].getHandle(),
-					p_object.m_materials[MaterialType_Combined][meshIndex].getHandle()))
+					p_object.m_materials[MaterialType_Combined][meshIndex].getHandle(),
+					p_object.m_baseObjectData.m_textureWrapMode))
 			);
 		}
 	}

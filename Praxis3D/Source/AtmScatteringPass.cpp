@@ -53,7 +53,7 @@ void AtmScatteringPass::InitModel()
 	constexpr double kMiePhaseFunctionG = 0.8;
 	constexpr double kGroundAlbedo = 0.1;
 	const double max_sun_zenith_angle =
-		(m_useHalfPrecision ? 102.0 : 120.0) / 180.0 * PI;
+		(m_useHalfPrecision ? 102.0 : 120.0) / 180.0 * Math::PI_DOUBLE;
 
 	DensityProfileLayer
 		rayleigh_layer(0.0, 1.0, -1.0 / kRayleighScaleHeight, 0.0, 0.0);

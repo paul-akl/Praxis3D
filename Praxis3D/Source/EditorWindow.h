@@ -28,6 +28,8 @@ public:
 		m_translateGuizmoEnabled = true;
 		m_rotateGuizmoEnabled = false;
 		m_showNewMapWindow = false;
+		m_showImGuiDemoWindow = false;
+		m_showImspinnerDemoWindow = false;
 		m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_None;
 		m_sceneState = EditorSceneState::EditorSceneState_Pause;
 		m_centerWindowSize = glm::ivec2(0);
@@ -50,19 +52,8 @@ public:
 		m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_None;
 		m_fileBrowserDialog.m_name = "EditorFileBrowserDialog";
 
-		m_luaVariableTypeStrings = { "null", "bool", "int", "float", "double", "vec2i", "vec2f", "vec3f", "vec4f", "string", "propertyID" };
-
-		m_shaderTypeStrings = { "Compute", "Fragment", "Geometry", "Vertex", "Tessellation control", "Tessellation evaluation" };
 		m_selectedProgramShader = -1;
 		m_selectedShader = -1;
-
-		for(unsigned int i = 0; i < ObjectMaterialType::NumberOfMaterialTypes; i++)
-			m_physicalMaterialProperties.push_back(GetString(static_cast<ObjectMaterialType>(i)));
-
-		for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
-			m_renderingPassesTypeText.push_back(GetString(static_cast<RenderPassType>(i)));
-
-		m_tonemappingMethodText = { "None", "Simple reinhard", "Reinhard with white point", "Filmic tonemapping", "Uncharted 2", "Unreal 3", "ACES", "Lottes", "Uchimura" };
 
 		m_nextEntityToSelect = NULL_ENTITY_ID;
 		m_pendingEntityToSelect = false;
@@ -81,6 +72,20 @@ public:
 		m_buttonBackgroundDisabled = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
 		m_mousePositionOnNewEntity = ImVec2(0.0f, 0.0f);
 		m_newEntityWindowInitialized = false;
+		m_sceneViewportPosition = ImVec2(0.0f, 0.0f);
+		m_sceneViewportSize = ImVec2(0.0f, 0.0f);
+
+		for(unsigned int i = 0; i < ObjectMaterialType::NumberOfMaterialTypes; i++)
+			m_physicalMaterialProperties.push_back(GetString(static_cast<ObjectMaterialType>(i)));
+
+		for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
+			m_renderingPassesTypeText.push_back(GetString(static_cast<RenderPassType>(i)));
+
+		m_luaVariableTypeStrings = { "null", "bool", "int", "float", "double", "vec2i", "vec2f", "vec3f", "vec4f", "string", "propertyID" };
+		m_shaderTypeStrings = { "Compute", "Fragment", "Geometry", "Vertex", "Tessellation control", "Tessellation evaluation" };
+		m_tonemappingMethodText = { "None", "Simple reinhard", "Reinhard with white point", "Filmic tonemapping", "Uncharted 2", "Unreal 3", "ACES", "Lottes", "Uchimura" };
+		m_textureWrapModeStrings = { "Clamp to border", "Clamp to edge", "Mirrored clamp to edge", "Mirrored repeat", "Repeat" };
+		m_textureWrapModeTypes = { TextureWrapType::TextureWrapType_ClampToBorder, TextureWrapType::TextureWrapType_ClampToEdge, TextureWrapType::TextureWrapType_MirroredClampToEdge, TextureWrapType::TextureWrapType_MirroredRepeat, TextureWrapType::TextureWrapType_Repeat };
 	}
 	~EditorWindow();
 
@@ -908,20 +913,17 @@ private:
 		return "";
 	}
 
-	bool show_demo_window;
-	bool show_another_window;
-	float clear_color;
-
 	bool m_renderSceneToTexture;
 	bool m_GUISequenceEnabled;
 	bool m_LUAScriptingEnabled;
 	bool m_translateGuizmoEnabled;
 	bool m_rotateGuizmoEnabled;
 	bool m_showNewMapWindow;
+	bool m_showImGuiDemoWindow;
+	bool m_showImspinnerDemoWindow;
 	MainMenuButtonType m_activatedMainMenuButton;
 	EditorSceneState m_sceneState;
 	glm::ivec2 m_centerWindowSize;
-	std::vector<const char *> m_physicalMaterialProperties;
 	KeyCommand m_keys[KeyType::KeyType_NumOfKeys];
 
 	// GUI settings
@@ -936,12 +938,10 @@ private:
 	ImVec4 m_buttonBackgroundDisabled;
 	ImVec2 m_mousePositionOnNewEntity;
 	bool m_newEntityWindowInitialized;
-
-	// LUA variables editor data
-	std::vector<const char *> m_luaVariableTypeStrings;
+	ImVec2 m_sceneViewportPosition;
+	ImVec2 m_sceneViewportSize;
 
 	// Assets variables
-	std::vector<const char *> m_shaderTypeStrings;
 	std::vector<std::pair<const Texture2D *, std::string>> m_textureAssets;
 	std::vector<std::pair<const Model *, std::string>> m_modelAssets;
 	std::vector<std::pair<const ShaderLoader::ShaderProgram *, std::string>> m_shaderAssets;
@@ -974,8 +974,6 @@ private:
 	// New scene settings
 	SceneData m_newSceneData;
 	ImGuiTabItemFlags m_newSceneSettingsTabFlags;
-	std::vector<const char *> m_renderingPassesTypeText;
-	std::vector<const char *> m_tonemappingMethodText;
 
 	// Button textures
 	std::vector<TextureLoader2D::Texture2DHandle> m_buttonTextures;
@@ -986,4 +984,13 @@ private:
 
 	// Square button size that is the same height as text
 	ImVec2 m_buttonSizedByFont;
+
+	// String arrays and other data used for ImGui Combo inputs
+	std::vector<const char *> m_physicalMaterialProperties;
+	std::vector<const char *> m_renderingPassesTypeText;
+	std::vector<const char *> m_luaVariableTypeStrings;
+	std::vector<const char *> m_shaderTypeStrings;
+	std::vector<const char *> m_tonemappingMethodText;
+	std::vector<const char *> m_textureWrapModeStrings;
+	std::vector<TextureWrapType> m_textureWrapModeTypes;
 };

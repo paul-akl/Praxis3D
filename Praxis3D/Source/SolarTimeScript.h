@@ -335,7 +335,7 @@ public:
 			dX = cos(dEclipticLongitude);
 			dRightAscension = atan2(dY, dX);
 			if(dRightAscension < 0.0) 
-				dRightAscension = dRightAscension + TWOPI;
+				dRightAscension = dRightAscension + Math::PI_2_DOUBLE;
 			dDeclination = asin(sin(dEclipticObliquity) * dSin_EclipticLongitude);
 		}
 
@@ -350,9 +350,9 @@ public:
 			double dCos_HourAngle;
 			double dParallax;
 			dGreenwichMeanSiderealTime = 6.6974243242 + 0.0657098283 * dElapsedJulianDays + dDecimalHours;
-			dLocalMeanSiderealTime = (dGreenwichMeanSiderealTime * 15 + m_longitude) * RAD;
+			dLocalMeanSiderealTime = (dGreenwichMeanSiderealTime * 15 + m_longitude) * Math::RAD_DOUBLE;
 			dHourAngle = dLocalMeanSiderealTime - dRightAscension;
-			dLatitudeInRadians = m_latitude * RAD;
+			dLatitudeInRadians = m_latitude * Math::RAD_DOUBLE;
 			dCos_Latitude = cos(dLatitudeInRadians);
 			dSin_Latitude = sin(dLatitudeInRadians);
 			dCos_HourAngle = cos(dHourAngle);
@@ -361,12 +361,12 @@ public:
 			dX = tan(dDeclination)*dCos_Latitude - dSin_Latitude * dCos_HourAngle;
 			m_azimuthAngle = atan2(dY, dX);
 			if(m_azimuthAngle < 0.0)
-				m_azimuthAngle = m_azimuthAngle + TWOPI;
-			m_azimuthAngle = m_azimuthAngle / RAD;
+				m_azimuthAngle = m_azimuthAngle + Math::PI_2_DOUBLE;
+			m_azimuthAngle = m_azimuthAngle / Math::RAD_DOUBLE;
 
 			// Parallax Correction
 			dParallax = (dEarthMeanRadius / dAstronomicalUnit) * sin(m_zenithAngle);
-			m_zenithAngle = (m_zenithAngle + dParallax) / RAD;
+			m_zenithAngle = (m_zenithAngle + dParallax) / Math::RAD_DOUBLE;
 			m_elevationAngle = 90.0f - m_zenithAngle;
 		}
 	}
@@ -374,7 +374,7 @@ public:
 	void calcSunPositionOld()
 	{
 		// Get the fractional year in radians
-		float fracYear = (2.0f * (float)PI / 365.0f) * (m_dayOfYear - 1 + (m_hours - 12.0f) / 24.0f);
+		float fracYear = (2.0f * Math::PI / 365.0f) * (m_dayOfYear - 1 + (m_hours - 12.0f) / 24.0f);
 
 		// Get the equation of time in minutes
 		float equatOfTime = 229.18f * (0.000075f + 0.001868f * cosf(fracYear) - 

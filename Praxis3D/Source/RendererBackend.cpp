@@ -107,15 +107,23 @@ void RendererBackend::processDrawing(const DrawCommands &p_drawCommands, const U
 		// Bind textures
 		glActiveTexture(GL_TEXTURE0 + MaterialType_Diffuse);
 		glBindTexture(GL_TEXTURE_2D, p_drawCommands[i].second.m_matDiffuse);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, p_drawCommands[i].second.m_matWrapMode);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, p_drawCommands[i].second.m_matWrapMode);
 
 		glActiveTexture(GL_TEXTURE0 + MaterialType_Normal);
 		glBindTexture(GL_TEXTURE_2D, p_drawCommands[i].second.m_matNormal);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, p_drawCommands[i].second.m_matWrapMode);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, p_drawCommands[i].second.m_matWrapMode);
 
 		glActiveTexture(GL_TEXTURE0 + MaterialType_Combined);
 		glBindTexture(GL_TEXTURE_2D, p_drawCommands[i].second.m_matCombined);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, p_drawCommands[i].second.m_matWrapMode);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, p_drawCommands[i].second.m_matWrapMode);
 
 		glActiveTexture(GL_TEXTURE0 + MaterialType_Emissive);
 		glBindTexture(GL_TEXTURE_2D, p_drawCommands[i].second.m_matEmissive);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, p_drawCommands[i].second.m_matWrapMode);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, p_drawCommands[i].second.m_matWrapMode);
 		
 		// Draw the geometry
 		glDrawElementsBaseVertex(GL_TRIANGLES,
