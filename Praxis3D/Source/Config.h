@@ -36,6 +36,7 @@ enum DataType : uint32_t
 	DataType_GUIPassFunctors,			// FunctorSequence
 	DataType_RenderToTexture,			// bool
 	DataType_RenderToTextureResolution, // glm::ivec2
+	DataType_LoadShader,				// ShaderLoader::ShaderProgram
 	DataType_LoadTexture2D,				// TextureLoader2D::Texture2DHandle
 	DataType_UnloadTexture2D,			// TextureLoader2D::Texture2DHandle
 	DataType_LoadTexture3D,
@@ -43,9 +44,11 @@ enum DataType : uint32_t
 	DataType_UnloadModel,
 	DataType_ModelsProperties,			// ModelComponent::ModelsProperties
 	// GUI
+	DataType_AboutWindow,				// bool
 	DataType_EnableGUISequence,			// bool
 	DataType_EditorWindow,				// EditorWindowSettings
 	DataType_FileBrowserDialog,			// FileBrowserDialog
+	DataType_SettingsWindow,			// bool
 	// Physics
 	DataType_SimulationActive,			// bool
 	// Scripting
@@ -162,14 +165,22 @@ namespace Systems
 			static constexpr BitMask Shared19	= (BitMask)1 << 19;
 			static constexpr BitMask Shared20	= (BitMask)1 << 20;
 			static constexpr BitMask Shared21	= (BitMask)1 << 21;
+			static constexpr BitMask Shared23	= (BitMask)1 << 23;
+			static constexpr BitMask Shared24	= (BitMask)1 << 24;
+			static constexpr BitMask Shared25	= (BitMask)1 << 25;
+			static constexpr BitMask Shared26	= (BitMask)1 << 26;
+			static constexpr BitMask Shared27	= (BitMask)1 << 27;
+			static constexpr BitMask Shared28	= (BitMask)1 << 28;
+			static constexpr BitMask Shared29	= (BitMask)1 << 29;
+			static constexpr BitMask Shared30	= (BitMask)1 << 30;
 		}
 		namespace Unique
 		{
-			static constexpr BitMask Unique1 = (BitMask)1 << 30;
-			static constexpr BitMask Unique2 = (BitMask)1 << 31;
-			static constexpr BitMask Unique3 = (BitMask)1 << 32;
-			static constexpr BitMask Unique4 = (BitMask)1 << 33;
-			static constexpr BitMask Unique5 = (BitMask)1 << 34;
+			static constexpr BitMask Unique1 = (BitMask)1 << 50;
+			static constexpr BitMask Unique2 = (BitMask)1 << 51;
+			static constexpr BitMask Unique3 = (BitMask)1 << 52;
+			static constexpr BitMask Unique4 = (BitMask)1 << 53;
+			static constexpr BitMask Unique5 = (BitMask)1 << 54;
 		}
 		namespace Type
 		{
@@ -240,9 +251,10 @@ namespace Systems
 		}
 		namespace Graphics
 		{
-			static constexpr BitMask Lighting				= Changes::Type::Graphics + Changes::Common::Shared21;
-			static constexpr BitMask Camera					= Changes::Type::Graphics + Changes::Common::Shared20;
-			static constexpr BitMask Framebuffers			= Changes::Type::Graphics + Changes::Common::Shared19;
+			static constexpr BitMask Lighting				= Changes::Type::Graphics + Changes::Common::Shared30;
+			static constexpr BitMask Camera					= Changes::Type::Graphics + Changes::Common::Shared29;
+			static constexpr BitMask Framebuffers			= Changes::Type::Graphics + Changes::Common::Shared28;
+			static constexpr BitMask Scene					= Changes::Type::Graphics + Changes::Common::Shared27;
 
 			static constexpr BitMask Target					= Changes::Type::Graphics + Changes::Graphics::Camera + Changes::Common::Shared1;
 			static constexpr BitMask UpVector				= Changes::Type::Graphics + Changes::Graphics::Camera + Changes::Common::Shared2;
@@ -266,7 +278,12 @@ namespace Systems
 			static constexpr BitMask AllBuffers				= PositionBuffer | DiffuseBuffer | NormalBuffer | EmissiveBuffer | MatPropertiesBuffer | 
 																IntermediateBuffer | FinalBuffer | RenderToTextureBuffer;
 
-			static constexpr BitMask All					= AllCamera | AllLighting | AllBuffers;
+			static constexpr BitMask AmbientIntensity		= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared16;
+			static constexpr BitMask ZFar					= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared17;
+			static constexpr BitMask ZNear					= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared18;
+			static constexpr BitMask AllScene				= AmbientIntensity | ZFar | ZNear;
+
+			static constexpr BitMask All					= AllCamera | AllLighting | AllBuffers | AllScene;
 		}
 		namespace GUI
 		{
@@ -355,6 +372,7 @@ namespace Properties
 	Code(WorldScale,) \
 	/* Graphics */ \
 	Code(AlphaThreshold, ) \
+	Code(AmbientIntensity, ) \
 	Code(AmbientOcclusion, ) \
 	Code(Attenuation,) \
 	Code(Camera,) \
@@ -421,6 +439,8 @@ namespace Properties
 	Code(TextureScale,) \
 	Code(VertexShader,) \
 	Code(WrapMode,) \
+	Code(ZFar,) \
+	Code(ZNear,) \
 	/* Graphics rendering passes */ \
 	Code(AtmScatteringRenderPass,) \
 	Code(BloomRenderPass,) \
@@ -865,6 +885,7 @@ public:
 			render_to_texture_resolution_y = 900;
 			tonemap_method = 6;
 			alpha_threshold = 0.0f;
+			ambient_light_intensity = 0.3f;
 			bloom_intensity = 1.0f;
 			bloom_knee = 0.1f;
 			bloom_threshold = 1.5f;
@@ -927,6 +948,7 @@ public:
 		int render_to_texture_resolution_y;
 		int tonemap_method;
 		float alpha_threshold;
+		float ambient_light_intensity;
 		float bloom_intensity;
 		float bloom_knee;
 		float bloom_threshold;
@@ -1403,6 +1425,7 @@ public:
 			numOfTexels = "numOfTexels";
 			mipLevel = "mipLevel";
 
+			ambientLightIntensity = "ambientLightIntensity";
 			dirLightColor = "directionalLight.m_color";
 			dirLightDirection = "directionalLight.m_direction";
 			dirLightIntensity = "directionalLight.m_intensity";
@@ -1507,6 +1530,7 @@ public:
 		std::string numOfTexels;
 		std::string mipLevel;
 
+		std::string ambientLightIntensity;
 		std::string dirLightColor;
 		std::string dirLightDirection;
 		std::string dirLightIntensity;

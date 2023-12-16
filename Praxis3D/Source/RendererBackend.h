@@ -655,7 +655,7 @@ protected:
 
 			case LoadObject_Shader:
 				{
-					unsigned int shaderHandles[ShaderType_NumOfTypes] = {};
+					unsigned int shaderHandles[ShaderType_NumOfTypes] = { 0 };
 					unsigned int shaderTypes[ShaderType_NumOfTypes] = {
 						GL_COMPUTE_SHADER,
 						GL_FRAGMENT_SHADER,
@@ -668,7 +668,8 @@ protected:
 					glGetError();
 
 					// Create shader program handle
-					p_command.m_handle = glCreateProgram();
+					if(p_command.m_handle == 0)
+						p_command.m_handle = glCreateProgram();
 
 					// Check for errors
 					GLenum glError = glGetError();
@@ -742,6 +743,7 @@ protected:
 
 									// Check for errors
 									glError = glGetError();
+
 									// If compilation failed
 									if(shaderCompileResult == 0)
 									{
@@ -778,6 +780,7 @@ protected:
 
 										// Check for errors
 										glError = glGetError();
+
 										if(glError != GL_NO_ERROR)
 										{
 											// Reset the shader handle
@@ -807,14 +810,12 @@ protected:
 						// If shader loading was successful
 						if(shaderLinkingResult)
 						{
-
 							glUseProgram(p_command.m_handle);
 
 							// Generate uniform update list, after the shader has been compiled
 							p_command.m_objectData.m_shaderData.m_uniformUpdater.generateUpdateList();
 
 							// Update some of the uniforms (that do not change frame to frame)
-							//p_command.m_objectData.m_shaderData.m_uniformUpdater.generateUpdateList();
 							p_command.m_objectData.m_shaderData.m_uniformUpdater.updateTextureUniforms();
 							p_command.m_objectData.m_shaderData.m_uniformUpdater.updateBlockBindingPoints();
 							p_command.m_objectData.m_shaderData.m_uniformUpdater.updateSSBBindingPoints();
@@ -852,13 +853,14 @@ protected:
 							ErrHandlerLoc::get().log(ErrorCode::Shader_link_failed, ErrorSource::Source_ShaderLoader, errorMessageTemp);
 						}
 
-						// Iterate over all shaders and detach them
+						// Iterate over all shaders, detach and delete them
 						for(unsigned int i = 0; i < ShaderType_NumOfTypes; i++)
 						{
 							// If shader is valid
 							if(shaderHandles[i] != 0)
 							{
 								glDetachShader(p_command.m_handle, shaderHandles[i]);
+								glDeleteShader(shaderHandles[i]);
 							}
 						}
 					}

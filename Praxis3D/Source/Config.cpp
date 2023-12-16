@@ -163,6 +163,7 @@ void Config::init()
 	AddVariablePredef(m_graphicsVar, render_to_texture_resolution_y);
 	AddVariablePredef(m_graphicsVar, tonemap_method);
 	AddVariablePredef(m_graphicsVar, alpha_threshold);
+	AddVariablePredef(m_graphicsVar, ambient_light_intensity);
 	AddVariablePredef(m_graphicsVar, emissive_multiplier);
 	AddVariablePredef(m_graphicsVar, emissive_threshold);
 	AddVariablePredef(m_graphicsVar, eye_adaption_rate);
@@ -419,6 +420,7 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, texelSize);
 	AddVariablePredef(m_shaderVar, numOfTexels);
 	AddVariablePredef(m_shaderVar, mipLevel);
+	AddVariablePredef(m_shaderVar, ambientLightIntensity);
 	AddVariablePredef(m_shaderVar, dirLightColor);
 	AddVariablePredef(m_shaderVar, dirLightDirection);
 	AddVariablePredef(m_shaderVar, dirLightIntensity);

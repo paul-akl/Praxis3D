@@ -283,6 +283,7 @@ void LuaScript::setFunctions()
 	// Engine functions
 	m_luaState.set_function("setEngineRunning", [](const bool p_v1) -> const void {Config::m_engineVar.running = p_v1; });
 	m_luaState.set_function("setEngineState", [this](const EngineStateType p_v1) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_StateChange, p_v1)); });
+	m_luaState.set_function("getEngineState", [this]() -> EngineStateType { return Config::engineVar().engineState; });
 
 	m_luaState.set_function("sendEngineChange", sol::overload([this](const EngineChangeType p_v1) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(p_v1)); },
 		[this](const EngineChangeType p_v1, const EngineStateType p_v2) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(p_v1, p_v2)); },
@@ -370,7 +371,8 @@ void LuaScript::setUsertypes()
 		"gl_context_minor_version", &Config::EngineVariables::gl_context_minor_version,
 		"object_directory_init_pool_size", &Config::EngineVariables::object_directory_init_pool_size,
 		"smoothing_tick_samples", &Config::EngineVariables::smoothing_tick_samples,
-		"running", &Config::EngineVariables::running);
+		"running", &Config::EngineVariables::running,
+		"engineState", &Config::EngineVariables::engineState);
 
 	m_luaState.new_usertype<Config::GameplayVariables>("GameplayVariables",
 		"camera_freelook_speed", &Config::GameplayVariables::camera_freelook_speed);

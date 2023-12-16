@@ -146,6 +146,7 @@ public:
 		friend class CommandBuffer;
 		friend class ShaderLoader;
 		friend class RendererFrontend;
+		friend class RendererScene;
 
 	public:
 		inline void addShader(ShaderType p_shaderType, const std::string &p_filename)
@@ -168,6 +169,9 @@ public:
 				{
 					if(!m_shaderFilename[i].empty())
 					{
+						// Make sure the shader source string is empty
+						m_shaderSource[i].clear();
+
 						// Load shader's source code from a file
 						std::ifstream sourceStream(Config::PathsVariables().shader_path + m_shaderFilename[i], std::ios::in);
 
@@ -197,6 +201,15 @@ public:
 			return returnError;
 		}
 
+		inline ErrorCode reloadToMemory()
+		{
+			// Reset the loaded flag
+			m_loadedToMemory = false;
+
+			// Load shader to memory
+			return loadToMemory();
+		}
+
 		// Returns true if the program contains any tessellation shaders
 		const inline bool isTessellated() const { return m_tessellated; }
 
@@ -208,6 +221,9 @@ public:
 		const inline bool isDefaultProgram() const		{ return m_defaultShader;		}
 		const inline bool isLoadedToVideoMemory() const { return m_loadedToVideoMemory; }
 		
+		// Setters
+		inline void setShaderFilename(const ShaderType p_shaderType, const std::string &p_filename) { m_shaderFilename[p_shaderType] = p_filename; }
+
 		// Comparator operators
 		const inline bool operator==(const std::string &p_filename) const { return (m_combinedFilename == p_filename); }
 		const inline bool operator==(const unsigned int p_programHandle) const { return (m_programHandle == p_programHandle); }
@@ -284,6 +300,8 @@ public:
 	// Returns a default (empty) shader
 	inline ShaderProgram *load() { return &m_defaultProgram; }
 	ShaderProgram *load(const PropertySet &p_properties);
+
+	ErrorCode reload(ShaderProgram *p_shaderProgram);
 
 	const inline std::vector<ShaderProgram *> &getObjectPool() const { return m_shaderPrograms; }
 

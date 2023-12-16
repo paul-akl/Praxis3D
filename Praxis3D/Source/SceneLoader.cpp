@@ -777,7 +777,7 @@ void SceneLoader::importFromProperties(GUIComponentsConstructionInfo &p_construc
 	{
 		switch(p_properties.getPropertyID())
 		{
-			case Properties::PropertyID::Sequence:
+			case Properties::PropertyID::GUISequenceComponent:
 			{
 				if(p_constructionInfo.m_guiSequenceConstructionInfo == nullptr)
 					p_constructionInfo.m_guiSequenceConstructionInfo = new GUISequenceComponent::GUISequenceComponentConstructionInfo();

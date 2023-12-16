@@ -1356,8 +1356,11 @@ void EditorWindow::update(const float p_deltaTime)
                                                 m_fileBrowserDialog.m_filter = "Model files (.obj .3ds .fbx){.obj,.OBJ,.3ds,.3DS,.fbx,.FBX},All files{.*}";
                                                 m_fileBrowserDialog.m_title = "Open a model file";
                                                 m_fileBrowserDialog.m_name = "OpenModelFileFileDialog";
-                                                m_fileBrowserDialog.m_rootPath = Config::filepathVar().model_path;
                                                 m_fileBrowserDialog.m_flags = FileBrowserDialog::FileBrowserDialogFlags::FileBrowserDialogFlags_None;
+
+                                                // Set the root path only if it isn't saved from the last file dialog
+                                                if(m_previouslyOpenedFileBrowser != m_currentlyOpenedFileBrowser)
+                                                    m_fileBrowserDialog.m_rootPath = Config::filepathVar().model_path;
 
                                                 // Tell the GUI scene to open the file browser
                                                 m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
@@ -1539,8 +1542,11 @@ void EditorWindow::update(const float p_deltaTime)
                                                                 m_fileBrowserDialog.m_filter = "Texture files (.png .tga .tif .tiff .jpg .jpeg .bmp){.png,.PNG,.tga,.TGA,.tif,.tiff,.jpg,.jpeg,.bmp},All files{.*}";
                                                                 m_fileBrowserDialog.m_title = "Open a texture file";
                                                                 m_fileBrowserDialog.m_name = "OpenTextureFileFileDialog";
-                                                                m_fileBrowserDialog.m_rootPath = Config::filepathVar().texture_path;
                                                                 m_fileBrowserDialog.m_flags = FileBrowserDialog::FileBrowserDialogFlags::FileBrowserDialogFlags_None;
+
+                                                                // Set the root path only if it isn't saved from the last file dialog
+                                                                if(m_previouslyOpenedFileBrowser != m_currentlyOpenedFileBrowser)
+                                                                    m_fileBrowserDialog.m_rootPath = Config::filepathVar().texture_path;
 
                                                                 // Tell the GUI scene to open the file browser
                                                                 m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
@@ -1905,8 +1911,11 @@ void EditorWindow::update(const float p_deltaTime)
                                         m_fileBrowserDialog.m_filter = "Audio files (.wav .flac .mp3 .ogg){.wav,.flac,.mp3,.ogg},All files{.*}";
                                         m_fileBrowserDialog.m_title = "Open an audio file";
                                         m_fileBrowserDialog.m_name = "OpenAudioFileFileDialog";
-                                        m_fileBrowserDialog.m_rootPath = Config::filepathVar().sound_path;
                                         m_fileBrowserDialog.m_flags = FileBrowserDialog::FileBrowserDialogFlags::FileBrowserDialogFlags_None;
+
+                                        // Set the root path only if it isn't saved from the last file dialog
+                                        if(m_previouslyOpenedFileBrowser != m_currentlyOpenedFileBrowser)
+                                            m_fileBrowserDialog.m_rootPath = Config::filepathVar().sound_path;
 
                                         // Tell the GUI scene to open the file browser
                                         m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
@@ -2518,21 +2527,13 @@ void EditorWindow::update(const float p_deltaTime)
                     drawLeftAlignedLabelText("Luminance multiplier:", inputWidgetOffset);
                     ImGui::DragFloat("##LuminanceMultiplierDrag", &Config::m_graphicsVar.luminance_multiplier, 0.001f, 0.0f, 100.0f, "%.5f");
 
-                    ImGui::SeparatorText("Parallax settings:");
+                    ImGui::SeparatorText("Graphics settings:");
 
                     // Draw PARALLAX LOD
                     drawLeftAlignedLabelText("Parallax LOD:", inputWidgetOffset);
-                   ImGui::DragFloat("##ParallaxLODDrag", &Config::m_graphicsVar.LOD_parallax_mapping, 0.1f, 0.0f, 100000.0f, "%.5f");
+                    ImGui::DragFloat("##ParallaxLODDrag", &Config::m_graphicsVar.LOD_parallax_mapping, 0.1f, 0.0f, 100000.0f, "%.5f");
 
                     ImGui::SeparatorText("Renderer settings:");
-
-                    // Draw Z NEAR
-                    drawLeftAlignedLabelText("Z buffer near:", inputWidgetOffset);
-                    ImGui::DragFloat("##ZNearDrag", &Config::m_graphicsVar.z_near, 0.001f, 0.0f, 10000000.0f, "%.5f");
-
-                    // Draw Z FAR
-                    drawLeftAlignedLabelText("Z buffer far:", inputWidgetOffset);
-                    ImGui::DragFloat("##ZFarrag", &Config::m_graphicsVar.z_far, 0.001f, 0.0f, 10000000.0f, "%.5f");
 
                     // Draw OBJECTS LOADER PER FRAME
                     drawLeftAlignedLabelText("Object loads per frame:", inputWidgetOffset);
@@ -2621,17 +2622,7 @@ void EditorWindow::update(const float p_deltaTime)
 
                 if(ImGui::BeginTabItem("Models"))
                 {
-                    for(decltype(m_modelAssets.size()) i = 0, size = m_modelAssets.size(); i < size; i++)
-                    {
-                        ImGui::Text(m_modelAssets[i].second.c_str());
-                    }
-                    ImGui::EndTabItem();
-                }
-
-                if(ImGui::BeginTabItem("Shaders"))
-                {
                     auto contentRegionWidth = ImGui::GetContentRegionAvail().x;
-                    auto singleWindowWidth = contentRegionWidth / 3.0f;
 
                     ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.26f, 0.26f, 0.26f, 1.0f));
                     ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f);
@@ -2640,15 +2631,54 @@ void EditorWindow::update(const float p_deltaTime)
                     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, m_imguiStyle.FramePadding.y));
                     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, m_imguiStyle.ItemSpacing.y));
 
-                    if(ImGui::BeginChild("##ShaderAssetsProgramSelection", ImVec2(contentRegionWidth * 0.25f, 0), true))
+                    if(ImGui::BeginChild("##ModelAssetsSelection", ImVec2(contentRegionWidth * 0.2f, 0), true))
+                    {
+                        ImGui::SeparatorText("Models:");
+                        for(decltype(m_modelAssets.size()) i = 0, size = m_modelAssets.size(); i < size; i++)
+                        {
+                            if(ImGui::Selectable(m_modelAssets[i].second.c_str(), m_selectedModel != nullptr ? m_modelAssets[i].first->getUniqueID() == m_selectedModel->getUniqueID() : false))
+                            {
+                                m_selectedModel = m_modelAssets[i].first;
+                            }
+                        }
+                    }
+                    ImGui::EndChild();
+
+                    ImGui::PopStyleVar(4); // ImGuiStyleVar_ChildBorderSize, ImGuiStyleVar_SeparatorTextAlign, ImGuiStyleVar_FramePadding, ImGuiStyleVar_ItemSpacing
+                    ImGui::PopStyleColor(); // ImGuiCol_Border
+
+                    ImGui::EndTabItem();
+                }
+
+                if(ImGui::BeginTabItem("Shaders"))
+                {
+                    if(!m_selectedShaderFilename.empty())
+                    {
+                        m_selectedProgram->setShaderFilename(static_cast<ShaderType>(m_selectedShaderType), m_selectedShaderFilename);
+                        m_selectedProgram->reloadToMemory();
+                        m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_LoadShader, (void *)m_selectedProgram);
+
+                        m_selectedShaderFilename.clear();
+                    }
+
+                    auto contentRegionWidth = ImGui::GetContentRegionAvail().x;
+
+                    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.26f, 0.26f, 0.26f, 1.0f));
+                    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f);
+                    ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextAlign, ImVec2(0.5f, 0.5f));
+
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, m_imguiStyle.FramePadding.y));
+                    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, m_imguiStyle.ItemSpacing.y));
+
+                    if(ImGui::BeginChild("##ShaderAssetsProgramSelection", ImVec2(contentRegionWidth * 0.2f, 0), true))
                     {
                         ImGui::SeparatorText("Shader programs:");
                         for(decltype(m_shaderAssets.size()) shaderIndex = 0, size = m_shaderAssets.size(); shaderIndex < size; shaderIndex++)
                         {
-                            if(ImGui::Selectable(m_shaderAssets[shaderIndex].second.c_str(), m_selectedProgramShader == shaderIndex))
+                            if(ImGui::Selectable(m_shaderAssets[shaderIndex].second.c_str(), m_selectedProgram != nullptr ? m_shaderAssets[shaderIndex].first->getCombinedFilename() == m_selectedProgram->getCombinedFilename() : false))
                             {
-                                m_selectedProgramShader = (int)shaderIndex;
-                                m_selectedShader = -1;
+                                m_selectedProgram = m_shaderAssets[shaderIndex].first;
+                                m_selectedShaderType = -1;
                             }
                         }
                     }
@@ -2656,18 +2686,18 @@ void EditorWindow::update(const float p_deltaTime)
 
                     ImGui::SameLine();
 
-                    if(m_selectedProgramShader >= 0 && m_selectedProgramShader < m_shaderAssets.size())
+                    if(m_selectedProgram != nullptr)
                     {
-                        if(ImGui::BeginChild("##ShaderAssetsShaderSelection", ImVec2(contentRegionWidth * 0.25f, 0), true))
+                        if(ImGui::BeginChild("##ShaderAssetsShaderSelection", ImVec2(contentRegionWidth * 0.2f, 0), true))
                         {
                             ImGui::SeparatorText("Shaders:");
                             for(unsigned int shaderType = 0; shaderType < ShaderType::ShaderType_NumOfTypes; shaderType++)
                             {
-                                if(!m_shaderAssets[m_selectedProgramShader].first->getShaderFilename(shaderType).empty())
+                                if(!m_selectedProgram->getShaderFilename(shaderType).empty())
                                 {
-                                    if(ImGui::Selectable(m_shaderAssets[m_selectedProgramShader].first->getShaderFilename(shaderType).c_str(), m_selectedShader == shaderType))
+                                    if(ImGui::Selectable(m_selectedProgram->getShaderFilename(shaderType).c_str(), m_selectedShaderType == shaderType))
                                     {
-                                        m_selectedShader = (int)shaderType;
+                                        m_selectedShaderType = (int)shaderType;
                                     }
                                 }
                             }
@@ -2679,7 +2709,7 @@ void EditorWindow::update(const float p_deltaTime)
 
                     ImGui::PopStyleVar(2); // ImGuiStyleVar_FramePadding, ImGuiStyleVar_ItemSpacing
 
-                    if(m_selectedShader >= 0 && m_selectedShader < ShaderType::ShaderType_NumOfTypes)
+                    if(m_selectedShaderType >= 0 && m_selectedShaderType < ShaderType::ShaderType_NumOfTypes)
                     {
                         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, m_imguiStyle.FramePadding.y));
                         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, m_imguiStyle.ItemSpacing.y));
@@ -2689,69 +2719,101 @@ void EditorWindow::update(const float p_deltaTime)
                             ImGui::PopStyleVar(2); // ImGuiStyleVar_FramePadding, ImGuiStyleVar_ItemSpacing
                             ImGui::SeparatorText("Shader settings:");
 
+                            auto buttonWidth = ImGui::GetContentRegionAvail().x / 4.0f;
+
                             // Calculate widget offset used to draw a label on the left and a widget on the right (opposite of how ImGui draws it)
-                            float inputWidgetOffset = ImGui::GetCursorPosX() + ImGui::CalcItemWidth() * 0.5f + ImGui::GetStyle().ItemInnerSpacing.x;                
-
-                            // Calculate button width so they span across the whole window width
-                            auto buttonWidth = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x * 2.0f) / 3.0f;
-
-                            if(ImGui::Button("Open in text editor", ImVec2(buttonWidth, 0)))
-                            {
-
-                            }
-
-                            ImGui::SameLine();
-
-                            if(ImGui::Button("Open in file explorer", ImVec2(buttonWidth, 0)))
-                            {
-                                ShellExecuteA(NULL, "explore", (Filesystem::getCurrentDirectory() + "\\" + Config::filepathVar().shader_path + Utilities::stripFilePath(m_shaderAssets[m_selectedProgramShader].first->getShaderFilename(m_selectedShader))).c_str(), NULL, NULL, SW_SHOWDEFAULT);
-                            }
-
-                            ImGui::SameLine();
-
-                            if(ImGui::Button("Reload shader program", ImVec2(buttonWidth, 0)))
-                            {
-
-                            }
-
-                            ImGui::Separator();
+                            float inputWidgetOffset = ImGui::GetCursorPosX() + ImGui::CalcItemWidth() * 0.5f + ImGui::GetStyle().ItemInnerSpacing.x;
 
                             // Draw SHADER FILENAME
-                            auto shaderFilename = m_shaderAssets[m_selectedProgramShader].first->getShaderFilename(m_selectedShader);
+                            auto shaderFilename = m_selectedProgram->getShaderFilename(m_selectedShaderType);
                             drawLeftAlignedLabelText("Filename:", inputWidgetOffset, calcTextSizedButtonOffset(1) - inputWidgetOffset - m_imguiStyle.FramePadding.x);
                             if(ImGui::InputText("##ShaderFilenameInput", &shaderFilename, ImGuiInputTextFlags_EnterReturnsTrue))
                             {
+                                m_selectedProgram->setShaderFilename(static_cast<ShaderType>(m_selectedShaderType), shaderFilename);
+                                m_selectedProgram->reloadToMemory();
+                                m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_LoadShader, (void *)m_selectedProgram);
                             }
 
                             // Draw OPEN button
                             ImGui::SameLine(calcTextSizedButtonOffset(1));
                             if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenFile], "##ShaderFileOpenFileButton", "Open a shader file"))
                             {
+                                // Only open the file browser if it's not opened already
+                                if(m_currentlyOpenedFileBrowser == FileBrowserActivated::FileBrowserActivated_None)
+                                {
+                                    // Set the file browser activation to Shader File
+                                    m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_ShaderFile;
+
+                                    // Define file browser variables
+                                    m_fileBrowserDialog.m_filter = "Shader files (.frag .vert .geom .tesc .tese .comp .glsl .vs .fs){.frag,.vert,.geom,.tesc,.tese,.comp,.glsl,.vs,.fs},All files{.*}";
+                                    m_fileBrowserDialog.m_title = "Open a shader file";
+                                    m_fileBrowserDialog.m_name = "OpenShaderFileFileDialog";
+                                    m_fileBrowserDialog.m_flags = FileBrowserDialog::FileBrowserDialogFlags::FileBrowserDialogFlags_None;
+
+                                    // Set the root path only if it isn't saved from the last file dialog
+                                    if(m_previouslyOpenedFileBrowser != m_currentlyOpenedFileBrowser)
+                                        m_fileBrowserDialog.m_rootPath = Config::filepathVar().shader_path;
+
+                                    // Tell the GUI scene to open the file browser
+                                    m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
+                                }
                             }
 
-                            // Draw RELOAD button
+                            const std::string shaderSelectionPopupName = "##ShaderSelectionPopup";
+
+                            // Draw OPEN ASSET LIST button
                             ImGui::SameLine(calcTextSizedButtonOffset(0));
-                            if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_Reload], "##ShaderFileReloadButton", "Reload the shader"))
+                            if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenAssetList], "##ShaderOpenAssetListButton", "Choose a shader from the loaded assets"))
                             {
+                                // Open the pop-up with the shader asset list
+                                ImGui::OpenPopup(shaderSelectionPopupName.c_str());
+                            }
+
+                            // Draw SHADER ASSET LIST
+                            if(ImGui::BeginPopup(shaderSelectionPopupName.c_str()))
+                            {
+                                // Remove selection border and align text vertically
+                                ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.0f, 0.5f));
+                                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+
+                                for(decltype(m_shaderAssets.size()) shaderAssetIndex = 0, shaderAssetSize = m_shaderAssets.size(); shaderAssetIndex < shaderAssetSize; shaderAssetIndex++)
+                                {
+                                    for(unsigned int shaderAssetType = 0; shaderAssetType < ShaderType::ShaderType_NumOfTypes; shaderAssetType++)
+                                    {
+                                        if(!m_shaderAssets[shaderAssetIndex].first->getShaderFilename(shaderAssetType).empty())
+                                        {
+                                            if(ImGui::Selectable(m_shaderAssets[shaderAssetIndex].first->getShaderFilename(shaderAssetType).c_str(), 
+                                                m_shaderAssets[shaderAssetIndex].first->getShaderFilename(shaderAssetType) == m_selectedProgram->getShaderFilename(m_selectedShaderType)))
+                                            {
+                                                m_selectedProgram->setShaderFilename(static_cast<ShaderType>(m_selectedShaderType), m_shaderAssets[shaderAssetIndex].first->getShaderFilename(shaderAssetType));
+                                                m_selectedProgram->reloadToMemory();
+                                                m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_LoadShader, (void *)m_selectedProgram);
+                                            }
+                                        }
+                                    }
+                                }
+
+                                ImGui::PopStyleVar(2); //ImGuiStyleVar_SelectableTextAlign, ImGuiStyleVar_FramePadding
+                                ImGui::EndPopup();
                             }
 
                             // Draw SHADER TYPE
-                            auto shaderType = m_selectedShader;
-                            drawLeftAlignedLabelText("Shader type:", inputWidgetOffset);
+                            auto shaderType = m_selectedShaderType;
+                            drawLeftAlignedLabelText("Shader type:", inputWidgetOffset, ImGui::GetWindowWidth() - inputWidgetOffset - m_imguiStyle.FramePadding.x);
                             if(ImGui::Combo("##ShaderTypePicker", &shaderType, &m_shaderTypeStrings[0], (int)m_shaderTypeStrings.size()))
                             {
                             }
 
                             // Draw DEFAULT SHADER
-                            auto defaultShader = m_shaderAssets[m_selectedProgramShader].first->isDefaultProgram();
-                            drawLeftAlignedLabelText("Default shader:", inputWidgetOffset);
+                            auto defaultShader = m_selectedProgram->isDefaultProgram();
+                            drawLeftAlignedLabelText("Default shader:", inputWidgetOffset, ImGui::GetWindowWidth() - inputWidgetOffset - m_imguiStyle.FramePadding.x);
                             if(ImGui::Checkbox("##DefaultShaderCheck", &defaultShader))
                             {
                             }                           
                             
                             // Draw LOADED-TO-VIDEO-MEMORY
-                            auto loadedToVideoMemory = m_shaderAssets[m_selectedProgramShader].first->isLoadedToVideoMemory();
-                            drawLeftAlignedLabelText("Loaded to video memory:", inputWidgetOffset);
+                            auto loadedToVideoMemory = m_selectedProgram->isLoadedToVideoMemory();
+                            drawLeftAlignedLabelText("Loaded to video memory:", inputWidgetOffset, ImGui::GetWindowWidth() - inputWidgetOffset - m_imguiStyle.FramePadding.x);
                             if(ImGui::Checkbox("##LoadedToVideoMemoryCheck", &loadedToVideoMemory))
                             {
                             }
@@ -2760,7 +2822,7 @@ void EditorWindow::update(const float p_deltaTime)
                             if(ImGui::TreeNodeEx("Uniform updater settings:", ImGuiTreeNodeFlags_Framed)) // ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf
                             {
                                 // Get uniform updater
-                                auto const &uniformUpdater = m_shaderAssets[m_selectedProgramShader].first->getUniformUpdater();
+                                auto const &uniformUpdater = m_selectedProgram->getUniformUpdater();
 
                                 // Draw UPDATES PER FRAME
                                 auto numUpdatesPerFrame = uniformUpdater.getNumUpdatesPerFrame();
@@ -2816,6 +2878,42 @@ void EditorWindow::update(const float p_deltaTime)
                         else
                             ImGui::PopStyleVar(2); // ImGuiStyleVar_FramePadding, ImGuiStyleVar_ItemSpacing
                         ImGui::EndChild();
+
+                        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, m_imguiStyle.FramePadding.y));
+                        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, m_imguiStyle.ItemSpacing.y));
+
+                        ImGui::SameLine();
+
+                        if(ImGui::BeginChild("##ShaderAssetsActions", ImVec2(contentRegionWidth * 0.1f, 0), true))
+                        {
+                            ImGui::SeparatorText("Actions:");
+
+                            // Calculate button width so they span across the whole window width
+                            auto buttonWidth = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x * 2.0f);
+
+                            if(ImGui::Button("Edit", ImVec2(buttonWidth, 20.0f)))
+                            {
+
+                            }
+
+                            if(ImGui::Button("Reload", ImVec2(buttonWidth, 20.0f)))
+                            {
+                                m_selectedProgram->reloadToMemory();
+                                m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_LoadShader, (void *)m_selectedProgram);
+                            }
+
+                            ImGui::NewLine();
+
+                            if(ImGui::Button("Open directory", ImVec2(buttonWidth, 20.0f)))
+                            {
+                                ShellExecuteA(NULL, "explore", (Filesystem::getCurrentDirectory() + "\\" + Config::filepathVar().shader_path + Utilities::stripFilePath(m_selectedProgram->getShaderFilename(m_selectedShaderType))).c_str(), NULL, NULL, SW_SHOWDEFAULT);
+                            }
+
+
+                        }
+                        ImGui::EndChild();
+
+                        ImGui::PopStyleVar(2); // ImGuiStyleVar_FramePadding, ImGuiStyleVar_ItemSpacing
                     }
 
                     ImGui::PopStyleVar(2); // ImGuiStyleVar_ChildBorderSize, ImGuiStyleVar_SeparatorTextAlign
@@ -2826,6 +2924,31 @@ void EditorWindow::update(const float p_deltaTime)
 
                 if(ImGui::BeginTabItem("Scripts"))
                 {
+                    auto contentRegionWidth = ImGui::GetContentRegionAvail().x;
+
+                    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.26f, 0.26f, 0.26f, 1.0f));
+                    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f);
+                    ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextAlign, ImVec2(0.5f, 0.5f));
+
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, m_imguiStyle.FramePadding.y));
+                    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, m_imguiStyle.ItemSpacing.y));
+
+                    if(ImGui::BeginChild("##LuaScriptAssetsSelection", ImVec2(contentRegionWidth * 0.2f, 0), true))
+                    {
+                        ImGui::SeparatorText("Lua scripts:");
+                        for(decltype(m_luaScriptAssets.size()) i = 0, size = m_luaScriptAssets.size(); i < size; i++)
+                        {
+                            if(ImGui::Selectable(m_luaScriptAssets[i].second.c_str(), m_selectedLuaScript != NULL_ENTITY_ID ? m_luaScriptAssets[i].first == m_selectedLuaScript : false))
+                            {
+                                m_selectedLuaScript = m_luaScriptAssets[i].first;
+                            }
+                        }
+                    }
+                    ImGui::EndChild();
+
+                    ImGui::PopStyleVar(4); // ImGuiStyleVar_ChildBorderSize, ImGuiStyleVar_SeparatorTextAlign, ImGuiStyleVar_FramePadding, ImGuiStyleVar_ItemSpacing
+                    ImGui::PopStyleColor(); // ImGuiCol_Border
+
                     ImGui::EndTabItem();
                 }
 
@@ -3120,10 +3243,16 @@ void EditorWindow::update(const float p_deltaTime)
 
                             // If the Lua script filename was changed, send a notification to the LUA Component
                             m_selectedEntity.m_luaScriptFilenameModified = true;
+
+                            // Remember the last opened file browser type
+                            m_previouslyOpenedFileBrowser = m_currentlyOpenedFileBrowser;
                         }
                         else
                             ErrHandlerLoc::get().log(ErrorCode::Editor_path_outside_current_dir, ErrorSource::Source_GUIEditor);
                     }
+
+                    // Remember the last opened file browser type
+                    m_previouslyOpenedFileBrowser = m_currentlyOpenedFileBrowser;
 
                     // Reset the file browser and mark the file browser as not opened
                     m_fileBrowserDialog.reset();
@@ -3142,6 +3271,9 @@ void EditorWindow::update(const float p_deltaTime)
                         m_systemScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_SceneFilename, EngineStateType::EngineStateType_Editor, m_fileBrowserDialog.m_filename));
                         m_systemScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_SceneReload, EngineStateType::EngineStateType_Editor, m_fileBrowserDialog.m_filename));
                     }
+
+                    // Remember the last opened file browser type
+                    m_previouslyOpenedFileBrowser = m_currentlyOpenedFileBrowser;
 
                     // Reset the file browser and mark the file browser as not opened
                     m_fileBrowserDialog.reset();
@@ -3167,6 +3299,9 @@ void EditorWindow::update(const float p_deltaTime)
                         else
                             ErrHandlerLoc::get().log(ErrorCode::Editor_path_outside_current_dir, ErrorSource::Source_GUIEditor);
                     }
+
+                    // Remember the last opened file browser type
+                    m_previouslyOpenedFileBrowser = m_currentlyOpenedFileBrowser;
 
                     // Reset the file browser and mark the file browser as not opened
                     m_fileBrowserDialog.reset();
@@ -3196,6 +3331,9 @@ void EditorWindow::update(const float p_deltaTime)
                         else
                             ErrHandlerLoc::get().log(ErrorCode::Editor_path_outside_current_dir, ErrorSource::Source_GUIEditor);
                     }
+
+                    // Remember the last opened file browser type
+                    m_previouslyOpenedFileBrowser = m_currentlyOpenedFileBrowser;
 
                     // Reset the file browser and mark the file browser as not opened
                     m_fileBrowserDialog.reset();
@@ -3229,6 +3367,9 @@ void EditorWindow::update(const float p_deltaTime)
                             ErrHandlerLoc::get().log(ErrorCode::Editor_path_outside_current_dir, ErrorSource::Source_GUIEditor);
                     }
 
+                    // Remember the last opened file browser type
+                    m_previouslyOpenedFileBrowser = m_currentlyOpenedFileBrowser;
+
                     // Reset the file browser and mark the file browser as not opened
                     m_fileBrowserDialog.reset();
                     m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_None;
@@ -3261,6 +3402,9 @@ void EditorWindow::update(const float p_deltaTime)
                             ErrHandlerLoc::get().log(ErrorCode::Editor_path_outside_current_dir, ErrorSource::Source_GUIEditor);
                     }
 
+                    // Remember the last opened file browser type
+                    m_previouslyOpenedFileBrowser = m_currentlyOpenedFileBrowser;
+
                     // Reset the file browser and mark the file browser as not opened
                     m_fileBrowserDialog.reset();
                     m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_None;
@@ -3288,6 +3432,9 @@ void EditorWindow::update(const float p_deltaTime)
                         else
                             ErrHandlerLoc::get().log(ErrorCode::Editor_path_outside_current_dir, ErrorSource::Source_GUIEditor);
                     }
+
+                    // Remember the last opened file browser type
+                    m_previouslyOpenedFileBrowser = m_currentlyOpenedFileBrowser;
 
                     // Reset the file browser and mark the file browser as not opened
                     m_fileBrowserDialog.resetAll();
@@ -3319,6 +3466,37 @@ void EditorWindow::update(const float p_deltaTime)
                         else
                             ErrHandlerLoc::get().log(ErrorCode::Editor_path_outside_current_dir, ErrorSource::Source_GUIEditor);
                     }
+
+                    // Remember the last opened file browser type
+                    m_previouslyOpenedFileBrowser = m_currentlyOpenedFileBrowser;
+
+                    // Reset the file browser and mark the file browser as not opened
+                    m_fileBrowserDialog.reset();
+                    m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_None;
+                }
+            }
+            break;
+        case EditorWindow::FileBrowserActivated_ShaderFile:
+            {
+                // If the file browser was activated and it is now closed, process the result
+                if(m_fileBrowserDialog.m_closed)
+                {
+                    if(m_fileBrowserDialog.m_success)
+                    {
+                        // Get the current directory path
+                        const std::string currentDirectory = Filesystem::getCurrentDirectory() + "\\" + Config::filepathVar().shader_path;
+
+                        // Check if the selected file is within the current directory
+                        if(m_fileBrowserDialog.m_filePathName.rfind(currentDirectory, 0) == 0)
+                        {
+                            m_selectedShaderFilename = m_fileBrowserDialog.m_filePathName.substr(currentDirectory.size());
+                        }
+                        else
+                            ErrHandlerLoc::get().log(ErrorCode::Editor_path_outside_current_dir, ErrorSource::Source_GUIEditor);
+                    }
+
+                    // Remember the last opened file browser type
+                    m_previouslyOpenedFileBrowser = m_currentlyOpenedFileBrowser;
 
                     // Reset the file browser and mark the file browser as not opened
                     m_fileBrowserDialog.reset();
@@ -3546,6 +3724,27 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
     ImGui::EndChild();
 
     ImGui::SeparatorText("Graphics scene settings:");
+
+    // Draw AMBIENT LIGHT INTENSITY
+    drawLeftAlignedLabelText("Ambient light intensity:", inputWidgetOffset);
+    if(ImGui::DragFloat("##AmbientLightIntensityDrag", &p_sceneData.m_ambientIntensity, 0.001f, 0.0f, 100000.0f, "%.5f") && p_sendChanges)
+    {
+        m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), Systems::Changes::Graphics::AmbientIntensity);
+    }
+    
+    // Draw Z FAR
+    drawLeftAlignedLabelText("Projection Z far:", inputWidgetOffset);
+    if(ImGui::DragFloat("##ZBufferFarDrag", &p_sceneData.m_zFar, 0.1f, 0.0f, 100000.0f, "%.5f") && p_sendChanges)
+    {
+        m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), Systems::Changes::Graphics::ZFar);
+    }
+
+    // Draw Z NEAR
+    drawLeftAlignedLabelText("Projection Z near:", inputWidgetOffset);
+    if(ImGui::DragFloat("##ZBufferNearDrag", &p_sceneData.m_zNear, 0.0001f, 0.0f, 100000.0f, "%.5f") && p_sendChanges)
+    {
+        m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), Systems::Changes::Graphics::ZNear);
+    }
 
     // Calculate rendering passes window height and cap it to a max height value
     float renderPassWindowHeight = (m_fontSize + m_imguiStyle.FramePadding.y * 2 + m_imguiStyle.ItemSpacing.y) * (p_sceneData.m_renderingPasses.size() + 2);
@@ -3806,6 +4005,11 @@ void EditorWindow::updateSceneData(SceneData &p_sceneData)
     for(unsigned int i = 0; i < AudioBusType::AudioBusType_NumOfTypes; i++)
         p_sceneData.m_volume[i] = audioScene->getVolume(static_cast<AudioBusType>(i));
 
+    // Set graphics data
+    p_sceneData.m_ambientIntensity = graphicsScene->getSceneObjects().m_ambientIntensity;
+    p_sceneData.m_zFar = graphicsScene->getSceneObjects().m_zFar;
+    p_sceneData.m_zNear = graphicsScene->getSceneObjects().m_zNear;
+
     // Add rendering passes
     p_sceneData.m_renderingPasses.clear();
     p_sceneData.m_renderingPasses = graphicsScene->getRenderingPasses();
@@ -4029,7 +4233,10 @@ void EditorWindow::updateComponentList()
 }
 
 void EditorWindow::updateAssetLists()
-{    
+{
+    // Get the entity registry from World Scene
+    auto &entityRegistry = static_cast<WorldScene *>(m_systemScene->getSceneLoader()->getSystemScene(Systems::World))->getEntityRegistry();
+
     //	 ____________________________
     //	|							 |
     //	|	   TEXTURE ASSETS        |
@@ -4049,6 +4256,10 @@ void EditorWindow::updateAssetLists()
         if(m_textureAssetLongestName.size() < texturePool[i]->getFilename().size())
             m_textureAssetLongestName = texturePool[i]->getFilename();
     }
+
+    // Sort the texture list based on the texture name
+    std::stable_sort(m_textureAssets.begin(), m_textureAssets.end(),
+        [](const std::pair<const Texture2D *, std::string> &p_a, const std::pair<const Texture2D *, std::string> &p_b) -> bool { return p_a.second < p_b.second; });
 
 
     //	 ____________________________
@@ -4070,6 +4281,10 @@ void EditorWindow::updateAssetLists()
         if(m_modelAssetLongestName.size() < modelPool[i]->getFilename().size())
             m_modelAssetLongestName = modelPool[i]->getFilename();
     }
+
+    // Sort the model list based on the model name
+    std::stable_sort(m_modelAssets.begin(), m_modelAssets.end(),
+        [](const std::pair<const Model *, std::string> &p_a, const std::pair<const Model *, std::string> &p_b) -> bool { return p_a.second < p_b.second; });
 
 
     //	 ____________________________
@@ -4117,6 +4332,32 @@ void EditorWindow::updateAssetLists()
         if(m_shaderAssetLongestName.size() < shaderName.size())
             m_shaderAssetLongestName = shaderName;
     }
+
+    // Sort the shader list based on the shader name
+    std::stable_sort(m_shaderAssets.begin(), m_shaderAssets.end(),
+        [](const std::pair<ShaderLoader::ShaderProgram *, std::string> &p_a, const std::pair<ShaderLoader::ShaderProgram *, std::string> &p_b) -> bool { return p_a.second < p_b.second; });
+    
+
+    //	 ____________________________
+    //	|							 |
+    //	|	  LUA SCRIPT ASSETS      |
+    //	|____________________________|
+    //
+    // Clear lua script asset array
+    m_luaScriptAssets.clear();
+
+    auto luaComponentView = entityRegistry.view<LuaComponent>();
+    for(auto entity : luaComponentView)
+    {
+        auto &luaComponent = luaComponentView.get<LuaComponent>(entity);
+
+        // Add the entity and lua script filename entry
+        m_luaScriptAssets.push_back(std::make_pair(entity, Utilities::stripFilename(luaComponent.getLuaScript()->getLuaScriptFilename())));
+    }
+
+    // Sort the lua script list based on the lua filename
+    std::stable_sort(m_luaScriptAssets.begin(), m_luaScriptAssets.end(),
+        [](const std::pair<EntityID, std::string> &p_a, const std::pair<EntityID, std::string> &p_b) -> bool { return p_a.second < p_b.second; });
 }
 
 void EditorWindow::generateNewMap(PropertySet &p_newSceneProperties, SceneData &p_sceneData)

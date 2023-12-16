@@ -330,10 +330,10 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 	}
 
 	// If Z-buffer near or far values have changed, flag projection matrix for updating
-	if(m_zFar != Config::graphicsVar().z_far || m_zNear != Config::graphicsVar().z_near)
+	if(m_zFar != p_sceneObjects.m_zFar || m_zNear != p_sceneObjects.m_zNear)
 	{
-		m_zFar = Config::graphicsVar().z_far;
-		m_zNear = Config::graphicsVar().z_near;
+		m_zFar = p_sceneObjects.m_zFar;
+		m_zNear = p_sceneObjects.m_zNear;
 		projectionMatrixNeedsUpdating = true;
 	}
 
@@ -454,6 +454,9 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 	// Set the camera target vector
 	m_frameData.m_cameraTarget = normalize(glm::vec3(0.0f, 0.0f, -1.0f) * glm::mat3(p_sceneObjects.m_cameraViewMatrix));
 	
+	// Set ambient intensity multiplier
+	m_frameData.m_ambientIntensity = p_sceneObjects.m_ambientIntensity;
+
 	// Prepare the geometry buffer for a new frame and a geometry pass
 	m_backend.getGeometryBuffer()->initFrame();
 	

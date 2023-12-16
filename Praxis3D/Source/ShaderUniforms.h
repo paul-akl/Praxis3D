@@ -571,6 +571,26 @@ private:
 	float m_bloomIntensity;
 };
 
+class AmbientLightIntensityUniform : public BaseUniform
+{
+public:
+	AmbientLightIntensityUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().ambientLightIntensity, p_shaderHandle), m_intensity(-1.0f)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		if(m_intensity != p_uniformData.m_frameData.m_ambientIntensity)
+		{
+			m_intensity = p_uniformData.m_frameData.m_ambientIntensity;
+
+			glUniform1f(m_uniformHandle, m_intensity);
+		}
+	}
+
+private:
+	float m_intensity;
+};
 class DirLightColorUniform : public BaseUniform
 {
 public:

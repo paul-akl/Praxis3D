@@ -310,17 +310,14 @@ vec2 parallaxOcclusionMapping(vec2 texCoords, vec3 viewDir, float p_LOD)
 }
 
 vec2 simpleParallaxMapping(vec2 p_texCoords, vec3 p_viewDir)
-{ 
-    //float height =  texture(heightTexture, p_texCoords).r;     
-    //return p_texCoords - (p_viewDir.xy ) * (height * 0.01);
-	
+{
 	float height =  getHeight(p_texCoords);    
     vec2 p = p_viewDir.xy  * (height * 0.02);
     return p_texCoords - p;
 }
 
 void main(void)
-{ 	
+{
 	float height = getHeight(texCoord);
 	vec2 newCoords = texCoord;
 	
@@ -346,32 +343,35 @@ void main(void)
 	if(diffuse.a < alphaThreshold)
 		discard;
 	
-	// Get roughness and metalness values, and emissive color
-	float roughness = getRoughness(newCoords);
-	float metalness = getMetalness(newCoords);
+	// Get roughness and metalness values with the new coordinates
+	// R - roughness
+	// G - metalness
+	// B - height
+	// A - ambient occlusion
+	vec4 combinedTextureValues = texture(combinedTexture, newCoords).rgba;
+	
+	// Get the emissive color with the new coordinates
 	vec4 emissiveColor = texture(emissiveTexture, newCoords).rgba;
 	
 	// Use emissive alpha channel as an intensity multiplier
-	emissiveColor *= emissiveMultiplier;
-	// Apply emissive color only if it's above the threshold
-	if(emissiveColor.a > emissiveThreshold)
-	{
-		// Use emissive alpha channel as an intensity multiplier
-		//emissiveColor *= emissiveColor.a * emissiveMultiplier;
-	}
-	else
-	{
-		//emissiveColor = vec4(0.0);
-	}
+	emissiveColor *= emissiveMultiplier;// * emissiveColor.a;
+	
+	// Write roughness, metalness to the material properties buffer
+	matPropertiesBuffer = vec4(
+	max(combinedTextureValues.x, MIN_ROUGHNESS), 	// R - roughness
+	combinedTextureValues.y, 						// G - metalness
+	combinedTextureValues.w, 						// B - ambient occlusion
+	1.0);											// A - unused for now
 	
 	// Write diffuse color to the diffuse buffer
 	diffuseBuffer = diffuse;
-	// Write roughness, metalness to the material properties buffer
-	matPropertiesBuffer = vec4(roughness, metalness, 1.0, 1.0);
+	
 	// Write emissive color into the emissive buffer
 	emissiveBuffer = emissiveColor;
+	
 	// Write fragment's position in world space	to the position buffer
 	positionBuffer = fragPos;
+	
 	// Perform normal mapping and write the new normal to the normal buffer
 	normalBuffer = TBN * normalize(texture(normalTexture, newCoords).rgb * 2.0 - 1.0);
 }

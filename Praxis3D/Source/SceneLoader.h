@@ -81,7 +81,6 @@ private:
 	void exportToProperties(const ScriptComponentsConstructionInfo &p_constructionInfo, PropertySet &p_properties);
 	void exportToProperties(const WorldComponentsConstructionInfo &p_constructionInfo, PropertySet &p_properties);
 
-
 	// Mutex used to block calls from other threads while import operation is in progress
 	SpinWait m_mutex;
 

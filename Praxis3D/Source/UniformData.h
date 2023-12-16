@@ -7,6 +7,7 @@ struct UniformFrameData
 {
 	UniformFrameData()
 	{
+		m_ambientIntensity = Config::graphicsVar().ambient_light_intensity;
 		m_numPointLights = 0;
 		m_numSpotLights = 0;
 		m_deltaTime = 0.0f;
@@ -31,9 +32,10 @@ struct UniformFrameData
 
 	// Parameters of directional light, since there can be only one of it
 	DirectionalLightDataSet m_directionalLight;
+	float m_ambientIntensity;
 
 	// Delta time of the last frame
-	float		m_deltaTime;
+	float m_deltaTime;
 
 	// Current number of lights in the light buffers
 	unsigned int m_numPointLights,

@@ -16,6 +16,8 @@ GUIScene::GUIScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : SystemSce
 	 m_GUITask = nullptr;
 	 m_editorWindow = nullptr;
 	 m_GUISequenceEnabled = true;
+	 m_showAboutWindow = false;
+	 m_showSettingsWindow = false;
 }
 
 GUIScene::~GUIScene()
@@ -169,6 +171,10 @@ void GUIScene::update(const float p_deltaTime)
 						browserDialog->m_filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
 						browserDialog->m_filename = ImGuiFileDialog::Instance()->GetCurrentFileName();
 						browserDialog->m_success = true;
+
+						// Save the last root path, so that the next time the browser dialog is opened, it is set to the last opened directory
+						if(browserDialog->m_saveLastRootPath)
+							browserDialog->m_rootPath = browserDialog->m_filePath;
 					}
 
 					// Close the dialog and remove it from the queue
@@ -190,6 +196,12 @@ void GUIScene::update(const float p_deltaTime)
 		{
 			m_editorWindow->update(p_deltaTime);
 		}
+
+		//	 ____________________________
+		//	|							 |
+		//	|		ABOUT WINDOW		 |
+		//	|____________________________|
+		//
 
 		//	 ____________________________
 		//	|							 |
@@ -361,6 +373,12 @@ void GUIScene::receiveData(const DataType p_dataType, void *p_data, const bool p
 {
 	switch(p_dataType)
 	{
+		case DataType::DataType_AboutWindow:
+			{
+
+			}
+			break;
+
 		case DataType::DataType_DeleteComponent:
 			{
 				// Get the world scene required for getting the entity registry and deleting components
@@ -391,20 +409,20 @@ void GUIScene::receiveData(const DataType p_dataType, void *p_data, const bool p
 					delete componentData;
 			}
 			break;
-		case DataType_EnableGUISequence:
+		case DataType::DataType_EnableGUISequence:
 			{
 				setGUISequenceEnabled(static_cast<bool>(p_data));
 			}
 			break;
 
-		case DataType_FileBrowserDialog:
+		case DataType::DataType_FileBrowserDialog:
 			{
 				// Cast the sent data into the intended type and add it to the file-browser dialog queue
 				m_fileBrowserDialogs.push(static_cast<FileBrowserDialog *>(p_data));
 			}
 			break;
 
-		case DataType_EditorWindow:
+		case DataType::DataType_EditorWindow:
 			{
 				// Cast the sent data into the intended type
 				EditorWindowSettings *editorWindowSettings = static_cast<EditorWindowSettings *>(p_data);
@@ -438,6 +456,12 @@ void GUIScene::receiveData(const DataType p_dataType, void *p_data, const bool p
 				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
 				if(p_deleteAfterReceiving)
 					delete editorWindowSettings;
+			}
+			break;
+
+		case DataType::DataType_SettingsWindow:
+			{
+
 			}
 			break;
 

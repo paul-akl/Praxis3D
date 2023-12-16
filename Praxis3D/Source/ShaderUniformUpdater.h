@@ -42,6 +42,32 @@ public:
 	inline size_t getNumSSBBufferBlocks() const	{ return m_numSSBBBlockUpdates;		}
 
 private:
+	// Clears all the internal arrays that are populated by generateUpdateList()
+	const inline void clearUpdateList()
+	{
+		// Delete all uniforms
+		for(auto *uniform : m_updatesPerFrame)
+			delete uniform;
+		for(auto *uniform : m_updatesPerModel)
+			delete uniform;
+		for(auto *uniform : m_updatesPerMesh)
+			delete uniform;
+		for(auto *uniform : m_textureUpdates)
+			delete uniform;
+		for(auto *uniform : m_uniformBlockUpdates)
+			delete uniform;
+		for(auto *uniform : m_SSBBlockUpdates)
+			delete uniform;
+
+		// Clear arrays
+		m_updatesPerFrame.clear();
+		m_updatesPerModel.clear();
+		m_updatesPerMesh.clear();
+		m_textureUpdates.clear();
+		m_uniformBlockUpdates.clear();
+		m_SSBBlockUpdates.clear();
+	}
+
 	// Checks which uniforms are used in the shader, and generates a list of valid ones
 	ErrorCode generateUpdateList();
 

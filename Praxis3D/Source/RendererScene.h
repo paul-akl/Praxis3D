@@ -84,7 +84,7 @@ struct LoadableComponentContainer
 // Used to store processed objects, so they can be sent to the renderer
 struct SceneObjects
 {
-	SceneObjects() : m_processDrawing(true) { }
+	SceneObjects() : m_processDrawing(true), m_ambientIntensity(Config::graphicsVar().ambient_light_intensity), m_zFar(Config::graphicsVar().z_far), m_zNear(Config::graphicsVar().z_near) { }
 
 	// ECS registry views
 	decltype(std::declval<entt::basic_registry<EntityID>>().view<ModelComponent, SpatialComponent>(entt::exclude<ShaderComponent, GraphicsLoadToMemoryComponent, GraphicsLoadToVideoMemoryComponent>)) m_models;
@@ -103,6 +103,13 @@ struct SceneObjects
 
 	// Should the scene be drawn (otherwise only load commands are processed)
 	bool m_processDrawing;
+
+	// Ambient light intensity multiplier
+	float m_ambientIntensity;
+
+	// Z-buffer limits
+	float m_zFar;
+	float m_zNear;
 };
 
 class RendererScene : public SystemScene
@@ -223,6 +230,7 @@ public:
 	const unsigned int getUnsignedInt(const Observer *p_observer, BitMask p_changedBits) const;
 	SystemTask *getSystemTask() { return m_renderTask; }
 	Systems::TypeID getSystemType() { return Systems::Graphics; }
+	const inline SceneObjects &getSceneObjects() const { return m_sceneObjects; }
 	inline SceneObjects &getSceneObjects() { return m_sceneObjects; }
 	const inline RenderingPasses &getRenderingPasses() const { return m_renderingPasses; }
 	const glm::mat4 &getViewMatrix() const;

@@ -87,6 +87,7 @@
 									"AlphaThreshold": "0.0f",
 									"EmissiveIntensity": "0.0f",
 									"HeightScale": "0.0f",
+									"WrapMode": "Repeat",
 									"Materials": 
 									{
 										"Diffuse": 
@@ -143,7 +144,7 @@
 				{
 					"Active": "true",
 					"LocalPosition": "0.0f, 0.5f, 0.0f",
-					"LocalRotation": "0.0f, 45f, 0.0f",
+					"LocalRotation": "0.0f, 44.9999f, 0.0f",
 					"LocalRotationQuaternion": "0.92388f, 0.0f, 0.382683f, 0.0f",
 					"LocalScale": "1.0f, 1.0f, 1.0f"
 				}
@@ -184,6 +185,7 @@
 									"AlphaThreshold": "0.0f",
 									"EmissiveIntensity": "0.0f",
 									"HeightScale": "0.0f",
+									"WrapMode": "Repeat",
 									"Materials": 
 									{
 										"Diffuse": 
@@ -225,7 +227,7 @@
 					"CollisionShape": 
 					{
 						"Type": "Box",
-						"Size": "1.96f, 1.96f, 1.96f"
+						"Size": "1.92f, 1.92f, 1.92f"
 					}
 				}
 			},
@@ -267,6 +269,7 @@
 									"AlphaThreshold": "0.0f",
 									"EmissiveIntensity": "0.0f",
 									"HeightScale": "0.0f",
+									"WrapMode": "Repeat",
 									"Materials": 
 									{
 										"Diffuse": 
@@ -329,6 +332,7 @@
 									"AlphaThreshold": "0.0f",
 									"EmissiveIntensity": "0.0f",
 									"HeightScale": "0.0f",
+									"WrapMode": "Repeat",
 									"Materials": 
 									{
 										"Diffuse": 
@@ -447,7 +451,7 @@
 				{
 					"Active": "true",
 					"LocalPosition": "0.0f, 0.0f, 0.0f",
-					"LocalRotation": "-40.0f, 0.0f, 0.0f",
+					"LocalRotation": "-40f, 0.0f, 0.0f",
 					"LocalRotationQuaternion": "0.939693f, -0.34202f, 0.0f, 0.0f",
 					"LocalScale": "1.0f, 1.0f, 1.0f"
 				}
@@ -606,6 +610,7 @@
 									"AlphaThreshold": "0.0f",
 									"EmissiveIntensity": "0.0f",
 									"HeightScale": "0.0f",
+									"WrapMode": "Repeat",
 									"Materials": 
 									{
 										"Diffuse": 
@@ -647,7 +652,7 @@
 					"CollisionShape": 
 					{
 						"Type": "Box",
-						"Size": "1.96f, 1.96f, 1.96f"
+						"Size": "1.92f, 1.92f, 1.92f"
 					}
 				}
 			},
@@ -698,6 +703,7 @@
 									"AlphaThreshold": "0.0f",
 									"EmissiveIntensity": "0.0f",
 									"HeightScale": "0.0f",
+									"WrapMode": "Repeat",
 									"Materials": 
 									{
 										"Diffuse": 
@@ -765,6 +771,7 @@
 									"AlphaThreshold": "0.0f",
 									"EmissiveIntensity": "0.0f",
 									"HeightScale": "0.0f",
+									"WrapMode": "Repeat",
 									"Materials": 
 									{
 										"Diffuse": 
@@ -845,6 +852,7 @@
 									"AlphaThreshold": "0.0f",
 									"EmissiveIntensity": "0.0f",
 									"HeightScale": "0.0f",
+									"WrapMode": "Repeat",
 									"Materials": 
 									{
 										"Diffuse": 
@@ -928,6 +936,9 @@
 		{
 			"Scene": 
 			{
+				"AmbientIntensity": "0.2f",
+				"ZFar": "40000.0f",
+				"ZNear": "1.0f",
 				"ObjectPoolSize": 
 				{
 					"CameraComponent": "1",

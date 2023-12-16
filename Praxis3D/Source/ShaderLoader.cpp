@@ -147,6 +147,11 @@ ShaderLoader::ShaderProgram *ShaderLoader::load(const PropertySet &p_properties)
 	return &m_defaultProgram;
 }
 
+ErrorCode ShaderLoader::reload(ShaderProgram *p_shaderProgram)
+{
+	return ErrorCode();
+}
+
 ShaderLoader::ShaderProgram::~ShaderProgram()
 {
 	delete m_uniformUpdater;

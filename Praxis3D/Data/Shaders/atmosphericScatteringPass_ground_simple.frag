@@ -694,6 +694,7 @@ void main()
 	vec3 normal = normalize(texture(normalMap, texCoord).xyz);
 	
 	float distanceToFrag = length(cameraPosVec - worldPos) / kLengthUnitInMeters;
+		
 	vec3 cameraPosition = cameraPosVec / kLengthUnitInMeters;
 	worldPos = worldPos / kLengthUnitInMeters;
 	

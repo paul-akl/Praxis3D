@@ -50,10 +50,13 @@ public:
 		m_colorEditFlags = ImGuiColorEditFlags_Float;
 		m_browseButtonWidth = 60.0f;
 		m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_None;
+		m_previouslyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_None;
 		m_fileBrowserDialog.m_name = "EditorFileBrowserDialog";
 
-		m_selectedProgramShader = -1;
-		m_selectedShader = -1;
+		m_selectedLuaScript = NULL_ENTITY_ID;
+		m_selectedModel = nullptr;
+		m_selectedProgram = nullptr;
+		m_selectedShaderType = -1;
 
 		m_nextEntityToSelect = NULL_ENTITY_ID;
 		m_pendingEntityToSelect = false;
@@ -130,26 +133,26 @@ public:
 			switch(p_changedBits)
 			{
 				case Systems::Changes::Graphics::Color:
-				{
-					switch(m_selectedEntity.m_lightType)
 					{
-					case LightComponent::LightComponentType::LightComponentType_directional:
-						return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_color;
-						break;
-					case LightComponent::LightComponentType::LightComponentType_point:
-						return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_color;
-						break;
-					case LightComponent::LightComponentType::LightComponentType_spot:
-						return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_color;
-						break;
+						switch(m_selectedEntity.m_lightType)
+						{
+							case LightComponent::LightComponentType::LightComponentType_directional:
+								return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_color;
+								break;
+							case LightComponent::LightComponentType::LightComponentType_point:
+								return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_color;
+								break;
+							case LightComponent::LightComponentType::LightComponentType_spot:
+								return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_color;
+								break;
+						}
 					}
-				}
-				break;
+					break;
 				case Systems::Changes::Physics::CollisionShapeSize:
-				{
-					return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeSize;
-				}
-				break;
+					{
+						return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeSize;
+					}
+					break;
 				case Systems::Changes::Physics::Gravity:
 					{
 						return m_currentSceneData.m_gravity;
@@ -342,6 +345,24 @@ public:
 							return m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_intensity;
 							break;
 					}
+				}
+				break;
+
+			case Systems::Changes::Graphics::AmbientIntensity:
+				{
+					return m_currentSceneData.m_ambientIntensity;
+				}
+				break;
+
+			case Systems::Changes::Graphics::ZFar:
+				{
+					return m_currentSceneData.m_zFar;
+				}
+				break;
+
+			case Systems::Changes::Graphics::ZNear:
+				{
+					return m_currentSceneData.m_zNear;
 				}
 				break;
 
@@ -618,6 +639,15 @@ private:
 	{
 		SceneData()
 		{
+			m_loadInBackground = false;
+			m_modified = true;
+
+			for(unsigned int i = 0; i < AudioBusType::AudioBusType_NumOfTypes; i++)
+				m_volume[i] = 1.0f;
+
+			m_ambientIntensity = 0.0f;
+			m_zFar = 0.0f;
+			m_zNear = 0.0f;
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_Geometry);
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_AtmScattering);
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_Lighting);
@@ -627,21 +657,25 @@ private:
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_Final);
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_GUI);
 
-			for(unsigned int i = 0; i < AudioBusType::AudioBusType_NumOfTypes; i++)
-				m_volume[i] = 1.0f;
-
 			m_gravity = glm::vec3(0.0f, -9.8f, 0.0f);
-			m_loadInBackground = false;
-			m_modified = true;
 		}
 
-		RenderingPasses m_renderingPasses;
-		std::vector<std::string> m_audioBanks;
-
-		float m_volume[AudioBusType::AudioBusType_NumOfTypes];
-		glm::vec3 m_gravity;
+		// General
 		bool m_loadInBackground;
 		bool m_modified;
+
+		// Audio scene
+		std::vector<std::string> m_audioBanks;
+		float m_volume[AudioBusType::AudioBusType_NumOfTypes];
+
+		// Graphics scene
+		float m_ambientIntensity;
+		float m_zFar;
+		float m_zNear;
+		RenderingPasses m_renderingPasses;
+
+		// Physics scene
+		glm::vec3 m_gravity;
 	};
 
 	enum ButtonTextureType : unsigned int
@@ -676,7 +710,8 @@ private:
 		FileBrowserActivated_ModelFile,
 		FileBrowserActivated_TextureFile,
 		FileBrowserActivated_AudioBankFile,
-		FileBrowserActivated_PrefabFile
+		FileBrowserActivated_PrefabFile,
+		FileBrowserActivated_ShaderFile
 	};
 	enum MainMenuButtonType : unsigned int
 	{
@@ -775,6 +810,12 @@ private:
 		return m_buttonSizedByFont.x + m_imguiStyle.FramePadding.x + (m_buttonSizedByFont.x + m_imguiStyle.FramePadding.x * 3) * p_buttonIndex;
 	}
 
+	int getShaderAssetIndex(const ShaderLoader::ShaderProgram *p_selectedProgram) const
+	{
+		for(decltype(m_shaderAssets.size()) shaderAssetIndex = 0, shaderAssetSize = m_shaderAssets.size(); shaderAssetIndex < shaderAssetSize; shaderAssetIndex++)
+			if(m_shaderAssets[shaderAssetIndex].first->getCombinedFilename() == p_selectedProgram->getCombinedFilename())
+				return (int)shaderAssetIndex;
+	}
 	void clearEntityAndComponentPool()
 	{
 		if(!m_entityAndComponentPool.empty())
@@ -930,6 +971,7 @@ private:
 	ImGuiColorEditFlags m_colorEditFlags;
 	float m_browseButtonWidth;
 	FileBrowserActivated m_currentlyOpenedFileBrowser;
+	FileBrowserActivated m_previouslyOpenedFileBrowser;
 	FileBrowserDialog m_fileBrowserDialog;
 	const ImVec2 m_playPauseButtonSize;
 	ImVec2 m_assetSelectionPopupImageSize;
@@ -943,13 +985,17 @@ private:
 
 	// Assets variables
 	std::vector<std::pair<const Texture2D *, std::string>> m_textureAssets;
-	std::vector<std::pair<const Model *, std::string>> m_modelAssets;
-	std::vector<std::pair<const ShaderLoader::ShaderProgram *, std::string>> m_shaderAssets;
+	std::vector<std::pair<Model *, std::string>> m_modelAssets;
+	std::vector<std::pair<ShaderLoader::ShaderProgram *, std::string>> m_shaderAssets;
+	std::vector<std::pair<EntityID, std::string>> m_luaScriptAssets;
 	std::string m_textureAssetLongestName;
 	std::string m_modelAssetLongestName;
 	std::string m_shaderAssetLongestName;
-	int m_selectedProgramShader;
-	int m_selectedShader;
+	std::string m_selectedShaderFilename;
+	EntityID m_selectedLuaScript;
+	Model *m_selectedModel;
+	ShaderLoader::ShaderProgram *m_selectedProgram;
+	int m_selectedShaderType;
 
 	// Texture inspector variables
 	Texture2D const * m_selectedTexture;

@@ -47,6 +47,7 @@ struct FileBrowserDialog
 		m_opened = false;
 		m_closed = false;
 		m_success = false;
+		m_saveLastRootPath = true;
 		m_rootPath = ".";
 		m_numOfSelectableFiles = 1;
 		m_flags = FileBrowserDialogFlags_None;
@@ -85,6 +86,7 @@ struct FileBrowserDialog
 		m_opened = false;
 		m_closed = false;
 		m_success = false;
+		m_saveLastRootPath = true;
 	}
 
 	std::string m_name,
@@ -103,7 +105,8 @@ struct FileBrowserDialog
 
 	bool m_opened,
 		 m_closed,
-		 m_success;
+		 m_success,
+		 m_saveLastRootPath;
 };
 
 class GUIScene : public SystemScene
@@ -175,4 +178,7 @@ private:
 	std::queue<FileBrowserDialog*> m_fileBrowserDialogs;
 	EditorWindow *m_editorWindow;
 	bool m_GUISequenceEnabled;
+
+	bool m_showAboutWindow;
+	bool m_showSettingsWindow;
 };

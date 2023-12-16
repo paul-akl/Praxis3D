@@ -72,6 +72,7 @@ uniform float gamma;
 uniform int numPointLights;
 uniform int numSpotLights;
 
+uniform float ambientLightIntensity;
 uniform DirectionalLight directionalLight;
 
 // Using uniform buffer objects to pass light arrays and std140 layout for consistent variable spacing inside the buffer.
@@ -153,7 +154,7 @@ vec3 fresnelSchlick(float p_cosTheta, vec3 p_F0)
     return p_F0 + (1.0 - p_F0) * pow(1.0 - p_cosTheta, 5.0);
 } 
 
-vec3 calcLightColor(vec3 p_albedoColor, vec3 p_normal, vec3 p_fragToEye, vec3 p_lightColor, vec3 p_lightDirection, float p_lightDistance, vec3 p_F0, float p_roughness, float p_metalic)
+vec3 calcLightColor(vec3 p_albedoColor, vec3 p_normal, vec3 p_fragToEye, vec3 p_lightColor, vec3 p_lightDirection, float p_lightDistance, vec3 p_F0, float p_roughness, float p_metalic, float p_ambientOcclusion)
 {	
 	/*/ Get specular and diffuse lighting
 	vec3 specularColor = LightingFuncGGX_REF(p_normal, p_fragToEye, p_lightDirection, p_roughnessSqrt, p_F0);
@@ -174,6 +175,7 @@ vec3 calcLightColor(vec3 p_albedoColor, vec3 p_normal, vec3 p_fragToEye, vec3 p_
 	
 	vec3 kS = F;
 	vec3 kD = vec3(1.0) - kS;
+	//vec3 kDambient = kD * (1.0 - p_metalic * 0.5);
 	kD *= 1.0 - p_metalic;
 	
 	vec3 numerator = NDF * G * F;
@@ -182,7 +184,10 @@ vec3 calcLightColor(vec3 p_albedoColor, vec3 p_normal, vec3 p_fragToEye, vec3 p_
 	
 	// Combine diffuse, specular, radiance with albedo color and return it
 	float NdotL = max(dot(p_normal, p_lightDirection), 0.0);
-	return (kD * p_albedoColor / PI + specular) * radiance * NdotL;
+	//return (kD * p_albedoColor / PI + specular) * radiance * NdotL;
+	vec3 lightColor = (kD * p_albedoColor / PI + specular) * radiance * NdotL;
+	lightColor += radiance * p_ambientOcclusion * ambientLightIntensity * (kD * p_albedoColor);
+	return lightColor;
 }
 
 vec2 calcTexCoord(void)
@@ -207,10 +212,12 @@ void main(void)
 	// Calculate view direction (fragment to eye vector)
 	fragmentToEye = normalize(cameraPosVec - worldPos);
 	
-	// Extract roughness and metalness values
+	// Extract roughness, metalness and ambient occlusion values
 	float roughnessSqrt = matProperties.x;
 	float metalic = matProperties.y;
-	
+	float ambientOcclusion = matProperties.z;
+	ambientOcclusion *= ambientOcclusion;
+
 	// Calculate F0, with minimum IOR as 0.04
 	vec3 f0 = mix(vec3(0.04), diffuseColor, metalic);
 	
@@ -231,7 +238,7 @@ void main(void)
 		float dirLightIntensity = directionalLight.m_intensity * mix(g_sunSetIntensityMod, g_sunNoonIntensityMod, dirLightFactorSqrt);
 	
 		// Add ambient lighting
-		finalLightColor += diffuseColor * dirLightIntensity * 0.003;
+		//finalLightColor += diffuseColor * dirLightColor * dirLightIntensity * ambientLightIntensity * ambientOcclusion * (1.0 - metalic * metalic);
 	
 		// Add directional lighting
 		finalLightColor += calcLightColor(
@@ -243,7 +250,8 @@ void main(void)
 			1.0, 
 			f0, 
 			roughnessSqrt, 
-			metalic) * dirLightIntensity;// * min(1.0, (dirLightFactor /* 100.0*/) + 0.02);
+			metalic,
+			ambientOcclusion) * dirLightIntensity;// * min(1.0, (dirLightFactor /* 100.0*/) + 0.02);
 	}
 		
 	for(int i = 0; i < numPointLights; i++)
@@ -254,7 +262,17 @@ void main(void)
 		lightDirection = normalize(lightDirection);
 		
 		// Light color multiplied by intensity and divided by attenuation
-		finalLightColor += (calcLightColor(diffuseColor, normal, fragmentToEye, pointLights[i].m_color, lightDirection, lightDistance, f0, roughnessSqrt, metalic) * pointLights[i].m_intensity);
+		finalLightColor += (calcLightColor(
+			diffuseColor, 
+			normal, 
+			fragmentToEye, 
+			pointLights[i].m_color, 
+			lightDirection, 
+			lightDistance, 
+			f0, 
+			roughnessSqrt, 
+			metalic, 
+			ambientOcclusion) * pointLights[i].m_intensity);
 	}
 	
 	for(int i = 0; i < numSpotLights; i++)
@@ -274,7 +292,17 @@ void main(void)
 			lightDirection = normalize(lightDirection);
 			
 			// Light color multiplied by intensity
-			vec3 lightColor = (calcLightColor(diffuseColor, normal, fragmentToEye, spotLights[i].m_color, lightDirection, lightDistance, f0, roughnessSqrt, metalic) * spotLights[i].m_intensity);
+			vec3 lightColor = (calcLightColor(
+				diffuseColor, 
+				normal, 
+				fragmentToEye, 
+				spotLights[i].m_color, 
+				lightDirection, 
+				lightDistance, 
+				f0, 
+				roughnessSqrt, 
+				metalic, 
+				ambientOcclusion) * spotLights[i].m_intensity);
 			
 			// Light restriction from cone
 			float coneAttenuation = (1.0 - (1.0 - spotLightFactor) * 1.0 / (1.0 - spotLights[i].m_cutoffAngle));
@@ -284,6 +312,7 @@ void main(void)
 	}
 	
 	colorBuffer = vec4(finalLightColor + emissiveColor, 1.0);
-	//colorBuffer = vec4(0.0, 1.0, 0.0, 1.0);
-	//colorBuffer = vec4(diffuseColor + emissiveColor, 1.0);
+	//colorBuffer = vec4(ambientOcclusion, ambientOcclusion, ambientOcclusion, 1.0);
+	//colorBuffer = vec4(matProperties.b, matProperties.b, matProperties.b, 1.0);
+	//colorBuffer = vec4(diffuseColor / PI, 1.0);
 }

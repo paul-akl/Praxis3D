@@ -56,6 +56,23 @@ ErrorCode RendererScene::setup(const PropertySet &p_properties)
 	worldScene->reserve<GraphicsLoadToMemoryComponent>(modelComponentPoolSize + shaderComponentPoolSize);
 	worldScene->reserve<GraphicsLoadToVideoMemoryComponent>(modelComponentPoolSize + shaderComponentPoolSize);
 
+	// Load graphics property data
+	for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
+	{
+		switch(p_properties[i].getPropertyID())
+		{
+			case Properties::AmbientIntensity:
+				m_sceneObjects.m_ambientIntensity = p_properties[i].getFloat();
+				break;
+			case Properties::ZFar:
+				m_sceneObjects.m_zFar = p_properties[i].getFloat();
+				break;
+			case Properties::ZNear:
+				m_sceneObjects.m_zNear = p_properties[i].getFloat();
+				break;
+		}
+	}
+
 	// Load the rendering passes
 	auto &renderPassesProperty = p_properties.getPropertySetByID(Properties::RenderPasses);
 	if(renderPassesProperty)
@@ -101,6 +118,11 @@ void RendererScene::exportSetup(PropertySet &p_propertySet)
 {
 	// Get the world scene required for getting the pool sizes
 	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
+
+	// Add graphics data
+	p_propertySet.addProperty(Properties::AmbientIntensity, m_sceneObjects.m_ambientIntensity);
+	p_propertySet.addProperty(Properties::ZFar, m_sceneObjects.m_zFar);
+	p_propertySet.addProperty(Properties::ZNear, m_sceneObjects.m_zNear);
 
 	// Add object pool sizes
 	auto &objectPoolSizePropertySet = p_propertySet.addPropertySet(Properties::ObjectPoolSize);
@@ -841,7 +863,20 @@ ErrorCode RendererScene::destroyObject(SystemObject *p_systemObject)
 
 void RendererScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 {
+	if(CheckBitmask(p_changeType, Systems::Changes::Graphics::AmbientIntensity))
+	{
+		m_sceneObjects.m_ambientIntensity = p_subject->getFloat(this, Systems::Changes::Graphics::AmbientIntensity);
+	}
 
+	if(CheckBitmask(p_changeType, Systems::Changes::Graphics::ZFar))
+	{
+		m_sceneObjects.m_zFar = p_subject->getFloat(this, Systems::Changes::Graphics::ZFar);
+	}
+
+	if(CheckBitmask(p_changeType, Systems::Changes::Graphics::ZNear))
+	{
+		m_sceneObjects.m_zNear = p_subject->getFloat(this, Systems::Changes::Graphics::ZNear);
+	}
 }
 
 void RendererScene::receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving)
@@ -931,8 +966,10 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 			break;
 
 		case DataType::DataType_RenderToTexture:
-			m_renderToTexture = static_cast<bool>(p_data);
-			m_renderTask->m_renderer.setRenderFinalToTexture(m_renderToTexture);
+			{
+				m_renderToTexture = static_cast<bool>(p_data);
+				m_renderTask->m_renderer.setRenderFinalToTexture(m_renderToTexture);
+			}
 			break;
 
 		case DataType::DataType_RenderToTextureResolution:
@@ -944,6 +981,18 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
 				if(p_deleteAfterReceiving)
 					delete renderToTextureResolution;
+			}
+			break;
+
+		case DataType::DataType_LoadShader:
+			{
+				ShaderLoader::ShaderProgram *shaderProgram = static_cast<ShaderLoader::ShaderProgram *>(p_data);
+
+				if(shaderProgram != nullptr)
+				{
+					shaderProgram->setLoadedToVideoMemory(false);
+					m_sceneObjects.m_loadToVideoMemory.emplace_back(shaderProgram);
+				}
 			}
 			break;
 

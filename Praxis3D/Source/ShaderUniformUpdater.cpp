@@ -11,6 +11,9 @@ ErrorCode ShaderUniformUpdater::generateUpdateList()
 {
 	ErrorCode returnError = ErrorCode::Success;
 
+	// Make sure the update lists are empty
+	clearUpdateList();
+
 	// Make sure shader handle is up to date
 	m_shaderHandle = m_shader.getShaderHandle();
 
@@ -117,6 +120,9 @@ ErrorCode ShaderUniformUpdater::generatePerFrameList()
 	// Distance based fog uniforms
 	uniformList.push_back(new FogDensityUniform(m_shaderHandle));
 	uniformList.push_back(new FogColorUniform(m_shaderHandle));
+
+	// Ambient light
+	uniformList.push_back(new AmbientLightIntensityUniform(m_shaderHandle));
 
 	// Directional light
 	uniformList.push_back(new DirLightColorUniform(m_shaderHandle));
