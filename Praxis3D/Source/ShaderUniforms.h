@@ -22,6 +22,12 @@ public:
 		m_uniformHandle = glGetUniformLocation(p_shaderHandle, p_name.c_str());
 	}
 
+	// Get uniform name
+	const inline std::string &getName() const { return m_name; }
+
+	// Get uniform handle
+	const inline unsigned int getHandle() const { return m_uniformHandle; }
+
 	// Returns true if the uniform is present in the shader
 	const inline bool isValid() const { return (m_uniformHandle != -1); }
 
@@ -41,6 +47,12 @@ public:
 		// Get the uniform location (returns -1 in case it is not present in the shader)
 		m_uniformHandle = glGetUniformBlockIndex(m_shaderHandle, p_name.c_str());
 	}
+
+	// Get uniform name
+	const inline std::string &getName() const { return m_name; }
+
+	// Get uniform handle
+	const inline unsigned int getHandle() const { return m_uniformHandle; }
 
 	// Returns true if the uniform is present in the shader
 	const inline bool isValid() const { return (m_uniformHandle != -1); }
@@ -78,9 +90,16 @@ public:
 		m_SSBOHandle = glGetProgramResourceIndex(m_shaderHandle, GL_SHADER_STORAGE_BLOCK, p_name.c_str());
 	}
 
+	// Get SSBO name
+	const inline std::string &getName() const { return m_name; }
+
+	// Get SSBO handle
+	const inline unsigned int getHandle() const { return m_SSBOHandle; }
+
 	// Returns true if the uniform is present in the shader
 	const inline bool isValid() const { return (m_SSBOHandle != -1); }
-	/*const inline int getBlockSize() const
+
+	const inline int getBlockSize() const
 	{
 		int blockSize = 0;
 
@@ -88,7 +107,7 @@ public:
 		glGetActiveUniformBlockiv(m_shaderHandle, m_SSBOHandle, GL_UNIFORM_BLOCK_DATA_SIZE, &blockSize);
 
 		return blockSize;
-	}*/
+	}
 
 	// Updates the uniform block binding index
 	virtual void update(const UniformData &p_uniformData) = 0;

@@ -68,7 +68,7 @@
     <OutDir>$(SolutionDir)\Builds\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)Dependencies\include\;$(SolutionDir)Dependencies\include\Lua\;$(SolutionDir)Dependencies\include\imgui\;$(SolutionDir)Dependencies\include\sdl\;$(SolutionDir)Dependencies\include\bullet3\;$(SolutionDir)Dependencies\include\imgui_tex_inspect\;$(SolutionDir)Dependencies\include\ImGuizmo\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Dependencies\include\;$(SolutionDir)Dependencies\include\Lua\;$(SolutionDir)Dependencies\include\imgui\;$(SolutionDir)Dependencies\include\sdl\;$(SolutionDir)Dependencies\include\bullet3\;$(SolutionDir)Dependencies\include\imgui_tex_inspect\;$(SolutionDir)Dependencies\include\ImGuizmo\;$(SolutionDir)Dependencies\include\ImGuiColorTextEdit\;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Dependencies\$(Platform)\$(Configuration)\lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)Builds\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
@@ -129,10 +129,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Dependencies\include\ImGuiColorTextEdit\LanguageDefinitions.cpp" />
+    <ClCompile Include="..\Dependencies\include\ImGuiColorTextEdit\TextEditor.cpp" />
     <ClCompile Include="..\Dependencies\include\ImGuiFileDialog\ImGuiFileDialog.cpp" />
     <ClCompile Include="..\Dependencies\include\ImGuizmo\ImGuizmo.cpp" />
     <ClCompile Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3.cpp" />
-    <ClCompile Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl.cpp" />
+    <ClCompile Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl2.cpp" />
     <ClCompile Include="..\Dependencies\include\imgui\imgui.cpp" />
     <ClCompile Include="..\Dependencies\include\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\Dependencies\include\imgui\imgui_draw.cpp" />
@@ -216,7 +218,7 @@
     <ClInclude Include="..\Dependencies\include\ImGuizmo\ImGuizmo.h" />
     <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3.h" />
     <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3_loader.h" />
-    <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl.h" />
+    <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl2.h" />
     <ClInclude Include="..\Dependencies\include\imgui\imconfig.h" />
     <ClInclude Include="..\Dependencies\include\imgui\imgui.h" />
     <ClInclude Include="..\Dependencies\include\imgui\imgui_internal.h" />

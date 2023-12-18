@@ -39,17 +39,79 @@ public:
 		return false;
 	}
 
-	// Write text (string) to file. Returns true if successful, false if not
-	static bool writeToFile(const std::string &p_text, const std::string &p_filename)
+	// Read text (string) from file. Returns true if successful, false if not
+	static bool readTextFromFile(const std::string &p_filename, std::string &p_text)
+	{
+		// Open file
+		std::ifstream importFile(p_filename, std::ios::in);
+
+		// Check if the file opened successfully
+		if(importFile)
+		{
+			// Seek to the end of the imported file
+			importFile.seekg(0, std::ios::end);
+
+			// Resize the output string to accommodate the whole import file
+			p_text.resize(importFile.tellg());
+
+			// Seek to the beginning of the imported file
+			importFile.seekg(0, std::ios::beg);
+
+			// Set the imported files content to the output string
+			importFile.read(&p_text[0], p_text.size());
+
+			// Close the import file
+			importFile.close();
+
+			// Read operation was successful
+			return true;
+		}
+
+		// If this point is reached, read operation failed
+		return false;
+	}
+
+	// Write text (string) to file. Any contents that existed in the file before it is open are discarded
+	// Returns true if successful, false if not
+	static bool writeTextToFile(const std::string &p_filename, const std::string &p_text)
 	{
 		// Open file stream
-		std::ofstream exportFile(p_filename);
+		std::ofstream exportFile(p_filename, std::ofstream::trunc);
 
 		// Check if file stream is open
 		if(exportFile.is_open())
 		{
 			// Write text to file
-			exportFile << p_text << std::endl;
+			exportFile << p_text;
+
+			// Close the export file
+			exportFile.close();
+
+			// Write operation was successful
+			return true;
+		}
+
+		// If this point is reached, write operation failed
+		return false;
+	}	
+	
+	// Appends text (string) to file. Adds all text to the end of the file, appending to its existing contents
+	// Returns true if successful, false if not
+	static bool addTextToFile(const std::string &p_filename, const std::string &p_text)
+	{
+		// Open file stream
+		std::ofstream exportFile(p_filename, std::ofstream::app);
+
+		// Check if file stream is open
+		if(exportFile.is_open())
+		{
+			// Write text to file
+			exportFile << p_text;
+
+			// Close the export file
+			exportFile.close();
+
+			// Write operation was successful
 			return true;
 		}
 

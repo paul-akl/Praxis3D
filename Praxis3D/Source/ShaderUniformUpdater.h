@@ -41,6 +41,14 @@ public:
 	inline size_t getNumUniformBlocks() const	{ return m_numUniformBlockUpdates;	}
 	inline size_t getNumSSBBufferBlocks() const	{ return m_numSSBBBlockUpdates;		}
 
+	const inline std::vector<BaseUniform *> &getPerFrameUniforms() const		{ return m_updatesPerFrame; }
+	const inline std::vector<BaseUniform *> &getPerModelUniforms() const		{ return m_updatesPerModel; }
+	const inline std::vector<BaseUniform *> &getPerMeshUniforms() const			{ return m_updatesPerMesh;	}
+	const inline std::vector<BaseUniform *> &getTextureUpdateUniforms() const	{ return m_textureUpdates;	}
+
+	const inline std::vector<BaseUniformBlock *> &getUniformBlocks() const		{ return m_uniformBlockUpdates; }
+	const inline std::vector<BaseShaderStorageBlock *> &getSSBblocks() const	{ return m_SSBBlockUpdates;		}
+
 private:
 	// Clears all the internal arrays that are populated by generateUpdateList()
 	const inline void clearUpdateList()

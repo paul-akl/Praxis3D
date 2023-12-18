@@ -22,10 +22,10 @@ void LuaScript::terminate()
 	// Unbind all created key commands
 	for(decltype(m_keyCommands.size()) i = 0; i < m_keyCommands.size(); i++)
 	{
-		if(m_keyCommands[i] != nullptr)
+		if(m_keyCommands[i].second != nullptr)
 		{
-			m_keyCommands[i]->unbindAll();
-			delete m_keyCommands[i];
+			m_keyCommands[i].second->unbindAll();
+			delete m_keyCommands[i].second;
 		}
 	}
 	m_keyCommands.clear();
@@ -773,7 +773,7 @@ void LuaScript::createObjectInLua(const unsigned int p_objectType, const std::st
 			m_luaState.set(p_variableName, keyCommand);
 
 			// Add key command pointer to an array so it is not lost
-			m_keyCommands.push_back(keyCommand);
+			m_keyCommands.push_back(std::make_pair(p_variableName, keyCommand));
 		}
 		break;
 

@@ -104,8 +104,7 @@ public:
 					std::string luaFilename = luaFilenameProperty.getString();
 					if(!luaFilename.empty())
 					{
-						luaFilename = Config::filepathVar().script_path + luaFilename;
-						if(Filesystem::exists(luaFilename))
+						if(Filesystem::exists(Config::filepathVar().script_path + luaFilename))
 						{
 							m_luaScript->setScriptFilename(luaFilename);
 

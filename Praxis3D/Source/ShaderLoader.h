@@ -214,6 +214,7 @@ public:
 		const inline bool isTessellated() const { return m_tessellated; }
 
 		// Getters
+		inline std::string &getShaderSource(ShaderType p_shaderType) { return m_shaderSource[p_shaderType]; }
 		const inline std::string &getCombinedFilename() const { return m_combinedFilename; }
 		const inline unsigned int getShaderHandle() const { return m_programHandle; }
 		inline ShaderUniformUpdater &getUniformUpdater() const { return *m_uniformUpdater; }

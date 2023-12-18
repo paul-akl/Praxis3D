@@ -1,4 +1,3 @@
-
 function init ()
 	-- Create needed variables
 	create(Types.EngineVariables, 'engineVariables');

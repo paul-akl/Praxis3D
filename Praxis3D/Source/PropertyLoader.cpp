@@ -29,6 +29,15 @@ ErrorCode PropertyLoader::loadFromFile(std::string p_filename)
 		return ErrorCode::Ifstream_failed;
 	}
 
+	// Seek to the end of the imported file
+	file.seekg(0, std::ios::end);
+
+	// Resize the output string to accommodate the whole import file
+	parsedString.resize(file.tellg());
+
+	// Seek to the beginning of the imported file
+	file.seekg(0, std::ios::beg);
+
 	// Iterate over each line, until reaching end-of-line
 	while(!file.eof())
 	{
@@ -101,29 +110,11 @@ ErrorCode PropertyLoader::saveToFile(PropertySet &p_propertySet, std::string p_f
 		if(m_filename.empty())
 			return ErrorCode::Property_no_filename;
 
-	// Create the file stream
-	std::ofstream file;
-
-	// If the file already exists, truncate it, otherwise, create a new file
-	if(Filesystem::exists(m_filename))
-		file.open(m_filename, std::ios::trunc);
-	else
-		file.open(m_filename, std::ios::out);
-
-	// If file is not valid, close it and return an error
-	if(file.fail())
-	{
-		file.close();
-		return ErrorCode::Ifstream_failed;
-	}
-
 	// Export property sets to the file
-	file << toString(p_propertySet, std::string());
-
-	// Close the file after we are done writing to it
-	file.close();
-
-	return ErrorCode::Success;
+	if(Filesystem::writeTextToFile(m_filename, toString(p_propertySet, std::string())))
+		return ErrorCode::Success;
+	else
+		return ErrorCode::Ifstream_failed;
 }
 
 std::string PropertyLoader::getNextField(size_t &p_charIndex, const std::string &p_string)

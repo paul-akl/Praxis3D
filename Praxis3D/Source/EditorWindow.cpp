@@ -1,3 +1,6 @@
+
+
+#include <fstream>
 #include <glm/gtc/type_ptr.hpp>
 #include <ranges>
 
@@ -40,9 +43,10 @@ EditorWindow::~EditorWindow()
         //m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_RenderToTexture, (void *)false);
     }
 
-    // Unbind keys
-    for(unsigned int i = 0; i < KeyType::KeyType_NumOfKeys; i++)
-        m_keys[i].unbindAll();
+    // Delete all text editor data entries
+    for(decltype(m_textEditorFiles.size()) i = 0, size = m_textEditorFiles.size(); i < size; i++)
+        if(m_textEditorFiles[i] != nullptr)
+            delete m_textEditorFiles[i];
 }
 
 ErrorCode EditorWindow::init()
@@ -177,61 +181,59 @@ void EditorWindow::update(const float p_deltaTime)
     //	|____________________________|
     //
     {
+        // Get ImGui IO (for key presses) and modifier keys
+        ImGuiIO &imGuiIO = ImGui::GetIO();
+        auto shiftKeyPressed = imGuiIO.KeyShift;
+        auto ctrlKeyPressed = imGuiIO.ConfigMacOSXBehaviors ? imGuiIO.KeySuper : imGuiIO.KeyCtrl;
+        auto altKeyPressed = imGuiIO.ConfigMacOSXBehaviors ? imGuiIO.KeyCtrl : imGuiIO.KeyAlt;
+
         // Shortcut for NEW
-        if(m_keys[KeyType::KeyType_Ctlr].isActivated() && m_keys[KeyType::KeyType_N].isActivated())
-        {
-            m_keys[KeyType::KeyType_Ctlr].deactivate();
-            m_keys[KeyType::KeyType_N].deactivate();
+        if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_N)))
             m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_New;
-        }
 
         // Shortcut for OPEN
-        if(m_keys[KeyType::KeyType_Ctlr].isActivated() && m_keys[KeyType::KeyType_O].isActivated())
-        {
-            m_keys[KeyType::KeyType_Ctlr].deactivate();
-            m_keys[KeyType::KeyType_O].deactivate();
+        if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_O)))
             m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Open;
-        }
 
         // Shortcut for SAVE
-        if(m_keys[KeyType::KeyType_Ctlr].isActivated() && !m_keys[KeyType::KeyType_Shift].isActivated() && m_keys[KeyType::KeyType_S].isActivated())
-        {
-            m_keys[KeyType::KeyType_Ctlr].deactivate();
-            m_keys[KeyType::KeyType_S].deactivate();
+        if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_S)))
             m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Save;
-        }
 
         // Shortcut for SAVE AS
-        if(m_keys[KeyType::KeyType_Ctlr].isActivated() && m_keys[KeyType::KeyType_Shift].isActivated() && m_keys[KeyType::KeyType_S].isActivated())
-        {
-            m_keys[KeyType::KeyType_Ctlr].deactivate();
-            m_keys[KeyType::KeyType_Shift].deactivate();
-            m_keys[KeyType::KeyType_S].deactivate();
+        if(shiftKeyPressed && ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_S)))
             m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_SaveAs;
-        }
 
         // Shortcut for RELOAD SCENE
-        if(m_keys[KeyType::KeyType_Ctlr].isActivated() && m_keys[KeyType::KeyType_R].isActivated())
-        {
-            m_keys[KeyType::KeyType_Ctlr].deactivate();
-            m_keys[KeyType::KeyType_R].deactivate();
+        if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_R)))
             m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_ReloadScene;
-        }
 
         // Shortcut for CLOSE EDITOR
-        if(m_keys[KeyType::KeyType_Esc].isActivated())
-        {
-            m_keys[KeyType::KeyType_Esc].deactivate();
+        if(ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))
             m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_CloseEditor;
-        }
 
         // Shortcut for EXIT
-        if(m_keys[KeyType::KeyType_Alt].isActivated() && m_keys[KeyType::KeyType_F4].isActivated())
-        {
-            m_keys[KeyType::KeyType_Alt].deactivate();
-            m_keys[KeyType::KeyType_F4].deactivate();
+        if(altKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F4)))
             m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Exit;
-        }
+
+        // Shortcut for UNDO
+        if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Z)))
+            m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Undo;
+
+        // Shortcut for REDO
+        if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Y)))
+            m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Redo;
+
+        // Shortcut for CUT
+        if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_X)))
+            m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Cut;
+
+        // Shortcut for COPY
+        if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_C)))
+            m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Copy;
+
+        // Shortcut for PASTE
+        if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_V)))
+            m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Paste;
 
         ImGui::BeginMainMenuBar();
 
@@ -265,7 +267,6 @@ void EditorWindow::update(const float p_deltaTime)
             {
                 m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_CloseEditor;
             }
-
             if(ImGui::MenuItem("Exit", "ALT+F4"))
             {
                 m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Exit;
@@ -275,12 +276,30 @@ void EditorWindow::update(const float p_deltaTime)
         }
         if(ImGui::BeginMenu("Edit"))
         {
-            if(ImGui::MenuItem("Undo", "CTRL+Z", false, false)) {}  // Disabled item
-            if(ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
+            if(ImGui::MenuItem("Undo", "CTRL+Z", false, m_currentlyActiveTextEditor != nullptr))
+            {
+                m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Undo;
+            }
+            if(ImGui::MenuItem("Redo", "CTRL+Y", false, m_currentlyActiveTextEditor != nullptr))
+            {
+                m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Redo;
+            }
+
             ImGui::Separator();
-            if(ImGui::MenuItem("Cut", "CTRL+X")) {}
-            if(ImGui::MenuItem("Copy", "CTRL+C")) {}
-            if(ImGui::MenuItem("Paste", "CTRL+V")) {}
+
+            if(ImGui::MenuItem("Cut", "CTRL+X", false, m_currentlyActiveTextEditor != nullptr))
+            {
+                m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Cut;
+            }
+            if(ImGui::MenuItem("Copy", "CTRL+C", false, m_currentlyActiveTextEditor != nullptr))
+            {
+                m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Copy;
+            }
+            if(ImGui::MenuItem("Paste", "CTRL+V", false, m_currentlyActiveTextEditor != nullptr))
+            {
+                m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Paste;
+            }
+
             ImGui::EndMenu();
         }        
         if(ImGui::BeginMenu("Debug"))
@@ -2673,12 +2692,39 @@ void EditorWindow::update(const float p_deltaTime)
                     if(ImGui::BeginChild("##ShaderAssetsProgramSelection", ImVec2(contentRegionWidth * 0.2f, 0), true))
                     {
                         ImGui::SeparatorText("Shader programs:");
+                        //for(decltype(m_shaderAssets.size()) shaderIndex = 0, size = m_shaderAssets.size(); shaderIndex < size; shaderIndex++)
+                        //{
+                        //    if(ImGui::Selectable(m_shaderAssets[shaderIndex].second.c_str(), m_selectedProgram != nullptr ? m_shaderAssets[shaderIndex].first->getCombinedFilename() == m_selectedProgram->getCombinedFilename() : false))
+                        //    {
+                        //        m_selectedProgram = m_shaderAssets[shaderIndex].first;
+                        //        m_selectedShaderType = -1;
+                        //    }
+                        //}
+
+
+                        static ImGuiTreeNodeFlags baseNodeFlags = ImGuiTreeNodeFlags_SpanAvailWidth;
+
                         for(decltype(m_shaderAssets.size()) shaderIndex = 0, size = m_shaderAssets.size(); shaderIndex < size; shaderIndex++)
                         {
-                            if(ImGui::Selectable(m_shaderAssets[shaderIndex].second.c_str(), m_selectedProgram != nullptr ? m_shaderAssets[shaderIndex].first->getCombinedFilename() == m_selectedProgram->getCombinedFilename() : false))
+                            if(ImGui::TreeNodeEx(m_shaderAssets[shaderIndex].second.c_str(), baseNodeFlags))
                             {
-                                m_selectedProgram = m_shaderAssets[shaderIndex].first;
-                                m_selectedShaderType = -1;
+                                for(unsigned int shaderType = 0; shaderType < ShaderType::ShaderType_NumOfTypes; shaderType++)
+                                {
+                                    if(!m_shaderAssets[shaderIndex].first->getShaderFilename(shaderType).empty())
+                                    {
+                                        if(ImGui::TreeNodeEx(m_shaderAssets[shaderIndex].first->getShaderFilename(shaderType).c_str(), baseNodeFlags | ImGuiTreeNodeFlags_Leaf))
+                                        {
+                                            if(ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+                                            {
+                                                m_selectedProgram = m_shaderAssets[shaderIndex].first;
+                                                m_selectedShaderType = shaderType;
+                                            }
+                                            ImGui::TreePop();
+                                        }
+                                    }
+                                }
+
+                                ImGui::TreePop();
                             }
                         }
                     }
@@ -2686,26 +2732,26 @@ void EditorWindow::update(const float p_deltaTime)
 
                     ImGui::SameLine();
 
-                    if(m_selectedProgram != nullptr)
-                    {
-                        if(ImGui::BeginChild("##ShaderAssetsShaderSelection", ImVec2(contentRegionWidth * 0.2f, 0), true))
-                        {
-                            ImGui::SeparatorText("Shaders:");
-                            for(unsigned int shaderType = 0; shaderType < ShaderType::ShaderType_NumOfTypes; shaderType++)
-                            {
-                                if(!m_selectedProgram->getShaderFilename(shaderType).empty())
-                                {
-                                    if(ImGui::Selectable(m_selectedProgram->getShaderFilename(shaderType).c_str(), m_selectedShaderType == shaderType))
-                                    {
-                                        m_selectedShaderType = (int)shaderType;
-                                    }
-                                }
-                            }
-                        }
-                        ImGui::EndChild();
-                    }
+                    //if(m_selectedProgram != nullptr)
+                    //{
+                    //    if(ImGui::BeginChild("##ShaderAssetsShaderSelection", ImVec2(contentRegionWidth * 0.2f, 0), true))
+                    //    {
+                    //        ImGui::SeparatorText("Shaders:");
+                    //        for(unsigned int shaderType = 0; shaderType < ShaderType::ShaderType_NumOfTypes; shaderType++)
+                    //        {
+                    //            if(!m_selectedProgram->getShaderFilename(shaderType).empty())
+                    //            {
+                    //                if(ImGui::Selectable(m_selectedProgram->getShaderFilename(shaderType).c_str(), m_selectedShaderType == shaderType))
+                    //                {
+                    //                    m_selectedShaderType = (int)shaderType;
+                    //                }
+                    //            }
+                    //        }
+                    //    }
+                    //    ImGui::EndChild();
+                    //}
 
-                    ImGui::SameLine();
+                    //ImGui::SameLine();
 
                     ImGui::PopStyleVar(2); // ImGuiStyleVar_FramePadding, ImGuiStyleVar_ItemSpacing
 
@@ -2714,7 +2760,184 @@ void EditorWindow::update(const float p_deltaTime)
                         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, m_imguiStyle.FramePadding.y));
                         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, m_imguiStyle.ItemSpacing.y));
 
-                        if(ImGui::BeginChild("##ShaderAssetsSettings", ImVec2(contentRegionWidth * 0.5f, 0), true))
+                        if(ImGui::BeginChild("##ShaderAssetsUniformUpdate", ImVec2(contentRegionWidth * 0.2f, 0), true))
+                        {
+                            // Calculate widget offset used to draw a label on the left and a widget on the right (opposite of how ImGui draws it)
+                            float inputWidgetOffset = ImGui::GetCursorPosX() + ImGui::CalcItemWidth() * 0.75f + ImGui::GetStyle().ItemInnerSpacing.x;
+
+                            ImGui::SeparatorText("Uniform updater:");
+
+                            // Draw UNIFORM UPDATER SETTINGS
+                            if(ImGui::TreeNodeEx("Uniform updater settings:", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed))
+                            {
+                                // Get uniform updater
+                                auto const &uniformUpdater = m_selectedProgram->getUniformUpdater();
+
+                                // Draw UPDATES PER FRAME
+                                auto numUpdatesPerFrame = uniformUpdater.getNumUpdatesPerFrame();
+                                drawLeftAlignedLabelText("Updates per frame:", inputWidgetOffset);
+                                if(numUpdatesPerFrame > 0)
+                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(numUpdatesPerFrame).c_str());
+                                else
+                                    ImGui::TextDisabled(Utilities::toString(numUpdatesPerFrame).c_str());
+
+                                // Draw UPDATES PER MODEL
+                                auto numUpdatesPerModel = uniformUpdater.getNumUpdatesPerModel();
+                                drawLeftAlignedLabelText("Updates per model:", inputWidgetOffset);
+                                if(numUpdatesPerModel > 0)
+                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(numUpdatesPerModel).c_str());
+                                else
+                                    ImGui::TextDisabled(Utilities::toString(numUpdatesPerModel).c_str());
+
+                                // Draw UPDATES PER MESH
+                                auto numUpdatesPerMesh = uniformUpdater.getNumUpdatesPerMesh();
+                                drawLeftAlignedLabelText("Updates per mesh:", inputWidgetOffset);
+                                if(numUpdatesPerMesh > 0)
+                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(numUpdatesPerMesh).c_str());
+                                else
+                                    ImGui::TextDisabled(Utilities::toString(numUpdatesPerMesh).c_str());
+
+                                // Draw TEXTURE UPDATES
+                                auto numTextureUpdates = uniformUpdater.getNumTextureUpdates();
+                                drawLeftAlignedLabelText("Texture updates:", inputWidgetOffset);
+                                if(numTextureUpdates > 0)
+                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(numTextureUpdates).c_str());
+                                else
+                                    ImGui::TextDisabled(Utilities::toString(numTextureUpdates).c_str());
+
+                                // Draw UNIFORM BLOCKS
+                                auto numUniformBlocks = uniformUpdater.getNumUniformBlocks();
+                                drawLeftAlignedLabelText("Uniform blocks:", inputWidgetOffset);
+                                if(numUniformBlocks > 0)
+                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(numUniformBlocks).c_str());
+                                else
+                                    ImGui::TextDisabled(Utilities::toString(numUniformBlocks).c_str());
+
+                                // Draw SSB BLOCKS
+                                auto numSSBBlocks = uniformUpdater.getNumSSBBufferBlocks();
+                                drawLeftAlignedLabelText("SSB blocks:", inputWidgetOffset);
+                                if(numSSBBlocks > 0)
+                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(numSSBBlocks).c_str());
+                                else
+                                    ImGui::TextDisabled(Utilities::toString(numSSBBlocks).c_str());
+
+                                ImGui::TreePop();
+                            }
+                        }
+                        ImGui::EndChild();
+
+                        ImGui::SameLine();
+
+                        if(ImGui::BeginChild("##ShaderAssetsBoundUniforms", ImVec2(contentRegionWidth * 0.2f, 0), true))
+                        {
+                            // Calculate widget offset used to draw a label on the left and a widget on the right (opposite of how ImGui draws it)
+                            float inputWidgetOffset = ImGui::GetCursorPosX() + ImGui::CalcItemWidth() * 0.75f + ImGui::GetStyle().ItemInnerSpacing.x;
+
+                            // Get uniform updater
+                            auto const &uniformUpdater = m_selectedProgram->getUniformUpdater();
+
+                            ImGui::SeparatorText("Bound uniforms:");
+
+                            // Draw PER-FRAME UPDATES
+                            if(uniformUpdater.getNumUpdatesPerFrame() > 0 && ImGui::TreeNodeEx("Per-frame updates:", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed))
+                            {
+                                auto const &perFrameUniforms = uniformUpdater.getPerFrameUniforms();
+                                for(auto *uniform : perFrameUniforms)
+                                {
+                                    ImGui::Text((uniform->getName() + " (").c_str());
+                                    ImGui::SameLine();
+                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(uniform->getHandle()).c_str());
+                                    ImGui::SameLine();
+                                    ImGui::Text(")");
+                                }
+
+                                ImGui::TreePop();
+                            }                            
+
+                            // Draw PER-MODEL UPDATES
+                            if(uniformUpdater.getNumUpdatesPerModel() > 0 && ImGui::TreeNodeEx("Per-model updates:", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed))
+                            {
+                                auto const &perModelUniforms = uniformUpdater.getPerModelUniforms();
+                                for(auto *uniform : perModelUniforms)
+                                {
+                                    ImGui::Text((uniform->getName() + " (").c_str());
+                                    ImGui::SameLine();
+                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(uniform->getHandle()).c_str());
+                                    ImGui::SameLine();
+                                    ImGui::Text(")");
+                                }
+
+                                ImGui::TreePop();
+                            }
+
+                            // Draw PER-MESH UPDATES
+                            if(uniformUpdater.getNumUpdatesPerMesh() > 0 && ImGui::TreeNodeEx("Per-mesh updates:", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed))
+                            {
+                                auto const &perMeshUniforms = uniformUpdater.getPerMeshUniforms();
+                                for(auto *uniform : perMeshUniforms)
+                                {
+                                    ImGui::Text((uniform->getName() + " (").c_str());
+                                    ImGui::SameLine();
+                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(uniform->getHandle()).c_str());
+                                    ImGui::SameLine();
+                                    ImGui::Text(")");
+                                }
+
+                                ImGui::TreePop();
+                            }
+
+                            // Draw TEXTURE UPDATES
+                            if(uniformUpdater.getNumTextureUpdates() > 0 && ImGui::TreeNodeEx("Texture updates:", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed))
+                            {
+                                auto const &textureUniforms = uniformUpdater.getTextureUpdateUniforms();
+                                for(auto *uniform : textureUniforms)
+                                {
+                                    ImGui::Text((uniform->getName() + " (").c_str());
+                                    ImGui::SameLine();
+                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(uniform->getHandle()).c_str());
+                                    ImGui::SameLine();
+                                    ImGui::Text(")");
+                                }
+
+                                ImGui::TreePop();
+                            }
+
+                            // Draw UNIFORM BLOCKS UPDATES
+                            if(uniformUpdater.getNumUniformBlocks() > 0 && ImGui::TreeNodeEx("Uniform block updates:", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed))
+                            {
+                                auto const &uniformBlocks = uniformUpdater.getUniformBlocks();
+                                for(auto *uniform : uniformBlocks)
+                                {
+                                    ImGui::Text((uniform->getName() + " (").c_str());
+                                    ImGui::SameLine();
+                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(uniform->getHandle()).c_str());
+                                    ImGui::SameLine();
+                                    ImGui::Text(")");
+                                }
+                                ImGui::TreePop();
+                            }
+
+                            // Draw SSBO UPDATES
+                            if(uniformUpdater.getNumSSBBufferBlocks() > 0 && ImGui::TreeNodeEx("SSBO updates:", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed))
+                            {
+                                auto const &shaderStorageBlocks = uniformUpdater.getSSBblocks();
+                                for(auto *uniform : shaderStorageBlocks)
+                                {
+                                    ImGui::Text((uniform->getName() + " (").c_str());
+                                    ImGui::SameLine();
+                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(uniform->getHandle()).c_str());
+                                    ImGui::SameLine();
+                                    ImGui::Text(")");
+                                }
+
+                                ImGui::TreePop();
+                            }
+                        }
+                        ImGui::EndChild();
+
+                        ImGui::SameLine();
+
+                        if(ImGui::BeginChild("##ShaderAssetsSettings", ImVec2(contentRegionWidth * 0.3f, 0), true))
                         {
                             ImGui::PopStyleVar(2); // ImGuiStyleVar_FramePadding, ImGuiStyleVar_ItemSpacing
                             ImGui::SeparatorText("Shader settings:");
@@ -2817,63 +3040,6 @@ void EditorWindow::update(const float p_deltaTime)
                             if(ImGui::Checkbox("##LoadedToVideoMemoryCheck", &loadedToVideoMemory))
                             {
                             }
-
-                            // Draw UNIFORM UPDATER SETTINGS
-                            if(ImGui::TreeNodeEx("Uniform updater settings:", ImGuiTreeNodeFlags_Framed)) // ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf
-                            {
-                                // Get uniform updater
-                                auto const &uniformUpdater = m_selectedProgram->getUniformUpdater();
-
-                                // Draw UPDATES PER FRAME
-                                auto numUpdatesPerFrame = uniformUpdater.getNumUpdatesPerFrame();
-                                drawLeftAlignedLabelText("Updates per frame:", inputWidgetOffset);
-                                if(numUpdatesPerFrame > 0)
-                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(numUpdatesPerFrame).c_str());
-                                else
-                                    ImGui::TextDisabled(Utilities::toString(numUpdatesPerFrame).c_str());
-
-                                // Draw UPDATES PER MODEL
-                                auto numUpdatesPerModel = uniformUpdater.getNumUpdatesPerModel();
-                                drawLeftAlignedLabelText("Updates per model:", inputWidgetOffset);
-                                if(numUpdatesPerModel > 0)
-                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(numUpdatesPerModel).c_str());
-                                else
-                                    ImGui::TextDisabled(Utilities::toString(numUpdatesPerModel).c_str());
-
-                                // Draw UPDATES PER MESH
-                                auto numUpdatesPerMesh = uniformUpdater.getNumUpdatesPerMesh();
-                                drawLeftAlignedLabelText("Updates per mesh:", inputWidgetOffset);
-                                if(numUpdatesPerMesh > 0)
-                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(numUpdatesPerMesh).c_str());
-                                else
-                                    ImGui::TextDisabled(Utilities::toString(numUpdatesPerMesh).c_str());
-
-                                // Draw TEXTURE UPDATES
-                                auto numTextureUpdates = uniformUpdater.getNumTextureUpdates();
-                                drawLeftAlignedLabelText("Texture updates:", inputWidgetOffset);
-                                if(numTextureUpdates > 0)
-                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(numTextureUpdates).c_str());
-                                else
-                                    ImGui::TextDisabled(Utilities::toString(numTextureUpdates).c_str());
-
-                                // Draw UNIFORM BLOCKS
-                                auto numUniformBlocks = uniformUpdater.getNumUniformBlocks();
-                                drawLeftAlignedLabelText("Uniform blocks:", inputWidgetOffset);
-                                if(numUniformBlocks > 0)
-                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(numUniformBlocks).c_str());
-                                else
-                                    ImGui::TextDisabled(Utilities::toString(numUniformBlocks).c_str());
-
-                                // Draw SSB BLOCKS
-                                auto numSSBBlocks = uniformUpdater.getNumSSBBufferBlocks();
-                                drawLeftAlignedLabelText("SSB blocks:", inputWidgetOffset);
-                                if(numSSBBlocks > 0)
-                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Utilities::toString(numSSBBlocks).c_str());
-                                else
-                                    ImGui::TextDisabled(Utilities::toString(numSSBBlocks).c_str());
-
-                                ImGui::TreePop();
-                            }
                         }
                         else
                             ImGui::PopStyleVar(2); // ImGuiStyleVar_FramePadding, ImGuiStyleVar_ItemSpacing
@@ -2893,7 +3059,18 @@ void EditorWindow::update(const float p_deltaTime)
 
                             if(ImGui::Button("Edit", ImVec2(buttonWidth, 20.0f)))
                             {
+                                TextEditorData *newTextEditorData = new TextEditorData();
 
+                                auto &shaderFilename = m_selectedProgram->getShaderFilename(m_selectedShaderType);
+
+                                newTextEditorData->m_filename = Utilities::stripFilename(shaderFilename);
+                                newTextEditorData->m_filePath = Config::PathsVariables().shader_path + Utilities::stripFilePath(shaderFilename);
+
+                                newTextEditorData->setLanguage(TextEditorLanguageType::TextEditorLanguageType_GLSL);
+                                newTextEditorData->setText(m_selectedProgram->getShaderSource(static_cast<ShaderType>(m_selectedShaderType)));
+                                newTextEditorData->enable();
+
+                                m_textEditorFiles.push_back(newTextEditorData);
                             }
 
                             if(ImGui::Button("Reload", ImVec2(buttonWidth, 20.0f)))
@@ -2945,6 +3122,154 @@ void EditorWindow::update(const float p_deltaTime)
                         }
                     }
                     ImGui::EndChild();
+
+                    auto *luaComponent = entityRegistry.try_get<LuaComponent>(m_selectedLuaScript);
+                    if(luaComponent != nullptr)
+                    {
+                        auto *luaScript = luaComponent->getLuaScript();
+
+                        ImGui::SameLine();
+
+                        if(ImGui::BeginChild("##LuaScriptAssetsVariables", ImVec2(contentRegionWidth * 0.2f, 0), true))
+                        {
+                            ImGui::SeparatorText("Variables:");
+
+                            const auto &luaVariables = luaScript->getLuaVariables();
+
+                            for(auto &variable : luaVariables)
+                            {
+                                ImGui::Text((variable.first + ": ").c_str());
+                                ImGui::SameLine();
+                                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), variable.second.getString().c_str());
+                            }
+                        }
+                        ImGui::EndChild();
+
+                        ImGui::SameLine();
+
+                        if(ImGui::BeginChild("##LuaScriptAssetsKeys", ImVec2(contentRegionWidth * 0.2f, 0), true))
+                        {
+                            ImGui::SeparatorText("Bound keys:");
+
+                            const auto &keybinds = luaScript->getBoundKeys();
+
+                            for(auto &keybind : keybinds)
+                            {
+                                if(ImGui::TreeNodeEx(keybind.first.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+                                {
+                                    for(decltype(keybind.second->getNumBindings()) i = 0, size = keybind.second->getNumBindings(); i < size; i++)
+                                    {
+                                        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), GetString((*keybind.second)[i]));
+                                    }
+                                    ImGui::TreePop();
+                                }
+                            }
+                        }
+                        ImGui::EndChild();
+
+                        ImGui::SameLine();
+
+                        if(ImGui::BeginChild("##LuaScriptAssetsSettings", ImVec2(contentRegionWidth * 0.3f, 0), true))
+                        {
+
+                            ImGui::PopStyleVar(2); // ImGuiStyleVar_FramePadding, ImGuiStyleVar_ItemSpacing
+
+                            auto buttonWidth = ImGui::GetContentRegionAvail().x / 4.0f;
+
+                            // Calculate widget offset used to draw a label on the left and a widget on the right (opposite of how ImGui draws it)
+                            float inputWidgetOffset = ImGui::GetCursorPosX() + ImGui::CalcItemWidth() * 0.5f + ImGui::GetStyle().ItemInnerSpacing.x;
+
+                            ImGui::SeparatorText("Lua script settings:");
+
+                            // Draw SCRIPT FILENAME
+                            auto scriptFilename = luaScript->getLuaScriptFilename();
+                            drawLeftAlignedLabelText("Filename:", inputWidgetOffset, calcTextSizedButtonOffset(1) - inputWidgetOffset - m_imguiStyle.FramePadding.x);
+                            if(ImGui::InputText("##LuaScriptFilenameInput", &scriptFilename, ImGuiInputTextFlags_EnterReturnsTrue))
+                            {
+                            }
+
+                            // Draw OPEN button
+                            ImGui::SameLine(calcTextSizedButtonOffset(1));
+                            if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenFile], "##LuaScriptOpenFileButton", "Open a Lua script file"))
+                            {
+                            }
+
+                            const std::string luaScriptSelectionPopupName = "##LuaScriptSelectionPopup";
+
+                            // Draw OPEN ASSET LIST button
+                            ImGui::SameLine(calcTextSizedButtonOffset(0));
+                            if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenAssetList], "##LuaScriptOpenAssetListButton", "Choose a Lua script from the loaded scripts"))
+                            {
+                                // Open the pop-up with the shader asset list
+                                ImGui::OpenPopup(luaScriptSelectionPopupName.c_str());
+                            }
+
+                            // Draw SHADER ASSET LIST
+                            if(ImGui::BeginPopup(luaScriptSelectionPopupName.c_str()))
+                            {
+                                // Remove selection border and align text vertically
+                                ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.0f, 0.5f));
+                                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+
+                                ImGui::PopStyleVar(2); //ImGuiStyleVar_SelectableTextAlign, ImGuiStyleVar_FramePadding
+                                ImGui::EndPopup();
+                            }
+                        }
+                        else
+                            ImGui::PopStyleVar(2); // ImGuiStyleVar_FramePadding, ImGuiStyleVar_ItemSpacing
+                        ImGui::EndChild();
+
+                        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, m_imguiStyle.FramePadding.y));
+                        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, m_imguiStyle.ItemSpacing.y));
+
+                        ImGui::SameLine();
+
+                        if(ImGui::BeginChild("##LuaScriptAssetsActions", ImVec2(contentRegionWidth * 0.1f, 0), true))
+                        {
+                            ImGui::SeparatorText("Actions:");
+
+                            // Calculate button width so they span across the whole window width
+                            auto buttonWidth = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x * 2.0f);
+
+                            if(ImGui::Button("Edit", ImVec2(buttonWidth, 20.0f)))
+                            {
+                                // Get lua script filename
+                                const std::string &filename = luaScript->getLuaScriptFilename();
+                                std::string luaSource;
+
+                                // Read lua script source from file
+                                if(Filesystem::readTextFromFile(Config::PathsVariables().script_path + filename, luaSource))
+                                {
+                                    TextEditorData *newTextEditorData = new TextEditorData();
+
+                                    newTextEditorData->m_filename = Utilities::stripFilename(filename);
+                                    newTextEditorData->m_filePath = Config::PathsVariables().script_path + Utilities::stripFilePath(filename);
+
+                                    newTextEditorData->setLanguage(TextEditorLanguageType::TextEditorLanguageType_Lua);
+                                    newTextEditorData->setText(luaSource);
+                                    newTextEditorData->enable();
+
+                                    m_textEditorFiles.push_back(newTextEditorData);
+                                }
+                            }
+
+                            if(ImGui::Button("Reload", ImVec2(buttonWidth, 20.0f)))
+                            {
+                                //m_selectedProgram->reloadToMemory();
+                                //m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_LoadShader, (void *)m_selectedProgram);
+                            }
+
+                            ImGui::NewLine();
+
+                            if(ImGui::Button("Open directory", ImVec2(buttonWidth, 20.0f)))
+                            {
+                                ShellExecuteA(NULL, "explore", (Filesystem::getCurrentDirectory() + "\\" + Config::filepathVar().script_path + Utilities::stripFilePath(luaScript->getLuaScriptFilename())).c_str(), NULL, NULL, SW_SHOWDEFAULT);
+                            }
+
+
+                        }
+                        ImGui::EndChild();
+                    }
 
                     ImGui::PopStyleVar(4); // ImGuiStyleVar_ChildBorderSize, ImGuiStyleVar_SeparatorTextAlign, ImGuiStyleVar_FramePadding, ImGuiStyleVar_ItemSpacing
                     ImGui::PopStyleColor(); // ImGuiCol_Border
@@ -3119,6 +3444,100 @@ void EditorWindow::update(const float p_deltaTime)
                         m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_GUIPassFunctors, (void *)&functorSequence);
 
                         ImGui::EndTabItem();
+                    }
+                }
+
+                // Reset the currently active text editor
+                m_currentlyActiveTextEditor = nullptr;
+
+                // Draw TEXT EDITOR
+                for(decltype(m_textEditorFiles.size()) i = 0, size = m_textEditorFiles.size(); i < size; i++)
+                {
+                    if(m_textEditorFiles[i]->m_textEditorEnabled)
+                    {
+                        bool tabOpened = true;
+
+                        if(ImGui::BeginTabItem((m_textEditorFiles[i]->m_filename + "##" + Utilities::toString(i)).c_str(), &tabOpened, m_textEditorFiles[i]->m_textEditorTabFlags | (m_textEditorFiles[i]->m_textEditor.HasTextChanged() ? ImGuiTabItemFlags_UnsavedDocument : 0)))
+                        {
+                            // Reset the tab flags (that previously been set to focus the window, when the text editor was launched), so it doesn't get continuously focused
+                            if(m_textEditorFiles[i]->m_textEditorTabFlags != 0)
+                                m_textEditorFiles[i]->m_textEditorTabFlags = 0;
+
+                            //auto cursorPosition = m_textEditorFiles[i]->m_textEditor.GetCursorPosition();
+                            int linePosition;
+                            int columnPosition;
+                            m_textEditorFiles[i]->m_textEditor.GetCursorPosition(linePosition, columnPosition);
+
+                            const char *whitespacesText = "Show whitespaces";
+                            const char *autoIndentText = "Auto indent";
+                            const char *saveToFileText = "Save to file";
+
+                            auto contentRegionMax = ImGui::GetWindowContentRegionMax().x;
+                            auto languageTypeComboWidgetSize = ImGui::CalcTextSize(m_textEditorLanguageTypeText[TextEditorLanguageType::TextEditorLanguageType_AngelScript]).x + ImGui::GetFrameHeight() + m_imguiStyle.FramePadding.x * 2.0f;
+                            auto languageTypeComboSize = languageTypeComboWidgetSize + m_imguiStyle.ItemInnerSpacing.x;
+                            auto whitespacesCheckboxSize = ImGui::GetFrameHeight() + ImGui::CalcTextSize(whitespacesText).x + m_imguiStyle.FramePadding.x * 2.0f + m_imguiStyle.ItemInnerSpacing.x;
+                            auto autoIndentCheckboxSize = ImGui::GetFrameHeight() + ImGui::CalcTextSize(autoIndentText).x + m_imguiStyle.FramePadding.x * 2.0f + m_imguiStyle.ItemInnerSpacing.x;
+                            auto saveButtonSize = ImGui::CalcTextSize(saveToFileText).x + m_imguiStyle.FramePadding.x * 2.0f + m_imguiStyle.ItemInnerSpacing.x;
+                            
+                            // Draw status bar
+                            ImGui::Text("%6d/%-6d %6d lines  | %s | %s | %s", linePosition + 1, columnPosition + 1, m_textEditorFiles[i]->m_textEditor.GetLineCount(),
+                                m_textEditorFiles[i]->m_textEditor.IsOverwriteEnabled() ? "Ovr" : "Ins",
+                                m_textEditorFiles[i]->m_textEditor.CanUndo() ? "*" : " ",
+                                m_textEditorFiles[i]->m_filename.c_str());
+
+                            // Draw SHOW WHITESPACES
+                            ImGui::SameLine(contentRegionMax - saveButtonSize - languageTypeComboSize - autoIndentCheckboxSize - whitespacesCheckboxSize);
+                            if(bool showWhitespaces = m_textEditorFiles[i]->m_textEditor.IsShowWhitespacesEnabled(); ImGui::Checkbox(whitespacesText, &showWhitespaces))
+                                m_textEditorFiles[i]->m_textEditor.SetShowWhitespacesEnabled(showWhitespaces);
+
+                            // Draw AUTO INDENT
+                            ImGui::SameLine(contentRegionMax - saveButtonSize - languageTypeComboSize - autoIndentCheckboxSize);
+                            if(bool autoIndent = m_textEditorFiles[i]->m_textEditor.IsAutoIndentEnabled(); ImGui::Checkbox(autoIndentText, &autoIndent))
+                                m_textEditorFiles[i]->m_textEditor.SetAutoIndentEnabled(autoIndent);
+
+                            // Draw LANGUAGE TYPE
+                            ImGui::SameLine(contentRegionMax - saveButtonSize - languageTypeComboSize);
+                            ImGui::SetNextItemWidth(languageTypeComboWidgetSize);
+                            if(int languageType = m_textEditorFiles[i]->m_languageType; ImGui::Combo(("##" + Utilities::toString(i) + "TextEditorLanguage").c_str(), &languageType, &m_textEditorLanguageTypeText[0], (int)m_textEditorLanguageTypeText.size()))
+                                m_textEditorFiles[i]->setLanguage(static_cast<TextEditorLanguageType>(languageType));
+
+                            // Enable button only when the text was changed
+                            // Remember the text-changed flag, because it might get reset if the save-to-file button is pressed
+                            bool textChanged = m_textEditorFiles[i]->m_textEditor.HasTextChanged();
+                            if(!textChanged)
+                                ImGui::BeginDisabled();
+
+                            // Draw SAVE TO FILE
+                            ImGui::SameLine(contentRegionMax - saveButtonSize);
+                            if(ImGui::Button(saveToFileText))
+                                saveTextFile(*m_textEditorFiles[i]);
+
+                            // Enable button only when the text was changed
+                            if(!textChanged)
+                                ImGui::EndDisabled();
+
+                            // Draw text editor
+                            m_textEditorFiles[i]->m_textEditor.Render(("##" + Utilities::toString(i) + m_textEditorFiles[i]->m_filename).c_str());
+
+                            // Set the flag for changed text
+                            //if(!m_textEditorFiles[i]->m_textChanged && m_textEditorFiles[i]->m_textEditor.IsTextChanged())
+                                //m_textEditorFiles[i]->m_textChanged = true;
+
+                            // Set the currently active text editor
+                            m_currentlyActiveTextEditor = m_textEditorFiles[i];
+
+                            ImGui::EndTabItem();
+                        }
+
+                        // If the tab was closed, delete the text editor entry
+                        if(!tabOpened)
+                        {
+                            m_currentlyActiveTextEditor = nullptr;
+                            delete m_textEditorFiles[i];
+                            m_textEditorFiles.erase(m_textEditorFiles.begin() + i);
+                            size = m_textEditorFiles.size();
+                            i--;
+                        }
                     }
                 }
 
@@ -3842,7 +4261,7 @@ void EditorWindow::drawEntityHierarchyEntry(EntityHierarchyEntry *p_entityEntry)
     if(ImGui::TreeNodeEx(p_entityEntry->m_combinedEntityIdAndName.c_str(), 
         m_selectedEntity.m_entityID == p_entityEntry->m_entityID ? flags | ImGuiTreeNodeFlags_Selected : flags))
     {
-        if(ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+        if(ImGui::IsItemClicked())// && !ImGui::IsItemToggledOpen())
             m_selectedEntity.setEntity(p_entityEntry->m_entityID);
 
         // Make button background transparent and remove frame padding to make the buttons smaller
@@ -3891,6 +4310,15 @@ void EditorWindow::drawEntityHierarchyEntry(EntityHierarchyEntry *p_entityEntry)
     }
 }
 
+void EditorWindow::saveTextFile(TextEditorData &p_textEditorData)
+{
+    // Write text to file
+    Filesystem::writeTextToFile(p_textEditorData.m_filePath + p_textEditorData.m_filename, p_textEditorData.m_textEditor.GetText());
+
+    // Reset the text changed flag
+    p_textEditorData.m_textEditor.ResetTextChanged();
+}
+
 void EditorWindow::processMainMenuButton(MainMenuButtonType &p_mainMenuButtonType)
 {
     // Process activated button
@@ -3923,30 +4351,39 @@ void EditorWindow::processMainMenuButton(MainMenuButtonType &p_mainMenuButtonTyp
             }
             break;
         case EditorWindow::MainMenuButtonType_Save:
-            // If the scene filename is empty (meaning the scene wasn't loaded from a file), launch the save-as file browser window
-            if(m_systemScene->getSceneLoader()->getSceneFilename().empty())
             {
-                // Only open the file browser if it's not opened already
-                if(m_currentlyOpenedFileBrowser == FileBrowserActivated::FileBrowserActivated_None)
+                if(m_currentlyActiveTextEditor != nullptr)
                 {
-                    // Set the file browser activation to Save Scene
-                    m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_SaveScene;
-
-                    // Define file browser variables
-                    m_fileBrowserDialog.m_definedFilename = m_systemScene->getSceneLoader()->getSceneFilename();
-                    m_fileBrowserDialog.m_filter = ".pmap,.*";
-                    m_fileBrowserDialog.m_title = "Save scene";
-                    m_fileBrowserDialog.m_name = "SaveSceneFileDialog";
-                    m_fileBrowserDialog.m_rootPath = Config::filepathVar().map_path;
-                    m_fileBrowserDialog.m_flags = FileBrowserDialog::FileBrowserDialogFlags::FileBrowserDialogFlags_ConfirmOverwrite;
-
-                    // Tell the GUI scene to open the file browser
-                    m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
+                    saveTextFile(*m_currentlyActiveTextEditor);
                 }
-            }
-            else
-            {
-                m_systemScene->getSceneLoader()->saveToFile(m_systemScene->getSceneLoader()->getSceneFilename());
+                else
+                {
+                    // If the scene filename is empty (meaning the scene wasn't loaded from a file), launch the save-as file browser window
+                    if(m_systemScene->getSceneLoader()->getSceneFilename().empty())
+                    {
+                        // Only open the file browser if it's not opened already
+                        if(m_currentlyOpenedFileBrowser == FileBrowserActivated::FileBrowserActivated_None)
+                        {
+                            // Set the file browser activation to Save Scene
+                            m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_SaveScene;
+
+                            // Define file browser variables
+                            m_fileBrowserDialog.m_definedFilename = m_systemScene->getSceneLoader()->getSceneFilename();
+                            m_fileBrowserDialog.m_filter = ".pmap,.*";
+                            m_fileBrowserDialog.m_title = "Save scene";
+                            m_fileBrowserDialog.m_name = "SaveSceneFileDialog";
+                            m_fileBrowserDialog.m_rootPath = Config::filepathVar().map_path;
+                            m_fileBrowserDialog.m_flags = FileBrowserDialog::FileBrowserDialogFlags::FileBrowserDialogFlags_ConfirmOverwrite;
+
+                            // Tell the GUI scene to open the file browser
+                            m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
+                        }
+                    }
+                    else
+                    {
+                        m_systemScene->getSceneLoader()->saveToFile(m_systemScene->getSceneLoader()->getSceneFilename());
+                    }
+                }
             }
             break;
         case EditorWindow::MainMenuButtonType_SaveAs:
@@ -3978,6 +4415,36 @@ void EditorWindow::processMainMenuButton(MainMenuButtonType &p_mainMenuButtonTyp
             break;
         case EditorWindow::MainMenuButtonType_Exit:
             Config::m_engineVar.running = false;
+            break;
+        case EditorWindow::MainMenuButtonType_Undo:
+            {
+                if(m_currentlyActiveTextEditor != nullptr)
+                    m_currentlyActiveTextEditor->m_textEditor.Undo();
+            }
+            break;
+        case EditorWindow::MainMenuButtonType_Redo:
+            {
+                if(m_currentlyActiveTextEditor != nullptr)
+                    m_currentlyActiveTextEditor->m_textEditor.Redo();
+            }
+            break;
+        case EditorWindow::MainMenuButtonType_Cut:
+            {
+                if(m_currentlyActiveTextEditor != nullptr)
+                    m_currentlyActiveTextEditor->m_textEditor.Cut();
+            }
+            break;
+        case EditorWindow::MainMenuButtonType_Copy:
+            {
+                if(m_currentlyActiveTextEditor != nullptr)
+                    m_currentlyActiveTextEditor->m_textEditor.Copy();
+            }
+            break;
+        case EditorWindow::MainMenuButtonType_Paste:
+            {
+                if(m_currentlyActiveTextEditor != nullptr)
+                    m_currentlyActiveTextEditor->m_textEditor.Paste();
+            }
             break;
     }
 

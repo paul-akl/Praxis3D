@@ -188,10 +188,9 @@ SystemObject *ScriptScene::createComponent(const EntityID &p_entityID, const Lua
 	{
 		if(!p_constructionInfo.m_luaScriptFilename.empty())
 		{
-			std::string luaFilename = Config::filepathVar().script_path + p_constructionInfo.m_luaScriptFilename;
-			if(Filesystem::exists(luaFilename))
+			if(Filesystem::exists(Config::filepathVar().script_path + p_constructionInfo.m_luaScriptFilename))
 			{
-				component.m_luaScript->setScriptFilename(luaFilename);
+				component.m_luaScript->setScriptFilename(p_constructionInfo.m_luaScriptFilename);
 
 				if(!p_constructionInfo.m_variables.empty())
 					component.m_luaScript->setVariables(p_constructionInfo.m_variables);

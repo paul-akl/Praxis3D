@@ -205,6 +205,9 @@
     <Filter Include="3rd Party\ImGuizmo">
       <UniqueIdentifier>{35332447-1f2e-4c5e-84ae-3e83c20e317d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="3rd Party\ImGuiColorTextEdit">
+      <UniqueIdentifier>{5c100d62-3eb7-4661-9688-6eaa6d863291}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -402,9 +405,6 @@
     <ClCompile Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3.cpp">
       <Filter>3rd Party\imgui\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl.cpp">
-      <Filter>3rd Party\imgui\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\GUIHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -452,6 +452,15 @@
     </ClCompile>
     <ClCompile Include="..\Dependencies\include\ImGuizmo\ImGuizmo.cpp">
       <Filter>3rd Party\ImGuizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\ImGuiColorTextEdit\TextEditor.cpp">
+      <Filter>3rd Party\ImGuiColorTextEdit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl2.cpp">
+      <Filter>3rd Party\imgui\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\include\ImGuiColorTextEdit\LanguageDefinitions.cpp">
+      <Filter>3rd Party\ImGuiColorTextEdit</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -827,9 +836,6 @@
     <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3_loader.h">
       <Filter>3rd Party\imgui\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl.h">
-      <Filter>3rd Party\imgui\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\GUIPass.h">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
@@ -940,6 +946,9 @@
     </ClInclude>
     <ClInclude Include="Source\Version.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl2.h">
+      <Filter>3rd Party\imgui\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

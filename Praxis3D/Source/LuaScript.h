@@ -91,7 +91,7 @@ public:
 		m_luaState.open_libraries(sol::lib::base);
 
 		// Load script file
-		m_luaState.script_file(m_luaScriptFilename);
+		m_luaState.script_file(Config::filepathVar().script_path + m_luaScriptFilename);
 
 		// Set enum definitions and function call-backs, and define C++ user-types in Lua
 		setDefinitions();
@@ -124,7 +124,7 @@ public:
 	inline void clearChanges() { m_currentChanges = Systems::Changes::None; }
 
 	// Set the filename of the script that should be loaded
-	inline void setScriptFilename(std::string &p_filename) { m_luaScriptFilename = p_filename; }
+	inline void setScriptFilename(const std::string &p_filename) { m_luaScriptFilename = p_filename; }
 
 	// Set the variables so they can be accessed from inside the lua script
 	inline void setVariables(const std::vector<std::pair<std::string, Property>> &p_variables)
@@ -162,6 +162,7 @@ public:
 
 	const inline std::string &getLuaScriptFilename() const { return m_luaScriptFilename; }
 	const inline std::vector<std::pair<std::string, Property>> &getLuaVariables() const { return m_variables; }
+	const inline std::vector<std::pair<std::string, KeyCommand *>> &getBoundKeys() const { return m_keyCommands; }
 
 private:
 	// Terminate the current LUA script and initialize it again
@@ -215,8 +216,8 @@ private:
 	// Contains all GUI data
 	GUIDataManager &m_GUIData;
 
-	// Keeps all created key commands, so they can be unbound and deleted when cleaning up
-	std::vector<KeyCommand*> m_keyCommands;
+	// Keeps all created key commands (and the variable name in Lua the key is assigned to), so they can be unbound and deleted when cleaning up
+	std::vector<std::pair<std::string, KeyCommand*>> m_keyCommands;
 
 	// Keep all created objects, so they can be deleted when cleaning up
 	std::vector<Conditional*> m_conditionals;

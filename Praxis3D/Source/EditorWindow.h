@@ -1,5 +1,7 @@
 #pragma once
 
+#include <TextEditor.h>
+
 #include "ComponentConstructorInfo.h"
 #include "ErrorHandlerLocator.h"
 #include "GUIHandler.h"
@@ -33,16 +35,6 @@ public:
 		m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_None;
 		m_sceneState = EditorSceneState::EditorSceneState_Pause;
 		m_centerWindowSize = glm::ivec2(0);
-
-		m_keys[KeyType::KeyType_Ctlr].bind(Scancode::Key_leftctrl);
-		m_keys[KeyType::KeyType_Shift].bind(Scancode::Key_leftshift);
-		m_keys[KeyType::KeyType_Alt].bind(Scancode::Key_leftalt);
-		m_keys[KeyType::KeyType_N].bind(Scancode::Key_N);
-		m_keys[KeyType::KeyType_O].bind(Scancode::Key_O);
-		m_keys[KeyType::KeyType_S].bind(Scancode::Key_S);
-		m_keys[KeyType::KeyType_R].bind(Scancode::Key_R);
-		m_keys[KeyType::KeyType_Esc].bind(Scancode::Key_esc);
-		m_keys[KeyType::KeyType_F4].bind(Scancode::Key_F4);
 
 		m_selectedTexture = nullptr;
 		m_textureInspectorTabFlags = 0;
@@ -87,8 +79,13 @@ public:
 		m_luaVariableTypeStrings = { "null", "bool", "int", "float", "double", "vec2i", "vec2f", "vec3f", "vec4f", "string", "propertyID" };
 		m_shaderTypeStrings = { "Compute", "Fragment", "Geometry", "Vertex", "Tessellation control", "Tessellation evaluation" };
 		m_tonemappingMethodText = { "None", "Simple reinhard", "Reinhard with white point", "Filmic tonemapping", "Uncharted 2", "Unreal 3", "ACES", "Lottes", "Uchimura" };
+		m_textEditorLanguageTypeText = { "Text", "C++", "C", "Cs", "Python", "Lua", "Json", "SQL", "AngelScript", "GLSL", "HLSL" };
 		m_textureWrapModeStrings = { "Clamp to border", "Clamp to edge", "Mirrored clamp to edge", "Mirrored repeat", "Repeat" };
 		m_textureWrapModeTypes = { TextureWrapType::TextureWrapType_ClampToBorder, TextureWrapType::TextureWrapType_ClampToEdge, TextureWrapType::TextureWrapType_MirroredClampToEdge, TextureWrapType::TextureWrapType_MirroredRepeat, TextureWrapType::TextureWrapType_Repeat };
+
+		m_currentlyActiveTextEditor = nullptr;
+
+		TextEditor::SetDefaultPalette(TextEditor::PaletteId::Dark);
 	}
 	~EditorWindow();
 
@@ -428,6 +425,85 @@ public:
 	}
 
 private:
+	enum ButtonTextureType : unsigned int
+	{
+		ButtonTextureType_Pause,
+		ButtonTextureType_Play,
+		ButtonTextureType_Restart,
+		ButtonTextureType_GUISequence,
+		ButtonTextureType_ScriptingEnable,
+		ButtonTextureType_DeleteEntry,
+		ButtonTextureType_Add,
+		ButtonTextureType_OpenFile,
+		ButtonTextureType_Reload,
+		ButtonTextureType_OpenAssetList,
+		ButtonTextureType_ArrowUp,
+		ButtonTextureType_GuizmoRotate,
+		ButtonTextureType_GuizmoTranslate,
+		ButtonTextureType_NumOfTypes
+	};
+	enum EditorSceneState : unsigned int
+	{
+		EditorSceneState_Play,
+		EditorSceneState_Pause
+	};
+	enum FileBrowserActivated : unsigned int
+	{
+		FileBrowserActivated_None,
+		FileBrowserActivated_LuaScript,
+		FileBrowserActivated_LoadScene,
+		FileBrowserActivated_SaveScene,
+		FileBrowserActivated_SoundFile,
+		FileBrowserActivated_ModelFile,
+		FileBrowserActivated_TextureFile,
+		FileBrowserActivated_AudioBankFile,
+		FileBrowserActivated_PrefabFile,
+		FileBrowserActivated_ShaderFile
+	};
+	enum MainMenuButtonType : unsigned int
+	{
+		MainMenuButtonType_None = 0,
+		MainMenuButtonType_New,
+		MainMenuButtonType_Open,
+		MainMenuButtonType_Save,
+		MainMenuButtonType_SaveAs,
+		MainMenuButtonType_ReloadScene,
+		MainMenuButtonType_CloseEditor,
+		MainMenuButtonType_Exit,
+		MainMenuButtonType_Undo,
+		MainMenuButtonType_Redo,
+		MainMenuButtonType_Cut,
+		MainMenuButtonType_Copy,
+		MainMenuButtonType_Paste
+	};
+	enum KeyType : unsigned int
+	{
+		KeyType_Ctlr,
+		KeyType_Shift,
+		KeyType_Alt,
+		KeyType_N,
+		KeyType_O,
+		KeyType_S,
+		KeyType_R,
+		KeyType_Esc,
+		KeyType_F4,
+		KeyType_NumOfKeys
+	};
+	enum TextEditorLanguageType : int
+	{
+		TextEditorLanguageType_None = 0,
+		TextEditorLanguageType_Cpp,
+		TextEditorLanguageType_C,
+		TextEditorLanguageType_Cs,
+		TextEditorLanguageType_Python,
+		TextEditorLanguageType_Lua,
+		TextEditorLanguageType_JSON,
+		TextEditorLanguageType_SQL,
+		TextEditorLanguageType_AngelScript,
+		TextEditorLanguageType_GLSL,
+		TextEditorLanguageType_HLSL
+	};
+
 	struct ComponentListEntry
 	{
 		ComponentListEntry(const EntityID p_entityID, const std::string &p_name, const std::string &p_combinedEntityIdAndName) : m_entityID(p_entityID), m_name(p_name), m_combinedEntityIdAndName(p_combinedEntityIdAndName) { }
@@ -677,65 +753,76 @@ private:
 		// Physics scene
 		glm::vec3 m_gravity;
 	};
+	struct TextEditorData
+	{
+		TextEditorData()
+		{
+			m_textEditorEnabled = true;
+			m_textEditorTabFlags = 0;
+			m_languageType = TextEditorLanguageType::TextEditorLanguageType_None;
+			m_textEditor.SetLanguageDefinition(TextEditor::LanguageDefinitionId::None);
+		}
 
-	enum ButtonTextureType : unsigned int
-	{
-		ButtonTextureType_Pause,
-		ButtonTextureType_Play,
-		ButtonTextureType_Restart,
-		ButtonTextureType_GUISequence,
-		ButtonTextureType_ScriptingEnable,
-		ButtonTextureType_DeleteEntry,
-		ButtonTextureType_Add,
-		ButtonTextureType_OpenFile,
-		ButtonTextureType_Reload,
-		ButtonTextureType_OpenAssetList,
-		ButtonTextureType_ArrowUp,
-		ButtonTextureType_GuizmoRotate,
-		ButtonTextureType_GuizmoTranslate,
-		ButtonTextureType_NumOfTypes
-	};
-	enum EditorSceneState : unsigned int
-	{
-		EditorSceneState_Play,
-		EditorSceneState_Pause
-	};
-	enum FileBrowserActivated : unsigned int
-	{
-		FileBrowserActivated_None,
-		FileBrowserActivated_LuaScript,
-		FileBrowserActivated_LoadScene,
-		FileBrowserActivated_SaveScene,
-		FileBrowserActivated_SoundFile,
-		FileBrowserActivated_ModelFile,
-		FileBrowserActivated_TextureFile,
-		FileBrowserActivated_AudioBankFile,
-		FileBrowserActivated_PrefabFile,
-		FileBrowserActivated_ShaderFile
-	};
-	enum MainMenuButtonType : unsigned int
-	{
-		MainMenuButtonType_None = 0,
-		MainMenuButtonType_New,
-		MainMenuButtonType_Open,
-		MainMenuButtonType_Save,
-		MainMenuButtonType_SaveAs,
-		MainMenuButtonType_ReloadScene,
-		MainMenuButtonType_CloseEditor,
-		MainMenuButtonType_Exit
-	};
-	enum KeyType : unsigned int
-	{
-		KeyType_Ctlr,
-		KeyType_Shift,
-		KeyType_Alt,
-		KeyType_N,
-		KeyType_O,
-		KeyType_S,
-		KeyType_R,
-		KeyType_Esc,
-		KeyType_F4,
-		KeyType_NumOfKeys
+		inline void enable()
+		{
+			m_textEditorEnabled = true;
+			m_textEditorTabFlags = ImGuiTabItemFlags_SetSelected;
+		}
+
+		inline void setText(const std::string &p_test)
+		{
+			m_textEditor.SetText(p_test);
+			m_textEditor.ResetTextChanged();
+		}
+
+		inline void setLanguage(const TextEditorLanguageType p_languageType)
+		{
+			m_languageType = p_languageType;
+			switch(p_languageType)
+			{
+				case EditorWindow::TextEditorLanguageType_None:
+				default:
+					m_textEditor.SetLanguageDefinition(TextEditor::LanguageDefinitionId::None);
+					break;
+				case EditorWindow::TextEditorLanguageType_Cpp:
+					m_textEditor.SetLanguageDefinition(TextEditor::LanguageDefinitionId::Cpp);
+					break;
+				case EditorWindow::TextEditorLanguageType_C:
+					m_textEditor.SetLanguageDefinition(TextEditor::LanguageDefinitionId::C);
+					break;
+				case EditorWindow::TextEditorLanguageType_Cs:
+					m_textEditor.SetLanguageDefinition(TextEditor::LanguageDefinitionId::Cs);
+					break;
+				case EditorWindow::TextEditorLanguageType_Python:
+					m_textEditor.SetLanguageDefinition(TextEditor::LanguageDefinitionId::Python);
+					break;
+				case EditorWindow::TextEditorLanguageType_Lua:
+					m_textEditor.SetLanguageDefinition(TextEditor::LanguageDefinitionId::Lua);
+					break;
+				case EditorWindow::TextEditorLanguageType_JSON:
+					m_textEditor.SetLanguageDefinition(TextEditor::LanguageDefinitionId::Json);
+					break;
+				case EditorWindow::TextEditorLanguageType_SQL:
+					m_textEditor.SetLanguageDefinition(TextEditor::LanguageDefinitionId::Sql);
+					break;
+				case EditorWindow::TextEditorLanguageType_AngelScript:
+					m_textEditor.SetLanguageDefinition(TextEditor::LanguageDefinitionId::AngelScript);
+					break;
+				case EditorWindow::TextEditorLanguageType_GLSL:
+					m_textEditor.SetLanguageDefinition(TextEditor::LanguageDefinitionId::Glsl);
+					break;
+				case EditorWindow::TextEditorLanguageType_HLSL:
+					m_textEditor.SetLanguageDefinition(TextEditor::LanguageDefinitionId::Hlsl);
+					break;
+			}
+		}
+
+		TextEditor m_textEditor;
+		bool m_textEditorEnabled;
+		std::string m_filename;
+		std::string m_filePath;
+		ImGuiTabItemFlags m_textEditorTabFlags;
+		TextEditorLanguageType m_languageType;
 	};
 
 	void drawSceneData(SceneData &p_sceneData, const bool p_sendChanges = false);
@@ -810,13 +897,13 @@ private:
 		return m_buttonSizedByFont.x + m_imguiStyle.FramePadding.x + (m_buttonSizedByFont.x + m_imguiStyle.FramePadding.x * 3) * p_buttonIndex;
 	}
 
-	int getShaderAssetIndex(const ShaderLoader::ShaderProgram *p_selectedProgram) const
+	inline int getShaderAssetIndex(const ShaderLoader::ShaderProgram *p_selectedProgram) const
 	{
 		for(decltype(m_shaderAssets.size()) shaderAssetIndex = 0, shaderAssetSize = m_shaderAssets.size(); shaderAssetIndex < shaderAssetSize; shaderAssetIndex++)
 			if(m_shaderAssets[shaderAssetIndex].first->getCombinedFilename() == p_selectedProgram->getCombinedFilename())
 				return (int)shaderAssetIndex;
 	}
-	void clearEntityAndComponentPool()
+	inline void clearEntityAndComponentPool()
 	{
 		if(!m_entityAndComponentPool.empty())
 		{
@@ -826,7 +913,7 @@ private:
 			m_entityAndComponentPool.clear();
 		}
 	}
-	void clearConstructionInfoPool()
+	inline void clearConstructionInfoPool()
 	{
 		if(!m_componentConstructionInfoPool.empty())
 		{
@@ -836,6 +923,8 @@ private:
 			m_componentConstructionInfoPool.clear();
 		}
 	}
+
+	void saveTextFile(TextEditorData &p_textEditorData);
 	void processMainMenuButton(MainMenuButtonType &p_mainMenuButtonType);
 	void updateSceneData(SceneData &p_sceneData);
 	void updateEntityList();
@@ -962,10 +1051,10 @@ private:
 	bool m_showNewMapWindow;
 	bool m_showImGuiDemoWindow;
 	bool m_showImspinnerDemoWindow;
+
 	MainMenuButtonType m_activatedMainMenuButton;
 	EditorSceneState m_sceneState;
 	glm::ivec2 m_centerWindowSize;
-	KeyCommand m_keys[KeyType::KeyType_NumOfKeys];
 
 	// GUI settings
 	ImGuiColorEditFlags m_colorEditFlags;
@@ -1037,6 +1126,11 @@ private:
 	std::vector<const char *> m_luaVariableTypeStrings;
 	std::vector<const char *> m_shaderTypeStrings;
 	std::vector<const char *> m_tonemappingMethodText;
+	std::vector<const char *> m_textEditorLanguageTypeText;
 	std::vector<const char *> m_textureWrapModeStrings;
 	std::vector<TextureWrapType> m_textureWrapModeTypes;
+
+	// Text editor
+	std::vector<TextEditorData *> m_textEditorFiles;
+	TextEditorData *m_currentlyActiveTextEditor;
 };
