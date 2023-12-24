@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <cmath>
 #include <variant>
 
 #include "Math.h"
@@ -368,6 +369,40 @@ struct SpotLightDataSet
 	glm::vec3 m_attenuation;
 	float m_intensity;
 	float m_cutoffAngle;
+};
+
+struct AODataSet
+{
+	AODataSet()
+	{
+		m_RadiusToScreen = 0.0;
+		m_radius = 0.0;
+		m_NegInvR2 = 0.0f;
+		m_NDotVBias = 0.0f;
+
+		m_InvFullResolution = glm::vec2(0.0f, 0.0f);
+		m_AOMultiplier = 0.0f;
+		m_PowExponent = 0.0f;
+
+		m_bias = 0.0f;
+		m_numOfDirections = 0;
+		m_numOfSamples = 0;
+		m_numOfSteps = 0;
+	}
+
+	float m_RadiusToScreen;	// radius
+	float m_radius;
+	float m_NegInvR2;		// radius * radius
+	float m_NDotVBias;
+
+	glm::vec2 m_InvFullResolution;
+	float m_AOMultiplier;
+	float m_PowExponent;
+
+	float m_bias;
+	int m_numOfDirections;
+	int m_numOfSamples;
+	int m_numOfSteps;
 };
 
 struct HDRDataSet

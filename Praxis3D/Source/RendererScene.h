@@ -127,6 +127,8 @@ public:
 
 	void activate();
 
+	void deactivate();
+
 	// Preloads all the resources in the scene (as opposed to loading them while rendering, in background threads)
 	ErrorCode preload();
 
@@ -233,6 +235,7 @@ public:
 	const inline SceneObjects &getSceneObjects() const { return m_sceneObjects; }
 	inline SceneObjects &getSceneObjects() { return m_sceneObjects; }
 	const inline RenderingPasses &getRenderingPasses() const { return m_renderingPasses; }
+	const inline AmbientOcclusionData &getAmbientOcclusionData() const { return m_sceneAOData; }
 	const glm::mat4 &getViewMatrix() const;
 	const glm::mat4 &getProjectionMatrix() const;
 
@@ -269,6 +272,9 @@ public:
 				case RenderPassType::RenderPassType_Final:
 					renderPassTypeProperty = Properties::FinalRenderPass;
 					break;
+				case RenderPassType::RenderPassType_AmbientOcclusion:
+					renderPassTypeProperty = Properties::AmbientOcclusionRenderPass;
+					break;
 			}
 
 			// Add the rendering pass array entry and rendering pass type
@@ -278,8 +284,6 @@ public:
 	static std::string getRenderingPassString(const RenderPassType p_renderPassType)
 	{
 		std::string returnString;
-
-
 	}
 
 private:
@@ -296,6 +300,9 @@ private:
 
 	// Contains a list of rendering passes that gets set in the renderer system
 	RenderingPasses m_renderingPasses;
+
+	// Ambient occlusion data
+	AmbientOcclusionData m_sceneAOData;
 
 	// Render-to-texture data
 	bool m_renderToTexture;

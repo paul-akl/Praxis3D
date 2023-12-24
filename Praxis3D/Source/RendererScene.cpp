@@ -10,8 +10,11 @@
 RendererScene::RendererScene(RendererSystem *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader, Properties::PropertyID::Renderer)
 {
 	m_renderTask = new RenderTask(this, p_system->getRenderer());
-	m_renderToTexture = false;
 	m_firstLoadingDone = false;
+
+	m_sceneAOData.setDefaultValues();
+
+	m_renderToTexture = false;
 	m_renderToTextureResolution = glm::ivec2(Config::graphicsVar().current_resolution_x, Config::graphicsVar().current_resolution_y);
 }
 
@@ -73,6 +76,44 @@ ErrorCode RendererScene::setup(const PropertySet &p_properties)
 		}
 	}
 
+	// Load ambient occlusion data
+	if(auto &aoProperty = p_properties.getPropertySetByID(Properties::AmbientOcclusion); aoProperty)
+	{
+		for(decltype(aoProperty.getNumProperties()) i = 0, size = aoProperty.getNumProperties(); i < size; i++)
+		{
+			switch(aoProperty[i].getPropertyID())
+			{
+				case Properties::Type:
+					m_sceneAOData.m_aoType = AmbientOcclusionData::propertyIDToAmbientOcclusionType(aoProperty[i].getID());
+					break;
+				case Properties::Bias:
+					m_sceneAOData.m_aoBias = aoProperty[i].getFloat();
+					break;
+				case Properties::Directions:
+					m_sceneAOData.m_aoNumOfDirections = aoProperty[i].getInt();
+					break;
+				case Properties::Radius:
+					m_sceneAOData.m_aoRadius = aoProperty[i].getFloat();
+					break;
+				case Properties::Intensity:
+					m_sceneAOData.m_aoIntensity = aoProperty[i].getFloat();
+					break;
+				case Properties::Samples:
+					m_sceneAOData.m_aoNumOfSamples = aoProperty[i].getInt();
+					break;
+				case Properties::Steps:
+					m_sceneAOData.m_aoNumOfSteps = aoProperty[i].getInt();
+					break;
+				case Properties::BlurSamples:
+					m_sceneAOData.m_aoBlurNumOfSamples = aoProperty[i].getInt();
+					break;
+				case Properties::BlurSharpness:
+					m_sceneAOData.m_aoBlurSharpness = aoProperty[i].getFloat();
+					break;
+			}
+		}
+	}
+
 	// Load the rendering passes
 	auto &renderPassesProperty = p_properties.getPropertySetByID(Properties::RenderPasses);
 	if(renderPassesProperty)
@@ -106,6 +147,9 @@ ErrorCode RendererScene::setup(const PropertySet &p_properties)
 					case Properties::FinalRenderPass:
 						m_renderingPasses.push_back(RenderPassType::RenderPassType_Final);
 						break;
+					case Properties::AmbientOcclusionRenderPass:
+						m_renderingPasses.push_back(RenderPassType::RenderPassType_AmbientOcclusion);
+						break;
 				}
 			}
 		}
@@ -123,6 +167,18 @@ void RendererScene::exportSetup(PropertySet &p_propertySet)
 	p_propertySet.addProperty(Properties::AmbientIntensity, m_sceneObjects.m_ambientIntensity);
 	p_propertySet.addProperty(Properties::ZFar, m_sceneObjects.m_zFar);
 	p_propertySet.addProperty(Properties::ZNear, m_sceneObjects.m_zNear);
+
+	// Add ambient occlusion data
+	auto &aoPropertySet = p_propertySet.addPropertySet(Properties::AmbientOcclusion);
+	aoPropertySet.addProperty(Properties::Type, AmbientOcclusionData::ambientOcclusionTypeToPropertyID(m_sceneAOData.m_aoType));
+	aoPropertySet.addProperty(Properties::Bias, m_sceneAOData.m_aoBias);
+	aoPropertySet.addProperty(Properties::Radius, m_sceneAOData.m_aoRadius);
+	aoPropertySet.addProperty(Properties::Intensity, m_sceneAOData.m_aoIntensity);
+	aoPropertySet.addProperty(Properties::Directions, m_sceneAOData.m_aoNumOfDirections);
+	aoPropertySet.addProperty(Properties::Samples, m_sceneAOData.m_aoNumOfSamples);
+	aoPropertySet.addProperty(Properties::Steps, m_sceneAOData.m_aoNumOfSteps);
+	aoPropertySet.addProperty(Properties::BlurSamples, m_sceneAOData.m_aoBlurNumOfSamples);
+	aoPropertySet.addProperty(Properties::BlurSharpness, m_sceneAOData.m_aoBlurSharpness);
 
 	// Add object pool sizes
 	auto &objectPoolSizePropertySet = p_propertySet.addPropertySet(Properties::ObjectPoolSize);
@@ -149,6 +205,17 @@ void RendererScene::activate()
 	{
 		rendererSystem->getRenderer().setRenderToTextureResolution(m_renderToTextureResolution);
 	}
+
+	// Set the AO data
+	rendererSystem->getRenderer().setAmbientOcclusionData(m_sceneAOData);
+}
+
+void RendererScene::deactivate()
+{
+	auto rendererSystem = static_cast<RendererSystem *>(m_system);
+
+	// Save the current AO data
+	m_sceneAOData = rendererSystem->getRenderer().getFrameData().m_aoData;
 }
 
 ErrorCode RendererScene::preload()
@@ -883,6 +950,23 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 {
 	switch(p_dataType)
 	{
+		case DataType::DataType_AmbientOcclusionData:
+			{
+				auto *aoData = static_cast<AmbientOcclusionData *>(p_data);
+
+				// Set the new AO data
+				m_sceneAOData = *aoData;
+
+				// Send the new AO data to the renderer
+				auto rendererSystem = static_cast<RendererSystem *>(m_system);
+				rendererSystem->getRenderer().setAmbientOcclusionData(m_sceneAOData);
+
+				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
+				if(p_deleteAfterReceiving)
+					delete aoData;
+			}
+			break;
+
 		case DataType::DataType_CreateComponent:
 			{
 				auto *componentInfo = static_cast<ComponentsConstructionInfo *>(p_data);

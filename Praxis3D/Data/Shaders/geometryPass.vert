@@ -9,6 +9,7 @@ layout(location = 4) in vec3 vertexBitangent;
 
 // Variables passed to fragment shader
 out mat3 TBN;
+out mat3 normalMatrix;
 out vec2 texCoord;
 out vec3 fragPos;
 out vec3 normal;
@@ -30,9 +31,12 @@ uniform float parallaxMappingLOD;
 
 void main(void)
 {		
-	// Multiply position and normal by model matrix (to convert them into world space)
+	// Multiply position by model matrix (to convert it into world space)
     fragPos = vec3(modelMat * vec4(vertexPosition, 1.0));
-	normal = normalize(mat3(modelMat) * vertexNormal);
+	
+	// Calculate normal matrix and convert normal into world space
+    normalMatrix = transpose(inverse(mat3(modelMat)));
+    normal = normalMatrix * vertexNormal;
 	
 	// Square the parallax LOD distance, so there's no need to do that in the fragment shader
 	parallaxLOD = parallaxMappingLOD * parallaxMappingLOD;
@@ -42,16 +46,20 @@ void main(void)
 	
 	// Multiply texture coordinates by the tiling factor. The higher the factor, the denser the tiling
 	texCoord = textureCoord * textureTilingFactor;
-	
+		
+	// Compute TBN matrix components
+	vec3 T = normalize(normalMatrix * vertexTangent);
+    vec3 B = normalize(normalMatrix * vertexBitangent);
+    vec3 N = normalize(normalMatrix * vertexNormal);
+    //T = normalize(T - dot(T, N) * N);
+    //vec3 B = cross(N, T);
+    
 	// Compute TBN matrix
-    vec3 T = normalize(mat3(modelMat) * vertexTangent);
-    vec3 B = normalize(mat3(modelMat) * vertexBitangent);
+    TBN = (mat3(T, B, N));
 	
-	TBN = transpose(inverse(mat3(T, B, normal)));
-	mat3 TBN2 = transpose((mat3(T, B, normal)));
-	
-	tangentCameraPos = TBN2 * cameraPosVec;
-	tangentFragPos = TBN2 * fragPos;
+	// Calculate variables needed for parallax mapping
+    tangentCameraPos = TBN * cameraPosVec;
+    tangentFragPos  = TBN * fragPos;
 	
 	gl_Position = MVP * vec4(vertexPosition, 1.0);
 }

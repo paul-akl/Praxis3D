@@ -69,29 +69,6 @@ public:
 		return returnError;
 	}
 
-	// Calculates the maximum mipmap levels based on the image size and bloom mipmap, bloom downscale limits 
-	unsigned int calculateMipmapLevels(unsigned int p_width, unsigned int p_height)
-	{
-		unsigned int width = p_width / 2;
-		unsigned int height = p_height / 2;
-		unsigned int mipLevels = 1;
-
-		unsigned int mipmapLimit = (unsigned int)Config::graphicsVar().bloom_mipmap_limit;
-		unsigned int downscaleLimit = (unsigned int)Config::graphicsVar().bloom_downscale_limit;
-
-		for(unsigned int i = 0; i < mipmapLimit; i++)
-		{
-			width = width / 2;
-			height = height / 2;
-
-			if(width < downscaleLimit || height < downscaleLimit) break;
-
-			mipLevels++;
-		}
-
-		return mipLevels + 1;
-	}
-
 	void update(RenderPassData &p_renderPassData, const SceneObjects &p_sceneObjects, const float p_deltaTime)
 	{
 		// Assign the bloom threshold value so it can be sent to the shader
@@ -103,7 +80,7 @@ public:
 
 		// Calculate mipmap size and level
 		glm::uvec2 mipmapSize = glm::uvec2(imageWidth / 2, imageHeight / 2);
-		unsigned int mipmapLevels = calculateMipmapLevels(imageWidth, imageHeight);
+		unsigned int mipmapLevels = calculateMipmapLevels(imageWidth, imageHeight, (unsigned int)Config::graphicsVar().bloom_mipmap_limit, (unsigned int)Config::graphicsVar().bloom_downscale_limit);
 
 		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferFinal, GBufferTextureType::GBufferInputTexture);
 

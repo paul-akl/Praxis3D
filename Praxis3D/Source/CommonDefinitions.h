@@ -4,6 +4,7 @@
 #include <functional>
 
 #include "EnumFactory.h"
+#include "Utilities.h"
 
 typedef std::uint32_t EntityID;
 typedef unsigned int UpdateCount;
@@ -83,6 +84,7 @@ enum MemoryBarrierType : unsigned int
 	Code(RenderPassType_Luminance,) \
 	Code(RenderPassType_Final,) \
 	Code(RenderPassType_GUI,) \
+	Code(RenderPassType_AmbientOcclusion,) \
 	Code(RenderPassType_NumOfTypes,)
 DECLARE_ENUM(RenderPassType, RENDER_PASS_TYPE)
 typedef std::vector<RenderPassType> RenderingPasses;
@@ -144,6 +146,7 @@ enum MaterialType : unsigned int
 	MaterialType_Combined,
 	MaterialType_NumOfTypes,
 	MaterialType_Roughness = MaterialType_NumOfTypes,
+	MaterialType_Noise,
 	MaterialType_Metalness,
 	MaterialType_Height,
 	MaterialType_AmbientOcclusion,
@@ -209,6 +212,7 @@ enum TextureFormat : int
 };
 enum TextureDataType : int
 {
+	TextureDataType_Short			= GL_SHORT,
 	TextureDataType_Float			= GL_FLOAT,
 	TextureDataType_Int				= GL_INT,
 	TextureDataType_UnsignedByte	= GL_UNSIGNED_BYTE
@@ -229,12 +233,22 @@ enum TextureDataFormat : int
 	TextureDataFormat_RGB32F	= GL_RGB32F,
 	TextureDataFormat_RGBA8		= GL_RGBA8,
 	TextureDataFormat_RGBA16	= GL_RGBA16,
+	TextureDataFormat_RGBA16SN	= GL_RGBA16_SNORM,
 	TextureDataFormat_RGBA16F	= GL_RGBA16F,
 	TextureDataFormat_RGBA32F	= GL_RGBA32F,
 	TextureDataFormat_R16I		= GL_R16I,
 	TextureDataFormat_R32I		= GL_R32I,
 	TextureDataFormat_R16UI		= GL_R16UI,
 	TextureDataFormat_R32UI		= GL_R32UI
+};
+enum TextureFilterType : int
+{
+	TextureFilterType_Linear				= GL_LINEAR,
+	TextureFilterType_LinearMipmapLinear	= GL_LINEAR_MIPMAP_LINEAR,
+	TextureFilterType_LinearMipmapNearest	= GL_LINEAR_MIPMAP_NEAREST,
+	TextureFilterType_Nearest				= GL_NEAREST,
+	TextureFilterType_NearestMipmapLinear	= GL_NEAREST_MIPMAP_LINEAR,
+	TextureFilterType_NearestMipmapNearest	= GL_NEAREST_MIPMAP_NEAREST
 };
 enum TextureWrapType : int
 {
@@ -249,7 +263,9 @@ enum UniformBufferBinding : unsigned int
 	UniformBufferBinding_PointLights,
 	UniformBufferBinding_SpotLights,
 	UniformBufferBinding_AtmScatParam,
-	UniformBufferBinding_LensFlareParam
+	UniformBufferBinding_LensFlareParam,
+	UniformBufferBinding_AODataSet,
+	UniformBufferBinding_SSAOSampleBuffer
 };
 
 enum GBufferTextureType : unsigned int
@@ -264,19 +280,16 @@ enum GBufferTextureType : unsigned int
 	GBufferIntermediate,
 	GBufferTotalNumTextures,
 	GBufferInputTexture = GBufferTotalNumTextures,
-	GbufferOutputTexture
+	GbufferOutputTexture,
+	GbufferDepth
 };
 
-/*enum ObjectMaterialType : unsigned int
+enum AmbientOcclusionType : int
 {
-	ObjectMaterialType_Null = 0,
-	ObjectMaterialType_Glass,
-	ObjectMaterialType_Metal,
-	ObjectMaterialType_Plastic,
-	ObjectMaterialType_Rock,
-	ObjectMaterialType_Wood,
-	ObjectMaterialType_NumOfTypes
-};*/
+	AmbientOcclusionType_None = 0,
+	AmbientOcclusionType_SSAO,
+	AmbientOcclusionType_HBAO
+};
 
 enum AudioBusType : unsigned int
 {

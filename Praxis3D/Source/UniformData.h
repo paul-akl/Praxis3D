@@ -8,9 +8,15 @@ struct UniformFrameData
 	UniformFrameData()
 	{
 		m_ambientIntensity = Config::graphicsVar().ambient_light_intensity;
+
+		m_deltaTime = 0.0f;
+
 		m_numPointLights = 0;
 		m_numSpotLights = 0;
-		m_deltaTime = 0.0f;
+
+		m_bloomTreshold = glm::vec4(0.0f);
+
+		m_texelSize = glm::vec2(1.0f);
 		m_mipLevel = 1;
 	}
 
@@ -28,7 +34,8 @@ struct UniformFrameData
 				m_viewMatrix,
 				m_viewProjMatrix,
 				m_atmScatProjMatrix,
-				m_transposeViewMatrix;
+				m_transposeViewMatrix,
+				m_transposeInverseViewMatrix;
 
 	// Parameters of directional light, since there can be only one of it
 	DirectionalLightDataSet m_directionalLight;
@@ -40,6 +47,9 @@ struct UniformFrameData
 	// Current number of lights in the light buffers
 	unsigned int m_numPointLights,
 				 m_numSpotLights;
+
+	// Ambient occlusion data
+	AmbientOcclusionData m_aoData;
 
 	// Bloom pass data
 	glm::vec4 m_bloomTreshold;

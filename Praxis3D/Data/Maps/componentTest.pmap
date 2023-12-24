@@ -227,7 +227,7 @@
 					"CollisionShape": 
 					{
 						"Type": "Box",
-						"Size": "1.92f, 1.92f, 1.92f"
+						"Size": "1.64f, 1.64f, 1.64f"
 					}
 				}
 			},
@@ -652,7 +652,7 @@
 					"CollisionShape": 
 					{
 						"Type": "Box",
-						"Size": "1.92f, 1.92f, 1.92f"
+						"Size": "1.64f, 1.64f, 1.64f"
 					}
 				}
 			},
@@ -939,6 +939,18 @@
 				"AmbientIntensity": "0.2f",
 				"ZFar": "40000.0f",
 				"ZNear": "1.0f",
+				"AmbientOcclusion": 
+				{
+					"Type": "HBAO",
+					"Bias": "0.1f",
+					"Radius": "2.0f",
+					"Intensity": "2.0f",
+					"Directions": "8",
+					"Samples": "64",
+					"Steps": "4",
+					"BlurSamples": "6",
+					"BlurSharpness": "40.0f"
+				},
 				"ObjectPoolSize": 
 				{
 					"CameraComponent": "1",
@@ -950,6 +962,9 @@
 				[
 					{
 						"Type": "GeometryRenderPass"
+					},
+					{
+						"Type": "AmbientOcclusionRenderPass"
 					},
 					{
 						"Type": "AtmScatteringRenderPass"

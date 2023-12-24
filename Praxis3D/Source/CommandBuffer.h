@@ -136,6 +136,8 @@ public:
 										 p_texture.getTextureFormat(),
 										 p_texture.getTextureDataFormat(),
 										 p_texture.getTextureDataType(),
+										 p_texture.getMagnificationFilterType(),
+										 p_texture.getMinificationFilterType(),
 										 p_texture.getEnableMipmap(),
 										 p_texture.getMipmapLevel(),
 										 p_texture.getTextureWidth(),

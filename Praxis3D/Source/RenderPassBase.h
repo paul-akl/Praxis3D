@@ -102,6 +102,26 @@ public:
 protected:
 	inline void setInitialized(const bool p_initialized) { m_initialized = p_initialized; }
 
+	// Calculates the maximum mipmap levels based on the image size and mipmap / downscale limits 
+	inline unsigned int calculateMipmapLevels(const unsigned int p_width, const unsigned int p_height, const unsigned int p_mipmapLimit, const unsigned int p_downscaleLimit) const
+	{
+		unsigned int width = p_width / 2;
+		unsigned int height = p_height / 2;
+		unsigned int mipLevels = 1;
+
+		for(unsigned int i = 0; i < p_mipmapLimit; i++)
+		{
+			width = width / 2;
+			height = height / 2;
+
+			if(width < p_downscaleLimit || height < p_downscaleLimit) break;
+
+			mipLevels++;
+		}
+
+		return mipLevels + 1;
+	}
+
 	unsigned int m_ID;
 	bool m_initialized;
 	RenderPassType m_renderPassType;

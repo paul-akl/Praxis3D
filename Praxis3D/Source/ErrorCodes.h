@@ -162,6 +162,7 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_SkyPass,) \
     Code(Source_SoundComponent,) \
     Code(Source_SoundListenerComponent,) \
+    Code(Source_SSAOPass,) \
     Code(Source_TextureLoader,) \
     Code(Source_UniversalScene,) \
     Code(Source_Window,) \

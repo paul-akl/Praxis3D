@@ -53,6 +53,7 @@ ErrorCode ShaderUniformUpdater::generateTextureUpdateList()
 	uniformList.push_back(new MatPropertiesMapUniform(m_shaderHandle));
 	uniformList.push_back(new IntermediateMapUniform(m_shaderHandle));
 	uniformList.push_back(new FinalMapUniform(m_shaderHandle));
+	uniformList.push_back(new DepthMapUniform(m_shaderHandle));
 	uniformList.push_back(new InputMapUniform(m_shaderHandle));
 	uniformList.push_back(new OutputMapUniform(m_shaderHandle));
 
@@ -72,6 +73,9 @@ ErrorCode ShaderUniformUpdater::generateTextureUpdateList()
 	uniformList.push_back(new NormalTextureUniform(m_shaderHandle));
 	uniformList.push_back(new EmissiveTextureUniform(m_shaderHandle));
 	uniformList.push_back(new CombinedTextureUniform(m_shaderHandle));
+
+	// Additional textures
+	uniformList.push_back(new NoiseTextureUniform(m_shaderHandle));
 
 	// Atmoshperic scattering textures
 	uniformList.push_back(new AtmIrradianceTextureUniform(m_shaderHandle));
@@ -110,6 +114,7 @@ ErrorCode ShaderUniformUpdater::generatePerFrameList()
 	uniformList.push_back(new ProjectionMatUniform(m_shaderHandle));
 	uniformList.push_back(new ViewProjectionMatUniform(m_shaderHandle));
 	uniformList.push_back(new TransposeViewMatUniform(m_shaderHandle));
+	uniformList.push_back(new TransposeInverseViewMatUniform(m_shaderHandle));
 	uniformList.push_back(new DirShadowMapMVPUniform(m_shaderHandle));
 	uniformList.push_back(new DirShadowMapBiasMVPUniform(m_shaderHandle));
 
@@ -146,6 +151,12 @@ ErrorCode ShaderUniformUpdater::generatePerFrameList()
 	uniformList.push_back(new EyeAdaptionIntendedBrightnessUniform(m_shaderHandle));
 	uniformList.push_back(new EmissiveMultiplierUniform(m_shaderHandle));
 	uniformList.push_back(new LODParallaxMappingUniform(m_shaderHandle));
+
+	// Ambient occlusion
+	uniformList.push_back(new HBAOBlurNumOfSamples(m_shaderHandle));
+	uniformList.push_back(new HBAOBlurSharpness(m_shaderHandle));
+	uniformList.push_back(new HBAOBlurHorizontalInvResDirection(m_shaderHandle));
+	uniformList.push_back(new HBAOBlurVerticalInvResDirection(m_shaderHandle));
 
 	// Bloom
 	uniformList.push_back(new BloomDirtIntensityUniform(m_shaderHandle));
@@ -224,6 +235,10 @@ ErrorCode ShaderUniformUpdater::generateUniformBlockList()
 	// Light buffers
 	uniformBlockList.push_back(new PointLightBufferUniform(m_shaderHandle));
 	uniformBlockList.push_back(new SpotLightBufferUniform(m_shaderHandle));
+
+	// Ambient occlusion buffer
+	uniformBlockList.push_back(new AODataSetBufferUniform(m_shaderHandle));
+	uniformBlockList.push_back(new SSAOSampleBufferUniform(m_shaderHandle));
 
 	// Atmospheric scattering buffer
 	uniformBlockList.push_back(new AtmScatParametersUniform(m_shaderHandle));

@@ -32,6 +32,8 @@ ErrorCode Model::loadToMemory()
 		// Assign flags for assimp loader
 		unsigned int assimpFlags = 0;
 
+		if(Config::modelVar().calcTangentSpace)
+			assimpFlags |= aiProcess_CalcTangentSpace;
 		if(Config::modelVar().joinIdenticalVertices)
 			assimpFlags |= aiProcess_JoinIdenticalVertices;
 		if(Config::modelVar().makeLeftHanded)

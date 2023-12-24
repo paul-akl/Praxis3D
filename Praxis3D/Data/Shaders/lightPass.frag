@@ -19,7 +19,6 @@ layout(std430, binding = 0) buffer HDRBuffer
 	float screenBrightness;
 };
 
-//layout(location = 0) out vec4 emissiveBuffer;
 layout(location = 0) out vec4 colorBuffer;
 
 in float avgBrightness;
@@ -134,7 +133,12 @@ float GeometrySchlickGGX(float p_NdotV, float p_roughness)
     float roughness = (p_roughness + 1.0);
     float k = (roughness * roughness) / 8.0;
 	
-    return p_NdotV / (p_NdotV * (1.0 - k) + k);
+    float nominator   = p_NdotV;
+    float denominator = p_NdotV * (1.0 - k) + k;
+	
+	return nominator / denominator;
+	
+    //return p_NdotV / (p_NdotV * (1.0 - k) + k);
 }
 
 // Calculates geometric attenuation (or visibility term - self shadowing of microfacets)
@@ -151,7 +155,8 @@ float GeometrySmith(vec3 p_normal, vec3 p_fragToEye, vec3 L, float p_roughness)
 // Calculates fresnel effect using Schlick's approximation
 vec3 fresnelSchlick(float p_cosTheta, vec3 p_F0)
 {
-    return p_F0 + (1.0 - p_F0) * pow(1.0 - p_cosTheta, 5.0);
+	return p_F0 + (1.0 - p_F0) * pow(clamp(1.0 - p_cosTheta, 0.0, 1.0), 5.0);
+    //return p_F0 + (1.0 - p_F0) * pow(1.0 - p_cosTheta, 5.0);
 } 
 
 vec3 calcLightColor(vec3 p_albedoColor, vec3 p_normal, vec3 p_fragToEye, vec3 p_lightColor, vec3 p_lightDirection, float p_lightDistance, vec3 p_F0, float p_roughness, float p_metalic, float p_ambientOcclusion)
@@ -175,7 +180,6 @@ vec3 calcLightColor(vec3 p_albedoColor, vec3 p_normal, vec3 p_fragToEye, vec3 p_
 	
 	vec3 kS = F;
 	vec3 kD = vec3(1.0) - kS;
-	//vec3 kDambient = kD * (1.0 - p_metalic * 0.5);
 	kD *= 1.0 - p_metalic;
 	
 	vec3 numerator = NDF * G * F;
@@ -185,8 +189,13 @@ vec3 calcLightColor(vec3 p_albedoColor, vec3 p_normal, vec3 p_fragToEye, vec3 p_
 	// Combine diffuse, specular, radiance with albedo color and return it
 	float NdotL = max(dot(p_normal, p_lightDirection), 0.0);
 	//return (kD * p_albedoColor / PI + specular) * radiance * NdotL;
+	
+	// Add light color
 	vec3 lightColor = (kD * p_albedoColor / PI + specular) * radiance * NdotL;
+	
+	// Add ambient light
 	lightColor += radiance * p_ambientOcclusion * ambientLightIntensity * (kD * p_albedoColor);
+	
 	return lightColor;
 }
 
@@ -216,7 +225,6 @@ void main(void)
 	float roughnessSqrt = matProperties.x;
 	float metalic = matProperties.y;
 	float ambientOcclusion = matProperties.z;
-	ambientOcclusion *= ambientOcclusion;
 
 	// Calculate F0, with minimum IOR as 0.04
 	vec3 f0 = mix(vec3(0.04), diffuseColor, metalic);
@@ -312,7 +320,5 @@ void main(void)
 	}
 	
 	colorBuffer = vec4(finalLightColor + emissiveColor, 1.0);
-	//colorBuffer = vec4(ambientOcclusion, ambientOcclusion, ambientOcclusion, 1.0);
-	//colorBuffer = vec4(matProperties.b, matProperties.b, matProperties.b, 1.0);
-	//colorBuffer = vec4(diffuseColor / PI, 1.0);
+	//colorBuffer = vec4(matProperties.z, matProperties.z, matProperties.z, 1.0);
 }

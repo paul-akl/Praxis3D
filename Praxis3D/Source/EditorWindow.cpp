@@ -780,7 +780,7 @@ void EditorWindow::update(const float p_deltaTime)
                         // Clear the component exist flags as they are reset every frame
                         m_selectedEntity.clearComponentExistFlags();
 
-                        // Calculate widget offset used to draw a label on the left and a widget on the right (opposite of how ImGui draws it)
+                        // Calculate widget offset used to draw a label on the left and a widget on ;he right (opposite of how ImGui draws it)
                         float inputWidgetOffset = ImGui::GetCursorPosX() + ImGui::CalcItemWidth() * 0.5f + ImGui::GetStyle().ItemInnerSpacing.x;
 
                         // Calculate the offset for the collapsing header that is drawn after the delete component button of each component type
@@ -4073,7 +4073,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
         }
     }
 
-    // Calculate rendering passes window height and cap it to a max height value
+    // Calculate audio banks window height and cap it to a max height value
     float audioBanksWindowHeight = (m_fontSize + m_imguiStyle.FramePadding.y * 2 + m_imguiStyle.ItemSpacing.y) * (p_sceneData.m_audioBanks.size() + 2);
     audioBanksWindowHeight = audioBanksWindowHeight > Config::GUIVar().editor_audio_banks_max_height ? Config::GUIVar().editor_audio_banks_max_height : audioBanksWindowHeight;
 
@@ -4165,11 +4165,113 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
         m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), Systems::Changes::Graphics::ZNear);
     }
 
+    // Calculate ambient occlusion window height
+    float ambientOcclusionWindowHeight = (m_fontSize + m_imguiStyle.FramePadding.y * 2 + m_imguiStyle.ItemSpacing.y);
+    ambientOcclusionWindowHeight *= p_sceneData.m_aoData.m_aoType == AmbientOcclusionType::AmbientOcclusionType_None ? 2.0f : 10.0f;
+
+    if(ImGui::BeginChild("##AmbientOcclusionSettings", ImVec2(0.0f, ambientOcclusionWindowHeight), true))
+    {
+        ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextBorderSize, 0.0f);
+        ImGui::SeparatorText("Ambient occlusion:");
+        ImGui::PopStyleVar(); //ImGuiStyleVar_SeparatorTextBorderSize
+
+        bool aoDataChanged = false;
+        int aoType = p_sceneData.m_aoData.m_aoType;
+        drawLeftAlignedLabelText("Ambient occlusion type:", inputWidgetOffset);
+        if(ImGui::Combo("##AOTypeCombo", &aoType, &m_ambientOcclusionTypeText[0], (int)m_ambientOcclusionTypeText.size()))
+        {
+            p_sceneData.m_aoData.m_aoType = AmbientOcclusionData::ambientOcclusionTypeToAmbientOcclusionType(aoType);
+
+            if(p_sendChanges)
+                aoDataChanged = true;
+
+            // Apply default AO type specific values
+            switch(p_sceneData.m_aoData.m_aoType)
+            {
+                case AmbientOcclusionType_SSAO:
+                    p_sceneData.m_aoData.m_aoBias = Config::graphicsVar().ao_ssao_bias;
+                    p_sceneData.m_aoData.m_aoIntensity = Config::graphicsVar().ao_ssao_intensity;
+                    p_sceneData.m_aoData.m_aoRadius = Config::graphicsVar().ao_ssao_radius;
+                    break;
+                case AmbientOcclusionType_HBAO:
+                    p_sceneData.m_aoData.m_aoBias = Config::graphicsVar().ao_hbao_bias;
+                    p_sceneData.m_aoData.m_aoIntensity = Config::graphicsVar().ao_hbao_intensity;
+                    p_sceneData.m_aoData.m_aoRadius = Config::graphicsVar().ao_hbao_radius;
+                    break;
+            }
+        }
+
+        if(p_sceneData.m_aoData.m_aoType != AmbientOcclusionType::AmbientOcclusionType_None)
+        {
+            // Draw NUMBER OF DIRECTIONS
+            drawLeftAlignedLabelText("Number of directions:", inputWidgetOffset);
+            if(ImGui::InputInt("##AONumberOfDirectionsInputInt", &p_sceneData.m_aoData.m_aoNumOfDirections) && p_sendChanges)
+            {
+                aoDataChanged = true;
+            }
+
+            // Draw NUMBER OF STEPS
+            drawLeftAlignedLabelText("Number of steps:", inputWidgetOffset);
+            if(ImGui::InputInt("##AONumberOfStepsInputInt", &p_sceneData.m_aoData.m_aoNumOfSteps) && p_sendChanges)
+            {
+                aoDataChanged = true;
+            }
+
+            // Draw NUMBER OF SAMPLES
+            drawLeftAlignedLabelText("Number of samples:", inputWidgetOffset);
+            if(ImGui::InputInt("##AONumberOfSamplesInputInt", &p_sceneData.m_aoData.m_aoNumOfSamples) && p_sendChanges)
+            {
+                aoDataChanged = true;
+            }
+
+            // Draw NUMBER OF BLUR SAMPLES
+            drawLeftAlignedLabelText("Number of blur samples:", inputWidgetOffset);
+            if(ImGui::InputInt("##AONumberOfBlurSamplesInputInt", &p_sceneData.m_aoData.m_aoBlurNumOfSamples) && p_sendChanges)
+            {
+                aoDataChanged = true;
+            }
+
+            // Draw AO INTENSITY
+            drawLeftAlignedLabelText("Intensity:", inputWidgetOffset);
+            if(ImGui::DragFloat("##AOIntensityDrag", &p_sceneData.m_aoData.m_aoIntensity, 0.1f, 0.0f, 100000.0f, "%.3f") && p_sendChanges)
+            {
+                aoDataChanged = true;
+            }
+
+            // Draw AO BIAS
+            drawLeftAlignedLabelText("Bias:", inputWidgetOffset);
+            if(ImGui::DragFloat("##AOBiasDrag", &p_sceneData.m_aoData.m_aoBias, 0.0001f, 0.0f, 1.0f, "%.5f") && p_sendChanges)
+            {
+                aoDataChanged = true;
+            }
+
+            // Draw AO RADIUS
+            drawLeftAlignedLabelText("Radius:", inputWidgetOffset);
+            if(ImGui::DragFloat("##AORadiusDrag", &p_sceneData.m_aoData.m_aoRadius, 0.01f, 0.0f, 100000.0f, "%.3f") && p_sendChanges)
+            {
+                aoDataChanged = true;
+            }
+
+            // Draw AO BLUR SHARPNESS
+            drawLeftAlignedLabelText("Blur sharpness:", inputWidgetOffset);
+            if(ImGui::DragFloat("##AOBlurSharpnessDrag", &p_sceneData.m_aoData.m_aoBlurSharpness, 0.1f, 0.0f, 100000.0f, "%.3f") && p_sendChanges)
+            {
+                aoDataChanged = true;
+            }
+
+        }
+
+        if(aoDataChanged)
+            m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_AmbientOcclusionData, (void *)&p_sceneData.m_aoData, false);
+
+    }
+    ImGui::EndChild();
+
     // Calculate rendering passes window height and cap it to a max height value
     float renderPassWindowHeight = (m_fontSize + m_imguiStyle.FramePadding.y * 2 + m_imguiStyle.ItemSpacing.y) * (p_sceneData.m_renderingPasses.size() + 2);
     renderPassWindowHeight = renderPassWindowHeight > Config::GUIVar().editor_render_pass_max_height ? Config::GUIVar().editor_render_pass_max_height : renderPassWindowHeight;
 
-    if(ImGui::BeginChild("##RenderingPasses", ImVec2(0, renderPassWindowHeight), true))//, ImVec2(0, childWindowHeight), true, ImGuiWindowFlags_None)
+    if(ImGui::BeginChild("##RenderingPasses", ImVec2(0.0f, renderPassWindowHeight), true))//, ImVec2(0, childWindowHeight), true, ImGuiWindowFlags_None)
     {
         ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextBorderSize, 0.0f);
         ImGui::SeparatorText("Rendering passes:");
@@ -4473,6 +4575,7 @@ void EditorWindow::updateSceneData(SceneData &p_sceneData)
         p_sceneData.m_volume[i] = audioScene->getVolume(static_cast<AudioBusType>(i));
 
     // Set graphics data
+    p_sceneData.m_aoData = graphicsScene->getAmbientOcclusionData();
     p_sceneData.m_ambientIntensity = graphicsScene->getSceneObjects().m_ambientIntensity;
     p_sceneData.m_zFar = graphicsScene->getSceneObjects().m_zFar;
     p_sceneData.m_zNear = graphicsScene->getSceneObjects().m_zNear;

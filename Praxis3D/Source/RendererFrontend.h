@@ -25,6 +25,7 @@ class RendererFrontend
 	friend class FinalPass;
 	friend class ReflectionPass;
 	friend class SkyPass;
+	friend class AmbientOcclusionPass;
 public:
 	// A handle for a uniform or shader storage buffer
 	struct ShaderBuffer
@@ -62,6 +63,7 @@ public:
 	void setRenderFinalToTexture(const bool p_renderToTexture);
 	void setRenderToTextureResolution(const glm::ivec2 p_renderToTextureResolution);
 	void setRenderingPasses(const RenderingPasses &p_renderingPasses);
+	void setAmbientOcclusionData(const AmbientOcclusionData &p_aoData) { m_frameData.m_aoData = p_aoData; }
 
 	const RenderingPasses getRenderingPasses();
 
@@ -186,6 +188,8 @@ protected:
 									p_texture.getTextureFormat(),
 									p_texture.getTextureDataFormat(),
 									p_texture.getTextureDataType(),
+									p_texture.getMagnificationFilterType(),
+									p_texture.getMinificationFilterType(),
 									p_texture.getEnableMipmap(),
 									p_texture.getMipmapLevel(),
 									p_texture.getTextureWidth(),

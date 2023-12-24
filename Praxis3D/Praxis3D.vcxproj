@@ -360,6 +360,7 @@
     <ClInclude Include="Source\SpatialComponent.h" />
     <ClInclude Include="Source\SpatialDataManager.h" />
     <ClInclude Include="Source\SpinWait.h" />
+    <ClInclude Include="Source\AmbientOcclusionPass.h" />
     <ClInclude Include="Source\SunScript.h" />
     <ClInclude Include="Source\System.h" />
     <ClInclude Include="Source\TaskManager.h" />

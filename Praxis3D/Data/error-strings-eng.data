@@ -111,6 +111,7 @@
 		"Source_SkyObject"								: "Sky Object",
 		"Source_SkyPass"									: "Sky Rendering Pass",
 		"Source_SoundComponent"						: "Sound Component",
+		"Source_SSAOPass"									: "SSAO Pass",
 		"Source_SoundListenerComponent"		: "Sound Listener Component",
 		"Source_UniversalScene"						: "Universal Scene",
 		"Source_TextureLoader"						: "Texture Loader",

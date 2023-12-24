@@ -1,4 +1,5 @@
 
+#include "AmbientOcclusionPass.h"
 #include "AtmScatteringPass.h"
 #include "BloomCompositePass.h"
 #include "BloomPass.h"
@@ -29,82 +30,6 @@ RendererFrontend::RendererFrontend() : m_renderPassData(nullptr)
 
 	m_zFar = Config::graphicsVar().z_far;
 	m_zNear = Config::graphicsVar().z_near;
-
-	/*/ Set up the order of the rendering passes
-	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Geometry);
-	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_AtmScattering);
-	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Lighting);
-	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_AtmScattering);
-	//m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_HdrMapping);
-	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Bloom);
-	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Luminance);
-	//m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Blur);
-	//m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_BloomComposite);
-	//m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_LenseFlare);
-	//m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Blur);
-	//m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_LenseFlareComposite);
-	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_Final);
-	m_renderingPassesTypes.push_back(RenderPassType::RenderPassType_GUI);
-
-	// Make sure the entries of the rendering passes are set to nullptr
-	for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
-		m_initializedRenderingPasses[i] = nullptr;
-
-	// Create rendering passes
-	for(decltype(m_renderingPassesTypes.size()) i = 0, size = m_renderingPassesTypes.size(); i < size; i++)
-	{
-		switch(m_renderingPassesTypes[i])
-		{
-		case RenderPassType_Geometry:
-			if(m_initializedRenderingPasses[RenderPassType_Geometry] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_Geometry] = new GeometryPass(*this);
-			break;
-		case RenderPassType_Lighting:
-			if(m_initializedRenderingPasses[RenderPassType_Lighting] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_Lighting] = new LightingPass(*this);
-			break;
-		case RenderPassType_AtmScattering:
-			if(m_initializedRenderingPasses[RenderPassType_AtmScattering] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_AtmScattering] = new AtmScatteringPass(*this);
-			break;
-		case RenderPassType_HdrMapping:
-			if(m_initializedRenderingPasses[RenderPassType_HdrMapping] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_HdrMapping] = new HdrMappingPass(*this);
-			break;
-		case RenderPassType_Blur:
-			if(m_initializedRenderingPasses[RenderPassType_Blur] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_Blur] = new BlurPass(*this);
-			break;
-		case RenderPassType_Bloom:
-			if(m_initializedRenderingPasses[RenderPassType_Bloom] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_Bloom] = new BloomPass(*this);
-			break;
-		case RenderPassType_BloomComposite:
-			if(m_initializedRenderingPasses[RenderPassType_BloomComposite] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_BloomComposite] = new BloomCompositePass(*this);
-			break;
-		case RenderPassType_LenseFlare:
-			if(m_initializedRenderingPasses[RenderPassType_LenseFlare] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_LenseFlare] = new LenseFlarePass(*this);
-			break;
-		case RenderPassType_LenseFlareComposite:
-			if(m_initializedRenderingPasses[RenderPassType_LenseFlareComposite] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_LenseFlareComposite] = new LenseFlareCompositePass(*this);
-			break;
-		case RenderPassType_Luminance:
-			if(m_initializedRenderingPasses[RenderPassType_Luminance] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_Luminance] = new LuminancePass(*this);
-			break;
-		case RenderPassType_Final:
-			if(m_initializedRenderingPasses[RenderPassType_Final] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_Final] = new FinalPass(*this);
-			break;
-		case RenderPassType_GUI:
-			if(m_initializedRenderingPasses[RenderPassType_GUI] == nullptr)
-				m_initializedRenderingPasses[RenderPassType_GUI] = new GUIPass(*this);
-			break;
-		}
-	}*/
 }
 
 RendererFrontend::~RendererFrontend()
@@ -246,6 +171,11 @@ void RendererFrontend::setRenderingPasses(const RenderingPasses &p_renderingPass
 					m_allRenderPasses[RenderPassType_GUI] = new GUIPass(*this);
 				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_GUI]);
 				guiRenderPassSet = true;
+				break;
+			case RenderPassType_AmbientOcclusion:
+				if(m_allRenderPasses[RenderPassType_AmbientOcclusion] == nullptr)
+					m_allRenderPasses[RenderPassType_AmbientOcclusion] = new AmbientOcclusionPass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_AmbientOcclusion]);
 				break;
 		}
 	}
@@ -447,6 +377,9 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 	
 	// Convert the view matrix to row major for the atmospheric scattering shaders
 	m_frameData.m_transposeViewMatrix = glm::transpose(m_frameData.m_viewMatrix);
+
+	// Calculate the transpose inverse view matrix needed for converting normals (in the normal g-buffer) to view space
+	m_frameData.m_transposeInverseViewMatrix = glm::transpose(glm::inverse(m_frameData.m_viewMatrix));
 
 	// Set the camera position
 	m_frameData.m_cameraPosition = p_sceneObjects.m_cameraViewMatrix[3];

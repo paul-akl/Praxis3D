@@ -76,6 +76,7 @@ public:
 		for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
 			m_renderingPassesTypeText.push_back(GetString(static_cast<RenderPassType>(i)));
 
+		m_ambientOcclusionTypeText = { "None", "SSAO", "HBAO" };
 		m_luaVariableTypeStrings = { "null", "bool", "int", "float", "double", "vec2i", "vec2f", "vec3f", "vec4f", "string", "propertyID" };
 		m_shaderTypeStrings = { "Compute", "Fragment", "Geometry", "Vertex", "Tessellation control", "Tessellation evaluation" };
 		m_tonemappingMethodText = { "None", "Simple reinhard", "Reinhard with white point", "Filmic tonemapping", "Uncharted 2", "Unreal 3", "ACES", "Lottes", "Uchimura" };
@@ -721,9 +722,13 @@ private:
 			for(unsigned int i = 0; i < AudioBusType::AudioBusType_NumOfTypes; i++)
 				m_volume[i] = 1.0f;
 
+			m_aoData.setDefaultValues();
+
 			m_ambientIntensity = 0.0f;
+
 			m_zFar = 0.0f;
 			m_zNear = 0.0f;
+
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_Geometry);
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_AtmScattering);
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_Lighting);
@@ -745,6 +750,7 @@ private:
 		float m_volume[AudioBusType::AudioBusType_NumOfTypes];
 
 		// Graphics scene
+		AmbientOcclusionData m_aoData;
 		float m_ambientIntensity;
 		float m_zFar;
 		float m_zNear;
@@ -963,15 +969,18 @@ private:
 	{
 		switch(p_textureDataType)
 		{
-		case TextureDataType_Float:
-			return "Float";
-			break;
-		case TextureDataType_Int:
-			return "Integer";
-			break;
-		case TextureDataType_UnsignedByte:
-			return "Unsigned byte";
-			break;
+			case TextureDataType::TextureDataType_Short:
+				return "Short";
+				break;
+			case TextureDataType::TextureDataType_Float:
+				return "Float";
+				break;
+			case TextureDataType::TextureDataType_Int:
+				return "Integer";
+				break;
+			case TextureDataType::TextureDataType_UnsignedByte:
+				return "Unsigned byte";
+				break;
 		}
 		return "";
 	}
@@ -979,66 +988,69 @@ private:
 	{
 		switch(p_textureDataFormat)
 		{
-		case TextureDataFormat_R8:
-			return "R8";
-			break;
-		case TextureDataFormat_R16:
-			return "R16";
-			break;
-		case TextureDataFormat_R16F:
-			return "R16F";
-			break;
-		case TextureDataFormat_R32F:
-			return "R32F";
-			break;
-		case TextureDataFormat_RG8:
-			return "RG8";
-			break;
-		case TextureDataFormat_RG16:
-			return "RG16";
-			break;
-		case TextureDataFormat_RG16F:
-			return "RG16F";
-			break;
-		case TextureDataFormat_RG32F:
-			return "RG32F";
-			break;
-		case TextureDataFormat_RGB8:
-			return "RGB8";
-			break;
-		case TextureDataFormat_RGB16:
-			return "RGB16";
-			break;
-		case TextureDataFormat_RGB16F:
-			return "RGB16F";
-			break;
-		case TextureDataFormat_RGB32F:
-			return "RGB32F";
-			break;
-		case TextureDataFormat_RGBA8:
-			return "RGBA8";
-			break;
-		case TextureDataFormat_RGBA16:
-			return "RGBA16";
-			break;
-		case TextureDataFormat_RGBA16F:
-			return "RGBA16F";
-			break;
-		case TextureDataFormat_RGBA32F:
-			return "RGBA32F";
-			break;
-		case TextureDataFormat_R16I:
-			return "R16I";
-			break;
-		case TextureDataFormat_R32I:
-			return "R32I";
-			break;
-		case TextureDataFormat_R16UI:
-			return "R16UI";
-			break;
-		case TextureDataFormat_R32UI:
-			return "R32UI";
-			break;
+			case TextureDataFormat::TextureDataFormat_R8:
+				return "R8";
+				break;
+			case TextureDataFormat::TextureDataFormat_R16:
+				return "R16";
+				break;
+			case TextureDataFormat::TextureDataFormat_R16F:
+				return "R16F";
+				break;
+			case TextureDataFormat::TextureDataFormat_R32F:
+				return "R32F";
+				break;
+			case TextureDataFormat::TextureDataFormat_RG8:
+				return "RG8";
+				break;
+			case TextureDataFormat::TextureDataFormat_RG16:
+				return "RG16";
+				break;
+			case TextureDataFormat::TextureDataFormat_RG16F:
+				return "RG16F";
+				break;
+			case TextureDataFormat::TextureDataFormat_RG32F:
+				return "RG32F";
+				break;
+			case TextureDataFormat::TextureDataFormat_RGB8:
+				return "RGB8";
+				break;
+			case TextureDataFormat::TextureDataFormat_RGB16:
+				return "RGB16";
+				break;
+			case TextureDataFormat::TextureDataFormat_RGB16F:
+				return "RGB16F";
+				break;
+			case TextureDataFormat::TextureDataFormat_RGB32F:
+				return "RGB32F";
+				break;
+			case TextureDataFormat::TextureDataFormat_RGBA8:
+				return "RGBA8";
+				break;
+			case TextureDataFormat::TextureDataFormat_RGBA16:
+				return "RGBA16";
+				break;
+			case TextureDataFormat::TextureDataFormat_RGBA16SN:
+				return "RGBA16 SNORM";
+				break;
+			case TextureDataFormat::TextureDataFormat_RGBA16F:
+				return "RGBA16F";
+				break;
+			case TextureDataFormat::TextureDataFormat_RGBA32F:
+				return "RGBA32F";
+				break;
+			case TextureDataFormat::TextureDataFormat_R16I:
+				return "R16I";
+				break;
+			case TextureDataFormat::TextureDataFormat_R32I:
+				return "R32I";
+				break;
+			case TextureDataFormat::TextureDataFormat_R16UI:
+				return "R16UI";
+				break;
+			case TextureDataFormat::TextureDataFormat_R32UI:
+				return "R32UI";
+				break;
 		}
 		return "";
 	}
@@ -1121,6 +1133,7 @@ private:
 	ImVec2 m_buttonSizedByFont;
 
 	// String arrays and other data used for ImGui Combo inputs
+	std::vector<const char *> m_ambientOcclusionTypeText;
 	std::vector<const char *> m_physicalMaterialProperties;
 	std::vector<const char *> m_renderingPassesTypeText;
 	std::vector<const char *> m_luaVariableTypeStrings;

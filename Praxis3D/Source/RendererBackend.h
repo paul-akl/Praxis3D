@@ -221,6 +221,8 @@ public:
 					const TextureFormat p_texFormat,
 					const TextureDataFormat p_texDataFormat,
 					const TextureDataType p_texDataType,
+					const TextureFilterType p_texMagFilter,
+					const TextureFilterType p_texMinFilter,
 					const bool p_enableMipmap,
 					const int p_mipmapLevel,
 					const unsigned int p_textureWidth,
@@ -228,7 +230,7 @@ public:
 					const void *p_data) :
 			m_handle(p_handle),
 			m_objectType(LoadObject_Texture2D),
-			m_objectData(p_name, p_texFormat, p_texDataFormat, p_texDataType, p_enableMipmap, p_mipmapLevel, p_textureWidth, p_textureHeight, p_data) { }
+			m_objectData(p_name, p_texFormat, p_texDataFormat, p_texDataType, p_texMagFilter, p_texMinFilter, p_enableMipmap, p_mipmapLevel, p_textureWidth, p_textureHeight, p_data) { }
 
 		LoadCommand(unsigned int &p_handle,
 					const TextureFormat p_texFormat,
@@ -306,6 +308,8 @@ public:
 							  const TextureFormat p_texFormat,
 							  const TextureDataFormat p_texDataFormat,
 							  const TextureDataType p_texDataType,
+							  const TextureFilterType p_texMagFilter,
+							  const TextureFilterType p_texMinFilter,
 							  const bool p_enableMipmap,
 							  const int p_mipmapLevel,
 							  const unsigned int p_textureWidth,
@@ -315,6 +319,8 @@ public:
 				m_texFormat(p_texFormat),
 				m_texDataFormat(p_texDataFormat),
 				m_texDataType(p_texDataType),
+				m_magnificationFilter(p_texMagFilter),
+				m_minificationFilter(p_texMinFilter),
 				m_enableMipmap(p_enableMipmap),
 				m_mipmapLevel(p_mipmapLevel),
 				m_textureWidth(p_textureWidth),
@@ -325,6 +331,8 @@ public:
 			const TextureFormat m_texFormat;
 			const TextureDataFormat m_texDataFormat;
 			const TextureDataType m_texDataType;
+			const TextureFilterType m_magnificationFilter;
+			const TextureFilterType m_minificationFilter;
 			const bool m_enableMipmap;
 			const int m_mipmapLevel;
 			const unsigned int m_textureWidth;
@@ -378,12 +386,14 @@ public:
 					   const TextureFormat p_texFormat,
 					   const TextureDataFormat p_texDataFormat,
 					   const TextureDataType p_texDataType,
+					   const TextureFilterType p_texMagFilter,
+					   const TextureFilterType p_texMinFilter,
 					   const bool p_enableMipmap,
 					   const int p_mipmapLevel,
 					   const unsigned int p_textureWidth,
 					   const unsigned int p_textureHeight,
 					   const void *p_data) :
-				m_tex2DData(p_name, p_texFormat, p_texDataFormat, p_texDataType, p_enableMipmap, p_mipmapLevel, p_textureWidth, p_textureHeight, p_data) { }
+				m_tex2DData(p_name, p_texFormat, p_texDataFormat, p_texDataType, p_texMagFilter, p_texMinFilter, p_enableMipmap, p_mipmapLevel, p_textureWidth, p_textureHeight, p_data) { }
 
 			ObjectData(const TextureFormat p_texFormat,
 					   const int p_mipmapLevel,
@@ -434,6 +444,12 @@ public:
 	void processDrawing(const DrawCommands &p_drawCommands, const UniformFrameData &p_frameData);
 	void processDrawing(const ScreenSpaceDrawCommands &p_screenSpaceDrawCommands, const UniformFrameData &p_frameData);
 	void processDrawing(const ComputeDispatchCommands &p_computeDispatchCommands, const UniformFrameData &p_frameData);
+
+	inline void bindTextureForReadering(const unsigned int p_bindingLocation, const TextureLoader2D::Texture2DHandle &p_texture) const
+	{
+		glActiveTexture(GL_TEXTURE0 + p_bindingLocation);
+		glBindTexture(GL_TEXTURE_2D, p_texture.getHandle());
+	}
 
 	inline GeometryBuffer *getGeometryBuffer() { return m_gbuffer; }
 
@@ -882,22 +898,15 @@ protected:
 						p_command.m_objectData.m_tex2DData.m_texDataType,
 						p_command.m_objectData.m_tex2DData.m_data);
 
-					// Generate mipmaps if they are enabled, and set texture filtering to use mipmaps
+					// Generate mipmaps if they are enabled
 					if(p_command.m_objectData.m_tex2DData.m_enableMipmap)
-					{
 						glGenerateMipmap(GL_TEXTURE_2D);
-						// Texture filtering mode, when image is minimized
-						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Config::textureVar().gl_texture_minification_mipmap);
-						// Texture filtering mode, when image is magnified
-						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, Config::textureVar().gl_texture_magnification_mipmap);
-					}
-					else
-					{
-						// Texture filtering mode, when image is minimized
-						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Config::textureVar().gl_texture_minification);
-						// Texture filtering mode, when image is magnified
-						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, Config::textureVar().gl_texture_magnification);
-					}
+
+					// Texture filtering mode, when image is magnified
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, p_command.m_objectData.m_tex2DData.m_magnificationFilter);
+
+					// Texture filtering mode, when image is minimized
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, p_command.m_objectData.m_tex2DData.m_minificationFilter);
 
 					// Texture anisotropic filtering
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, Config::textureVar().gl_texture_anisotropy);

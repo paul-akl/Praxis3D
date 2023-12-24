@@ -33,6 +33,7 @@ enum DataType : uint32_t
 	DataType_CreateEntity,				// ComponentsConstructionInfo
 	DataType_DeleteEntity,				// EntityAndComponent
 	// Graphics
+	DataType_AmbientOcclusionData,		// AmbientOcclusionData
 	DataType_GUIPassFunctors,			// FunctorSequence
 	DataType_RenderToTexture,			// bool
 	DataType_RenderToTextureResolution, // glm::ivec2
@@ -165,6 +166,7 @@ namespace Systems
 			static constexpr BitMask Shared19	= (BitMask)1 << 19;
 			static constexpr BitMask Shared20	= (BitMask)1 << 20;
 			static constexpr BitMask Shared21	= (BitMask)1 << 21;
+			static constexpr BitMask Shared22	= (BitMask)1 << 22;
 			static constexpr BitMask Shared23	= (BitMask)1 << 23;
 			static constexpr BitMask Shared24	= (BitMask)1 << 24;
 			static constexpr BitMask Shared25	= (BitMask)1 << 25;
@@ -279,9 +281,15 @@ namespace Systems
 																IntermediateBuffer | FinalBuffer | RenderToTextureBuffer;
 
 			static constexpr BitMask AmbientIntensity		= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared16;
-			static constexpr BitMask ZFar					= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared17;
-			static constexpr BitMask ZNear					= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared18;
-			static constexpr BitMask AllScene				= AmbientIntensity | ZFar | ZNear;
+			static constexpr BitMask AOIntensity			= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared17;
+			static constexpr BitMask AOBlurSharpness		= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared18;
+			static constexpr BitMask AOBias					= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared19;
+			static constexpr BitMask AONumOfSamples			= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared20;
+			static constexpr BitMask AORadius				= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared21;
+			static constexpr BitMask AOType					= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared22;
+			static constexpr BitMask ZFar					= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared23;
+			static constexpr BitMask ZNear					= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared24;
+			static constexpr BitMask AllScene				= AmbientIntensity | AOIntensity | AOBlurSharpness | AOBias | AONumOfSamples | AORadius | AOType | ZFar | ZNear;
 
 			static constexpr BitMask All					= AllCamera | AllLighting | AllBuffers | AllScene;
 		}
@@ -336,6 +344,7 @@ namespace Properties
 	Code(Keybindings,) \
 	Code(LoadInBackground,) \
 	Code(Name,) \
+	Code(None,) \
 	Code(Objects,) \
 	Code(ObjectPoolSize,) \
 	Code(Scene,) \
@@ -375,6 +384,9 @@ namespace Properties
 	Code(AmbientIntensity, ) \
 	Code(AmbientOcclusion, ) \
 	Code(Attenuation,) \
+	Code(Bias,) \
+	Code(BlurSamples,) \
+	Code(BlurSharpness,) \
 	Code(Camera,) \
 	Code(CameraComponent,) \
 	Code(ClampToBorder,) \
@@ -385,6 +397,7 @@ namespace Properties
 	Code(CutoffAngle,) \
 	Code(Diffuse,) \
 	Code(Direction,) \
+	Code(Directions,) \
 	Code(DirectionalLight,) \
 	Code(Emissive,) \
 	Code(EmissiveIntensity,) \
@@ -394,6 +407,7 @@ namespace Properties
 	Code(GeometryShader,) \
 	Code(Graphics,) \
 	Code(GraphicsObject,) \
+	Code(HBAO,) \
 	Code(Height,) \
 	Code(HeightScale,) \
 	Code(Intensity,) \
@@ -425,6 +439,7 @@ namespace Properties
 	Code(Repeat,) \
 	Code(RMHAO,) \
 	Code(Roughness,) \
+	Code(Samples,) \
 	Code(Shaders,) \
 	Code(ShaderComponent,) \
 	Code(ShaderPoolSize,) \
@@ -432,7 +447,9 @@ namespace Properties
 	Code(ShaderModelObject,) \
 	Code(SpotLight,) \
 	Code(SpotLightPoolSize,) \
+	Code(SSAO,) \
 	Code(Static,) \
+	Code(Steps,) \
 	Code(TessControlShader,) \
 	Code(TessEvaluationShader,) \
 	Code(TextureTilingFactor,) \
@@ -442,6 +459,7 @@ namespace Properties
 	Code(ZFar,) \
 	Code(ZNear,) \
 	/* Graphics rendering passes */ \
+	Code(AmbientOcclusionRenderPass,) \
 	Code(AtmScatteringRenderPass,) \
 	Code(BloomRenderPass,) \
 	Code(GeometryRenderPass,) \
@@ -866,6 +884,11 @@ public:
 			eye_adaption = false;
 			multisampling = true;
 			alpha_size = 8;
+			ao_blur_num_of_samples = 6;
+			ao_num_of_directions = 8;
+			ao_num_of_samples = 64;
+			ao_num_of_steps = 4;
+			ao_type = AmbientOcclusionType::AmbientOcclusionType_HBAO;
 			bloom_blur_passes = 5;
 			bloom_downscale_limit = 10;
 			bloom_mipmap_limit = 16;
@@ -886,6 +909,13 @@ public:
 			tonemap_method = 6;
 			alpha_threshold = 0.0f;
 			ambient_light_intensity = 0.3f;
+			ao_hbao_bias = 0.1f;
+			ao_ssao_bias = 0.025f;
+			ao_blurSharpness = 40.0f;
+			ao_hbao_intensity = 2.0f;
+			ao_ssao_intensity = 2.0f;
+			ao_hbao_radius = 2.0f;
+			ao_ssao_radius = 0.5f;
 			bloom_intensity = 1.0f;
 			bloom_knee = 0.1f;
 			bloom_threshold = 1.5f;
@@ -929,6 +959,11 @@ public:
 		bool eye_adaption;
 		bool multisampling;
 		int alpha_size;
+		int ao_blur_num_of_samples;
+		int ao_num_of_directions;
+		int ao_num_of_samples;
+		int ao_num_of_steps;
+		int ao_type;
 		int bloom_blur_passes;
 		int bloom_downscale_limit;
 		int bloom_mipmap_limit;
@@ -949,6 +984,13 @@ public:
 		int tonemap_method;
 		float alpha_threshold;
 		float ambient_light_intensity;
+		float ao_hbao_bias;
+		float ao_ssao_bias;
+		float ao_blurSharpness;
+		float ao_hbao_intensity;
+		float ao_ssao_intensity;
+		float ao_hbao_radius;
+		float ao_ssao_radius;
 		float bloom_intensity;
 		float bloom_knee;
 		float bloom_threshold;
@@ -1002,7 +1044,7 @@ public:
 			editor_inspector_button_width_multiplier = 1.5f;
 			editor_lua_variables_max_height = 200.0f;
 			editor_play_button_size = 30.0f;
-			editor_render_pass_max_height = 250.0f;
+			editor_render_pass_max_height = 270.0f;
 			gui_file_dialog_min_size_x = 400.0f;
 			gui_file_dialog_min_size_y = 200.0f;
 			gui_file_dialog_dir_color_R = 0.905f;
@@ -1152,7 +1194,7 @@ public:
 			makeLeftHanded = false;
 			triangulate = true;
 			removeComponent = false;
-			genNormals = true;
+			genNormals = false;
 			genSmoothNormals = true;
 			genUVCoords = true;
 			optimizeMeshes = true;
@@ -1278,6 +1320,12 @@ public:
 			bloom_upscale_comp_shader = "bloomUpscale.comp";
 			blur_pass_vert_shader = "blurPass.vert";
 			blur_pass_frag_shader = "blurPass.frag";
+			hbao_blur_horizontal_frag_shader = "ambientOcclusionBlurHBAOhorizontal.frag";
+			hbao_blur_horizontal_vert_shader = "ambientOcclusionBlurHBAO.vert";
+			hbao_blur_vertical_frag_shader = "ambientOcclusionBlurHBAOvertical.frag";
+			hbao_blur_vertical_vert_shader = "ambientOcclusionBlurHBAO.vert";
+			hbao_pass_frag_shader = "ambientOcclusionPassHBAO.frag";
+			hbao_pass_vert_shader = "ambientOcclusionPassHBAO.vert";
 			lense_flare_comp_pass_vert_shader = "lenseFlareCompositePass.vert";
 			lense_flare_comp_pass_frag_shader = "lenseFlareCompositePass.frag";
 			lense_flare_pass_vert_shader = "lenseFlarePass.vert";
@@ -1293,6 +1341,10 @@ public:
 			lens_flare_dirt_texture = "DirtMaskTexture.png";
 			lens_flare_ghost_gradient_texture = "p3d_lensFlareGhostColorGradient.png";
 			lens_flare_starburst_texture = "p3d_lensFlareStarburst.png";
+			ssao_blur_frag_shader = "ambientOcclusionBlurSSAO.frag";
+			ssao_blur_vert_shader = "ambientOcclusionBlurSSAO.vert";
+			ssao_pass_frag_shader = "ambientOcclusionPassSSAO.frag";
+			ssao_pass_vert_shader = "ambientOcclusionPassSSAO.vert";
 			dir_light_quad_offset_x = 0.0f;
 			dir_light_quad_offset_y = 0.0f;
 			dir_light_quad_offset_z = 0.0f;
@@ -1308,6 +1360,7 @@ public:
 			objects_loaded_per_frame = 1;
 			render_to_texture_buffer = GBufferTextureType::GBufferEmissive;
 			shader_pool_size = 10;
+			ssao_num_of_samples = 64;
 			depth_test = true;
 			face_culling = true;
 		}
@@ -1348,6 +1401,12 @@ public:
 		std::string bloom_upscale_comp_shader;
 		std::string blur_pass_vert_shader;
 		std::string blur_pass_frag_shader;
+		std::string hbao_blur_horizontal_frag_shader;
+		std::string hbao_blur_horizontal_vert_shader;
+		std::string hbao_blur_vertical_frag_shader;
+		std::string hbao_blur_vertical_vert_shader;
+		std::string hbao_pass_frag_shader;
+		std::string hbao_pass_vert_shader;
 		std::string lense_flare_comp_pass_vert_shader;
 		std::string lense_flare_comp_pass_frag_shader;
 		std::string lense_flare_pass_vert_shader;
@@ -1363,6 +1422,10 @@ public:
 		std::string lens_flare_dirt_texture;
 		std::string lens_flare_ghost_gradient_texture;
 		std::string lens_flare_starburst_texture;
+		std::string ssao_blur_frag_shader;
+		std::string ssao_blur_vert_shader;
+		std::string ssao_pass_frag_shader;
+		std::string ssao_pass_vert_shader;
 		float dir_light_quad_offset_x;
 		float dir_light_quad_offset_y;
 		float dir_light_quad_offset_z;
@@ -1378,6 +1441,7 @@ public:
 		int objects_loaded_per_frame;
 		int render_to_texture_buffer;
 		int shader_pool_size;
+		int ssao_num_of_samples;
 		bool depth_test;
 		bool face_culling;
 	};
@@ -1408,6 +1472,7 @@ public:
 			modelViewMatUniform = "modelViewMat";
 			modelViewProjectionMatUniform = "MVP";
 			transposeViewMatUniform = "transposeViewMat";
+			transposeInverseViewMatUniform = "transposeInverseViewMat";
 			screenSizeUniform = "screenSize";
 			screenNumOfPixelsUniform = "screenNumOfPixels";
 			deltaTimeMSUniform = "deltaTimeMS";
@@ -1452,6 +1517,7 @@ public:
 			matPropertiesMapUniform = "matPropertiesMap";
 			intermediateMapUniform = "intermediateMap";
 			finalMapUniform = "finalColorMap";
+			depthMapUniform = "depthMap";
 			inputColorMapUniform = "inputColorMap";
 			outputColorMapUniform = "outputColorMap";
 
@@ -1466,6 +1532,12 @@ public:
 			heightTextureUniform = "heightTexture";
 			combinedTextureUniform = "combinedTexture";
 			averageLuminanceTexture = "averageLuminanceTexture";
+			noiseTexture = "noiseTexture";
+
+			hbaoBlurHorizontalInvResDirection = "hbaoBlurHorizontalInvResDirection";
+			hbaoBlurVerticalInvResDirection = "hbaoBlurVerticalInvResDirection";
+			hbaoBlurNumOfSamples = "hbaoBlurNumOfSamples";
+			hbaoBlurSharpness = "hbaoBlurSharpness";
 
 			atmIrradianceTextureUniform = "atmIrradianceTexture";
 			atmScatteringTextureUniform = "atmScatteringTexture";
@@ -1496,6 +1568,8 @@ public:
 
 			eyeAdaptionRateUniform = "eyeAdaptionRate";
 			eyeAdaptionIntBrightnessUniform = "eyeAdaptionIntBrightness";
+			AODataSetBuffer = "AODataSetBuffer";
+			SSAOSampleBuffer = "SSAOSampleBuffer";
 			HDRSSBuffer = "HDRBuffer";
 			atmScatParamBuffer = "AtmScatParametersBuffer";
 			lensFlareParametersBuffer = "LensFlareParametersBuffer";
@@ -1513,6 +1587,7 @@ public:
 		std::string modelViewMatUniform;
 		std::string modelViewProjectionMatUniform;
 		std::string transposeViewMatUniform;
+		std::string transposeInverseViewMatUniform;
 		std::string screenSizeUniform;
 		std::string screenNumOfPixelsUniform;
 		std::string deltaTimeMSUniform;
@@ -1557,6 +1632,7 @@ public:
 		std::string matPropertiesMapUniform;
 		std::string intermediateMapUniform;
 		std::string finalMapUniform;
+		std::string depthMapUniform;
 		std::string inputColorMapUniform;
 		std::string outputColorMapUniform;
 
@@ -1571,6 +1647,12 @@ public:
 		std::string heightTextureUniform;
 		std::string combinedTextureUniform;
 		std::string averageLuminanceTexture;
+		std::string noiseTexture;
+
+		std::string hbaoBlurHorizontalInvResDirection;
+		std::string hbaoBlurVerticalInvResDirection;
+		std::string hbaoBlurNumOfSamples;
+		std::string hbaoBlurSharpness;
 
 		std::string atmIrradianceTextureUniform;
 		std::string atmScatteringTextureUniform;
@@ -1601,6 +1683,8 @@ public:
 
 		std::string eyeAdaptionRateUniform;
 		std::string eyeAdaptionIntBrightnessUniform;
+		std::string AODataSetBuffer;
+		std::string SSAOSampleBuffer;
 		std::string HDRSSBuffer;
 		std::string atmScatParamBuffer;
 		std::string lensFlareParametersBuffer;

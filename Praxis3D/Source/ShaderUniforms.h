@@ -215,6 +215,18 @@ public:
 		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &p_uniformData.m_frameData.m_transposeViewMatrix[0][0]);
 	}
 };
+class TransposeInverseViewMatUniform : public BaseUniform
+{
+public:
+	TransposeInverseViewMatUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().transposeInverseViewMatUniform, p_shaderHandle)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniformMatrix4fv(m_uniformHandle, 1, GL_FALSE, &p_uniformData.m_frameData.m_transposeInverseViewMatrix[0][0]);
+	}
+};
 
 class ScreenSizeUniform : public BaseUniform
 {
@@ -844,6 +856,16 @@ public:
 		glUniform1i(m_uniformHandle, GBufferTextureType::GBufferFinal);
 	}
 };
+class DepthMapUniform : public BaseUniform
+{
+public:
+	DepthMapUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().depthMapUniform, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniform1i(m_uniformHandle, GBufferTextureType::GbufferDepth);
+	}
+};
 class InputMapUniform : public BaseUniform
 {
 public:
@@ -913,8 +935,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		//glUniform1i(m_uniformHandle, p_uniformData.getNormalTexturePos());
-		glUniform1i(m_uniformHandle, MaterialType_Normal);
+		glUniform1i(m_uniformHandle, MaterialType::MaterialType_Normal);
 	}
 };
 class EmissiveTextureUniform : public BaseUniform
@@ -924,7 +945,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform1i(m_uniformHandle, MaterialType_Emissive);
+		glUniform1i(m_uniformHandle, MaterialType::MaterialType_Emissive);
 	}
 };
 class CombinedTextureUniform : public BaseUniform
@@ -934,9 +955,100 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		//glUniform1i(m_uniformHandle, p_uniformData.getCombinedTexturePos());
-		glUniform1i(m_uniformHandle, MaterialType_Combined);
+		glUniform1i(m_uniformHandle, MaterialType::MaterialType_Combined);
 	}
+};
+
+class NoiseTextureUniform : public BaseUniform
+{
+public:
+	NoiseTextureUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().noiseTexture, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniform1i(m_uniformHandle, MaterialType::MaterialType_Noise);
+	}
+};
+
+class HBAOBlurNumOfSamples : public BaseUniform
+{
+public:
+	HBAOBlurNumOfSamples(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().hbaoBlurNumOfSamples, p_shaderHandle), m_numOfSamples(0)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		if(m_numOfSamples != p_uniformData.m_frameData.m_aoData.m_aoBlurNumOfSamples)
+		{
+			m_numOfSamples = p_uniformData.m_frameData.m_aoData.m_aoBlurNumOfSamples;
+
+			glUniform1i(m_uniformHandle, m_numOfSamples);
+		}
+	}
+
+private:
+	int m_numOfSamples;
+}; 
+class HBAOBlurSharpness : public BaseUniform
+{
+public:
+	HBAOBlurSharpness(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().hbaoBlurSharpness, p_shaderHandle), m_blurSharpness(0.0f)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		if(m_blurSharpness != p_uniformData.m_frameData.m_aoData.m_aoBlurSharpness)
+		{
+			m_blurSharpness = p_uniformData.m_frameData.m_aoData.m_aoBlurSharpness;
+
+			glUniform1f(m_uniformHandle, m_blurSharpness);
+		}
+	}
+
+private:
+	float m_blurSharpness;
+};
+class HBAOBlurHorizontalInvResDirection : public BaseUniform
+{
+public:
+	HBAOBlurHorizontalInvResDirection(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().hbaoBlurHorizontalInvResDirection, p_shaderHandle), m_screenHeight(0)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		if(m_screenHeight != p_uniformData.m_frameData.m_screenSize.y)
+		{
+			m_screenHeight = p_uniformData.m_frameData.m_screenSize.y;
+
+			glUniform2f(m_uniformHandle, 0.0f, 1.0f / (float)m_screenHeight);
+		}
+	}
+
+private:
+	int m_screenHeight;
+};
+class HBAOBlurVerticalInvResDirection : public BaseUniform
+{
+public:
+	HBAOBlurVerticalInvResDirection(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().hbaoBlurVerticalInvResDirection, p_shaderHandle), m_screenWidth(0)
+	{
+	}
+
+	void update(const UniformData &p_uniformData)
+	{
+		if(m_screenWidth != p_uniformData.m_frameData.m_screenSize.x)
+		{
+			m_screenWidth = p_uniformData.m_frameData.m_screenSize.x;
+
+			glUniform2f(m_uniformHandle, 1.0f / (float)m_screenWidth, 0.0f);
+		}
+	}
+
+private:
+	int m_screenWidth;
 };
 
 class AtmIrradianceTextureUniform : public BaseUniform
@@ -1282,7 +1394,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		updateBlockBinding(UniformBufferBinding_PointLights);
+		updateBlockBinding(UniformBufferBinding::UniformBufferBinding_PointLights);
 	}
 };
 class SpotLightBufferUniform : public BaseUniformBlock
@@ -1292,7 +1404,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		updateBlockBinding(UniformBufferBinding_SpotLights);
+		updateBlockBinding(UniformBufferBinding::UniformBufferBinding_SpotLights);
 	}
 };
 class AtmScatParametersUniform : public BaseUniformBlock
@@ -1302,7 +1414,7 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		updateBlockBinding(UniformBufferBinding_AtmScatParam);
+		updateBlockBinding(UniformBufferBinding::UniformBufferBinding_AtmScatParam);
 	}
 };
 class LensFlareParametersUniform : public BaseUniformBlock
@@ -1312,7 +1424,27 @@ public:
 
 	void update(const UniformData &p_uniformData)
 	{
-		updateBlockBinding(UniformBufferBinding_LensFlareParam);
+		updateBlockBinding(UniformBufferBinding::UniformBufferBinding_LensFlareParam);
+	}
+};
+class AODataSetBufferUniform : public BaseUniformBlock
+{
+public:
+	AODataSetBufferUniform(unsigned int p_shaderHandle) : BaseUniformBlock(Config::shaderVar().AODataSetBuffer, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		updateBlockBinding(UniformBufferBinding::UniformBufferBinding_AODataSet);
+	}
+};
+class SSAOSampleBufferUniform : public BaseUniformBlock
+{
+public:
+	SSAOSampleBufferUniform(unsigned int p_shaderHandle) : BaseUniformBlock(Config::shaderVar().SSAOSampleBuffer, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		updateBlockBinding(UniformBufferBinding::UniformBufferBinding_SSAOSampleBuffer);
 	}
 };
 

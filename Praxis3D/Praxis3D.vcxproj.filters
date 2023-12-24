@@ -950,6 +950,9 @@
     <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl2.h">
       <Filter>3rd Party\imgui\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\AmbientOcclusionPass.h">
+      <Filter>Renderer\Render Passes\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\config.ini" />

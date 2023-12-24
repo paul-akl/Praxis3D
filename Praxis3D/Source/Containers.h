@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "Config.h"
 #include "CommonDefinitions.h"
 #include "Math.h"
 #include "PropertySet.h"
@@ -196,4 +197,110 @@ struct EntityAndComponent
 
 	EntityID m_entityID;
 	ComponentType m_componentType;
+};
+
+// Stores data used for tweaking the ambient occlusion effect
+struct AmbientOcclusionData
+{
+	AmbientOcclusionData()
+	{
+		setDefaultValues();
+		m_aoType = AmbientOcclusionType::AmbientOcclusionType_None;
+	}
+
+	void setDefaultValues()
+	{
+		m_aoNumOfDirections = Config::graphicsVar().ao_num_of_directions;
+		m_aoNumOfSamples = Config::graphicsVar().ao_num_of_samples;
+		m_aoNumOfSteps = Config::graphicsVar().ao_num_of_steps;
+		m_aoBlurNumOfSamples = Config::graphicsVar().ao_blur_num_of_samples;
+		m_aoBlurSharpness = Config::graphicsVar().ao_blurSharpness;
+		m_aoType = AmbientOcclusionData::ambientOcclusionTypeToAmbientOcclusionType(Config::graphicsVar().ao_type);
+
+		// Apply default AO type specific values
+		switch(m_aoType)
+		{
+			case AmbientOcclusionType_SSAO:
+				m_aoBias = Config::graphicsVar().ao_ssao_bias;
+				m_aoIntensity = Config::graphicsVar().ao_ssao_intensity;
+				m_aoRadius = Config::graphicsVar().ao_ssao_radius;
+				break;
+			case AmbientOcclusionType_HBAO:
+				m_aoBias = Config::graphicsVar().ao_hbao_bias;
+				m_aoIntensity = Config::graphicsVar().ao_hbao_intensity;
+				m_aoRadius = Config::graphicsVar().ao_hbao_radius;
+				break;
+		}
+	}
+
+	bool operator==(const AmbientOcclusionData &p_aoData) 
+	{ 
+		return	m_aoNumOfDirections == p_aoData.m_aoNumOfDirections &&
+				m_aoNumOfSamples	== p_aoData.m_aoNumOfSamples &&
+				m_aoNumOfSteps		== p_aoData.m_aoNumOfSteps &&
+				m_aoIntensity		== p_aoData.m_aoIntensity &&
+				m_aoBias			== p_aoData.m_aoBias &&
+				m_aoRadius			== p_aoData.m_aoRadius &&
+				m_aoBlurSharpness	== p_aoData.m_aoBlurSharpness &&
+				m_aoType			== p_aoData.m_aoType;
+	}
+
+	static Properties::PropertyID ambientOcclusionTypeToPropertyID(const AmbientOcclusionType p_aoType)
+	{
+		switch(p_aoType)
+		{
+			case AmbientOcclusionType::AmbientOcclusionType_None:
+			default:
+				return Properties::None;
+				break;
+			case AmbientOcclusionType::AmbientOcclusionType_SSAO:
+				return Properties::SSAO;
+				break;
+			case AmbientOcclusionType::AmbientOcclusionType_HBAO:
+				return Properties::HBAO;
+				break;
+		}
+	}
+	static AmbientOcclusionType propertyIDToAmbientOcclusionType(const Properties::PropertyID p_propertyID)
+	{
+		switch(p_propertyID)
+		{
+			case Properties::None:
+			default:
+				return AmbientOcclusionType::AmbientOcclusionType_None;
+				break;
+			case Properties::SSAO:
+				return AmbientOcclusionType::AmbientOcclusionType_SSAO;
+				break;
+			case Properties::HBAO:
+				return AmbientOcclusionType::AmbientOcclusionType_HBAO;
+				break;
+		}
+	}
+	static AmbientOcclusionType ambientOcclusionTypeToAmbientOcclusionType(const int p_aoType)
+	{
+		switch(p_aoType)
+		{
+			case AmbientOcclusionType::AmbientOcclusionType_None:
+			default:
+				return AmbientOcclusionType::AmbientOcclusionType_None;
+				break;
+			case AmbientOcclusionType::AmbientOcclusionType_SSAO:
+				return AmbientOcclusionType::AmbientOcclusionType_SSAO;
+				break;
+			case AmbientOcclusionType::AmbientOcclusionType_HBAO:
+				return AmbientOcclusionType::AmbientOcclusionType_HBAO;
+				break;
+		}
+	}
+
+	int m_aoNumOfDirections;
+	int m_aoNumOfSamples;
+	int m_aoNumOfSteps;
+	int m_aoBlurNumOfSamples;
+	float m_aoIntensity;
+	float m_aoBias;
+	float m_aoRadius;
+	float m_aoBlurSharpness;
+	AmbientOcclusionType m_aoType;
 };

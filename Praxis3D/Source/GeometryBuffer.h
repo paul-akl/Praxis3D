@@ -31,7 +31,7 @@ public:
 	virtual void initFinalPass();		// Bind the final buffer to 'read from' and the default screen buffer to 'write to'
 	
 	// Buffer binding functions
-	inline void bindBufferForReading(GBufferTextureType p_buffer, int p_activeTexture)
+	inline void bindBufferForReading(GBufferTextureType p_buffer, int p_activeTexture = 0)
 	{
 		glActiveTexture(GL_TEXTURE0 + p_activeTexture);
 		switch(p_buffer)
@@ -51,27 +51,8 @@ public:
 		case GBufferTextureType::GBufferIntermediate:
 			glBindTexture(GL_TEXTURE_2D, m_intermediateBuffer);
 			break;
-		}
-	}
-	inline void bindBufferForReading(GBufferTextureType p_buffer)
-	{
-		glActiveTexture(GL_TEXTURE0);
-		switch(p_buffer)
-		{
-		case GBufferTextureType::GBufferPosition:
-		case GBufferTextureType::GBufferDiffuse:
-		case GBufferTextureType::GBufferNormal:
-		case GBufferTextureType::GBufferEmissive:
-			glBindTexture(GL_TEXTURE_2D, m_GBTextures[p_buffer]);
-			break;
-		case GBufferTextureType::GBufferMatProperties:
-			glBindTexture(GL_TEXTURE_2D, m_GBTextures[p_buffer]);
-			break;
-		case GBufferTextureType::GBufferFinal:
-			glBindTexture(GL_TEXTURE_2D, m_finalBuffer);
-			break;
-		case GBufferTextureType::GBufferIntermediate:
-			glBindTexture(GL_TEXTURE_2D, m_intermediateBuffer);
+		case GBufferTextureType::GbufferDepth:
+			glBindTexture(GL_TEXTURE_2D, m_depthBuffer);
 			break;
 		}
 	}
@@ -212,4 +193,3 @@ protected:
 
 	GBufferTextureType m_finalPassBuffer;
 };
-

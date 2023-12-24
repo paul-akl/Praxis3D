@@ -58,10 +58,45 @@ public:
 	inline TextureDataType getTextureDataType()		const { return m_textureDataType; }
 	inline bool getMipmapEnabled()					const { return m_enableMipmap; }
 	inline int getMipmapLevel()						const { return m_mipmapLevel; }
-	inline const unsigned char *getPixelData()		const { return m_pixelData; }
+	inline const void *getPixelData()				const { return m_pixelData; }
+
+	inline void setPixelData(void *p_pixelData)
+	{
+		if(m_pixelData != nullptr)
+			delete m_pixelData;
+
+		m_pixelData = p_pixelData;
+	}
 
 	// Returns true of the texture was loaded from file
 	const inline bool isLoadedFromFile() const { return m_loadedFromFile; }
+
+	// Convert the GL filter type (int) to TextureFilterType enum
+	static inline TextureFilterType convertToTextureFilterType(const int p_textureFilterType)
+	{
+		switch(p_textureFilterType)
+		{
+			case TextureFilterType::TextureFilterType_Linear:
+			default:
+				return TextureFilterType::TextureFilterType_Linear;
+				break;
+			case TextureFilterType::TextureFilterType_LinearMipmapLinear:
+				return TextureFilterType::TextureFilterType_LinearMipmapLinear;
+				break;
+			case TextureFilterType::TextureFilterType_LinearMipmapNearest:
+				return TextureFilterType::TextureFilterType_LinearMipmapNearest;
+				break;
+			case TextureFilterType::TextureFilterType_Nearest:
+				return TextureFilterType::TextureFilterType_Nearest;
+				break;
+			case TextureFilterType::TextureFilterType_NearestMipmapLinear:
+				return TextureFilterType::TextureFilterType_NearestMipmapLinear;
+				break;
+			case TextureFilterType::TextureFilterType_NearestMipmapNearest:
+				return TextureFilterType::TextureFilterType_NearestMipmapNearest;
+				break;
+		}
+	}
 
 protected:
 	Texture2D(LoaderBase<TextureLoader2D, Texture2D> *p_loaderBase, std::string p_filename, size_t p_uniqueID, unsigned int p_handle) : UniqueObject(p_loaderBase, p_uniqueID, p_filename), m_handle(p_handle)
@@ -77,6 +112,17 @@ protected:
 		m_textureFormat = TextureFormat::TextureFormat_RGBA;
 		m_textureDataFormat = TextureDataFormat::TextureDataFormat_RGBA8;
 		m_textureDataType = TextureDataType::TextureDataType_UnsignedByte;
+
+		if(m_enableMipmap)
+		{
+			m_magnificationFilter = convertToTextureFilterType(Config::textureVar().gl_texture_magnification_mipmap);
+			m_minificationFilter = convertToTextureFilterType(Config::textureVar().gl_texture_minification_mipmap);
+		}
+		else
+		{
+			m_magnificationFilter = convertToTextureFilterType(Config::textureVar().gl_texture_magnification);
+			m_minificationFilter = convertToTextureFilterType(Config::textureVar().gl_texture_minification);
+		}
 	}
 
 	// Loads pixel data (using the filename) from HDD to RAM, re-factors it
@@ -124,7 +170,8 @@ protected:
 				m_size = m_textureWidth * m_textureHeight;
 				
 				// Texture data passed to the GPU must be in an unsigned char array format
-				m_pixelData = (unsigned char*)FreeImage_GetBits(m_bitmap);
+				//m_pixelData = (unsigned char *)FreeImage_GetBits(m_bitmap);
+				auto pixelData = FreeImage_GetBits(m_bitmap);
 
 				// Temp variable for swapping color channels
 				unsigned char blue = 0;
@@ -135,10 +182,12 @@ protected:
 				// FreeImage loads in BGR format, therefore swap of bytes is needed (Or usage of GL_BGR)
 				for(unsigned int i = 0; i < m_size; i++)
 				{
-					blue = m_pixelData[i * numChan + 0];						 // Store blue
-					m_pixelData[i * numChan + 0] = m_pixelData[i * numChan + 2]; // Set red
-					m_pixelData[i * numChan + 2] = blue;						 // Set blue
+					blue = pixelData[i * numChan + 0];						 // Store blue
+					pixelData[i * numChan + 0] = pixelData[i * numChan + 2]; // Set red
+					pixelData[i * numChan + 2] = blue;						 // Set blue
 				}
+
+				m_pixelData = pixelData;
 
 				setLoadedToMemory(true);
 				m_loadedFromFile = true;
@@ -202,7 +251,7 @@ protected:
 					// Copy the pixel data
 					// Width-index * texture-width + height-index is the translation from 2D array indices to 1D
 					// Multiply the indices by 4, because textures contain RGBA channels, and add the channel offset
-					m_pixelData[(destWidth * m_textureWidth + destHeight) * 4 + p_destChannel] =
+					((GLubyte *)m_pixelData)[(destWidth * m_textureWidth + destHeight) * 4 + p_destChannel] =
 						p_pixelData[(srcWidth * p_textureWidth + srcHeight) * 4 + p_sourceChannel];
 				}
 			}
@@ -219,12 +268,14 @@ protected:
 	TextureFormat m_textureFormat;
 	TextureDataFormat m_textureDataFormat;
 	TextureDataType m_textureDataType;
+	TextureFilterType m_magnificationFilter;
+	TextureFilterType m_minificationFilter;
 	bool m_loadedFromFile;
 	bool m_enableMipmap;
 	int m_mipmapLevel;
 
 	FIBITMAP* m_bitmap;
-	unsigned char *m_pixelData;
+	void *m_pixelData;
 	unsigned int m_size,
 				 m_handle,
 				 m_textureWidth,
@@ -263,7 +314,7 @@ public:
 			if(m_textureData->m_pixelData && p_textureHandle.m_textureData->m_pixelData)
 			{
 				// Set the color channel of the internal texture
-				m_textureData->setColorChannel(p_textureHandle.m_textureData->m_pixelData,
+				m_textureData->setColorChannel((GLubyte *)p_textureHandle.m_textureData->m_pixelData,
 											   p_textureHandle.m_textureData->m_textureWidth,
 											   p_textureHandle.m_textureData->m_textureHeight,
 											   p_destChannel, p_sourceChannel);
@@ -304,9 +355,17 @@ public:
 		inline TextureFormat getTextureFormat() const { return m_textureData->m_textureFormat; }
 		inline TextureDataFormat getTextureDataFormat() const { return m_textureData->m_textureDataFormat; }
 		inline TextureDataType getTextureDataType() const { return m_textureData->m_textureDataType; }
+		inline TextureFilterType getMagnificationFilterType() const { return m_textureData->m_magnificationFilter; }
+		inline TextureFilterType getMinificationFilterType() const { return m_textureData->m_minificationFilter; }
 		inline bool getEnableMipmap() const { return m_textureData->m_enableMipmap; }
-		inline const unsigned char *getPixelData() const { return m_textureData->m_pixelData; }
+		inline const void *getPixelData() const { return m_textureData->m_pixelData; }
 		const inline bool isLoadedFromFile() const { return m_textureData->m_loadedFromFile; }
+
+		// Setters
+		inline void setPixelData(void *p_pixelData) { m_textureData->setPixelData(p_pixelData); }
+		inline void setHandle(unsigned int p_handle) { m_textureData->m_handle = p_handle; }
+		inline void setMagnificationFilterType(const TextureFilterType p_filterType) { m_textureData->m_magnificationFilter = p_filterType; }
+		inline void setMinificationFilterType(const TextureFilterType p_filterType) { m_textureData->m_minificationFilter = p_filterType; }
 
 	private:
 		// Increment the reference counter when creating a handle

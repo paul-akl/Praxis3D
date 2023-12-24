@@ -18,6 +18,7 @@ layout(location = 4) out vec4 matPropertiesBuffer;
 
 // Variables from vertex shader
 in mat3 TBN;
+in mat3 normalMatrix;
 in vec2 texCoord;
 in vec3 fragPos;
 in vec3 normal;
@@ -217,7 +218,7 @@ vec2 parallaxMappingNew(vec2 T, vec3 V)
 
 	int nCurrSample = 0;
 
-	while ( nCurrSample < nNumSamples )
+	while(nCurrSample < nNumSamples)
 	{
 		// Sample the heightmap at the current texcoord offset.  The heightmap 
 		// is stored in the alpha channel of the height/normal map.
@@ -316,6 +317,23 @@ vec2 simpleParallaxMapping(vec2 p_texCoords, vec3 p_viewDir)
     return p_texCoords - p;
 }
 
+vec3 getNormalFromMap(vec2 p_texCoord, vec3 p_worldPos)
+{
+    vec3 tangentNormal = texture(normalTexture, p_texCoord).xyz * 2.0 - 1.0;
+
+    vec3 Q1  = dFdx(p_worldPos);
+    vec3 Q2  = dFdy(p_worldPos);
+    vec2 st1 = dFdx(p_texCoord);
+    vec2 st2 = dFdy(p_texCoord);
+
+    vec3 N   = normalize(normal);
+    vec3 T  = normalize(Q1*st2.t - Q2*st1.t);
+    vec3 B  = -normalize(cross(N, T));
+    mat3 TBN = mat3(T, B, N);
+
+    return normalize(TBN * tangentNormal);
+}
+
 void main(void)
 {
 	float height = getHeight(texCoord);
@@ -343,7 +361,7 @@ void main(void)
 	if(diffuse.a < alphaThreshold)
 		discard;
 	
-	// Get roughness and metalness values with the new coordinates
+	// Get material properties values with the new coordinates
 	// R - roughness
 	// G - metalness
 	// B - height
@@ -372,6 +390,6 @@ void main(void)
 	// Write fragment's position in world space	to the position buffer
 	positionBuffer = fragPos;
 	
-	// Perform normal mapping and write the new normal to the normal buffer
-	normalBuffer = TBN * normalize(texture(normalTexture, newCoords).rgb * 2.0 - 1.0);
+	// Write fragment's normal direction in world space
+	normalBuffer = normalize(TBN * normalize(texture(normalTexture, newCoords).rgb * 2.0 - 1.0));
 }
