@@ -73,6 +73,7 @@ enum MemoryBarrierType : unsigned int
 };
 #define RENDER_PASS_TYPE(Code) \
 	Code(RenderPassType_Geometry, = 0) \
+	Code(RenderPassType_ShadowMapping,) \
 	Code(RenderPassType_Lighting,) \
 	Code(RenderPassType_AtmScattering,) \
 	Code(RenderPassType_HdrMapping,) \
@@ -260,14 +261,20 @@ enum TextureWrapType : int
 };
 enum UniformBufferBinding : unsigned int
 {
-	UniformBufferBinding_PointLights,
+	UniformBufferBinding_PointLights = 0,
 	UniformBufferBinding_SpotLights,
 	UniformBufferBinding_AtmScatParam,
 	UniformBufferBinding_LensFlareParam,
 	UniformBufferBinding_AODataSet,
-	UniformBufferBinding_SSAOSampleBuffer
+	UniformBufferBinding_SSAOSampleBuffer,
+	UniformBufferBinding_CSMMatrixBuffer
 };
 
+enum FramebufferType : unsigned int
+{
+	FramebufferType_GBuffer = 0,
+	FramebufferType_CSMBuffer
+};
 enum GBufferTextureType : unsigned int
 {
 	GBufferPosition,
@@ -278,10 +285,15 @@ enum GBufferTextureType : unsigned int
 	GBufferFinal,
 	GBufferNumTextures = GBufferFinal,
 	GBufferIntermediate,
-	GBufferTotalNumTextures,
-	GBufferInputTexture = GBufferTotalNumTextures,
+	GBufferInputTexture,
 	GbufferOutputTexture,
-	GbufferDepth
+	GbufferDepth,
+	GBufferTotalNumTextures
+};
+
+enum CSMBufferTextureType : unsigned int
+{
+	CSMBufferTextureType_CSMDepthMap = GBufferTextureType::GBufferTotalNumTextures
 };
 
 enum AmbientOcclusionType : int

@@ -257,6 +257,7 @@
     <ClInclude Include="Source\Config.h" />
     <ClInclude Include="Source\ConfigLoader.h" />
     <ClInclude Include="Source\Containers.h" />
+    <ClInclude Include="Source\CSMFramebuffer.h" />
     <ClInclude Include="Source\DebugMoveScript.h" />
     <ClInclude Include="Source\DebugRotateScript.h" />
     <ClInclude Include="Source\DebugUIScript.h" />
@@ -316,6 +317,7 @@
     <ClInclude Include="Source\ModelComponent.h" />
     <ClInclude Include="Source\ModelLoader.h" />
     <ClInclude Include="Source\ModelGraphicsObjects.h" />
+    <ClInclude Include="Source\ShadowMappingPass.h" />
     <ClInclude Include="Source\SoundComponent.h" />
     <ClInclude Include="Source\NullObjects.h" />
     <ClInclude Include="Source\NullSystemObjects.h" />

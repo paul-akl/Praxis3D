@@ -47,7 +47,30 @@ public:
 
 	void update(RenderPassData &p_renderPassData, const SceneObjects &p_sceneObjects, const float p_deltaTime)
 	{
+		// Prepare the geometry buffer for a new frame and a geometry pass
+		m_renderer.m_backend.getGeometryBuffer()->initFrame();
+
 		glDepthMask(GL_TRUE);
+		glEnable(GL_DEPTH_TEST);		// Enable depth testing, as this is much like a regular forward render pass
+		glClear(GL_DEPTH_BUFFER_BIT);	// Make sure to clear the depth buffer for the new frame
+
+		// Set depth test function
+		glDepthFunc(Config::rendererVar().depth_test_func);
+		//glDisable(GL_CULL_FACE);
+
+		// Enable / disable face culling
+		if(Config::rendererVar().face_culling)
+		{
+			glEnable(GL_CULL_FACE);
+
+			// Set face culling mode
+			glCullFace(Config::rendererVar().face_culling_mode);
+		}
+		else
+			glDisable(GL_CULL_FACE);
+
+
+		//glDepthMask(GL_TRUE);
 		glDepthFunc(GL_LEQUAL);
 
 		// Set input and output color maps for this frame

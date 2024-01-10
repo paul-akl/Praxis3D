@@ -304,3 +304,49 @@ struct AmbientOcclusionData
 	float m_aoBlurSharpness;
 	AmbientOcclusionType m_aoType;
 };
+
+// Stores a single CSM cascade settings
+struct ShadowCascadeData
+{
+	ShadowCascadeData() : m_cascadeFarDistance(1.0f), m_maxBias(Config::rendererVar().csm_max_shadow_bias), m_distanceIsDivider(true), m_penumbraScale(1.0f) { }
+	ShadowCascadeData(const float p_cascadeDistance, const bool p_distanceIsDivider, const float p_maxBias, const float p_penumbraScale) : m_cascadeFarDistance(p_cascadeDistance), m_distanceIsDivider(p_distanceIsDivider), m_maxBias(p_maxBias), m_penumbraScale(p_penumbraScale) { }
+
+	// Float value holds either cascade distance or a divider
+	float m_cascadeFarDistance;
+
+	// Maximum bias value that the slope bias calculation result is clamped at
+	float m_maxBias;
+
+	// PCF Poisson sampling "spread" gets multiplied by penumbra scale
+	float m_penumbraScale;
+
+	// Bool value indicates whether the float is a literal distance unit or a divider (meant to divide z-far to get the distance unit)
+	// true - divider; false - literal distance unit
+	bool m_distanceIsDivider;
+};
+
+// Stores shadow mapping settings
+struct ShadowMappingData
+{
+	ShadowMappingData()
+	{
+		m_penumbraScaleRange = glm::vec2(Config::rendererVar().csm_penumbra_size_scale_min, Config::rendererVar().csm_penumbra_size_scale_max);
+		m_csmCascadePlaneZMultiplier = 10.0f;
+		m_penumbraSize = Config::rendererVar().csm_penumbra_size;
+		m_csmResolution = Config::rendererVar().csm_resolution;
+		m_numOfPCFSamples = Config::rendererVar().csm_num_of_pcf_samples;
+		m_shadowMappingEnabled = false;
+		m_zClipping = false;
+	}
+
+	std::vector<ShadowCascadeData> m_shadowCascadePlaneDistances;
+
+	// Cascaded shadow mapping data
+	glm::vec2 m_penumbraScaleRange;		// Min and Max range of penumbra size scaling based on fragment distance from the camera
+	float m_csmCascadePlaneZMultiplier;	// Multiplier for CSM cascade planes z clip distance
+	float m_penumbraSize;				// Shadow edge softness
+	unsigned int m_csmResolution;		// Resolution of CSM shadow map depth buffer
+	unsigned int m_numOfPCFSamples;		// Number of shadow map samples taken and averaged out during the Percentage-Closer Filtering
+	bool m_shadowMappingEnabled;		// Is the shadow mapping pass enabled
+	bool m_zClipping;					// Turn on z-clipping when rendering geometry for CSM depth pass (fixes VERY distant objects getting clipped out of the orthogonal shadow plane)
+};

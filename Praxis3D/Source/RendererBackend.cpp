@@ -5,22 +5,23 @@ RendererBackend::SingleTriangle RendererBackend::m_fullscreenTriangle;
 RendererBackend::RendererBackend()
 {
 	m_gbuffer = nullptr;
+	m_csmBuffer = nullptr;
 }
 
 RendererBackend::~RendererBackend()
 {
-	delete m_gbuffer;
+	if(m_gbuffer != nullptr)
+		delete m_gbuffer;
+	if(m_csmBuffer != nullptr)
+		delete m_csmBuffer;
 }
 
 ErrorCode RendererBackend::init(const UniformFrameData &p_frameData)
 {
 	ErrorCode returnCode = ErrorCode::Success;
 
-	// Initialize gbuffer (and also pass the screen size to be used as the buffer size)
-	m_gbuffer = new GeometryBuffer((unsigned int)p_frameData.m_screenSize.x, (unsigned int)p_frameData.m_screenSize.y);
-
-	// Check if the gbuffer initialization was successful
-	if(ErrHandlerLoc::get().ifSuccessful(m_gbuffer->init(), returnCode))
+	// Initialize gbuffer and check if the gbuffer initialization was successful
+	if(ErrHandlerLoc::get().ifSuccessful(createFramebuffer(FramebufferType::FramebufferType_GBuffer, p_frameData), returnCode))
 	{
 		// Load fullscreen triangle (used to render post-processing effects)
 		m_fullscreenTriangle.load();
@@ -39,13 +40,47 @@ ErrorCode RendererBackend::init(const UniformFrameData &p_frameData)
 
 		//glDepthFunc(GL_LESS);
 
-		// Set face culling mode
-		glCullFace(Config::rendererVar().face_culling_mode);
-
 		// Set depth test function
 		glDepthFunc(Config::rendererVar().depth_test_func);
 	}
 	return returnCode;
+}
+
+ErrorCode RendererBackend::createFramebuffer(const FramebufferType p_frambufferType, const UniformFrameData &p_frameData)
+{
+	ErrorCode returnError = ErrorCode::Success;
+
+	switch(p_frambufferType)
+	{
+		case FramebufferType_GBuffer:
+		{
+			if(m_gbuffer != nullptr)
+				delete m_gbuffer;
+
+			// Initialize gbuffer (and also pass the screen size to be used as the buffer size)
+			m_gbuffer = new GeometryBuffer(p_frameData);
+
+			// Check if the gbuffer initialization was successful
+			returnError = m_gbuffer->init(p_frameData);
+			//if(ErrHandlerLoc::get().ifSuccessful(m_gbuffer->init(), returnError))
+		}
+		break;
+
+		case FramebufferType_CSMBuffer:
+		{
+			if(m_csmBuffer != nullptr)
+				delete m_csmBuffer;
+
+			m_csmBuffer = new CSMFramebuffer(p_frameData);
+
+			returnError = m_csmBuffer->init(p_frameData);
+
+		}
+		break;
+
+	}
+
+	return returnError;
 }
 
 void RendererBackend::processUpdate(const BufferUpdateCommands &p_updateCommands, const UniformFrameData &p_frameData)

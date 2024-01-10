@@ -37,6 +37,7 @@ enum DataType : uint32_t
 	DataType_GUIPassFunctors,			// FunctorSequence
 	DataType_RenderToTexture,			// bool
 	DataType_RenderToTextureResolution, // glm::ivec2
+	DataType_ShadowMappingData,			// ShadowMappingData
 	DataType_LoadShader,				// ShaderLoader::ShaderProgram
 	DataType_LoadTexture2D,				// TextureLoader2D::Texture2DHandle
 	DataType_UnloadTexture2D,			// TextureLoader2D::Texture2DHandle
@@ -385,10 +386,12 @@ namespace Properties
 	Code(AmbientOcclusion, ) \
 	Code(Attenuation,) \
 	Code(Bias,) \
+	Code(BiasMax,) \
 	Code(BlurSamples,) \
 	Code(BlurSharpness,) \
 	Code(Camera,) \
 	Code(CameraComponent,) \
+	Code(Cascades,) \
 	Code(ClampToBorder,) \
 	Code(ClampToEdge,) \
 	Code(Color,) \
@@ -399,6 +402,8 @@ namespace Properties
 	Code(Direction,) \
 	Code(Directions,) \
 	Code(DirectionalLight,) \
+	Code(Distance,) \
+	Code(Divider,) \
 	Code(Emissive,) \
 	Code(EmissiveIntensity,) \
 	Code(EnvironmentMapDynamic,) \
@@ -427,6 +432,10 @@ namespace Properties
 	Code(NegativeZ,) \
 	Code(Normal,) \
 	Code(ParallaxHeightScale,) \
+	Code(PenumbraScale,) \
+	Code(PenumbraSize,) \
+	Code(PenumbraScaleRange,) \
+	Code(PCF,) \
 	Code(PointLight,) \
 	Code(PointLightPoolSize,) \
 	Code(PositiveX,) \
@@ -437,6 +446,7 @@ namespace Properties
 	Code(Rendering,) \
 	Code(RenderPasses,) \
 	Code(Repeat,) \
+	Code(Resolution,) \
 	Code(RMHAO,) \
 	Code(Roughness,) \
 	Code(Samples,) \
@@ -445,6 +455,7 @@ namespace Properties
 	Code(ShaderPoolSize,) \
 	Code(ShaderGraphicsObject,) \
 	Code(ShaderModelObject,) \
+	Code(ShadowMapping,) \
 	Code(SpotLight,) \
 	Code(SpotLightPoolSize,) \
 	Code(SSAO,) \
@@ -456,17 +467,20 @@ namespace Properties
 	Code(TextureScale,) \
 	Code(VertexShader,) \
 	Code(WrapMode,) \
+	Code(ZClipping,) \
 	Code(ZFar,) \
 	Code(ZNear,) \
+	Code(ZPlaneMultiplier,) \
 	/* Graphics rendering passes */ \
 	Code(AmbientOcclusionRenderPass,) \
 	Code(AtmScatteringRenderPass,) \
 	Code(BloomRenderPass,) \
+	Code(FinalRenderPass,) \
 	Code(GeometryRenderPass,) \
 	Code(GUIRenderPass,) \
 	Code(LightingRenderPass,) \
 	Code(LuminanceRenderPass,) \
-	Code(FinalRenderPass,) \
+	Code(ShadowMappingPass,) \
 	/* GUI */ \
 	Code(EditorWindow,) \
 	Code(GUI,) \
@@ -969,6 +983,8 @@ public:
 		int bloom_mipmap_limit;
 		int current_resolution_x;
 		int current_resolution_y;
+		//int csm_num_of_levels;
+		//int csm_resolution;
 		int dir_shadow_res_x;
 		int dir_shadow_res_y;
 		int lens_flare_blur_passes;
@@ -1044,7 +1060,7 @@ public:
 			editor_inspector_button_width_multiplier = 1.5f;
 			editor_lua_variables_max_height = 200.0f;
 			editor_play_button_size = 30.0f;
-			editor_render_pass_max_height = 270.0f;
+			editor_render_pass_max_height = 275.0f;
 			gui_file_dialog_min_size_x = 400.0f;
 			gui_file_dialog_min_size_y = 200.0f;
 			gui_file_dialog_dir_color_R = 0.905f;
@@ -1320,6 +1336,9 @@ public:
 			bloom_upscale_comp_shader = "bloomUpscale.comp";
 			blur_pass_vert_shader = "blurPass.vert";
 			blur_pass_frag_shader = "blurPass.frag";
+			csm_pass_frag_shader = "csmPass.frag";
+			csm_pass_geom_shader = "csmPass.geom";
+			csm_pass_vert_shader = "csmPass.vert";
 			hbao_blur_horizontal_frag_shader = "ambientOcclusionBlurHBAOhorizontal.frag";
 			hbao_blur_horizontal_vert_shader = "ambientOcclusionBlurHBAO.vert";
 			hbao_blur_vertical_frag_shader = "ambientOcclusionBlurHBAOvertical.frag";
@@ -1330,6 +1349,8 @@ public:
 			lense_flare_comp_pass_frag_shader = "lenseFlareCompositePass.frag";
 			lense_flare_pass_vert_shader = "lenseFlarePass.vert";
 			lense_flare_pass_frag_shader = "lenseFlarePass.frag";
+			light_pass_csm_vert_shader = "lightPass_CSM.vert";
+			light_pass_csm_frag_shader = "lightPass_CSM.frag";
 			light_pass_vert_shader = "lightPass.vert";
 			light_pass_frag_shader = "lightPass.frag";
 			final_pass_vert_shader = "finalPass.vert";
@@ -1345,12 +1366,18 @@ public:
 			ssao_blur_vert_shader = "ambientOcclusionBlurSSAO.vert";
 			ssao_pass_frag_shader = "ambientOcclusionPassSSAO.frag";
 			ssao_pass_vert_shader = "ambientOcclusionPassSSAO.vert";
+			csm_max_shadow_bias = 0.0005f;
+			csm_penumbra_size = 1.42f;
+			csm_penumbra_size_scale_min = 1.0f;
+			csm_penumbra_size_scale_max = 2000.0f;
 			dir_light_quad_offset_x = 0.0f;
 			dir_light_quad_offset_y = 0.0f;
 			dir_light_quad_offset_z = 0.0f;
 			dir_light_quad_rotation_x = 180.0f;
 			dir_light_quad_rotation_y = 0.0f;
 			dir_light_quad_rotation_z = 0.0f;
+			csm_num_of_pcf_samples = 16;
+			csm_resolution = 2048;
 			depth_test_func = GL_LESS;
 			face_culling_mode = GL_BACK;
 			heightmap_combine_channel = 3;
@@ -1401,6 +1428,9 @@ public:
 		std::string bloom_upscale_comp_shader;
 		std::string blur_pass_vert_shader;
 		std::string blur_pass_frag_shader;
+		std::string csm_pass_frag_shader;
+		std::string csm_pass_geom_shader;
+		std::string csm_pass_vert_shader;
 		std::string hbao_blur_horizontal_frag_shader;
 		std::string hbao_blur_horizontal_vert_shader;
 		std::string hbao_blur_vertical_frag_shader;
@@ -1411,6 +1441,8 @@ public:
 		std::string lense_flare_comp_pass_frag_shader;
 		std::string lense_flare_pass_vert_shader;
 		std::string lense_flare_pass_frag_shader;
+		std::string light_pass_csm_vert_shader;
+		std::string light_pass_csm_frag_shader;
 		std::string light_pass_vert_shader;
 		std::string light_pass_frag_shader;
 		std::string final_pass_vert_shader;
@@ -1426,12 +1458,18 @@ public:
 		std::string ssao_blur_vert_shader;
 		std::string ssao_pass_frag_shader;
 		std::string ssao_pass_vert_shader;
+		float csm_max_shadow_bias;
+		float csm_penumbra_size;
+		float csm_penumbra_size_scale_min;
+		float csm_penumbra_size_scale_max;
 		float dir_light_quad_offset_x;
 		float dir_light_quad_offset_y;
 		float dir_light_quad_offset_z;
 		float dir_light_quad_rotation_x;
 		float dir_light_quad_rotation_y;
 		float dir_light_quad_rotation_z;
+		int csm_num_of_pcf_samples;
+		int csm_resolution;
 		int depth_test_func;
 		int face_culling_mode;
 		int heightmap_combine_channel;
@@ -1489,6 +1527,7 @@ public:
 			texelSize = "texelSize";
 			numOfTexels = "numOfTexels";
 			mipLevel = "mipLevel";
+			projPlaneRange = "projPlaneRange";
 
 			ambientLightIntensity = "ambientLightIntensity";
 			dirLightColor = "directionalLight.m_color";
@@ -1520,6 +1559,9 @@ public:
 			depthMapUniform = "depthMap";
 			inputColorMapUniform = "inputColorMap";
 			outputColorMapUniform = "outputColorMap";
+
+			csmDepthMapUniform = "csmDepthMap";
+			csmPenumbraScaleRange = "csmPenumbraScaleRange";
 
 			sunGlowTextureUniform = "sunGlowMap";
 			skyMapTextureUniform = "skyMap";
@@ -1570,6 +1612,7 @@ public:
 			eyeAdaptionIntBrightnessUniform = "eyeAdaptionIntBrightness";
 			AODataSetBuffer = "AODataSetBuffer";
 			SSAOSampleBuffer = "SSAOSampleBuffer";
+			CSMDataSetBuffer = "CSMDataSetBuffer";
 			HDRSSBuffer = "HDRBuffer";
 			atmScatParamBuffer = "AtmScatParametersBuffer";
 			lensFlareParametersBuffer = "LensFlareParametersBuffer";
@@ -1577,6 +1620,9 @@ public:
 			testMatUniform = "testMat";
 			testVecUniform = "testVec";
 			testFloatUniform = "testFloat";
+
+			define_numOfCascades = "NUM_OF_CASCADES";
+			define_numOfPCFSamples = "NUM_OF_PCF_SAMPLES";
 		}
 
 		std::string atmScatProjMatUniform;
@@ -1604,6 +1650,7 @@ public:
 		std::string texelSize;
 		std::string numOfTexels;
 		std::string mipLevel;
+		std::string projPlaneRange;
 
 		std::string ambientLightIntensity;
 		std::string dirLightColor;
@@ -1635,6 +1682,9 @@ public:
 		std::string depthMapUniform;
 		std::string inputColorMapUniform;
 		std::string outputColorMapUniform;
+		
+		std::string csmDepthMapUniform;
+		std::string csmPenumbraScaleRange;
 
 		std::string sunGlowTextureUniform;
 		std::string skyMapTextureUniform;
@@ -1685,6 +1735,7 @@ public:
 		std::string eyeAdaptionIntBrightnessUniform;
 		std::string AODataSetBuffer;
 		std::string SSAOSampleBuffer;
+		std::string CSMDataSetBuffer;
 		std::string HDRSSBuffer;
 		std::string atmScatParamBuffer;
 		std::string lensFlareParametersBuffer;
@@ -1692,6 +1743,10 @@ public:
 		std::string testMatUniform;
 		std::string testVecUniform;
 		std::string testFloatUniform;
+
+		// Shader #define variable names
+		std::string define_numOfCascades;
+		std::string define_numOfPCFSamples;
 	};
 	struct TextureVariables
 	{

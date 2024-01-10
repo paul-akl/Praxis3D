@@ -126,11 +126,17 @@ ErrorCode RendererScene::setup(const PropertySet &p_properties)
 			{
 				switch(typeProperty.getID())
 				{
+					case Properties::AmbientOcclusionRenderPass:
+						m_renderingPasses.push_back(RenderPassType::RenderPassType_AmbientOcclusion);
+						break;
 					case Properties::AtmScatteringRenderPass:
 						m_renderingPasses.push_back(RenderPassType::RenderPassType_AtmScattering);
 						break;
 					case Properties::BloomRenderPass:
 						m_renderingPasses.push_back(RenderPassType::RenderPassType_Bloom);
+						break;
+					case Properties::FinalRenderPass:
+						m_renderingPasses.push_back(RenderPassType::RenderPassType_Final);
 						break;
 					case Properties::GeometryRenderPass:
 						m_renderingPasses.push_back(RenderPassType::RenderPassType_Geometry);
@@ -144,13 +150,92 @@ ErrorCode RendererScene::setup(const PropertySet &p_properties)
 					case Properties::LuminanceRenderPass:
 						m_renderingPasses.push_back(RenderPassType::RenderPassType_Luminance);
 						break;
-					case Properties::FinalRenderPass:
-						m_renderingPasses.push_back(RenderPassType::RenderPassType_Final);
-						break;
-					case Properties::AmbientOcclusionRenderPass:
-						m_renderingPasses.push_back(RenderPassType::RenderPassType_AmbientOcclusion);
+					case Properties::ShadowMappingPass:
+						m_renderingPasses.push_back(RenderPassType::RenderPassType_ShadowMapping);
 						break;
 				}
+			}
+		}
+	}
+
+	// Load shadow mapping data
+	if(auto &shadowMappingProperty = p_properties.getPropertySetByID(Properties::ShadowMapping); shadowMappingProperty)
+	{
+		for(decltype(shadowMappingProperty.getNumProperties()) i = 0, size = shadowMappingProperty.getNumProperties(); i < size; i++)
+		{
+			switch(shadowMappingProperty[i].getPropertyID())
+			{
+				// Set CSM penumbra size (shadow edge softness)
+				case Properties::PenumbraSize:
+					m_shadowMappingData.m_penumbraSize = shadowMappingProperty[i].getFloat();
+					break;
+
+					// Set CSM penumbra size scale range
+				case Properties::PenumbraScaleRange:
+					m_shadowMappingData.m_penumbraScaleRange = shadowMappingProperty[i].getVec2f();
+					break;
+
+				// Set CSM resolution property
+				case Properties::Resolution:
+					m_shadowMappingData.m_csmResolution = (unsigned int)shadowMappingProperty[i].getInt();
+					break;
+
+				// Set CSM cascade plane z clip distance multiplier
+				case Properties::ZClipping:
+					m_shadowMappingData.m_zClipping = shadowMappingProperty[i].getBool();
+					break;
+
+				// Set CSM cascade plane z clip distance multiplier
+				case Properties::ZPlaneMultiplier:
+					m_shadowMappingData.m_csmCascadePlaneZMultiplier = shadowMappingProperty[i].getFloat();
+					break;
+			}
+		}
+
+		// Find PCF property set
+		if(auto &pcfProperty = shadowMappingProperty.getPropertySetByID(Properties::PCF); pcfProperty)
+		{
+			// Find the Samples property
+			if(auto &samplesProperty = pcfProperty.getPropertyByID(Properties::Samples); samplesProperty)
+			{
+				// Get the number of samples and make sure it is not zero or lower
+				int samples = samplesProperty.getInt();
+				if(samples > 0)
+					m_shadowMappingData.m_numOfPCFSamples = (unsigned int)samples;
+			}
+		}
+
+		// Find Cascades property set
+		if(auto &cascadesProperty = shadowMappingProperty.getPropertySetByID(Properties::Cascades); cascadesProperty)
+		{
+			// Go over each array entry of Cascades property set
+			for(decltype(cascadesProperty.getNumPropertySets()) i = 0, size = cascadesProperty.getNumPropertySets(); i < size; i++)
+			{
+				ShadowCascadeData cascadeData;
+
+				// If the Distance property is present, add the shadow cascade distance and set the divider flag to FALSE
+				// Otherwise, if the Divider property is present, add the divider value and set the divider flag to TRUE
+				if(auto &distanceProperty = cascadesProperty.getPropertySetUnsafe(i).getPropertyByID(Properties::Distance); distanceProperty)
+				{
+					cascadeData.m_cascadeFarDistance = distanceProperty.getFloat();
+					cascadeData.m_distanceIsDivider = false;
+				}
+				else
+					if(auto &dividerProperty = cascadesProperty.getPropertySetUnsafe(i).getPropertyByID(Properties::Divider); dividerProperty)
+					{
+						cascadeData.m_cascadeFarDistance = dividerProperty.getFloat();
+						cascadeData.m_distanceIsDivider = true;
+					}
+
+				// Find and add the max bias value
+				if(auto &biasMaxProperty = cascadesProperty.getPropertySetUnsafe(i).getPropertyByID(Properties::BiasMax); biasMaxProperty)
+					cascadeData.m_maxBias = biasMaxProperty.getFloat();
+
+				// Find and add the penumbra scale value
+				if(auto &penumbraScaleProperty = cascadesProperty.getPropertySetUnsafe(i).getPropertyByID(Properties::PenumbraScale); penumbraScaleProperty)
+					cascadeData.m_penumbraScale = penumbraScaleProperty.getFloat();
+
+				m_shadowMappingData.m_shadowCascadePlaneDistances.push_back(cascadeData);
 			}
 		}
 	}
@@ -187,15 +272,45 @@ void RendererScene::exportSetup(PropertySet &p_propertySet)
 	objectPoolSizePropertySet.addProperty(Properties::ModelComponent, (int)worldScene->getPoolSize<ModelComponent>());
 	objectPoolSizePropertySet.addProperty(Properties::ShaderComponent, (int)worldScene->getPoolSize<ShaderComponent>());
 
+	// Add rendering passes
 	exportRenderingPasses(p_propertySet, m_renderingPasses);
+
+	// Add shadow mapping data
+	auto &shadowMappingPropertySet = p_propertySet.addPropertySet(Properties::ShadowMapping);
+
+	shadowMappingPropertySet.addProperty(Properties::PenumbraSize, m_shadowMappingData.m_penumbraSize);
+	shadowMappingPropertySet.addProperty(Properties::PenumbraScaleRange, m_shadowMappingData.m_penumbraScaleRange);
+	shadowMappingPropertySet.addProperty(Properties::Resolution, (int)m_shadowMappingData.m_csmResolution);
+	shadowMappingPropertySet.addProperty(Properties::ZClipping, m_shadowMappingData.m_zClipping);
+	shadowMappingPropertySet.addProperty(Properties::ZPlaneMultiplier, m_shadowMappingData.m_csmCascadePlaneZMultiplier);
+
+	auto &pcfPropertySet = shadowMappingPropertySet.addPropertySet(Properties::PCF);
+	pcfPropertySet.addProperty(Properties::Samples, (int)m_shadowMappingData.m_numOfPCFSamples);
+
+	// Go over each CSM cascade plane
+	auto &cascadesPropertySet = shadowMappingPropertySet.addPropertySet(Properties::Cascades);
+	for(decltype(m_shadowMappingData.m_shadowCascadePlaneDistances.size()) i = 0, size = m_shadowMappingData.m_shadowCascadePlaneDistances.size(); i < size; i++)
+	{
+		// Set the export cascade type property to either Divider or Distance, based on the divider flag
+		Properties::PropertyID cascadeTypeProperty = m_shadowMappingData.m_shadowCascadePlaneDistances[i].m_distanceIsDivider ? Properties::Divider : Properties::Distance;
+
+		// Add the cascade plane array entry
+		auto &cascadeArrayEntryProperty = cascadesPropertySet.addPropertySet(Properties::ArrayEntry);
+
+		// Add distance or divider property
+		cascadeArrayEntryProperty.addProperty(cascadeTypeProperty, m_shadowMappingData.m_shadowCascadePlaneDistances[i].m_cascadeFarDistance);
+
+		// Add max bias property
+		cascadeArrayEntryProperty.addProperty(Properties::BiasMax, m_shadowMappingData.m_shadowCascadePlaneDistances[i].m_maxBias);
+
+		// Add penumbra scale property
+		cascadeArrayEntryProperty.addProperty(Properties::PenumbraScale, m_shadowMappingData.m_shadowCascadePlaneDistances[i].m_penumbraScale);
+	}
 }
 
 void RendererScene::activate()
 {
 	auto rendererSystem = static_cast<RendererSystem *>(m_system);
-
-	// Set rendering passes
-	rendererSystem->setRenderingPasses(m_renderingPasses);
 
 	// Set whether render the scene to texture or the whole screen
 	rendererSystem->getRenderer().setRenderFinalToTexture(m_renderToTexture);
@@ -208,6 +323,15 @@ void RendererScene::activate()
 
 	// Set the AO data
 	rendererSystem->getRenderer().setAmbientOcclusionData(m_sceneAOData);
+
+	// Set the shadow mapping data
+	rendererSystem->getRenderer().setShadowMappingData(m_shadowMappingData);
+
+	// Set rendering passes
+	rendererSystem->setRenderingPasses(m_renderingPasses);
+
+	// Update the internal shadow mapping enabled flag, as it is set based on the rendering passes that are given to the renderer system
+	m_shadowMappingData.m_shadowMappingEnabled = rendererSystem->getRenderer().getShadowMappingData().m_shadowMappingEnabled;
 }
 
 void RendererScene::deactivate()
@@ -1065,6 +1189,23 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
 				if(p_deleteAfterReceiving)
 					delete renderToTextureResolution;
+			}
+			break;
+
+		case DataType::DataType_ShadowMappingData:
+			{
+				auto *shadowMappingData = static_cast<ShadowMappingData *>(p_data);
+
+				// Set the new shadow mapping data
+				m_shadowMappingData = *shadowMappingData;
+
+				// Send the new shadow mapping data to the renderer
+				auto rendererSystem = static_cast<RendererSystem *>(m_system);
+				rendererSystem->getRenderer().setShadowMappingData(m_shadowMappingData);
+
+				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
+				if(p_deleteAfterReceiving)
+					delete shadowMappingData;
 			}
 			break;
 

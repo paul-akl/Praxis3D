@@ -16,6 +16,7 @@
 #include "PostProcessPass.h"
 #include "ReflectionPass.h"
 #include "RendererFrontend.h"
+#include "ShadowMappingPass.h"
 #include "SkyPass.h"
 
 RendererFrontend::RendererFrontend() : m_renderPassData(nullptr)
@@ -27,9 +28,6 @@ RendererFrontend::RendererFrontend() : m_renderPassData(nullptr)
 	m_renderingPassesSet = false;
 	for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
 		m_allRenderPasses[i] = nullptr;
-
-	m_zFar = Config::graphicsVar().z_far;
-	m_zNear = Config::graphicsVar().z_near;
 }
 
 RendererFrontend::~RendererFrontend()
@@ -106,6 +104,7 @@ void RendererFrontend::setRenderingPasses(const RenderingPasses &p_renderingPass
 	m_activeRenderPasses.clear();
 
 	bool guiRenderPassSet = false;
+	bool shadowMappingPassSet = false;
 
 	for(decltype(p_renderingPasses.size()) i = 0, size = p_renderingPasses.size(); i < size; i++)
 	{
@@ -115,6 +114,12 @@ void RendererFrontend::setRenderingPasses(const RenderingPasses &p_renderingPass
 				if(m_allRenderPasses[RenderPassType_Geometry] == nullptr)
 					m_allRenderPasses[RenderPassType_Geometry] = new GeometryPass(*this);
 				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_Geometry]);
+				break;
+			case RenderPassType_ShadowMapping:
+				if(m_allRenderPasses[RenderPassType_ShadowMapping] == nullptr)
+					m_allRenderPasses[RenderPassType_ShadowMapping] = new ShadowMappingPass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_ShadowMapping]);
+				shadowMappingPassSet = true;
 				break;
 			case RenderPassType_Lighting:
 				if(m_allRenderPasses[RenderPassType_Lighting] == nullptr)
@@ -186,6 +191,9 @@ void RendererFrontend::setRenderingPasses(const RenderingPasses &p_renderingPass
 	else
 		if(m_guiRenderWasEnabled)
 			Config::m_GUIVar.gui_render = true;
+
+	// Set the shadow mapping enabled flag
+	m_frameData.m_shadowMappingData.m_shadowMappingEnabled = shadowMappingPassSet;
 
 	for(decltype(m_activeRenderPasses.size()) size = m_activeRenderPasses.size(), i = 0; i < size; i++)
 	{
@@ -259,11 +267,12 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 		}
 	}
 
-	// If Z-buffer near or far values have changed, flag projection matrix for updating
-	if(m_zFar != p_sceneObjects.m_zFar || m_zNear != p_sceneObjects.m_zNear)
+	// If Z-buffer near or far or FOV values have changed, flag projection matrix for updating
+	if(m_frameData.m_zFar != p_sceneObjects.m_zFar || m_frameData.m_zNear != p_sceneObjects.m_zNear || m_frameData.m_fov != Config::graphicsVar().fov)
 	{
-		m_zFar = p_sceneObjects.m_zFar;
-		m_zNear = p_sceneObjects.m_zNear;
+		m_frameData.m_zFar = p_sceneObjects.m_zFar;
+		m_frameData.m_zNear = p_sceneObjects.m_zNear;
+		m_frameData.m_fov = Config::graphicsVar().fov;
 		projectionMatrixNeedsUpdating = true;
 	}
 
@@ -389,17 +398,6 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 	
 	// Set ambient intensity multiplier
 	m_frameData.m_ambientIntensity = p_sceneObjects.m_ambientIntensity;
-
-	// Prepare the geometry buffer for a new frame and a geometry pass
-	m_backend.getGeometryBuffer()->initFrame();
-	
-	glDepthMask(GL_TRUE);
-	glEnable(GL_DEPTH_TEST);		// Enable depth testing, as this is much like a regular forward render pass
-	glClear(GL_DEPTH_BUFFER_BIT);	// Make sure to clear the depth buffer for the new frame
-
-	// Set depth test function
-	glDepthFunc(Config::rendererVar().depth_test_func);
-	//glDisable(GL_CULL_FACE);
 
 	for(decltype(m_activeRenderPasses.size()) i = 0, size = m_activeRenderPasses.size(); i < size; i++)
 	{

@@ -156,3 +156,40 @@ ShaderLoader::ShaderProgram::~ShaderProgram()
 {
 	delete m_uniformUpdater;
 }
+
+ErrorCode ShaderLoader::ShaderProgram::setVariableDefinition(const ShaderVariableDefinition &p_variable)
+{
+	ErrorCode returnError = ErrorCode::Success;
+
+	// Get the source code for the given shader
+	std::string &shaderSource = m_shaderSource[p_variable.m_shaderType];
+
+	// Check if the source code is present
+	if(!shaderSource.empty())
+	{
+		// Find the variable starting position in the source code
+		auto variableStartPosition = shaderSource.find(p_variable.m_variableName);
+
+		// Check if the variable was found
+		if(variableStartPosition != std::string::npos)
+		{
+			// Find the variable end position, by looking for the "next line" symbol, as that determines the end of the #define
+			auto variableEndPosition = shaderSource.find("\n", variableStartPosition + 1);
+
+			// Check if the end position was found
+			if(variableEndPosition != std::string::npos)
+			{
+				// Replace the variable and its value with the given one
+				shaderSource.replace(variableStartPosition, variableEndPosition - variableStartPosition, p_variable.m_variableName + " " + p_variable.m_variableValue);
+			}
+			else
+				returnError = ErrorCode::Shader_variable_not_found;
+		}
+		else
+			returnError = ErrorCode::Shader_variable_not_found;
+	}
+	else
+		returnError = ErrorCode::Shader_source_empty;
+
+	return returnError;
+}

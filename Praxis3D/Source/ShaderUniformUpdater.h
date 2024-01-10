@@ -13,6 +13,7 @@
 class ShaderUniformUpdater
 {
 	friend class RendererBackend;
+	friend class LightingPass;
 public:
 	ShaderUniformUpdater(ShaderLoader::ShaderProgram &p_shader) : m_shader(p_shader)
 	{

@@ -2,6 +2,8 @@
 
 #include <GL/glew.h>
 
+#include "UniformData.h"
+
 class Framebuffer
 {
 public:
@@ -38,13 +40,14 @@ public:
 
 	GLuint getStatus() { return m_status; }
 
-	virtual ErrorCode init() = 0;
+	virtual ErrorCode init(const UniformFrameData &p_frameData) = 0;
 	
 	inline unsigned int getBufferWidth() const { return m_bufferWidth; }
 	inline unsigned int getBufferHeight() const { return m_bufferHeight; }
 	
 	// Set the size of all buffers
 	virtual void setBufferSize(unsigned int p_bufferWidth, unsigned int p_bufferHeight) = 0;
+
 	// Set the size of an individual buffer
 	virtual void setBufferSize(GLuint p_buffer, unsigned int p_bufferWidth, unsigned int p_bufferHeight) = 0;
 

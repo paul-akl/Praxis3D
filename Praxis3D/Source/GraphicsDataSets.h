@@ -405,12 +405,22 @@ struct AODataSet
 	int m_numOfSteps;
 };
 
+struct CascadedShadowMapDataSet
+{
+	CascadedShadowMapDataSet() : m_cascadePlaneDistance(0.0f), m_maxBias(0.0f), m_poissonSampleScale(0.0f), m_penumbraScale(1.0f) { }
+	CascadedShadowMapDataSet(const glm::mat4 &p_lightSpaceMatrix, const float p_cascadePlaneDistance, const float p_maxBias, const float p_poissonSampleScale, const float p_penumbraScale) :
+		m_lightSpaceMatrix(p_lightSpaceMatrix), m_cascadePlaneDistance(p_cascadePlaneDistance), m_maxBias(p_maxBias), m_poissonSampleScale(p_poissonSampleScale), m_penumbraScale(p_penumbraScale) { }
+
+	glm::mat4 m_lightSpaceMatrix;
+	float m_cascadePlaneDistance;
+	float m_maxBias;
+	float m_poissonSampleScale;
+	float m_penumbraScale;
+};
+
 struct HDRDataSet
 {
-	HDRDataSet()
-	{
-		m_screenBrightness = 0.5f;
-	}
+	HDRDataSet() : m_screenBrightness(0.5f) { }
 
 	float m_screenBrightness;
 };

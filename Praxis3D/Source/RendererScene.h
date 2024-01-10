@@ -236,6 +236,7 @@ public:
 	inline SceneObjects &getSceneObjects() { return m_sceneObjects; }
 	const inline RenderingPasses &getRenderingPasses() const { return m_renderingPasses; }
 	const inline AmbientOcclusionData &getAmbientOcclusionData() const { return m_sceneAOData; }
+	const inline ShadowMappingData &getShadowMappingData() const { return m_shadowMappingData; }
 	const glm::mat4 &getViewMatrix() const;
 	const glm::mat4 &getProjectionMatrix() const;
 
@@ -251,11 +252,17 @@ public:
 			Properties::PropertyID renderPassTypeProperty = Properties::Null;
 			switch(renderPassType)
 			{
+				case RenderPassType::RenderPassType_AmbientOcclusion:
+					renderPassTypeProperty = Properties::AmbientOcclusionRenderPass;
+					break;
 				case RenderPassType::RenderPassType_AtmScattering:
 					renderPassTypeProperty = Properties::AtmScatteringRenderPass;
 					break;
 				case RenderPassType::RenderPassType_Bloom:
 					renderPassTypeProperty = Properties::BloomRenderPass;
+					break;
+				case RenderPassType::RenderPassType_Final:
+					renderPassTypeProperty = Properties::FinalRenderPass;
 					break;
 				case RenderPassType::RenderPassType_Geometry:
 					renderPassTypeProperty = Properties::GeometryRenderPass;
@@ -269,11 +276,8 @@ public:
 				case RenderPassType::RenderPassType_Luminance:
 					renderPassTypeProperty = Properties::LuminanceRenderPass;
 					break;
-				case RenderPassType::RenderPassType_Final:
-					renderPassTypeProperty = Properties::FinalRenderPass;
-					break;
-				case RenderPassType::RenderPassType_AmbientOcclusion:
-					renderPassTypeProperty = Properties::AmbientOcclusionRenderPass;
+				case RenderPassType::RenderPassType_ShadowMapping:
+					renderPassTypeProperty = Properties::ShadowMappingPass;
 					break;
 			}
 
@@ -303,6 +307,9 @@ private:
 
 	// Ambient occlusion data
 	AmbientOcclusionData m_sceneAOData;
+
+	// Shadow mapping data
+	ShadowMappingData m_shadowMappingData;
 
 	// Render-to-texture data
 	bool m_renderToTexture;

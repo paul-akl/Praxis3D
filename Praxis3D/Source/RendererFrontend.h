@@ -10,10 +10,12 @@ struct RenderPassData;
 
 class RendererFrontend
 {
+	friend class AmbientOcclusionPass;
 	friend class AtmScatteringPass;
 	friend class BloomCompositePass;
 	friend class BloomPass;
 	friend class BlurPass;
+	friend class FinalPass;
 	friend class GeometryPass;
 	friend class GUIPass;
 	friend class HdrMappingPass;
@@ -22,10 +24,9 @@ class RendererFrontend
 	friend class LightingPass;
 	friend class LuminancePass;
 	friend class PostProcessPass;
-	friend class FinalPass;
 	friend class ReflectionPass;
+	friend class ShadowMappingPass;
 	friend class SkyPass;
-	friend class AmbientOcclusionPass;
 public:
 	// A handle for a uniform or shader storage buffer
 	struct ShaderBuffer
@@ -64,8 +65,10 @@ public:
 	void setRenderToTextureResolution(const glm::ivec2 p_renderToTextureResolution);
 	void setRenderingPasses(const RenderingPasses &p_renderingPasses);
 	void setAmbientOcclusionData(const AmbientOcclusionData &p_aoData) { m_frameData.m_aoData = p_aoData; }
+	void setShadowMappingData(const ShadowMappingData &p_shadowMappingData) { m_frameData.m_shadowMappingData = p_shadowMappingData; }
 
 	const RenderingPasses getRenderingPasses();
+	const ShadowMappingData &getShadowMappingData() const { return m_frameData.m_shadowMappingData; }
 
 	// Renders a complete frame
 	void renderFrame(SceneObjects &p_sceneObjects, const float p_deltaTime);
@@ -326,32 +329,20 @@ protected:
 	// Recalculates the projection matrix
 	inline void updateProjectionMatrix()
 	{
-		//m_frameData.m_projMatrix = glm::perspective(
-		//	Config::graphicsVar().fov, 
-		//	(float) m_frameData.m_screenSize.x / (float) m_frameData.m_screenSize.y, 
-		//	Config::graphicsVar().z_near,
-		//	Config::graphicsVar().z_far);
-
 		m_frameData.m_projMatrix = glm::perspectiveFov(
-			glm::radians(Config::graphicsVar().fov),
+			glm::radians(m_frameData.m_fov),
 			(float)m_frameData.m_screenSize.x,
 			(float)m_frameData.m_screenSize.y,
-			Config::graphicsVar().z_near,
-			Config::graphicsVar().z_far);
+			m_frameData.m_zNear,
+			m_frameData.m_zFar);
 
 		m_frameData.m_atmScatProjMatrix = Math::perspectiveRadian(Config::graphicsVar().fov,
 																m_frameData.m_screenSize.x,
 																m_frameData.m_screenSize.y);
-
-		//m_frameData.m_atmScatProjMatrix.perspectiveRadian(	Config::graphicsVar().fov,
-		//													m_frameData.m_screenSize.x,
-		//													m_frameData.m_screenSize.y);
 	}
 
 	bool m_renderingPassesSet;
 	bool m_guiRenderWasEnabled;
-	float m_zFar;
-	float m_zNear;
 
 	// Renderer backend, serves as an interface layer to GPU
 	RendererBackend m_backend;

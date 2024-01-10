@@ -77,6 +77,7 @@ public:
 			m_renderingPassesTypeText.push_back(GetString(static_cast<RenderPassType>(i)));
 
 		m_ambientOcclusionTypeText = { "None", "SSAO", "HBAO" };
+		m_cascadeDistanceTypeText = { "Units", "Divider" };
 		m_luaVariableTypeStrings = { "null", "bool", "int", "float", "double", "vec2i", "vec2f", "vec3f", "vec4f", "string", "propertyID" };
 		m_shaderTypeStrings = { "Compute", "Fragment", "Geometry", "Vertex", "Tessellation control", "Tessellation evaluation" };
 		m_tonemappingMethodText = { "None", "Simple reinhard", "Reinhard with white point", "Filmic tonemapping", "Uncharted 2", "Unreal 3", "ACES", "Lottes", "Uchimura" };
@@ -729,7 +730,9 @@ private:
 			m_zFar = 0.0f;
 			m_zNear = 0.0f;
 
+			m_renderingPasses.push_back(RenderPassType::RenderPassType_ShadowMapping);
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_Geometry);
+			m_renderingPasses.push_back(RenderPassType::RenderPassType_AmbientOcclusion);
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_AtmScattering);
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_Lighting);
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_AtmScattering);
@@ -754,6 +757,7 @@ private:
 		float m_ambientIntensity;
 		float m_zFar;
 		float m_zNear;
+		ShadowMappingData m_shadowMappingData;
 		RenderingPasses m_renderingPasses;
 
 		// Physics scene
@@ -1134,6 +1138,7 @@ private:
 
 	// String arrays and other data used for ImGui Combo inputs
 	std::vector<const char *> m_ambientOcclusionTypeText;
+	std::vector<const char *> m_cascadeDistanceTypeText;
 	std::vector<const char *> m_physicalMaterialProperties;
 	std::vector<const char *> m_renderingPassesTypeText;
 	std::vector<const char *> m_luaVariableTypeStrings;

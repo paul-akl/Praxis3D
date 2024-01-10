@@ -953,6 +953,12 @@
     <ClInclude Include="Source\AmbientOcclusionPass.h">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\ShadowMappingPass.h">
+      <Filter>Renderer\Render Passes\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\CSMFramebuffer.h">
+      <Filter>Renderer\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\config.ini" />

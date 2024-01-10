@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "Config.h"
+#include "CSMFramebuffer.h"
 #include "GeometryBuffer.h"
 #include "Loaders.h"
 #include "ShaderUniformUpdater.h"
@@ -429,6 +430,8 @@ public:
 
 	ErrorCode init(const UniformFrameData &p_frameData);
 
+	ErrorCode createFramebuffer(const FramebufferType p_frambufferType, const UniformFrameData &p_frameData);
+
 	void setScreenSize(const UniformFrameData &p_frameData)
 	{
 		// Set gbuffer textures size
@@ -451,6 +454,7 @@ public:
 		glBindTexture(GL_TEXTURE_2D, p_texture.getHandle());
 	}
 
+	inline CSMFramebuffer *getCSMFramebuffer() { return m_csmBuffer; }
 	inline GeometryBuffer *getGeometryBuffer() { return m_gbuffer; }
 
 	inline unsigned int getFramebufferTextureHandle(GBufferTextureType p_bufferType) const { return m_gbuffer->getBufferTextureHandle(p_bufferType); }
@@ -1014,4 +1018,5 @@ protected:
 	static SingleTriangle m_fullscreenTriangle;
 
 	GeometryBuffer *m_gbuffer;
+	CSMFramebuffer *m_csmBuffer;
 };

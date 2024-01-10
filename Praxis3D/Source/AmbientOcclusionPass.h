@@ -29,7 +29,7 @@ public:
 	{
 		ErrorCode returnError = ErrorCode::Success;
 
-		m_name = "SSAO Rendering Pass";
+		m_name = "Ambient Occlusion Rendering Pass";
 
 		// Create the HBAO pass shader
 		{

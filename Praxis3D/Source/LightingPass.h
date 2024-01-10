@@ -10,14 +10,18 @@ public:
 		m_pointLightBuffer(BufferType_Uniform, BufferBindTarget_Uniform, BufferUsageHint_DynamicDraw),
 		m_spotLightBuffer(BufferType_Uniform, BufferBindTarget_Uniform, BufferUsageHint_DynamicDraw),
 		m_shaderLightPass(nullptr),
+		m_shaderLightCSMPass(nullptr),
 		m_maxNumPointLights(decltype(m_pointLights.size())(Config::graphicsVar().max_num_point_lights)),
-		m_maxNumSpotLights(decltype(m_spotLights.size())(Config::graphicsVar().max_num_spot_lights)) { }
+		m_maxNumSpotLights(decltype(m_spotLights.size())(Config::graphicsVar().max_num_spot_lights)),
+		m_numOfCascades(0),
+		m_numOfPCFSamples(1),
+		m_shadowMappingEnabled(false) { }
 
 	~LightingPass() { }
 
 	ErrorCode init()
 	{
-		ErrorCode returnError;
+		ErrorCode returnError = ErrorCode::Success;
 
 		m_name = "Lighting Rendering Pass";
 
@@ -36,21 +40,61 @@ public:
 		m_emissiveAndOutputBuffers[0] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(GBufferTextureType::GBufferEmissive);
 		m_emissiveAndOutputBuffers[1] = m_renderer.m_backend.getGeometryBuffer()->getBufferLocation(GBufferTextureType::GBufferFinal);
 
-		// Create a property-set used to load lighting shader
-		PropertySet lightShaderProperties(Properties::Shaders);
-		lightShaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().light_pass_vert_shader);
-		lightShaderProperties.addProperty(Properties::FragmentShader, Config::rendererVar().light_pass_frag_shader);
+		// Get the current shadow mapping data
+		const auto &shadowMappingData = m_renderer.m_frameData.m_shadowMappingData;
 
-		// Create shaders
-		m_shaderLightPass = Loaders::shader().load(lightShaderProperties);
+		// Get the current number of shadow cascades
+		m_numOfCascades = (unsigned int)shadowMappingData.m_shadowCascadePlaneDistances.size();
+		m_numOfPCFSamples = shadowMappingData.m_numOfPCFSamples;
+		m_shadowMappingEnabled = shadowMappingData.m_shadowMappingEnabled;
 
-		// Load shaders to memory
-		returnError = m_shaderLightPass->loadToMemory();
-
-		if(returnError == ErrorCode::Success)
+		// Load lighting pass shader
 		{
-			// Queue the shaders to be loaded to GPU
-			m_renderer.queueForLoading(*m_shaderLightPass);
+			// Create a property-set used to load lighting shader
+			PropertySet lightShaderProperties(Properties::Shaders);
+
+			lightShaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().light_pass_vert_shader);
+			lightShaderProperties.addProperty(Properties::FragmentShader, Config::rendererVar().light_pass_frag_shader);
+
+			// Create the shader
+			m_shaderLightPass = Loaders::shader().load(lightShaderProperties);
+
+			// Load the shader to memory
+			if(ErrorCode shaderError = m_shaderLightPass->loadToMemory(); shaderError == ErrorCode::Success)
+			{
+				// Queue the shader to be loaded to GPU
+				m_renderer.queueForLoading(*m_shaderLightPass);
+			}
+			else
+				returnError = shaderError;
+		}
+
+		// Load lighting with cascaded shadow mapping pass shader
+		{
+			// Create a property-set used to load lighting shader
+			PropertySet lightShaderProperties(Properties::Shaders);
+
+			lightShaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().light_pass_csm_vert_shader);
+			lightShaderProperties.addProperty(Properties::FragmentShader, Config::rendererVar().light_pass_csm_frag_shader);
+
+			// Create the shader
+			m_shaderLightCSMPass = Loaders::shader().load(lightShaderProperties);
+
+			// Load the shader to memory
+			if(ErrorCode shaderError = m_shaderLightCSMPass->loadToMemory(); shaderError == ErrorCode::Success)
+			{
+				if(m_numOfCascades > 0)
+					if(ErrorCode shaderVariableError = m_shaderLightCSMPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_numOfCascades, m_numOfCascades); shaderVariableError != ErrorCode::Success)
+						ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_numOfCascades, ErrorSource::Source_LightingPass);
+
+				if(ErrorCode shaderVariableError = m_shaderLightCSMPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_numOfPCFSamples, m_numOfPCFSamples); shaderVariableError != ErrorCode::Success)
+					ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_numOfPCFSamples, ErrorSource::Source_LightingPass);
+
+				// Queue the shader to be loaded to GPU
+				m_renderer.queueForLoading(*m_shaderLightCSMPass);
+			}
+			else
+				returnError = shaderError;
 		}
 
 		// Queue light buffers to be created
@@ -148,16 +192,6 @@ public:
 		m_spotLightBuffer.m_updateSize = sizeof(SpotLightDataSet) * m_spotLights.size();
 		m_spotLightBuffer.m_data = (void*)m_spotLights.data();
 
-		// Bind textures for reading
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferPosition, GBufferTextureType::GBufferPosition);
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferDiffuse, GBufferTextureType::GBufferDiffuse);
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferNormal, GBufferTextureType::GBufferNormal);
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferEmissive, GBufferTextureType::GBufferEmissive);
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferMatProperties, GBufferTextureType::GBufferMatProperties);
-
-		// Bind texture for writing
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
-
 		// Queue light buffer updates (so that new values that were just setup are sent to the GPU)
 		m_renderer.queueForUpdate(m_pointLightBuffer);
 		m_renderer.queueForUpdate(m_spotLightBuffer);
@@ -165,8 +199,64 @@ public:
 		// Pass update commands so they are executed 
 		m_renderer.passUpdateCommandsToBackend();
 
+		// Bind textures for reading
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferPosition, GBufferTextureType::GBufferPosition);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferDiffuse, GBufferTextureType::GBufferDiffuse);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferNormal, GBufferTextureType::GBufferNormal);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferEmissive, GBufferTextureType::GBufferEmissive);
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferMatProperties, GBufferTextureType::GBufferMatProperties);
+
+		// Get the current shadow mapping data
+		const auto &shadowMappingData = m_renderer.m_frameData.m_shadowMappingData;
+
+		ShaderLoader::ShaderProgram *lightPassShader = m_shaderLightCSMPass;
+
+		if(shadowMappingData.m_shadowMappingEnabled && !shadowMappingData.m_shadowCascadePlaneDistances.empty())
+		{
+			// If the number of shadow cascades has changed, set the new define inside the shader source and recompile the shader
+			if(m_numOfCascades != (unsigned int)shadowMappingData.m_shadowCascadePlaneDistances.size() || m_numOfPCFSamples != shadowMappingData.m_numOfPCFSamples)
+			{
+				m_numOfCascades = (unsigned int)shadowMappingData.m_shadowCascadePlaneDistances.size();
+				m_numOfPCFSamples = shadowMappingData.m_numOfPCFSamples;
+
+				if(m_numOfCascades > 0)
+				{
+					ErrorCode shaderVariableError = m_shaderLightCSMPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_numOfCascades, m_numOfCascades);
+
+					if(shaderVariableError == ErrorCode::Success)
+					{
+						shaderVariableError = m_shaderLightCSMPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_numOfPCFSamples, m_numOfPCFSamples);
+
+						if(shaderVariableError == ErrorCode::Success)
+						{
+							// Queue the shader to be loaded to GPU
+							m_shaderLightCSMPass->resetLoadedToVideoMemoryFlag();
+							m_renderer.queueForLoading(*m_shaderLightCSMPass);
+							m_renderer.passLoadCommandsToBackend();
+
+							// Make sure to update uniform block bindings, since light CSM shader uses CSM data set uniform that is owned by the shadow map pass, and might be created later
+							m_shaderLightCSMPass->m_uniformUpdater->updateBlockBindingPoints();
+						}
+						else
+							ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_numOfPCFSamples, ErrorSource::Source_LightingPass);
+					}
+					else
+						ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_numOfCascades, ErrorSource::Source_LightingPass);
+				}
+			}
+
+			m_renderer.m_backend.getCSMFramebuffer()->bindBufferForReading(CSMBufferTextureType::CSMBufferTextureType_CSMDepthMap, CSMBufferTextureType::CSMBufferTextureType_CSMDepthMap);
+
+			m_shaderLightCSMPass->m_uniformUpdater->updateBlockBindingPoints();
+		}
+		else
+			lightPassShader = m_shaderLightPass;
+
+		// Bind texture for writing
+		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
+
 		// Queue the screen space triangle, using lighting shader, to be drawn
-		m_renderer.queueForDrawing(m_shaderLightPass->getShaderHandle(), m_shaderLightPass->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
+		m_renderer.queueForDrawing(lightPassShader->getShaderHandle(), lightPassShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
 
 		// Pass the draw command so it is executed
 		m_renderer.passScreenSpaceDrawCommandsToBackend();
@@ -175,7 +265,8 @@ public:
 	}
 
 private:
-	ShaderLoader::ShaderProgram	*m_shaderLightPass;
+	ShaderLoader::ShaderProgram *m_shaderLightPass;
+	ShaderLoader::ShaderProgram	*m_shaderLightCSMPass;
 
 	// Buffer handles used for binding
 	std::vector<GeometryBuffer::GBufferTexture> m_emissiveAndOutputBuffers;
@@ -190,4 +281,8 @@ private:
 
 	decltype(m_pointLights.size()) m_maxNumPointLights;
 	decltype(m_spotLights.size()) m_maxNumSpotLights;
+
+	unsigned int m_numOfCascades;
+	unsigned int m_numOfPCFSamples;
+	bool m_shadowMappingEnabled;
 };

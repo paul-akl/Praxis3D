@@ -176,6 +176,10 @@ void Config::init()
 	AddVariablePredef(m_graphicsVar, ao_ssao_intensity);
 	AddVariablePredef(m_graphicsVar, ao_hbao_radius);
 	AddVariablePredef(m_graphicsVar, ao_ssao_radius);
+	AddVariablePredef(m_graphicsVar, bloom_intensity);
+	AddVariablePredef(m_graphicsVar, bloom_knee);
+	AddVariablePredef(m_graphicsVar, bloom_threshold);
+	AddVariablePredef(m_graphicsVar, bloom_dirt_intensity);
 	AddVariablePredef(m_graphicsVar, emissive_multiplier);
 	AddVariablePredef(m_graphicsVar, emissive_threshold);
 	AddVariablePredef(m_graphicsVar, eye_adaption_rate);
@@ -367,6 +371,9 @@ void Config::init()
 	AddVariablePredef(m_rendererVar, bloom_composite_pass_frag_shader);
 	AddVariablePredef(m_rendererVar, blur_pass_vert_shader);
 	AddVariablePredef(m_rendererVar, blur_pass_frag_shader);
+	AddVariablePredef(m_rendererVar, csm_pass_frag_shader);
+	AddVariablePredef(m_rendererVar, csm_pass_geom_shader);
+	AddVariablePredef(m_rendererVar, csm_pass_vert_shader);
 	AddVariablePredef(m_rendererVar, hbao_blur_horizontal_frag_shader);
 	AddVariablePredef(m_rendererVar, hbao_blur_horizontal_vert_shader);
 	AddVariablePredef(m_rendererVar, hbao_blur_vertical_frag_shader);
@@ -377,6 +384,8 @@ void Config::init()
 	AddVariablePredef(m_rendererVar, lense_flare_comp_pass_frag_shader);
 	AddVariablePredef(m_rendererVar, lense_flare_pass_vert_shader);
 	AddVariablePredef(m_rendererVar, lense_flare_pass_frag_shader);
+	AddVariablePredef(m_rendererVar, light_pass_csm_vert_shader);
+	AddVariablePredef(m_rendererVar, light_pass_csm_frag_shader);
 	AddVariablePredef(m_rendererVar, light_pass_vert_shader);
 	AddVariablePredef(m_rendererVar, light_pass_frag_shader);
 	AddVariablePredef(m_rendererVar, final_pass_vert_shader);
@@ -392,12 +401,18 @@ void Config::init()
 	AddVariablePredef(m_rendererVar, ssao_blur_vert_shader);
 	AddVariablePredef(m_rendererVar, ssao_pass_frag_shader);
 	AddVariablePredef(m_rendererVar, ssao_pass_vert_shader);
+	AddVariablePredef(m_rendererVar, csm_max_shadow_bias);
+	AddVariablePredef(m_rendererVar, csm_penumbra_size);
+	AddVariablePredef(m_rendererVar, csm_penumbra_size_scale_min);
+	AddVariablePredef(m_rendererVar, csm_penumbra_size_scale_max);
 	AddVariablePredef(m_rendererVar, dir_light_quad_offset_x);
 	AddVariablePredef(m_rendererVar, dir_light_quad_offset_y);
 	AddVariablePredef(m_rendererVar, dir_light_quad_offset_z);
 	AddVariablePredef(m_rendererVar, dir_light_quad_rotation_x);
 	AddVariablePredef(m_rendererVar, dir_light_quad_rotation_y);
 	AddVariablePredef(m_rendererVar, dir_light_quad_rotation_z);
+	AddVariablePredef(m_rendererVar, csm_num_of_pcf_samples);
+	AddVariablePredef(m_rendererVar, csm_resolution);
 	AddVariablePredef(m_rendererVar, depth_test_func);
 	AddVariablePredef(m_rendererVar, face_culling_mode);
 	AddVariablePredef(m_rendererVar, heightmap_combine_channel);
@@ -444,6 +459,7 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, texelSize);
 	AddVariablePredef(m_shaderVar, numOfTexels);
 	AddVariablePredef(m_shaderVar, mipLevel);
+	AddVariablePredef(m_shaderVar, projPlaneRange);
 	AddVariablePredef(m_shaderVar, ambientLightIntensity);
 	AddVariablePredef(m_shaderVar, dirLightColor);
 	AddVariablePredef(m_shaderVar, dirLightDirection);
@@ -470,6 +486,8 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, depthMapUniform);
 	AddVariablePredef(m_shaderVar, inputColorMapUniform);
 	AddVariablePredef(m_shaderVar, outputColorMapUniform);
+	AddVariablePredef(m_shaderVar, csmDepthMapUniform);
+	AddVariablePredef(m_shaderVar, csmPenumbraScaleRange);
 	AddVariablePredef(m_shaderVar, sunGlowTextureUniform);
 	AddVariablePredef(m_shaderVar, skyMapTextureUniform);
 	AddVariablePredef(m_shaderVar, dirShadowMapTextureUniform);
@@ -509,12 +527,15 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, eyeAdaptionIntBrightnessUniform);
 	AddVariablePredef(m_shaderVar, AODataSetBuffer);
 	AddVariablePredef(m_shaderVar, SSAOSampleBuffer);
+	AddVariablePredef(m_shaderVar, CSMDataSetBuffer);
 	AddVariablePredef(m_shaderVar, HDRSSBuffer);
 	AddVariablePredef(m_shaderVar, atmScatParamBuffer);
 	AddVariablePredef(m_shaderVar, lensFlareParametersBuffer);
 	AddVariablePredef(m_shaderVar, testMatUniform);
 	AddVariablePredef(m_shaderVar, testVecUniform);
 	AddVariablePredef(m_shaderVar, testFloatUniform);
+	AddVariablePredef(m_shaderVar, define_numOfCascades);
+	AddVariablePredef(m_shaderVar, define_numOfPCFSamples);
 
 	// Texture variables
 	AddVariablePredef(m_textureVar, default_texture);

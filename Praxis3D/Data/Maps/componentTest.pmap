@@ -406,7 +406,7 @@
 						},
 						{
 							"Name": "cameraSpeedMultiplier",
-							"Value": "100000.0f"
+							"Value": "100.0f"
 						}
 					]
 				}
@@ -961,6 +961,9 @@
 				"RenderPasses": 
 				[
 					{
+						"Type": "ShadowMappingPass"
+					},
+					{
 						"Type": "GeometryRenderPass"
 					},
 					{
@@ -987,7 +990,45 @@
 					{
 						"Type": "GUIRenderPass"
 					}
-				]
+				],
+				"ShadowMapping":
+				{
+					"PenumbraSize": "1.42",
+					"PenumbraScaleRange": "1.0f, 2000.0f",
+					"Resolution": "4096",
+					"ZClipping": "true",
+					"ZPlaneMultiplier": "10.0f",
+					"PCF":
+					{
+						"Samples": "16"
+					},
+					"Cascades":
+					[
+						{
+							"Divider": "50.0f",
+							"Distance": "8.0f",
+							"BiasMax" : "0.0005f"
+						},
+						{
+							"Divider": "25.0f",
+							"Distance": "16.0f",
+							"BiasMax" : "0.0005f"
+						},
+						{
+							"Divider": "10.0f",
+							"Distance": "64.0f",
+							"BiasMax" : "0.0005f"
+						},
+						{
+							"Divider": "2.0f",
+							"Distance": "128.0f"
+						},
+						{
+							"Divider": "1.0f",
+							"PenumbraScale": "2.0f"
+						}
+					]
+				}
 			},
 			"System": 
 			{

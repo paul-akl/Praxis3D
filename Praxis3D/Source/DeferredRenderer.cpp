@@ -36,10 +36,10 @@ ErrorCode DeferredRenderer::init()
 	m_screenSize.y = Config::graphicsVar().current_resolution_y;
 	
 	// Initialize gbuffer (and also pass the screen size to be used as the buffer size)
-	m_gbuffer = new GeometryBuffer((unsigned int) m_screenSize.x, (unsigned int) m_screenSize.y);
+	//m_gbuffer = new GeometryBuffer((unsigned int) m_screenSize.x, (unsigned int) m_screenSize.y);
 
 	// Initialize gbuffer and check if it was successful
-	if(ErrHandlerLoc::get().ifSuccessful(m_gbuffer->init(), returnCode))
+	//if(ErrHandlerLoc::get().ifSuccessful(m_gbuffer->init(), returnCode))
 	{
 		// Create a property-set used to load geometry shader
 		PropertySet geomShaderProperties(Properties::Shaders);

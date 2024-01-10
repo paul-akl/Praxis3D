@@ -2524,39 +2524,41 @@ void EditorWindow::update(const float p_deltaTime)
                     drawSceneData(m_currentSceneData, true);
 
                     // Calculate widget offset used to draw a label on the left and a widget on the right (opposite of how ImGui draws it)
-                    float inputWidgetOffset = ImGui::GetCursorPosX() + ImGui::CalcItemWidth() * 0.5f + ImGui::GetStyle().ItemInnerSpacing.x;
+                    float inputWidgetOffset = ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x * 0.5f + ImGui::GetStyle().ItemInnerSpacing.x;
 
                     // Center the separator text
                     ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextAlign, ImVec2(0.5f, 0.5f));
                     ImGui::SeparatorText("Luminance settings:");
 
                     // Draw TONEMAP METHOD
-                    drawLeftAlignedLabelText("Tonemap method:", inputWidgetOffset);
+                    drawLeftAlignedLabelText("Tonemap method:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
                     ImGui::Combo("##TonemapMethodPicker", &Config::m_graphicsVar.tonemap_method, &m_tonemappingMethodText[0], (int)m_tonemappingMethodText.size());
 
                     // Draw LUMINANCE RANGE MIN
-                    drawLeftAlignedLabelText("Luminance range min:", inputWidgetOffset);
+                    drawLeftAlignedLabelText("Luminance range min:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
                     ImGui::DragFloat("##LuminanceRangeMinDrag", &Config::m_graphicsVar.luminance_range_min, 0.001f, 0.0f, 100.0f, "%.5f");
 
                     // Draw LUMINANCE RANGE MAX
-                    drawLeftAlignedLabelText("Luminance range max:", inputWidgetOffset);
+                    drawLeftAlignedLabelText("Luminance range max:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
                     ImGui::DragFloat("##LuminanceRangeMaxDrag", &Config::m_graphicsVar.luminance_range_max, 0.001f, 0.0f, 100.0f, "%.5f");
 
                     // Draw LUMINANCE MULTIPLIER
-                    drawLeftAlignedLabelText("Luminance multiplier:", inputWidgetOffset);
+                    drawLeftAlignedLabelText("Luminance multiplier:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
                     ImGui::DragFloat("##LuminanceMultiplierDrag", &Config::m_graphicsVar.luminance_multiplier, 0.001f, 0.0f, 100.0f, "%.5f");
 
                     ImGui::SeparatorText("Graphics settings:");
 
                     // Draw PARALLAX LOD
-                    drawLeftAlignedLabelText("Parallax LOD:", inputWidgetOffset);
+                    drawLeftAlignedLabelText("Parallax LOD:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
                     ImGui::DragFloat("##ParallaxLODDrag", &Config::m_graphicsVar.LOD_parallax_mapping, 0.1f, 0.0f, 100000.0f, "%.5f");
 
                     ImGui::SeparatorText("Renderer settings:");
 
                     // Draw OBJECTS LOADER PER FRAME
-                    drawLeftAlignedLabelText("Object loads per frame:", inputWidgetOffset);
+                    drawLeftAlignedLabelText("Object loads per frame:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
                     ImGui::InputInt("##ObjectsLoadedPerFrameInput", &Config::m_rendererVar.objects_loaded_per_frame);
+
+                    ImGui::NewLine();
 
                     ImGui::PopStyleVar(); //ImGuiStyleVar_SeparatorTextAlign
                     ImGui::EndTabItem();
@@ -4149,6 +4151,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
     if(ImGui::DragFloat("##AmbientLightIntensityDrag", &p_sceneData.m_ambientIntensity, 0.001f, 0.0f, 100000.0f, "%.5f") && p_sendChanges)
     {
         m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), Systems::Changes::Graphics::AmbientIntensity);
+        p_sceneData.m_modified = true;
     }
     
     // Draw Z FAR
@@ -4156,6 +4159,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
     if(ImGui::DragFloat("##ZBufferFarDrag", &p_sceneData.m_zFar, 0.1f, 0.0f, 100000.0f, "%.5f") && p_sendChanges)
     {
         m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), Systems::Changes::Graphics::ZFar);
+        p_sceneData.m_modified = true;
     }
 
     // Draw Z NEAR
@@ -4163,6 +4167,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
     if(ImGui::DragFloat("##ZBufferNearDrag", &p_sceneData.m_zNear, 0.0001f, 0.0f, 100000.0f, "%.5f") && p_sendChanges)
     {
         m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), Systems::Changes::Graphics::ZNear);
+        p_sceneData.m_modified = true;
     }
 
     // Calculate ambient occlusion window height
@@ -4262,8 +4267,178 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
         }
 
         if(aoDataChanged)
+        {
             m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_AmbientOcclusionData, (void *)&p_sceneData.m_aoData, false);
+            p_sceneData.m_modified = true;
+        }
 
+    }
+    ImGui::EndChild();
+
+    // Calculate ambient occlusion window height
+    float shadowMappingWindowHeight = (m_fontSize + m_imguiStyle.FramePadding.y * 2 + m_imguiStyle.ItemSpacing.y);
+    shadowMappingWindowHeight *= p_sceneData.m_shadowMappingData.m_shadowMappingEnabled ? 10 + 3 * p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances.size() : 2.0f;
+    shadowMappingWindowHeight += m_imguiStyle.ItemSpacing.y;
+
+    if(ImGui::BeginChild("##CascadedShadowMappingSettings", ImVec2(0.0f, shadowMappingWindowHeight), true))
+    {
+        ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextBorderSize, 0.0f);
+        ImGui::SeparatorText("Cascaded shadow mapping:");
+        ImGui::PopStyleVar(); //ImGuiStyleVar_SeparatorTextBorderSize
+
+        bool csmDataChanged = false;
+
+        // Draw ENABLED
+        drawLeftAlignedLabelText("Enabled:", inputWidgetOffset);
+        if(ImGui::Checkbox("##CSMEnabledCheckbox", &p_sceneData.m_shadowMappingData.m_shadowMappingEnabled) && p_sendChanges)
+        {
+            csmDataChanged = true;
+        }
+
+        // Show the rest of the shadow mapping settings only of the shadow mapping is enabled
+        if(p_sceneData.m_shadowMappingData.m_shadowMappingEnabled)
+        {
+            // Draw DEPTH MAP Z-CLIPPING
+            drawLeftAlignedLabelText("Depth map Z-clipping:", inputWidgetOffset);
+            if(ImGui::Checkbox("##CSMZClippingCheckbox", &p_sceneData.m_shadowMappingData.m_zClipping) && p_sendChanges)
+            {
+                csmDataChanged = true;
+            }
+
+            // Draw PENUMBRA SIZE
+            drawLeftAlignedLabelText("Penumbra size:", inputWidgetOffset);
+            if(ImGui::DragFloat("##CSMPenumbraSizeDrag", &p_sceneData.m_shadowMappingData.m_penumbraSize, 0.01f, 0.01f, 10.0f, "%.3f") && p_sendChanges)
+            {
+                csmDataChanged = true;
+            }
+
+            // Draw PENUMBRA SCALE RANGE
+            drawLeftAlignedLabelText("Penumbra scale range:", inputWidgetOffset);
+            if(ImGui::DragFloat2("##CSMPenumbraScaleRangeDrag", glm::value_ptr(p_sceneData.m_shadowMappingData.m_penumbraScaleRange), 1.0f, 1.0f, 10000.0f) && p_sendChanges)
+            {
+                csmDataChanged = true;
+            }
+
+            // Draw RESOLUTION
+            drawLeftAlignedLabelText("Resolution:", inputWidgetOffset);
+            if(int resolution = (int)p_sceneData.m_shadowMappingData.m_csmResolution; ImGui::DragInt("##CSMResolutionDrag", &resolution, 64.0f, 64, 10240))
+            {
+                p_sceneData.m_shadowMappingData.m_csmResolution = (unsigned int)resolution;
+
+                if(p_sendChanges)
+                    csmDataChanged = true;
+            }
+
+            // Draw Z-PLANE MULTIPLIER
+            drawLeftAlignedLabelText("Z-plane multiplier:", inputWidgetOffset);
+            if(ImGui::DragFloat("##CSMZPlaneMultiplierDrag", &p_sceneData.m_shadowMappingData.m_csmCascadePlaneZMultiplier, 0.1f, 1.0f, 10000.0f, "%.1f") && p_sendChanges)
+            {
+                csmDataChanged = true;
+            }
+
+            // Draw PCF SAMPLES
+            drawLeftAlignedLabelText("PCF samples:", inputWidgetOffset);
+            if(int numOfPCFSamples = (int)p_sceneData.m_shadowMappingData.m_numOfPCFSamples; ImGui::InputInt("##CSMPCFSamplesInputInt", &numOfPCFSamples) && p_sendChanges)
+            {
+                if(numOfPCFSamples > 0)
+                {
+                    p_sceneData.m_shadowMappingData.m_numOfPCFSamples = (unsigned int)numOfPCFSamples;
+                    csmDataChanged = true;
+                }
+            }
+
+            // Calculate CSM cascades window height
+            float cascadesWindowHeight = (m_fontSize + m_imguiStyle.FramePadding.y * 2 + m_imguiStyle.ItemSpacing.y);
+            cascadesWindowHeight *= 2 + 3 * p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances.size();
+
+            if(ImGui::BeginChild("##CSMCascades", ImVec2(0, cascadesWindowHeight), true))
+            {
+                // Calculate widget offset used to draw a label on the left and a widget on the right (opposite of how ImGui draws it)
+                float inputWidgetOffsetCascades = ImGui::GetCursorPosX() + ImGui::CalcItemWidth() * 0.5f + ImGui::GetStyle().ItemInnerSpacing.x;
+
+                ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextBorderSize, 0.0f);
+                ImGui::SeparatorText("CSM cascades:");
+                ImGui::PopStyleVar(); //ImGuiStyleVar_SeparatorTextBorderSize
+
+                for(decltype(p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances.size()) size = p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances.size(), i = 0; i < size; i++)
+                {
+                    // Calculate item width to fit both DISTANCE and DISTANCE TYPE items on the same line
+                    auto itemWidth = (ImGui::GetContentRegionAvail().x - inputWidgetOffset) / 2.0f;
+
+                    // Draw CASCADE DISTANCE
+                    drawLeftAlignedLabelText((Utilities::toString(i + 1) + ". Cascade distance:").c_str(), inputWidgetOffset, itemWidth);
+                    if(ImGui::DragFloat(("##CascadesDistanceDrag" + Utilities::toString(i)).c_str(), &p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances[i].m_cascadeFarDistance, 1.0f, 0.0f, 10000.0f, "%.1f") && p_sendChanges)
+                    {
+                        csmDataChanged = true;
+                    }
+
+                    // Draw CASCADE DISTANCE UNIT TYPE
+                    int distanceType = p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances[i].m_distanceIsDivider ? 1 : 0;
+                    ImGui::SameLine();
+                    ImGui::SetNextItemWidth(itemWidth - calcTextSizedButtonSize(1) - m_imguiStyle.FramePadding.x * 4);
+                    if(ImGui::Combo(("##CascadesDistanceTypeCombo" + Utilities::toString(i)).c_str(), &distanceType, &m_cascadeDistanceTypeText[0], (int)m_cascadeDistanceTypeText.size()))
+                    {
+                        p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances[i].m_distanceIsDivider = (distanceType == 1);
+                        csmDataChanged = true;
+                    }
+
+                    // Draw DELETE button
+                    ImGui::SameLine(calcTextSizedButtonOffset(1));
+                    if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry], "##CSMCascadeDeleteButton" + Utilities::toString(i), "Remove shadow cascade entry"))
+                    {
+                        p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances.erase(p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances.begin() + i);
+                        size = p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances.size();
+                        i--;
+
+                        if(p_sendChanges)
+                            csmDataChanged = true;
+                    }
+
+                    // Draw ADD button
+                    ImGui::SameLine(calcTextSizedButtonOffset(0));
+                    if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_Add], "CSMCascadeAddButton" + Utilities::toString(i), "Add a shadow cascade entry"))
+                    {
+                        p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances.insert(p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances.begin() + i + 1, ShadowCascadeData());
+                        size = p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances.size();
+
+                        if(p_sendChanges)
+                            csmDataChanged = true;
+                    }
+
+                    // Draw BIAX MAX
+                    drawLeftAlignedLabelText("   Bias max:", inputWidgetOffset, itemWidth);
+                    if(ImGui::DragFloat(("##CascadesBiasMaxDrag" + Utilities::toString(i)).c_str(), &p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances[i].m_maxBias, 0.000001f, 0.0f, 1.0f, "%.5f") && p_sendChanges)
+                    {
+                        csmDataChanged = true;
+                    }
+
+                    // Draw PENUMBRA SCALE
+                    drawLeftAlignedLabelText("   Penumbra scale:", inputWidgetOffset, itemWidth);
+                    if(ImGui::DragFloat(("##CascadesPenumbraScaleDrag" + Utilities::toString(i)).c_str(), &p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances[i].m_penumbraScale, 0.001f, 0.0001f, 1000.0f, "%.3f") && p_sendChanges)
+                    {
+                        csmDataChanged = true;
+                    }
+                }
+
+                // Draw ADD button
+                ImGui::SetCursorPosX(calcTextSizedButtonOffset(0));
+                if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_Add], "##CSMCascadeAddAtEndButton", "Add a shadow cascade entry"))
+                {
+                    p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances.push_back(ShadowCascadeData());
+
+                    if(p_sendChanges)
+                        csmDataChanged = true;
+                }
+            }
+            ImGui::EndChild();
+        }
+
+        // If CSM data was changed, send the new data to the renderer and mark the scene data as modified
+        if(csmDataChanged)
+        {
+            m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_ShadowMappingData, (void *)&p_sceneData.m_shadowMappingData, false);
+            p_sceneData.m_modified = true;
+        }
     }
     ImGui::EndChild();
 
@@ -4576,6 +4751,7 @@ void EditorWindow::updateSceneData(SceneData &p_sceneData)
 
     // Set graphics data
     p_sceneData.m_aoData = graphicsScene->getAmbientOcclusionData();
+    p_sceneData.m_shadowMappingData = graphicsScene->getShadowMappingData();
     p_sceneData.m_ambientIntensity = graphicsScene->getSceneObjects().m_ambientIntensity;
     p_sceneData.m_zFar = graphicsScene->getSceneObjects().m_zFar;
     p_sceneData.m_zNear = graphicsScene->getSceneObjects().m_zNear;

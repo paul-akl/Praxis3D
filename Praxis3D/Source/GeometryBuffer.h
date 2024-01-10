@@ -15,13 +15,13 @@ public:
 
 	typedef unsigned int GBufferTexture;
 
-	GeometryBuffer(unsigned int p_bufferWidth, unsigned int p_bufferHeight);
+	GeometryBuffer(const UniformFrameData &p_frameData);
 	~GeometryBuffer();
 	
 	//virtual void bindReadBuffer(GBufferTextureType p_type) { glReadBuffer(GL_COLOR_ATTACHMENT0 + p_type); }
 
 	// Generates buffers, set's up FBO
-	virtual ErrorCode init();
+	virtual ErrorCode init(const UniformFrameData &p_frameData);
 	virtual void setBufferSize(unsigned int p_bufferWidth, unsigned int p_bufferHeight);
 	virtual void setBufferSize(GLuint p_buffer, unsigned int p_bufferWidth, unsigned int p_bufferHeight);
 

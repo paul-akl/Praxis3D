@@ -42,7 +42,7 @@ class BaseUniformBlock
 {
 public:
 	BaseUniformBlock(const std::string &p_name, const unsigned int p_shaderHandle)
-		: m_name(p_name), m_shaderHandle(p_shaderHandle)
+		: m_name(p_name), m_shaderHandle(p_shaderHandle), m_uniformHandle(-1)
 	{
 		// Get the uniform location (returns -1 in case it is not present in the shader)
 		m_uniformHandle = glGetUniformBlockIndex(m_shaderHandle, p_name.c_str());
@@ -263,6 +263,26 @@ public:
 
 private:
 	glm::ivec2 m_screenSize;
+};
+class ProjPlaneRangeUniform : public BaseUniform
+{
+public:
+	ProjPlaneRangeUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().projPlaneRange, p_shaderHandle), m_zFar(0.0f), m_zNear(0.0f) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		if(m_zFar != p_uniformData.m_frameData.m_zFar || m_zNear != p_uniformData.m_frameData.m_zNear)
+		{
+			m_zFar = p_uniformData.m_frameData.m_zFar;
+			m_zNear = p_uniformData.m_frameData.m_zNear;
+
+			glUniform2f(m_uniformHandle, m_zFar, m_zNear);
+		}
+	}
+
+private:
+	float m_zFar;
+	float m_zNear;
 };
 class DeltaTimeMSUniform : public BaseUniform
 {
@@ -786,6 +806,7 @@ public:
 	}
 };
 
+// Gbuffer textures
 class PositionMapUniform : public BaseUniform
 {
 public:
@@ -884,6 +905,18 @@ public:
 	void update(const UniformData &p_uniformData)
 	{
 		glUniform1i(m_uniformHandle, GBufferTextureType::GbufferOutputTexture);
+	}
+};
+
+// CSM textures
+class CSMDepthMapUniform : public BaseUniform
+{
+public:
+	CSMDepthMapUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().csmDepthMapUniform, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniform1i(m_uniformHandle, CSMBufferTextureType::CSMBufferTextureType_CSMDepthMap);
 	}
 };
 
@@ -1049,6 +1082,25 @@ public:
 
 private:
 	int m_screenWidth;
+};
+
+class CSMPenumbraScaleRangeUniform : public BaseUniform
+{
+public:
+	CSMPenumbraScaleRangeUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().csmPenumbraScaleRange, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		if(m_penumbraScaleRange != p_uniformData.m_frameData.m_shadowMappingData.m_penumbraScaleRange)
+		{
+			m_penumbraScaleRange = p_uniformData.m_frameData.m_shadowMappingData.m_penumbraScaleRange;
+
+			glUniform2f(m_uniformHandle, m_penumbraScaleRange.x, m_penumbraScaleRange.y);
+		}
+	}
+
+private:
+	glm::vec2 m_penumbraScaleRange;
 };
 
 class AtmIrradianceTextureUniform : public BaseUniform
@@ -1445,6 +1497,16 @@ public:
 	void update(const UniformData &p_uniformData)
 	{
 		updateBlockBinding(UniformBufferBinding::UniformBufferBinding_SSAOSampleBuffer);
+	}
+};
+class CSMMatrixBufferUniform : public BaseUniformBlock
+{
+public:
+	CSMMatrixBufferUniform(unsigned int p_shaderHandle) : BaseUniformBlock(Config::shaderVar().CSMDataSetBuffer, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		updateBlockBinding(UniformBufferBinding::UniformBufferBinding_CSMMatrixBuffer);
 	}
 };
 

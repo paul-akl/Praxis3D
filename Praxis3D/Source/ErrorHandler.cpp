@@ -60,6 +60,8 @@ ErrorHandler::ErrorHandler()
 	AssignErrorType(Shader_creation_failed, Error);
 	AssignErrorType(Shader_link_failed, Error);
 	AssignErrorType(Shader_loading_failed, Error);
+	AssignErrorType(Shader_source_empty, Warning);
+	AssignErrorType(Shader_variable_not_found, Warning);
 	AssignErrorType(GameObjects_missing, Error);
 	AssignErrorType(Number_of_meshes_missmatch, Warning);
 	AssignErrorType(Texture_not_found, Warning); 
@@ -139,7 +141,7 @@ void ErrorHandler::log(ErrorCode p_errorCode, ErrorSource p_errorSource)
 		}
 	}
 	else
-		log(m_errorData[p_errorCode].m_errorType, p_errorSource, "\033[1;33m" + m_errorData[p_errorCode].m_errorString + "\033[0m");
+		log(m_errorData[p_errorCode].m_errorType, p_errorSource, m_errorData[p_errorCode].m_errorString);
 }
 void ErrorHandler::log(ErrorType p_errorType, ErrorSource p_errorSource, std::string p_error)
 {

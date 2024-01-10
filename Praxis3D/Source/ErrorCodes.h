@@ -83,6 +83,8 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
 	Code(Shader_creation_failed,) \
 	Code(Shader_link_failed,) \
 	Code(Shader_loading_failed,) \
+	Code(Shader_source_empty,) \
+	Code(Shader_variable_not_found,) \
 	/* Scene loader errors */ \
 	Code(GameObjects_missing,) \
 	Code(Number_of_meshes_missmatch,) \
@@ -158,6 +160,7 @@ DECLARE_ENUM(ErrorCode, ERROR_CODES)
     Code(Source_ScriptObject,) \
     Code(Source_ShaderComponent,) \
     Code(Source_ShaderLoader,) \
+    Code(Source_ShadowMappingPass,) \
     Code(Source_SkyObject,) \
     Code(Source_SkyPass,) \
     Code(Source_SoundComponent,) \

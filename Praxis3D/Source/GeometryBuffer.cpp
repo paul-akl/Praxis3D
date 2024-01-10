@@ -1,7 +1,7 @@
 #include "Config.h"
 #include "GeometryBuffer.h"
 
-GeometryBuffer::GeometryBuffer(unsigned int p_bufferWidth, unsigned int p_bufferHeight) : Framebuffer(p_bufferWidth, p_bufferHeight)
+GeometryBuffer::GeometryBuffer(const UniformFrameData &p_frameData) : Framebuffer(p_frameData.m_screenSize.x, p_frameData.m_screenSize.y)
 {
 
 	m_intermediateBuffer = 0;
@@ -39,7 +39,7 @@ GeometryBuffer::~GeometryBuffer()
 		glDeleteTextures(1, &m_finalBuffer);
 }
 
-ErrorCode GeometryBuffer::init()
+ErrorCode GeometryBuffer::init(const UniformFrameData &p_frameData)
 {
 	ErrorCode returnCode = ErrorCode::Success;
 
@@ -221,6 +221,7 @@ void GeometryBuffer::setBufferSize(GLuint p_buffer, unsigned int p_bufferWidth, 
 void GeometryBuffer::initFrame()
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO);
+	glViewport(0, 0, m_bufferWidth, m_bufferHeight);
 	glDrawBuffer(GL_COLOR_ATTACHMENT0 + GBufferIntermediate);	// Bind intermediate buffer
 	glClear(GL_COLOR_BUFFER_BIT);								// and clear it
 	glDrawBuffer(GL_COLOR_ATTACHMENT0 + GBufferFinal);			// Bind final buffer

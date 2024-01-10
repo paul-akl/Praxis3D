@@ -18,6 +18,22 @@ class ShaderLoader
 {
 	friend class ShaderProgram;
 public:
+	// Holds data on #define variable replacements in the shader source code
+	struct ShaderVariableDefinition
+	{
+		ShaderVariableDefinition(const ShaderType p_shaderType, const std::string &p_variableName, const std::string &p_value)
+			: m_shaderType(p_shaderType), m_variableName(p_variableName), m_variableValue(p_value) { }
+
+		bool operator==(const ShaderVariableDefinition &p_variable)
+		{
+			return	m_shaderType == p_variable.m_shaderType && 
+					m_variableName == p_variable.m_variableName;
+		}
+
+		ShaderType m_shaderType;
+		std::string m_variableName;
+		std::string m_variableValue;
+	};
 	class Shader
 	{
 		friend class ShaderLoader;
@@ -147,6 +163,7 @@ public:
 		friend class ShaderLoader;
 		friend class RendererFrontend;
 		friend class RendererScene;
+		friend class LightingPass;
 
 	public:
 		inline void addShader(ShaderType p_shaderType, const std::string &p_filename)
@@ -196,6 +213,12 @@ public:
 						}
 					}
 				}
+
+				// Re-set all the previously set variable definitions
+				for(const auto &variable : m_variableDefinitions)
+				{
+					setVariableDefinition(variable);
+				}
 			}
 
 			return returnError;
@@ -224,6 +247,30 @@ public:
 		
 		// Setters
 		inline void setShaderFilename(const ShaderType p_shaderType, const std::string &p_filename) { m_shaderFilename[p_shaderType] = p_filename; }
+		inline void resetLoadedToVideoMemoryFlag() { m_loadedToVideoMemory = false; }
+
+		// Functions for setting the #define variable values inside the shader code; must either be called before loading the shader to video memory (compiling) or the shader must be reloaded for the new value to take effect
+		ErrorCode setDefineValue(const ShaderType p_shaderType, const std::string &p_variableName, const std::string &p_value)
+		{
+			ErrorCode returnError = ErrorCode::Success;
+
+			// Create variable
+			ShaderVariableDefinition variable(p_shaderType, p_variableName, p_value);
+
+			// Try to set the variable
+			returnError = setVariableDefinition(variable);
+
+			// If the variable was set, save it
+			if(returnError == ErrorCode::Success)
+				saveVariableDefinition(variable);
+
+			return returnError;
+		}
+		inline ErrorCode setDefineValue(const ShaderType p_shaderType, const std::string &p_variableName, const bool p_value)			{ return setDefineValue(p_shaderType, p_variableName, Utilities::toString(p_value)); }
+		inline ErrorCode setDefineValue(const ShaderType p_shaderType, const std::string &p_variableName, const int p_value)			{ return setDefineValue(p_shaderType, p_variableName, Utilities::toString(p_value)); }
+		inline ErrorCode setDefineValue(const ShaderType p_shaderType, const std::string &p_variableName, const unsigned int p_value)	{ return setDefineValue(p_shaderType, p_variableName, Utilities::toString(p_value)); }
+		inline ErrorCode setDefineValue(const ShaderType p_shaderType, const std::string &p_variableName, const float p_value)			{ return setDefineValue(p_shaderType, p_variableName, Utilities::toString(p_value)); }
+		inline ErrorCode setDefineValue(const ShaderType p_shaderType, const std::string &p_variableName, const double p_value)			{ return setDefineValue(p_shaderType, p_variableName, Utilities::toString(p_value)); }
 
 		// Comparator operators
 		const inline bool operator==(const std::string &p_filename) const { return (m_combinedFilename == p_filename); }
@@ -271,6 +318,25 @@ public:
 		~ShaderProgram();
 
 		void setLoadedToVideoMemory(bool p_loaded) { m_loadedToVideoMemory = p_loaded; }
+		void saveVariableDefinition(const ShaderVariableDefinition &p_variable)
+		{
+			bool variableSet = false;
+
+			// If the variable definition already exist, update it
+			for(auto &variable : m_variableDefinitions)
+			{
+				if(p_variable == variable)
+				{
+					variable.m_variableValue = p_variable.m_variableValue;
+					variableSet = true;
+				}
+			}
+
+			// If the variable definition didn't exist, create a new one
+			if(!variableSet)
+				m_variableDefinitions.push_back(p_variable);
+		}
+		ErrorCode setVariableDefinition(const ShaderVariableDefinition &p_variable);
 
 		bool	m_defaultShader, 
 				m_loadedToMemory,
@@ -287,6 +353,8 @@ public:
 		unsigned int m_programHandle;
 
 		ShaderUniformUpdater *m_uniformUpdater;
+
+		std::vector<ShaderVariableDefinition> m_variableDefinitions;
 		
 		// Holds a default shader handle that the program handle can be tested against
 		static unsigned int m_defaultProgramHandle;

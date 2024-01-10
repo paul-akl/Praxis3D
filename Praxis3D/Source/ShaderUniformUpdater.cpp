@@ -45,7 +45,7 @@ ErrorCode ShaderUniformUpdater::generateTextureUpdateList()
 	// Make a vector of uniform classes and populate it
 	std::vector<BaseUniform*> uniformList;
 
-	// Framebuffer texture uniforms
+	// Geometry framebuffer texture uniforms
 	uniformList.push_back(new PositionMapUniform(m_shaderHandle));
 	uniformList.push_back(new DiffuseMapUniform(m_shaderHandle));
 	uniformList.push_back(new NormalMapUniform(m_shaderHandle));
@@ -56,6 +56,9 @@ ErrorCode ShaderUniformUpdater::generateTextureUpdateList()
 	uniformList.push_back(new DepthMapUniform(m_shaderHandle));
 	uniformList.push_back(new InputMapUniform(m_shaderHandle));
 	uniformList.push_back(new OutputMapUniform(m_shaderHandle));
+
+	// Cascaded shadow map framebuffer texture uniforms
+	uniformList.push_back(new CSMDepthMapUniform(m_shaderHandle));
 
 	// Cubemap texture uniforms
 	uniformList.push_back(new DynamicEnvironmentMapUniform(m_shaderHandle));
@@ -121,6 +124,7 @@ ErrorCode ShaderUniformUpdater::generatePerFrameList()
 	// Camera uniforms
 	uniformList.push_back(new CameraPosVecUniform(m_shaderHandle));
 	uniformList.push_back(new CameraTargetVecUniform(m_shaderHandle));
+	uniformList.push_back(new ProjPlaneRangeUniform(m_shaderHandle));
 
 	// Distance based fog uniforms
 	uniformList.push_back(new FogDensityUniform(m_shaderHandle));
@@ -163,6 +167,9 @@ ErrorCode ShaderUniformUpdater::generatePerFrameList()
 	uniformList.push_back(new BloomIntensityUniform(m_shaderHandle));
 	uniformList.push_back(new BloomTresholdUniform(m_shaderHandle));
 
+	// CSM
+	uniformList.push_back(new CSMPenumbraScaleRangeUniform(m_shaderHandle));
+	
 	// Luminance
 	uniformList.push_back(new InverseLogLuminanceRangeUniform(m_shaderHandle));
 	uniformList.push_back(new LogLuminanceRangeUniform(m_shaderHandle));
@@ -245,6 +252,9 @@ ErrorCode ShaderUniformUpdater::generateUniformBlockList()
 	
 	// Lens flare effect parameters buffer
 	uniformBlockList.push_back(new LensFlareParametersUniform(m_shaderHandle));
+
+	// Cascaded shadow mapping matrix buffer
+	uniformBlockList.push_back(new CSMMatrixBufferUniform(m_shaderHandle));
 
 	// Go through each uniform and check if it is valid
 	// If it is, add it to the update list, if not, delete it

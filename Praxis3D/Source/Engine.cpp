@@ -17,6 +17,17 @@
 #include "WindowLocator.h"
 #include "WorldSystem.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+	__declspec(dllexport) uint32_t NvOptimusEnablement = 1;
+	__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+
+#ifdef __cplusplus
+}
+#endif
+
 int Engine::m_instances = 0;
 
 #define ENUMTOSTRING(ENUM) #ENUM
