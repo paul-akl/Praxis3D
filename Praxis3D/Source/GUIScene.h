@@ -5,6 +5,7 @@
 #include "ObjectPool.h"
 #include "System.h"
 
+class AboutWindow;
 class EditorWindow;
 class GUISystem;
 struct ComponentsConstructionInfo;
@@ -176,6 +177,7 @@ private:
 
 	GUITask *m_GUITask;
 	std::queue<FileBrowserDialog*> m_fileBrowserDialogs;
+	AboutWindow *m_aboutWindow;
 	EditorWindow *m_editorWindow;
 	bool m_GUISequenceEnabled;
 

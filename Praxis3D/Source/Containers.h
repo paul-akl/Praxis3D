@@ -305,6 +305,24 @@ struct AmbientOcclusionData
 	AmbientOcclusionType m_aoType;
 };
 
+// Stores misc scene settings
+struct MiscSceneData
+{
+	MiscSceneData() : 
+		m_ambientIntensityDirectional(Config::graphicsVar().ambient_intensity_directional),
+		m_ambientIntensityPoint(Config::graphicsVar().ambient_intensity_point),
+		m_ambientIntensitySpot(Config::graphicsVar().ambient_intensity_spot),
+		m_stochasticSamplingSeamFix(Config::rendererVar().stochastic_sampling_seam_fix) { }
+
+	// Ambient light intensity multiplier
+	float m_ambientIntensityDirectional;
+	float m_ambientIntensityPoint;
+	float m_ambientIntensitySpot;
+
+	// Stochastic sampling mipmap seam fix flag
+	bool m_stochasticSamplingSeamFix;
+};
+
 // Stores a single CSM cascade settings
 struct ShadowCascadeData
 {

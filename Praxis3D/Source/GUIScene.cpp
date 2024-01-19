@@ -3,6 +3,7 @@
 #include <ImGuiFileDialog/ImGuiFileDialog.h>
 
 #include "WorldScene.h"
+#include "AboutWindow.h"
 #include "ComponentConstructorInfo.h"
 #include "EditorWindow.h"
 #include "GUIHandlerLocator.h"
@@ -18,12 +19,17 @@ GUIScene::GUIScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : SystemSce
 	 m_GUISequenceEnabled = true;
 	 m_showAboutWindow = false;
 	 m_showSettingsWindow = false;
+
+	 m_aboutWindow = new AboutWindow(this);
 }
 
 GUIScene::~GUIScene()
 {
 	if(m_GUITask != nullptr)
 		delete m_GUITask;
+
+	if(m_aboutWindow != nullptr)
+		delete m_aboutWindow;
 
 	if(m_editorWindow != nullptr)
 		delete m_editorWindow;
@@ -40,6 +46,10 @@ ErrorCode GUIScene::init()
 	ImVec4(0.745f, 0.482f, 0.176f, 1.0f)
 	ImVec4(0.843f, 0.682f, 0.361f, 1.0f)
 	ImVec4(0.808f, 0.498f, 0.306f, 1.0f)*/
+
+	// Initialize the About Window
+	if(ErrorCode aboutWindowError = m_aboutWindow->init(); aboutWindowError != ErrorCode::Success)
+		ErrHandlerLoc::get().log(aboutWindowError, ErrorSource::Source_GUI);
 
 	return ErrorCode::Success;
 }
@@ -202,6 +212,10 @@ void GUIScene::update(const float p_deltaTime)
 		//	|		ABOUT WINDOW		 |
 		//	|____________________________|
 		//
+		if(m_showAboutWindow)
+		{
+			m_aboutWindow->update(p_deltaTime);
+		}
 
 		//	 ____________________________
 		//	|							 |
@@ -375,7 +389,17 @@ void GUIScene::receiveData(const DataType p_dataType, void *p_data, const bool p
 	{
 		case DataType::DataType_AboutWindow:
 			{
+				bool newShowAboutWindowFlag = static_cast<bool>(p_data);
 
+				if(m_showAboutWindow != newShowAboutWindowFlag)
+				{
+					m_showAboutWindow = newShowAboutWindowFlag;
+
+					if(m_showAboutWindow)
+						m_aboutWindow->activate();
+					else
+						m_aboutWindow->deactivate();
+				}
 			}
 			break;
 

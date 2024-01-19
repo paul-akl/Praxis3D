@@ -1,5 +1,11 @@
 #version 430 core
 
+#define STOCHASTIC_SAMPLING 0
+#define STOCHASTIC_SAMPLING_MIPMAP_SEAM_FIX 1
+
+#define PARALLAX_MAPPING 0
+#define PARALLAX_MAPPING_METHOD 5
+
 #define MIN_LOD_PARALLAX 0.1
 #define MAX_LOD_PARALLAX 20.0
 #define LOD_PARALLAX_THRESHOLD 0.0
@@ -37,16 +43,20 @@ uniform mat4 projMat;
 	Red: Roughness
 	Green: Metalness
 	Blue: Height
-	Alpha: Ambient Occlusion
-*/
+	Alpha: Ambient Occlusion */
 uniform sampler2D combinedTexture;
 uniform sampler2D diffuseTexture;
 uniform sampler2D normalTexture;
 uniform sampler2D emissiveTexture;
+uniform sampler2D noiseTexture;
 
 uniform float alphaThreshold;
 uniform float emissiveMultiplier;
 uniform float emissiveThreshold;
+uniform float heightScale;
+uniform float stochasticSamplingScale;
+uniform ivec2 screenSize;
+uniform vec2 pomNumOfSteps;	// Parallax Occlusion Mapping number of depth steps (x = min, y = max)
 
 /*
 vec2 steepParallaxMapping(vec2 texCoords, vec3 viewDir)
@@ -80,34 +90,115 @@ vec2 steepParallaxMapping(vec2 texCoords, vec3 viewDir)
     return currentTexCoords;
 }*/
 
+
+float sum(vec3 p_value) 
+{
+	return p_value.x + p_value.y + p_value.z; 
+}
+
+float sum(vec4 p_value) 
+{
+	return p_value.x + p_value.y + p_value.z + p_value.w; 
+}
+
+vec4 textureNoTile(in sampler2D p_texture, vec2 p_texCoords, float p_scale)
+{
+    float k = texture(noiseTexture, 0.005 * p_texCoords).r; // cheap (cache friendly) lookup
+    
+    vec2 duvdx = dFdx(p_texCoords);
+    vec2 duvdy = dFdy(p_texCoords);
+    
+    float l = k * 8.0;
+    float f = fract(l);
+    
+#if STOCHASTIC_SAMPLING_MIPMAP_SEAM_FIX
+	// Avoid mipmap seams
+    float ia = floor(l + 0.5);
+    float ib = floor(l);
+    f = min(f, 1.0 - f) * 2.0;
+#else
+    float ia = floor(l);
+    float ib = ia + 1.0;
+#endif    
+    
+    vec2 offa = sin(vec2(3.0, 7.0) * ia); // can replace with any other hash
+    vec2 offb = sin(vec2(3.0, 7.0) * ib); // can replace with any other hash
+
+    vec4 cola = textureGrad(p_texture, p_texCoords + p_scale * offa, duvdx, duvdy).xyzw;
+    vec4 colb = textureGrad(p_texture, p_texCoords + p_scale * offb, duvdx, duvdy).xyzw;
+    
+    return mix(cola, colb, smoothstep(0.2, 0.8, f - 0.1 * sum(cola - colb)));
+}
+
+// Returns texture data with or without texture repetition algorithm 
+vec4 sampleTexture(const sampler2D p_texture, const vec2 p_texCoords)
+{
+#if STOCHASTIC_SAMPLING
+	return textureNoTile(p_texture, p_texCoords, stochasticSamplingScale);
+#else
+	return texture(p_texture, p_texCoords).rgba;
+#endif
+}
+
 float getHeight(const vec2 p_texCoords)
 {
-	return 1.0 - texture(combinedTexture, p_texCoords).b;
+	return 1.0 - sampleTexture(combinedTexture, p_texCoords).b;
 }
+
 float getHeight(const vec2 p_texCoords, const vec2 p_dPdx, const vec2 p_dPdy)
 {
-	return textureGrad(combinedTexture, p_texCoords, p_dPdx , p_dPdy).b;
+	return textureGrad(combinedTexture, p_texCoords, p_dPdx, p_dPdy).b;
 }
 
 float getRoughness(const vec2 p_texCoords)
 {
-	return max(texture(combinedTexture, p_texCoords).r, MIN_ROUGHNESS);
-}
-float getMetalness(const vec2 p_texCoords)
-{
-	return texture(combinedTexture, p_texCoords).g;
-}
-float getAmbientOcclusion(const vec2 p_texCoords)
-{
-	return texture(combinedTexture, p_texCoords).a;
+	return max(sampleTexture(combinedTexture, p_texCoords).r, MIN_ROUGHNESS);
 }
 
-vec2 reliefParallaxMapping(vec2 p_texCoords, vec3 p_viewDir)
+float getMetalness(const vec2 p_texCoords)
+{
+	return sampleTexture(combinedTexture, p_texCoords).g;
+}
+
+float getAmbientOcclusion(const vec2 p_texCoords)
+{
+	return sampleTexture(combinedTexture, p_texCoords).a;
+}
+
+vec3 getNormalFromMap(vec2 p_texCoord, vec3 p_worldPos)
+{
+    vec3 tangentNormal = texture(normalTexture, p_texCoord).xyz * 2.0 - 1.0;
+
+    vec3 Q1  = dFdx(p_worldPos);
+    vec3 Q2  = dFdy(p_worldPos);
+    vec2 st1 = dFdx(p_texCoord);
+    vec2 st2 = dFdy(p_texCoord);
+
+    vec3 N   = normalize(normal);
+    vec3 T  = normalize(Q1*st2.t - Q2*st1.t);
+    vec3 B  = -normalize(cross(N, T));
+    mat3 TBN = mat3(T, B, N);
+
+    return normalize(TBN * tangentNormal);
+}
+
+vec3 barycentricToModelPosition(vec2 p_texCoords, vec3 p_vertex0, vec3 p_vertex1, vec3 p_vertex2) 
+{
+    vec3 barycentric = vec3(1.0 - p_texCoords.x - p_texCoords.y, p_texCoords.x, p_texCoords.y);
+    return barycentric.x * p_vertex0 + barycentric.y * p_vertex1 + barycentric.z * p_vertex2;
+}
+
+vec2 calcSimpleParallaxMapping(vec2 p_texCoords, vec3 p_viewDir)
+{
+	float height =  getHeight(p_texCoords) * heightScale;    
+    vec2 p = p_viewDir.xy * height;
+    return p_texCoords - p;
+}
+
+vec2 calcReliefParallaxMapping(vec2 p_texCoords, vec3 p_viewDir)
 {   
 	// determine required number of layers
-	const float minLayers = 10;
-	const float maxLayers = 15;
-	float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0, 0, 1), p_viewDir)));
+	float numLayers = mix(pomNumOfSteps.y, pomNumOfSteps.x, abs(dot(vec3(0, 0, 1), p_viewDir)));
 
 	// height of each layer
 	float layerHeight = 1.0 / numLayers;
@@ -171,32 +262,66 @@ vec2 reliefParallaxMapping(vec2 p_texCoords, vec3 p_viewDir)
 	return currentTextureCoords;
 }
 
-vec2 parallaxMappingNew(vec2 T, vec3 V)
+vec2 calcSteepParallaxMapping(const vec2 p_texCoords, const vec3 p_viewDir)
+{ 
+    // Calculate the number of depth layers
+    const float numLayers = mix(pomNumOfSteps.y, pomNumOfSteps.x, abs(dot(vec3(0.0, 0.0, 1.0), p_viewDir)));
+	
+    // Calculate the size of each layer
+    const float layerDepth = 1.0 / numLayers;
+	
+    // Depth of the current layer
+    float currentLayerDepth = 0.0;
+	
+    // Calculate the amount to shift the texture coordinates per layer
+    const vec2 rayDirection = p_viewDir.xy / p_viewDir.z * heightScale; 
+    const vec2 deltaTexCoords = rayDirection / numLayers;
+  
+    // Get initial values
+    vec2 currentTexCoords = p_texCoords;
+    float currentDepthMapValue = getHeight(currentTexCoords);
+      
+    while(currentLayerDepth < currentDepthMapValue)
+    {
+        // Shift texture coordinates along the direction of ray
+        currentTexCoords -= deltaTexCoords;
+		
+        // Get the depth value at current texture coordinates
+        currentDepthMapValue = getHeight(currentTexCoords);  
+		
+        // Get the depth of next layer
+        currentLayerDepth += layerDepth;  
+    }
+    
+    return currentTexCoords;
+}
+
+vec2 calcParallaxMappingAlternative(vec2 T, vec3 V)
 {
 	vec2 finalTexCoords = T;
 
 	// Calculate the parallax offset vector max length.
 	// This is equivalent to the tangent of the angle between the
 	// viewer position and the fragment location.
-	float fParallaxLimit = -length( V.xy ) / V.z;
+	float fParallaxLimit = -length(V.xy) / V.z;
 
 	// Scale the parallax limit according to heightmap scale.
-	fParallaxLimit *= 0.04f;						
+	fParallaxLimit *= heightScale;						
 
 	// Calculate the parallax offset vector direction and maximum offset.
-	vec2 vOffsetDir = normalize( V.xy );
+	vec2 vOffsetDir = normalize(V.xy);
 	vec2 vMaxOffset = vOffsetDir * fParallaxLimit;
 
 	// Calculate the geometric surface normal vector, the vector from
 	// the viewer to the fragment, and the vector from the fragment
 	// to the light.
-	vec3 N = normalize( normal );
-	vec3 E = normalize( V );
+	vec3 N = normalize(normal);
+	vec3 E = normalize(V);
 
 	// Calculate how many samples should be taken along the view ray
 	// to find the surface intersection.  This is based on the angle
 	// between the surface normal and the view vector.
-	float nNumSamples2 = mix( 20, 10, dot( E, N ) );
+	float nNumSamples2 = mix(pomNumOfSteps.y, pomNumOfSteps.x, dot(E, N));
 	int nNumSamples = int(nNumSamples2);
 	
 	// Specify the view ray step size.  Each sample will shift the current
@@ -205,13 +330,13 @@ vec2 parallaxMappingNew(vec2 T, vec3 V)
 
 	// Calculate the texture coordinate partial derivatives in screen
 	// space for the tex2Dgrad texture sampling instruction.
-	vec2 dx = dFdx( T );
-	vec2 dy = dFdy( T );
+	vec2 dx = dFdx(T);
+	vec2 dy = dFdy(T);
 
 	// Initialize the starting view ray height and the texture offsets.
 	float fCurrRayHeight = 1.0;	
-	vec2 vCurrOffset = vec2( 0, 0 );
-	vec2 vLastOffset = vec2( 0, 0 );
+	vec2 vCurrOffset = vec2(0, 0);
+	vec2 vLastOffset = vec2(0, 0);
 
 	float fLastSampledHeight = 1;
 	float fCurrSampledHeight = 1;
@@ -226,7 +351,7 @@ vec2 parallaxMappingNew(vec2 T, vec3 V)
 		fCurrSampledHeight = getHeight(T + vCurrOffset, dx, dy); //NormalHeightMap.SampleGrad( LinearSampler, IN.texcoord + vCurrOffset, dx, dy ).a;
 
 		// Test if the view ray has intersected the surface.
-		if ( fCurrSampledHeight > fCurrRayHeight )
+		if(fCurrSampledHeight > fCurrRayHeight)
 		{
 			// Find the relative height delta before and after the intersection.
 			// This provides a measure of how close the intersection is to 
@@ -237,7 +362,7 @@ vec2 parallaxMappingNew(vec2 T, vec3 V)
 
 			// Interpolate between the final two segments to 
 			// find the true intersection point offset.
-			vCurrOffset = (ratio) * vLastOffset + (1.0-ratio) * vCurrOffset;
+			vCurrOffset = ratio * vLastOffset + (1.0 - ratio) * vCurrOffset;
 			
 			// Force the exit of the while loop
 			nCurrSample = nNumSamples + 1;	
@@ -267,98 +392,77 @@ vec2 parallaxMappingNew(vec2 T, vec3 V)
 	return vFinalCoords;
 }
 
-vec2 parallaxOcclusionMapping(vec2 texCoords, vec3 viewDir, float p_LOD)
+vec2 calcParallaxOcclusionMapping(const vec2 p_texCoords, const vec3 p_viewDir)
 {
-	// number of depth layers
-    const float minLayers = 15;
-    const float maxLayers = 20;
-    float numLayers = max(mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir))) * p_LOD, 1.0);  
-    // calculate the size of each layer
-    float layerDepth = 1.0 / numLayers;
-    // depth of current layer
+    // Calculate the number of depth layers
+    const float numLayers = mix(pomNumOfSteps.y, pomNumOfSteps.x, abs(dot(vec3(0.0, 0.0, 1.0), p_viewDir)));  
+	
+    // Calculate the size of each layer
+    const float layerDepth = 1.0 / numLayers;
+	
+    // Depth of the current layer
     float currentLayerDepth = 0.0;
-    // the amount to shift the texture coordinates per layer (from vector P)
-    vec2 P = viewDir.xy / viewDir.z * parallaxScale; 
-    vec2 deltaTexCoords = P / numLayers;
+	
+    // Calculate the amount to shift the texture coordinates per layer
+    const vec2 rayDirection = p_viewDir.xy / p_viewDir.z * heightScale; 
+    const vec2 deltaTexCoords = rayDirection / numLayers;
   
-    // get initial values
-    vec2  currentTexCoords     = texCoords;
+    // Get initial values
+    vec2 currentTexCoords = p_texCoords;
     float currentDepthMapValue = getHeight(currentTexCoords);
-      
+	
     while(currentLayerDepth < currentDepthMapValue)
     {
-        // shift texture coordinates along direction of P
+        // Shift texture coordinates along the direction of ray
         currentTexCoords -= deltaTexCoords;
-        // get depthmap value at current texture coordinates
-        currentDepthMapValue = getHeight(currentTexCoords);  
-        // get depth of next layer
+		
+        // Get the depth value at current texture coordinates
+        currentDepthMapValue = getHeight(currentTexCoords);
+		
+        // Get the depth of next layer
         currentLayerDepth += layerDepth;  
     }
-    
-    // -- parallax occlusion mapping interpolation from here on
-    // get texture coordinates before collision (reverse operations)
-    vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
+    	
+    // Get the texture coordinates before collision (reverse operations)
+    const vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
 
-    // get depth after and before collision for linear interpolation
-    float afterDepth  = currentDepthMapValue - currentLayerDepth;
-    float beforeDepth = getHeight(prevTexCoords) - currentLayerDepth + layerDepth;
+    // Get the depth after and before collision for linear interpolation
+    const float afterDepth  = currentDepthMapValue - currentLayerDepth;
+    const float beforeDepth = getHeight(prevTexCoords) - currentLayerDepth + layerDepth;
  
-    // interpolation of texture coordinates
-    float weight = afterDepth / (afterDepth - beforeDepth);
-    vec2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
-
-    return finalTexCoords;
-}
-
-vec2 simpleParallaxMapping(vec2 p_texCoords, vec3 p_viewDir)
-{
-	float height =  getHeight(p_texCoords);    
-    vec2 p = p_viewDir.xy  * (height * 0.02);
-    return p_texCoords - p;
-}
-
-vec3 getNormalFromMap(vec2 p_texCoord, vec3 p_worldPos)
-{
-    vec3 tangentNormal = texture(normalTexture, p_texCoord).xyz * 2.0 - 1.0;
-
-    vec3 Q1  = dFdx(p_worldPos);
-    vec3 Q2  = dFdy(p_worldPos);
-    vec2 st1 = dFdx(p_texCoord);
-    vec2 st2 = dFdy(p_texCoord);
-
-    vec3 N   = normalize(normal);
-    vec3 T  = normalize(Q1*st2.t - Q2*st1.t);
-    vec3 B  = -normalize(cross(N, T));
-    mat3 TBN = mat3(T, B, N);
-
-    return normalize(TBN * tangentNormal);
+    // Calculate the interpolation of texture coordinates
+    const float weight = afterDepth / (afterDepth - beforeDepth);
+    return prevTexCoords * weight + currentTexCoords * (1.0 - weight);
 }
 
 void main(void)
 {
 	float height = getHeight(texCoord);
-	vec2 newCoords = texCoord;
 	
-	// This is to save performance by not performing the
-	// parallax mapping for objects that it was not intended for
-	if((1.0 - height) * parallaxScale > PARALLAX_SCALE_THRESHOLD)
-	{
-		vec3 viewDir = tangentCameraPos - tangentFragPos;
-		float distanceToFrag = length(viewDir);
-		viewDir = normalize(viewDir);
+	vec2 newCoords = texCoord;
 		
-		float LOD = mix(MIN_LOD_PARALLAX, MAX_LOD_PARALLAX, 1.0 - ((distanceToFrag) / parallaxLOD));
-		
-		//if(LOD > LOD_PARALLAX_THRESHOLD)
-			newCoords = parallaxOcclusionMapping(texCoord, viewDir, LOD);
-			
-	}
+#if PARALLAX_MAPPING
+	vec3 viewDirNew = normalize(tangentCameraPos - tangentFragPos);
+	
+#if PARALLAX_MAPPING_METHOD == 1
+    newCoords = calcSimpleParallaxMapping(newCoords, viewDirNew);
+#elif PARALLAX_MAPPING_METHOD == 2
+    newCoords = calcReliefParallaxMapping(newCoords, viewDirNew);
+#elif PARALLAX_MAPPING_METHOD == 3
+    newCoords = calcSteepParallaxMapping(newCoords, viewDirNew);
+#elif PARALLAX_MAPPING_METHOD == 4
+    newCoords = calcParallaxMappingAlternative(newCoords, viewDirNew);
+#elif PARALLAX_MAPPING_METHOD == 5
+    newCoords = calcParallaxOcclusionMapping(newCoords, viewDirNew);
+#endif
+
+#endif
 	
 	// Get diffuse color
-	vec4 diffuse = texture(diffuseTexture, newCoords).rgba;
+	vec4 diffuseColor = sampleTexture(diffuseTexture, newCoords);
 	
 	// Discard fragment if the diffuse alpha color value is smaller than alpha threshold
-	if(diffuse.a < alphaThreshold)
+	if(diffuseColor.a < alphaThreshold)
 		discard;
 	
 	// Get material properties values with the new coordinates
@@ -366,30 +470,34 @@ void main(void)
 	// G - metalness
 	// B - height
 	// A - ambient occlusion
-	vec4 combinedTextureValues = texture(combinedTexture, newCoords).rgba;
+	vec4 combinedTextureColor = sampleTexture(combinedTexture, newCoords);
 	
 	// Get the emissive color with the new coordinates
-	vec4 emissiveColor = texture(emissiveTexture, newCoords).rgba;
+	vec4 emissiveColor = sampleTexture(emissiveTexture, newCoords);
+	
+	// Get the normal map values
+	vec3 normalColor = sampleTexture(normalTexture, newCoords).rgb;
 	
 	// Use emissive alpha channel as an intensity multiplier
 	emissiveColor *= emissiveMultiplier;// * emissiveColor.a;
 	
 	// Write roughness, metalness to the material properties buffer
 	matPropertiesBuffer = vec4(
-	max(combinedTextureValues.x, MIN_ROUGHNESS), 	// R - roughness
-	combinedTextureValues.y, 						// G - metalness
-	combinedTextureValues.w, 						// B - ambient occlusion
-	1.0);											// A - unused for now
-	
+		max(combinedTextureColor.x, MIN_ROUGHNESS), 	// R - roughness
+		combinedTextureColor.y, 						// G - metalness
+		combinedTextureColor.w, 						// B - ambient occlusion
+		1.0);											// A - unused for now
+		
 	// Write diffuse color to the diffuse buffer
-	diffuseBuffer = diffuse;
+	diffuseBuffer = diffuseColor;
 	
 	// Write emissive color into the emissive buffer
 	emissiveBuffer = emissiveColor;
 	
 	// Write fragment's position in world space	to the position buffer
 	positionBuffer = fragPos;
-	
+		
 	// Write fragment's normal direction in world space
-	normalBuffer = normalize(TBN * normalize(texture(normalTexture, newCoords).rgb * 2.0 - 1.0));
+	//normalBuffer = normalize(TBN * normalize(texture(normalTexture, newCoords).rgb * 2.0 - 1.0));
+	normalBuffer = normalize(TBN * normalize(normalColor * 2.0 - 1.0));
 }

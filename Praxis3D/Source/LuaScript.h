@@ -97,6 +97,7 @@ public:
 		setDefinitions();
 		setFunctions();
 		setUsertypes();
+		setLuaVariables();
 
 		// Get function references that are inside the Lua script
 		m_luaInit = m_luaState[Config::scriptVar().iniFunctionName];
@@ -127,13 +128,15 @@ public:
 	inline void setScriptFilename(const std::string &p_filename) { m_luaScriptFilename = p_filename; }
 
 	// Set the variables so they can be accessed from inside the lua script
-	inline void setVariables(const std::vector<std::pair<std::string, Property>> &p_variables)
+	inline void setVariables(const std::vector<std::pair<std::string, Property>> &p_variables, const bool p_setVariablesInsideLua = false)
 	{
 		m_variables = p_variables;
+		if(p_setVariablesInsideLua)
+			setLuaVariables();
 	}
 
 	// Set the variables so they can be accessed from inside the lua script
-	inline void setVariables(const PropertySet &p_properties)
+	inline void setVariables(const PropertySet &p_properties, const bool p_setVariablesInsideLua = false)
 	{
 		if(p_properties && p_properties.getPropertyID() == Properties::Variables)
 		{
@@ -145,6 +148,9 @@ public:
 					p_properties.getPropertySet(iVariable).getPropertyByID(Properties::Name).getString(),
 					p_properties.getPropertySet(iVariable).getPropertyByID(Properties::Value));
 			}
+
+			if(p_setVariablesInsideLua)
+				setLuaVariables();
 		}
 	}
 
@@ -180,6 +186,8 @@ private:
 	void setFunctions();
 	// Defines usertypes, so that they can be used in the lua script
 	void setUsertypes();
+	// Sets the defined variables inside the lua script
+	void setLuaVariables();
 
 	// Creates and assigns objects to be used in the lua script
 	// Should only be called from the lua script

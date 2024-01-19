@@ -12,10 +12,11 @@
 
 TextureLoader2D::TextureLoader2D()
 {
-	m_defaultTextures[DefaultTextureType::DefaultTextureType_Diffuse] = new Texture2D(this, Config::textureVar().default_texture, m_objectPool.size(), 0);
-	m_defaultTextures[DefaultTextureType::DefaultTextureType_Emissive] = new Texture2D(this, Config::textureVar().default_emissive_texture, m_objectPool.size(), 0);
-	m_defaultTextures[DefaultTextureType::DefaultTextureType_Height] = new Texture2D(this, Config::textureVar().default_height_texture, m_objectPool.size(), 0);
-	m_defaultTextures[DefaultTextureType::DefaultTextureType_Normal] = new Texture2D(this, Config::textureVar().default_normal_texture, m_objectPool.size(), 0);
+	m_defaultTextures[DefaultTextureType::DefaultTextureType_Diffuse] = new Texture2D(this, Config::filepathVar().engine_assets_path + Config::textureVar().default_texture, m_objectPool.size(), 0);
+	m_defaultTextures[DefaultTextureType::DefaultTextureType_Emissive] = new Texture2D(this, Config::filepathVar().engine_assets_path + Config::textureVar().default_emissive_texture, m_objectPool.size(), 0);
+	m_defaultTextures[DefaultTextureType::DefaultTextureType_Height] = new Texture2D(this, Config::filepathVar().engine_assets_path + Config::textureVar().default_height_texture, m_objectPool.size(), 0);
+	m_defaultTextures[DefaultTextureType::DefaultTextureType_Normal] = new Texture2D(this, Config::filepathVar().engine_assets_path + Config::textureVar().default_normal_texture, m_objectPool.size(), 0);
+	m_defaultTextures[DefaultTextureType::DefaultTextureType_RMHA] = new Texture2D(this, Config::filepathVar().engine_assets_path + Config::textureVar().default_RMHA_texture, m_objectPool.size(), 0);
 
 	for(unsigned int i = 0; i < DefaultTextureType::DefaultTextureType_NumOfTypes; i++)
 		m_defaultTextureHandles[i] = nullptr;
@@ -33,25 +34,30 @@ TextureLoader2D::~TextureLoader2D()
 ErrorCode TextureLoader2D::init()
 {
 	// If the default texture filename changed upon loading the configuration
-	if(m_defaultTextures[DefaultTextureType::DefaultTextureType_Diffuse]->m_filename != Config::textureVar().default_texture)
+	if(m_defaultTextures[DefaultTextureType::DefaultTextureType_Diffuse]->m_filename != Config::filepathVar().engine_assets_path + Config::textureVar().default_texture)
 	{
 		delete m_defaultTextures[DefaultTextureType::DefaultTextureType_Diffuse];
-		m_defaultTextures[DefaultTextureType::DefaultTextureType_Diffuse] = new Texture2D(this, Config::textureVar().default_texture, m_objectPool.size(), 0);
+		m_defaultTextures[DefaultTextureType::DefaultTextureType_Diffuse] = new Texture2D(this, Config::filepathVar().engine_assets_path + Config::textureVar().default_texture, m_objectPool.size(), 0);
 	}
-	if(m_defaultTextures[DefaultTextureType::DefaultTextureType_Emissive]->m_filename != Config::textureVar().default_emissive_texture)
+	if(m_defaultTextures[DefaultTextureType::DefaultTextureType_Emissive]->m_filename != Config::filepathVar().engine_assets_path + Config::textureVar().default_emissive_texture)
 	{
 		delete m_defaultTextures[DefaultTextureType::DefaultTextureType_Emissive];
-		m_defaultTextures[DefaultTextureType::DefaultTextureType_Emissive] = new Texture2D(this, Config::textureVar().default_emissive_texture, m_objectPool.size(), 0);
+		m_defaultTextures[DefaultTextureType::DefaultTextureType_Emissive] = new Texture2D(this, Config::filepathVar().engine_assets_path + Config::textureVar().default_emissive_texture, m_objectPool.size(), 0);
 	}
-	if(m_defaultTextures[DefaultTextureType::DefaultTextureType_Height]->m_filename != Config::textureVar().default_height_texture)
+	if(m_defaultTextures[DefaultTextureType::DefaultTextureType_Height]->m_filename != Config::filepathVar().engine_assets_path + Config::textureVar().default_height_texture)
 	{
 		delete m_defaultTextures[DefaultTextureType::DefaultTextureType_Height];
-		m_defaultTextures[DefaultTextureType::DefaultTextureType_Height] = new Texture2D(this, Config::textureVar().default_height_texture, m_objectPool.size(), 0);
+		m_defaultTextures[DefaultTextureType::DefaultTextureType_Height] = new Texture2D(this, Config::filepathVar().engine_assets_path + Config::textureVar().default_height_texture, m_objectPool.size(), 0);
 	}
-	if(m_defaultTextures[DefaultTextureType::DefaultTextureType_Normal]->m_filename != Config::textureVar().default_normal_texture)
+	if(m_defaultTextures[DefaultTextureType::DefaultTextureType_Normal]->m_filename != Config::filepathVar().engine_assets_path + Config::textureVar().default_normal_texture)
 	{
 		delete m_defaultTextures[DefaultTextureType::DefaultTextureType_Normal];
-		m_defaultTextures[DefaultTextureType::DefaultTextureType_Normal] = new Texture2D(this, Config::textureVar().default_normal_texture, m_objectPool.size(), 0);
+		m_defaultTextures[DefaultTextureType::DefaultTextureType_Normal] = new Texture2D(this, Config::filepathVar().engine_assets_path + Config::textureVar().default_normal_texture, m_objectPool.size(), 0);
+	}
+	if(m_defaultTextures[DefaultTextureType::DefaultTextureType_RMHA]->m_filename != Config::filepathVar().engine_assets_path + Config::textureVar().default_RMHA_texture)
+	{
+		delete m_defaultTextures[DefaultTextureType::DefaultTextureType_RMHA];
+		m_defaultTextures[DefaultTextureType::DefaultTextureType_RMHA] = new Texture2D(this, Config::filepathVar().engine_assets_path + Config::textureVar().default_RMHA_texture, m_objectPool.size(), 0);
 	}
 	
 	// Load default textures
@@ -93,8 +99,10 @@ TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string &p_file
 		case MaterialType_Height:
 			returnTexture = m_defaultTextures[DefaultTextureType::DefaultTextureType_Height];
 			break;
-		case MaterialType_Diffuse:
 		case MaterialType_Combined:
+			returnTexture = m_defaultTextures[DefaultTextureType::DefaultTextureType_RMHA];
+			break;
+		case MaterialType_Diffuse:
 		case MaterialType_Roughness:
 		case MaterialType_Metalness:
 		case MaterialType_AmbientOcclusion:
@@ -117,6 +125,9 @@ TextureLoader2D::Texture2DHandle TextureLoader2D::load(const std::string &p_file
 			break;
 		case MaterialType_Height:
 			defaultTextureHandle = m_defaultTextures[DefaultTextureType::DefaultTextureType_Height]->m_handle;
+			break;
+		case MaterialType_Combined:
+			defaultTextureHandle = m_defaultTextures[DefaultTextureType::DefaultTextureType_RMHA]->m_handle;
 			break;
 		}
 
@@ -280,7 +291,7 @@ TextureLoaderCubemap::TextureLoaderCubemap()
 {
 	std::string defaultFilenames[CubemapFace_NumOfFaces];
 	for(unsigned int face = CubemapFace_PositiveX; face < CubemapFace_NumOfFaces; face++)
-		defaultFilenames[face] = Config::textureVar().default_texture;
+		defaultFilenames[face] = Config::filepathVar().engine_assets_path + Config::textureVar().default_texture;
 
 	m_defaultCubemap = new TextureCubemap(this, Config::textureVar().default_texture, defaultFilenames, m_objectPool.size(), 0);
 }
@@ -293,13 +304,13 @@ ErrorCode TextureLoaderCubemap::init()
 {
 	// If the default texture filename changed upon loading the configuration
 	// (don't need to compare all filenames, since the default cubemap will have the same texture for all faces)
-	if(m_defaultCubemap->m_filenames[CubemapFace_PositiveX] != Config::textureVar().default_texture)
+	if(m_defaultCubemap->m_filenames[CubemapFace_PositiveX] != Config::filepathVar().engine_assets_path + Config::textureVar().default_texture)
 	{
 		delete m_defaultCubemap;
 
 		std::string defaultFilenames[CubemapFace_NumOfFaces];
 		for(unsigned int face = CubemapFace_PositiveX; face < CubemapFace_NumOfFaces; face++)
-			defaultFilenames[face] = Config::textureVar().default_texture;
+			defaultFilenames[face] = Config::filepathVar().engine_assets_path + Config::textureVar().default_texture;
 
 		m_defaultCubemap = new TextureCubemap(this, Config::textureVar().default_texture, defaultFilenames, m_objectPool.size(), 0);
 	}

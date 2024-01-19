@@ -4,15 +4,6 @@
 		{
 			"Name": "root",
 			"ID": "0",
-			"World":
-			{
-				"SpatialComponent":
-				{
-					"LocalPosition": "0.0f, 0.0f, 0.0f",
-					"LocalRotation": "0.0f, 0.0f, 0.0f",
-					"LocalScale": "1.0f, 1.0f, 1.0f"
-				}
-			},
 			"Script":
 			{
 				"LuaComponent":
@@ -25,18 +16,6 @@
 			"Name": "GUI",
 			"ID": "1",
 			"Parent": "0",
-			"Audio":
-			{
-				"SoundComponent":
-				{
-					"Filename": "chat.mp3",
-					"Type": "Music",
-					"Loop": "true",
-					"Spatialized": "false",
-					"StartPlaying": "false",
-					"Volume": "0.5f"
-				}
-			},
 			"GUI":
 			{
 				"GUISequenceComponent":
@@ -60,13 +39,11 @@
 		{
 			"Scene":
 			{
+				"ObjectPoolSize": "1",
 				"Banks":
 				[
 					{
-						"Filename": "Impact.bank"
-					},
-					{
-						"Filename": "Impacts_extended.bank"
+						"Filename": "Default\Impact.bank"
 					}
 				]
 			}
@@ -75,7 +52,7 @@
 		{
 			"Scene":
 			{
-				"ObjectPoolSize": "50",
+				"ObjectPoolSize": "1",
 				"RenderPasses":
 				[
 					{
@@ -106,14 +83,14 @@
 		{
 			"Scene":
 			{
-				"ObjectPoolSize": "50"
+				"ObjectPoolSize": "1"
 			}
 		},
 		"Physics":
 		{
 			"Scene":
 			{
-				"ObjectPoolSize": "50",
+				"ObjectPoolSize": "1",
 				"Gravity": "0.0f, -9.8f, 0.0f"
 			}
 		},
@@ -121,7 +98,7 @@
 		{
 			"Scene":
 			{
-				"ObjectPoolSize": "50"
+				"ObjectPoolSize": "1"
 			}
 		}
 	}

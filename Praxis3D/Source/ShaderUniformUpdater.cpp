@@ -155,6 +155,7 @@ ErrorCode ShaderUniformUpdater::generatePerFrameList()
 	uniformList.push_back(new EyeAdaptionIntendedBrightnessUniform(m_shaderHandle));
 	uniformList.push_back(new EmissiveMultiplierUniform(m_shaderHandle));
 	uniformList.push_back(new LODParallaxMappingUniform(m_shaderHandle));
+	uniformList.push_back(new ParallaxMappingNumOfStepsUniform(m_shaderHandle));
 
 	// Ambient occlusion
 	uniformList.push_back(new HBAOBlurNumOfSamples(m_shaderHandle));
@@ -212,7 +213,8 @@ ErrorCode ShaderUniformUpdater::generatePerModelList()
 	uniformList.push_back(new TexelSizeUniform(m_shaderHandle));
 	uniformList.push_back(new NumOFTexelsUniform(m_shaderHandle));
 	uniformList.push_back(new TextureTilingFactorUniform(m_shaderHandle));
-
+	uniformList.push_back(new StochasticSamplingScaleUniform(m_shaderHandle));
+	
 	// Test uniforms, used for debugging, etc
 	uniformList.push_back(new TestMatUniform(m_shaderHandle));
 	uniformList.push_back(new TestVecUniform(m_shaderHandle));

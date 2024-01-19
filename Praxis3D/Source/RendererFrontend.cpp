@@ -268,11 +268,11 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 	}
 
 	// If Z-buffer near or far or FOV values have changed, flag projection matrix for updating
-	if(m_frameData.m_zFar != p_sceneObjects.m_zFar || m_frameData.m_zNear != p_sceneObjects.m_zNear || m_frameData.m_fov != Config::graphicsVar().fov)
+	if(m_frameData.m_zFar != p_sceneObjects.m_zFar || m_frameData.m_zNear != p_sceneObjects.m_zNear || m_frameData.m_fov != p_sceneObjects.m_fov)
 	{
 		m_frameData.m_zFar = p_sceneObjects.m_zFar;
 		m_frameData.m_zNear = p_sceneObjects.m_zNear;
-		m_frameData.m_fov = Config::graphicsVar().fov;
+		m_frameData.m_fov = p_sceneObjects.m_fov;
 		projectionMatrixNeedsUpdating = true;
 	}
 
@@ -396,9 +396,6 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 	// Set the camera target vector
 	m_frameData.m_cameraTarget = normalize(glm::vec3(0.0f, 0.0f, -1.0f) * glm::mat3(p_sceneObjects.m_cameraViewMatrix));
 	
-	// Set ambient intensity multiplier
-	m_frameData.m_ambientIntensity = p_sceneObjects.m_ambientIntensity;
-
 	for(decltype(m_activeRenderPasses.size()) i = 0, size = m_activeRenderPasses.size(); i < size; i++)
 	{
 		m_activeRenderPasses[i]->update(*m_renderPassData, p_sceneObjects, p_deltaTime);

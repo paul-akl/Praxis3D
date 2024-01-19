@@ -449,7 +449,26 @@ public:
 
 private:
 	float m_currentTexTillingFactor;
-}; 
+};
+class StochasticSamplingScaleUniform : public BaseUniform
+{
+public:
+	StochasticSamplingScaleUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().stochasticSamplingScaleUniform, p_shaderHandle), m_currentStochasticSamplingScale(0.0f) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		// Check if the same value is not already assigned (a small optimization)
+		if(m_currentStochasticSamplingScale != p_uniformData.m_objectData.m_stochasticSamplingScale)
+		{
+			m_currentStochasticSamplingScale = p_uniformData.m_objectData.m_stochasticSamplingScale;
+
+			glUniform1f(m_uniformHandle, m_currentStochasticSamplingScale);
+		}
+	}
+
+private:
+	float m_currentStochasticSamplingScale;
+};
 class EyeAdaptionRateUniform : public BaseUniform
 {
 public:
@@ -491,21 +510,42 @@ private:
 class LODParallaxMappingUniform : public BaseUniform
 {
 public:
-	LODParallaxMappingUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().LODParallaxUniform, p_shaderHandle), parallaxLOD(-1.0f) { }
+	LODParallaxMappingUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().LODParallaxUniform, p_shaderHandle), m_parallaxLOD(-1.0f) { }
 
 	void update(const UniformData &p_uniformData)
 	{
 		// Check if the same value is not already assigned (a small optimization)
-		if(parallaxLOD != Config::graphicsVar().LOD_parallax_mapping)
+		if(m_parallaxLOD != Config::graphicsVar().LOD_parallax_mapping)
 		{
-			parallaxLOD = Config::graphicsVar().LOD_parallax_mapping;
+			m_parallaxLOD = Config::graphicsVar().LOD_parallax_mapping;
 
-			glUniform1f(m_uniformHandle, parallaxLOD);
+			glUniform1f(m_uniformHandle, m_parallaxLOD);
 		}
 	}
 
 private:
-	float parallaxLOD;
+	float m_parallaxLOD;
+};
+class ParallaxMappingNumOfStepsUniform : public BaseUniform
+{
+public:
+	ParallaxMappingNumOfStepsUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().parallaxMappingNumOfStepsLayersUniform, p_shaderHandle), m_minNumOfSteps(1.0f), m_maxNumOfSteps(1.0f){ }
+
+	void update(const UniformData &p_uniformData)
+	{
+		// Check if the same value is not already assigned (a small optimization)
+		if(m_minNumOfSteps != Config::rendererVar().parallax_mapping_min_steps || m_maxNumOfSteps != Config::rendererVar().parallax_mapping_max_steps)
+		{
+			m_minNumOfSteps = Config::rendererVar().parallax_mapping_min_steps;
+			m_maxNumOfSteps = Config::rendererVar().parallax_mapping_max_steps;
+
+			glUniform2f(m_uniformHandle, m_minNumOfSteps, m_maxNumOfSteps);
+		}
+	}
+
+private:
+	float m_minNumOfSteps;
+	float m_maxNumOfSteps;
 };
 class TexelSizeUniform : public BaseUniform
 {
@@ -625,22 +665,28 @@ private:
 class AmbientLightIntensityUniform : public BaseUniform
 {
 public:
-	AmbientLightIntensityUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().ambientLightIntensity, p_shaderHandle), m_intensity(-1.0f)
+	AmbientLightIntensityUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().ambientLightIntensity, p_shaderHandle), m_intensityDirectional(-1.0f), m_intensityPoint(-1.0f), m_intensitySpot(-1.0f)
 	{
 	}
 
 	void update(const UniformData &p_uniformData)
 	{
-		if(m_intensity != p_uniformData.m_frameData.m_ambientIntensity)
+		if(m_intensityDirectional != p_uniformData.m_frameData.m_miscSceneData.m_ambientIntensityDirectional ||
+			m_intensityPoint != p_uniformData.m_frameData.m_miscSceneData.m_ambientIntensityPoint ||
+			m_intensitySpot != p_uniformData.m_frameData.m_miscSceneData.m_ambientIntensitySpot)
 		{
-			m_intensity = p_uniformData.m_frameData.m_ambientIntensity;
+			m_intensityDirectional = p_uniformData.m_frameData.m_miscSceneData.m_ambientIntensityDirectional;
+			m_intensityPoint = p_uniformData.m_frameData.m_miscSceneData.m_ambientIntensityPoint;
+			m_intensitySpot = p_uniformData.m_frameData.m_miscSceneData.m_ambientIntensitySpot;
 
-			glUniform1f(m_uniformHandle, m_intensity);
+			glUniform3f(m_uniformHandle, m_intensityDirectional, m_intensityPoint, m_intensitySpot);
 		}
 	}
 
 private:
-	float m_intensity;
+	float m_intensityDirectional;
+	float m_intensityPoint;
+	float m_intensitySpot;
 };
 class DirLightColorUniform : public BaseUniform
 {

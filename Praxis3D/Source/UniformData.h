@@ -7,16 +7,14 @@ struct UniformFrameData
 {
 	UniformFrameData()
 	{
-		m_ambientIntensity = Config::graphicsVar().ambient_light_intensity;
+		m_fov = Config::graphicsVar().fov;
+		m_zFar = Config::graphicsVar().z_far;
+		m_zNear = Config::graphicsVar().z_near;
 
 		m_deltaTime = 0.0f;
 
 		m_numPointLights = 0;
 		m_numSpotLights = 0;
-
-		m_zFar = Config::graphicsVar().z_far;
-		m_zNear = Config::graphicsVar().z_near;
-		m_fov = Config::graphicsVar().fov;
 
 		m_bloomTreshold = glm::vec4(0.0f);
 
@@ -43,7 +41,11 @@ struct UniformFrameData
 
 	// Parameters of directional light, since there can be only one of it
 	DirectionalLightDataSet m_directionalLight;
-	float m_ambientIntensity;
+
+	// Camera settings
+	float m_fov;
+	float m_zFar;
+	float m_zNear;
 
 	// Delta time of the last frame
 	float m_deltaTime;
@@ -51,11 +53,6 @@ struct UniformFrameData
 	// Current number of lights in the light buffers
 	unsigned int m_numPointLights,
 				 m_numSpotLights;
-
-	// Projection data
-	float m_zFar;
-	float m_zNear;
-	float m_fov;
 
 	// Ambient occlusion data
 	AmbientOcclusionData m_aoData;
@@ -67,6 +64,7 @@ struct UniformFrameData
 	ShadowMappingData m_shadowMappingData;
 
 	// Misc
+	MiscSceneData m_miscSceneData;
 	glm::vec2 m_texelSize;
 	int m_mipLevel;
 };
@@ -79,6 +77,7 @@ struct UniformObjectData
 		m_alphaThreshold = 0.0f;
 		m_emissiveIntensity = 0.0f;
 		m_textureTilingFactor = 1.0f;
+		m_stochasticSamplingScale = 1.0f;
 	}
 
 	UniformObjectData(const glm::mat4 &p_modelMat,
@@ -86,12 +85,14 @@ struct UniformObjectData
 					  float	p_heightScale = 0.0f,
 					  float p_alphaThreshold = 0.0f,
 					  float p_emissiveIntensity = 0.0f,
-					  float p_textureTilingFactor = 1.0f)
+					  float p_textureTilingFactor = 1.0f, 
+					  float p_stochasticSamplingScale = 1.0f)
 	{
 		m_heightScale = p_heightScale;
 		m_alphaThreshold = p_alphaThreshold;
 		m_emissiveIntensity = p_emissiveIntensity;
 		m_textureTilingFactor = p_textureTilingFactor;
+		m_stochasticSamplingScale = p_stochasticSamplingScale;
 
 		m_modelMat = p_modelMat;
 		m_modelViewProjMatrix = p_modelViewProjMatrix;
@@ -103,7 +104,8 @@ struct UniformObjectData
 	float	m_heightScale,
 			m_alphaThreshold,
 			m_emissiveIntensity,
-			m_textureTilingFactor;
+			m_textureTilingFactor,
+			m_stochasticSamplingScale;
 };
 
 struct UniformData

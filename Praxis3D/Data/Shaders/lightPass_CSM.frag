@@ -1,5 +1,7 @@
 #version 430 core
 
+#define SHADOW_MAPPING 0
+
 #define AVG_INTENDED_BRIGHTNESS 0.5
 #define MIN_INTENDED_BRIGHTNESS 0.001
 #define MAX_INTENDED_BRIGHTNESS 100.0
@@ -75,6 +77,7 @@ struct SpotLight
     float m_cutoffAngle;
 };
 
+#if SHADOW_MAPPING
 struct CascadedShadowMapDataSet
 {
 	mat4 m_lightSpaceMatrix;
@@ -84,27 +87,30 @@ struct CascadedShadowMapDataSet
 	float m_poissonSampleScale;
 	float m_penumbraScale;
 };
+#endif
 
 uniform sampler2D positionMap;
 uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
 uniform sampler2D emissiveMap;
 uniform sampler2D matPropertiesMap;
+#if SHADOW_MAPPING
 uniform sampler2DArray csmDepthMap;
+uniform vec2 csmPenumbraScaleRange;
+#endif
 
 uniform mat4 lightMatrixTest;
 uniform mat4 modelViewMat;
 uniform mat4 viewMat;
 uniform vec3 cameraPosVec;
 uniform vec2 projPlaneRange; // x - zFar, y - zNear
-uniform vec2 csmPenumbraScaleRange;
 uniform ivec2 screenSize;
 uniform float gamma;
+uniform vec3 ambientLightIntensity;	// x - directional, y - point, z - spot
 
 uniform int numPointLights;
 uniform int numSpotLights;
 
-uniform float ambientLightIntensity;
 uniform DirectionalLight directionalLight;
 
 // Using uniform buffer objects to pass light arrays and std140 layout for consistent variable spacing inside the buffer.
@@ -118,10 +124,12 @@ layout (std140) uniform SpotLights
 	SpotLight spotLights[MAX_NUM_SPOT_LIGHTS];
 };
 
+#if SHADOW_MAPPING
 layout (std140) uniform CSMDataSetBuffer
 {
 	CascadedShadowMapDataSet m_csmDataSet[NUM_OF_CASCADES];
 };
+#endif
 
 layout (std430, binding = 0) buffer HDRBuffer
 {
@@ -222,7 +230,18 @@ vec3 fresnelSchlick(float p_cosTheta, vec3 p_F0)
     //return p_F0 + (1.0 - p_F0) * pow(1.0 - p_cosTheta, 5.0);
 } 
 
-vec3 calcLightColor(vec3 p_albedoColor, vec3 p_normal, vec3 p_fragToEye, vec3 p_lightColor, vec3 p_lightDirection, float p_lightDistance, vec3 p_F0, float p_roughness, float p_metalic, float p_ambientOcclusion, float p_shadowFactor)
+vec3 calcLightColor(const vec3 p_albedoColor, 
+					const vec3 p_normal, 
+					const vec3 p_fragToEye, 
+					const vec3 p_lightColor, 
+					const vec3 p_lightDirection, 
+					const float p_lightDistance, 
+					const vec3 p_F0, 
+					const float p_roughness, 
+					const float p_metalic, 
+					const float p_ambientOcclusion, 
+					const float p_ambientLightIntensity, 
+					const float p_shadowFactor)
 {	
 	/*/ Get specular and diffuse lighting
 	vec3 specularColor = LightingFuncGGX_REF(p_normal, p_fragToEye, p_lightDirection, p_roughnessSqrt, p_F0);
@@ -253,14 +272,19 @@ vec3 calcLightColor(vec3 p_albedoColor, vec3 p_normal, vec3 p_fragToEye, vec3 p_
 	float NdotL = max(dot(p_normal, p_lightDirection), 0.0);
 	
 	// Add light color
+#if SHADOW_MAPPING
 	vec3 lightColor = (kD * p_albedoColor / PI + specular) * radiance * NdotL * p_shadowFactor;
+#else
+	vec3 lightColor = (kD * p_albedoColor / PI + specular) * radiance * NdotL;
+#endif
 	
 	// Add ambient light
-	lightColor += radiance * p_ambientOcclusion * ambientLightIntensity * (p_albedoColor) * (1.0 - p_metalic);
+	lightColor += radiance * p_ambientOcclusion * p_ambientLightIntensity * (p_albedoColor) * (1.0 - p_metalic);
 	
 	return lightColor;
 }
 
+#if SHADOW_MAPPING
 float calcCascadedShadow(vec3 p_worldPos, vec3 p_normal, vec3 p_lightDirection)
 {
     vec4 fragPosViewSpace = viewMat * vec4(p_worldPos, 1.0);
@@ -321,6 +345,7 @@ float calcCascadedShadow(vec3 p_worldPos, vec3 p_normal, vec3 p_lightDirection)
 	
     return shadow;
 }
+#endif
 
 void main(void) 
 {
@@ -363,10 +388,12 @@ void main(void)
 		vec3 dirLightColor = mix(g_sunSetColor, g_sunNoonColor, dirLightFactorSqrt);
 		float dirLightIntensity = directionalLight.m_intensity * mix(g_sunSetIntensityMod, g_sunNoonIntensityMod, dirLightFactorSqrt);
 	
-		// Add ambient lighting
-		//finalLightColor += diffuseColor * dirLightColor * dirLightIntensity * ambientLightIntensity * ambientOcclusion * (1.0 - metalic * metalic);
-	
+		// Perform cascaded shadow mapping
+#if SHADOW_MAPPING
 		float shadowFactor = calcCascadedShadow(worldPos, normal, dirLightDirection);
+#else
+		float shadowFactor = 1.0;
+#endif
 		
 		// Add directional lighting
 		finalLightColor += calcLightColor(
@@ -380,6 +407,7 @@ void main(void)
 			roughnessSqrt, 
 			metalic,
 			ambientOcclusion,
+			ambientLightIntensity.x,
 			shadowFactor) * dirLightIntensity;// * min(1.0, (dirLightFactor /* 100.0*/) + 0.02);
 	}
 		
@@ -402,6 +430,7 @@ void main(void)
 			roughnessSqrt, 
 			metalic, 
 			ambientOcclusion,
+			ambientLightIntensity.y,
 			1.0) * pointLights[i].m_intensity);
 	}
 	
@@ -433,6 +462,7 @@ void main(void)
 				roughnessSqrt, 
 				metalic, 
 				ambientOcclusion,
+				ambientLightIntensity.z,
 				1.0) * spotLights[i].m_intensity);
 			
 			// Light restriction from cone

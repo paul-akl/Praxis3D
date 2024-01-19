@@ -84,7 +84,7 @@ struct LoadableComponentContainer
 // Used to store processed objects, so they can be sent to the renderer
 struct SceneObjects
 {
-	SceneObjects() : m_processDrawing(true), m_ambientIntensity(Config::graphicsVar().ambient_light_intensity), m_zFar(Config::graphicsVar().z_far), m_zNear(Config::graphicsVar().z_near) { }
+	SceneObjects() : m_processDrawing(true), m_activeCameraEntityID(NULL_ENTITY_ID), m_activeCameraID(0), m_fov(Config::graphicsVar().fov), m_zFar(Config::graphicsVar().z_far), m_zNear(Config::graphicsVar().z_near) { }
 
 	// ECS registry views
 	decltype(std::declval<entt::basic_registry<EntityID>>().view<ModelComponent, SpatialComponent>(entt::exclude<ShaderComponent, GraphicsLoadToMemoryComponent, GraphicsLoadToVideoMemoryComponent>)) m_models;
@@ -94,6 +94,8 @@ struct SceneObjects
 
 	// Camera
 	glm::mat4 m_cameraViewMatrix;
+	EntityID m_activeCameraEntityID;
+	int m_activeCameraID;
 
 	// Objects that need to be loaded to VRAM
 	std::vector<LoadableObjectsContainer> m_loadToVideoMemory;
@@ -104,10 +106,8 @@ struct SceneObjects
 	// Should the scene be drawn (otherwise only load commands are processed)
 	bool m_processDrawing;
 
-	// Ambient light intensity multiplier
-	float m_ambientIntensity;
-
-	// Z-buffer limits
+	// Camera settings
+	float m_fov;
 	float m_zFar;
 	float m_zNear;
 };
@@ -173,7 +173,11 @@ public:
 	{
 		p_constructionInfo.m_active = p_component.isObjectActive();
 		p_constructionInfo.m_name = p_component.getName();
+
+		p_constructionInfo.m_cameraID = p_component.m_cameraID;
 		p_constructionInfo.m_fov = p_component.m_fov;
+		p_constructionInfo.m_zFar = p_component.m_zFar;
+		p_constructionInfo.m_zNear = p_component.m_zNear;
 	}
 	void exportComponent(LightComponent::LightComponentConstructionInfo &p_constructionInfo, const LightComponent &p_component)
 	{
@@ -236,6 +240,7 @@ public:
 	inline SceneObjects &getSceneObjects() { return m_sceneObjects; }
 	const inline RenderingPasses &getRenderingPasses() const { return m_renderingPasses; }
 	const inline AmbientOcclusionData &getAmbientOcclusionData() const { return m_sceneAOData; }
+	const inline MiscSceneData &getMiscSceneData() const { return m_miscSceneData; }
 	const inline ShadowMappingData &getShadowMappingData() const { return m_shadowMappingData; }
 	const glm::mat4 &getViewMatrix() const;
 	const glm::mat4 &getProjectionMatrix() const;
@@ -304,6 +309,9 @@ private:
 
 	// Contains a list of rendering passes that gets set in the renderer system
 	RenderingPasses m_renderingPasses;
+
+	// Contains misc scene settings that don't fit into other (specific) data containers
+	MiscSceneData m_miscSceneData;
 
 	// Ambient occlusion data
 	AmbientOcclusionData m_sceneAOData;

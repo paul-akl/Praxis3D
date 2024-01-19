@@ -200,48 +200,13 @@ void LuaScript::setDefinitions()
 
 	// Create entries for GUI changes
 	m_changeTypesTable[sol::update_if_empty]["GUI"]["Sequence"] = Int64Packer(Systems::Changes::GUI::Sequence);
-
-	// Iterate over variables array and set each variable depending on its type
-	for(decltype(m_variables.size()) i = 0, size = m_variables.size(); i < size; i++)
-	{
-		switch(m_variables[i].second.getVariableType())
-		{
-		case Property::Type_bool:
-			m_luaState.set(m_variables[i].first, m_variables[i].second.getBool());
-			break;
-		case Property::Type_int:
-			m_luaState.set(m_variables[i].first, m_variables[i].second.getInt());
-			break;
-		case Property::Type_float:
-			m_luaState.set(m_variables[i].first, m_variables[i].second.getFloat());
-			break;
-		case Property::Type_double:
-			m_luaState.set(m_variables[i].first, m_variables[i].second.getDouble());
-			break;
-		case Property::Type_vec2i:
-			m_luaState.set(m_variables[i].first, m_variables[i].second.getVec2i());
-			break;
-		case Property::Type_vec2f:
-			m_luaState.set(m_variables[i].first, m_variables[i].second.getVec2f());
-			break;
-		case Property::Type_vec3f:
-			m_luaState.set(m_variables[i].first, m_variables[i].second.getVec3f());
-			break;
-		case Property::Type_vec4f:
-			m_luaState.set(m_variables[i].first, m_variables[i].second.getVec4f());
-			break;
-		case Property::Type_string:
-			m_luaState.set(m_variables[i].first, m_variables[i].second.getString());
-			break;
-		case Property::Type_propertyID:
-			m_luaState.set(m_variables[i].first, GetString(m_variables[i].second.getID()));
-			break;
-		}
-	}
 }
 
 void LuaScript::setFunctions()
 {
+	// Change controller functions
+	m_luaState.set_function("sendData", [this](const Systems::TypeID p_v1, const DataType p_v2, bool p_v3) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendData(m_scriptScene->getSceneLoader()->getSystemScene(p_v1), p_v2, (void *)&p_v3, false); });
+
 	// Error handler functions
 	auto errorTable = m_luaState.create_table("ErrHandlerLoc");
 	errorTable.set_function("log", sol::overload(
@@ -347,6 +312,13 @@ void LuaScript::setFunctions()
 void LuaScript::setUsertypes()
 {
 	// Enums
+	m_luaState.new_enum("DataType",
+		"DataType_AboutWindow", DataType::DataType_AboutWindow,
+		"DataType_EnableGUISequence", DataType::DataType_EnableGUISequence,
+		"DataType_SettingsWindow", DataType::DataType_SettingsWindow,
+		"DataType_SimulationActive", DataType::DataType_SimulationActive,
+		"DataType_EnableLuaScripting", DataType::DataType_EnableLuaScripting);
+
 	m_luaState.new_enum("EngineStateType",
 		"MainMenu", EngineStateType::EngineStateType_MainMenu,
 		"Play", EngineStateType::EngineStateType_Play,
@@ -358,6 +330,15 @@ void LuaScript::setUsertypes()
 		"SceneLoad", EngineChangeType::EngineChangeType_SceneLoad,
 		"SceneReload", EngineChangeType::EngineChangeType_SceneReload,
 		"StateChange", EngineChangeType::EngineChangeType_StateChange);
+
+	m_luaState.new_enum("SystemType",
+		GetString(Systems::TypeID::Null), Systems::TypeID::Null,
+		GetString(Systems::TypeID::Audio), Systems::TypeID::Audio,
+		GetString(Systems::TypeID::Graphics), Systems::TypeID::Graphics,
+		GetString(Systems::TypeID::GUI), Systems::TypeID::GUI,
+		GetString(Systems::TypeID::Physics), Systems::TypeID::Physics,
+		GetString(Systems::TypeID::Script), Systems::TypeID::Script,
+		GetString(Systems::TypeID::World), Systems::TypeID::World);
 
 	// Config variables
 	m_luaState.new_usertype<Config::EngineVariables>("EngineVariables",
@@ -418,6 +399,9 @@ void LuaScript::setUsertypes()
 		"mouse_sensitivity", &Config::InputVariables::mouse_sensitivity);
 
 	m_luaState.new_usertype<Config::PathsVariables>("PathsVariables",
+		"config_path", &Config::PathsVariables::config_path,
+		"engine_assets_path", &Config::PathsVariables::engine_assets_path,
+		"gui_assets_path", &Config::PathsVariables::gui_assets_path,
 		"map_path", &Config::PathsVariables::map_path,
 		"model_path", &Config::PathsVariables::model_path,
 		"object_path", &Config::PathsVariables::object_path,
@@ -714,6 +698,47 @@ void LuaScript::setUsertypes()
 		"check", &Conditional::check,
 		"uncheck", &Conditional::uncheck,
 		"set", &Conditional::set);
+}
+
+void LuaScript::setLuaVariables()
+{
+	// Iterate over variables array and set each variable depending on its type
+	for(decltype(m_variables.size()) i = 0, size = m_variables.size(); i < size; i++)
+	{
+		switch(m_variables[i].second.getVariableType())
+		{
+			case Property::Type_bool:
+				m_luaState.set(m_variables[i].first, m_variables[i].second.getBool());
+				break;
+			case Property::Type_int:
+				m_luaState.set(m_variables[i].first, m_variables[i].second.getInt());
+				break;
+			case Property::Type_float:
+				m_luaState.set(m_variables[i].first, m_variables[i].second.getFloat());
+				break;
+			case Property::Type_double:
+				m_luaState.set(m_variables[i].first, m_variables[i].second.getDouble());
+				break;
+			case Property::Type_vec2i:
+				m_luaState.set(m_variables[i].first, m_variables[i].second.getVec2i());
+				break;
+			case Property::Type_vec2f:
+				m_luaState.set(m_variables[i].first, m_variables[i].second.getVec2f());
+				break;
+			case Property::Type_vec3f:
+				m_luaState.set(m_variables[i].first, m_variables[i].second.getVec3f());
+				break;
+			case Property::Type_vec4f:
+				m_luaState.set(m_variables[i].first, m_variables[i].second.getVec4f());
+				break;
+			case Property::Type_string:
+				m_luaState.set(m_variables[i].first, m_variables[i].second.getString());
+				break;
+			case Property::Type_propertyID:
+				m_luaState.set(m_variables[i].first, GetString(m_variables[i].second.getID()));
+				break;
+		}
+	}
 }
 
 void LuaScript::createObjectInLua(const unsigned int p_objectType, const std::string p_variableName)

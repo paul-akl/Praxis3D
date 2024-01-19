@@ -49,6 +49,7 @@ ShaderLoader::ShaderProgram *ShaderLoader::load(const PropertySet &p_properties)
 		std::string programName;
 
 		int numberOfShaders = 0;
+		bool nameGenerated = false;
 
 		// Iterate over all passed properties
 		for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
@@ -107,6 +108,8 @@ ShaderLoader::ShaderProgram *ShaderLoader::load(const PropertySet &p_properties)
 					programName.pop_back();
 					programName.pop_back();
 				}
+
+				nameGenerated = true;
 			}
 
 			// Generate hash key from program's name
@@ -126,6 +129,9 @@ ShaderLoader::ShaderProgram *ShaderLoader::load(const PropertySet &p_properties)
 			// Add the new program to the array
 			ShaderProgram *newProgram = new ShaderProgram(programName, programHashkey);
 			m_shaderPrograms.push_back(newProgram);
+
+			// Set the flag specifying whether the name was generated or given
+			newProgram->m_combinedFilenameGenerated = nameGenerated;
 
 			// Iterate over shader types
 			for(unsigned int shaderType = 0; shaderType < ShaderType_NumOfTypes; shaderType++)

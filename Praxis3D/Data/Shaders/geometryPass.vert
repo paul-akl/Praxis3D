@@ -1,5 +1,7 @@
 #version 430 core
 
+#define PARALLAX_MAPPING 0
+
 // Mesh buffers
 layout(location = 0) in vec3 vertexPosition;
 layout(location = 1) in vec3 vertexNormal;
@@ -51,15 +53,18 @@ void main(void)
 	vec3 T = normalize(normalMatrix * vertexTangent);
     vec3 B = normalize(normalMatrix * vertexBitangent);
     vec3 N = normalize(normalMatrix * vertexNormal);
-    //T = normalize(T - dot(T, N) * N);
-    //vec3 B = cross(N, T);
-    
+	
 	// Compute TBN matrix
     TBN = (mat3(T, B, N));
 	
+#if PARALLAX_MAPPING
+	// Calculate TBN needed for tangent space (used for parallax mapping)
+	mat3 tangentTBN = transpose(TBN);
+	
 	// Calculate variables needed for parallax mapping
-    tangentCameraPos = TBN * cameraPosVec;
-    tangentFragPos  = TBN * fragPos;
+    tangentCameraPos = tangentTBN * cameraPosVec;
+    tangentFragPos  = tangentTBN * fragPos;
+#endif
 	
 	gl_Position = MVP * vec4(vertexPosition, 1.0);
 }

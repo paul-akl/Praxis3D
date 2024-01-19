@@ -8,86 +8,133 @@ class ModelComponent : public SystemObject, public LoadableGraphicsObject
 {
 	friend class RendererScene;
 public:
+	struct SingleMeshData
+	{
+		SingleMeshData()
+		{
+			m_meshMaterials.resize(MaterialType::MaterialType_NumOfTypes);
+			m_meshMaterialsScales.resize(MaterialType::MaterialType_NumOfTypes);
+
+			m_alphaThreshold = Config::graphicsVar().alpha_threshold;
+			m_emissiveIntensity = Config::graphicsVar().emissive_multiplier;
+			m_heightScale = Config::graphicsVar().height_scale;
+			m_stochasticSamplingScale = 1.0f;
+			m_active = true;
+			m_present = false;
+			m_stochasticSampling = false;
+			m_textureWrapMode = TextureWrapType::TextureWrapType_Repeat;
+		}
+
+		SingleMeshData(
+			const std::vector<std::string> &p_meshMaterials, 
+			const std::vector<glm::vec2> &p_meshMaterialsScales, 
+			const std::string &p_meshName, 
+			const float p_alphaThreshold, 
+			const float p_emissiveIntensity, 
+			const float p_heightScale, 
+			const float p_stochasticSamplingScale,
+			const bool p_active, 
+			const bool p_present, 
+			const bool p_stochasticSampling,
+			const TextureWrapType p_textureWrapMode) :
+			m_meshMaterials(p_meshMaterials),
+			m_meshMaterialsScales(p_meshMaterialsScales),
+			m_meshName(p_meshName),
+			m_alphaThreshold(p_alphaThreshold),
+			m_emissiveIntensity(p_emissiveIntensity),
+			m_heightScale(p_heightScale),
+			m_stochasticSamplingScale(p_stochasticSamplingScale),
+			m_active(p_active),
+			m_present(p_present),
+			m_stochasticSampling(p_stochasticSampling),
+			m_textureWrapMode(p_textureWrapMode) { }
+
+		std::vector<std::string> m_meshMaterials;
+		std::vector<glm::vec2> m_meshMaterialsScales;
+		std::string m_meshName;
+		float m_alphaThreshold;
+		float m_emissiveIntensity;
+		float m_heightScale;
+		float m_stochasticSamplingScale;
+		bool m_active;
+		bool m_present;
+		bool m_stochasticSampling;
+		TextureWrapType m_textureWrapMode;
+	};
 	struct MeshProperties
 	{
 		MeshProperties()
 		{
-			m_numOfMeshes = 0;
+			//m_numOfMeshes = 0;
 		}
 
 		void resize(const std::size_t p_size)
 		{
-			if(p_size > m_numOfMeshes)
-			{
-				m_numOfMeshes = p_size;
+			if(p_size > m_meshData.size())
+				m_meshData.resize(p_size);
+			//if(p_size > m_numOfMeshes)
+			//{
+			//	m_numOfMeshes = p_size;
 
-				// Resize mesh materials
-				if(p_size > m_meshMaterials.size())
-				{
-					std::vector<std::string> emptyStrings(MaterialType::MaterialType_NumOfTypes);
-					m_meshMaterials.resize(p_size, emptyStrings);
-				}
+			//	// Resize mesh materials
+			//	if(p_size > m_meshMaterials.size())
+			//	{
+			//		std::vector<std::string> emptyStrings(MaterialType::MaterialType_NumOfTypes);
+			//		m_meshMaterials.resize(p_size, emptyStrings);
+			//	}
 
-				// Resize mesh materials scale and initialize each element to 1.0f
-				const auto oldSize = m_meshMaterialsScale.size();
-				if(p_size > oldSize)
-				{
-					std::vector<glm::vec2> emptyVec2(MaterialType::MaterialType_NumOfTypes, glm::vec2(1.0f, 1.0f));
-					m_meshMaterialsScale.resize(p_size, emptyVec2);
-				}
+			//	// Resize mesh materials scale and initialize each element to 1.0f
+			//	const auto oldSize = m_meshMaterialsScale.size();
+			//	if(p_size > oldSize)
+			//	{
+			//		std::vector<glm::vec2> emptyVec2(MaterialType::MaterialType_NumOfTypes, glm::vec2(1.0f, 1.0f));
+			//		m_meshMaterialsScale.resize(p_size, emptyVec2);
+			//	}
 
-				// Resize mesh material alpha threshold and initialize each element to 0.0f
-				if(p_size > m_alphaThreshold.size())
-					m_alphaThreshold.resize(p_size, Config::graphicsVar().alpha_threshold);
+			//	// Resize mesh material alpha threshold and initialize each element to 0.0f
+			//	if(p_size > m_alphaThreshold.size())
+			//		m_alphaThreshold.resize(p_size, Config::graphicsVar().alpha_threshold);
 
-				// Resize mesh material emissive intensity initialize each element to 0.0f
-				if(p_size > m_emissiveIntensity.size())
-					m_emissiveIntensity.resize(p_size, Config::graphicsVar().emissive_multiplier);
+			//	// Resize mesh material emissive intensity initialize each element to 0.0f
+			//	if(p_size > m_emissiveIntensity.size())
+			//		m_emissiveIntensity.resize(p_size, Config::graphicsVar().emissive_multiplier);
 
-				// Resize mesh material height scale and initialize each element to 1.0f
-				if(p_size > m_heightScale.size())
-					m_heightScale.resize(p_size, Config::graphicsVar().height_scale);
+			//	// Resize mesh material height scale and initialize each element to 1.0f
+			//	if(p_size > m_heightScale.size())
+			//		m_heightScale.resize(p_size, Config::graphicsVar().height_scale);
 
-				// Resize the "mesh is active" array and initialize each element to true
-				if(p_size > m_active.size())
-					m_active.resize(p_size, true);
+			//	// Resize the "mesh is active" array and initialize each element to true
+			//	if(p_size > m_active.size())
+			//		m_active.resize(p_size, true);
 
-				// Resize the "mesh is present" array and initialize each element to false
-				if(p_size > m_present.size())
-					m_present.resize(p_size, false);
+			//	// Resize the "mesh is present" array and initialize each element to false
+			//	if(p_size > m_present.size())
+			//		m_present.resize(p_size, false);
 
-				// Resize the texture wrap mode array and initialize each element to Repeat
-				if(p_size > m_textureWrapMode.size())
-					m_textureWrapMode.resize(p_size, TextureWrapType::TextureWrapType_Repeat);
-			}
+			//	// Resize the texture wrap mode array and initialize each element to Repeat
+			//	if(p_size > m_textureWrapMode.size())
+			//		m_textureWrapMode.resize(p_size, TextureWrapType::TextureWrapType_Repeat);
+			//}
 		}
 
 		void clear()
 		{
-			m_numOfMeshes = 0;
+			//m_numOfMeshes = 0;
 			m_modelName.clear();
-			m_meshMaterials.clear();
-			m_meshMaterialsScale.clear();
-			m_alphaThreshold.clear();
-			m_emissiveIntensity.clear();
-			m_heightScale.clear();
-			m_active.clear();
-			m_present.clear();
-			m_textureWrapMode.clear();
+			m_meshData.clear();
+			//m_meshMaterials.clear();
+			//m_meshMaterialsScale.clear();
+			//m_alphaThreshold.clear();
+			//m_emissiveIntensity.clear();
+			//m_heightScale.clear();
+			//m_active.clear();
+			//m_present.clear();
+			//m_textureWrapMode.clear();
 		}
 
 		std::string m_modelName;
 
-		std::size_t m_numOfMeshes;
-		std::vector<std::vector<std::string>> m_meshMaterials;
-		std::vector<std::vector<glm::vec2>> m_meshMaterialsScale;
-		std::vector<std::string> m_meshNames;
-		std::vector<float> m_alphaThreshold;
-		std::vector<float> m_emissiveIntensity;
-		std::vector<float> m_heightScale;
-		std::vector<bool> m_active;
-		std::vector<bool> m_present;
-		std::vector<TextureWrapType> m_textureWrapMode;
+		std::vector<SingleMeshData> m_meshData;
 	};
 	struct ModelsProperties
 	{
@@ -124,103 +171,6 @@ public:
 		importTextures();
 		if(m_texturesNeedLoading)
 			loadTexturesToMemory();
-
-		return;
-
-		if(m_modelsProperties != nullptr)
-		{
-			m_modelData.clear();
-
-			// Go over each model
-			for(decltype(m_modelsProperties->m_models.size()) modelIndex = 0, modelSize = m_modelsProperties->m_models.size(); modelIndex < modelSize; modelIndex++)
-			{
-				// Add a new model data entry, and get a reference to it
-				m_modelData.emplace_back(Loaders::model().load(m_modelsProperties->m_models[modelIndex].m_modelName, false));
-				auto &newModelData = m_modelData.back();
-
-				// Load the model to memory, to be able to access all of its meshes 
-				auto modelLoadError = newModelData.m_model.loadToMemory();
-
-				if(modelLoadError == ErrorCode::Success)
-				{
-					// Get the material arrays that were loaded from the model file
-					auto &materialArrayFromModel = newModelData.m_model.getMaterialArrays();
-
-					// Go over each mesh
-					for(decltype(newModelData.m_model.getMeshSize()) meshIndex = 0, meshSize = newModelData.m_model.getMeshSize(); meshIndex < meshSize; meshIndex++)
-					{
-						if(m_modelsProperties->m_models[modelIndex].m_meshMaterials.size() > meshIndex)
-						{
-							if(m_modelsProperties->m_models[modelIndex].m_present[meshIndex] == true)
-							{
-								// Define material data and material properties
-								MaterialData materials[MaterialType::MaterialType_NumOfTypes];
-
-								// Go over each material type
-								for(unsigned int iMatType = 0; iMatType < MaterialType::MaterialType_NumOfTypes; iMatType++)
-								{
-									auto filename = materialArrayFromModel.m_materials[iMatType][meshIndex].m_filename;
-
-									if(!m_modelsProperties->m_models[modelIndex].m_meshMaterials[meshIndex][iMatType].empty())
-									{
-										filename = m_modelsProperties->m_models[modelIndex].m_meshMaterials[meshIndex][iMatType];
-									}
-
-									materials[iMatType].m_texture = Loaders::texture2D().load(filename, static_cast<MaterialType>(iMatType), false);
-									auto materialLoadError = materials[iMatType].m_texture.loadToMemory();
-
-									materials[iMatType].m_textureScale = m_modelsProperties->m_models[modelIndex].m_meshMaterialsScale[meshIndex][iMatType];
-								}
-
-								// Add the data for this mesh. Include materials loaded from the model itself, if they were present, otherwise, include default textures instead
-								newModelData.m_meshes.push_back(MeshData(
-									newModelData.m_model.getMeshArray()[meshIndex], 
-									materials, 
-									m_modelsProperties->m_models[modelIndex].m_heightScale[meshIndex], 
-									m_modelsProperties->m_models[modelIndex].m_alphaThreshold[meshIndex], 
-									m_modelsProperties->m_models[modelIndex].m_emissiveIntensity[meshIndex],
-									m_modelsProperties->m_models[modelIndex].m_textureWrapMode[meshIndex]));
-
-								ErrHandlerLoc::get().log(ErrorCode::Load_to_memory_success, ErrorSource::Source_ModelComponent, m_modelsProperties->m_models[modelIndex].m_modelName);
-							}
-						}
-						else
-						{								
-							// Define material data and material properties
-							MaterialData materials[MaterialType::MaterialType_NumOfTypes];
-
-							// Go over each material type
-							for(unsigned int iMatType = 0; iMatType < MaterialType::MaterialType_NumOfTypes; iMatType++)
-							{
-								auto filename = materialArrayFromModel.m_materials[iMatType][meshIndex].m_filename;
-
-								materials[iMatType].m_texture = Loaders::texture2D().load(filename, static_cast<MaterialType>(iMatType), false);
-								auto materialLoadError = materials[iMatType].m_texture.loadToMemory();
-
-								materials[iMatType].m_textureScale = glm::vec2(Config::graphicsVar().texture_tiling_factor, Config::graphicsVar().texture_tiling_factor);
-							}
-
-							newModelData.m_meshes.push_back(MeshData(newModelData.m_model.getMeshArray()[meshIndex], materials, Config::graphicsVar().height_scale, Config::graphicsVar().alpha_threshold, Config::graphicsVar().emissive_multiplier, TextureWrapType::TextureWrapType_Repeat));
-
-							ErrHandlerLoc::get().log(ErrorCode::Load_to_memory_success, ErrorSource::Source_ModelComponent, m_modelsProperties->m_models[modelIndex].m_modelName);
-						}
-					}
-				}
-				else
-				{
-					ErrHandlerLoc::get().log(ErrorCode::Load_to_memory_failure, ErrorSource::Source_ModelComponent, m_modelsProperties->m_models[modelIndex].m_modelName);
-				}
-			}
-		}
-
-		// Set the component as loaded, because the load function was called
-		setLoadedToMemory(true);
-
-		if(m_modelsProperties != nullptr)
-		{
-			delete m_modelsProperties;
-			m_modelsProperties = nullptr;
-		}
 	}
 
 	void importModels()
@@ -260,7 +210,7 @@ public:
 				// Go over each mesh
 				for(decltype(newModelData.m_model.getMeshSize()) meshIndex = 0, meshSize = newModelData.m_model.getMeshSize(); meshIndex < meshSize; meshIndex++)
 				{
-					if(m_modelsProperties->m_models[modelIndex].m_meshMaterials.size() > meshIndex)// && m_modelsProperties->m_models[modelIndex].m_present[meshIndex] == true)
+					if(m_modelsProperties->m_models[modelIndex].m_meshData.size() > meshIndex)// && m_modelsProperties->m_models[modelIndex].m_present[meshIndex] == true)
 					{
 						MaterialData materials[MaterialType::MaterialType_NumOfTypes];
 
@@ -269,9 +219,9 @@ public:
 						{
 							auto filename = materialArrayFromModel.m_materials[iMatType][meshIndex].m_filename;
 
-							if(!m_modelsProperties->m_models[modelIndex].m_meshMaterials[meshIndex][iMatType].empty())
+							if(!m_modelsProperties->m_models[modelIndex].m_meshData[meshIndex].m_meshMaterials[iMatType].empty())
 							{
-								filename = m_modelsProperties->m_models[modelIndex].m_meshMaterials[meshIndex][iMatType];
+								filename = m_modelsProperties->m_models[modelIndex].m_meshData[meshIndex].m_meshMaterials[iMatType];
 							}
 
 							materials[iMatType].m_texture = Loaders::texture2D().load(filename, static_cast<MaterialType>(iMatType), false);
@@ -279,41 +229,23 @@ public:
 							if(!materials[iMatType].m_texture.isLoadedToMemory())
 								m_texturesNeedLoading = true;
 
-							materials[iMatType].m_textureScale = m_modelsProperties->m_models[modelIndex].m_meshMaterialsScale[meshIndex][iMatType];
+							materials[iMatType].m_textureScale = m_modelsProperties->m_models[modelIndex].m_meshData[meshIndex].m_meshMaterialsScales[iMatType];
 
 							if(materials[iMatType].m_textureScale == glm::vec2(0.0f, 0.0f))
 								materials[iMatType].m_textureScale = glm::vec2(Config::graphicsVar().texture_tiling_factor, Config::graphicsVar().texture_tiling_factor);
 						}
 
-						bool active = true;
-						if(m_modelsProperties->m_models[modelIndex].m_active.size() > meshIndex)
-							active = m_modelsProperties->m_models[modelIndex].m_active[meshIndex];
-
-						float heightScale = Config::graphicsVar().height_scale;
-						if(m_modelsProperties->m_models[modelIndex].m_heightScale.size() > meshIndex)
-							heightScale = m_modelsProperties->m_models[modelIndex].m_heightScale[meshIndex];
-
-						float alphaThreshold = Config::graphicsVar().alpha_threshold;
-						if(m_modelsProperties->m_models[modelIndex].m_alphaThreshold.size() > meshIndex)
-							alphaThreshold = m_modelsProperties->m_models[modelIndex].m_alphaThreshold[meshIndex];
-
-						float emissiveIntensity = Config::graphicsVar().emissive_multiplier;
-						if(m_modelsProperties->m_models[modelIndex].m_emissiveIntensity.size() > meshIndex)
-							emissiveIntensity = m_modelsProperties->m_models[modelIndex].m_emissiveIntensity[meshIndex];
-
-						TextureWrapType textureWrapMode = TextureWrapType::TextureWrapType_Repeat;
-						if(m_modelsProperties->m_models[modelIndex].m_textureWrapMode.size() > meshIndex)
-							textureWrapMode = m_modelsProperties->m_models[modelIndex].m_textureWrapMode[meshIndex];
-
 						// Add the data for this mesh. Include materials loaded from the model itself, if they were present, otherwise, include default textures instead
 						newModelData.m_meshes.push_back(MeshData(
 							newModelData.m_model.getMeshArray()[meshIndex],
 							materials,
-							heightScale,
-							alphaThreshold,
-							emissiveIntensity,
-							textureWrapMode,
-							active));
+							m_modelsProperties->m_models[modelIndex].m_meshData[meshIndex].m_heightScale,
+							m_modelsProperties->m_models[modelIndex].m_meshData[meshIndex].m_alphaThreshold,
+							m_modelsProperties->m_models[modelIndex].m_meshData[meshIndex].m_emissiveIntensity,
+							m_modelsProperties->m_models[modelIndex].m_meshData[meshIndex].m_stochasticSampling,
+							m_modelsProperties->m_models[modelIndex].m_meshData[meshIndex].m_stochasticSamplingScale,
+							m_modelsProperties->m_models[modelIndex].m_meshData[meshIndex].m_textureWrapMode,
+							m_modelsProperties->m_models[modelIndex].m_meshData[meshIndex].m_active));
 					}
 					else
 					{
@@ -333,7 +265,15 @@ public:
 							materials[iMatType].m_textureScale = glm::vec2(Config::graphicsVar().texture_tiling_factor, Config::graphicsVar().texture_tiling_factor);
 						}
 
-						newModelData.m_meshes.push_back(MeshData(newModelData.m_model.getMeshArray()[meshIndex], materials, Config::graphicsVar().height_scale, Config::graphicsVar().alpha_threshold, Config::graphicsVar().emissive_multiplier, TextureWrapType::TextureWrapType_Repeat, true));
+						newModelData.m_meshes.push_back(MeshData(
+							newModelData.m_model.getMeshArray()[meshIndex], 
+							materials, 
+							Config::graphicsVar().height_scale, 
+							Config::graphicsVar().alpha_threshold, 
+							Config::graphicsVar().emissive_multiplier, 
+							false, Config::graphicsVar().stochastic_sampling_scale, 
+							TextureWrapType::TextureWrapType_Repeat, 
+							true));
 
 						//ErrHandlerLoc::get().log(ErrorCode::Load_to_memory_success, ErrorSource::Source_ModelComponent, m_modelsProperties->m_models[modelIndex].m_modelName);
 					}
@@ -523,16 +463,42 @@ public:
 					meshMaterialScales.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_materials[materialIndex].m_textureScale);
 				}
 
-				newModelEntry.m_meshMaterials.push_back(meshMaterials);
-				newModelEntry.m_meshMaterialsScale.push_back(meshMaterialScales);
-				newModelEntry.m_meshNames.push_back(m_modelData[modelIndex].m_model.getMeshName(meshIndex));
-				newModelEntry.m_alphaThreshold.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_alphaThreshold);
-				newModelEntry.m_emissiveIntensity.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_emissiveIntensity);
-				newModelEntry.m_heightScale.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_heightScale);
-				newModelEntry.m_active.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_active);
-				newModelEntry.m_present.push_back(materialPresent);
-				newModelEntry.m_textureWrapMode.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_textureWrapMode);
-				newModelEntry.m_numOfMeshes++;
+				newModelEntry.m_meshData.push_back(SingleMeshData(
+					meshMaterials,
+					meshMaterialScales,
+					m_modelData[modelIndex].m_model.getMeshName(meshIndex),
+					m_modelData[modelIndex].m_meshes[meshIndex].m_alphaThreshold,
+					m_modelData[modelIndex].m_meshes[meshIndex].m_emissiveIntensity,
+					m_modelData[modelIndex].m_meshes[meshIndex].m_heightScale,
+					m_modelData[modelIndex].m_meshes[meshIndex].m_rextureRepetitionScale,
+					m_modelData[modelIndex].m_meshes[meshIndex].m_active,
+					materialPresent,
+					m_modelData[modelIndex].m_meshes[meshIndex].m_stochasticSampling,
+					m_modelData[modelIndex].m_meshes[meshIndex].m_textureWrapMode
+				));
+
+				//newModelEntry.m_meshMaterials.push_back(meshMaterials);
+				//newModelEntry.m_meshMaterialsScale.push_back(meshMaterialScales);
+				//newModelEntry.m_meshNames.push_back(m_modelData[modelIndex].m_model.getMeshName(meshIndex));
+				//newModelEntry.m_alphaThreshold.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_alphaThreshold);
+				//newModelEntry.m_emissiveIntensity.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_emissiveIntensity);
+				//newModelEntry.m_heightScale.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_heightScale);
+				//newModelEntry.m_active.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_active);
+				//newModelEntry.m_present.push_back(materialPresent);
+				//newModelEntry.m_textureWrapMode.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_textureWrapMode);
+				//newModelEntry.m_numOfMeshes++;
+
+				//const std::vector<std::string> &p_meshMaterials,
+				//	const std::vector<glm::vec2> &p_meshMaterialsScales,
+				//	const std::string &p_meshName,
+				//	const float p_alphaThreshold,
+				//	const float p_emissiveIntensity,
+				//	const float p_heightScale,
+				//	const float p_textureRepetitionScale,
+				//	const bool p_active,
+				//	const bool p_present,
+				//	const bool p_textureRepetition,
+				//	const TextureWrapType p_textureWrapMode) :
 			}
 		}
 	}

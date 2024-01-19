@@ -959,6 +959,9 @@
     <ClInclude Include="Source\CSMFramebuffer.h">
       <Filter>Renderer\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\AboutWindow.h">
+      <Filter>GUI\Objects\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\config.ini" />

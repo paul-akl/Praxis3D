@@ -35,7 +35,7 @@ public:
 	CommandBuffer() { }
 	~CommandBuffer() { }
 
-	inline void queueForDrawing(const RenderableObjectData &p_object, const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_viewProjMatrix)
+	inline void queueForDrawing(const RenderableObjectData &p_object, const unsigned int p_shaderHandle, ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_viewProjMatrix)
 	{
 		// Get the neccessary handles
 		const unsigned int modelHandle = p_object.m_model.getHandle();
@@ -75,7 +75,7 @@ public:
 			);
 		}
 	}
-	inline void queueForDrawing(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_viewProjMatrix)
+	inline void queueForDrawing(const unsigned int p_shaderHandle, ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_viewProjMatrix)
 	{
 		// Assign the object data that is later passed to the shaders
 		const UniformObjectData objectData(p_viewProjMatrix,
@@ -83,7 +83,8 @@ public:
 										   Config::graphicsVar().height_scale,
 										   Config::graphicsVar().alpha_threshold,
 										   Config::graphicsVar().emissive_threshold,
-										   Config::graphicsVar().texture_tiling_factor);
+										   Config::graphicsVar().texture_tiling_factor,
+										   Config::graphicsVar().stochastic_sampling_scale);
 
 		// Calculate the sort key
 		RendererBackend::DrawCommands::value_type::first_type sortKey = 0;

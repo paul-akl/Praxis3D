@@ -206,7 +206,7 @@ void RendererBackend::processDrawing(const ComputeDispatchCommands &p_computeDis
 
 		// Get various handles
 		const auto shaderHandle = p_computeDispatchCommands[i].m_shaderHandle;
-		const auto &uniformUpdater = p_computeDispatchCommands[i].m_uniformUpdater;
+		const auto *uniformUpdater = &p_computeDispatchCommands[i].m_uniformUpdater;
 
 		// Bind the shader
 		bindShader(shaderHandle);

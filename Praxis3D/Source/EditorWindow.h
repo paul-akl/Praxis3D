@@ -255,6 +255,18 @@ public:
 			}
 			break;
 
+		case Systems::Changes::Graphics::ActiveCameraID:
+			{
+				return m_currentSceneData.m_activeCameraID;
+			}
+			break;
+
+		case Systems::Changes::Graphics::CameraID:
+			{
+				return m_selectedEntity.m_componentData.m_graphicsComponents.m_cameraConstructionInfo->m_cameraID;
+			}
+			break;
+
 		case Systems::Changes::Physics::CollisionShapeType:
 			{
 				if(m_selectedEntity.m_collisionShapeType >= 0 && m_selectedEntity.m_collisionShapeType < RigidBodyComponent::CollisionShapeType::CollisionShapeType_NumOfTypes)
@@ -276,17 +288,24 @@ public:
 				}
 				break;
 
-			case Systems::Changes::World::ObjectMaterialType:
-				{
-					if(m_selectedEntity.m_objectMaterialType >= 0 && m_selectedEntity.m_objectMaterialType < ObjectMaterialType::NumberOfMaterialTypes)
-						return (unsigned int)m_selectedEntity.m_objectMaterialType;
-				}
-				break;
-
 			case Systems::Changes::Graphics::LightType:
 				{
 					if(m_selectedEntity.m_lightType >= 0 && m_selectedEntity.m_lightType < LightComponent::LightComponentType::LightComponentType_spot + 1)
 						return (unsigned int)m_selectedEntity.m_lightType;
+				}
+				break;
+
+			case Systems::Changes::Physics::CollisionShapeType:
+				{
+					if(m_selectedEntity.m_collisionShapeType >= 0 && m_selectedEntity.m_collisionShapeType < RigidBodyComponent::CollisionShapeType::CollisionShapeType_NumOfTypes)
+						return (unsigned int)m_selectedEntity.m_collisionShapeType;
+				}
+				break;
+
+			case Systems::Changes::World::ObjectMaterialType:
+				{
+					if(m_selectedEntity.m_objectMaterialType >= 0 && m_selectedEntity.m_objectMaterialType < ObjectMaterialType::NumberOfMaterialTypes)
+						return (unsigned int)m_selectedEntity.m_objectMaterialType;
 				}
 				break;
 		}
@@ -334,6 +353,12 @@ public:
 				}
 				break;
 
+			case Systems::Changes::Graphics::FOV:
+				{
+					return m_selectedEntity.m_componentData.m_graphicsComponents.m_cameraConstructionInfo->m_fov;
+				}
+				break;
+
 			case Systems::Changes::Graphics::Intensity:
 				{
 					switch(m_selectedEntity.m_lightType)
@@ -347,27 +372,33 @@ public:
 				}
 				break;
 
-			case Systems::Changes::Graphics::AmbientIntensity:
-				{
-					return m_currentSceneData.m_ambientIntensity;
-				}
-				break;
-
 			case Systems::Changes::Graphics::ZFar:
 				{
-					return m_currentSceneData.m_zFar;
+					return m_selectedEntity.m_componentData.m_graphicsComponents.m_cameraConstructionInfo->m_zFar;
 				}
 				break;
 
 			case Systems::Changes::Graphics::ZNear:
 				{
-					return m_currentSceneData.m_zNear;
+					return m_selectedEntity.m_componentData.m_graphicsComponents.m_cameraConstructionInfo->m_zNear;
 				}
 				break;
 
 			case Systems::Changes::Physics::Friction:
 				{
 					return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_friction;
+				}
+				break;
+
+			case Systems::Changes::Physics::RollingFriction:
+				{
+					return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_rollingFriction;
+				}
+				break;
+
+			case Systems::Changes::Physics::SpinningFriction:
+				{
+					return m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_spinningFriction;
 				}
 				break;
 
@@ -723,12 +754,9 @@ private:
 			for(unsigned int i = 0; i < AudioBusType::AudioBusType_NumOfTypes; i++)
 				m_volume[i] = 1.0f;
 
+			m_activeCameraID = 0;
+
 			m_aoData.setDefaultValues();
-
-			m_ambientIntensity = 0.0f;
-
-			m_zFar = 0.0f;
-			m_zNear = 0.0f;
 
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_ShadowMapping);
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_Geometry);
@@ -753,10 +781,9 @@ private:
 		float m_volume[AudioBusType::AudioBusType_NumOfTypes];
 
 		// Graphics scene
+		int m_activeCameraID;
 		AmbientOcclusionData m_aoData;
-		float m_ambientIntensity;
-		float m_zFar;
-		float m_zNear;
+		MiscSceneData m_miscSceneData;
 		ShadowMappingData m_shadowMappingData;
 		RenderingPasses m_renderingPasses;
 
@@ -839,11 +866,12 @@ private:
 	void drawEntityHierarchyEntry(EntityHierarchyEntry *p_entityEntry);
 	inline void drawLeftAlignedLabelText(const char *p_labelText, float p_nextWidgetOffset)
 	{
+		const auto regionWidth = ImGui::GetContentRegionAvail().x;
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text(p_labelText);
 		ImGui::SameLine();
 		ImGui::SetCursorPosX(p_nextWidgetOffset);
-		ImGui::SetNextItemWidth(ImGui::GetWindowWidth() - p_nextWidgetOffset);
+		ImGui::SetNextItemWidth(regionWidth - p_nextWidgetOffset);
 	}
 	inline void drawLeftAlignedLabelText(const char *p_labelText, float p_nextWidgetOffset, float p_nextItemWidth)
 	{
@@ -900,7 +928,7 @@ private:
 	// (p_buttonIndex is the button count from the right side)
 	inline float calcTextSizedButtonOffset(const int p_buttonIndex = 0)
 	{
-		return ImGui::GetContentRegionAvail().x - m_buttonSizedByFont.x - m_imguiStyle.FramePadding.x - (m_buttonSizedByFont.x + m_imguiStyle.FramePadding.x * 3) * p_buttonIndex;
+		return ImGui::GetContentRegionAvail().x - m_buttonSizedByFont.x - (m_imguiStyle.FramePadding.x * 2.0f) - (m_buttonSizedByFont.x + m_imguiStyle.FramePadding.x * 3.0f) * p_buttonIndex;
 	}	
 	inline float calcTextSizedButtonSize(const unsigned int p_buttonIndex = 0)
 	{

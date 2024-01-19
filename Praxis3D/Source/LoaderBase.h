@@ -113,10 +113,6 @@ public:
 				{
 					// Unload the object from RAM and VRAM
 					unload(*static_cast<TObject *>(object), p_sceneLoader);
-					//m_objectUnloadQueue.front()->unload();
-					//m_objectUnloadQueue.front()->unloadMemory();
-					//m_objectUnloadQueue.front()->unloadVideoMemory();
-					//removeObject(*object);
 					m_objectRemoveQueue.push_back(object);
 					i++;
 				}

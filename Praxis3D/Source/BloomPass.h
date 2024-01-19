@@ -8,7 +8,7 @@ class BloomPass : public RenderPass
 public:
 	BloomPass(RendererFrontend &p_renderer) :
 		RenderPass(p_renderer, RenderPassType::RenderPassType_Bloom),
-		m_lensDirtTexture(Loaders::texture2D().load(Config::rendererVar().lens_flare_dirt_texture)),
+		m_lensDirtTexture(Loaders::texture2D().load(Config::filepathVar().engine_assets_path + Config::rendererVar().lens_flare_dirt_texture)),
 		m_bloomDownscaleShader(nullptr),
 		m_bloomUpscaleShader(nullptr) { }
 

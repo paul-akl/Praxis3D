@@ -23,7 +23,9 @@ public:
 	{
 		RigidBodyComponentConstructionInfo()
 		{
-			m_friction = 0.5f;
+			m_friction = 1.0f;
+			m_rollingFriction = 1.0f;
+			m_spinningFriction = 1.0f;
 			m_mass = 0.0f;
 			m_restitution = 0.0f;
 			m_kinematic = false;
@@ -32,6 +34,8 @@ public:
 		}
 
 		float m_friction;
+		float m_rollingFriction;
+		float m_spinningFriction;
 		float m_mass;
 		float m_restitution;
 		bool m_kinematic;
@@ -267,22 +271,22 @@ public:
 		switch(m_collisionShapeType)
 		{
 			case CollisionShapeType::CollisionShapeType_Box:
-				return Math::toGlmVec3(m_collisionShape.m_boxShape->getImplicitShapeDimensions());
+				return Math::toGlmVec3(m_collisionShape.m_boxShape->getImplicitShapeDimensions()) + glm::vec3(m_collisionShape.m_boxShape->getMargin());
 				break;
 			case CollisionShapeType::CollisionShapeType_Capsule:
-				return Math::toGlmVec3(m_collisionShape.m_capsuleShape->getImplicitShapeDimensions());
+				return Math::toGlmVec3(m_collisionShape.m_capsuleShape->getImplicitShapeDimensions()) + glm::vec3(m_collisionShape.m_capsuleShape->getMargin());
 				break;
 			case CollisionShapeType::CollisionShapeType_Cone:
-				return Math::toGlmVec3(m_collisionShape.m_coneShape->getImplicitShapeDimensions());
+				return Math::toGlmVec3(m_collisionShape.m_coneShape->getImplicitShapeDimensions()) + glm::vec3(m_collisionShape.m_coneShape->getMargin());
 				break;
 			case CollisionShapeType::CollisionShapeType_ConvexHull:
-				return Math::toGlmVec3(m_collisionShape.m_convexHullShape->getImplicitShapeDimensions());
+				return Math::toGlmVec3(m_collisionShape.m_convexHullShape->getImplicitShapeDimensions()) + glm::vec3(m_collisionShape.m_convexHullShape->getMargin());
 				break;
 			case CollisionShapeType::CollisionShapeType_Cylinder:
-				return Math::toGlmVec3(m_collisionShape.m_cylinderShape->getImplicitShapeDimensions());
+				return Math::toGlmVec3(m_collisionShape.m_cylinderShape->getImplicitShapeDimensions()) + glm::vec3(m_collisionShape.m_cylinderShape->getMargin());
 				break;
 			case CollisionShapeType::CollisionShapeType_Sphere:
-				return Math::toGlmVec3(m_collisionShape.m_sphereShape->getImplicitShapeDimensions());
+				return glm::vec3(m_collisionShape.m_sphereShape->getRadius());
 				break;
 		}
 

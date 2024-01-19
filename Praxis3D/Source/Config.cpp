@@ -168,7 +168,9 @@ void Config::init()
 	AddVariablePredef(m_graphicsVar, render_to_texture_resolution_y);
 	AddVariablePredef(m_graphicsVar, tonemap_method);
 	AddVariablePredef(m_graphicsVar, alpha_threshold);
-	AddVariablePredef(m_graphicsVar, ambient_light_intensity);
+	AddVariablePredef(m_graphicsVar, ambient_intensity_directional);
+	AddVariablePredef(m_graphicsVar, ambient_intensity_point);
+	AddVariablePredef(m_graphicsVar, ambient_intensity_spot);
 	AddVariablePredef(m_graphicsVar, ao_hbao_bias);
 	AddVariablePredef(m_graphicsVar, ao_ssao_bias);
 	AddVariablePredef(m_graphicsVar, ao_blurSharpness);
@@ -209,6 +211,7 @@ void Config::init()
 	AddVariablePredef(m_graphicsVar, luminance_range_min);
 	AddVariablePredef(m_graphicsVar, luminance_range_max);
 	AddVariablePredef(m_graphicsVar, height_scale);
+	AddVariablePredef(m_graphicsVar, stochastic_sampling_scale);
 	AddVariablePredef(m_graphicsVar, texture_tiling_factor);
 	AddVariablePredef(m_graphicsVar, z_far);
 	AddVariablePredef(m_graphicsVar, z_near);
@@ -292,15 +295,17 @@ void Config::init()
 
 	// Model variables
 	AddVariablePredef(m_modelVar, calcTangentSpace);
-	AddVariablePredef(m_modelVar, joinIdenticalVertices);
-	AddVariablePredef(m_modelVar, makeLeftHanded);
-	AddVariablePredef(m_modelVar, triangulate);
-	AddVariablePredef(m_modelVar, removeComponent);
+	AddVariablePredef(m_modelVar, genBoundingBoxes);
 	AddVariablePredef(m_modelVar, genNormals);
 	AddVariablePredef(m_modelVar, genSmoothNormals);
 	AddVariablePredef(m_modelVar, genUVCoords);
-	AddVariablePredef(m_modelVar, optimizeMeshes);
+	AddVariablePredef(m_modelVar, joinIdenticalVertices);
+	AddVariablePredef(m_modelVar, makeLeftHanded);
+	AddVariablePredef(m_modelVar, optimizeCacheLocality);
 	AddVariablePredef(m_modelVar, optimizeGraph);
+	AddVariablePredef(m_modelVar, optimizeMeshes);
+	AddVariablePredef(m_modelVar, removeComponent);
+	AddVariablePredef(m_modelVar, triangulate);
 
 	// Object pool variables
 	AddVariablePredef(m_objPoolVar, camera_component_default_pool_size);
@@ -319,6 +324,8 @@ void Config::init()
 
 	// File-path variables
 	AddVariablePredef(m_filepathVar, config_path);
+	AddVariablePredef(m_filepathVar, engine_assets_path);
+	AddVariablePredef(m_filepathVar, gui_assets_path);
 	AddVariablePredef(m_filepathVar, map_path);
 	AddVariablePredef(m_filepathVar, model_path);
 	AddVariablePredef(m_filepathVar, object_path);
@@ -401,6 +408,7 @@ void Config::init()
 	AddVariablePredef(m_rendererVar, ssao_blur_vert_shader);
 	AddVariablePredef(m_rendererVar, ssao_pass_frag_shader);
 	AddVariablePredef(m_rendererVar, ssao_pass_vert_shader);
+	AddVariablePredef(m_rendererVar, texture_repetition_noise_texture);
 	AddVariablePredef(m_rendererVar, csm_max_shadow_bias);
 	AddVariablePredef(m_rendererVar, csm_penumbra_size);
 	AddVariablePredef(m_rendererVar, csm_penumbra_size_scale_min);
@@ -411,6 +419,8 @@ void Config::init()
 	AddVariablePredef(m_rendererVar, dir_light_quad_rotation_x);
 	AddVariablePredef(m_rendererVar, dir_light_quad_rotation_y);
 	AddVariablePredef(m_rendererVar, dir_light_quad_rotation_z);
+	AddVariablePredef(m_rendererVar, parallax_mapping_min_steps);
+	AddVariablePredef(m_rendererVar, parallax_mapping_max_steps);
 	AddVariablePredef(m_rendererVar, csm_num_of_pcf_samples);
 	AddVariablePredef(m_rendererVar, csm_resolution);
 	AddVariablePredef(m_rendererVar, depth_test_func);
@@ -420,13 +430,16 @@ void Config::init()
 	AddVariablePredef(m_rendererVar, max_num_point_lights);
 	AddVariablePredef(m_rendererVar, max_num_spot_lights);
 	AddVariablePredef(m_rendererVar, objects_loaded_per_frame);
+	AddVariablePredef(m_rendererVar, parallax_mapping_method);
 	AddVariablePredef(m_rendererVar, render_to_texture_buffer);
 	AddVariablePredef(m_rendererVar, shader_pool_size);
 	AddVariablePredef(m_rendererVar, ssao_num_of_samples);
 	AddVariablePredef(m_rendererVar, depth_test);
 	AddVariablePredef(m_rendererVar, face_culling);
+	AddVariablePredef(m_rendererVar, stochastic_sampling_seam_fix);
 
 	// Script variables
+	AddVariablePredef(m_scriptVar, defaultScriptFilename);
 	AddVariablePredef(m_scriptVar, iniFunctionName);
 	AddVariablePredef(m_scriptVar, updateFunctionName);
 	AddVariablePredef(m_scriptVar, createObjectFunctionName);
@@ -453,8 +466,10 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, emissiveMultiplierUniform);
 	AddVariablePredef(m_shaderVar, emissiveThresholdUniform);
 	AddVariablePredef(m_shaderVar, heightScaleUniform);
+	AddVariablePredef(m_shaderVar, parallaxMappingNumOfStepsLayersUniform);
 	AddVariablePredef(m_shaderVar, combinedTextureUniform);
 	AddVariablePredef(m_shaderVar, textureTilingFactorUniform);
+	AddVariablePredef(m_shaderVar, stochasticSamplingScaleUniform);
 	AddVariablePredef(m_shaderVar, LODParallaxUniform);
 	AddVariablePredef(m_shaderVar, texelSize);
 	AddVariablePredef(m_shaderVar, numOfTexels);
@@ -536,12 +551,18 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, testFloatUniform);
 	AddVariablePredef(m_shaderVar, define_numOfCascades);
 	AddVariablePredef(m_shaderVar, define_numOfPCFSamples);
+	AddVariablePredef(m_shaderVar, define_parallaxMapping);
+	AddVariablePredef(m_shaderVar, define_parallaxMappingMethod);
+	AddVariablePredef(m_shaderVar, define_shadowMapping);
+	AddVariablePredef(m_shaderVar, define_stochasticSampling);
+	AddVariablePredef(m_shaderVar, define_stochasticSamplingSeamFix);
 
 	// Texture variables
 	AddVariablePredef(m_textureVar, default_texture);
 	AddVariablePredef(m_textureVar, default_emissive_texture);
 	AddVariablePredef(m_textureVar, default_height_texture);
 	AddVariablePredef(m_textureVar, default_normal_texture);
+	AddVariablePredef(m_textureVar, default_RMHA_texture);
 	AddVariablePredef(m_textureVar, default_specular_intensity);
 	AddVariablePredef(m_textureVar, default_specular_power);
 	AddVariablePredef(m_textureVar, diffuse_texture_format);

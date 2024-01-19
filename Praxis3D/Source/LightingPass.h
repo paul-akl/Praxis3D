@@ -53,6 +53,7 @@ public:
 			// Create a property-set used to load lighting shader
 			PropertySet lightShaderProperties(Properties::Shaders);
 
+			lightShaderProperties.addProperty(Properties::Name, std::string("lightPass"));
 			lightShaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().light_pass_vert_shader);
 			lightShaderProperties.addProperty(Properties::FragmentShader, Config::rendererVar().light_pass_frag_shader);
 
@@ -62,6 +63,10 @@ public:
 			// Load the shader to memory
 			if(ErrorCode shaderError = m_shaderLightPass->loadToMemory(); shaderError == ErrorCode::Success)
 			{
+				// Disable shadow mapping
+				if(ErrorCode shaderVariableError = m_shaderLightPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_shadowMapping, 0); shaderVariableError != ErrorCode::Success)
+					ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_shadowMapping, ErrorSource::Source_LightingPass);
+
 				// Queue the shader to be loaded to GPU
 				m_renderer.queueForLoading(*m_shaderLightPass);
 			}
@@ -74,8 +79,9 @@ public:
 			// Create a property-set used to load lighting shader
 			PropertySet lightShaderProperties(Properties::Shaders);
 
-			lightShaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().light_pass_csm_vert_shader);
-			lightShaderProperties.addProperty(Properties::FragmentShader, Config::rendererVar().light_pass_csm_frag_shader);
+			lightShaderProperties.addProperty(Properties::Name, std::string("lightPass_CSM"));
+			lightShaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().light_pass_vert_shader);
+			lightShaderProperties.addProperty(Properties::FragmentShader, Config::rendererVar().light_pass_frag_shader);
 
 			// Create the shader
 			m_shaderLightCSMPass = Loaders::shader().load(lightShaderProperties);
@@ -83,10 +89,16 @@ public:
 			// Load the shader to memory
 			if(ErrorCode shaderError = m_shaderLightCSMPass->loadToMemory(); shaderError == ErrorCode::Success)
 			{
+				// Enable shadow mapping
+				if(ErrorCode shaderVariableError = m_shaderLightCSMPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_shadowMapping, 1); shaderVariableError != ErrorCode::Success)
+					ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_shadowMapping, ErrorSource::Source_LightingPass);
+
+				// Set the number of cascades
 				if(m_numOfCascades > 0)
 					if(ErrorCode shaderVariableError = m_shaderLightCSMPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_numOfCascades, m_numOfCascades); shaderVariableError != ErrorCode::Success)
 						ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_numOfCascades, ErrorSource::Source_LightingPass);
 
+				// Set the number of PCF samples
 				if(ErrorCode shaderVariableError = m_shaderLightCSMPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_numOfPCFSamples, m_numOfPCFSamples); shaderVariableError != ErrorCode::Success)
 					ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_numOfPCFSamples, ErrorSource::Source_LightingPass);
 
@@ -221,27 +233,35 @@ public:
 
 				if(m_numOfCascades > 0)
 				{
-					ErrorCode shaderVariableError = m_shaderLightCSMPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_numOfCascades, m_numOfCascades);
-
+					// Enable shadow mapping
+					ErrorCode shaderVariableError = m_shaderLightCSMPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_shadowMapping, 1); 
+					
 					if(shaderVariableError == ErrorCode::Success)
 					{
-						shaderVariableError = m_shaderLightCSMPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_numOfPCFSamples, m_numOfPCFSamples);
+						shaderVariableError = m_shaderLightCSMPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_numOfCascades, m_numOfCascades);
 
 						if(shaderVariableError == ErrorCode::Success)
 						{
-							// Queue the shader to be loaded to GPU
-							m_shaderLightCSMPass->resetLoadedToVideoMemoryFlag();
-							m_renderer.queueForLoading(*m_shaderLightCSMPass);
-							m_renderer.passLoadCommandsToBackend();
+							shaderVariableError = m_shaderLightCSMPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_numOfPCFSamples, m_numOfPCFSamples);
 
-							// Make sure to update uniform block bindings, since light CSM shader uses CSM data set uniform that is owned by the shadow map pass, and might be created later
-							m_shaderLightCSMPass->m_uniformUpdater->updateBlockBindingPoints();
+							if(shaderVariableError == ErrorCode::Success)
+							{
+								// Queue the shader to be loaded to GPU
+								m_shaderLightCSMPass->resetLoadedToVideoMemoryFlag();
+								m_renderer.queueForLoading(*m_shaderLightCSMPass);
+								m_renderer.passLoadCommandsToBackend();
+
+								// Make sure to update uniform block bindings, since light CSM shader uses CSM data set uniform that is owned by the shadow map pass, and might be created later
+								m_shaderLightCSMPass->m_uniformUpdater->updateBlockBindingPoints();
+							}
+							else
+								ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_numOfPCFSamples, ErrorSource::Source_LightingPass);
 						}
 						else
-							ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_numOfPCFSamples, ErrorSource::Source_LightingPass);
+							ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_numOfCascades, ErrorSource::Source_LightingPass);
 					}
 					else
-						ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_numOfCascades, ErrorSource::Source_LightingPass);
+						ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_shadowMapping, ErrorSource::Source_LightingPass);
 				}
 			}
 
@@ -257,6 +277,7 @@ public:
 
 		// Queue the screen space triangle, using lighting shader, to be drawn
 		m_renderer.queueForDrawing(lightPassShader->getShaderHandle(), lightPassShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
+
 
 		// Pass the draw command so it is executed
 		m_renderer.passScreenSpaceDrawCommandsToBackend();

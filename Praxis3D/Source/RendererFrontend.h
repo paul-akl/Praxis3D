@@ -65,6 +65,7 @@ public:
 	void setRenderToTextureResolution(const glm::ivec2 p_renderToTextureResolution);
 	void setRenderingPasses(const RenderingPasses &p_renderingPasses);
 	void setAmbientOcclusionData(const AmbientOcclusionData &p_aoData) { m_frameData.m_aoData = p_aoData; }
+	void setMiscSceneData(const MiscSceneData &p_miscSceneData) { m_frameData.m_miscSceneData = p_miscSceneData; }
 	void setShadowMappingData(const ShadowMappingData &p_shadowMappingData) { m_frameData.m_shadowMappingData = p_shadowMappingData; }
 
 	const RenderingPasses getRenderingPasses();
@@ -78,51 +79,60 @@ public:
 	const inline UniformFrameData &getFrameData() const { return m_frameData; }
 	
 protected:
-	inline void queueForDrawing(const ModelData &p_modelData, const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_modelMatrix, const glm::mat4 &p_viewProjMatrix)
+	inline void queueForDrawing(const Model::Mesh &p_mesh, const MeshData &p_meshData, const uint32_t p_modelHandle, const uint32_t p_shaderHandle, ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_modelMatrix, const glm::mat4 &p_modelViewProjMatrix)
+	{
+		// Calculate the sort key, by combining lower 16 bits of shader handle and model handle
+		// sortkey = 64 bits total
+		// 64-48 bits = shader handle
+		// 48-32 bits = model handle
+		RendererBackend::DrawCommands::value_type::first_type sortKey = ((p_shaderHandle & 0x0000ffff) << 16) | (p_modelHandle & 0x0000ffff);
+		sortKey = sortKey << 32;
+
+		// TODO: per-texture material parameters
+		// Assign the object data that is later passed to the shaders
+		const UniformObjectData objectData(p_modelMatrix,
+			p_modelViewProjMatrix,
+			p_meshData.m_heightScale,
+			p_meshData.m_alphaThreshold,
+			p_meshData.m_emissiveIntensity,
+			p_meshData.m_materials[MaterialType::MaterialType_Diffuse].m_textureScale.x,
+			p_meshData.m_rextureRepetitionScale);
+
+		m_drawCommands.emplace_back(
+			sortKey,
+			RendererBackend::DrawCommand(
+				p_uniformUpdater,
+				objectData,
+				p_shaderHandle,
+				p_modelHandle,
+				p_mesh.m_numIndices,
+				p_mesh.m_baseVertex,
+				p_mesh.m_baseIndex,
+				p_meshData.m_materials[MaterialType::MaterialType_Diffuse].m_texture.getHandle(),
+				p_meshData.m_materials[MaterialType::MaterialType_Normal].m_texture.getHandle(),
+				p_meshData.m_materials[MaterialType::MaterialType_Emissive].m_texture.getHandle(),
+				p_meshData.m_materials[MaterialType::MaterialType_Combined].m_texture.getHandle(),
+				p_meshData.m_textureWrapMode)
+		);
+	}
+	inline void queueForDrawing(const ModelData &p_modelData, const unsigned int p_shaderHandle, ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_modelMatrix, const glm::mat4 &p_viewProjMatrix)
 	{
 		// Get the necessary handles
 		const unsigned int modelHandle = p_modelData.m_model.getHandle();
 
 		// Calculate model-view-projection matrix
 		const glm::mat4 modelViewProjMatrix = p_viewProjMatrix * p_modelMatrix;
-
-		// Calculate the sort key
-		RendererBackend::DrawCommands::value_type::first_type sortKey = 0;
-		
+				
 		// Add a draw command for each mesh, using the same object data
 		for(decltype(p_modelData.m_model.getNumMeshes()) meshIndex = 0, numMeshes = p_modelData.m_model.getNumMeshes(); meshIndex < numMeshes; meshIndex++)
 		{
 			if(p_modelData.m_meshes[meshIndex].m_active)
 			{
-				// TODO: per-texture material parameters
-				// Assign the object data that is later passed to the shaders
-				const UniformObjectData objectData(p_modelMatrix,
-					modelViewProjMatrix,
-					p_modelData.m_meshes[meshIndex].m_heightScale,
-					p_modelData.m_meshes[meshIndex].m_alphaThreshold,
-					p_modelData.m_meshes[meshIndex].m_emissiveIntensity,
-					p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Diffuse].m_textureScale.x);
-
-				m_drawCommands.emplace_back(
-					sortKey,
-					RendererBackend::DrawCommand(
-						p_uniformUpdater,
-						objectData,
-						p_shaderHandle,
-						modelHandle,
-						p_modelData.m_model[meshIndex].m_numIndices,
-						p_modelData.m_model[meshIndex].m_baseVertex,
-						p_modelData.m_model[meshIndex].m_baseIndex,
-						p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Diffuse].m_texture.getHandle(),
-						p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Normal].m_texture.getHandle(),
-						p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Emissive].m_texture.getHandle(),
-						p_modelData.m_meshes[meshIndex].m_materials[MaterialType::MaterialType_Combined].m_texture.getHandle(),
-						p_modelData.m_meshes[meshIndex].m_textureWrapMode)
-				);
+				queueForDrawing(p_modelData.m_model[meshIndex], p_modelData.m_meshes[meshIndex], modelHandle, p_shaderHandle, p_uniformUpdater, p_modelMatrix, modelViewProjMatrix);
 			}
 		}
 	}
-	inline void queueForDrawing(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_viewProjMatrix)
+	inline void queueForDrawing(const unsigned int p_shaderHandle, ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_viewProjMatrix)
 	{
 		// Assign the object data that is later passed to the shaders
 		const UniformObjectData objectData(p_viewProjMatrix,
@@ -130,7 +140,8 @@ protected:
 										   Config::graphicsVar().height_scale,
 										   Config::graphicsVar().alpha_threshold,
 										   Config::graphicsVar().emissive_threshold,
-										   Config::graphicsVar().texture_tiling_factor);
+										   Config::graphicsVar().texture_tiling_factor,
+										   Config::graphicsVar().stochastic_sampling_scale);
 
 		// Calculate the sort key
 		RendererBackend::DrawCommands::value_type::first_type sortKey = 0;
@@ -143,7 +154,7 @@ protected:
 				p_shaderHandle)
 			);
 	}	
-	inline void queueForDrawing(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_viewProjMatrix, const unsigned int p_numOfGroupsX, const unsigned int p_numOfGroupsY, const unsigned int p_numOfGroupsZ, const MemoryBarrierType p_memoryBarrier)
+	inline void queueForDrawing(const unsigned int p_shaderHandle, ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_viewProjMatrix, const unsigned int p_numOfGroupsX, const unsigned int p_numOfGroupsY, const unsigned int p_numOfGroupsZ, const MemoryBarrierType p_memoryBarrier)
 	{
 		// Assign the object data that is later passed to the shaders
 		const UniformObjectData objectData(p_viewProjMatrix,
@@ -151,7 +162,8 @@ protected:
 										   Config::graphicsVar().height_scale,
 										   Config::graphicsVar().alpha_threshold,
 										   Config::graphicsVar().emissive_threshold,
-										   Config::graphicsVar().texture_tiling_factor);
+										   Config::graphicsVar().texture_tiling_factor,
+										   Config::graphicsVar().stochastic_sampling_scale);
 
 		m_computeDispatchCommands.emplace_back(p_numOfGroupsX,
 											   p_numOfGroupsY,
@@ -295,6 +307,8 @@ protected:
 	}
 	inline void passDrawCommandsToBackend()
 	{
+		std::sort(m_drawCommands.begin(), m_drawCommands.end(), [](const auto &p_left, const auto &p_right) { return p_left.first < p_right.first; });
+
 		// Pass the queued draw commands to the backend to be sent to GPU
 		m_backend.processDrawing(m_drawCommands, m_frameData);
 
@@ -336,7 +350,7 @@ protected:
 			m_frameData.m_zNear,
 			m_frameData.m_zFar);
 
-		m_frameData.m_atmScatProjMatrix = Math::perspectiveRadian(Config::graphicsVar().fov,
+		m_frameData.m_atmScatProjMatrix = Math::perspectiveRadian(m_frameData.m_fov,
 																m_frameData.m_screenSize.x,
 																m_frameData.m_screenSize.y);
 	}

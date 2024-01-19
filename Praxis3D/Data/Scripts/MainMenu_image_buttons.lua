@@ -26,66 +26,66 @@ function init ()
 	create(Types.Conditional, 'exitButtonHover')
 	
 	-- Load button textures
-	buttonLoadTexture = loadTexture2D('buttons\\button_load_0.png')
+	buttonLoadTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_load_0.png')
 	buttonLoadTexture:loadToMemory()
 	buttonLoadTexture:loadToVideoMemory()
 	
-	buttonLoadPressedTexture = loadTexture2D('buttons\\button_load_1.png')
+	buttonLoadPressedTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_load_1.png')
 	buttonLoadPressedTexture:loadToMemory()
 	buttonLoadPressedTexture:loadToVideoMemory()
 	
 	-- Play button textures
-	buttonPlayTexture = loadTexture2D('buttons\\button_play_0.png')
+	buttonPlayTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_play_0.png')
 	buttonPlayTexture:loadToMemory()
 	buttonPlayTexture:loadToVideoMemory()
 	
-	buttonPlayPressedTexture = loadTexture2D('buttons\\button_play_1.png')
+	buttonPlayPressedTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_play_1.png')
 	buttonPlayPressedTexture:loadToMemory()
 	buttonPlayPressedTexture:loadToVideoMemory()
 	
 	-- Editor button textures
-	buttonEditorTexture = loadTexture2D('buttons\\button_editor_0.png')
+	buttonEditorTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_editor_0.png')
 	buttonEditorTexture:loadToMemory()
 	buttonEditorTexture:loadToVideoMemory()
 	
-	buttonEditorPressedTexture = loadTexture2D('buttons\\button_editor_1.png')
+	buttonEditorPressedTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_editor_1.png')
 	buttonEditorPressedTexture:loadToMemory()
 	buttonEditorPressedTexture:loadToVideoMemory()
 	
 	-- Options button textures
-	buttonOptionsTexture = loadTexture2D('buttons\\button_options_0.png')
+	buttonOptionsTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_options_0.png')
 	buttonOptionsTexture:loadToMemory()
 	buttonOptionsTexture:loadToVideoMemory()
 	
-	buttonOptionsPressedTexture = loadTexture2D('buttons\\button_options_1.png')
+	buttonOptionsPressedTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_options_1.png')
 	buttonOptionsPressedTexture:loadToMemory()
 	buttonOptionsPressedTexture:loadToVideoMemory()
 	
 	-- About button textures
-	buttonAboutTexture = loadTexture2D('buttons\\button_about_0.png')
+	buttonAboutTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_about_0.png')
 	buttonAboutTexture:loadToMemory()
 	buttonAboutTexture:loadToVideoMemory()
 	
-	buttonAboutPressedTexture = loadTexture2D('buttons\\button_about_1.png')
+	buttonAboutPressedTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_about_1.png')
 	buttonAboutPressedTexture:loadToMemory()
 	buttonAboutPressedTexture:loadToVideoMemory()
 	
 	-- Exit button textures
-	buttonExitTexture = loadTexture2D('buttons\\button_exit_0.png')
+	buttonExitTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_exit_0.png')
 	buttonExitTexture:loadToMemory()
 	buttonExitTexture:loadToVideoMemory()
 	
-	buttonExitPressedTexture = loadTexture2D('buttons\\button_exit_1.png')
+	buttonExitPressedTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_exit_1.png')
 	buttonExitPressedTexture:loadToMemory()
 	buttonExitPressedTexture:loadToVideoMemory()
 	
 	-- Engine logo texture
-	praxisLogoTexture = loadTexture2D('logo1.png')
+	praxisLogoTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'logo1.png')
 	praxisLogoTexture:loadToMemory()
 	praxisLogoTexture:loadToVideoMemory()
 	
 	-- Fmod logo texture
-	fmodLogoTexture = loadTexture2D('FMOD Logo White - Black Background.png')
+	fmodLogoTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'FMOD Logo White - Black Background.png')
 	fmodLogoTexture:loadToMemory()
 	fmodLogoTexture:loadToVideoMemory()
 	
@@ -114,7 +114,16 @@ function init ()
 	fileBrowserLoadMap.m_filter = '.pmap,*.*'
 	fileBrowserLoadMap.m_rootPath = pathsVariables.map_path
 	
+	fileBrowserEditMap = FileBrowserDialog.new()
+	fileBrowserEditMap.m_name = 'fileBrowserEditMap'
+	fileBrowserEditMap.m_title = 'Edit Map File'
+	fileBrowserEditMap.m_filter = '.pmap,*.*'
+	fileBrowserEditMap.m_rootPath = pathsVariables.map_path
+	
 	fileBrowserLoadMapOpened = false
+	fileBrowserEditMapOpened = false
+	
+	aboutWindowOpened = false
 	
 	ErrHandlerLoc.logErrorCode(ErrorCode.Initialize_success, getLuaFilename())
 end
@@ -170,7 +179,7 @@ function update (p_deltaTime)
 	GUI.PushStyleColor(ImGuiCol.Button, 0.0, 0.0, 0.0, 0.0);
 	GUI.PushStyleColor(ImGuiCol.ButtonActive, 0.0, 0.0, 0.0, 0.0);
 	GUI.PushStyleColor(ImGuiCol.ButtonHovered, 0.0, 0.0, 0.0, 0.0);
-	
+		
 	-- Draw the EXIT button
 	GUI.SetNextWindowPos(buttonPositionX - buttonHalfSizeX, buttonPositionY - buttonHalfSizeY)
 	GUI.Begin('EXIT BTN', bitwiseOr(ImGuiWindowFlags.NoDecoration, ImGuiWindowFlags.NoMove, ImGuiWindowFlags.NoSavedSettings, ImGuiWindowFlags.NoBackground))
@@ -251,7 +260,8 @@ function update (p_deltaTime)
 	
 	-- Check if the OPTIONS button is pressed
 	if aboutButtonPressed:isChecked() then
-		print('ABOUT')
+		aboutWindowOpened = not aboutWindowOpened
+		sendData(SystemType.GUI, DataType.DataType_AboutWindow, aboutWindowOpened)
 	end
 	
 	-- Check if the OPTIONS button is pressed
@@ -261,7 +271,11 @@ function update (p_deltaTime)
 	
 	-- Check if the EDITOR button is pressed; change the current engine state to EDITOR, if it is
 	if editorButtonPressed:isChecked() then
-		sendEngineChange(EngineChangeType.StateChange, EngineStateType.Editor)
+		if not fileBrowserEditMapOpened then
+			fileBrowserEditMapOpened = true
+			GUI.FileDialog(fileBrowserEditMap)
+		end
+		--sendEngineChange(EngineChangeType.StateChange, EngineStateType.Editor)
 		--setMouseCapture(true)
 	end
 	
@@ -279,6 +293,7 @@ function update (p_deltaTime)
 		end
 	end
 	
+	-- Load map file browser
 	if fileBrowserLoadMap.m_closed then
 		if fileBrowserLoadMap.m_success then
 			infoText = 'Loading map: "' .. fileBrowserLoadMap.m_filename .. '"'
@@ -292,4 +307,20 @@ function update (p_deltaTime)
 		fileBrowserLoadMapOpened = false
 		fileBrowserLoadMap:reset()
 	end
+	
+	-- Edit map file browser
+	if fileBrowserEditMap.m_closed then
+		if fileBrowserEditMap.m_success then
+			infoText = 'Edit map: "' .. fileBrowserEditMap.m_filename .. '"'
+			ErrHandlerLoc.logErrorType(ErrorType.Info, infoText)
+			
+			sendEngineChange(EngineChangeType.SceneFilename, EngineStateType.Editor, fileBrowserEditMap.m_filename)
+			sendEngineChange(EngineChangeType.StateChange, EngineStateType.Editor)
+			
+			setMouseCapture(true)
+		end
+		fileBrowserEditMapOpened = false
+		fileBrowserEditMap:reset()
+	end
+	
 end

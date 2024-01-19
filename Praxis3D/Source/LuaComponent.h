@@ -233,6 +233,30 @@ public:
 		}
 	}
 
+	void receiveData(const DataType p_dataType, void *p_data, const bool p_deleteAfterReceiving)
+	{
+		switch(p_dataType)
+		{
+			case DataType::DataType_LuaVariables:
+				{
+					auto *luaVariables = static_cast<std::vector<std::pair<std::string, Property>>*>(p_data);
+
+					// Reset the new lua variables
+					if(m_luaScript != nullptr)
+						m_luaScript->setVariables(*luaVariables, true);
+
+					// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
+					if(p_deleteAfterReceiving)
+						delete luaVariables;
+				}
+				break;
+
+			default:
+				assert(p_deleteAfterReceiving == true && "Memory leak - unhandled orphaned void data pointer in receiveData");
+				break;
+		}
+	}
+
 	void setSpatialDataManagerReference(const SpatialDataManager &p_spatialData) 
 	{ 
 		m_spatialData = &p_spatialData;

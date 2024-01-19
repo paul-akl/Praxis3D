@@ -516,15 +516,7 @@ void EditorWindow::update(const float p_deltaTime)
                         }
                     }
 
-                    if(m_openNewEntityPopup)
-                    {
-                        //ImGui::OpenPopup(componentTypeSelectionPopupName.c_str());
-                        //m_openNewEntityPopup = false;
-                    }
-
-                    // Draw COMPONENT TYPE LIST
-                    //if(ImGui::BeginPopupModal(componentTypeSelectionPopupName.c_str()))
-
+                    // Draw a pop-up with the new entity settings
                     if(m_openNewEntityPopup)
                     {
                         if(!m_newEntityWindowInitialized)
@@ -675,6 +667,22 @@ void EditorWindow::update(const float p_deltaTime)
                             // Draw CREATE button
                             if(ImGui::Button("Create"))
                             {
+                                // If a prefab was set, load it
+                                if(!m_newEntityConstructionInfo->m_prefab.empty())
+                                {
+                                    // Backup the current construction info
+                                    ComponentsConstructionInfo currentConstructionInfo = *m_newEntityConstructionInfo;
+
+                                    // Import prefab
+                                    m_systemScene->getSceneLoader()->importPrefab(*m_newEntityConstructionInfo, m_newEntityConstructionInfo->m_prefab);
+
+                                    // Re-set the previous construction info values that were set during the entity creation, as these override the values that are imported from a prefab
+                                    m_newEntityConstructionInfo->m_id = currentConstructionInfo.m_id;
+                                    m_newEntityConstructionInfo->m_name = currentConstructionInfo.m_name;
+                                    m_newEntityConstructionInfo->m_parent = currentConstructionInfo.m_parent;
+                                    m_newEntityConstructionInfo->m_prefab = currentConstructionInfo.m_prefab;
+                                }
+
                                 m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::World), DataType::DataType_CreateEntity, (void *)m_newEntityConstructionInfo, false);
 
                                 // Make the new entity be selected next frame
@@ -809,7 +817,7 @@ void EditorWindow::update(const float p_deltaTime)
                                 if(ImGui::InputText("##NameStringInput", &m_selectedEntity.m_componentData.m_name, ImGuiInputTextFlags_EnterReturnsTrue))
                                 {
                                     // If the prefab name was changed, send a notification to the Metadata Component
-                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, metadataComponent, Systems::Changes::World::PrefabName);
+                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, metadataComponent, Systems::Changes::Generic::Name);
                                 }
 
                                 // Draw PREFAB
@@ -1117,6 +1125,10 @@ void EditorWindow::update(const float p_deltaTime)
                             if(ImGui::CollapsingHeader(GetString(Properties::PropertyID::CameraComponent), ImGuiTreeNodeFlags_DefaultOpen))
                             {
                                 m_selectedEntity.m_componentData.m_graphicsComponents.m_cameraConstructionInfo->m_active = cameraComponent->isObjectActive();
+                                m_selectedEntity.m_componentData.m_graphicsComponents.m_cameraConstructionInfo->m_cameraID = cameraComponent->getCameraID();
+                                m_selectedEntity.m_componentData.m_graphicsComponents.m_cameraConstructionInfo->m_fov = cameraComponent->getCameraFOV();
+                                m_selectedEntity.m_componentData.m_graphicsComponents.m_cameraConstructionInfo->m_zFar = cameraComponent->getCameraFarClip();
+                                m_selectedEntity.m_componentData.m_graphicsComponents.m_cameraConstructionInfo->m_zNear = cameraComponent->getCameraNearClip();
 
                                 // Draw ACTIVE
                                 drawLeftAlignedLabelText("Active:", inputWidgetOffset);
@@ -1124,6 +1136,38 @@ void EditorWindow::update(const float p_deltaTime)
                                 {
                                     // If the active flag was changed, send a notification to the Camera Component
                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, cameraComponent, Systems::Changes::Generic::Active);
+                                }                                
+                                
+                                // Draw CAMERA ID
+                                drawLeftAlignedLabelText("Camera ID:", inputWidgetOffset);
+                                if(ImGui::InputInt("##CameraIDInput", &m_selectedEntity.m_componentData.m_graphicsComponents.m_cameraConstructionInfo->m_cameraID))
+                                {
+                                    // If the camera ID was changed, send a notification to the Camera Component
+                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, cameraComponent, Systems::Changes::Graphics::CameraID);
+                                }
+
+                                // Draw FOV
+                                drawLeftAlignedLabelText("FOV:", inputWidgetOffset);
+                                if(ImGui::DragFloat("##CameraFOVDrag", &m_selectedEntity.m_componentData.m_graphicsComponents.m_cameraConstructionInfo->m_fov, 1.0f, 1.0f, 180.0f, "%.0f"))
+                                {
+                                    // If the FOV was changed, send a notification to the Camera Component
+                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, cameraComponent, Systems::Changes::Graphics::FOV);
+                                }
+
+                                // Draw FAR PLANE
+                                drawLeftAlignedLabelText("Far plane:", inputWidgetOffset);
+                                if(ImGui::DragFloat("##CameraFarPlaneDrag", &m_selectedEntity.m_componentData.m_graphicsComponents.m_cameraConstructionInfo->m_zFar, 0.1f, 0.0f, 100000.0f, "%.5f"))
+                                {
+                                    // If the far plane was changed, send a notification to the Camera Component
+                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, cameraComponent, Systems::Changes::Graphics::ZFar);
+                                }
+
+                                // Draw NEAR PLANE
+                                drawLeftAlignedLabelText("Near plane:", inputWidgetOffset);
+                                if(ImGui::DragFloat("##CameraNearPlaneDrag", &m_selectedEntity.m_componentData.m_graphicsComponents.m_cameraConstructionInfo->m_zNear, 0.0001f, 0.0f, 100000.0f, "%.5f"))
+                                {
+                                    // If the near plane was changed, send a notification to the Camera Component
+                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, cameraComponent, Systems::Changes::Graphics::ZNear);
                                 }
                             }
                         }
@@ -1301,11 +1345,11 @@ void EditorWindow::update(const float p_deltaTime)
                                 {
                                     bool modelComponentDataNeedsUpdating = false;
 
-                                    // If the model data was modified, send the new data to the ModelComponent
+                                    // If the model data was modified the previous frame, set the flag to update the ModelComponent
                                     if(m_selectedEntity.m_modelDataModified)
                                     {
-                                        m_systemScene->getSceneLoader()->getChangeController()->sendData(modelComponent, DataType::DataType_ModelsProperties, (void *)&m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_modelsProperties);
                                         m_selectedEntity.m_modelDataModified = false;
+                                        modelComponentDataNeedsUpdating = true;
                                     }
                                     else
                                     {
@@ -1443,10 +1487,10 @@ void EditorWindow::update(const float p_deltaTime)
                                             }
 
                                             ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextAlign, ImVec2(0.5f, 0.5f));
-                                            for(decltype(modelEntry.m_numOfMeshes) meshSize = modelEntry.m_numOfMeshes, meshIndex = 0; meshIndex < meshSize; meshIndex++)
+                                            for(decltype(modelEntry.m_meshData.size()) meshSize = modelEntry.m_meshData.size(), meshIndex = 0; meshIndex < meshSize; meshIndex++)
                                             {
                                                 // Get the mesh name
-                                                std::string meshName = modelEntry.m_meshNames[meshIndex];
+                                                std::string meshName = modelEntry.m_meshData[meshIndex].m_meshName;
                                                 if(!meshName.empty())
                                                     meshName = " (" + meshName + ")";
 
@@ -1456,11 +1500,11 @@ void EditorWindow::update(const float p_deltaTime)
                                                     ImGui::SeparatorText("Mesh settings:");
 
                                                     // Draw ACTIVE
-                                                    bool active = modelEntry.m_active[meshIndex];
+                                                    bool active = modelEntry.m_meshData[meshIndex].m_active;
                                                     drawLeftAlignedLabelText("Active:", inputWidgetOffset);
                                                     if(ImGui::Checkbox(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "ActiveCheckbox").c_str(), &active))
                                                     {
-                                                        modelEntry.m_active[meshIndex] = active;
+                                                        modelEntry.m_meshData[meshIndex].m_active = active;
 
                                                         // If the active flag was changed, set the modified flag
                                                         m_selectedEntity.m_modelDataModified = true;
@@ -1468,7 +1512,7 @@ void EditorWindow::update(const float p_deltaTime)
 
                                                     // Draw HEIGHT SCALE
                                                     drawLeftAlignedLabelText("Height scale:", inputWidgetOffset);
-                                                    if(ImGui::DragFloat(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "HeightScaleDrag").c_str(), &modelEntry.m_heightScale[meshIndex], Config::GUIVar().editor_float_slider_speed, 0.0f, 100000.0f))
+                                                    if(ImGui::DragFloat(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "HeightScaleDrag").c_str(), &modelEntry.m_meshData[meshIndex].m_heightScale, Config::GUIVar().editor_float_slider_speed, 0.0f, 100000.0f))
                                                     {
                                                         // If the height scale was changed, set the modified flag
                                                         m_selectedEntity.m_modelDataModified = true;
@@ -1476,7 +1520,7 @@ void EditorWindow::update(const float p_deltaTime)
 
                                                     // Draw ALPHA THRESHOLD
                                                     drawLeftAlignedLabelText("Alpha Threshold:", inputWidgetOffset);
-                                                    if(ImGui::DragFloat(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "AlphaThresholdDrag").c_str(), &modelEntry.m_alphaThreshold[meshIndex], Config::GUIVar().editor_float_slider_speed, 0.0f, 1.0f))
+                                                    if(ImGui::DragFloat(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "AlphaThresholdDrag").c_str(), &modelEntry.m_meshData[meshIndex].m_alphaThreshold, Config::GUIVar().editor_float_slider_speed, 0.0f, 1.0f))
                                                     {
                                                         // If the alpha threshold was changed, set the modified flag
                                                         m_selectedEntity.m_modelDataModified = true;
@@ -1484,9 +1528,28 @@ void EditorWindow::update(const float p_deltaTime)
 
                                                     // Draw EMISSIVE INTENSITY
                                                     drawLeftAlignedLabelText("Emissive intensity:", inputWidgetOffset);
-                                                    if(ImGui::DragFloat(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "EmissiveIntensityDrag").c_str(), &modelEntry.m_emissiveIntensity[meshIndex], Config::GUIVar().editor_float_slider_speed, 0.0f, 100000.0f))
+                                                    if(ImGui::DragFloat(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "EmissiveIntensityDrag").c_str(), &modelEntry.m_meshData[meshIndex].m_emissiveIntensity, Config::GUIVar().editor_float_slider_speed, 0.0f, 100000.0f))
                                                     {
                                                         // If the emissive intensity was changed, set the modified flag
+                                                        m_selectedEntity.m_modelDataModified = true;
+                                                    }
+
+                                                    // Draw TEXTURE REPETITION
+                                                    bool textureRepetition = modelEntry.m_meshData[meshIndex].m_stochasticSampling;
+                                                    drawLeftAlignedLabelText("Texture repetition:", inputWidgetOffset);
+                                                    if(ImGui::Checkbox(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "TextureRepetitionCheckbox").c_str(), &textureRepetition))
+                                                    {
+                                                        modelEntry.m_meshData[meshIndex].m_stochasticSampling = textureRepetition;
+
+                                                        // If the texture repetition flag was changed, set the modified flag
+                                                        m_selectedEntity.m_modelDataModified = true;
+                                                    }
+                                                    
+                                                    // Draw TEXTURE REPETITION SALCE
+                                                    drawLeftAlignedLabelText("Repetition scale:", inputWidgetOffset);
+                                                    if(ImGui::DragFloat(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "TextureRepetitionScaleDrag").c_str(), &modelEntry.m_meshData[meshIndex].m_stochasticSamplingScale, Config::GUIVar().editor_float_slider_speed))
+                                                    {
+                                                        // If the texture repetition scale was changed, set the modified flag
                                                         m_selectedEntity.m_modelDataModified = true;
                                                     }
 
@@ -1494,7 +1557,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                     int textureWrapMode = 0;
                                                     for(decltype(m_textureWrapModeTypes.size()) i = 0, size = m_textureWrapModeTypes.size(); i < size; i++)
                                                     {
-                                                        if(m_textureWrapModeTypes[i] == modelEntry.m_textureWrapMode[meshIndex])
+                                                        if(m_textureWrapModeTypes[i] == modelEntry.m_meshData[meshIndex].m_textureWrapMode)
                                                         {
                                                             textureWrapMode = (int)i;
                                                             break;
@@ -1506,7 +1569,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                     if(ImGui::Combo(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "TextureWrapModeCombo").c_str(), &textureWrapMode, &m_textureWrapModeStrings[0], (int)m_textureWrapModeStrings.size()))
                                                     {
                                                         // Set the texture wrap mode
-                                                        modelEntry.m_textureWrapMode[meshIndex] = m_textureWrapModeTypes[textureWrapMode];
+                                                        modelEntry.m_meshData[meshIndex].m_textureWrapMode = m_textureWrapModeTypes[textureWrapMode];
 
                                                         // Set the modified flag
                                                         m_selectedEntity.m_modelDataModified = true;
@@ -1537,11 +1600,11 @@ void EditorWindow::update(const float p_deltaTime)
 
                                                         // Draw TEXTURE FILENAME
                                                         drawLeftAlignedLabelText("Filename:", inputWidgetOffset, calcTextSizedButtonOffset(2) - inputWidgetOffset - m_imguiStyle.FramePadding.x + m_imguiStyle.IndentSpacing);
-                                                        if(ImGui::InputText(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureFilenameInput").c_str(), &modelEntry.m_meshMaterials[meshIndex][materialIndex], ImGuiInputTextFlags_EnterReturnsTrue))
+                                                        if(ImGui::InputText(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureFilenameInput").c_str(), &modelEntry.m_meshData[meshIndex].m_meshMaterials[materialIndex], ImGuiInputTextFlags_EnterReturnsTrue))
                                                         {
                                                             // If the texture filename was changed, set the modified flag
                                                             m_selectedEntity.m_modelDataModified = true;
-                                                            modelEntry.m_present[meshIndex] = true;
+                                                            modelEntry.m_meshData[meshIndex].m_present = true;
                                                         }
 
                                                         // Draw TEXTURE OPEN button
@@ -1552,7 +1615,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                             if(m_currentlyOpenedFileBrowser == FileBrowserActivated::FileBrowserActivated_None)
                                                             {
                                                                 // Set the selected texture filename handle
-                                                                m_selectedEntity.m_selectedTextureName = &modelEntry.m_meshMaterials[meshIndex][materialIndex];
+                                                                m_selectedEntity.m_selectedTextureName = &modelEntry.m_meshData[meshIndex].m_meshMaterials[materialIndex];
 
                                                                 // Set the file browser activation to Texture File
                                                                 m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_TextureFile;
@@ -1614,7 +1677,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                                         ImVec4(0.0f, 0.0f, 0.0f, 0.0f)))
                                                                     {
                                                                         // Set the selected texture
-                                                                        modelEntry.m_meshMaterials[meshIndex][materialIndex] = m_textureAssets[i].second;
+                                                                        modelEntry.m_meshData[meshIndex].m_meshMaterials[materialIndex] = m_textureAssets[i].second;
 
                                                                         // Set the modified flag
                                                                         m_selectedEntity.m_modelDataModified = true;
@@ -1626,11 +1689,11 @@ void EditorWindow::update(const float p_deltaTime)
 
                                                                     // Draw TEXTURE NAME selection
                                                                     // Set the text height to the texture image button height
-                                                                    if(ImGui::Selectable(m_textureAssets[i].second.c_str(), (modelEntry.m_meshMaterials[meshIndex][materialIndex] == m_textureAssets[i].second), 0, nameTextSize))
+                                                                    if(ImGui::Selectable(m_textureAssets[i].second.c_str(), (modelEntry.m_meshData[meshIndex].m_meshMaterials[materialIndex] == m_textureAssets[i].second), 0, nameTextSize))
                                                                     {
                                                                         // Set the selected texture
-                                                                        modelEntry.m_meshMaterials[meshIndex][materialIndex] = m_textureAssets[i].second;
-                                                                        modelEntry.m_present[meshIndex] = true;
+                                                                        modelEntry.m_meshData[meshIndex].m_meshMaterials[materialIndex] = m_textureAssets[i].second;
+                                                                        modelEntry.m_meshData[meshIndex].m_present = true;
 
                                                                         // Set the modified flag
                                                                         m_selectedEntity.m_modelDataModified = true;
@@ -1643,7 +1706,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                         }
 
                                                         drawLeftAlignedLabelText("Texture scale:", inputWidgetOffset);
-                                                        if(ImGui::DragFloat2(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureScaleDrag").c_str(), glm::value_ptr(modelEntry.m_meshMaterialsScale[meshIndex][materialIndex]), Config::GUIVar().editor_float_slider_speed))
+                                                        if(ImGui::DragFloat2(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureScaleDrag").c_str(), glm::value_ptr(modelEntry.m_meshData[meshIndex].m_meshMaterialsScales[materialIndex]), Config::GUIVar().editor_float_slider_speed))
                                                         {
                                                             // If the texture scale was changed, set the modified flag
                                                             m_selectedEntity.m_modelDataModified = true;
@@ -1674,6 +1737,12 @@ void EditorWindow::update(const float p_deltaTime)
 
                                         // Set the modified flag
                                         m_selectedEntity.m_modelDataModified = true;
+                                    }
+
+                                    // If the model data was modified, send the new data to the ModelComponent
+                                    if(m_selectedEntity.m_modelDataModified)
+                                    {
+                                        m_systemScene->getSceneLoader()->getChangeController()->sendData(modelComponent, DataType::DataType_ModelsProperties, (void *)&m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_modelsProperties);
                                     }
                                 }
                                 else
@@ -1745,9 +1814,11 @@ void EditorWindow::update(const float p_deltaTime)
                                 // Get the current rigid body data
                                 m_selectedEntity.m_collisionShapeType = rigidBodyComponent->getCollisionShapeType();
                                 m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_friction = rigidBody->getFriction();
+                                m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_kinematic = rigidBody->isKinematicObject();
                                 m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_mass = rigidBody->getMass();
                                 m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_restitution = rigidBody->getRestitution();
-                                m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_kinematic = rigidBody->isKinematicObject();
+                                m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_rollingFriction = rigidBody->getRollingFriction();
+                                m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_spinningFriction = rigidBody->getSpinningFriction();
 
                                 // Draw ACTIVE
                                 m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_active = rigidBodyComponent->isObjectActive();
@@ -1782,6 +1853,22 @@ void EditorWindow::update(const float p_deltaTime)
                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Physics::Friction);
                                 }
 
+                                // Draw ROLLING FRICTION
+                                drawLeftAlignedLabelText("Rolling friction:", inputWidgetOffset);
+                                if(ImGui::DragFloat("##RollingFrictionDrag", &m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_rollingFriction, Config::GUIVar().editor_float_slider_speed))
+                                {
+                                    // If the rolling friction was changed, send a notification to the Rigid Body Component
+                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Physics::RollingFriction);
+                                }
+
+                                // Draw SPINNING FRICTION
+                                drawLeftAlignedLabelText("Spinning friction:", inputWidgetOffset);
+                                if(ImGui::DragFloat("##SpinningFrictionDrag", &m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_spinningFriction, Config::GUIVar().editor_float_slider_speed))
+                                {
+                                    // If the spinning friction was changed, send a notification to the Rigid Body Component
+                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Physics::SpinningFriction);
+                                }
+
                                 // Draw RESTITUTION
                                 drawLeftAlignedLabelText("Restitution:", inputWidgetOffset);
                                 if(ImGui::DragFloat("#RestitutionDrag", &m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_restitution, Config::GUIVar().editor_float_slider_speed))
@@ -1802,11 +1889,8 @@ void EditorWindow::update(const float p_deltaTime)
                                 {
                                     case RigidBodyComponent::CollisionShapeType::CollisionShapeType_Box:
                                         {
-                                            // Get the Bullet Physics collision shape
-                                            auto collisionShape = rigidBodyComponent->getCollisionShapeBox();
-
                                             // Get the collision shape data
-                                            m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeSize = Math::toGlmVec3(collisionShape->getImplicitShapeDimensions());
+                                            m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeSize = rigidBodyComponent->getCollisionShapeSize();
 
                                             // Draw BOX HALF EXTENTS
                                             drawLeftAlignedLabelText("Box half extents:", inputWidgetOffset);
@@ -1840,11 +1924,8 @@ void EditorWindow::update(const float p_deltaTime)
                                         break;
                                     case RigidBodyComponent::CollisionShapeType::CollisionShapeType_Sphere:
                                         {
-                                            // Get the Bullet Physics collision shape
-                                            auto collisionShape = rigidBodyComponent->getCollisionShapeSphere();
-
                                             // Get the collision shape data
-                                            m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeSize = Math::toGlmVec3(collisionShape->getImplicitShapeDimensions());
+                                            m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeSize = rigidBodyComponent->getCollisionShapeSize();
 
                                             // Draw SPHERE RADIUS
                                             drawLeftAlignedLabelText("Sphere radius:", inputWidgetOffset);
@@ -2021,7 +2102,7 @@ void EditorWindow::update(const float p_deltaTime)
 
                                 // Draw SOUND LISTENER ID
                                 drawLeftAlignedLabelText("Listener ID:", inputWidgetOffset);
-                                ImGui::InputInt("##ListenerIDInput", &m_selectedEntity.m_componentData.m_audioComponents.m_soundListenerConstructionInfo->m_listenerID);
+                                if(ImGui::InputInt("##ListenerIDInput", &m_selectedEntity.m_componentData.m_audioComponents.m_soundListenerConstructionInfo->m_listenerID))
                                 {
                                     // If the sound listener ID was changed, send a notification to the Sound Listener Component
                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundListenerComponent, Systems::Changes::Audio::ListenerID);
@@ -2117,214 +2198,215 @@ void EditorWindow::update(const float p_deltaTime)
                                     childWindowHeight = childWindowHeight > Config::GUIVar().editor_lua_variables_max_height ? Config::GUIVar().editor_lua_variables_max_height : childWindowHeight;
 
                                     ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0.0f);
-                                    if(!m_selectedEntity.m_luaVariables.empty() && ImGui::BeginChild("##LuaVariables", ImVec2(0, childWindowHeight), true, ImGuiWindowFlags_None))
+                                    if(ImGui::BeginChild("##LuaVariables", ImVec2(0, childWindowHeight), true, ImGuiWindowFlags_None))
                                     {
-                                        // Calculate item sizes and offsets
-                                        //const ImVec2 deleteButtonSize = ImVec2(m_fontSize * ((float)m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry].getTextureWidth() / (float)m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry].getTextureHeight()), fontSize);
-                                        //const ImVec2 addButtonSize = ImVec2(fontSize, fontSize);
-                                        const float itemSpacing = m_imguiStyle.ItemInnerSpacing.x;
-                                        const float windowWidth = ImGui::GetContentRegionAvail().x;
-                                        const float itemSpace = windowWidth - (itemSpacing * 3) - m_buttonSizedByFont.x - m_imguiStyle.FramePadding.x * 2;
-                                        const float itemSizes[3] = { itemSpace / 2.5f, itemSpace / 5.0f, itemSpace / 2.5f };
-                                        const float offsets[2] = { itemSizes[0] + itemSpacing, itemSizes[0] + itemSizes[1] + (itemSpacing * 2) };
-
-                                        // Draw LUA VARIABLES table column labels
-                                        float textSize = ImGui::CalcTextSize("Names:").x;
-                                        ImGui::AlignTextToFramePadding();
-                                        ImGui::SetCursorPosX(textSize + (textSize / 2.0f) > itemSizes[0] ? 0.0f : (itemSizes[0] / 2.0f) - (textSize / 2.0f));
-                                        ImGui::SetNextItemWidth(itemSizes[0]);
-                                        ImGui::Text("Names:");
-
-                                        textSize = ImGui::CalcTextSize("Types:").x;
-                                        ImGui::SameLine();
-                                        ImGui::SetCursorPosX(textSize + (textSize / 2.0f) > itemSizes[1] ? offsets[0] : offsets[0] + (itemSizes[1] / 2.0f) - (textSize / 2.0f));
-                                        ImGui::SetNextItemWidth(itemSizes[1]);
-                                        ImGui::Text("Types:");
-
-                                        textSize = ImGui::CalcTextSize("Values:").x;
-                                        ImGui::SameLine();
-                                        ImGui::SetCursorPosX(textSize + (textSize / 2.0f) > itemSizes[2] ? offsets[1] : offsets[1] + (itemSizes[2] / 2.0f) - (textSize / 2.0f));
-                                        ImGui::SetNextItemWidth(itemSizes[2]);
-                                        ImGui::Text("Values:");
-
-                                        // Draw LUA VARIABLES table
-                                        for(decltype(m_selectedEntity.m_luaVariables.size()) i = 0, size = m_selectedEntity.m_luaVariables.size(); i < size; i++)
+                                        if(!m_selectedEntity.m_luaVariables.empty())
                                         {
-                                            const std::string widgetName = ("##" + Utilities::toString(i));
+                                            // Calculate item sizes and offsets
+                                            const float itemSpacing = m_imguiStyle.ItemInnerSpacing.x;
+                                            const float windowWidth = ImGui::GetContentRegionAvail().x;
+                                            const float itemSpace = windowWidth - (itemSpacing * 3) - m_buttonSizedByFont.x - m_imguiStyle.FramePadding.x * 2;
+                                            const float itemSizes[3] = { itemSpace / 2.5f, itemSpace / 5.0f, itemSpace / 2.5f };
+                                            const float offsets[2] = { itemSizes[0] + itemSpacing, itemSizes[0] + itemSizes[1] + (itemSpacing * 2) };
 
+                                            // Draw LUA VARIABLES table column labels
+                                            float textSize = ImGui::CalcTextSize("Names:").x;
                                             ImGui::AlignTextToFramePadding();
+                                            ImGui::SetCursorPosX(textSize + (textSize / 2.0f) > itemSizes[0] ? 0.0f : (itemSizes[0] / 2.0f) - (textSize / 2.0f));
                                             ImGui::SetNextItemWidth(itemSizes[0]);
-                                            if(ImGui::InputText((widgetName + "LuaVariableName").c_str(), &m_selectedEntity.m_luaVariables[i].first, ImGuiInputTextFlags_EnterReturnsTrue))
-                                            {
-                                                m_selectedEntity.m_luaVariablesModified = true;
-                                            }
+                                            ImGui::Text("Names:");
 
+                                            textSize = ImGui::CalcTextSize("Types:").x;
                                             ImGui::SameLine();
-                                            ImGui::SetCursorPosX(offsets[0]);
+                                            ImGui::SetCursorPosX(textSize + (textSize / 2.0f) > itemSizes[1] ? offsets[0] : offsets[0] + (itemSizes[1] / 2.0f) - (textSize / 2.0f));
                                             ImGui::SetNextItemWidth(itemSizes[1]);
-                                            int variableType = m_selectedEntity.m_luaVariables[i].second.getVariableType();
-                                            if(ImGui::Combo((widgetName + "LuaVariableTypeCombo").c_str(), &variableType, &m_luaVariableTypeStrings[0], (int)m_luaVariableTypeStrings.size()))
+                                            ImGui::Text("Types:");
+
+                                            textSize = ImGui::CalcTextSize("Values:").x;
+                                            ImGui::SameLine();
+                                            ImGui::SetCursorPosX(textSize + (textSize / 2.0f) > itemSizes[2] ? offsets[1] : offsets[1] + (itemSizes[2] / 2.0f) - (textSize / 2.0f));
+                                            ImGui::SetNextItemWidth(itemSizes[2]);
+                                            ImGui::Text("Values:");
+
+                                            // Draw LUA VARIABLES table
+                                            for(decltype(m_selectedEntity.m_luaVariables.size()) i = 0, size = m_selectedEntity.m_luaVariables.size(); i < size; i++)
                                             {
-                                                m_selectedEntity.m_luaVariablesModified = true;
-                                                switch(variableType)
+                                                const std::string widgetName = ("##" + Utilities::toString(i));
+
+                                                ImGui::AlignTextToFramePadding();
+                                                ImGui::SetNextItemWidth(itemSizes[0]);
+                                                if(ImGui::InputText((widgetName + "LuaVariableName").c_str(), &m_selectedEntity.m_luaVariables[i].first, ImGuiInputTextFlags_EnterReturnsTrue))
+                                                {
+                                                    m_selectedEntity.m_luaVariablesModified = true;
+                                                }
+
+                                                ImGui::SameLine();
+                                                ImGui::SetCursorPosX(offsets[0]);
+                                                ImGui::SetNextItemWidth(itemSizes[1]);
+                                                int variableType = m_selectedEntity.m_luaVariables[i].second.getVariableType();
+                                                if(ImGui::Combo((widgetName + "LuaVariableTypeCombo").c_str(), &variableType, &m_luaVariableTypeStrings[0], (int)m_luaVariableTypeStrings.size()))
+                                                {
+                                                    m_selectedEntity.m_luaVariablesModified = true;
+                                                    switch(variableType)
+                                                    {
+                                                        case Property::PropertyVariableType::Type_null:
+                                                            m_selectedEntity.m_luaVariables[i].second = Property();
+                                                            break;
+                                                        case Property::PropertyVariableType::Type_bool:
+                                                            m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getBool());
+                                                            break;
+                                                        case Property::PropertyVariableType::Type_int:
+                                                            m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getInt());
+                                                            break;
+                                                        case Property::PropertyVariableType::Type_float:
+                                                            m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getFloat());
+                                                            break;
+                                                        case Property::PropertyVariableType::Type_double:
+                                                            m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getDouble());
+                                                            break;
+                                                        case Property::PropertyVariableType::Type_vec2i:
+                                                            m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getVec2i());
+                                                            break;
+                                                        case Property::PropertyVariableType::Type_vec2f:
+                                                            m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getVec2f());
+                                                            break;
+                                                        case Property::PropertyVariableType::Type_vec3f:
+                                                            m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getVec3f());
+                                                            break;
+                                                        case Property::PropertyVariableType::Type_vec4f:
+                                                            m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getVec4f());
+                                                            break;
+                                                        case Property::PropertyVariableType::Type_string:
+                                                            m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getString());
+                                                            break;
+                                                        case Property::PropertyVariableType::Type_propertyID:
+                                                            m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getPropertyID());
+                                                            break;
+                                                    }
+                                                }
+
+                                                ImGui::SameLine();
+                                                ImGui::SetCursorPosX(offsets[1]);
+                                                ImGui::SetNextItemWidth(itemSizes[2]);
+                                                switch(m_selectedEntity.m_luaVariables[i].second.getVariableType())
                                                 {
                                                     case Property::PropertyVariableType::Type_null:
-                                                        m_selectedEntity.m_luaVariables[i].second = Property();
+                                                        {
+                                                            ImGui::Text("");
+                                                        }
                                                         break;
                                                     case Property::PropertyVariableType::Type_bool:
-                                                        m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getBool());
+                                                        {
+                                                            bool value = m_selectedEntity.m_luaVariables[i].second.getBool();
+                                                            if(ImGui::Checkbox((widgetName + "LuaVariableBoolCheckbox").c_str(), &value))
+                                                            {
+                                                                m_selectedEntity.m_luaVariablesModified = true;
+                                                                m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
+                                                            }
+                                                        }
                                                         break;
                                                     case Property::PropertyVariableType::Type_int:
-                                                        m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getInt());
+                                                        {
+                                                            int value = m_selectedEntity.m_luaVariables[i].second.getInt();
+                                                            ImGui::InputInt((widgetName + "LuaVariableIntInput").c_str(), &value);
+                                                            {
+                                                                m_selectedEntity.m_luaVariablesModified = true;
+                                                                m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
+                                                            }
+                                                        }
                                                         break;
                                                     case Property::PropertyVariableType::Type_float:
-                                                        m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getFloat());
+                                                        {
+                                                            float value = m_selectedEntity.m_luaVariables[i].second.getFloat();
+                                                            if(ImGui::DragFloat((widgetName + "LuaVariableFloatDrag").c_str(), &value, Config::GUIVar().editor_float_slider_speed))
+                                                            {
+                                                                m_selectedEntity.m_luaVariablesModified = true;
+                                                                m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
+                                                            }
+                                                        }
                                                         break;
                                                     case Property::PropertyVariableType::Type_double:
-                                                        m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getDouble());
+                                                        {
+                                                            double value = m_selectedEntity.m_luaVariables[i].second.getDouble();
+                                                            if(ImGui::DragScalar((widgetName + "LuaVariableDoubleDrag").c_str(), ImGuiDataType_Double, &value, 0.0005f))
+                                                            {
+                                                                m_selectedEntity.m_luaVariablesModified = true;
+                                                                m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
+                                                            }
+                                                        }
                                                         break;
                                                     case Property::PropertyVariableType::Type_vec2i:
-                                                        m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getVec2i());
+                                                        {
+                                                            glm::ivec2 value = m_selectedEntity.m_luaVariables[i].second.getVec2i();
+                                                            if(ImGui::InputInt2((widgetName + "LuaVariableVec2iDrag").c_str(), glm::value_ptr(value)))
+                                                            {
+                                                                m_selectedEntity.m_luaVariablesModified = true;
+                                                                m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
+                                                            }
+                                                        }
                                                         break;
                                                     case Property::PropertyVariableType::Type_vec2f:
-                                                        m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getVec2f());
+                                                        {
+                                                            glm::vec2 value = m_selectedEntity.m_luaVariables[i].second.getVec2f();
+                                                            if(ImGui::DragFloat2((widgetName + "LuaVariableVec2fDrag").c_str(), glm::value_ptr(value), Config::GUIVar().editor_float_slider_speed))
+                                                            {
+                                                                m_selectedEntity.m_luaVariablesModified = true;
+                                                                m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
+                                                            }
+                                                        }
                                                         break;
                                                     case Property::PropertyVariableType::Type_vec3f:
-                                                        m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getVec3f());
+                                                        {
+                                                            glm::vec3 value = m_selectedEntity.m_luaVariables[i].second.getVec3f();
+                                                            if(ImGui::DragFloat3((widgetName + "LuaVariableVec3fDrag").c_str(), glm::value_ptr(value), Config::GUIVar().editor_float_slider_speed))
+                                                            {
+                                                                m_selectedEntity.m_luaVariablesModified = true;
+                                                                m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
+                                                            }
+                                                        }
                                                         break;
                                                     case Property::PropertyVariableType::Type_vec4f:
-                                                        m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getVec4f());
+                                                        {
+                                                            glm::vec4 value = m_selectedEntity.m_luaVariables[i].second.getVec4f();
+                                                            if(ImGui::DragFloat4((widgetName + "LuaVariableVec4fDrag").c_str(), glm::value_ptr(value), Config::GUIVar().editor_float_slider_speed))
+                                                            {
+                                                                m_selectedEntity.m_luaVariablesModified = true;
+                                                                m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
+                                                            }
+                                                        }
                                                         break;
                                                     case Property::PropertyVariableType::Type_string:
-                                                        m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getString());
+                                                        {
+                                                            std::string value = m_selectedEntity.m_luaVariables[i].second.getString();
+                                                            if(ImGui::InputText((widgetName + "LuaVariableStringInput").c_str(), &value, ImGuiInputTextFlags_EnterReturnsTrue))
+                                                            {
+                                                                m_selectedEntity.m_luaVariablesModified = true;
+                                                                m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
+                                                            }
+                                                        }
                                                         break;
                                                     case Property::PropertyVariableType::Type_propertyID:
-                                                        m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), m_selectedEntity.m_luaVariables[i].second.getPropertyID());
+                                                        {
+                                                            unsigned int value = m_selectedEntity.m_luaVariables[i].second.getID();
+                                                            ImGui::InputScalar((widgetName + "LuaVariablePropertyIDInput").c_str(), ImGuiDataType_U32, &value);
+                                                            {
+                                                                m_selectedEntity.m_luaVariablesModified = true;
+                                                                if(value >= 0 && value < Properties::PropertyID::NumberOfPropertyIDs)
+                                                                    m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), static_cast<Properties::PropertyID>(value));
+                                                            }
+                                                        }
                                                         break;
                                                 }
-                                            }
 
-                                            ImGui::SameLine();
-                                            ImGui::SetCursorPosX(offsets[1]);
-                                            ImGui::SetNextItemWidth(itemSizes[2]);
-                                            switch(m_selectedEntity.m_luaVariables[i].second.getVariableType())
-                                            {
-                                                case Property::PropertyVariableType::Type_null:
-                                                    {
-                                                        ImGui::Text("");
-                                                    }
-                                                    break;
-                                                case Property::PropertyVariableType::Type_bool:
-                                                    {
-                                                        bool value = m_selectedEntity.m_luaVariables[i].second.getBool();
-                                                        if(ImGui::Checkbox((widgetName + "LuaVariableBoolCheckbox").c_str(), &value))
-                                                        {
-                                                            m_selectedEntity.m_luaVariablesModified = true;
-                                                            m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
-                                                        }
-                                                    }
-                                                    break;
-                                                case Property::PropertyVariableType::Type_int:
-                                                    {
-                                                        int value = m_selectedEntity.m_luaVariables[i].second.getInt();
-                                                        ImGui::InputInt((widgetName + "LuaVariableIntInput").c_str(), &value);
-                                                        {
-                                                            m_selectedEntity.m_luaVariablesModified = true;
-                                                            m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
-                                                        }
-                                                    }
-                                                    break;
-                                                case Property::PropertyVariableType::Type_float:
-                                                    {
-                                                        float value = m_selectedEntity.m_luaVariables[i].second.getFloat();
-                                                        if(ImGui::DragFloat((widgetName + "LuaVariableFloatDrag").c_str(), &value, Config::GUIVar().editor_float_slider_speed))
-                                                        {
-                                                            m_selectedEntity.m_luaVariablesModified = true;
-                                                            m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
-                                                        }
-                                                    }
-                                                    break;
-                                                case Property::PropertyVariableType::Type_double:
-                                                    {
-                                                        double value = m_selectedEntity.m_luaVariables[i].second.getDouble();
-                                                        if(ImGui::DragScalar((widgetName + "LuaVariableDoubleDrag").c_str(), ImGuiDataType_Double, &value, 0.0005f))
-                                                        {
-                                                            m_selectedEntity.m_luaVariablesModified = true;
-                                                            m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
-                                                        }
-                                                    }
-                                                    break;
-                                                case Property::PropertyVariableType::Type_vec2i:
-                                                    {
-                                                        glm::ivec2 value = m_selectedEntity.m_luaVariables[i].second.getVec2i();
-                                                        if(ImGui::InputInt2((widgetName + "LuaVariableVec2iDrag").c_str(), glm::value_ptr(value)))
-                                                        {
-                                                            m_selectedEntity.m_luaVariablesModified = true;
-                                                            m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
-                                                        }
-                                                    }
-                                                    break;
-                                                case Property::PropertyVariableType::Type_vec2f:
-                                                    {
-                                                        glm::vec2 value = m_selectedEntity.m_luaVariables[i].second.getVec2f();
-                                                        if(ImGui::DragFloat2((widgetName + "LuaVariableVec2fDrag").c_str(), glm::value_ptr(value), Config::GUIVar().editor_float_slider_speed))
-                                                        {
-                                                            m_selectedEntity.m_luaVariablesModified = true;
-                                                            m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
-                                                        }
-                                                    }
-                                                    break;
-                                                case Property::PropertyVariableType::Type_vec3f:
-                                                    {
-                                                        glm::vec3 value = m_selectedEntity.m_luaVariables[i].second.getVec3f();
-                                                        if(ImGui::DragFloat3((widgetName + "LuaVariableVec3fDrag").c_str(), glm::value_ptr(value), Config::GUIVar().editor_float_slider_speed))
-                                                        {
-                                                            m_selectedEntity.m_luaVariablesModified = true;
-                                                            m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
-                                                        }
-                                                    }
-                                                    break;
-                                                case Property::PropertyVariableType::Type_vec4f:
-                                                    {
-                                                        glm::vec4 value = m_selectedEntity.m_luaVariables[i].second.getVec4f();
-                                                        if(ImGui::DragFloat4((widgetName + "LuaVariableVec4fDrag").c_str(), glm::value_ptr(value), Config::GUIVar().editor_float_slider_speed))
-                                                        {
-                                                            m_selectedEntity.m_luaVariablesModified = true;
-                                                            m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
-                                                        }
-                                                    }
-                                                    break;
-                                                case Property::PropertyVariableType::Type_string:
-                                                    {
-                                                        std::string value = m_selectedEntity.m_luaVariables[i].second.getString();
-                                                        if(ImGui::InputText((widgetName + "LuaVariableStringInput").c_str(), &value, ImGuiInputTextFlags_EnterReturnsTrue))
-                                                        {
-                                                            m_selectedEntity.m_luaVariablesModified = true;
-                                                            m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
-                                                        }
-                                                    }
-                                                    break;
-                                                case Property::PropertyVariableType::Type_propertyID:
-                                                    {
-                                                        unsigned int value = m_selectedEntity.m_luaVariables[i].second.getID();
-                                                        ImGui::InputScalar((widgetName + "LuaVariablePropertyIDInput").c_str(), ImGuiDataType_U32, &value);
-                                                        {
-                                                            m_selectedEntity.m_luaVariablesModified = true;
-                                                            if(value >= 0 && value < Properties::PropertyID::NumberOfPropertyIDs)
-                                                                m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), static_cast<Properties::PropertyID>(value));
-                                                        }
-                                                    }
-                                                    break;
-                                            }
-
-                                            // Draw DELETE button
-                                            ImGui::SameLine(calcTextSizedButtonOffset(0) - m_imguiStyle.FramePadding.x);
-                                            if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry], widgetName + "LuaVariablesDeleteButton", "Delete Lua variable"))
-                                            {
-                                                m_selectedEntity.m_luaVariablesModified = true;
-                                                m_selectedEntity.m_luaVariables.erase(m_selectedEntity.m_luaVariables.begin() + i);
-                                                size = m_selectedEntity.m_luaVariables.size();
-                                                i--;
+                                                // Draw DELETE button
+                                                ImGui::SameLine(calcTextSizedButtonOffset(0) - m_imguiStyle.FramePadding.x);
+                                                if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_DeleteEntry], widgetName + "LuaVariablesDeleteButton", "Delete Lua variable"))
+                                                {
+                                                    m_selectedEntity.m_luaVariablesModified = true;
+                                                    m_selectedEntity.m_luaVariables.erase(m_selectedEntity.m_luaVariables.begin() + i);
+                                                    size = m_selectedEntity.m_luaVariables.size();
+                                                    i--;
+                                                }
                                             }
                                         }
 
@@ -2338,6 +2420,13 @@ void EditorWindow::update(const float p_deltaTime)
 
                                         ImGui::EndChild();
                                     }
+
+                                    if(m_selectedEntity.m_luaVariablesModified)
+                                    {
+                                        m_selectedEntity.m_luaVariablesModified = false;
+                                        m_systemScene->getSceneLoader()->getChangeController()->sendData(luaComponent, DataType::DataType_LuaVariables, (void *)&m_selectedEntity.m_luaVariables, false);
+                                    }
+
                                     ImGui::PopStyleVar();
                                 }
                             }
@@ -2472,11 +2561,13 @@ void EditorWindow::update(const float p_deltaTime)
                                         case ComponentType::ComponentType_RigidBodyComponent:
                                             {
                                                 newComponentInfo->m_physicsComponents.m_rigidBodyConstructionInfo = new RigidBodyComponent::RigidBodyComponentConstructionInfo();
+                                                newComponentInfo->m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeType = RigidBodyComponent::CollisionShapeType::CollisionShapeType_Box;
                                             }
                                             break;
                                         case ComponentType::ComponentType_LuaComponent:
                                             {
                                                 newComponentInfo->m_scriptComponents.m_luaConstructionInfo = new LuaComponent::LuaComponentConstructionInfo();
+                                                newComponentInfo->m_scriptComponents.m_luaConstructionInfo->m_luaScriptFilename = Config::scriptVar().defaultScriptFilename;
                                             }
                                             break;
                                         case ComponentType::ComponentType_ObjectMaterialComponent:
@@ -2548,9 +2639,21 @@ void EditorWindow::update(const float p_deltaTime)
 
                     ImGui::SeparatorText("Graphics settings:");
 
+                    // Draw PARALLAX METHOD
+                    drawLeftAlignedLabelText("Parallax method:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
+                    ImGui::SliderInt("##ParallaxMethodSlider", &Config::m_rendererVar.parallax_mapping_method, 1, 5, "%d");
+
                     // Draw PARALLAX LOD
                     drawLeftAlignedLabelText("Parallax LOD:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
                     ImGui::DragFloat("##ParallaxLODDrag", &Config::m_graphicsVar.LOD_parallax_mapping, 0.1f, 0.0f, 100000.0f, "%.5f");
+
+                    // Draw PARALLAX MIN STEPS
+                    drawLeftAlignedLabelText("Parallax min steps:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
+                    ImGui::SliderFloat("##ParallaxMinStepsDrag", &Config::m_rendererVar.parallax_mapping_min_steps, 1.0f, 128.0f, "%.0f");
+
+                    // Draw PARALLAX MAX STEPS
+                    drawLeftAlignedLabelText("Parallax max steps:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
+                    ImGui::SliderFloat("##ParallaxMaxStepsDrag", &Config::m_rendererVar.parallax_mapping_max_steps, 1.0f, 128.0f, "%.0f");
 
                     ImGui::SeparatorText("Renderer settings:");
 
@@ -3949,19 +4052,19 @@ void EditorWindow::setup(EditorWindowSettings &p_editorWindowSettings)
     //	|  WARNING: ORDER DEPENDENT  |
     //	|      TEXTURE CREATION      |
     //	|____________________________|
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_pause_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_play_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_restart_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_gui_sequence_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_scripting_enabled_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_delete_entry_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_add_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_open_file_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_reload_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_open_asset_list_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_arrow_up_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_guizmo_rotate_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::GUIVar().editor_button_guizmo_translate_texture));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_pause_texture));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_play_texture));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_restart_texture));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_gui_sequence_texture));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_scripting_enabled_texture));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_delete_entry_texture));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_add_texture));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_open_file_texture));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_reload_texture));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_open_asset_list_texture));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_arrow_up_texture));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_guizmo_rotate_texture));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_guizmo_translate_texture));
 
     assert(m_buttonTextures.size() == ButtonTextureType::ButtonTextureType_NumOfTypes && "m_buttonTextures array is different size than the number of button textures, in EditorWindow.cpp");
 
@@ -4146,27 +4249,56 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
 
     ImGui::SeparatorText("Graphics scene settings:");
 
-    // Draw AMBIENT LIGHT INTENSITY
-    drawLeftAlignedLabelText("Ambient light intensity:", inputWidgetOffset);
-    if(ImGui::DragFloat("##AmbientLightIntensityDrag", &p_sceneData.m_ambientIntensity, 0.001f, 0.0f, 100000.0f, "%.5f") && p_sendChanges)
+    bool miscSceneDataChanged = false;
+
+    // Draw ACTIVE CAMERA ID
+    drawLeftAlignedLabelText("Active camera ID:", inputWidgetOffset);
+    if(ImGui::InputInt("##ActiveCameraIDInput", &p_sceneData.m_activeCameraID) && p_sendChanges)
     {
-        m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), Systems::Changes::Graphics::AmbientIntensity);
-        p_sceneData.m_modified = true;
-    }
-    
-    // Draw Z FAR
-    drawLeftAlignedLabelText("Projection Z far:", inputWidgetOffset);
-    if(ImGui::DragFloat("##ZBufferFarDrag", &p_sceneData.m_zFar, 0.1f, 0.0f, 100000.0f, "%.5f") && p_sendChanges)
-    {
-        m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), Systems::Changes::Graphics::ZFar);
-        p_sceneData.m_modified = true;
+        // If the active camera ID was changed, send a notification to the Graphics Scene
+        m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), Systems::Changes::Graphics::ActiveCameraID);
     }
 
-    // Draw Z NEAR
-    drawLeftAlignedLabelText("Projection Z near:", inputWidgetOffset);
-    if(ImGui::DragFloat("##ZBufferNearDrag", &p_sceneData.m_zNear, 0.0001f, 0.0f, 100000.0f, "%.5f") && p_sendChanges)
+    // Draw TEXTURE REPETITION SEAM FIX
+    drawLeftAlignedLabelText("Tex repetition seam fix:", inputWidgetOffset);
+    if(ImGui::Checkbox("##TexRepetitionSeamFixCheckbox", &p_sceneData.m_miscSceneData.m_stochasticSamplingSeamFix) && p_sendChanges)
     {
-        m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), Systems::Changes::Graphics::ZNear);
+        miscSceneDataChanged = true;
+    }
+
+    if(ImGui::BeginChild("##AmbientLightIntensitySettings", ImVec2(0.0f, (m_fontSize + m_imguiStyle.FramePadding.y * 2 + m_imguiStyle.ItemSpacing.y) * 4), true))
+    {
+        ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextBorderSize, 0.0f);
+        ImGui::SeparatorText("Ambient light intensity:");
+        ImGui::PopStyleVar(); //ImGuiStyleVar_SeparatorTextBorderSize
+
+        // Draw AMBIENT LIGHT INTENSITY
+        drawLeftAlignedLabelText("Directional light:", inputWidgetOffset);
+        if(ImGui::DragFloat("##DirLightAmbientIntensityDrag", &p_sceneData.m_miscSceneData.m_ambientIntensityDirectional, 0.001f, 0.0f, 100000.0f, "%.5f") && p_sendChanges)
+        {
+            miscSceneDataChanged = true;
+        }
+
+        // Draw AMBIENT LIGHT INTENSITY
+        drawLeftAlignedLabelText("Point light:", inputWidgetOffset);
+        if(ImGui::DragFloat("##PointLightAmbientIntensityDrag", &p_sceneData.m_miscSceneData.m_ambientIntensityPoint, 0.001f, 0.0f, 100000.0f, "%.5f") && p_sendChanges)
+        {
+            miscSceneDataChanged = true;
+        }
+
+        // Draw AMBIENT LIGHT INTENSITY
+        drawLeftAlignedLabelText("Spot light:", inputWidgetOffset);
+        if(ImGui::DragFloat("##SpotLightAmbientIntensityDrag", &p_sceneData.m_miscSceneData.m_ambientIntensitySpot, 0.001f, 0.0f, 100000.0f, "%.5f") && p_sendChanges)
+        {
+            miscSceneDataChanged = true;
+        }
+    }
+    ImGui::EndChild();
+
+    // Send the new misc scene data to the renderer
+    if(miscSceneDataChanged)
+    {
+        m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_MiscSceneData, (void *)&p_sceneData.m_miscSceneData, false);
         p_sceneData.m_modified = true;
     }
 
@@ -4750,11 +4882,10 @@ void EditorWindow::updateSceneData(SceneData &p_sceneData)
         p_sceneData.m_volume[i] = audioScene->getVolume(static_cast<AudioBusType>(i));
 
     // Set graphics data
+    p_sceneData.m_activeCameraID = graphicsScene->getSceneObjects().m_activeCameraID;
     p_sceneData.m_aoData = graphicsScene->getAmbientOcclusionData();
+    p_sceneData.m_miscSceneData = graphicsScene->getMiscSceneData();
     p_sceneData.m_shadowMappingData = graphicsScene->getShadowMappingData();
-    p_sceneData.m_ambientIntensity = graphicsScene->getSceneObjects().m_ambientIntensity;
-    p_sceneData.m_zFar = graphicsScene->getSceneObjects().m_zFar;
-    p_sceneData.m_zNear = graphicsScene->getSceneObjects().m_zNear;
 
     // Add rendering passes
     p_sceneData.m_renderingPasses.clear();
@@ -5045,23 +5176,29 @@ void EditorWindow::updateAssetLists()
     const auto &shaderPool = Loaders::shader().getObjectPool();
     for(decltype(shaderPool.size()) i = 0, size = shaderPool.size(); i < size; i++)
     {
-        // Set the shader name based on the types of shader present
-        std::string shaderName = shaderPool[i]->getShaderFilename(ShaderType::ShaderType_Fragment);
-        if(shaderName.empty())
+        // Get the shader name
+        std::string shaderName = shaderPool[i]->getCombinedFilename();
+
+        // If the name was auto generated, set the shader name based on the types of shader present
+        if(shaderPool[i]->isNameAutoGenerated())
         {
-            shaderName = shaderPool[i]->getShaderFilename(ShaderType::ShaderType_Vertex);
+            shaderName = shaderPool[i]->getShaderFilename(ShaderType::ShaderType_Fragment);
             if(shaderName.empty())
             {
-                shaderName = shaderPool[i]->getShaderFilename(ShaderType::ShaderType_Compute);
+                shaderName = shaderPool[i]->getShaderFilename(ShaderType::ShaderType_Vertex);
                 if(shaderName.empty())
                 {
-                    shaderName = shaderPool[i]->getShaderFilename(ShaderType::ShaderType_Geometry);
+                    shaderName = shaderPool[i]->getShaderFilename(ShaderType::ShaderType_Compute);
                     if(shaderName.empty())
                     {
-                        shaderName = shaderPool[i]->getShaderFilename(ShaderType::ShaderType_TessControl);
+                        shaderName = shaderPool[i]->getShaderFilename(ShaderType::ShaderType_Geometry);
                         if(shaderName.empty())
                         {
-                            shaderName = shaderPool[i]->getShaderFilename(ShaderType::ShaderType_TessEvaluation);
+                            shaderName = shaderPool[i]->getShaderFilename(ShaderType::ShaderType_TessControl);
+                            if(shaderName.empty())
+                            {
+                                shaderName = shaderPool[i]->getShaderFilename(ShaderType::ShaderType_TessEvaluation);
+                            }
                         }
                     }
                 }
@@ -5135,8 +5272,8 @@ void EditorWindow::generateNewMap(PropertySet &p_newSceneProperties, SceneData &
     editorCameraObjectEntry.addProperty(Properties::PropertyID::ID, 2000000000);
     editorCameraObjectEntry.addProperty(Properties::PropertyID::Parent, 0);
     editorCameraObjectEntry.addPropertySet(Properties::PropertyID::Graphics).addPropertySet(Properties::PropertyID::CameraComponent);
-    editorCameraObjectEntry.addPropertySet(Properties::PropertyID::World).addPropertySet(Properties::PropertyID::SpatialComponent);
     editorCameraObjectEntry.addPropertySet(Properties::PropertyID::Script).addPropertySet(Properties::PropertyID::LuaComponent).addProperty(Properties::PropertyID::Filename, std::string("Camera_free_object_spawn.lua"));
+    editorCameraObjectEntry.addPropertySet(Properties::PropertyID::World).addPropertySet(Properties::PropertyID::SpatialComponent);
 
     // Add root property set for systems
     auto &rootSystemsPropertySet = p_newSceneProperties.addPropertySet(Properties::Systems);
@@ -5152,7 +5289,61 @@ void EditorWindow::generateNewMap(PropertySet &p_newSceneProperties, SceneData &
         }
     }
 
+    // Add graphics settings
+    auto &graphicsScenePropertySet = rootSystemsPropertySet.addPropertySet(Properties::PropertyID::Graphics).addPropertySet(Properties::PropertyID::Scene);
+    graphicsScenePropertySet.addProperty(Properties::PropertyID::CameraID, p_sceneData.m_activeCameraID);
+    graphicsScenePropertySet.addProperty(Properties::PropertyID::StochasticSamplingSeamFix, p_sceneData.m_miscSceneData.m_stochasticSamplingSeamFix);
+
+    // Add ambient intensity
+    auto &ambientPropertySet = graphicsScenePropertySet.addPropertySet(Properties::AmbientIntensity);
+    ambientPropertySet.addProperty(Properties::DirectionalLight, p_sceneData.m_miscSceneData.m_ambientIntensityDirectional);
+    ambientPropertySet.addProperty(Properties::PointLight, p_sceneData.m_miscSceneData.m_ambientIntensityPoint);
+    ambientPropertySet.addProperty(Properties::SpotLight, p_sceneData.m_miscSceneData.m_ambientIntensitySpot);
+
+    // Add ambient occlusion settings
+    auto &aoPropertySet = graphicsScenePropertySet.addPropertySet(Properties::PropertyID::AmbientOcclusion);
+    switch(p_sceneData.m_aoData.m_aoType)
+    {
+        case AmbientOcclusionType::AmbientOcclusionType_SSAO:
+            aoPropertySet.addProperty(Properties::PropertyID::Type, Properties::PropertyID::SSAO);
+            break;
+        case AmbientOcclusionType::AmbientOcclusionType_HBAO:
+            aoPropertySet.addProperty(Properties::PropertyID::Type, Properties::PropertyID::HBAO);
+            break;
+        case AmbientOcclusionType::AmbientOcclusionType_None:
+            aoPropertySet.addProperty(Properties::PropertyID::Type, Properties::PropertyID::None);
+        default:
+            break;
+    }
+    aoPropertySet.addProperty(Properties::PropertyID::Bias, p_sceneData.m_aoData.m_aoBias);
+    aoPropertySet.addProperty(Properties::PropertyID::Radius, p_sceneData.m_aoData.m_aoRadius);
+    aoPropertySet.addProperty(Properties::PropertyID::Intensity, p_sceneData.m_aoData.m_aoIntensity);
+    aoPropertySet.addProperty(Properties::PropertyID::Directions, p_sceneData.m_aoData.m_aoNumOfDirections);
+    aoPropertySet.addProperty(Properties::PropertyID::Samples, p_sceneData.m_aoData.m_aoNumOfSamples);
+    aoPropertySet.addProperty(Properties::PropertyID::Steps, p_sceneData.m_aoData.m_aoNumOfSteps);
+    aoPropertySet.addProperty(Properties::PropertyID::BlurSamples, p_sceneData.m_aoData.m_aoBlurNumOfSamples);
+    aoPropertySet.addProperty(Properties::PropertyID::BlurSharpness, p_sceneData.m_aoData.m_aoBlurSharpness);
+
     // Add rendering passes
-    auto &graphicsScenePropertySet = rootSystemsPropertySet.addPropertySet(Properties::Graphics).addPropertySet(Properties::Scene);
     RendererScene::exportRenderingPasses(graphicsScenePropertySet, p_sceneData.m_renderingPasses);
+
+    // Add shadow mapping settings
+    auto &shadowMappingPropertySet = graphicsScenePropertySet.addPropertySet(Properties::PropertyID::ShadowMapping);
+    shadowMappingPropertySet.addProperty(Properties::PropertyID::PenumbraSize, p_sceneData.m_shadowMappingData.m_penumbraSize);
+    shadowMappingPropertySet.addProperty(Properties::PropertyID::PenumbraScaleRange, p_sceneData.m_shadowMappingData.m_penumbraScaleRange);
+    shadowMappingPropertySet.addProperty(Properties::PropertyID::Resolution, (int)p_sceneData.m_shadowMappingData.m_csmResolution);
+    shadowMappingPropertySet.addProperty(Properties::PropertyID::ZClipping, p_sceneData.m_shadowMappingData.m_zClipping);
+    shadowMappingPropertySet.addProperty(Properties::PropertyID::ZPlaneMultiplier, p_sceneData.m_shadowMappingData.m_csmCascadePlaneZMultiplier);
+    shadowMappingPropertySet.addPropertySet(Properties::PCF).addProperty(Properties::PropertyID::Samples, (int)p_sceneData.m_shadowMappingData.m_numOfPCFSamples);
+    auto &cascadesPropertySet = shadowMappingPropertySet.addPropertySet(Properties::PropertyID::Cascades);
+    for(auto &cascade : p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances)
+    {
+        auto &singleCascadePropertySet = cascadesPropertySet.addPropertySet(Properties::PropertyID::ArrayEntry);
+        if(cascade.m_distanceIsDivider)
+            singleCascadePropertySet.addProperty(Properties::PropertyID::Divider, cascade.m_cascadeFarDistance);
+        else
+            singleCascadePropertySet.addProperty(Properties::PropertyID::Distance, cascade.m_cascadeFarDistance);
+        singleCascadePropertySet.addProperty(Properties::PropertyID::BiasMax, cascade.m_maxBias);
+        singleCascadePropertySet.addProperty(Properties::PropertyID::PenumbraScale, cascade.m_penumbraScale);
+    }
 }

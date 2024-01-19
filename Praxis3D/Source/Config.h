@@ -35,6 +35,7 @@ enum DataType : uint32_t
 	// Graphics
 	DataType_AmbientOcclusionData,		// AmbientOcclusionData
 	DataType_GUIPassFunctors,			// FunctorSequence
+	DataType_MiscSceneData,				// MiscSceneData
 	DataType_RenderToTexture,			// bool
 	DataType_RenderToTextureResolution, // glm::ivec2
 	DataType_ShadowMappingData,			// ShadowMappingData
@@ -54,7 +55,8 @@ enum DataType : uint32_t
 	// Physics
 	DataType_SimulationActive,			// bool
 	// Scripting
-	DataType_EnableLuaScripting			// bool
+	DataType_EnableLuaScripting,		// bool
+	DataType_LuaVariables				// std::vector<std::pair<std::string, Property>>
 };
 
 namespace Systems
@@ -259,38 +261,41 @@ namespace Systems
 			static constexpr BitMask Framebuffers			= Changes::Type::Graphics + Changes::Common::Shared28;
 			static constexpr BitMask Scene					= Changes::Type::Graphics + Changes::Common::Shared27;
 
-			static constexpr BitMask Target					= Changes::Type::Graphics + Changes::Graphics::Camera + Changes::Common::Shared1;
-			static constexpr BitMask UpVector				= Changes::Type::Graphics + Changes::Graphics::Camera + Changes::Common::Shared2;
-			static constexpr BitMask AllCamera				= Target | UpVector;
+			static constexpr BitMask CameraID				= Changes::Type::Graphics + Changes::Graphics::Camera + Changes::Common::Shared1;
+			static constexpr BitMask Target					= Changes::Type::Graphics + Changes::Graphics::Camera + Changes::Common::Shared2;
+			static constexpr BitMask UpVector				= Changes::Type::Graphics + Changes::Graphics::Camera + Changes::Common::Shared3;
+			static constexpr BitMask FOV					= Changes::Type::Graphics + Changes::Graphics::Camera + Changes::Common::Shared4;
+			static constexpr BitMask ZFar					= Changes::Type::Graphics + Changes::Graphics::Camera + Changes::Common::Shared5;
+			static constexpr BitMask ZNear					= Changes::Type::Graphics + Changes::Graphics::Camera + Changes::Common::Shared6;
+			static constexpr BitMask AllCamera				= CameraID | Target | UpVector | FOV | ZFar | ZNear;
 
-			static constexpr BitMask LightType				= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared3;
-			static constexpr BitMask Color					= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared4;
-			static constexpr BitMask CutoffAngle			= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared5;
-			static constexpr BitMask Direction				= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared6;
-			static constexpr BitMask Intensity				= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared7;
+			static constexpr BitMask LightType				= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared7;
+			static constexpr BitMask Color					= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared8;
+			static constexpr BitMask CutoffAngle			= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared9;
+			static constexpr BitMask Direction				= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared10;
+			static constexpr BitMask Intensity				= Changes::Type::Graphics + Changes::Graphics::Lighting + Changes::Common::Shared11;
 			static constexpr BitMask AllLighting			= LightType | Color | CutoffAngle | Direction | Intensity;
 
-			static constexpr BitMask PositionBuffer			= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared8;
-			static constexpr BitMask DiffuseBuffer			= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared9;
-			static constexpr BitMask NormalBuffer			= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared10;
-			static constexpr BitMask EmissiveBuffer			= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared11;
-			static constexpr BitMask MatPropertiesBuffer	= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared12;
-			static constexpr BitMask IntermediateBuffer		= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared13;
-			static constexpr BitMask FinalBuffer			= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared14;
-			static constexpr BitMask RenderToTextureBuffer	= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared15;
+			static constexpr BitMask PositionBuffer			= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared12;
+			static constexpr BitMask DiffuseBuffer			= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared13;
+			static constexpr BitMask NormalBuffer			= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared14;
+			static constexpr BitMask EmissiveBuffer			= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared15;
+			static constexpr BitMask MatPropertiesBuffer	= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared16;
+			static constexpr BitMask IntermediateBuffer		= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared17;
+			static constexpr BitMask FinalBuffer			= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared18;
+			static constexpr BitMask RenderToTextureBuffer	= Changes::Type::Graphics + Changes::Graphics::Framebuffers + Changes::Common::Shared19;
 			static constexpr BitMask AllBuffers				= PositionBuffer | DiffuseBuffer | NormalBuffer | EmissiveBuffer | MatPropertiesBuffer | 
 																IntermediateBuffer | FinalBuffer | RenderToTextureBuffer;
 
-			static constexpr BitMask AmbientIntensity		= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared16;
-			static constexpr BitMask AOIntensity			= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared17;
-			static constexpr BitMask AOBlurSharpness		= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared18;
-			static constexpr BitMask AOBias					= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared19;
-			static constexpr BitMask AONumOfSamples			= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared20;
-			static constexpr BitMask AORadius				= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared21;
-			static constexpr BitMask AOType					= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared22;
-			static constexpr BitMask ZFar					= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared23;
-			static constexpr BitMask ZNear					= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared24;
-			static constexpr BitMask AllScene				= AmbientIntensity | AOIntensity | AOBlurSharpness | AOBias | AONumOfSamples | AORadius | AOType | ZFar | ZNear;
+			static constexpr BitMask ActiveCameraID			= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared20;
+			static constexpr BitMask AmbientIntensity		= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared21;
+			static constexpr BitMask AOIntensity			= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared22;
+			static constexpr BitMask AOBlurSharpness		= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared23;
+			static constexpr BitMask AOBias					= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared24;
+			static constexpr BitMask AONumOfSamples			= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared25;
+			static constexpr BitMask AORadius				= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared26;
+			static constexpr BitMask AOType					= Changes::Type::Graphics + Changes::Graphics::Scene + Changes::Common::Shared27;
+			static constexpr BitMask AllScene				= ActiveCameraID | AmbientIntensity | AOIntensity | AOBlurSharpness | AOBias | AONumOfSamples | AORadius | AOType;
 
 			static constexpr BitMask All					= AllCamera | AllLighting | AllBuffers | AllScene;
 		}
@@ -305,12 +310,15 @@ namespace Systems
 			static constexpr BitMask CollisionShapeSize		= Changes::Type::Physics + Changes::Common::Shared1;
 			static constexpr BitMask CollisionShapeType		= Changes::Type::Physics + Changes::Common::Shared2;
 			static constexpr BitMask Friction				= Changes::Type::Physics + Changes::Common::Shared3;
-			static constexpr BitMask Mass					= Changes::Type::Physics + Changes::Common::Shared4;
-			static constexpr BitMask Restitution			= Changes::Type::Physics + Changes::Common::Shared5;
-			static constexpr BitMask Kinematic				= Changes::Type::Physics + Changes::Common::Shared6;
-			static constexpr BitMask Gravity				= Changes::Type::Physics + Changes::Common::Shared7;
+			static constexpr BitMask RollingFriction		= Changes::Type::Physics + Changes::Common::Shared4;
+			static constexpr BitMask SpinningFriction		= Changes::Type::Physics + Changes::Common::Shared5;
+			static constexpr BitMask Mass					= Changes::Type::Physics + Changes::Common::Shared6;
+			static constexpr BitMask Restitution			= Changes::Type::Physics + Changes::Common::Shared7;
+			static constexpr BitMask Kinematic				= Changes::Type::Physics + Changes::Common::Shared8;
+			static constexpr BitMask Gravity				= Changes::Type::Physics + Changes::Common::Shared9;
 
-			static constexpr BitMask All					= CollisionShapeType | CollisionShapeSize | Friction | Mass | Restitution | Kinematic | Gravity;
+			static constexpr BitMask All					= CollisionShapeType | CollisionShapeSize | Friction | RollingFriction | 
+																SpinningFriction | Mass | Restitution | Kinematic | Gravity;
 		}
 		namespace Script
 		{
@@ -391,6 +399,7 @@ namespace Properties
 	Code(BlurSharpness,) \
 	Code(Camera,) \
 	Code(CameraComponent,) \
+	Code(CameraID,) \
 	Code(Cascades,) \
 	Code(ClampToBorder,) \
 	Code(ClampToEdge,) \
@@ -408,6 +417,7 @@ namespace Properties
 	Code(EmissiveIntensity,) \
 	Code(EnvironmentMapDynamic,) \
 	Code(EnvironmentMapObject,) \
+	Code(FOV,) \
 	Code(FragmentShader,) \
 	Code(GeometryShader,) \
 	Code(Graphics,) \
@@ -461,6 +471,9 @@ namespace Properties
 	Code(SSAO,) \
 	Code(Static,) \
 	Code(Steps,) \
+	Code(StochasticSampling,) \
+	Code(StochasticSamplingScale,) \
+	Code(StochasticSamplingSeamFix,) \
 	Code(TessControlShader,) \
 	Code(TessEvaluationShader,) \
 	Code(TextureTilingFactor,) \
@@ -525,11 +538,13 @@ namespace Properties
 	Code(Mass,) \
 	Code(Physics,) \
 	Code(PhysicsObject,) \
+	Code(RollingFriction,) \
 	Code(Restitution,) \
 	Code(RigidBody,) \
 	Code(RigidBodyComponent,) \
 	Code(Size,) \
 	Code(Sphere,) \
+	Code(SpinningFriction,) \
 	Code(Velocity,) \
 	/* Script */ \
 	Code(Angle,) \
@@ -673,9 +688,9 @@ public:
 			bus_name_prefix = "bus:/";
 			bus_name_sfx = "SFX";
 			channel_name_master = "Master";
-			default_sound_bank = "Master.bank";
-			default_sound_bank_string = "Master.strings.bank";
-			default_impact_sound_bank = "Impact.bank";
+			default_sound_bank = "Default\\Master.bank";
+			default_sound_bank_string = "Default\\Master.strings.bank";
+			default_impact_sound_bank = "Default\\Impact.bank";
 			pathDelimiter = ":/";
 		}
 
@@ -880,7 +895,7 @@ public:
 		{
 			default_map = "default.pmap";
 			main_menu_map = "mainMenu.pmap";
-			play_map = "componentTest.pmap";
+			play_map = "default.pmap";
 			camera_freelook_speed = 10.0f;
 		}
 
@@ -922,7 +937,9 @@ public:
 			render_to_texture_resolution_y = 900;
 			tonemap_method = 6;
 			alpha_threshold = 0.0f;
-			ambient_light_intensity = 0.3f;
+			ambient_intensity_directional = 0.3f;
+			ambient_intensity_point = 0.1f;
+			ambient_intensity_spot = 0.1f;
 			ao_hbao_bias = 0.1f;
 			ao_ssao_bias = 0.025f;
 			ao_blurSharpness = 40.0f;
@@ -963,6 +980,7 @@ public:
 			luminance_range_min = 0.004f;
 			luminance_range_max = 11.3f;
 			height_scale = 0.0f;
+			stochastic_sampling_scale = 1.0f;
 			texture_tiling_factor = 1.0f;
 			z_far = 8000.0f;
 			z_near = 0.1f;
@@ -999,7 +1017,9 @@ public:
 		int render_to_texture_resolution_y;
 		int tonemap_method;
 		float alpha_threshold;
-		float ambient_light_intensity;
+		float ambient_intensity_directional;
+		float ambient_intensity_point;
+		float ambient_intensity_spot;
 		float ao_hbao_bias;
 		float ao_ssao_bias;
 		float ao_blurSharpness;
@@ -1040,6 +1060,7 @@ public:
 		float luminance_range_min;
 		float luminance_range_max;
 		float height_scale;
+		float stochastic_sampling_scale;
 		float texture_tiling_factor;
 		float z_far;
 		float z_near;
@@ -1069,21 +1090,21 @@ public:
 			loading_spinner_radius = 24.0f;
 			loading_spinner_speed = 16.0f;
 			loading_spinner_thickness = 3.0f;
-			editor_button_add_texture = "buttons\\button_add_3.png";
-			editor_button_add_list_texture = "buttons\\button_add_from_list_1.png";
-			editor_button_arrow_down_texture = "buttons\\button_arrow_down_1.png";
-			editor_button_arrow_up_texture = "buttons\\button_arrow_up_1.png";
-			editor_button_delete_entry_texture = "buttons\\button_delete_5.png";
-			editor_button_gui_sequence_texture = "buttons\\button_gui_sequence_5.png";
-			editor_button_guizmo_rotate_texture = "buttons\\button_guizmo_rotate_1.png";
-			editor_button_guizmo_translate_texture = "buttons\\button_guizmo_translate_2.png";
-			editor_button_open_file_texture = "buttons\\button_open_file_1.png";
-			editor_button_open_asset_list_texture = "buttons\\button_add_from_list_1.png";
-			editor_button_pause_texture = "buttons\\button_editor_pause_2.png";
-			editor_button_play_texture = "buttons\\button_editor_play_2.png";
-			editor_button_reload_texture = "buttons\\button_reload_3.png";
-			editor_button_restart_texture = "buttons\\button_editor_restart_2.png";
-			editor_button_scripting_enabled_texture = "buttons\\button_scripting_3.png";
+			editor_button_add_texture = "button_add_3.png";
+			editor_button_add_list_texture = "button_add_from_list_1.png";
+			editor_button_arrow_down_texture = "button_arrow_down_1.png";
+			editor_button_arrow_up_texture = "button_arrow_up_1.png";
+			editor_button_delete_entry_texture = "button_delete_5.png";
+			editor_button_gui_sequence_texture = "button_gui_sequence_5.png";
+			editor_button_guizmo_rotate_texture = "button_guizmo_rotate_1.png";
+			editor_button_guizmo_translate_texture = "button_guizmo_translate_2.png";
+			editor_button_open_file_texture = "button_open_file_1.png";
+			editor_button_open_asset_list_texture = "button_add_from_list_1.png";
+			editor_button_pause_texture = "button_editor_pause_2.png";
+			editor_button_play_texture = "button_editor_play_2.png";
+			editor_button_reload_texture = "button_reload_3.png";
+			editor_button_restart_texture = "button_editor_restart_2.png";
+			editor_button_scripting_enabled_texture = "button_scripting_3.png";
 			editor_new_entity_name = "New Entity";
 			gui_editor_window_name = "Editor window";
 		}
@@ -1160,8 +1181,8 @@ public:
 			vsync_key = 68;
 			mouse_filter = false;
 			mouse_warp_mode = false;
-			mouse_jaw = 0.005f;
-			mouse_pitch = 0.005f;
+			mouse_jaw = 0.001f;
+			mouse_pitch = 0.001f;
 			mouse_pitch_clip = 1.2f;
 			mouse_sensitivity = 1.0f;
 		}
@@ -1206,27 +1227,31 @@ public:
 		ModelVariables()
 		{
 			calcTangentSpace = true;
-			joinIdenticalVertices = false;
-			makeLeftHanded = false;
-			triangulate = true;
-			removeComponent = false;
+			genBoundingBoxes = true;
 			genNormals = false;
 			genSmoothNormals = true;
 			genUVCoords = true;
+			joinIdenticalVertices = false;
+			makeLeftHanded = false;
+			optimizeCacheLocality = false;
 			optimizeMeshes = true;
 			optimizeGraph = false;
+			removeComponent = false;
+			triangulate = true;
 		}
 
 		bool calcTangentSpace;
-		bool joinIdenticalVertices;
-		bool makeLeftHanded;
-		bool triangulate;
-		bool removeComponent;
+		bool genBoundingBoxes;
 		bool genNormals;
 		bool genSmoothNormals;
 		bool genUVCoords;
-		bool optimizeMeshes;
+		bool joinIdenticalVertices;
+		bool makeLeftHanded;
+		bool optimizeCacheLocality;
 		bool optimizeGraph;
+		bool optimizeMeshes;
+		bool removeComponent;
+		bool triangulate;
 	};
 	struct ObjectPoolVariables
 	{
@@ -1266,6 +1291,8 @@ public:
 		PathsVariables()
 		{
 			config_path = "Data\\";
+			engine_assets_path = "Default\\";
+			gui_assets_path = "Default\\GUI\\";
 			map_path = "Data\\Maps\\";
 			model_path = "Data\\Models\\";
 			object_path = "Data\\Objects\\";
@@ -1277,6 +1304,8 @@ public:
 		}
 
 		std::string config_path;
+		std::string engine_assets_path;
+		std::string gui_assets_path;
 		std::string map_path;
 		std::string model_path;
 		std::string object_path;
@@ -1351,21 +1380,22 @@ public:
 			lense_flare_pass_frag_shader = "lenseFlarePass.frag";
 			light_pass_csm_vert_shader = "lightPass_CSM.vert";
 			light_pass_csm_frag_shader = "lightPass_CSM.frag";
-			light_pass_vert_shader = "lightPass.vert";
-			light_pass_frag_shader = "lightPass.frag";
+			light_pass_vert_shader = "lightPass_CSM.vert";
+			light_pass_frag_shader = "lightPass_CSM.frag";
 			final_pass_vert_shader = "finalPass.vert";
 			final_pass_frag_shader = "finalPass.frag";
 			postProcess_pass_vert_shader = "postProcessPass.vert";
 			postProcess_pass_frag_shader = "postProcessPass.frag";
 			reflection_pass_vert_shader = "reflectionPass.vert";
 			reflection_pass_frag_shader = "reflectionPass.frag";
-			lens_flare_dirt_texture = "DirtMaskTexture.png";
+			lens_flare_dirt_texture = "lensDirtMask.png";
 			lens_flare_ghost_gradient_texture = "p3d_lensFlareGhostColorGradient.png";
 			lens_flare_starburst_texture = "p3d_lensFlareStarburst.png";
 			ssao_blur_frag_shader = "ambientOcclusionBlurSSAO.frag";
 			ssao_blur_vert_shader = "ambientOcclusionBlurSSAO.vert";
 			ssao_pass_frag_shader = "ambientOcclusionPassSSAO.frag";
 			ssao_pass_vert_shader = "ambientOcclusionPassSSAO.vert";
+			texture_repetition_noise_texture = "gray_noise_medium.png";
 			csm_max_shadow_bias = 0.0005f;
 			csm_penumbra_size = 1.42f;
 			csm_penumbra_size_scale_min = 1.0f;
@@ -1376,6 +1406,8 @@ public:
 			dir_light_quad_rotation_x = 180.0f;
 			dir_light_quad_rotation_y = 0.0f;
 			dir_light_quad_rotation_z = 0.0f;
+			parallax_mapping_min_steps = 8.0f;
+			parallax_mapping_max_steps = 32.0f;
 			csm_num_of_pcf_samples = 16;
 			csm_resolution = 2048;
 			depth_test_func = GL_LESS;
@@ -1385,11 +1417,13 @@ public:
 			max_num_point_lights = 50;
 			max_num_spot_lights = 10;
 			objects_loaded_per_frame = 1;
+			parallax_mapping_method = 5;
 			render_to_texture_buffer = GBufferTextureType::GBufferEmissive;
 			shader_pool_size = 10;
 			ssao_num_of_samples = 64;
 			depth_test = true;
 			face_culling = true;
+			stochastic_sampling_seam_fix = true;
 		}
 		
 		std::string atm_scattering_ground_vert_shader;
@@ -1458,6 +1492,7 @@ public:
 		std::string ssao_blur_vert_shader;
 		std::string ssao_pass_frag_shader;
 		std::string ssao_pass_vert_shader;
+		std::string texture_repetition_noise_texture;
 		float csm_max_shadow_bias;
 		float csm_penumbra_size;
 		float csm_penumbra_size_scale_min;
@@ -1468,6 +1503,8 @@ public:
 		float dir_light_quad_rotation_x;
 		float dir_light_quad_rotation_y;
 		float dir_light_quad_rotation_z;
+		float parallax_mapping_min_steps;
+		float parallax_mapping_max_steps;
 		int csm_num_of_pcf_samples;
 		int csm_resolution;
 		int depth_test_func;
@@ -1477,22 +1514,26 @@ public:
 		int max_num_point_lights;
 		int max_num_spot_lights;
 		int objects_loaded_per_frame;
+		int parallax_mapping_method;
 		int render_to_texture_buffer;
 		int shader_pool_size;
 		int ssao_num_of_samples;
 		bool depth_test;
 		bool face_culling;
+		bool stochastic_sampling_seam_fix;
 	};
 	struct ScriptVariables
 	{
 		ScriptVariables()
 		{
+			defaultScriptFilename = "Default_script.lua";
 			iniFunctionName = "init";
 			updateFunctionName = "update";
 			createObjectFunctionName = "create";
 			userTypeTableName = "Types";
 		}
 
+		std::string defaultScriptFilename;
 		std::string iniFunctionName;
 		std::string updateFunctionName;
 		std::string createObjectFunctionName;
@@ -1521,8 +1562,10 @@ public:
 			alphaThresholdUniform = "alphaThreshold";
 			emissiveMultiplierUniform = "emissiveMultiplier";
 			emissiveThresholdUniform = "emissiveThreshold";
-			heightScaleUniform = "heightScale";
+			heightScaleUniform = "heightScale"; 
+			parallaxMappingNumOfStepsLayersUniform = "pomNumOfSteps";
 			textureTilingFactorUniform = "textureTilingFactor";
+			stochasticSamplingScaleUniform = "stochasticSamplingScale";
 			LODParallaxUniform = "parallaxMappingLOD";
 			texelSize = "texelSize";
 			numOfTexels = "numOfTexels";
@@ -1623,6 +1666,11 @@ public:
 
 			define_numOfCascades = "NUM_OF_CASCADES";
 			define_numOfPCFSamples = "NUM_OF_PCF_SAMPLES";
+			define_parallaxMapping = "PARALLAX_MAPPING";
+			define_parallaxMappingMethod = "PARALLAX_MAPPING_METHOD";
+			define_shadowMapping = "SHADOW_MAPPING";
+			define_stochasticSampling = "STOCHASTIC_SAMPLING";
+			define_stochasticSamplingSeamFix = "STOCHASTIC_SAMPLING_MIPMAP_SEAM_FIX";
 		}
 
 		std::string atmScatProjMatUniform;
@@ -1645,7 +1693,9 @@ public:
 		std::string emissiveMultiplierUniform;
 		std::string emissiveThresholdUniform;
 		std::string heightScaleUniform;
+		std::string parallaxMappingNumOfStepsLayersUniform;
 		std::string textureTilingFactorUniform;
+		std::string stochasticSamplingScaleUniform;
 		std::string LODParallaxUniform;
 		std::string texelSize;
 		std::string numOfTexels;
@@ -1747,6 +1797,11 @@ public:
 		// Shader #define variable names
 		std::string define_numOfCascades;
 		std::string define_numOfPCFSamples;
+		std::string define_parallaxMapping;
+		std::string define_parallaxMappingMethod;
+		std::string define_shadowMapping;
+		std::string define_stochasticSampling;
+		std::string define_stochasticSamplingSeamFix;
 	};
 	struct TextureVariables
 	{
@@ -1756,6 +1811,7 @@ public:
 			default_emissive_texture = "default_emissive.png";
 			default_height_texture = "default_height.png";
 			default_normal_texture = "default_normal.png";
+			default_RMHA_texture = "default_RMHA.png";
 			default_specular_intensity = 1.0f;
 			default_specular_power = 32.0f;
 			diffuse_texture_format = GL_RGBA;
@@ -1779,6 +1835,7 @@ public:
 		std::string default_emissive_texture;
 		std::string default_height_texture;
 		std::string default_normal_texture;
+		std::string default_RMHA_texture;
 		float default_specular_intensity;
 		float default_specular_power;
 		int diffuse_texture_format;

@@ -81,7 +81,8 @@ void RigidBodyComponent::changeOccurred(ObservedSubject *p_subject, BitMask p_ch
 		switch(m_collisionShapeType)
 		{
 		case CollisionShapeType::CollisionShapeType_Box:
-			m_collisionShape.m_boxShape->setImplicitShapeDimensions(Math::toBtVector3(p_subject->getVec3(this, Systems::Changes::Physics::CollisionShapeSize)));
+			m_collisionShape.m_boxShape->setImplicitShapeDimensions(Math::toBtVector3(
+				p_subject->getVec3(this, Systems::Changes::Physics::CollisionShapeSize) - glm::vec3(m_collisionShape.m_boxShape->getMargin())));
 			static_cast<PhysicsScene *>(m_systemScene)->cleanProxyFromPairs(*m_rigidBody);
 			break;
 		case CollisionShapeType::CollisionShapeType_Capsule:
@@ -93,7 +94,8 @@ void RigidBodyComponent::changeOccurred(ObservedSubject *p_subject, BitMask p_ch
 		case CollisionShapeType::CollisionShapeType_Cylinder:
 			break;
 		case CollisionShapeType::CollisionShapeType_Sphere:
-			m_collisionShape.m_sphereShape->setImplicitShapeDimensions(Math::toBtVector3(p_subject->getVec3(this, Systems::Changes::Physics::CollisionShapeSize)));
+			m_collisionShape.m_sphereShape->setImplicitShapeDimensions(Math::toBtVector3(
+				p_subject->getVec3(this, Systems::Changes::Physics::CollisionShapeSize)));
 			static_cast<PhysicsScene *>(m_systemScene)->cleanProxyFromPairs(*m_rigidBody);
 			break;
 		}
@@ -104,7 +106,38 @@ void RigidBodyComponent::changeOccurred(ObservedSubject *p_subject, BitMask p_ch
 		auto collisionShapeTypeNumber = p_subject->getUnsignedInt(this, Systems::Changes::Physics::CollisionShapeType);
 		if(collisionShapeTypeNumber >= 0 && collisionShapeTypeNumber < CollisionShapeType::CollisionShapeType_NumOfTypes)
 		{
-			CollisionShapeType collisionShapeType = static_cast<CollisionShapeType>(collisionShapeTypeNumber);
+			// Save the current collision shape size for the new shape
+			const auto oldCollisionShapeSize = getCollisionShapeSize();
+
+			// Get the new collision shape type
+			m_collisionShapeType = static_cast<CollisionShapeType>(collisionShapeTypeNumber);
+
+			// Delete the old collision shape
+			delete m_rigidBody->getCollisionShape();
+
+			// Create the new collision shape
+			switch(m_collisionShapeType)
+			{
+				case CollisionShapeType::CollisionShapeType_Box:
+					m_collisionShape.m_boxShape = new btBoxShape(Math::toBtVector3(oldCollisionShapeSize));
+					m_rigidBody->setCollisionShape(m_collisionShape.m_boxShape);
+					break;
+				case CollisionShapeType::CollisionShapeType_Capsule:
+					break;
+				case CollisionShapeType::CollisionShapeType_Cone:
+					break;
+				case CollisionShapeType::CollisionShapeType_ConvexHull:
+					break;
+				case CollisionShapeType::CollisionShapeType_Cylinder:
+					break;
+				case CollisionShapeType::CollisionShapeType_Sphere:
+					m_collisionShape.m_sphereShape = new btSphereShape(oldCollisionShapeSize.x);
+					m_rigidBody->setCollisionShape(m_collisionShape.m_sphereShape);
+					break;
+			}
+
+			// Reload physics scene pairs
+			static_cast<PhysicsScene *>(m_systemScene)->cleanProxyFromPairs(*m_rigidBody);
 		}
 	}
 
@@ -113,9 +146,21 @@ void RigidBodyComponent::changeOccurred(ObservedSubject *p_subject, BitMask p_ch
 		m_rigidBody->setFriction(p_subject->getFloat(this, Systems::Changes::Physics::Friction));
 	}
 
+	if(CheckBitmask(p_changeType, Systems::Changes::Physics::RollingFriction))
+	{
+		m_rigidBody->setRollingFriction(p_subject->getFloat(this, Systems::Changes::Physics::RollingFriction));
+	}
+
+	if(CheckBitmask(p_changeType, Systems::Changes::Physics::SpinningFriction))
+	{
+		m_rigidBody->setSpinningFriction(p_subject->getFloat(this, Systems::Changes::Physics::SpinningFriction));
+	}
+
 	if(CheckBitmask(p_changeType, Systems::Changes::Physics::Mass))
 	{
-		m_rigidBody->setMassProps(p_subject->getFloat(this, Systems::Changes::Physics::Mass), btVector3(0, 0, 0));
+		const auto mass = p_subject->getFloat(this, Systems::Changes::Physics::Mass);
+		getCollisionShape()->calculateLocalInertia(mass, m_constructionInfo->m_localInertia);
+		m_rigidBody->setMassProps(mass, m_constructionInfo->m_localInertia);
 	}
 
 	if(CheckBitmask(p_changeType, Systems::Changes::Physics::Restitution))

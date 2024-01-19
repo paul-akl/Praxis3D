@@ -228,6 +228,7 @@
     <ClInclude Include="..\Dependencies\include\imgui_tex_inspect\tex_inspect_opengl.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="resource1.h" />
+    <ClInclude Include="Source\AboutWindow.h" />
     <ClInclude Include="Source\AtmScatteringConstants.h" />
     <ClInclude Include="Source\AtmScatteringModel.h" />
     <ClInclude Include="Source\AtmScatteringPass.h" />

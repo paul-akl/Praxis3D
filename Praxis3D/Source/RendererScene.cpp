@@ -64,8 +64,11 @@ ErrorCode RendererScene::setup(const PropertySet &p_properties)
 	{
 		switch(p_properties[i].getPropertyID())
 		{
-			case Properties::AmbientIntensity:
-				m_sceneObjects.m_ambientIntensity = p_properties[i].getFloat();
+			case Properties::CameraID:
+				m_sceneObjects.m_activeCameraID = p_properties[i].getInt();
+				break;
+			case Properties::StochasticSamplingSeamFix:
+				m_miscSceneData.m_stochasticSamplingSeamFix = p_properties[i].getBool();
 				break;
 			case Properties::ZFar:
 				m_sceneObjects.m_zFar = p_properties[i].getFloat();
@@ -73,6 +76,26 @@ ErrorCode RendererScene::setup(const PropertySet &p_properties)
 			case Properties::ZNear:
 				m_sceneObjects.m_zNear = p_properties[i].getFloat();
 				break;
+		}
+	}
+
+	// Load ambient intensity
+	if(auto &ambientProperty = p_properties.getPropertySetByID(Properties::AmbientIntensity); ambientProperty)
+	{
+		for(decltype(ambientProperty.getNumProperties()) i = 0, size = ambientProperty.getNumProperties(); i < size; i++)
+		{
+			switch(ambientProperty[i].getPropertyID())
+			{
+				case Properties::DirectionalLight:
+					m_miscSceneData.m_ambientIntensityDirectional = ambientProperty[i].getFloat();
+					break;
+				case Properties::PointLight:
+					m_miscSceneData.m_ambientIntensityPoint = ambientProperty[i].getFloat();
+					break;
+				case Properties::SpotLight:
+					m_miscSceneData.m_ambientIntensitySpot = ambientProperty[i].getFloat();
+					break;
+			}
 		}
 	}
 
@@ -249,9 +272,14 @@ void RendererScene::exportSetup(PropertySet &p_propertySet)
 	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
 
 	// Add graphics data
-	p_propertySet.addProperty(Properties::AmbientIntensity, m_sceneObjects.m_ambientIntensity);
-	p_propertySet.addProperty(Properties::ZFar, m_sceneObjects.m_zFar);
-	p_propertySet.addProperty(Properties::ZNear, m_sceneObjects.m_zNear);
+	p_propertySet.addProperty(Properties::CameraID, m_sceneObjects.m_activeCameraID);
+	p_propertySet.addProperty(Properties::StochasticSamplingSeamFix, m_miscSceneData.m_stochasticSamplingSeamFix);
+
+	// Add ambient intensity
+	auto &ambientPropertySet = p_propertySet.addPropertySet(Properties::AmbientIntensity);
+	ambientPropertySet.addProperty(Properties::DirectionalLight, m_miscSceneData.m_ambientIntensityDirectional);
+	ambientPropertySet.addProperty(Properties::PointLight, m_miscSceneData.m_ambientIntensityPoint);
+	ambientPropertySet.addProperty(Properties::SpotLight, m_miscSceneData.m_ambientIntensitySpot);
 
 	// Add ambient occlusion data
 	auto &aoPropertySet = p_propertySet.addPropertySet(Properties::AmbientOcclusion);
@@ -323,6 +351,9 @@ void RendererScene::activate()
 
 	// Set the AO data
 	rendererSystem->getRenderer().setAmbientOcclusionData(m_sceneAOData);
+
+	// Set the misc scene data
+	rendererSystem->getRenderer().setMiscSceneData(m_miscSceneData);
 
 	// Set the shadow mapping data
 	rendererSystem->getRenderer().setShadowMappingData(m_shadowMappingData);
@@ -655,15 +686,27 @@ void RendererScene::update(const float p_deltaTime)
 	//	|	  CAMERA COMPONENTS		|
 	//	|___________________________|
 	//
+	EntityID activeCameraEntityID = NULL_ENTITY_ID;
 	auto cameraView = entityRegistry.view<CameraComponent, SpatialComponent>();
 	for(auto entity : cameraView)
 	{
-		auto &cameraComponent = cameraView.get<CameraComponent>(entity);
-		auto &spatialComponent = cameraView.get<SpatialComponent>(entity);
+		activeCameraEntityID = entity;
 
+		if(cameraView.get<CameraComponent>(entity).m_cameraID == m_sceneObjects.m_activeCameraID)
+			break;
+	}
+
+	if(activeCameraEntityID != NULL_ENTITY_ID)
+	{
+		m_sceneObjects.m_activeCameraEntityID = activeCameraEntityID;
+
+		auto &cameraComponent = cameraView.get<CameraComponent>(m_sceneObjects.m_activeCameraEntityID);
+		auto &spatialComponent = cameraView.get<SpatialComponent>(m_sceneObjects.m_activeCameraEntityID);
+
+		m_sceneObjects.m_fov = cameraComponent.m_fov;
+		m_sceneObjects.m_zFar = cameraComponent.m_zFar;
+		m_sceneObjects.m_zNear = cameraComponent.m_zNear;
 		m_sceneObjects.m_cameraViewMatrix = spatialComponent.getSpatialDataChangeManager().getWorldTransform();
-
-		break;
 	}
 }
 
@@ -769,7 +812,11 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const C
 		component.setActive(p_constructionInfo.m_active);
 		component.setLoadedToMemory(true);
 		component.setLoadedToVideoMemory(true);
+
 		component.m_fov = p_constructionInfo.m_fov;
+		component.m_cameraID = p_constructionInfo.m_cameraID;
+		component.m_zFar = p_constructionInfo.m_zFar;
+		component.m_zNear = p_constructionInfo.m_zNear;
 
 		returnObject = &component;
 	}
@@ -1054,19 +1101,9 @@ ErrorCode RendererScene::destroyObject(SystemObject *p_systemObject)
 
 void RendererScene::changeOccurred(ObservedSubject *p_subject, BitMask p_changeType)
 {
-	if(CheckBitmask(p_changeType, Systems::Changes::Graphics::AmbientIntensity))
+	if(CheckBitmask(p_changeType, Systems::Changes::Graphics::ActiveCameraID))
 	{
-		m_sceneObjects.m_ambientIntensity = p_subject->getFloat(this, Systems::Changes::Graphics::AmbientIntensity);
-	}
-
-	if(CheckBitmask(p_changeType, Systems::Changes::Graphics::ZFar))
-	{
-		m_sceneObjects.m_zFar = p_subject->getFloat(this, Systems::Changes::Graphics::ZFar);
-	}
-
-	if(CheckBitmask(p_changeType, Systems::Changes::Graphics::ZNear))
-	{
-		m_sceneObjects.m_zNear = p_subject->getFloat(this, Systems::Changes::Graphics::ZNear);
+		m_sceneObjects.m_activeCameraID = p_subject->getInt(this, Systems::Changes::Graphics::ActiveCameraID);
 	}
 }
 
@@ -1170,6 +1207,23 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
 				if(p_deleteAfterReceiving)
 					delete functors;
+			}
+			break;
+
+		case DataType::DataType_MiscSceneData:
+			{
+				auto *miscSceneData = static_cast<MiscSceneData *>(p_data);
+
+				// Set the new misc scene data
+				m_miscSceneData = *miscSceneData;
+
+				// Send the new misc scene data to the renderer
+				auto rendererSystem = static_cast<RendererSystem *>(m_system);
+				rendererSystem->getRenderer().setMiscSceneData(m_miscSceneData);
+
+				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
+				if(p_deleteAfterReceiving)
+					delete miscSceneData;
 			}
 			break;
 

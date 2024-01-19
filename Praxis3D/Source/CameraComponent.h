@@ -11,15 +11,25 @@ public:
 	{
 		CameraComponentConstructionInfo()
 		{
+			m_cameraID = 0;
 			m_fov = Config::graphicsVar().fov;
+			m_zFar = Config::graphicsVar().z_far;
+			m_zNear = Config::graphicsVar().z_near;
 		}
 
+		int m_cameraID;
+
 		float m_fov;
+		float m_zFar;
+		float m_zNear;
 	};
 
 	CameraComponent(SystemScene *p_systemScene, std::string p_name, const EntityID p_entityID, std::size_t p_id = 0) : SystemObject(p_systemScene, p_name, Properties::PropertyID::CameraComponent, p_entityID)
 	{
+		m_cameraID = 0;
 		m_fov = Config::graphicsVar().fov;
+		m_zFar = Config::graphicsVar().z_far;
+		m_zNear = Config::graphicsVar().z_near;
 	}
 	~CameraComponent() { }
 
@@ -37,49 +47,17 @@ public:
 
 	}
 
-	ErrorCode importObject(const PropertySet &p_properties) final override
-	{
-		ErrorCode importError = ErrorCode::Failure;
-
-		// Check if PropertySet isn't empty and the component hasn't been loaded already
-		if(p_properties && !isLoadedToMemory())
-		{
-			// Get the camera properties
-			//auto const &cameraProperty = p_properties.getPropertySetByID(Properties::Camera);
-
-			//if(cameraProperty)
-			//{
-				//importError = ErrorCode::Success;
-			//}
-			if(p_properties.getPropertyID() == Properties::CameraComponent)
-			{
-				importError = ErrorCode::Success;
-				ErrHandlerLoc().get().log(ErrorType::Info, ErrorSource::Source_CameraComponent, m_name + " - Camera loaded");
-			}
-
-			if(importError == ErrorCode::Success)
-			{
-				setLoadedToMemory(true);
-				setLoadedToVideoMemory(true);
-			}
-		}
-
-		return importError;
-	}
-
-	PropertySet exportObject() final override
-	{
-		// Create the root Camera property set
-		PropertySet propertySet(Properties::Camera);
-
-		return propertySet;
-	}
-
 	// System type is Graphics
 	BitMask getSystemType() final override { return Systems::Graphics; }
 
 	BitMask getDesiredSystemChanges() final override { return Systems::Changes::Graphics::Camera; }
 	BitMask getPotentialSystemChanges() final override { return Systems::Changes::None; }
+
+	// Getters
+	const inline int getCameraID() const { return m_cameraID; }
+	const inline float getCameraFOV() const { return m_fov; }
+	const inline float getCameraFarClip() const { return m_zFar; }
+	const inline float getCameraNearClip() const { return m_zNear; }
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) 
 	{
@@ -88,8 +66,33 @@ public:
 			// Get the active flag from the subject and set the active flag accordingly
 			setActive(p_subject->getBool(this, Systems::Changes::Generic::Active));
 		}
+
+		if(CheckBitmask(p_changeType, Systems::Changes::Graphics::CameraID))
+		{
+			m_cameraID = p_subject->getInt(this, Systems::Changes::Graphics::CameraID);
+		}
+
+		if(CheckBitmask(p_changeType, Systems::Changes::Graphics::FOV))
+		{
+			m_fov = p_subject->getFloat(this, Systems::Changes::Graphics::FOV);
+		}
+
+		if(CheckBitmask(p_changeType, Systems::Changes::Graphics::ZFar))
+		{
+			m_zFar = p_subject->getFloat(this, Systems::Changes::Graphics::ZFar);
+		}
+
+		if(CheckBitmask(p_changeType, Systems::Changes::Graphics::ZNear))
+		{
+			m_zNear = p_subject->getFloat(this, Systems::Changes::Graphics::ZNear);
+		}
 	}
 
 private:
+	int m_cameraID;
+
+	// Projection data
 	float m_fov;
+	float m_zFar;
+	float m_zNear;
 };

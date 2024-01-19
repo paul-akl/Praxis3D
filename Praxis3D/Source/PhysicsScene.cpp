@@ -437,6 +437,8 @@ SystemObject *PhysicsScene::createComponent(const EntityID &p_entityID, const Ri
 
 			component.m_constructionInfo->m_friction = p_constructionInfo.m_friction;
 			component.m_constructionInfo->m_restitution = p_constructionInfo.m_restitution;
+			component.m_constructionInfo->m_rollingFriction = p_constructionInfo.m_rollingFriction;
+			component.m_constructionInfo->m_spinningFriction = p_constructionInfo.m_spinningFriction;
 
 			// If mass is not zero, rigid body is dynamic; in that case, calculate the local inertia 
 			if(component.m_constructionInfo->m_mass != 0.0f)

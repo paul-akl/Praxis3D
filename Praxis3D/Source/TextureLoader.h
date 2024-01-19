@@ -409,6 +409,7 @@ public:
 			returnTexture = m_defaultTextures[DefaultTextureType::DefaultTextureType_Emissive];
 			break;
 		case MaterialType_Combined:
+			returnTexture = m_defaultTextures[DefaultTextureType::DefaultTextureType_RMHA];
 			break;
 		case MaterialType_Roughness:
 			break;
@@ -444,6 +445,7 @@ protected:
 		DefaultTextureType_Emissive,
 		DefaultTextureType_Height,
 		DefaultTextureType_Normal,
+		DefaultTextureType_RMHA,
 		DefaultTextureType_NumOfTypes
 	};
 

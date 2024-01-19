@@ -1,0 +1,88 @@
+{
+	"Name": "Terrain middle",
+	"ID": "1",
+	"Parent": "0",
+	"Graphics": 
+	{
+		"ModelComponent": 
+		{
+			"Active": "true",
+			"Models": 
+			[
+				{
+					"Filename": "Default\plane.fbx",
+					"Meshes": 
+					[
+						{
+							"Index": "0",
+							"Active": "true",
+							"AlphaThreshold": "0.0f",
+							"EmissiveIntensity": "0.0f",
+							"HeightScale": "0.0f",
+							"StochasticSampling": "false",
+							"StochasticSamplingScale": "1.0f",
+							"WrapMode": "Repeat",
+							"Materials": 
+							{
+								"Diffuse": 
+								{
+									"Filename": "Default\grid_gray_2_alb.png",
+									"TextureScale": "1000.0f, 1000.0f"
+								},
+								"Normal": 
+								{
+									"Filename": "Default\default_normal.png",
+									"TextureScale": "1000.0f, 1000.0f"
+								},
+								"Emissive": 
+								{
+									"Filename": "Default\default_emissive.png",
+									"TextureScale": "1000.0f, 1000.0f"
+								},
+								"RMHAO": 
+								{
+									"Filename": "Default\default_RMHA.png",
+									"TextureScale": "1000.0f, 1000.0f"
+								}
+							}
+						}
+					]
+				}
+			]
+		}
+	},
+	"Physics": 
+	{
+		"RigidBodyComponent": 
+		{
+			"Active": "true",
+			"Friction": "1.0f",
+			"Kinematic": "false",
+			"Mass": "0.0f",
+			"Restitution": "0.5f",
+			"RollingFriction": "0.5f",
+			"SpinningFriction": "1.0f",
+			"CollisionShape": 
+			{
+				"Type": "Box",
+				"Size": "400.0f, 0.0f, 400.0f"
+			}
+		}
+	},
+	"World": 
+	{
+		"ObjectMaterialComponent": 
+		{
+			"Active": "true",
+			"Type": "Rock"
+		},
+		"SpatialComponent": 
+		{
+			"Active": "true",
+			"LocalPosition": "0.0f, 0.0f, 0.0f",
+			"LocalRotation": "0.0f, -0.0f, 0.0f",
+			"LocalRotationQuaternion": "1.0f, 0.0f, 0.0f, 0.0f",
+			"LocalScale": "400.0f, 400.0f, 400.0f"
+		}
+	}
+}

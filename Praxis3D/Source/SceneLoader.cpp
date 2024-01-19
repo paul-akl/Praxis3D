@@ -442,6 +442,7 @@ void SceneLoader::importFromProperties(AudioComponentsConstructionInfo &p_constr
 					p_constructionInfo.m_soundConstructionInfo = new SoundComponent::SoundComponentConstructionInfo();
 
 				p_constructionInfo.m_soundConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::SoundComponent);
+				p_properties.getValueByID(Properties::Active, p_constructionInfo.m_soundConstructionInfo->m_active);
 
 				// Get the sound filename
 				auto const &filename = p_properties.getPropertyByID(Properties::Filename).getString();
@@ -536,6 +537,27 @@ void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_con
 					p_constructionInfo.m_cameraConstructionInfo = new CameraComponent::CameraComponentConstructionInfo();
 
 				p_constructionInfo.m_cameraConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::CameraComponent);
+				p_properties.getValueByID(Properties::Active, p_constructionInfo.m_cameraConstructionInfo->m_active);
+
+				// Load property data
+				for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
+				{
+					switch(p_properties[i].getPropertyID())
+					{
+						case Properties::CameraID:
+							p_constructionInfo.m_cameraConstructionInfo->m_cameraID = p_properties[i].getInt();
+							break;
+						case Properties::FOV:
+							p_constructionInfo.m_cameraConstructionInfo->m_fov = p_properties[i].getFloat();
+							break;
+						case Properties::ZFar:
+							p_constructionInfo.m_cameraConstructionInfo->m_zFar = p_properties[i].getFloat();
+							break;
+						case Properties::ZNear:
+							p_constructionInfo.m_cameraConstructionInfo->m_zNear = p_properties[i].getFloat();
+							break;
+					}
+				}
 			}
 			break;
 
@@ -545,6 +567,7 @@ void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_con
 					p_constructionInfo.m_lightConstructionInfo = new LightComponent::LightComponentConstructionInfo();
 
 				p_constructionInfo.m_lightConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::LightComponent);
+				p_properties.getValueByID(Properties::Active, p_constructionInfo.m_lightConstructionInfo->m_active);
 
 				// Get the light type
 				auto const &type = p_properties.getPropertyByID(Properties::Type).getID();
@@ -598,6 +621,7 @@ void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_con
 					p_constructionInfo.m_modelConstructionInfo = new ModelComponent::ModelComponentConstructionInfo();
 
 				p_constructionInfo.m_modelConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::ModelComponent);
+				p_properties.getValueByID(Properties::Active, p_constructionInfo.m_modelConstructionInfo->m_active);
 
 				bool modelDataPresent = false;
 
@@ -640,34 +664,41 @@ void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_con
 									for(decltype(meshesProperty.getNumPropertySets()) iMesh = 0, numMeshes = meshesProperty.getNumPropertySets(); iMesh < numMeshes; iMesh++)
 									{
 										// Try to get the mesh index property node and check if it is present
-										auto &meshIndexProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::Index);
-										if(meshIndexProperty)
+										if(auto &meshIndexProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::Index); meshIndexProperty)
 										{
 											// Get the mesh index, check if it is valid and within the range of mesh array that was loaded from the model
 											const int meshDataIndex = meshIndexProperty.getInt();
 
 											// Make sure the meshMaterials vector can fit the given mesh index
-											if(meshDataIndex >= newModelEntry.m_meshMaterials.size())
+											if(meshDataIndex >= newModelEntry.m_meshData.size())
 											{
 												newModelEntry.resize(meshDataIndex + 1);
-												newModelEntry.m_present[meshDataIndex] = true;
+												newModelEntry.m_meshData[meshDataIndex].m_present = true;
 											}
 
 											// Get the active flag, if it is present
 											if(auto activeProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::Active); activeProperty)
-												newModelEntry.m_active[meshDataIndex] = activeProperty.getBool();
+												newModelEntry.m_meshData[meshDataIndex].m_active = activeProperty.getBool();
 
 											// Get material alpha threshold value, if it is present
 											if(auto alphaThresholdProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::AlphaThreshold); alphaThresholdProperty)
-												newModelEntry.m_alphaThreshold[meshDataIndex] = alphaThresholdProperty.getFloat();
+												newModelEntry.m_meshData[meshDataIndex].m_alphaThreshold = alphaThresholdProperty.getFloat();
 
 											// Get emissive intensity, if it is present
 											if(auto emissiveIntensityProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::EmissiveIntensity); emissiveIntensityProperty)
-												newModelEntry.m_emissiveIntensity[meshDataIndex] = emissiveIntensityProperty.getFloat();
+												newModelEntry.m_meshData[meshDataIndex].m_emissiveIntensity = emissiveIntensityProperty.getFloat();
 
 											// Get material height scale value, if it is present
 											if(auto heightScaleProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::HeightScale); heightScaleProperty)
-												newModelEntry.m_heightScale[meshDataIndex] = heightScaleProperty.getFloat();
+												newModelEntry.m_meshData[meshDataIndex].m_heightScale = heightScaleProperty.getFloat();
+
+											// Get stochastic sampling flag, if it is present
+											if(auto stochasticSamplingProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::StochasticSampling); stochasticSamplingProperty)
+												newModelEntry.m_meshData[meshDataIndex].m_stochasticSampling = stochasticSamplingProperty.getBool();
+
+											// Get stochastic sampling scale value, if it is present
+											if(auto stochasticSamplingScaleProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::StochasticSamplingScale); stochasticSamplingScaleProperty)
+												newModelEntry.m_meshData[meshDataIndex].m_stochasticSamplingScale = stochasticSamplingScaleProperty.getFloat();
 
 											// Get material wrap mode
 											if(auto wrapModeProperty = meshesProperty.getPropertySet(iMesh).getPropertyByID(Properties::WrapMode); wrapModeProperty)
@@ -675,20 +706,20 @@ void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_con
 												switch(wrapModeProperty.getID())
 												{
 													case Properties::ClampToBorder:
-														newModelEntry.m_textureWrapMode[meshDataIndex] = TextureWrapType::TextureWrapType_ClampToBorder;
+														newModelEntry.m_meshData[meshDataIndex].m_textureWrapMode = TextureWrapType::TextureWrapType_ClampToBorder;
 														break;
 													case Properties::ClampToEdge:
-														newModelEntry.m_textureWrapMode[meshDataIndex] = TextureWrapType::TextureWrapType_ClampToEdge;
+														newModelEntry.m_meshData[meshDataIndex].m_textureWrapMode = TextureWrapType::TextureWrapType_ClampToEdge;
 														break;
 													case Properties::MirroredClampToEdge:
-														newModelEntry.m_textureWrapMode[meshDataIndex] = TextureWrapType::TextureWrapType_MirroredClampToEdge;
+														newModelEntry.m_meshData[meshDataIndex].m_textureWrapMode = TextureWrapType::TextureWrapType_MirroredClampToEdge;
 														break;
 													case Properties::MirroredRepeat:
-														newModelEntry.m_textureWrapMode[meshDataIndex] = TextureWrapType::TextureWrapType_MirroredRepeat;
+														newModelEntry.m_meshData[meshDataIndex].m_textureWrapMode = TextureWrapType::TextureWrapType_MirroredRepeat;
 														break;
 													case Properties::Repeat:
 													default:
-														newModelEntry.m_textureWrapMode[meshDataIndex] = TextureWrapType::TextureWrapType_Repeat;
+														newModelEntry.m_meshData[meshDataIndex].m_textureWrapMode = TextureWrapType::TextureWrapType_Repeat;
 														break;
 												}
 											}
@@ -717,13 +748,13 @@ void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_con
 													if(filenameProperty.isVariableTypeString())
 													{
 														// Get texture filename string, check if it is valid
-														newModelEntry.m_meshMaterials[meshDataIndex][iMatType] = filenameProperty.getString();
+														newModelEntry.m_meshData[meshDataIndex].m_meshMaterials[iMatType] = filenameProperty.getString();
 													}
 
 													// Get texture scale property, check if it is valid
 													auto scaleProperty = materialProperties[iMatType].getPropertyByID(Properties::TextureScale);
 													if(scaleProperty)
-														newModelEntry.m_meshMaterialsScale[meshDataIndex][iMatType] = scaleProperty.getVec2f();
+														newModelEntry.m_meshData[meshDataIndex].m_meshMaterialsScales[iMatType] = scaleProperty.getVec2f();
 												}
 											}
 										}
@@ -803,6 +834,7 @@ void SceneLoader::importFromProperties(PhysicsComponentsConstructionInfo &p_cons
 				p_constructionInfo.m_rigidBodyConstructionInfo = new RigidBodyComponent::RigidBodyComponentConstructionInfo();
 
 			p_constructionInfo.m_rigidBodyConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::RigidBodyComponent);
+			p_properties.getValueByID(Properties::Active, p_constructionInfo.m_rigidBodyConstructionInfo->m_active);
 
 			// --------------------
 			// Load collision shape
@@ -834,11 +866,11 @@ void SceneLoader::importFromProperties(PhysicsComponentsConstructionInfo &p_cons
 					case Properties::Sphere:
 					{
 						// Get the size property
-						auto const &radiusProperty = collisionShapeProperty.getPropertyByID(Properties::Radius);
+						auto const &sizeProperty = collisionShapeProperty.getPropertyByID(Properties::Size);
 
 						// If the size was not given, leave it to a default radius of 0.5f (which makes the sphere diameter equal to 1.0)
-						if(radiusProperty)
-							p_constructionInfo.m_rigidBodyConstructionInfo->m_collisionShapeSize.x = radiusProperty.getFloat();
+						if(sizeProperty)
+							p_constructionInfo.m_rigidBodyConstructionInfo->m_collisionShapeSize = sizeProperty.getVec3f();
 						else
 							ErrHandlerLoc().get().log(ErrorCode::Property_missing_radius, p_name, ErrorSource::Source_RigidBodyComponent);
 
@@ -879,6 +911,12 @@ void SceneLoader::importFromProperties(PhysicsComponentsConstructionInfo &p_cons
 				case Properties::Restitution:
 					p_constructionInfo.m_rigidBodyConstructionInfo->m_restitution = p_properties[i].getFloat();
 					break;
+				case Properties::RollingFriction:
+					p_constructionInfo.m_rigidBodyConstructionInfo->m_rollingFriction = p_properties[i].getFloat();
+					break;
+				case Properties::SpinningFriction:
+					p_constructionInfo.m_rigidBodyConstructionInfo->m_spinningFriction = p_properties[i].getFloat();
+					break;
 				case Properties::Velocity:
 					p_constructionInfo.m_rigidBodyConstructionInfo->m_linearVelocity = p_properties[i].getVec3f();
 					break;
@@ -904,6 +942,7 @@ void SceneLoader::importFromProperties(ScriptComponentsConstructionInfo &p_const
 					p_constructionInfo.m_luaConstructionInfo = new LuaComponent::LuaComponentConstructionInfo();
 
 				p_constructionInfo.m_luaConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::LuaComponent);
+				p_properties.getValueByID(Properties::Active, p_constructionInfo.m_luaConstructionInfo->m_active);
 
 				auto const &luaFilenameProperty = p_properties.getPropertyByID(Properties::Filename);
 				auto const &luaVariablesProperty = p_properties.getPropertySetByID(Properties::Variables);
@@ -955,6 +994,7 @@ void SceneLoader::importFromProperties(WorldComponentsConstructionInfo &p_constr
 					p_constructionInfo.m_objectMaterialConstructionInfo = new ObjectMaterialComponent::ObjectMaterialComponentConstructionInfo();
 
 				p_constructionInfo.m_objectMaterialConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::ObjectMaterialComponent);
+				p_properties.getValueByID(Properties::Active, p_constructionInfo.m_objectMaterialConstructionInfo->m_active);
 
 				// Get the type property representing the object material type
 				auto const &typeProperty = p_properties.getPropertyByID(Properties::Type);
@@ -1013,6 +1053,7 @@ void SceneLoader::importFromProperties(WorldComponentsConstructionInfo &p_constr
 					p_constructionInfo.m_spatialConstructionInfo = new SpatialComponent::SpatialComponentConstructionInfo();
 
 				p_constructionInfo.m_spatialConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::SpatialComponent);
+				p_properties.getValueByID(Properties::Active, p_constructionInfo.m_spatialConstructionInfo->m_active);
 
 				// Load property data
 				for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
@@ -1125,7 +1166,10 @@ void SceneLoader::exportToProperties(const GraphicsComponentsConstructionInfo &p
 			auto &componentPropertySet = propertySet.addPropertySet(Properties::PropertyID::CameraComponent);
 
 			componentPropertySet.addProperty(Properties::PropertyID::Active, p_constructionInfo.m_cameraConstructionInfo->m_active);
-			//componentPropertySet.addProperty(Properties::PropertyID::FOV, p_constructionInfo.m_cameraConstructionInfo->m_fov);
+			componentPropertySet.addProperty(Properties::PropertyID::CameraID, p_constructionInfo.m_cameraConstructionInfo->m_cameraID);
+			componentPropertySet.addProperty(Properties::PropertyID::FOV, p_constructionInfo.m_cameraConstructionInfo->m_fov);
+			componentPropertySet.addProperty(Properties::PropertyID::ZFar, p_constructionInfo.m_cameraConstructionInfo->m_zFar);
+			componentPropertySet.addProperty(Properties::PropertyID::ZNear, p_constructionInfo.m_cameraConstructionInfo->m_zNear);
 		}
 
 		// Export LightComponent
@@ -1159,103 +1203,96 @@ void SceneLoader::exportToProperties(const GraphicsComponentsConstructionInfo &p
 		// Export ModelComponent
 		if(p_constructionInfo.m_modelConstructionInfo != nullptr)
 		{
+			// Create ModelComponent entry
 			auto &componentPropertySet = propertySet.addPropertySet(Properties::PropertyID::ModelComponent);
 
+			// Add active flag
 			componentPropertySet.addProperty(Properties::PropertyID::Active, p_constructionInfo.m_modelConstructionInfo->m_active);
 
+			// Create Models entry
 			auto &modelsPropertySet = componentPropertySet.addPropertySet(Properties::PropertyID::Models);
 
 			// Go over each model
 			for(auto &model : p_constructionInfo.m_modelConstructionInfo->m_modelsProperties.m_models)
 			{
-				// Make sure the number of meshes is not bigger than any of the property arrays
-				if(	model.m_numOfMeshes <= model.m_meshMaterials.size() &&
-					model.m_numOfMeshes <= model.m_meshMaterialsScale.size() &&
-					model.m_numOfMeshes <= model.m_alphaThreshold.size() &&
-					model.m_numOfMeshes <= model.m_heightScale.size() &&
-					model.m_numOfMeshes <= model.m_active.size() &&
-					model.m_numOfMeshes <= model.m_present.size())
+				auto &modelPropertyArrayEntry = modelsPropertySet.addPropertySet(Properties::ArrayEntry);
+
+				// Add model data
+				modelPropertyArrayEntry.addProperty(Properties::PropertyID::Filename, model.m_modelName);
+
+				// Create Meshes entry
+				auto &meshesPropertySet = modelPropertyArrayEntry.addPropertySet(Properties::PropertyID::Meshes);
+
+				// Go over each mesh
+				for(decltype(model.m_meshData.size()) i = 0, size = model.m_meshData.size(); i < size; i++)
 				{
-					auto &modelPropertyArrayEntry = modelsPropertySet.addPropertySet(Properties::ArrayEntry);
-
-					// Add model data
-					modelPropertyArrayEntry.addProperty(Properties::PropertyID::Filename, model.m_modelName);
-
-					auto &meshesPropertySet = modelPropertyArrayEntry.addPropertySet(Properties::PropertyID::Meshes);
-
-					// Go over each mesh
-					for(decltype(model.m_numOfMeshes) i = 0; i < model.m_numOfMeshes; i++)
+					// Make sure the mesh data is present
+					if(model.m_meshData[i].m_present)
 					{
-						// Make sure the mesh data is present
-						if(model.m_present[i])
+						auto &meshPropertyArrayEntry = meshesPropertySet.addPropertySet(Properties::ArrayEntry);
+
+						// Add mesh data
+						meshPropertyArrayEntry.addProperty(Properties::PropertyID::Index, (int)i);
+						meshPropertyArrayEntry.addProperty(Properties::PropertyID::Active, model.m_meshData[i].m_active);
+						meshPropertyArrayEntry.addProperty(Properties::PropertyID::AlphaThreshold, model.m_meshData[i].m_alphaThreshold);
+						meshPropertyArrayEntry.addProperty(Properties::PropertyID::EmissiveIntensity, model.m_meshData[i].m_emissiveIntensity);
+						meshPropertyArrayEntry.addProperty(Properties::PropertyID::HeightScale, model.m_meshData[i].m_heightScale);
+						meshPropertyArrayEntry.addProperty(Properties::PropertyID::StochasticSampling, model.m_meshData[i].m_stochasticSampling);
+						meshPropertyArrayEntry.addProperty(Properties::PropertyID::StochasticSamplingScale, model.m_meshData[i].m_stochasticSamplingScale);
+
+						switch(model.m_meshData[i].m_textureWrapMode)
 						{
-							auto &meshPropertyArrayEntry = meshesPropertySet.addPropertySet(Properties::ArrayEntry);
+							case TextureWrapType::TextureWrapType_ClampToBorder:
+								meshPropertyArrayEntry.addProperty(Properties::PropertyID::WrapMode, Properties::PropertyID::ClampToBorder);
+								break;
+							case TextureWrapType::TextureWrapType_ClampToEdge:
+								meshPropertyArrayEntry.addProperty(Properties::PropertyID::WrapMode, Properties::PropertyID::ClampToEdge);
+								break;
+							case TextureWrapType::TextureWrapType_MirroredClampToEdge:
+								meshPropertyArrayEntry.addProperty(Properties::PropertyID::WrapMode, Properties::PropertyID::MirroredClampToEdge);
+								break;
+							case TextureWrapType::TextureWrapType_MirroredRepeat:
+								meshPropertyArrayEntry.addProperty(Properties::PropertyID::WrapMode, Properties::PropertyID::MirroredRepeat);
+								break;
+							case TextureWrapType::TextureWrapType_Repeat:
+								meshPropertyArrayEntry.addProperty(Properties::PropertyID::WrapMode, Properties::PropertyID::Repeat);
+								break;
+						}
 
-							// Add mesh data
-							meshPropertyArrayEntry.addProperty(Properties::PropertyID::Index, (int)i);
-							meshPropertyArrayEntry.addProperty(Properties::PropertyID::Active, model.m_active[i]);
-							meshPropertyArrayEntry.addProperty(Properties::PropertyID::AlphaThreshold, model.m_alphaThreshold[i]);
-							meshPropertyArrayEntry.addProperty(Properties::PropertyID::EmissiveIntensity, model.m_emissiveIntensity[i]);
-							meshPropertyArrayEntry.addProperty(Properties::PropertyID::HeightScale, model.m_heightScale[i]);
+						auto &materialsPropertySet = meshPropertyArrayEntry.addPropertySet(Properties::Materials);
 
-							switch(model.m_textureWrapMode[i])
+						// Go over each material
+						for(unsigned int materialType = 0; materialType < MaterialType::MaterialType_NumOfTypes; materialType++)
+						{
+							// Make sure the material filename is not empty
+							if(!model.m_meshData[i].m_meshMaterials[materialType].empty())
 							{
-								case TextureWrapType::TextureWrapType_ClampToBorder:
-									meshPropertyArrayEntry.addProperty(Properties::PropertyID::WrapMode, Properties::PropertyID::ClampToBorder);
-									break;
-								case TextureWrapType::TextureWrapType_ClampToEdge:
-									meshPropertyArrayEntry.addProperty(Properties::PropertyID::WrapMode, Properties::PropertyID::ClampToEdge);
-									break;
-								case TextureWrapType::TextureWrapType_MirroredClampToEdge:
-									meshPropertyArrayEntry.addProperty(Properties::PropertyID::WrapMode, Properties::PropertyID::MirroredClampToEdge);
-									break;
-								case TextureWrapType::TextureWrapType_MirroredRepeat:
-									meshPropertyArrayEntry.addProperty(Properties::PropertyID::WrapMode, Properties::PropertyID::MirroredRepeat);
-									break;
-								case TextureWrapType::TextureWrapType_Repeat:
-									meshPropertyArrayEntry.addProperty(Properties::PropertyID::WrapMode, Properties::PropertyID::Repeat);
-									break;
-							}
+								Properties::PropertyID materialPropertyID = Properties::Null;
 
-							auto &materialsPropertySet = meshPropertyArrayEntry.addPropertySet(Properties::Materials);
-
-							// Go over each material
-							for(unsigned int materialType = 0; materialType < MaterialType::MaterialType_NumOfTypes; materialType++)
-							{
-								// Make sure the material filename is not empty
-								if(!model.m_meshMaterials[i][materialType].empty())
+								// Convert MaterialType to PropertyID
+								switch(materialType)
 								{
-									Properties::PropertyID materialPropertyID = Properties::Null;
-
-									// Convert MaterialType to PropertyID
-									switch(materialType)
-									{
-										case MaterialType_Diffuse:
-											materialPropertyID = Properties::Diffuse;
-											break;
-										case MaterialType_Normal:
-											materialPropertyID = Properties::Normal;
-											break;
-										case MaterialType_Emissive:
-											materialPropertyID = Properties::Emissive;
-											break;
-										case MaterialType_Combined:
-											materialPropertyID = Properties::RMHAO;
-											break;
-									}
-									auto &materialPropertySet = materialsPropertySet.addPropertySet(materialPropertyID);
-
-									// Add material data
-									materialPropertySet.addProperty(Properties::PropertyID::Filename, model.m_meshMaterials[i][materialType]);
-									materialPropertySet.addProperty(Properties::PropertyID::TextureScale, model.m_meshMaterialsScale[i][materialType]);
+									case MaterialType_Diffuse:
+										materialPropertyID = Properties::Diffuse;
+										break;
+									case MaterialType_Normal:
+										materialPropertyID = Properties::Normal;
+										break;
+									case MaterialType_Emissive:
+										materialPropertyID = Properties::Emissive;
+										break;
+									case MaterialType_Combined:
+										materialPropertyID = Properties::RMHAO;
+										break;
 								}
+								auto &materialPropertySet = materialsPropertySet.addPropertySet(materialPropertyID);
+
+								// Add material data
+								materialPropertySet.addProperty(Properties::PropertyID::Filename, model.m_meshData[i].m_meshMaterials[materialType]);
+								materialPropertySet.addProperty(Properties::PropertyID::TextureScale, model.m_meshData[i].m_meshMaterialsScales[materialType]);
 							}
 						}
 					}
-				}
-				else
-				{
-					ErrHandlerLoc::get().log(ErrorCode::Number_of_meshes_missmatch, ErrorSource::Source_SceneLoader, model.m_modelName);
 				}
 			}
 		}
@@ -1310,9 +1347,11 @@ void SceneLoader::exportToProperties(const PhysicsComponentsConstructionInfo &p_
 			// Add rigid body data
 			componentPropertySet.addProperty(Properties::PropertyID::Active, p_constructionInfo.m_rigidBodyConstructionInfo->m_active);
 			componentPropertySet.addProperty(Properties::PropertyID::Friction, p_constructionInfo.m_rigidBodyConstructionInfo->m_friction);
+			componentPropertySet.addProperty(Properties::PropertyID::Kinematic, p_constructionInfo.m_rigidBodyConstructionInfo->m_kinematic);
 			componentPropertySet.addProperty(Properties::PropertyID::Mass, p_constructionInfo.m_rigidBodyConstructionInfo->m_mass);
 			componentPropertySet.addProperty(Properties::PropertyID::Restitution, p_constructionInfo.m_rigidBodyConstructionInfo->m_restitution);
-			componentPropertySet.addProperty(Properties::PropertyID::Kinematic, p_constructionInfo.m_rigidBodyConstructionInfo->m_kinematic);
+			componentPropertySet.addProperty(Properties::PropertyID::RollingFriction, p_constructionInfo.m_rigidBodyConstructionInfo->m_rollingFriction);
+			componentPropertySet.addProperty(Properties::PropertyID::SpinningFriction, p_constructionInfo.m_rigidBodyConstructionInfo->m_spinningFriction);
 
 			// Convert CollisionShapeType to PropertyID
 			Properties::PropertyID collisionShapeType = Properties::Null;

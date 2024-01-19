@@ -33,25 +33,29 @@ ErrorCode Model::loadToMemory()
 		unsigned int assimpFlags = 0;
 
 		if(Config::modelVar().calcTangentSpace)
-			assimpFlags |= aiProcess_CalcTangentSpace;
+			assimpFlags |= aiPostProcessSteps::aiProcess_CalcTangentSpace;
 		if(Config::modelVar().joinIdenticalVertices)
-			assimpFlags |= aiProcess_JoinIdenticalVertices;
+			assimpFlags |= aiPostProcessSteps::aiProcess_JoinIdenticalVertices;
 		if(Config::modelVar().makeLeftHanded)
-			assimpFlags |= aiProcess_MakeLeftHanded;
+			assimpFlags |= aiPostProcessSteps::aiProcess_MakeLeftHanded;
 		if(Config::modelVar().triangulate)
-			assimpFlags |= aiProcess_Triangulate;
+			assimpFlags |= aiPostProcessSteps::aiProcess_Triangulate;
 		if(Config::modelVar().removeComponent)
-			assimpFlags |= aiProcess_RemoveComponent;
+			assimpFlags |= aiPostProcessSteps::aiProcess_RemoveComponent;
+		if(Config::modelVar().genBoundingBoxes)
+			assimpFlags |= aiPostProcessSteps::aiProcess_GenBoundingBoxes;
 		if(Config::modelVar().genNormals)
-			assimpFlags |= aiProcess_GenNormals;
+			assimpFlags |= aiPostProcessSteps::aiProcess_GenNormals;
 		if(Config::modelVar().genSmoothNormals)
-			assimpFlags |= aiProcess_GenSmoothNormals;
+			assimpFlags |= aiPostProcessSteps::aiProcess_GenSmoothNormals;
 		if(Config::modelVar().genUVCoords)
-			assimpFlags |= aiProcess_GenUVCoords;
+			assimpFlags |= aiPostProcessSteps::aiProcess_GenUVCoords;
+		if(Config::modelVar().optimizeCacheLocality)
+			assimpFlags |= aiPostProcessSteps::aiProcess_ImproveCacheLocality;
 		if(Config::modelVar().optimizeMeshes)
-			assimpFlags |= aiProcess_OptimizeMeshes;
+			assimpFlags |= aiPostProcessSteps::aiProcess_OptimizeMeshes;
 		if(Config::modelVar().optimizeGraph)
-			assimpFlags |= aiProcess_OptimizeGraph;
+			assimpFlags |= aiPostProcessSteps::aiProcess_OptimizeGraph;
 
 		Assimp::Importer assimpImporter;
 

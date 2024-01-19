@@ -48,10 +48,10 @@ public:
 				m_vbo;
 	};
 
-	// Draw command holds all the neccessary data to draw a piece of geometry (a mesh)
+	// Draw command holds all the necessary data to draw a piece of geometry (a mesh)
 	struct DrawCommand
 	{
-		DrawCommand(const ShaderUniformUpdater &p_uniformUpdater, 
+		DrawCommand(ShaderUniformUpdater &p_uniformUpdater, 
 					const UniformObjectData &p_uniformObjectData, 
 					const unsigned int p_shaderHandle,
 					const unsigned int p_modelHandle,
@@ -64,7 +64,7 @@ public:
 					const unsigned int p_matCombined,
 					const int p_matWrapMode) :
 
-			m_uniformUpdater(p_uniformUpdater), 
+			m_uniformUpdater(&p_uniformUpdater), 
 			m_uniformObjectData(p_uniformObjectData),
 			m_shaderHandle(p_shaderHandle),
 			m_modelHandle(p_modelHandle),
@@ -77,22 +77,22 @@ public:
 			m_matCombined(p_matCombined),
 			m_matWrapMode(p_matWrapMode) { }
 
-		const ShaderUniformUpdater &m_uniformUpdater;
-		const UniformObjectData m_uniformObjectData;
+		ShaderUniformUpdater *m_uniformUpdater;
+		UniformObjectData m_uniformObjectData;
 
-		const unsigned int m_shaderHandle;
-		const unsigned int m_modelHandle;
+		unsigned int m_shaderHandle;
+		unsigned int m_modelHandle;
 
-		const unsigned int m_numIndices;
-		const unsigned int m_baseVertex;
-		const unsigned int m_baseIndex;
+		unsigned int m_numIndices;
+		unsigned int m_baseVertex;
+		unsigned int m_baseIndex;
 
-		const int m_matWrapMode;
+		int m_matWrapMode;
 
-		const unsigned int m_matDiffuse;
-		const unsigned int m_matNormal;
-		const unsigned int m_matEmissive;
-		const unsigned int m_matCombined;
+		unsigned int m_matDiffuse;
+		unsigned int m_matNormal;
+		unsigned int m_matEmissive;
+		unsigned int m_matCombined;
 	};
 
 	// Screen-space draw command is used to render a full-screen triangle, intended for
@@ -102,11 +102,11 @@ public:
 		ScreenSpaceDrawCommand(const ShaderUniformUpdater &p_uniformUpdater,
 							   const UniformObjectData &p_uniformObjectData,
 							   const unsigned int p_shaderHandle) :
-			m_uniformUpdater(p_uniformUpdater),
+			m_uniformUpdater(&p_uniformUpdater),
 			m_uniformObjectData(p_uniformObjectData),
 			m_shaderHandle(p_shaderHandle) { }
 
-		const ShaderUniformUpdater &m_uniformUpdater;
+		const ShaderUniformUpdater *m_uniformUpdater;
 		const UniformObjectData m_uniformObjectData;
 
 		const unsigned int m_shaderHandle;
@@ -119,7 +119,7 @@ public:
 							   const unsigned int p_numOfGroupsY, 
 							   const unsigned int p_numOfGroupsZ, 
 							   const MemoryBarrierType p_memoryBarrier, 
-							   const ShaderUniformUpdater &p_uniformUpdater,
+							   ShaderUniformUpdater &p_uniformUpdater,
 							   const UniformObjectData &p_uniformObjectData,
 							   const unsigned int p_shaderHandle) :
 			m_numOfGroups{ p_numOfGroupsX, p_numOfGroupsY, p_numOfGroupsZ },
@@ -128,13 +128,13 @@ public:
 			m_uniformObjectData(p_uniformObjectData),
 			m_shaderHandle(p_shaderHandle) { }
 
-		const unsigned int m_numOfGroups[3];
-		const MemoryBarrierType m_memoryBarrier;
+		unsigned int m_numOfGroups[3];
+		MemoryBarrierType m_memoryBarrier;
 
-		const ShaderUniformUpdater &m_uniformUpdater;
-		const UniformObjectData m_uniformObjectData;
+		ShaderUniformUpdater &m_uniformUpdater;
+		UniformObjectData m_uniformObjectData;
 
-		const unsigned int m_shaderHandle;
+		unsigned int m_shaderHandle;
 	};
 
 	// Used for binding textures and framebuffers for reading and writing
@@ -417,8 +417,8 @@ public:
 	};
 
 	// First element is a sort key, second element is an object to draw
-	typedef std::vector<std::pair<int64_t, DrawCommand>> DrawCommands;
-	typedef std::vector<std::pair<int64_t, ScreenSpaceDrawCommand>> ScreenSpaceDrawCommands;
+	typedef std::vector<std::pair<uint64_t, DrawCommand>> DrawCommands;
+	typedef std::vector<std::pair<uint64_t, ScreenSpaceDrawCommand>> ScreenSpaceDrawCommands;
 
 	typedef std::vector<LoadCommand> LoadCommands;
 	typedef std::vector<std::pair<UnloadObjectType, unsigned int>> UnloadCommands;
@@ -528,7 +528,7 @@ protected:
 	}
 
 	// Uniform update functions
-	inline void textureUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
+	inline void textureUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater *p_uniformUpdater, const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
 	{
 		// Check if the texture uniforms haven't been updated already
 		//if(m_rendererState.m_lastTexUpdate != p_shaderHandle)
@@ -537,11 +537,11 @@ protected:
 			UniformData uniformData(p_objectData, p_frameData);
 
 			// Update texture uniforms
-			p_uniformUpdater.updateTextureUniforms(uniformData);
+			p_uniformUpdater->updateTextureUniforms(uniformData);
 			m_rendererState.m_lastTexUpdate = p_shaderHandle;
 		//}
 	}
-	inline void frameUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
+	inline void frameUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater *p_uniformUpdater, const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
 	{
 		// Check if the frame uniforms haven't been updated already
 		//if(m_rendererState.m_lastFrameUpdate != p_shaderHandle)
@@ -552,11 +552,11 @@ protected:
 			UniformData uniformData(p_objectData, p_frameData);
 
 			// Update frame uniforms
-			p_uniformUpdater.updateFrame(uniformData);
+			p_uniformUpdater->updateFrame(uniformData);
 			m_rendererState.m_lastFrameUpdate = p_shaderHandle;
 		//}
 	}
-	inline void modelUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
+	inline void modelUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater *p_uniformUpdater, const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
 	{
 		// Check if the model uniforms haven't been updated already
 		//if(m_rendererState.m_lastModelUpdate != p_shaderHandle)
@@ -565,11 +565,11 @@ protected:
 			UniformData uniformData(p_objectData, p_frameData);
 			
 			// Update model uniforms
-			p_uniformUpdater.updateModel(uniformData);
+			p_uniformUpdater->updateModel(uniformData);
 			m_rendererState.m_lastModelUpdate = p_shaderHandle;
 		//}
 	}
-	inline void meshUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater &p_uniformUpdater, const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
+	inline void meshUniformUpdate(const unsigned int p_shaderHandle, const ShaderUniformUpdater *p_uniformUpdater, const UniformObjectData &p_objectData, const UniformFrameData &p_frameData)
 	{
 		// Check if the mesh uniforms haven't been updated already
 		//if(m_rendererState.m_lastMeshUpdate != p_shaderHandle)
@@ -578,7 +578,7 @@ protected:
 			UniformData uniformData(p_objectData, p_frameData);
 
 			// Update mesh uniforms
-			p_uniformUpdater.updateMesh(uniformData);
+			p_uniformUpdater->updateMesh(uniformData);
 			m_rendererState.m_lastMeshUpdate = p_shaderHandle;
 		//}
 	}
