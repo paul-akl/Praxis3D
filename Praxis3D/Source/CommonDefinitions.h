@@ -39,6 +39,7 @@ enum EngineChangeType : unsigned int
 	EngineChangeType_None = 0,
 	EngineChangeType_SceneFilename,
 	EngineChangeType_SceneLoad,
+	EngineChangeType_SceneUnload,
 	EngineChangeType_SceneReload,
 	EngineChangeType_StateChange
 };
@@ -310,6 +311,13 @@ enum AudioBusType : unsigned int
 	AudioBusType_Music,
 	AudioBusType_SFX,
 	AudioBusType_NumOfTypes
+};
+
+enum GuiFontType : unsigned int
+{
+	GuiFontType_Default = 0,
+	GuiFontType_AboutWindow,
+	GuiFontType_NumOfTypes
 };
 
 #define OBJ_MATERIAL_ID(Code) \

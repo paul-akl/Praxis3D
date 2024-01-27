@@ -56,6 +56,7 @@ void Config::init()
 	// Audio Variables
 	AddVariablePredef(m_audioVar, impact_impulse_param_divider);
 	AddVariablePredef(m_audioVar, impact_impulse_volume_divider);
+	AddVariablePredef(m_audioVar, impact_min_volume_threshold);
 	AddVariablePredef(m_audioVar, impact_max_volume_threshold); 
 	AddVariablePredef(m_audioVar, impact_soft_hard_threshold);
 	AddVariablePredef(m_audioVar, max_impact_volume);
@@ -221,6 +222,7 @@ void Config::init()
 	AddVariablePredef(m_GUIVar, gui_render);
 	AddVariablePredef(m_GUIVar, gui_dark_style);
 	AddVariablePredef(m_GUIVar, gui_sequence_array_reserve_size);
+	AddVariablePredef(m_GUIVar, about_window_font_size);
 	AddVariablePredef(m_GUIVar, editor_asset_selection_button_size_multiplier);
 	AddVariablePredef(m_GUIVar, editor_asset_texture_button_size_x);
 	AddVariablePredef(m_GUIVar, editor_asset_texture_button_size_y);
@@ -238,6 +240,8 @@ void Config::init()
 	AddVariablePredef(m_GUIVar, loading_spinner_radius);
 	AddVariablePredef(m_GUIVar, loading_spinner_speed);
 	AddVariablePredef(m_GUIVar, loading_spinner_thickness);
+	AddVariablePredef(m_GUIVar, about_window_font);
+	AddVariablePredef(m_GUIVar, about_window_logo_texture);
 	AddVariablePredef(m_GUIVar, editor_button_add_texture);
 	AddVariablePredef(m_GUIVar, editor_button_add_list_texture);
 	AddVariablePredef(m_GUIVar, editor_button_arrow_down_texture);
@@ -255,6 +259,8 @@ void Config::init()
 	AddVariablePredef(m_GUIVar, editor_button_scripting_enabled_texture);
 	AddVariablePredef(m_GUIVar, editor_new_entity_name);
 	AddVariablePredef(m_GUIVar, gui_editor_window_name);
+	AddVariablePredef(m_GUIVar, url_github);
+	AddVariablePredef(m_GUIVar, url_pauldev);
 
 	// Input variables
 	AddVariablePredef(m_inputVar, back_key);
@@ -324,7 +330,8 @@ void Config::init()
 
 	// File-path variables
 	AddVariablePredef(m_filepathVar, config_path);
-	AddVariablePredef(m_filepathVar, engine_assets_path);
+	AddVariablePredef(m_filepathVar, engine_assets_path); 
+	AddVariablePredef(m_filepathVar, font_path);
 	AddVariablePredef(m_filepathVar, gui_assets_path);
 	AddVariablePredef(m_filepathVar, map_path);
 	AddVariablePredef(m_filepathVar, model_path);

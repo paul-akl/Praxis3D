@@ -79,6 +79,7 @@ public:
 	{
 		p_constructionInfo.m_active = p_component.isObjectActive();
 		p_constructionInfo.m_name = p_component.getName();
+		p_constructionInfo.m_pauseInEditor = p_component.pauseInEditor();
 
 		if(p_component.getLuaScript() != nullptr)
 		{

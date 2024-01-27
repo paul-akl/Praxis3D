@@ -1,5 +1,5 @@
 {
-	"LoadInBackground": "false",
+	"LoadInBackground": "true",
 	"GameObject": 
 	[
 		{
@@ -10,6 +10,7 @@
 			{
 				"LuaComponent": 
 				{
+					"PauseInEditor": "false",
 					"Active": "true",
 					"Filename": "Window_controls.lua"
 				}
@@ -828,6 +829,95 @@
 		},
 		{
 			"Name": "Cube 1",
+			"ID": "10",
+			"Parent": "0",
+			"Prefab": "cubeRigidBody.prefab",
+			"Graphics": 
+			{
+				"ModelComponent": 
+				{
+					"Active": "true",
+					"Models": 
+					[
+						{
+							"Filename": "Default\cube.fbx",
+							"Meshes": 
+							[
+								{
+									"Index": "0",
+									"Active": "true",
+									"AlphaThreshold": "0.0f",
+									"EmissiveIntensity": "0.0f",
+									"HeightScale": "0.0f",
+									"StochasticSampling": "false",
+									"StochasticSamplingScale": "1.0f",
+									"WrapMode": "Repeat",
+									"Materials": 
+									{
+										"Diffuse": 
+										{
+											"Filename": "Default\grid_gray_1_alb.png",
+											"TextureScale": "2.0f, 1.0f"
+										},
+										"Normal": 
+										{
+											"Filename": "Default\default_normal.png",
+											"TextureScale": "1.0f, 1.0f"
+										},
+										"Emissive": 
+										{
+											"Filename": "Default\default_emissive.png",
+											"TextureScale": "1.0f, 1.0f"
+										},
+										"RMHAO": 
+										{
+											"Filename": "Default\grid_1_RMHA.png",
+											"TextureScale": "1.0f, 1.0f"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			"Physics": 
+			{
+				"RigidBodyComponent": 
+				{
+					"Active": "true",
+					"Friction": "0.5f",
+					"Kinematic": "false",
+					"Mass": "10.0f",
+					"Restitution": "0.5f",
+					"RollingFriction": "1.0f",
+					"SpinningFriction": "1.0f",
+					"CollisionShape": 
+					{
+						"Type": "Box",
+						"Size": "2.0f, 2.0f, 2.0f"
+					}
+				}
+			},
+			"World": 
+			{
+				"ObjectMaterialComponent": 
+				{
+					"Active": "true",
+					"Type": "Rock"
+				},
+				"SpatialComponent": 
+				{
+					"Active": "true",
+					"LocalPosition": "5.0002f, 2.0f, 29.996f",
+					"LocalRotation": "1.92908e-05f, -0.233349f, -0.000159582f",
+					"LocalRotationQuaternion": "0.999998f, 1.65508e-07f, -0.00203635f, -1.39227e-06f",
+					"LocalScale": "2.0f, 2.0f, 2.0f"
+				}
+			}
+		},
+		{
+			"Name": "Cube 2",
 			"ID": "11",
 			"Parent": "0",
 			"Prefab": "cubeRigidBody.prefab",
@@ -903,20 +993,20 @@
 				"ObjectMaterialComponent": 
 				{
 					"Active": "true",
-					"Type": "Rubber"
+					"Type": "Rock"
 				},
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "5.0002f, 2.0f, 29.996f",
-					"LocalRotation": "1.92908e-05f, -0.233349f, -0.000159582f",
-					"LocalRotationQuaternion": "0.999998f, 1.65508e-07f, -0.00203635f, -1.39227e-06f",
+					"LocalPosition": "0.00257387f, 1.99999f, 29.9871f",
+					"LocalRotation": "0.000140975f, 0.214498f, 0.000389868f",
+					"LocalRotationQuaternion": "0.999998f, 1.22387e-06f, 0.00187185f, 3.39993e-06f",
 					"LocalScale": "2.0f, 2.0f, 2.0f"
 				}
 			}
 		},
 		{
-			"Name": "Cube 2",
+			"Name": "Cube 3",
 			"ID": "12",
 			"Parent": "0",
 			"Prefab": "cubeRigidBody.prefab",
@@ -992,20 +1082,20 @@
 				"ObjectMaterialComponent": 
 				{
 					"Active": "true",
-					"Type": "Metal"
+					"Type": "Rock"
 				},
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "0.00257387f, 1.99999f, 29.9871f",
-					"LocalRotation": "0.000140975f, 0.214498f, 0.000389868f",
-					"LocalRotationQuaternion": "0.999998f, 1.22387e-06f, 0.00187185f, 3.39993e-06f",
+					"LocalPosition": "-5.00142f, 1.99987f, 29.989f",
+					"LocalRotation": "-0.00116673f, -0.371206f, -0.00294637f",
+					"LocalRotationQuaternion": "0.999995f, -1.02649e-05f, -0.00323938f, -2.57448e-05f",
 					"LocalScale": "2.0f, 2.0f, 2.0f"
 				}
 			}
 		},
 		{
-			"Name": "Cube 3",
+			"Name": "Cube 4",
 			"ID": "13",
 			"Parent": "0",
 			"Prefab": "cubeRigidBody.prefab",
@@ -1081,20 +1171,20 @@
 				"ObjectMaterialComponent": 
 				{
 					"Active": "true",
-					"Type": "Metal"
+					"Type": "Rock"
 				},
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "-5.00142f, 1.99987f, 29.989f",
-					"LocalRotation": "-0.00116673f, -0.371206f, -0.00294637f",
-					"LocalRotationQuaternion": "0.999995f, -1.02649e-05f, -0.00323938f, -2.57448e-05f",
+					"LocalPosition": "-9.99597f, 1.99999f, 29.9966f",
+					"LocalRotation": "0.000212867f, 0.401212f, 0.000299044f",
+					"LocalRotationQuaternion": "0.999994f, 1.84847e-06f, 0.00350123f, 2.60313e-06f",
 					"LocalScale": "2.0f, 2.0f, 2.0f"
 				}
 			}
 		},
 		{
-			"Name": "Cube 4",
+			"Name": "Cube 5",
 			"ID": "14",
 			"Parent": "0",
 			"Prefab": "cubeRigidBody.prefab",
@@ -1170,20 +1260,20 @@
 				"ObjectMaterialComponent": 
 				{
 					"Active": "true",
-					"Type": "Metal"
+					"Type": "Rock"
 				},
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "-9.99597f, 1.99999f, 29.9966f",
-					"LocalRotation": "0.000212867f, 0.401212f, 0.000299044f",
-					"LocalRotationQuaternion": "0.999994f, 1.84847e-06f, 0.00350123f, 2.60313e-06f",
+					"LocalPosition": "-13.1083f, 2.0f, 26.1834f",
+					"LocalRotation": "-1.25699e-05f, 51.1743f, 2.62711e-06f",
+					"LocalRotationQuaternion": "0.901929f, -1.08837e-07f, 0.431883f, 6.80522e-08f",
 					"LocalScale": "2.0f, 2.0f, 2.0f"
 				}
 			}
 		},
 		{
-			"Name": "Cube 5",
+			"Name": "Cube 6",
 			"ID": "15",
 			"Parent": "0",
 			"Prefab": "cubeRigidBody.prefab",
@@ -1259,96 +1349,7 @@
 				"ObjectMaterialComponent": 
 				{
 					"Active": "true",
-					"Type": "Metal"
-				},
-				"SpatialComponent": 
-				{
-					"Active": "true",
-					"LocalPosition": "-13.1083f, 2.0f, 26.1834f",
-					"LocalRotation": "-1.25699e-05f, 51.1743f, 2.62711e-06f",
-					"LocalRotationQuaternion": "0.901929f, -1.08837e-07f, 0.431883f, 6.80522e-08f",
-					"LocalScale": "2.0f, 2.0f, 2.0f"
-				}
-			}
-		},
-		{
-			"Name": "Cube 6",
-			"ID": "16",
-			"Parent": "0",
-			"Prefab": "cubeRigidBody.prefab",
-			"Graphics": 
-			{
-				"ModelComponent": 
-				{
-					"Active": "true",
-					"Models": 
-					[
-						{
-							"Filename": "Default\cube.fbx",
-							"Meshes": 
-							[
-								{
-									"Index": "0",
-									"Active": "true",
-									"AlphaThreshold": "0.0f",
-									"EmissiveIntensity": "0.0f",
-									"HeightScale": "0.0f",
-									"StochasticSampling": "false",
-									"StochasticSamplingScale": "1.0f",
-									"WrapMode": "Repeat",
-									"Materials": 
-									{
-										"Diffuse": 
-										{
-											"Filename": "Default\grid_gray_1_alb.png",
-											"TextureScale": "2.0f, 1.0f"
-										},
-										"Normal": 
-										{
-											"Filename": "Default\default_normal.png",
-											"TextureScale": "1.0f, 1.0f"
-										},
-										"Emissive": 
-										{
-											"Filename": "Default\default_emissive.png",
-											"TextureScale": "1.0f, 1.0f"
-										},
-										"RMHAO": 
-										{
-											"Filename": "Default\grid_1_RMHA.png",
-											"TextureScale": "1.0f, 1.0f"
-										}
-									}
-								}
-							]
-						}
-					]
-				}
-			},
-			"Physics": 
-			{
-				"RigidBodyComponent": 
-				{
-					"Active": "true",
-					"Friction": "0.5f",
-					"Kinematic": "false",
-					"Mass": "10.0f",
-					"Restitution": "0.5f",
-					"RollingFriction": "1.0f",
-					"SpinningFriction": "1.0f",
-					"CollisionShape": 
-					{
-						"Type": "Box",
-						"Size": "2.0f, 2.0f, 2.0f"
-					}
-				}
-			},
-			"World": 
-			{
-				"ObjectMaterialComponent": 
-				{
-					"Active": "true",
-					"Type": "Metal"
+					"Type": "Rock"
 				},
 				"SpatialComponent": 
 				{
@@ -1362,7 +1363,7 @@
 		},
 		{
 			"Name": "Cube 7",
-			"ID": "17",
+			"ID": "16",
 			"Parent": "0",
 			"Prefab": "cubeRigidBody.prefab",
 			"Graphics": 
@@ -1437,7 +1438,7 @@
 				"ObjectMaterialComponent": 
 				{
 					"Active": "true",
-					"Type": "Rubber"
+					"Type": "Rock"
 				},
 				"SpatialComponent": 
 				{
@@ -1451,7 +1452,7 @@
 		},
 		{
 			"Name": "Cube 8",
-			"ID": "18",
+			"ID": "17",
 			"Parent": "0",
 			"Prefab": "cubeRigidBody.prefab",
 			"Graphics": 
@@ -1526,7 +1527,7 @@
 				"ObjectMaterialComponent": 
 				{
 					"Active": "true",
-					"Type": "Rubber"
+					"Type": "Rock"
 				},
 				"SpatialComponent": 
 				{
@@ -1540,7 +1541,7 @@
 		},
 		{
 			"Name": "Cube 9",
-			"ID": "19",
+			"ID": "18",
 			"Parent": "0",
 			"Prefab": "cubeRigidBody.prefab",
 			"Graphics": 
@@ -1615,7 +1616,7 @@
 				"ObjectMaterialComponent": 
 				{
 					"Active": "true",
-					"Type": "Metal"
+					"Type": "Rock"
 				},
 				"SpatialComponent": 
 				{
@@ -1629,7 +1630,7 @@
 		},
 		{
 			"Name": "Cube 10",
-			"ID": "20",
+			"ID": "19",
 			"Parent": "0",
 			"Prefab": "cubeRigidBody.prefab",
 			"Graphics": 
@@ -1704,7 +1705,7 @@
 				"ObjectMaterialComponent": 
 				{
 					"Active": "true",
-					"Type": "Rubber"
+					"Type": "Rock"
 				},
 				"SpatialComponent": 
 				{
@@ -1718,7 +1719,7 @@
 		},
 		{
 			"Name": "Cube 11",
-			"ID": "21",
+			"ID": "20",
 			"Parent": "0",
 			"Prefab": "cubeRigidBody.prefab",
 			"Graphics": 
@@ -1793,7 +1794,7 @@
 				"ObjectMaterialComponent": 
 				{
 					"Active": "true",
-					"Type": "Metal"
+					"Type": "Rock"
 				},
 				"SpatialComponent": 
 				{
@@ -1807,7 +1808,7 @@
 		},
 		{
 			"Name": "Cube 12",
-			"ID": "22",
+			"ID": "21",
 			"Parent": "0",
 			"Prefab": "cubeRigidBody.prefab",
 			"Graphics": 
@@ -1882,12 +1883,12 @@
 				"ObjectMaterialComponent": 
 				{
 					"Active": "true",
-					"Type": "Metal"
+					"Type": "Rock"
 				},
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "17.5926f, 2.00004f, 31.3525f",
+					"LocalPosition": "17.3766f, 2.00006f, 31.3525f",
 					"LocalRotation": "0.0f, -31.5152f, 0.0f",
 					"LocalRotationQuaternion": "0.962419f, 0.0f, -0.271568f, 0.0f",
 					"LocalScale": "2.0f, 2.0f, 2.0f"
@@ -1896,7 +1897,7 @@
 		},
 		{
 			"Name": "Sphere 1",
-			"ID": "23",
+			"ID": "22",
 			"Parent": "0",
 			"Graphics": 
 			{
@@ -1971,6 +1972,89 @@
 				{
 					"Active": "true",
 					"LocalPosition": "-0.261543f, 18.7009f, 30.0f",
+					"LocalRotation": "0.584159f, 65.048f, -179.714f",
+					"LocalRotationQuaternion": "0.000638762f, -0.537655f, 0.00295783f, 0.843159f",
+					"LocalScale": "1.0f, 1.0f, 1.0f"
+				}
+			}
+		},
+		{
+			"Name": "Sphere 2",
+			"ID": "23",
+			"Parent": "0",
+			"Graphics": 
+			{
+				"ModelComponent": 
+				{
+					"Active": "true",
+					"Models": 
+					[
+						{
+							"Filename": "Default\sphereHighpoly.fbx",
+							"Meshes": 
+							[
+								{
+									"Index": "0",
+									"Active": "true",
+									"AlphaThreshold": "0.0f",
+									"EmissiveIntensity": "0.0f",
+									"HeightScale": "0.0f",
+									"StochasticSampling": "false",
+									"StochasticSamplingScale": "1.0f",
+									"WrapMode": "Repeat",
+									"Materials": 
+									{
+										"Diffuse": 
+										{
+											"Filename": "Default\grid_yellow_alb.png",
+											"TextureScale": "4.0f, 1.0f"
+										},
+										"Normal": 
+										{
+											"Filename": "Default\default_normal.png",
+											"TextureScale": "1.0f, 1.0f"
+										},
+										"Emissive": 
+										{
+											"Filename": "Default\default_emissive.png",
+											"TextureScale": "1.0f, 1.0f"
+										},
+										"RMHAO": 
+										{
+											"Filename": "Default\grid_2_RMHA.png",
+											"TextureScale": "1.0f, 1.0f"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			"Physics": 
+			{
+				"RigidBodyComponent": 
+				{
+					"Active": "true",
+					"Friction": "0.85f",
+					"Kinematic": "false",
+					"Mass": "2.0f",
+					"Restitution": "1.0f",
+					"RollingFriction": "0.001f",
+					"SpinningFriction": "1.0f",
+					"CollisionShape": 
+					{
+						"Type": "Sphere",
+						"Size": "1.0f, 1.0f, 1.0f"
+					}
+				}
+			},
+			"World": 
+			{
+				"SpatialComponent": 
+				{
+					"Active": "true",
+					"LocalPosition": "-4.95439f, 18.7009f, 27.759f",
 					"LocalRotation": "0.584159f, 65.048f, -179.714f",
 					"LocalRotationQuaternion": "0.000638762f, -0.537655f, 0.00295783f, 0.843159f",
 					"LocalScale": "1.0f, 1.0f, 1.0f"
@@ -2509,13 +2593,22 @@
 			{
 				"LuaComponent": 
 				{
-					"Active": "false",
-					"Filename": "Constant_rotation.lua",
+					"PauseInEditor": "true",
+					"Active": "true",
+					"Filename": "Constant_rotation_single_axis.lua",
 					"Variables": 
 					[
 						{
 							"Name": "rotationSpeed",
 							"Value": "50.0f"
+						},
+						{
+							"Name": "rotationAxis",
+							"Value": "0.0f, 1.0f, 0.0f"
+						},
+						{
+							"Name": "syncWithPhysicsSimulation",
+							"Value": "true"
 						}
 					]
 				}
@@ -2735,13 +2828,22 @@
 			{
 				"LuaComponent": 
 				{
-					"Active": "false",
-					"Filename": "Constant_rotation.lua",
+					"PauseInEditor": "true",
+					"Active": "true",
+					"Filename": "Constant_rotation_single_axis.lua",
 					"Variables": 
 					[
 						{
 							"Name": "rotationSpeed",
 							"Value": "50.0f"
+						},
+						{
+							"Name": "rotationAxis",
+							"Value": "0.0f, 1.0f, 0.0f"
+						},
+						{
+							"Name": "syncWithPhysicsSimulation",
+							"Value": "true"
 						}
 					]
 				}
@@ -2912,7 +3014,8 @@
 			{
 				"SoundListenerComponent": 
 				{
-					"Active": "true"
+					"Active": "true",
+					"ID": "0"
 				}
 			},
 			"Graphics": 
@@ -2930,6 +3033,7 @@
 			{
 				"LuaComponent": 
 				{
+					"PauseInEditor": "false",
 					"Active": "true",
 					"Filename": "Camera_free.lua",
 					"Variables": 
@@ -2950,9 +3054,9 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "0.474485f, 6.47126f, 7.71065f",
-					"LocalRotation": "168.727f, -0.453055f, -179.917f",
-					"LocalRotationQuaternion": "-0.00400652f, -0.000332513f, 0.994943f, 0.0981934f",
+					"LocalPosition": "-1.33628f, 8.73796f, 3.85384f",
+					"LocalRotation": "175.977f, -2.05774f, -179.87f",
+					"LocalRotationQuaternion": "-0.017989f, -0.000506373f, 0.999005f, 0.0350705f",
 					"LocalScale": "1.0f, 1.0f, 1.0f"
 				}
 			}
@@ -2975,8 +3079,28 @@
 			{
 				"LuaComponent": 
 				{
+					"PauseInEditor": "true",
 					"Active": "true",
-					"Filename": "Sun_move.lua"
+					"Filename": "Constant_rotation_two_axes.lua",
+					"Variables": 
+					[
+						{
+							"Name": "rotationSpeed",
+							"Value": "0.5f"
+						},
+						{
+							"Name": "rotationAxis1",
+							"Value": "0.0f, 1.0f, 0.0f"
+						},
+						{
+							"Name": "rotationAxis2",
+							"Value": "1.0f, 0.0f, 0.0f"
+						},
+						{
+							"Name": "syncWithPhysicsSimulation",
+							"Value": "true"
+						}
+					]
 				}
 			},
 			"World": 
@@ -2985,9 +3109,102 @@
 				{
 					"Active": "true",
 					"LocalPosition": "0.0f, 0.0f, 0.0f",
-					"LocalRotation": "-68.861f, -42.1089f, -0.000119687f",
-					"LocalRotationQuaternion": "0.769747f, -0.527659f, -0.296318f, -0.203126f",
+					"LocalRotation": "-50f, -59.9991f, -0.000375651f",
+					"LocalRotationQuaternion": "0.784888f, -0.366001f, -0.453147f, -0.211309f",
 					"LocalScale": "1.0f, 1.0f, 1.0f"
+				}
+			}
+		},
+		{
+			"Name": "Day-night ambient sound",
+			"ID": "37",
+			"Parent": "0",
+			"Script": 
+			{
+				"LuaComponent": 
+				{
+					"PauseInEditor": "false",
+					"Active": "true",
+					"Filename": "Day_night_cycle_ambient_sound.lua",
+					"Variables": 
+					[
+						{
+							"Name": "entityNameSun",
+							"Value": "Directional sunlight"
+						},
+						{
+							"Name": "entityNameDaySound",
+							"Value": "Ambient sound day"
+						},
+						{
+							"Name": "entityNameNightSound",
+							"Value": "Ambient sound night"
+						},
+						{
+							"Name": "dayNightTransitionRange",
+							"Value": "0.1f"
+						}
+					]
+				}
+			}
+		},
+		{
+			"Name": "Ambient sound day",
+			"ID": "38",
+			"Parent": "37",
+			"Audio": 
+			{
+				"SoundComponent": 
+				{
+					"Active": "true",
+					"Loop": "true",
+					"Name": "Ambient_default_day",
+					"Source": "Event",
+					"Spatialized": "false",
+					"StartPlaying": "true",
+					"Type": "Ambient",
+					"Volume": "1.0f"
+				}
+			}
+		},
+		{
+			"Name": "Ambient sound night",
+			"ID": "39",
+			"Parent": "37",
+			"Audio": 
+			{
+				"SoundComponent": 
+				{
+					"Active": "true",
+					"Loop": "true",
+					"Name": "Ambient_default_night",
+					"Source": "Event",
+					"Spatialized": "false",
+					"StartPlaying": "true",
+					"Type": "Ambient",
+					"Volume": "0.0f"
+				}
+			}
+		},
+		{
+			"Name": "Startup window",
+			"ID": "40",
+			"Parent": "0",
+			"GUI": 
+			{
+				"GUISequenceComponent": 
+				{
+					"Active": "true",
+					"Static": "false"
+				}
+			},
+			"Script": 
+			{
+				"LuaComponent": 
+				{
+					"PauseInEditor": "true",
+					"Active": "true",
+					"Filename": "Example_map_startup_window.lua"
 				}
 			}
 		}
@@ -3000,18 +3217,21 @@
 			{
 				"ObjectPoolSize": 
 				{
-					"SoundComponent": "0",
+					"SoundComponent": "2",
 					"SoundListenerComponent": "1"
 				},
 				"Banks": 
 				[
 					{
 						"Filename": "Default\Impact.bank"
+					},
+					{
+						"Filename": "Default\Ambient.bank"
 					}
 				],
 				"Volume": 
 				{
-					"Ambient": "1.0f",
+					"Ambient": "0.2f",
 					"Master": "0.5f",
 					"Music": "0.1f",
 					"SoundEffect": "1.0f"
@@ -3049,7 +3269,7 @@
 				{
 					"CameraComponent": "1",
 					"LightComponent": "10",
-					"ModelComponent": "33",
+					"ModelComponent": "34",
 					"ShaderComponent": "0"
 				},
 				"RenderPasses": 
@@ -3088,7 +3308,7 @@
 				"ShadowMapping": 
 				{
 					"PenumbraSize": "0.72f",
-					"PenumbraScaleRange": "1.0f, 2000.0f",
+					"PenumbraScaleRange": "1.0f, 300.0f",
 					"Resolution": "4096",
 					"ZClipping": "true",
 					"ZPlaneMultiplier": "10.0f",
@@ -3109,6 +3329,11 @@
 							"PenumbraScale": "1.0f"
 						},
 						{
+							"Distance": "32.0f",
+							"BiasMax": "0.0005f",
+							"PenumbraScale": "1.0f"
+						},
+						{
 							"Distance": "64.0f",
 							"BiasMax": "0.0005f",
 							"PenumbraScale": "1.0f"
@@ -3121,12 +3346,17 @@
 						{
 							"Distance": "256.0f",
 							"BiasMax": "0.0005f",
+							"PenumbraScale": "2.0f"
+						},
+						{
+							"Distance": "512.0f",
+							"BiasMax": "0.0005f",
 							"PenumbraScale": "1.0f"
 						},
 						{
 							"Divider": "1.0f",
 							"BiasMax": "0.0005f",
-							"PenumbraScale": "2.0f"
+							"PenumbraScale": "1.0f"
 						}
 					]
 				}
@@ -3141,7 +3371,7 @@
 			{
 				"ObjectPoolSize": 
 				{
-					"GUISequenceComponent": "0"
+					"GUISequenceComponent": "1"
 				}
 			},
 			"System": 
@@ -3155,8 +3385,8 @@
 				"Gravity": "0.0f, -9.8f, 0.0f",
 				"ObjectPoolSize": 
 				{
-					"RigidBodyComponent": "27",
-					"CollisionEventComponent": "27"
+					"RigidBodyComponent": "28",
+					"CollisionEventComponent": "28"
 				}
 			},
 			"System": 
@@ -3169,7 +3399,7 @@
 			{
 				"ObjectPoolSize": 
 				{
-					"LuaComponent": "5"
+					"LuaComponent": "7"
 				}
 			},
 			"System": 
@@ -3182,9 +3412,9 @@
 			{
 				"ObjectPoolSize": 
 				{
-					"MetadataComponent": "36",
+					"MetadataComponent": "41",
 					"ObjectMaterialComponent": "26",
-					"SpatialComponent": "36"
+					"SpatialComponent": "37"
 				}
 			},
 			"System": 

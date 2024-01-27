@@ -6,10 +6,12 @@
 #include "PropertyLoader.h"
 #include "SceneLoader.h"
 
-SceneLoader::SceneLoader()
+SceneLoader::SceneLoader(const EngineStateType p_engineStateType) : m_engineStateType(p_engineStateType)
 {
 	m_changeController = nullptr;
 	m_loadInBackground = false;
+	m_loadingStatus = true;
+	m_firstLoad = true;
 
 	for(int i = 0; i < Systems::NumberOfSystems; i++)
 		m_systemScenes[i] = g_nullSystemBase.createScene(this, EngineStateType::EngineStateType_Default);
@@ -442,65 +444,63 @@ void SceneLoader::importFromProperties(AudioComponentsConstructionInfo &p_constr
 					p_constructionInfo.m_soundConstructionInfo = new SoundComponent::SoundComponentConstructionInfo();
 
 				p_constructionInfo.m_soundConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::SoundComponent);
-				p_properties.getValueByID(Properties::Active, p_constructionInfo.m_soundConstructionInfo->m_active);
 
-				// Get the sound filename
-				auto const &filename = p_properties.getPropertyByID(Properties::Filename).getString();
-
-				if(!filename.empty())
+				// Load property data
+				for(decltype(p_properties.getNumProperties()) i = 0, size = p_properties.getNumProperties(); i < size; i++)
 				{
-					// Get the sound type
-					auto const &type = p_properties.getPropertyByID(Properties::Type).getID();
-
-					// Load values based on the type of sound
-					switch(type)
+					switch(p_properties[i].getPropertyID())
 					{
-					case Properties::Ambient:
-
-						p_constructionInfo.m_soundConstructionInfo->m_soundType = SoundComponent::SoundType::SoundType_Ambient;
-
-						p_properties.getValueByID(Properties::Loop, p_constructionInfo.m_soundConstructionInfo->m_loop);
-						p_properties.getValueByID(Properties::Spatialized, p_constructionInfo.m_soundConstructionInfo->m_spatialized);
-						p_properties.getValueByID(Properties::StartPlaying, p_constructionInfo.m_soundConstructionInfo->m_startPlaying);
-						p_properties.getValueByID(Properties::Volume, p_constructionInfo.m_soundConstructionInfo->m_volume);
-						p_constructionInfo.m_soundConstructionInfo->m_soundFilename = filename;
-
-						break;
-
-					case Properties::Music:
-
-						p_constructionInfo.m_soundConstructionInfo->m_soundType = SoundComponent::SoundType::SoundType_Music;
-
-						p_properties.getValueByID(Properties::Loop, p_constructionInfo.m_soundConstructionInfo->m_loop);
-						p_properties.getValueByID(Properties::Spatialized, p_constructionInfo.m_soundConstructionInfo->m_spatialized);
-						p_properties.getValueByID(Properties::StartPlaying, p_constructionInfo.m_soundConstructionInfo->m_startPlaying);
-						p_properties.getValueByID(Properties::Volume, p_constructionInfo.m_soundConstructionInfo->m_volume);
-						p_constructionInfo.m_soundConstructionInfo->m_soundFilename = filename;
-
-						break;
-
-					case Properties::SoundEffect:
-
-						p_constructionInfo.m_soundConstructionInfo->m_soundType = SoundComponent::SoundType::SoundType_SoundEffect;
-
-						p_properties.getValueByID(Properties::Loop, p_constructionInfo.m_soundConstructionInfo->m_loop);
-						p_properties.getValueByID(Properties::Spatialized, p_constructionInfo.m_soundConstructionInfo->m_spatialized);
-						p_properties.getValueByID(Properties::StartPlaying, p_constructionInfo.m_soundConstructionInfo->m_startPlaying);
-						p_properties.getValueByID(Properties::Volume, p_constructionInfo.m_soundConstructionInfo->m_volume);
-						p_constructionInfo.m_soundConstructionInfo->m_soundFilename = filename;
-
-						break;
-
-					default:
-
-						ErrHandlerLoc().get().log(ErrorCode::Property_missing_type, p_name, ErrorSource::Source_SoundComponent);
-						delete p_constructionInfo.m_soundConstructionInfo;
-						p_constructionInfo.m_soundConstructionInfo = nullptr;
-
-						break;
+						case Properties::Active:
+							p_constructionInfo.m_soundConstructionInfo->m_active = p_properties[i].getBool();
+							break;
+						case Properties::Loop:
+							p_constructionInfo.m_soundConstructionInfo->m_loop = p_properties[i].getBool();
+							break;
+						case Properties::Name:
+							p_constructionInfo.m_soundConstructionInfo->m_soundName = p_properties[i].getString();
+							break;
+						case Properties::Source:
+							switch(p_properties[i].getID())
+							{
+								case Properties::Event:
+									p_constructionInfo.m_soundConstructionInfo->m_soundSourceType = SoundComponent::SoundSourceType::SoundSourceType_Event;
+									break;
+								case Properties::File:
+									p_constructionInfo.m_soundConstructionInfo->m_soundSourceType = SoundComponent::SoundSourceType::SoundSourceType_File;
+									break;
+							}
+							break;
+						case Properties::Spatialized:
+							p_constructionInfo.m_soundConstructionInfo->m_spatialized = p_properties[i].getBool();
+							break;
+						case Properties::StartPlaying:
+							p_constructionInfo.m_soundConstructionInfo->m_startPlaying = p_properties[i].getBool();
+							break;
+						case Properties::Type:
+							switch(p_properties[i].getID())
+							{
+								case Properties::Ambient:
+									p_constructionInfo.m_soundConstructionInfo->m_soundType = SoundComponent::SoundType::SoundType_Ambient;
+									break;
+								case Properties::Music:
+									p_constructionInfo.m_soundConstructionInfo->m_soundType = SoundComponent::SoundType::SoundType_Music;
+									break;
+								case Properties::SoundEffect:
+									p_constructionInfo.m_soundConstructionInfo->m_soundType = SoundComponent::SoundType::SoundType_SoundEffect;
+									break;
+								default:
+									ErrHandlerLoc().get().log(ErrorCode::Property_missing_type, p_name, ErrorSource::Source_SoundComponent);
+									break;
+								}
+							break;
+						case Properties::Volume:
+							p_constructionInfo.m_soundConstructionInfo->m_volume = p_properties[i].getFloat();
+							break;
 					}
 				}
-				else
+
+				// Make sure the sound name was set
+				if(p_constructionInfo.m_soundConstructionInfo->m_soundName.empty())
 				{
 					ErrHandlerLoc().get().log(ErrorCode::Property_no_filename, p_name, ErrorSource::Source_SoundComponent);
 					delete p_constructionInfo.m_soundConstructionInfo;
@@ -944,6 +944,9 @@ void SceneLoader::importFromProperties(ScriptComponentsConstructionInfo &p_const
 				p_constructionInfo.m_luaConstructionInfo->m_name = p_name + Config::componentVar().component_name_separator + GetString(Properties::PropertyID::LuaComponent);
 				p_properties.getValueByID(Properties::Active, p_constructionInfo.m_luaConstructionInfo->m_active);
 
+				if(auto const &pauseInEditorProperty = p_properties.getPropertyByID(Properties::PauseInEditor); pauseInEditorProperty)
+					p_constructionInfo.m_luaConstructionInfo->m_pauseInEditor = pauseInEditorProperty.getBool();
+
 				auto const &luaFilenameProperty = p_properties.getPropertyByID(Properties::Filename);
 				auto const &luaVariablesProperty = p_properties.getPropertySetByID(Properties::Variables);
 
@@ -1113,40 +1116,62 @@ void SceneLoader::exportToProperties(const AudioComponentsConstructionInfo &p_co
 	if(	p_constructionInfo.m_soundConstructionInfo != nullptr ||
 		p_constructionInfo.m_soundListenerConstructionInfo != nullptr)
 	{
+		// Add Audio entry
 		auto &propertySet = p_properties.addPropertySet(Properties::PropertyID::Audio);
 
 		// Export SoundComponent
 		if(p_constructionInfo.m_soundConstructionInfo != nullptr)
 		{
-			auto &componentPropertySet = propertySet.addPropertySet(Properties::PropertyID::SoundComponent);
+			// Convert SoundSourceType to PropertyID
+			Properties::PropertyID soundSourceType = Properties::PropertyID::File;
+			switch(p_constructionInfo.m_soundConstructionInfo->m_soundSourceType)
+			{
+				case SoundComponent::SoundSourceType::SoundSourceType_Event:
+					soundSourceType = Properties::PropertyID::Event;
+					break;
+				case SoundComponent::SoundSourceType::SoundSourceType_File:
+					soundSourceType = Properties::PropertyID::File;
+					break;
+			}
 
-			componentPropertySet.addProperty(Properties::PropertyID::Active, p_constructionInfo.m_soundConstructionInfo->m_active);
-			componentPropertySet.addProperty(Properties::PropertyID::Filename, p_constructionInfo.m_soundConstructionInfo->m_soundFilename);
+			// Convert SoundType to PropertyID
+			Properties::PropertyID soundType = Properties::PropertyID::SoundEffect;
 			switch(p_constructionInfo.m_soundConstructionInfo->m_soundType)
 			{
 				case SoundComponent::SoundType::SoundType_Ambient:
-					componentPropertySet.addProperty(Properties::PropertyID::Type, Properties::PropertyID::Ambient);
+					soundType = Properties::PropertyID::Ambient;
 					break;
 				case SoundComponent::SoundType::SoundType_Music:
-					componentPropertySet.addProperty(Properties::PropertyID::Type, Properties::PropertyID::Music);
+					soundType = Properties::PropertyID::Music;
 					break;
 				case SoundComponent::SoundType::SoundType_SoundEffect:
-					componentPropertySet.addProperty(Properties::PropertyID::Type, Properties::PropertyID::SoundEffect);
+					soundType = Properties::PropertyID::SoundEffect;
 					break;
 			}
+
+			// Add SoundComponent entry
+			auto &componentPropertySet = propertySet.addPropertySet(Properties::PropertyID::SoundComponent);
+
+			// Add SoundComponent properties
+			componentPropertySet.addProperty(Properties::PropertyID::Active, p_constructionInfo.m_soundConstructionInfo->m_active);
 			componentPropertySet.addProperty(Properties::PropertyID::Loop, p_constructionInfo.m_soundConstructionInfo->m_loop);
+			componentPropertySet.addProperty(Properties::PropertyID::Name, p_constructionInfo.m_soundConstructionInfo->m_soundName);
+			componentPropertySet.addProperty(Properties::PropertyID::Source, soundSourceType);
 			componentPropertySet.addProperty(Properties::PropertyID::Spatialized, p_constructionInfo.m_soundConstructionInfo->m_spatialized);
 			componentPropertySet.addProperty(Properties::PropertyID::StartPlaying, p_constructionInfo.m_soundConstructionInfo->m_startPlaying);
+			componentPropertySet.addProperty(Properties::PropertyID::Type, soundType);
 			componentPropertySet.addProperty(Properties::PropertyID::Volume, p_constructionInfo.m_soundConstructionInfo->m_volume);
 		}
 
 		// Export SoundListenerComponent
 		if(p_constructionInfo.m_soundListenerConstructionInfo != nullptr)
 		{
+			// Add SoundListenerComponent entry
 			auto &componentPropertySet = propertySet.addPropertySet(Properties::PropertyID::SoundListenerComponent);
 
+			// Add SoundListenerComponent properties
 			componentPropertySet.addProperty(Properties::PropertyID::Active, p_constructionInfo.m_soundListenerConstructionInfo->m_active);
-			//componentPropertySet.addProperty(Properties::PropertyID::ListenerID, p_constructionInfo.m_soundListenerConstructionInfo->m_listenerID);
+			componentPropertySet.addProperty(Properties::PropertyID::ID, p_constructionInfo.m_soundListenerConstructionInfo->m_listenerID);
 		}
 	}
 }
@@ -1398,6 +1423,9 @@ void SceneLoader::exportToProperties(const ScriptComponentsConstructionInfo &p_c
 		if(p_constructionInfo.m_luaConstructionInfo != nullptr)
 		{
 			auto &componentPropertySet = propertySet.addPropertySet(Properties::PropertyID::LuaComponent);
+
+			// Add pause-in-editor flag
+			componentPropertySet.addProperty(Properties::PropertyID::PauseInEditor, p_constructionInfo.m_luaConstructionInfo->m_pauseInEditor);
 
 			// Add LUA component data
 			if(!p_constructionInfo.m_luaConstructionInfo->m_luaScriptFilename.empty())

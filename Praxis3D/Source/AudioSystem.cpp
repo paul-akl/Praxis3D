@@ -58,6 +58,9 @@ ErrorCode AudioSystem::init()
 				}
 			}
 
+			// Get all audio buses
+			assignBusses();
+
 			// Add all channel groups (other than master) to the master channel group as a nested group
 			for(unsigned int i = 0; i < AudioBusType::AudioBusType_NumOfTypes; i++)
 				if(i != AudioBusType::AudioBusType_Master)

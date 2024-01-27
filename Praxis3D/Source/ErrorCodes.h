@@ -60,6 +60,7 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
 	Code(Geometrybuffer_failed,) \
 	/* GUI errors */ \
 	Code(Editor_path_outside_current_dir,) \
+	Code(Font_type_missing_construction,) \
 	Code(GL_context_missing,) \
 	Code(Universal_scene_extend_null,) \
 	Code(Universal_scene_extend_duplicate,) \
@@ -70,6 +71,8 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
 	Code(ObjectPool_full,) \
 	/* Physics system errors */ \
 	Code(Collision_invalid,) \
+	Code(Collision_max_dynamic_events,) \
+	Code(Collision_max_static_events,) \
 	Code(Collision_missing,) \
 	Code(Kinematic_has_mass,) \
 	/* Property loader errors */ \

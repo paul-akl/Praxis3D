@@ -26,7 +26,7 @@ public:
 	{
 		m_renderSceneToTexture = true;
 		m_GUISequenceEnabled = false;
-		m_LUAScriptingEnabled = true;
+		m_LUAScriptingEnabled = false;
 		m_translateGuizmoEnabled = true;
 		m_rotateGuizmoEnabled = false;
 		m_showNewMapWindow = false;
@@ -240,6 +240,12 @@ public:
 					return m_selectedEntity.m_componentData.m_guiComponents.m_guiSequenceConstructionInfo->m_staticSequence;
 				}
 				break;
+
+			case Systems::Changes::Script::PauseInEditor:
+				{
+					return m_selectedEntity.m_componentData.m_scriptComponents.m_luaConstructionInfo->m_pauseInEditor;
+				}
+				break;
 		}
 
 		return NullObjects::NullBool; 
@@ -285,6 +291,13 @@ public:
 				{
 					if(m_selectedEntity.m_soundType >= 0 && m_selectedEntity.m_soundType < SoundComponent::SoundType_NumOfTypes)
 						return (unsigned int)m_selectedEntity.m_soundType;
+				}
+				break;
+
+			case Systems::Changes::Audio::SoundSourceType:
+				{
+					if(m_selectedEntity.m_soundSourceType >= 0 && m_selectedEntity.m_soundSourceType < SoundComponent::SoundSourceType_NumOfTypes)
+						return (unsigned int)m_selectedEntity.m_soundSourceType;
 				}
 				break;
 
@@ -427,9 +440,9 @@ public:
 				}
 				break;
 
-			case Systems::Changes::Audio::Filename:
+			case Systems::Changes::Audio::SoundName:
 				{
-					return m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_soundFilename;
+					return m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_soundName;
 				}
 				break;
 
@@ -641,6 +654,7 @@ private:
 			setEntity(NULL_ENTITY_ID);
 			m_playing = false;
 			m_soundType = SoundComponent::SoundType::SoundType_Null;
+			m_soundSourceType = 0;
 			m_objectMaterialType = ObjectMaterialType::Concrete;
 			m_lightType = LightComponent::LightComponentType::LightComponentType_null;
 			m_collisionShapeType = RigidBodyComponent::CollisionShapeType::CollisionShapeType_Null;
@@ -713,6 +727,7 @@ private:
 		// SoundComponent data
 		bool m_playing;
 		int m_soundType;
+		int m_soundSourceType;
 
 		// SpatialComponent data
 		SpatialDataManager m_spatialDataManager;

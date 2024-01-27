@@ -167,6 +167,7 @@ protected:
 	void assignBusses()
 	{
 		for(unsigned int busType = 0; busType < AudioBusType::AudioBusType_NumOfTypes; busType++)
+		{
 			switch(busType)
 			{
 				case AudioBusType_Ambient:
@@ -187,6 +188,7 @@ protected:
 					ErrHandlerLoc::get().log(ErrorCode::Audio_invalid_bus_type, ErrorSource::Source_AudioSystem);
 					break;
 			}
+		}
 	}
 
 	FMOD::Studio::Bus *getBus(const AudioBusType p_busType) { return m_buses[p_busType]; }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AboutWindow.h"
 #include "GUIObject.h"
 #include "GUITask.h"
 #include "ObjectPool.h"
@@ -177,7 +178,7 @@ private:
 
 	GUITask *m_GUITask;
 	std::queue<FileBrowserDialog*> m_fileBrowserDialogs;
-	AboutWindow *m_aboutWindow;
+	AboutWindow m_aboutWindow;
 	EditorWindow *m_editorWindow;
 	bool m_GUISequenceEnabled;
 

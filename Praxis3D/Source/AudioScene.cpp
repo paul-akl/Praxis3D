@@ -190,8 +190,21 @@ void AudioScene::deactivate()
 		{
 			if(component.m_playing)
 			{
-				component.m_channel->stop();
-				component.m_playing = false;
+				switch(component.m_soundSourceType)
+				{
+					case SoundComponent::SoundSourceType::SoundSourceType_Event:
+						{
+							//component.m_soundEventInstance->stop(FMOD_STUDIO_STOP_MODE::FMOD_STUDIO_STOP_IMMEDIATE);
+							//component.m_playing = false;
+						}
+						break;
+					case SoundComponent::SoundSourceType::SoundSourceType_File:
+						{
+							component.m_channel->stop();
+							component.m_playing = false;
+						}
+						break;
+				}
 			}
 		}
 	}
@@ -262,134 +275,238 @@ void AudioScene::update(const float p_deltaTime)
 		}
 	}
 
-	//	 ___________________________
-	//	|							|
-	//	|  SOUND COMPONENTS UPDATE	|
-	//	|___________________________|
-	//
-	auto soundComponentView = entityRegistry.view<SoundComponent>();
-	for(auto entity : soundComponentView)
+	if(!(m_sceneLoader->getFirstLoad() && m_sceneLoader->getSceneLoadingStatus()))
 	{
-		auto &component = soundComponentView.get<SoundComponent>(entity);
-
-		if(component.isObjectActive())
+		//	 ___________________________
+		//	|							|
+		//	|  SOUND COMPONENTS UPDATE	|
+		//	|___________________________|
+		//
+		auto soundComponentView = entityRegistry.view<SoundComponent>();
+		for(auto entity : soundComponentView)
 		{
-			if(component.m_changePending)
+			auto &component = soundComponentView.get<SoundComponent>(entity);
+
+			switch(component.m_soundSourceType)
 			{
-				if(component.m_reloadSound)
-				{
-					createSound(component);
-				}
-				else
-				{
-					if(component.m_volumeChanged)
-						component.m_channel->setVolume(component.m_volume);
-
-					if(component.m_loopChanged)
-						if(component.m_loop)
-							component.m_channel->setMode(FMOD_LOOP_NORMAL);
-						else
-							component.m_channel->setMode(FMOD_LOOP_OFF);
-
-					if(component.m_spatializedChanged)
-						if(component.m_spatialized)
-							component.m_channel->setMode(FMOD_3D);
-						else
-							component.m_channel->setMode(FMOD_2D);
-				}
-
-				component.resetChanges();
-			}
-
-			if(!component.m_playing)
-			{
-				if(component.m_startPlaying && component.m_sound != nullptr)
-				{
-					component.m_playing = true;
-
-					AudioSystem::fmodErrorLog(m_coreSystem->playSound(component.m_sound, m_soundTypeChannelGroups[component.m_soundType], true, &component.m_channel), component.m_soundFilename);
-					component.m_channel->setVolume(component.m_volume);
-
-					if(component.m_spatialized)
+				case SoundComponent::SoundSourceType::SoundSourceType_Event:
 					{
-						auto spatialComponent = entityRegistry.try_get<SpatialComponent>(entity);
-						if(spatialComponent != nullptr)
-						{
-							FMOD_VECTOR velocity = Math::toFmodVector(spatialComponent->getSpatialDataChangeManager().getVelocity());
-							FMOD_VECTOR position = Math::toFmodVector(spatialComponent->getSpatialDataChangeManager().getWorldTransform()[3]);
+						FMOD_STUDIO_PLAYBACK_STATE playState;
+						component.m_soundEventInstance->getPlaybackState(&playState);
 
-							component.m_channel->set3DAttributes(&position, &velocity);
+						if(playState == FMOD_STUDIO_PLAYBACK_STATE::FMOD_STUDIO_PLAYBACK_PLAYING)
+							component.m_playing = true;
+						else
+							component.m_playing = false;
+
+						if(component.isObjectActive())
+						{
+							if(component.m_changePending)
+							{
+								if(component.m_reloadSound)
+								{
+									createSound(component);
+								}
+								else
+								{
+									if(component.m_volumeChanged)
+										component.m_soundEventInstance->setVolume(component.m_volume);
+								}
+							}
+
+							if(!component.m_playing)
+							{
+								if(component.m_startPlaying && component.m_soundEventInstance != nullptr)
+								{
+									//component.m_playing = true;
+
+									component.m_soundEventInstance->setVolume(component.m_volume);
+									//eventInstance->set3DAttributes(&spatialAttributes);
+									component.m_soundEventInstance->start();
+									component.m_soundEventInstance->setPaused(false);
+
+									//component.m_soundEventInstance->p
+									//AudioSystem::fmodErrorLog(m_coreSystem->playSound(component.m_sound, m_soundTypeChannelGroups[component.m_soundType], true, &component.m_channel), component.m_soundName);
+									//component.m_channel->setVolume(component.m_volume);
+
+									if(component.m_spatialized)
+									{
+										auto spatialComponent = entityRegistry.try_get<SpatialComponent>(entity);
+										if(spatialComponent != nullptr)
+										{
+											FMOD_VECTOR velocity = Math::toFmodVector(spatialComponent->getSpatialDataChangeManager().getVelocity());
+											FMOD_VECTOR position = Math::toFmodVector(spatialComponent->getSpatialDataChangeManager().getWorldTransform()[3]);
+
+											//component.m_channel->set3DAttributes(&position, &velocity);
+										}
+									}
+
+									//component.m_channel->setPaused(false);
+								}
+							}
+
+							if(component.m_spatialized)
+							{
+								auto spatialComponent = entityRegistry.try_get<SpatialComponent>(entity);
+								if(spatialComponent != nullptr)
+								{
+									const glm::mat3 translateMatrix = glm::mat3(spatialComponent->getSpatialDataChangeManager().getWorldTransform());
+
+									// Get 3D attributes
+									FMOD_3D_ATTRIBUTES spatialAttributes;
+									spatialAttributes.position = Math::toFmodVector(spatialComponent->getSpatialDataChangeManager().getWorldTransform()[3]);
+									spatialAttributes.velocity = Math::toFmodVector(spatialComponent->getSpatialDataChangeManager().getVelocity());
+									spatialAttributes.forward = Math::toFmodVector(glm::vec3(0.0f, 0.0f, -1.0f) * translateMatrix);
+									spatialAttributes.up = Math::toFmodVector(glm::vec3(0.0f, 1.0f, 0.0f) * translateMatrix);
+
+									component.m_soundEventInstance->set3DAttributes(&spatialAttributes);
+								}
+							}
+						}
+						else
+						{
+							if(component.m_playing)
+							{
+								//if(component.m_soundEventInstance != nullptr)
+								component.m_soundEventInstance->stop(FMOD_STUDIO_STOP_ALLOWFADEOUT);
+								component.m_playing = false;
+							}
 						}
 					}
+					break;
 
-					component.m_channel->setPaused(false);
-				}
-			}
+				case SoundComponent::SoundSourceType::SoundSourceType_File:
+					{
+						if(component.isObjectActive())
+						{
+							if(component.m_changePending)
+							{
+								if(component.m_reloadSound)
+								{
+									createSound(component);
+								}
+								else
+								{
+									if(component.m_volumeChanged)
+										component.m_channel->setVolume(component.m_volume);
 
-			if(component.m_spatialized)
-			{
-				auto spatialComponent = entityRegistry.try_get<SpatialComponent>(entity);
-				if(spatialComponent != nullptr)
-				{
-					FMOD_VECTOR velocity = Math::toFmodVector(spatialComponent->getSpatialDataChangeManager().getVelocity());
-					FMOD_VECTOR position = Math::toFmodVector(spatialComponent->getSpatialDataChangeManager().getWorldTransform()[3]);
+									if(component.m_loopChanged)
+										if(component.m_loop)
+											component.m_channel->setMode(FMOD_LOOP_NORMAL);
+										else
+											component.m_channel->setMode(FMOD_LOOP_OFF);
 
-					component.m_channel->set3DAttributes(&position, &velocity);
-				}
+									if(component.m_spatializedChanged)
+										if(component.m_spatialized)
+											component.m_channel->setMode(FMOD_3D);
+										else
+											component.m_channel->setMode(FMOD_2D);
+								}
+
+								component.resetChanges();
+							}
+
+							if(!component.m_playing)
+							{
+								if(component.m_startPlaying && component.m_sound != nullptr)
+								{
+									component.m_playing = true;
+
+									AudioSystem::fmodErrorLog(m_coreSystem->playSound(component.m_sound, m_soundTypeChannelGroups[component.m_soundType], true, &component.m_channel), component.m_soundName);
+									component.m_channel->setVolume(component.m_volume);
+
+									if(component.m_spatialized)
+									{
+										auto spatialComponent = entityRegistry.try_get<SpatialComponent>(entity);
+										if(spatialComponent != nullptr)
+										{
+											FMOD_VECTOR velocity = Math::toFmodVector(spatialComponent->getSpatialDataChangeManager().getVelocity());
+											FMOD_VECTOR position = Math::toFmodVector(spatialComponent->getSpatialDataChangeManager().getWorldTransform()[3]);
+
+											component.m_channel->set3DAttributes(&position, &velocity);
+										}
+									}
+
+									component.m_channel->setPaused(false);
+								}
+							}
+
+							if(component.m_spatialized)
+							{
+								auto spatialComponent = entityRegistry.try_get<SpatialComponent>(entity);
+								if(spatialComponent != nullptr)
+								{
+									FMOD_VECTOR velocity = Math::toFmodVector(spatialComponent->getSpatialDataChangeManager().getVelocity());
+									FMOD_VECTOR position = Math::toFmodVector(spatialComponent->getSpatialDataChangeManager().getWorldTransform()[3]);
+
+									component.m_channel->set3DAttributes(&position, &velocity);
+								}
+							}
+						}
+						else
+						{
+							if(component.m_playing)
+							{
+								component.m_channel->stop();
+								component.m_playing = false;
+							}
+						}
+					}
+					break;
 			}
 		}
-		else
+
+		//	 ___________________________
+		//	|							|
+		//	|  COLLISION EVENTS UPDATE	|
+		//	|___________________________|
+		//
+		const auto collisionEventMaterialSpatialView = worldScene->getEntityRegistry().view<CollisionEventComponent, ObjectMaterialComponent, SpatialComponent>();
+		for(auto entity : collisionEventMaterialSpatialView)
 		{
-			if(component.m_playing)
+			// Get the collision component
+			const auto &collisionComponent = collisionEventMaterialSpatialView.get<CollisionEventComponent>(entity);
+
+			// Check if there are any collisions
+			if(collisionComponent.m_numOfDynamicCollisions[frontIndex] > 0)
 			{
-				component.m_channel->stop();
-				component.m_playing = false;
-			}
-		}
-	}	
+				// Get parent spatial data
+				const auto &spatialComponent = collisionEventMaterialSpatialView.get<SpatialComponent>(entity);
+				const glm::mat3 parentTranslateMatrix = glm::mat3(spatialComponent.getSpatialDataChangeManager().getParentTransform());
+				const glm::vec4 parentPosition = spatialComponent.getSpatialDataChangeManager().getParentTransform()[3];
 
-	//	 ___________________________
-	//	|							|
-	//	|  COLLISION EVENTS UPDATE	|
-	//	|___________________________|
-	//
-	auto collisionEventMaterialView = worldScene->getEntityRegistry().view<CollisionEventComponent, ObjectMaterialComponent>();
-	for(auto entity : collisionEventMaterialView)
-	{
-		auto &collisionComponent = collisionEventMaterialView.get<CollisionEventComponent>(entity);
+				auto &materialComponent = collisionEventMaterialSpatialView.get<ObjectMaterialComponent>(entity);
 
-		if(collisionComponent.m_numOfDynamicCollisions[frontIndex] > 0)
-		{
-			auto &materialComponent = collisionEventMaterialView.get<ObjectMaterialComponent>(entity);
-
-			for(size_t i = 0, size = collisionComponent.m_numOfDynamicCollisions[frontIndex]; i < size; i++)
-			{
-				//if(collisionComponent.m_dynamicCollisions[frontIndex][i].m_firstObjInCollisionPair)
+				// Go over each collision of the entity
+				for(size_t i = 0, size = collisionComponent.m_numOfDynamicCollisions[frontIndex]; i < size; i++)
 				{
-					// Get the transform matrix
-					glm::mat4 transformMatrix;
-					collisionComponent.m_dynamicCollisions[frontIndex][i].m_worldTransform.getOpenGLMatrix(glm::value_ptr(transformMatrix));
-					const glm::mat3 translateMatrix = glm::mat3(transformMatrix);
+					//if(collisionComponent.m_dynamicCollisions[frontIndex][i].m_firstObjInCollisionPair)
+					{
+						// Get the transform matrix
+						glm::mat4 transformMatrix;
+						collisionComponent.m_dynamicCollisions[frontIndex][i].m_worldTransform.getOpenGLMatrix(glm::value_ptr(transformMatrix));
+						const glm::mat3 translateMatrix = glm::mat3(transformMatrix) * parentTranslateMatrix;
 
-					// Get 3D attributes
-					FMOD_3D_ATTRIBUTES spatialAttributes;
-					spatialAttributes.position = Math::toFmodVector(transformMatrix[3]);
-					spatialAttributes.velocity = Math::toFmodVector(collisionComponent.m_dynamicCollisions[frontIndex][i].m_velocity);
-					spatialAttributes.forward = Math::toFmodVector(glm::vec3(0.0f, 0.0f, -1.0f) * translateMatrix);
-					spatialAttributes.up = Math::toFmodVector(glm::vec3(0.0f, 1.0f, 0.0f) * translateMatrix);
-					const float volume = glm::min(collisionComponent.m_dynamicCollisions[frontIndex][i].m_appliedImpulse / Config::audioVar().impact_impulse_volume_divider, Config::audioVar().impact_max_volume_threshold);
+						// Get 3D attributes
+						FMOD_3D_ATTRIBUTES spatialAttributes;
+						spatialAttributes.position = Math::toFmodVector(transformMatrix[3] + parentPosition);
+						spatialAttributes.velocity = Math::toFmodVector(collisionComponent.m_dynamicCollisions[frontIndex][i].m_velocity);
+						spatialAttributes.forward = Math::toFmodVector(glm::vec3(0.0f, 0.0f, -1.0f) * translateMatrix);
+						spatialAttributes.up = Math::toFmodVector(glm::vec3(0.0f, 1.0f, 0.0f) * translateMatrix);
+						const float volume = glm::clamp(collisionComponent.m_dynamicCollisions[frontIndex][i].m_appliedImpulse / Config::audioVar().impact_impulse_volume_divider, Config::audioVar().impact_min_volume_threshold, Config::audioVar().impact_max_volume_threshold);
 
-					// Create an event (sound) instance
-					FMOD::Studio::EventInstance *eventInstance;
-					m_impactEvents[materialComponent.getObjectMaterialType()]->createInstance(&eventInstance);
+						// Create an event (sound) instance
+						FMOD::Studio::EventInstance *eventInstance;
+						m_impactEvents[materialComponent.getObjectMaterialType()]->createInstance(&eventInstance);
 
-					// Set sound parameters and play the sound
-					eventInstance->setParameterByName("Impulse", collisionComponent.m_dynamicCollisions[frontIndex][i].m_appliedImpulse / Config::audioVar().impact_impulse_param_divider);
-					eventInstance->setVolume(volume);
-					eventInstance->set3DAttributes(&spatialAttributes);
-					eventInstance->start();
-					eventInstance->setPaused(false);
-					eventInstance->release();
+						// Set sound parameters and play the sound
+						eventInstance->setParameterByName("Impulse", collisionComponent.m_dynamicCollisions[frontIndex][i].m_appliedImpulse / Config::audioVar().impact_impulse_param_divider);
+						eventInstance->setVolume(volume);
+						eventInstance->set3DAttributes(&spatialAttributes);
+						eventInstance->start();
+						eventInstance->setPaused(false);
+						eventInstance->release();
+					}
 				}
 			}
 		}
@@ -460,7 +577,7 @@ std::vector<SystemObject *> AudioScene::getComponents(const EntityID p_entityID)
 	return returnVector;
 }
 
-std::vector<SystemObject*> AudioScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
+std::vector<SystemObject *> AudioScene::createComponents(const EntityID p_entityID, const ComponentsConstructionInfo &p_constructionInfo, const bool p_startLoading)
 {
 	return createComponents(p_entityID, p_constructionInfo.m_audioComponents, p_startLoading);
 }
@@ -513,14 +630,16 @@ SystemObject *AudioScene::createComponent(const EntityID &p_entityID, const Soun
 	auto componentInitError = component.init();
 	if(componentInitError == ErrorCode::Success)
 	{
-		component.m_soundType = p_constructionInfo.m_soundType;
-		component.m_soundFilename = p_constructionInfo.m_soundFilename;
+		component.setActive(p_constructionInfo.m_active);
 		component.m_loop = p_constructionInfo.m_loop;
+		component.m_soundName = p_constructionInfo.m_soundName;
+		component.m_soundSourceType = p_constructionInfo.m_soundSourceType;
 		component.m_spatialized = p_constructionInfo.m_spatialized;
 		component.m_startPlaying = p_constructionInfo.m_startPlaying;
+		component.m_soundType = p_constructionInfo.m_soundType;
 		component.m_volume = p_constructionInfo.m_volume;
+
 		component.m_objectType = Properties::PropertyID::SoundComponent;
-		component.setActive(p_constructionInfo.m_active);
 
 		createSound(component);
 
@@ -723,59 +842,156 @@ void AudioScene::receiveData(const DataType p_dataType, void *p_data, const bool
 
 void AudioScene::createSound(SoundComponent &p_soundComponent)
 {
-	if(p_soundComponent.m_sound != nullptr)
+	switch(p_soundComponent.m_soundSourceType)
 	{
-		if(p_soundComponent.m_playing)
-		{
-			p_soundComponent.m_channel->stop();
-			p_soundComponent.m_playing = false;
-		}
-
-		p_soundComponent.m_sound->release(); 
-		p_soundComponent.m_sound = nullptr;
-	}
-
-	FMOD_MODE mode = 0;
-
-	if(p_soundComponent.m_loop)
-		mode |= FMOD_LOOP_NORMAL;
-	else
-		mode |= FMOD_LOOP_OFF;
-
-	if(p_soundComponent.m_spatialized)
-		mode |= FMOD_3D | FMOD_3D_WORLDRELATIVE | FMOD_3D_INVERSEROLLOFF;
-	else
-		mode |= FMOD_2D;
-
-
-	switch(p_soundComponent.m_soundType)
-	{
-		case SoundComponent::SoundType::SoundType_Music:
+		case SoundComponent::SoundSourceType::SoundSourceType_Event:
 			{
-				m_coreSystem->createStream((Config::filepathVar().sound_path + p_soundComponent.m_soundFilename).c_str(), mode, p_soundComponent.m_soundExInfo, &p_soundComponent.m_sound);
+				if(p_soundComponent.m_soundEventInstance != nullptr)
+				{
+					if(p_soundComponent.m_playing)
+					{
+						p_soundComponent.m_soundEventInstance->stop(FMOD_STUDIO_STOP_MODE::FMOD_STUDIO_STOP_IMMEDIATE);
+						p_soundComponent.m_playing = false;
+					}
+
+					p_soundComponent.m_soundEventInstance = nullptr;
+				}
+
+				p_soundComponent.m_soundEventDescription = m_audioSystem->getEvent(p_soundComponent.m_soundName);
+				p_soundComponent.m_soundEventDescription->createInstance(&p_soundComponent.m_soundEventInstance);
 			}
 			break;
 
-		case SoundComponent::SoundType::SoundType_Ambient:
+		case SoundComponent::SoundSourceType::SoundSourceType_File:
 			{
-				m_coreSystem->createStream((Config::filepathVar().sound_path + p_soundComponent.m_soundFilename).c_str(), mode, p_soundComponent.m_soundExInfo, &p_soundComponent.m_sound);
-			}
-			break;
+				if(p_soundComponent.m_sound != nullptr)
+				{
+					if(p_soundComponent.m_playing)
+					{
+						p_soundComponent.m_channel->stop();
+						p_soundComponent.m_playing = false;
+					}
 
-		case SoundComponent::SoundType::SoundType_SoundEffect:
-			{
-				m_coreSystem->createSound((Config::filepathVar().sound_path + p_soundComponent.m_soundFilename).c_str(), mode, p_soundComponent.m_soundExInfo, &p_soundComponent.m_sound);
-			}
-			break;
+					p_soundComponent.m_sound->release();
+					p_soundComponent.m_sound = nullptr;
+				}
 
-		case SoundComponent::SoundType::SoundType_Null:
-		default:
+				FMOD_MODE mode = 0;
+
+				if(p_soundComponent.m_loop)
+					mode |= FMOD_LOOP_NORMAL;
+				else
+					mode |= FMOD_LOOP_OFF;
+
+				if(p_soundComponent.m_spatialized)
+					mode |= FMOD_3D | FMOD_3D_WORLDRELATIVE | FMOD_3D_INVERSEROLLOFF;
+				else
+					mode |= FMOD_2D;
+
+				switch(p_soundComponent.m_soundType)
+				{
+					case SoundComponent::SoundType::SoundType_Music:
+						{
+							m_coreSystem->createStream((Config::filepathVar().sound_path + p_soundComponent.m_soundName).c_str(), mode, p_soundComponent.m_soundExInfo, &p_soundComponent.m_sound);
+						}
+						break;
+
+					case SoundComponent::SoundType::SoundType_Ambient:
+						{
+							m_coreSystem->createStream((Config::filepathVar().sound_path + p_soundComponent.m_soundName).c_str(), mode, p_soundComponent.m_soundExInfo, &p_soundComponent.m_sound);
+						}
+						break;
+
+					case SoundComponent::SoundType::SoundType_SoundEffect:
+						{
+							m_coreSystem->createSound((Config::filepathVar().sound_path + p_soundComponent.m_soundName).c_str(), mode, p_soundComponent.m_soundExInfo, &p_soundComponent.m_sound);
+						}
+						break;
+
+					case SoundComponent::SoundType::SoundType_Null:
+					default:
+						break;
+				}
+			}
 			break;
 	}
 }
 
 void AudioScene::playSound(SoundComponent &p_soundComponent)
 {
+	switch(p_soundComponent.m_soundSourceType)
+	{
+		case SoundComponent::SoundSourceType::SoundSourceType_Event:
+			{
+				if(p_soundComponent.m_soundEventInstance != nullptr)
+				{
+					if(p_soundComponent.m_playing)
+					{
+						p_soundComponent.m_soundEventInstance->stop(FMOD_STUDIO_STOP_MODE::FMOD_STUDIO_STOP_IMMEDIATE);
+						p_soundComponent.m_playing = false;
+					}
+
+					p_soundComponent.m_soundEventInstance = nullptr;
+				}
+
+				p_soundComponent.m_soundEventDescription = m_audioSystem->getEvent(p_soundComponent.m_soundName);
+				p_soundComponent.m_soundEventDescription->createInstance(&p_soundComponent.m_soundEventInstance);
+			}
+			break;
+
+		case SoundComponent::SoundSourceType::SoundSourceType_File:
+			{
+				if(p_soundComponent.m_sound != nullptr)
+				{
+					if(p_soundComponent.m_playing)
+					{
+						p_soundComponent.m_channel->stop();
+						p_soundComponent.m_playing = false;
+					}
+
+					p_soundComponent.m_sound->release();
+					p_soundComponent.m_sound = nullptr;
+				}
+
+				FMOD_MODE mode = 0;
+
+				if(p_soundComponent.m_loop)
+					mode |= FMOD_LOOP_NORMAL;
+				else
+					mode |= FMOD_LOOP_OFF;
+
+				if(p_soundComponent.m_spatialized)
+					mode |= FMOD_3D | FMOD_3D_WORLDRELATIVE | FMOD_3D_INVERSEROLLOFF;
+				else
+					mode |= FMOD_2D;
+
+				switch(p_soundComponent.m_soundType)
+				{
+					case SoundComponent::SoundType::SoundType_Music:
+						{
+							m_coreSystem->createStream((Config::filepathVar().sound_path + p_soundComponent.m_soundName).c_str(), mode, p_soundComponent.m_soundExInfo, &p_soundComponent.m_sound);
+						}
+						break;
+
+					case SoundComponent::SoundType::SoundType_Ambient:
+						{
+							m_coreSystem->createStream((Config::filepathVar().sound_path + p_soundComponent.m_soundName).c_str(), mode, p_soundComponent.m_soundExInfo, &p_soundComponent.m_sound);
+						}
+						break;
+
+					case SoundComponent::SoundType::SoundType_SoundEffect:
+						{
+							m_coreSystem->createSound((Config::filepathVar().sound_path + p_soundComponent.m_soundName).c_str(), mode, p_soundComponent.m_soundExInfo, &p_soundComponent.m_sound);
+						}
+						break;
+
+					case SoundComponent::SoundType::SoundType_Null:
+					default:
+						break;
+				}
+			}
+			break;
+	}
 }
 
 void AudioScene::loadParameterGUIDs()

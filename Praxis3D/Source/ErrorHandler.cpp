@@ -42,6 +42,7 @@ ErrorHandler::ErrorHandler()
 	AssignErrorType(Framebuffer_failed, FatalError);
 	AssignErrorType(Geometrybuffer_failed, FatalError);
 	AssignErrorType(Editor_path_outside_current_dir, Warning);
+	AssignErrorType(Font_type_missing_construction, Warning);
 	AssignErrorType(GL_context_missing, Error);
 	AssignErrorType(Universal_scene_extend_null, Error);
 	AssignErrorType(Universal_scene_extend_duplicate, Error);
@@ -49,6 +50,8 @@ ErrorHandler::ErrorHandler()
 	AssignErrorType(AssimpScene_failed, Error);
 	AssignErrorType(ObjectPool_full, Warning); 
 	AssignErrorType(Collision_invalid, Warning);
+	AssignErrorType(Collision_max_dynamic_events, Warning);
+	AssignErrorType(Collision_max_static_events, Warning);
 	AssignErrorType(Collision_missing, Warning);
 	AssignErrorType(Kinematic_has_mass, Warning);
 	AssignErrorType(Property_missing_size, Warning);

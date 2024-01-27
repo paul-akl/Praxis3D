@@ -144,6 +144,7 @@
     <ClCompile Include="..\Dependencies\include\imgui_tex_inspect\imgui_tex_inspect.cpp" />
     <ClCompile Include="..\Dependencies\include\imgui_tex_inspect\tex_inspect_opengl.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Source\AboutWindow.cpp" />
     <ClCompile Include="Source\AtmScatteringModel.cpp" />
     <ClCompile Include="Source\AtmScatteringPass.cpp" />
     <ClCompile Include="Source\AudioScene.cpp" />

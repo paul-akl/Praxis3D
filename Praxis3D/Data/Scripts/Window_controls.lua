@@ -1,3 +1,12 @@
+--[[
+	Basic window controls by hot-keys.
+	
+	Functions:
+	- Go back to main menu
+	- Toggle full-screen mode
+	- Toggle mouse capture mode
+	- Toggle v-sync mode
+]]--
 
 function init ()
 	-- Create needed variables
@@ -28,9 +37,11 @@ end
 function update (p_deltaTime)
 		
 	if closeKey:isActivated() then
-		-- Set the engine running state to false, so it is shutdown the next frame
-		--setEngineRunning(false)
-		setEngineState(EngineStateType.MainMenu)
+		-- If the current engine state is PlayState, unload it and return to main menu
+		if getEngineState() == EngineStateType.Play then
+			sendEngineChange(EngineChangeType.StateChange, EngineStateType.MainMenu)
+			sendEngineChange(EngineChangeType.SceneUnload, EngineStateType.Play)
+		end
 	end	
 	
 	if fullscreenKey:isActivated() then

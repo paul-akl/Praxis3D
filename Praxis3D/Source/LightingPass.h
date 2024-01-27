@@ -223,7 +223,7 @@ public:
 
 		ShaderLoader::ShaderProgram *lightPassShader = m_shaderLightCSMPass;
 
-		if(shadowMappingData.m_shadowMappingEnabled && !shadowMappingData.m_shadowCascadePlaneDistances.empty())
+		if(p_sceneObjects.m_processDrawing && shadowMappingData.m_shadowMappingEnabled && !shadowMappingData.m_shadowCascadePlaneDistances.empty())
 		{
 			// If the number of shadow cascades has changed, set the new define inside the shader source and recompile the shader
 			if(m_numOfCascades != (unsigned int)shadowMappingData.m_shadowCascadePlaneDistances.size() || m_numOfPCFSamples != shadowMappingData.m_numOfPCFSamples)

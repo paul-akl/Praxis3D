@@ -2,6 +2,7 @@
 #include <ImGuiFileDialog/ImGuiFileDialog.h>
 
 #include "ComponentConstructorInfo.h"
+#include "GUISystem.h"
 #include "LuaScript.h"
 #include "Loaders.h"
 
@@ -191,12 +192,21 @@ void LuaScript::setDefinitions()
 	imGuiStyleFlag[sol::update_if_empty]["ButtonTextAlign"] = ImGuiStyleVar_::ImGuiStyleVar_ButtonTextAlign;
 	imGuiStyleFlag[sol::update_if_empty]["SelectableTextAlign"] = ImGuiStyleVar_::ImGuiStyleVar_SelectableTextAlign;
 
+	// Create a table for ImGui fonts
+	sol::table imGuiFont = m_luaState["ImGuiFont"].get_or_create<sol::table>();
+
+	imGuiFont[sol::update_if_empty]["Default"] = GuiFontType::GuiFontType_Default;
+	imGuiFont[sol::update_if_empty]["AboutWindow"] = GuiFontType::GuiFontType_AboutWindow;
+
 	// Add each object type to the user type table
 	for(int i = 0; i < LuaDefinitions::UserTypes::NumOfTypes; i++)
 		m_userTypesTable[sol::update_if_empty][GetString(static_cast<LuaDefinitions::UserTypes>(i))] = i;
 
 	// Create a table for different types of changes
 	m_changeTypesTable = m_luaState["Changes"].get_or_create<sol::table>();
+
+	// Create entries for AUDIO changes
+	m_changeTypesTable[sol::update_if_empty]["Audio"]["Volume"] = Int64Packer(Systems::Changes::Audio::Volume);
 
 	// Create entries for GUI changes
 	m_changeTypesTable[sol::update_if_empty]["GUI"]["Sequence"] = Int64Packer(Systems::Changes::GUI::Sequence);
@@ -205,7 +215,35 @@ void LuaScript::setDefinitions()
 void LuaScript::setFunctions()
 {
 	// Change controller functions
-	m_luaState.set_function("sendData", [this](const Systems::TypeID p_v1, const DataType p_v2, bool p_v3) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendData(m_scriptScene->getSceneLoader()->getSystemScene(p_v1), p_v2, (void *)&p_v3, false); });
+	m_luaState.set_function("sendData", [this](const Systems::TypeID p_v1, const DataType p_v2, bool p_v3) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendData(m_scriptScene->getSceneLoader()->getSystemScene(p_v1), p_v2, (void *)p_v3, false); });
+	m_luaState.set_function("sendChange", sol::overload(
+		[this](SystemObject *p_observer, const Int64Packer &p_changeType, const bool p_v1) -> const void { this->queueChange(p_observer, p_changeType.get(), p_v1); },
+		[this](SystemObject *p_observer, const Int64Packer &p_changeType, const int p_v1) -> const void { this->queueChange(p_observer, p_changeType.get(), p_v1); },
+		[this](SystemObject *p_observer, const Int64Packer &p_changeType, const float p_v1) -> const void { this->queueChange(p_observer, p_changeType.get(), p_v1); },
+		[this](SystemObject *p_observer, const Int64Packer &p_changeType, const std::string &p_v1) -> const void { this->queueChange(p_observer, p_changeType.get(), p_v1); }));
+
+	// Entity functions
+	m_luaState.set_function("getEntityID", [this](const std::string &p_filename) -> EntityID { return static_cast<WorldScene *>(m_scriptScene->getSceneLoader()->getSystemScene(Systems::World))->getEntity(p_filename); });
+	m_luaState.set_function("isEntityIDValid", [](const EntityID p_entityID) -> bool { return p_entityID != NULL_ENTITY_ID; });
+	m_luaState.set_function("createEntity", [this](const ComponentsConstructionInfo &p_constructionInfo) -> EntityID { return static_cast<WorldScene *>(m_scriptScene->getSceneLoader()->getSystemScene(Systems::World))->createEntity(p_constructionInfo); });
+	m_luaState.set_function("importPrefab", [this](ComponentsConstructionInfo &p_constructionInfo, const std::string &p_filename) -> bool { return m_scriptScene->getSceneLoader()->importPrefab(p_constructionInfo, p_filename) == ErrorCode::Success; });
+
+	// Entity component functions
+	m_luaState.set_function("getSoundComponent", [this](const EntityID p_entityID) -> SoundComponent *{ return static_cast<WorldScene *>(m_scriptScene->getSceneLoader()->getSystemScene(Systems::World))->getEntityRegistry().try_get<SoundComponent>(p_entityID); });
+	m_luaState.set_function("getSpatialComponent", [this](const EntityID p_entityID) -> SpatialComponent *{ return static_cast<WorldScene *>(m_scriptScene->getSceneLoader()->getSystemScene(Systems::World))->getEntityRegistry().try_get<SpatialComponent>(p_entityID); });
+
+	// Entity component system object functions
+	m_luaState.set_function("getSoundComponentSystemObject", [this](const EntityID p_entityID) -> SystemObject * { return static_cast<WorldScene *>(m_scriptScene->getSceneLoader()->getSystemScene(Systems::World))->getEntityRegistry().try_get<SoundComponent>(p_entityID); });
+	m_luaState.set_function("getSpatialComponentSystemObject", [this](const EntityID p_entityID) -> SystemObject *{ return static_cast<WorldScene *>(m_scriptScene->getSceneLoader()->getSystemScene(Systems::World))->getEntityRegistry().try_get<SpatialComponent>(p_entityID); });
+
+	// Engine functions
+	m_luaState.set_function("setEngineRunning", [](const bool p_v1) -> const void {Config::m_engineVar.running = p_v1; });
+	m_luaState.set_function("setEngineState", [this](const EngineStateType p_v1) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_StateChange, p_v1)); });
+	m_luaState.set_function("getEngineState", [this]() -> EngineStateType { return m_scriptScene->getSceneLoader()->getEngineState(); });
+
+	m_luaState.set_function("sendEngineChange", sol::overload([this](const EngineChangeType p_v1) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(p_v1)); },
+		[this](const EngineChangeType p_v1, const EngineStateType p_v2) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(p_v1, p_v2)); },
+		[this](const EngineChangeType p_v1, const EngineStateType p_v2, const std::string p_v3) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(p_v1, p_v2, p_v3)); }));
 
 	// Error handler functions
 	auto errorTable = m_luaState.create_table("ErrHandlerLoc");
@@ -220,40 +258,6 @@ void LuaScript::setFunctions()
 		[this](const ErrorCode p_v1, const std::string p_v2) -> const void { ErrHandlerLoc::get().log(p_v1, ErrorSource::Source_LuaScript, p_v2); },
 		[this](const ErrorCode p_v1, const ErrorSource p_v2, const std::string p_v3) -> const void { ErrHandlerLoc::get().log(p_v1, p_v2, p_v3); }));
 
-	// Math functions
-	m_luaState.set_function("toRadianF", sol::resolve<float(const float)>(&glm::radians));
-	m_luaState.set_function("toRadianVec3", sol::resolve<glm::vec3(const glm::vec3 &)>(&glm::radians));
-	m_luaState.set_function("toRadianVec4", sol::resolve<glm::vec4(const glm::vec4 &)>(&glm::radians));
-	m_luaState.set_function("toDegreesF", sol::resolve<float(const float)>(&glm::degrees));
-	m_luaState.set_function("toDegreesVec3", sol::resolve<glm::vec3(const glm::vec3 &)>(&glm::degrees));
-	m_luaState.set_function("toDegreesVec4", sol::resolve<glm::vec4(const glm::vec4 &)>(&glm::degrees));
-	m_luaState.set_function("angleAxisQuat", sol::resolve<glm::quat(const float &, const glm::vec3 &)>(&glm::angleAxis));
-	m_luaState.set_function("bitwiseOr", sol::overload([this](const int p_v1, const int p_v2) -> const int { return p_v1 | p_v2; },
-		[this](const int p_v1, const int p_v2, const int p_v3) -> const int { return p_v1 | p_v2 | p_v3; },
-		[this](const int p_v1, const int p_v2, const int p_v3, const int p_v4) -> const int { return p_v1 | p_v2 | p_v3 | p_v4; },
-		[this](const int p_v1, const int p_v2, const int p_v3, const int p_v4, const int p_v5) -> const int { return p_v1 | p_v2 | p_v3 | p_v4 | p_v5; }));
-
-	// Input / Window functions
-	m_luaState.set_function("getMouseInfo", []() -> const Window::MouseInfo { return WindowLocator::get().getMouseInfo(); });
-	m_luaState.set_function("getMouseCapture", []() -> const bool { return Config::windowVar().mouse_captured; });
-	m_luaState.set_function("setFullscreen", [](const bool p_v1) -> const void { WindowLocator::get().setFullscreen(p_v1); });
-	m_luaState.set_function("setMouseCapture", [](const bool p_v1) -> const void { WindowLocator::get().setMouseCapture(p_v1); });
-	m_luaState.set_function("setVerticalSync", [](const bool p_v1) -> const void { WindowLocator::get().setVerticalSync(p_v1); });
-	m_luaState.set_function("setWindowTitle", [](const std::string &p_v1) -> const void { WindowLocator::get().setWindowTitle(p_v1); });
-
-	// Entity component functions
-	m_luaState.set_function("createEntity", [this](const ComponentsConstructionInfo &p_constructionInfo) -> EntityID { return static_cast<WorldScene *>(m_scriptScene->getSceneLoader()->getSystemScene(Systems::World))->createEntity(p_constructionInfo); });
-	m_luaState.set_function("importPrefab", [this](ComponentsConstructionInfo &p_constructionInfo, const std::string &p_filename) -> bool { return m_scriptScene->getSceneLoader()->importPrefab(p_constructionInfo, p_filename) == ErrorCode::Success; });
-
-	// Engine functions
-	m_luaState.set_function("setEngineRunning", [](const bool p_v1) -> const void {Config::m_engineVar.running = p_v1; });
-	m_luaState.set_function("setEngineState", [this](const EngineStateType p_v1) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_StateChange, p_v1)); });
-	m_luaState.set_function("getEngineState", [this]() -> EngineStateType { return Config::engineVar().engineState; });
-
-	m_luaState.set_function("sendEngineChange", sol::overload([this](const EngineChangeType p_v1) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(p_v1)); },
-		[this](const EngineChangeType p_v1, const EngineStateType p_v2) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(p_v1, p_v2)); },
-		[this](const EngineChangeType p_v1, const EngineStateType p_v2, const std::string p_v3) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(p_v1, p_v2, p_v3)); }));
-
 	// GUI functions
 	auto GUITable = m_luaState.create_table("GUI");
 	GUITable.set_function("Begin", sol::overload([this](const std::string &p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::Begin(p_v1.c_str()); }); },
@@ -263,6 +267,7 @@ void LuaScript::setFunctions()
 	GUITable.set_function("BeginMenu", [this](const std::string &p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::BeginMenu(p_v1.c_str()); }); });
 	GUITable.set_function("Button", sol::overload([this](const std::string &p_v1, Conditional *p_v2) -> void { m_GUIData.addFunctor([=] { p_v2->m_flag = ImGui::Button(p_v1.c_str()); }); },
 		[this](const std::string &p_v1, const float p_v2, const float p_v3, Conditional *p_v4) -> void { m_GUIData.addFunctor([=] { p_v4->m_flag = ImGui::Button(p_v1.c_str(), ImVec2(p_v2, p_v3)); }); }));
+	GUITable.set_function("CalcTextSize", [this](const std::string &p_v1) -> const glm::vec2 { const auto textSize = ImGui::CalcTextSize(p_v1.c_str()); return glm::vec2(textSize.x, textSize.y); });
 	GUITable.set_function("Checkbox", [this](const std::string &p_v1, Conditional *p_v2) -> void { m_GUIData.addFunctor([=] { ImGui::Checkbox(p_v1.c_str(), &p_v2->m_flag); }); });
 	GUITable.set_function("ColorEdit3", [this](const std::string &p_v1, glm::vec3 *p_v2) -> void { m_GUIData.addFunctor([=] { ImGui::ColorEdit3(p_v1.c_str(), &(p_v2->x)); }); });
 	GUITable.set_function("ColorEdit4", [this](const std::string &p_v1, glm::vec4 *p_v2) -> void { m_GUIData.addFunctor([=] { ImGui::ColorEdit4(p_v1.c_str(), &(p_v2->x)); }); });
@@ -271,34 +276,55 @@ void LuaScript::setFunctions()
 	GUITable.set_function("EndMenu", [this]() -> const void { m_GUIData.addFunctor([=] { ImGui::EndMenu(); }); });
 	GUITable.set_function("EndMenuBar", [this]() -> const void { m_GUIData.addFunctor([=] { ImGui::EndMenuBar(); }); });
 	GUITable.set_function("FileDialog", [this](FileBrowserDialog *p_v1) -> const void { m_scriptScene->getSceneLoader()->getChangeController()->sendData(m_scriptScene->getSceneLoader()->getSystemScene(Systems::GUI), DataType::DataType_FileBrowserDialog, (void *)p_v1); });
-	GUITable.set_function("Image", sol::overload([this](TextureLoader2D::Texture2DHandle &p_v1) -> void { m_GUIData.addFunctor([=] { ImGui::Image((ImTextureID)(uint64_t)p_v1.getHandle(), ImVec2((float)p_v1.getTextureWidth(), (float)p_v1.getTextureHeight()), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)); }); },
-		[this](TextureLoader2D::Texture2DHandle &p_v1, const float p_v2, const float p_v3) -> void { m_GUIData.addFunctor([=] { ImGui::Image((ImTextureID)(uint64_t)p_v1.getHandle(), ImVec2(p_v2, p_v3), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)); }); },
-		[this](TextureLoader2D::Texture2DHandle &p_v1, const float p_v2, const float p_v3, const float p_v4, const float p_v5, const float p_v6, const float p_v7) -> void { m_GUIData.addFunctor([=] { ImGui::Image((ImTextureID)(uint64_t)p_v1.getHandle(), ImVec2(p_v2, p_v3), ImVec2(p_v4, p_v5), ImVec2(p_v6, p_v7)); }); }));
-	GUITable.set_function("ImageButton", sol::overload([this](TextureLoader2D::Texture2DHandle &p_v1, Conditional *p_v2) -> void { m_GUIData.addFunctor([=] { p_v2->m_flag = ImGui::ImageButton((ImTextureID)(uint64_t)p_v1.getHandle(), ImVec2((float)p_v1.getTextureWidth(), (float)p_v1.getTextureHeight()), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); }); },
-		[this](TextureLoader2D::Texture2DHandle &p_v1, const float p_v2, const float p_v3, Conditional *p_v4) -> void { m_GUIData.addFunctor([=] { p_v4->m_flag = ImGui::ImageButton((ImTextureID)(uint64_t)p_v1.getHandle(), ImVec2(p_v2, p_v3), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)); }); },
-		[this](TextureLoader2D::Texture2DHandle &p_v1, const float p_v2, const float p_v3, const float p_v4, const float p_v5, const float p_v6, const float p_v7, Conditional *p_v8) -> void { m_GUIData.addFunctor([=] { p_v8->m_flag = ImGui::ImageButton((ImTextureID)(uint64_t)p_v1.getHandle(), ImVec2(p_v2, p_v3), ImVec2(p_v4, p_v5), ImVec2(p_v6, p_v7)); }); }));
+	GUITable.set_function("GetContentRegionAvail", [this]() -> const glm::vec2 { const auto regionSize = ImGui::GetContentRegionAvail(); return glm::vec2(regionSize.x, regionSize.y); });
+	GUITable.set_function("GetContentRegionAvailX", [this]() -> const float { return ImGui::GetContentRegionAvail().x; });
+	GUITable.set_function("GetContentRegionAvailY", [this]() -> const float { return ImGui::GetContentRegionAvail().y; });
+	GUITable.set_function("GetScreenSize", [this]() -> const glm::vec2 { return glm::vec2(Config::rendererVar().current_viewport_size_x, Config::rendererVar().current_viewport_size_y); });
+	GUITable.set_function("Image", sol::overload([this](TextureLoader2D::Texture2DHandle *p_v1) -> void { m_GUIData.addFunctor([=] { ImGui::Image((ImTextureID)(uint64_t)p_v1->getHandle(), ImVec2((float)p_v1->getTextureWidth(), (float)p_v1->getTextureHeight()), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)); }); },
+		[this](TextureLoader2D::Texture2DHandle *p_v1, const float p_v2, const float p_v3) -> void { m_GUIData.addFunctor([=] { ImGui::Image((ImTextureID)(uint64_t)p_v1->getHandle(), ImVec2(p_v2, p_v3), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)); }); },
+		[this](TextureLoader2D::Texture2DHandle *p_v1, const float p_v2, const float p_v3, const float p_v4, const float p_v5, const float p_v6, const float p_v7) -> void { m_GUIData.addFunctor([=] { ImGui::Image((ImTextureID)(uint64_t)p_v1->getHandle(), ImVec2(p_v2, p_v3), ImVec2(p_v4, p_v5), ImVec2(p_v6, p_v7)); }); }));
+	GUITable.set_function("ImageButton", sol::overload([this](TextureLoader2D::Texture2DHandle *p_v1, Conditional *p_v2) -> void { m_GUIData.addFunctor([=] { p_v2->m_flag = ImGui::ImageButton((ImTextureID)(uint64_t)p_v1->getHandle(), ImVec2((float)p_v1->getTextureWidth(), (float)p_v1->getTextureHeight()), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); }); },
+		[this](TextureLoader2D::Texture2DHandle *p_v1, const float p_v2, const float p_v3, Conditional *p_v4) -> void { m_GUIData.addFunctor([=] { p_v4->m_flag = ImGui::ImageButton((ImTextureID)(uint64_t)p_v1->getHandle(), ImVec2(p_v2, p_v3), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)); }); },
+		[this](TextureLoader2D::Texture2DHandle *p_v1, const float p_v2, const float p_v3, const float p_v4, const float p_v5, const float p_v6, const float p_v7, Conditional *p_v8) -> void { m_GUIData.addFunctor([=] { p_v8->m_flag = ImGui::ImageButton((ImTextureID)(uint64_t)p_v1->getHandle(), ImVec2(p_v2, p_v3), ImVec2(p_v4, p_v5), ImVec2(p_v6, p_v7)); }); }));
 	GUITable.set_function("IsItemHovered", [this](Conditional *p_v1) -> const void { m_GUIData.addFunctor([=] { p_v1->m_flag = ImGui::IsItemHovered(); }); });
 	GUITable.set_function("MenuItem", [this](const std::string &p_v1, const std::string &p_v2, Conditional *p_v3) -> void { m_GUIData.addFunctor([=] { p_v3->m_flag = ImGui::MenuItem(p_v1.c_str(), p_v2.c_str()); }); });
+	GUITable.set_function("NewLine", [this]() -> const void { m_GUIData.addFunctor([=] { ImGui::NewLine(); }); });
 	GUITable.set_function("PlotLines", [this](const std::string &p_v1, const float *p_v2, int p_v3) -> const void { m_GUIData.addFunctor([=] { ImGui::PlotLines(p_v1.c_str(), p_v2, p_v3); }); });
+	GUITable.set_function("PopFont", [this]() -> const void { m_GUIData.addFunctor([=] { ImGui::PopFont(); }); });
 	GUITable.set_function("PopStyleColor", sol::overload([this](const int p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::PopStyleColor(p_v1); }); },
 		[this]() -> const void { m_GUIData.addFunctor([=] { ImGui::PopStyleColor(1); }); }));
 	GUITable.set_function("PopStyleVar", sol::overload([this](const int p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::PopStyleVar(p_v1); }); },
 		[this]() -> const void { m_GUIData.addFunctor([=] { ImGui::PopStyleVar(1); }); }));
+	GUITable.set_function("PushFont", [this](const GuiFontType p_fontType) -> const void { auto *font = static_cast<GUISystem *>(m_scriptScene->getSceneLoader()->getSystemScene(Systems::GUI)->getSystem())->getFont(p_fontType); m_GUIData.addFunctor([=] { ImGui::PushFont(font); }); });
 	GUITable.set_function("PushStyleColor", [this](const int p_v1, const float p_v2, const float p_v3, const float p_v4, const float p_v5) -> const void { m_GUIData.addFunctor([=] { ImGui::PushStyleColor(p_v1, ImVec4(p_v2, p_v3, p_v4, p_v5)); }); });
 	GUITable.set_function("PushStyleVar", sol::overload([this](const int p_v1, const float p_v2) -> const void { m_GUIData.addFunctor([=] { ImGui::PushStyleVar(p_v1, p_v2); }); },
 		[this](const int p_v1, const float p_v2, const float p_v3) -> const void { m_GUIData.addFunctor([=] { ImGui::PushStyleVar(p_v1, ImVec2(p_v2, p_v3)); }); }));
-	GUITable.set_function("SetNextWindowPos", [this](const float p_v1, const float p_v2) -> const void { m_GUIData.addFunctor([=] { ImGui::SetNextWindowPos(ImVec2(p_v1, p_v2)); }); });
+	GUITable.set_function("SetCursorPosX", [this](const float p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::SetCursorPosX(p_v1); }); });
+	GUITable.set_function("SetCursorPosY", [this](const float p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::SetCursorPosY(p_v1); }); });
+	GUITable.set_function("SetNextWindowPos", [this](const float p_v1, const float p_v2) -> const void { m_GUIData.addFunctor([=] { ImGui::SetNextWindowPos(ImVec2(Config::rendererVar().current_viewport_position_x + p_v1, Config::rendererVar().current_viewport_position_y + p_v2)); }); });
 	GUITable.set_function("SetNextWindowContentSize", [this](const float p_v1, const float p_v2) -> const void { m_GUIData.addFunctor([=] { ImGui::SetNextWindowContentSize(ImVec2(p_v1, p_v2)); }); });
 	GUITable.set_function("SetNextWindowSize", [this](const float p_v1, const float p_v2) -> const void { m_GUIData.addFunctor([=] { ImGui::SetNextWindowSize(ImVec2(p_v1, p_v2)); }); });
+	GUITable.set_function("SetNextWindowSizeFullscreen", [this]() -> const void { m_GUIData.addFunctor([=] { ImGui::SetNextWindowSize(ImVec2((float)Config::rendererVar().current_viewport_size_x, (float)Config::rendererVar().current_viewport_size_y)); }); });
+	GUITable.set_function("SetWindowFontScale", [this](const float p_fontScale) -> const void { m_GUIData.addFunctor([=] { ImGui::SetWindowFontScale(p_fontScale); }); });
 	GUITable.set_function("ShowMetricsWindow", [this](bool p_v1) -> void { m_GUIData.addFunctor([=] { bool open = p_v1; ImGui::ShowMetricsWindow(&open); }); });
 	GUITable.set_function("SliderFloat", [this](const std::string &p_v1, float *p_v2, const float p_v3, const float p_v4) -> const void { m_GUIData.addFunctor([=] { ImGui::SliderFloat(p_v1.c_str(), p_v2, p_v3, p_v4); }); });
 	GUITable.set_function("SameLine", [this]() -> const void { m_GUIData.addFunctor([=] { ImGui::SameLine(); }); });
 	GUITable.set_function("Text", sol::overload([this](const std::string &p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::Text(p_v1.c_str()); }); },
 		[this](const std::string &p_v1, const float p_v2) -> const void { m_GUIData.addFunctor([=] { ImGui::Text(p_v1.c_str(), p_v2); }); },
 		[this](const std::string &p_v1, const float p_v2, const float p_v3) -> const void { m_GUIData.addFunctor([=] { ImGui::Text(p_v1.c_str(), p_v2, p_v3); }); }));
+	GUITable.set_function("TextCenterAligned", sol::overload([this](const std::string &p_text) -> const void { m_GUIData.addFunctor([=] { ImGui::SetCursorPosX((ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(p_text.c_str()).x) / 2.0f); ImGui::Text(p_text.c_str()); }); },
+		[this](const std::string &p_text, const float p_screenSizeX) -> const void { m_GUIData.addFunctor([=] { ImGui::SetCursorPosX((p_screenSizeX - ImGui::CalcTextSize(p_text.c_str()).x) - 2.0f); ImGui::Text(p_text.c_str()); }); }));
 	GUITable.set_function("TextColored", sol::overload([this](const glm::vec4 p_v1, const std::string &p_v2) -> const void { m_GUIData.addFunctor([=] { ImGui::TextColored(ImVec4(p_v1.x, p_v1.y, p_v1.z, p_v1.w), p_v2.c_str()); }); },
 		[this](const glm::vec4 p_v1, const std::string &p_v2, const float p_v3) -> const void { m_GUIData.addFunctor([=] { ImGui::TextColored(ImVec4(p_v1.x, p_v1.y, p_v1.z, p_v1.w), p_v2.c_str(), p_v3); }); },
 		[this](const glm::vec4 p_v1, const std::string &p_v2, const float p_v3, const float p_v4) -> const void { m_GUIData.addFunctor([=] { ImGui::TextColored(ImVec4(p_v1.x, p_v1.y, p_v1.z, p_v1.w), p_v2.c_str(), p_v3, p_v4); }); }));
+
+	// Input / Window functions
+	m_luaState.set_function("getMouseInfo", []() -> const Window::MouseInfo { return WindowLocator::get().getMouseInfo(); });
+	m_luaState.set_function("getMouseCapture", []() -> const bool { return Config::windowVar().mouse_captured; });
+	m_luaState.set_function("setFullscreen", [](const bool p_v1) -> const void { WindowLocator::get().setFullscreen(p_v1); });
+	m_luaState.set_function("setMouseCapture", [](const bool p_v1) -> const void { WindowLocator::get().setMouseCapture(p_v1); });
+	m_luaState.set_function("setVerticalSync", [](const bool p_v1) -> const void { WindowLocator::get().setVerticalSync(p_v1); });
+	m_luaState.set_function("setWindowTitle", [](const std::string &p_v1) -> const void { WindowLocator::get().setWindowTitle(p_v1); });
 
 	// Loader functions
 	m_luaState.set_function("loadTexture2D", [](const std::string &p_v1) -> TextureLoader2D::Texture2DHandle { return Loaders::texture2D().load(p_v1); });
@@ -307,6 +333,27 @@ void LuaScript::setFunctions()
 	m_luaState.set_function("getLuaFilename", &LuaScript::getLuaScriptFilename, this);
 	m_luaState.set_function("postChanges", &LuaScript::registerChange, this);
 	m_luaState.set_function(Config::scriptVar().createObjectFunctionName, &LuaScript::createObjectInLua, this);
+
+	// Math functions
+	m_luaState.set_function("angleAxisQuat", sol::resolve<glm::quat(const float &, const glm::vec3 &)>(&glm::angleAxis));
+	m_luaState.set_function("bitwiseOr", sol::overload([](const int p_v1, const int p_v2) -> const int { return p_v1 | p_v2; },
+		[](const int p_v1, const int p_v2, const int p_v3) -> const int { return p_v1 | p_v2 | p_v3; },
+		[](const int p_v1, const int p_v2, const int p_v3, const int p_v4) -> const int { return p_v1 | p_v2 | p_v3 | p_v4; },
+		[](const int p_v1, const int p_v2, const int p_v3, const int p_v4, const int p_v5) -> const int { return p_v1 | p_v2 | p_v3 | p_v4 | p_v5; }));
+	m_luaState.set_function("clamp", [](const float p_value, const float p_min, const float p_max) -> float { return glm::clamp(p_value, p_min, p_max); });
+	m_luaState.set_function("dot", sol::overload([this](const glm::vec3 &p_v1, const glm::vec3 &p_v2) -> float { return glm::dot(p_v1, p_v2); },
+		[this](const glm::vec4 &p_v1, const glm::vec4 &p_v2) -> float { return glm::dot(p_v1, p_v2); }));
+	m_luaState.set_function("linearInterpolation", sol::overload([](const float p_value, const float p_domainMin, const float p_domainMax) -> const float { return (p_value - p_domainMin) / (p_domainMax - p_domainMin); },
+		[this](const float p_value, const float p_domainMin, const float p_domainMax, const float p_rangeMin, const float p_rangeMax) -> const float { return glm::mix(p_rangeMin, p_rangeMax, (p_value - p_domainMin) / (p_domainMax - p_domainMin)); }));
+	m_luaState.set_function("toRadianF", sol::resolve<float(const float)>(&glm::radians));
+	m_luaState.set_function("toRadianVec3", sol::resolve<glm::vec3(const glm::vec3 &)>(&glm::radians));
+	m_luaState.set_function("toRadianVec4", sol::resolve<glm::vec4(const glm::vec4 &)>(&glm::radians));
+	m_luaState.set_function("toDegreesF", sol::resolve<float(const float)>(&glm::degrees));
+	m_luaState.set_function("toDegreesVec3", sol::resolve<glm::vec3(const glm::vec3 &)>(&glm::degrees));
+	m_luaState.set_function("toDegreesVec4", sol::resolve<glm::vec4(const glm::vec4 &)>(&glm::degrees));
+
+	// Physics functions
+	m_luaState.set_function("getPhysicsSimulationRunning", [this]() -> const bool { return static_cast<PhysicsScene *>(m_scriptScene->getSceneLoader()->getSystemScene(Systems::Physics))->getSimulationRunning(); });
 }
 
 void LuaScript::setUsertypes()
@@ -328,6 +375,7 @@ void LuaScript::setUsertypes()
 		"None", EngineChangeType::EngineChangeType_None,
 		"SceneFilename", EngineChangeType::EngineChangeType_SceneFilename,
 		"SceneLoad", EngineChangeType::EngineChangeType_SceneLoad,
+		"SceneUnload", EngineChangeType::EngineChangeType_SceneUnload,
 		"SceneReload", EngineChangeType::EngineChangeType_SceneReload,
 		"StateChange", EngineChangeType::EngineChangeType_StateChange);
 
@@ -339,6 +387,10 @@ void LuaScript::setUsertypes()
 		GetString(Systems::TypeID::Physics), Systems::TypeID::Physics,
 		GetString(Systems::TypeID::Script), Systems::TypeID::Script,
 		GetString(Systems::TypeID::World), Systems::TypeID::World);
+
+	// Components
+	m_luaState.new_usertype<SpatialComponent>("SpatialComponent",
+		"getSpatialDataChangeManager", &SpatialComponent::getSpatialDataChangeManager);
 
 	// Config variables
 	m_luaState.new_usertype<Config::EngineVariables>("EngineVariables",
@@ -431,6 +483,40 @@ void LuaScript::setUsertypes()
 	// Math types
 	m_luaState.new_usertype<Int64Packer>("Int64");
 
+	m_luaState.new_usertype<glm::ivec2>("Ivec2",
+		sol::constructors<glm::ivec2(), glm::ivec2(int), glm::ivec2(int, int), glm::ivec2(glm::vec2)>(),
+		"x", &glm::ivec2::x,
+		"y", &glm::ivec2::y,
+		"addF", [](const glm::ivec2 &v1, const int f) -> glm::ivec2 { return v1 + f; },
+		"subF", [](const glm::ivec2 &v1, const int f) -> glm::ivec2 { return v1 - f; },
+		"mulF", [](const glm::ivec2 &v1, const int f) -> glm::ivec2 { return v1 * f; },
+		"divF", [](const glm::ivec2 &v1, const int f) -> glm::ivec2 { return v1 / f; },
+		"addIvec2", [](const glm::ivec2 &v1, const glm::ivec2 &v2) -> glm::ivec2 { return v1 + v2; },
+		"subIvec2", [](const glm::ivec2 &v1, const glm::ivec2 &v2) -> glm::ivec2 { return v1 - v2; },
+		"mulIvec2", [](const glm::ivec2 &v1, const glm::ivec2 &v2) -> glm::ivec2 { return v1 * v2; },
+		"divIvec2", [](const glm::ivec2 &v1, const glm::ivec2 &v2) -> glm::ivec2 { return v1 / v2; },
+		sol::meta_function::addition, [](const glm::ivec2 &v1, glm::ivec2 &v2) -> glm::ivec2 { return v1 + v2; },
+		sol::meta_function::subtraction, [](const glm::ivec2 &v1, glm::ivec2 &v2) -> glm::ivec2 { return v1 - v2; },
+		sol::meta_function::multiplication, [](const glm::ivec2 &v1, glm::ivec2 &v2) -> glm::ivec2 { return v1 * v2; },
+		sol::meta_function::division, [](const glm::ivec2 &v1, glm::ivec2 &v2) -> glm::ivec2 { return v1 / v2; });
+
+	m_luaState.new_usertype<glm::vec2>("Vec2",
+		sol::constructors<glm::vec2(), glm::vec2(float), glm::vec2(float, float), glm::vec2(glm::vec3), glm::vec2(glm::ivec2)>(),
+		"x", &glm::vec2::x,
+		"y", &glm::vec2::y,
+		"addF", [](const glm::vec2 &v1, const float f) -> glm::vec2 { return v1 + f; },
+		"subF", [](const glm::vec2 &v1, const float f) -> glm::vec2 { return v1 - f; },
+		"mulF", [](const glm::vec2 &v1, const float f) -> glm::vec2 { return v1 * f; },
+		"divF", [](const glm::vec2 &v1, const float f) -> glm::vec2 { return v1 / f; },
+		"addVec2", [](const glm::vec2 &v1, const glm::vec2 &v2) -> glm::vec2 { return v1 + v2; },
+		"subVec2", [](const glm::vec2 &v1, const glm::vec2 &v2) -> glm::vec2 { return v1 - v2; },
+		"mulVec2", [](const glm::vec2 &v1, const glm::vec2 &v2) -> glm::vec2 { return v1 * v2; },
+		"divVec2", [](const glm::vec2 &v1, const glm::vec2 &v2) -> glm::vec2 { return v1 / v2; },
+		sol::meta_function::addition, [](const glm::vec2 &v1, glm::vec2 &v2) -> glm::vec2 { return v1 + v2; },
+		sol::meta_function::subtraction, [](const glm::vec2 &v1, glm::vec2 &v2) -> glm::vec2 { return v1 - v2; },
+		sol::meta_function::multiplication, [](const glm::vec2 &v1, glm::vec2 &v2) -> glm::vec2 { return v1 * v2; },
+		sol::meta_function::division, [](const glm::vec2 &v1, glm::vec2 &v2) -> glm::vec2 { return v1 / v2; });
+
 	m_luaState.new_usertype<glm::vec3>("Vec3",
 		sol::constructors<glm::vec3(), glm::vec3(float), glm::vec3(float, float, float), glm::vec3(glm::vec4)>(),
 		"x", &glm::vec3::x,
@@ -444,6 +530,7 @@ void LuaScript::setUsertypes()
 		"subVec3", [](const glm::vec3 &v1, const glm::vec3 &v2) -> glm::vec3 { return v1 - v2; },
 		"mulVec3", [](const glm::vec3 &v1, const glm::vec3 &v2) -> glm::vec3 { return v1 * v2; },
 		"divVec3", [](const glm::vec3 &v1, const glm::vec3 &v2) -> glm::vec3 { return v1 / v2; },
+		"dot", [](const glm::vec3 &v1, const glm::vec3 &v2) -> float { return glm::dot(v1, v2); },
 		"normalize", [](const glm::vec3 &v1) -> glm::vec3 { return glm::normalize(v1); },
 		sol::meta_function::addition, [](const glm::vec3 &v1, glm::vec3 &v2) -> glm::vec3 { return v1 + v2; },
 		sol::meta_function::subtraction, [](const glm::vec3 &v1, glm::vec3 &v2) -> glm::vec3 { return v1 - v2; },

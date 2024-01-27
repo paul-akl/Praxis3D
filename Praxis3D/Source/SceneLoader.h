@@ -18,7 +18,7 @@ struct WorldComponentsConstructionInfo;
 class SceneLoader
 {
 public:
-	SceneLoader();
+	SceneLoader(const EngineStateType p_engineStateType);
 	~SceneLoader();
 
 	inline void registerSystemScene(SystemScene *p_scene)
@@ -33,6 +33,7 @@ public:
 			m_changeController = p_changeCtrl;
 	}
 
+	inline SystemScene **getAllSystemScenes() { return m_systemScenes; }
 	inline SystemScene *getSystemScene(Systems::TypeID p_systemType) const { return m_systemScenes[p_systemType]; }
 	inline UniversalScene *getChangeController() const { return m_changeController; }
 
@@ -62,6 +63,21 @@ public:
 
 	// Set the load-in-background flag
 	inline void setLoadInBackground(const bool p_loadInBackground) { m_loadInBackground = p_loadInBackground; }
+
+	// Set the current loading status of all scenes
+	inline void setSceneLoadingStatus(const bool p_loadingStatus) { m_loadingStatus = p_loadingStatus; }
+
+	// Get the current loading status of all scenes
+	inline bool getSceneLoadingStatus() const { return m_loadingStatus; }
+	
+	// Set the first (initial) load flag
+	inline void setFirstLoad(const bool p_firstLoad) { m_firstLoad = p_firstLoad; }
+
+	// Is this the first (initial) load
+	inline bool getFirstLoad() const { return m_firstLoad; }
+
+	// Get the engine state type that this scene loader belongs to
+	inline EngineStateType getEngineState() const { return m_engineStateType; }
 
 private:
 	ErrorCode importFromFile(ComponentsConstructionInfo &p_constructionInfo, const std::string &p_filename);
@@ -93,10 +109,19 @@ private:
 	// Change controller, used for storing and distributing messages between subjects and observers
 	UniversalScene *m_changeController;
 
+	// The engine state type that this scene loader belongs to
+	const EngineStateType m_engineStateType;
+
 	// Should the imported objects be called to start loading in the background
 	bool m_loadInBackground;
 
 	// Holds the last loaded scene filename, used for exporting the scene back to file
 	std::string m_filename;
+
+	// Denotes whether any of the scenes currently loading
+	bool m_loadingStatus;
+
+	// Denotes whether this is the first time that scenes are loading
+	bool m_firstLoad;
 };
 

@@ -150,6 +150,24 @@ public:
 	BitMask getDesiredSystemChanges() { return Systems::Changes::Generic::CreateObject || Systems::Changes::Generic::DeleteObject; }
 	BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
 
+	// Find and return an entity ID of an entity matching the given name
+	// Returns NULL_ENTITY_ID if no entity was found
+	inline EntityID getEntity(const std::string &p_name) const
+	{
+		// Iterate every entity and add its entity ID and name to the list
+		for(auto entity : m_entityRegistry.view<EntityID>())
+		{
+			// Try to get the metadata component
+			if(auto metadataComponent = m_entityRegistry.try_get<MetadataComponent>(entity); metadataComponent != nullptr)
+			{
+				if(metadataComponent->m_name == p_name)
+					return entity;
+			}
+		}
+
+		return NULL_ENTITY_ID;
+	}
+
 	// Adds a component with the given parameters and returns a reference to it
 	template <class T_Component, class... T_Args>
 	T_Component &addComponent(EntityID p_entity, T_Args&&... p_args)

@@ -12,7 +12,6 @@
 #include "Utilities.h"
 
 typedef uint64_t BitMask;
-//typedef uint32_t DataType;
 
 // Tests if the given bitmask contains the given flag; returns true if the flag bits are present in the bitmask
 constexpr bool CheckBitmask(const BitMask p_bitmask, const BitMask p_flag) { return ((p_bitmask & p_flag) == p_flag); }
@@ -236,23 +235,24 @@ namespace Systems
 		}
 		namespace Audio
 		{
-			static constexpr BitMask Filename				= Changes::Type::Audio + Changes::Common::Shared1;
+			static constexpr BitMask SoundName				= Changes::Type::Audio + Changes::Common::Shared1;
 			static constexpr BitMask ListenerID				= Changes::Type::Audio + Changes::Common::Shared2;
 			static constexpr BitMask Loop					= Changes::Type::Audio + Changes::Common::Shared3;
 			static constexpr BitMask Reload					= Changes::Type::Audio + Changes::Common::Shared4;
 			static constexpr BitMask SoundType				= Changes::Type::Audio + Changes::Common::Shared5;
-			static constexpr BitMask Spatialized			= Changes::Type::Audio + Changes::Common::Shared6;
-			static constexpr BitMask StartPlaying			= Changes::Type::Audio + Changes::Common::Shared7;
-			static constexpr BitMask Volume					= Changes::Type::Audio + Changes::Common::Shared8;
+			static constexpr BitMask SoundSourceType		= Changes::Type::Audio + Changes::Common::Shared6;
+			static constexpr BitMask Spatialized			= Changes::Type::Audio + Changes::Common::Shared7;
+			static constexpr BitMask StartPlaying			= Changes::Type::Audio + Changes::Common::Shared8;
+			static constexpr BitMask Volume					= Changes::Type::Audio + Changes::Common::Shared9;
 			
-			static constexpr BitMask VolumeAmbient			= Changes::Type::Audio + Changes::Common::Shared9;
-			static constexpr BitMask VolumeMaster			= Changes::Type::Audio + Changes::Common::Shared10;
-			static constexpr BitMask VolumeMusic			= Changes::Type::Audio + Changes::Common::Shared11;
-			static constexpr BitMask VolumeSFX				= Changes::Type::Audio + Changes::Common::Shared12;
+			static constexpr BitMask VolumeAmbient			= Changes::Type::Audio + Changes::Common::Shared10;
+			static constexpr BitMask VolumeMaster			= Changes::Type::Audio + Changes::Common::Shared11;
+			static constexpr BitMask VolumeMusic			= Changes::Type::Audio + Changes::Common::Shared12;
+			static constexpr BitMask VolumeSFX				= Changes::Type::Audio + Changes::Common::Shared13;
 			static constexpr BitMask AllVolume				= VolumeAmbient | VolumeMaster | VolumeMusic | VolumeSFX;
 
-			static constexpr BitMask All					= Filename | ListenerID | Loop | Reload | SoundType | Spatialized | StartPlaying | 
-																Volume | AllVolume;
+			static constexpr BitMask All					= SoundName | ListenerID | Loop | Reload | SoundType | SoundSourceType | 
+																Spatialized | StartPlaying | Volume | AllVolume;
 		}
 		namespace Graphics
 		{
@@ -322,9 +322,10 @@ namespace Systems
 		}
 		namespace Script
 		{
-			static constexpr BitMask Filename				= Changes::Type::GUI + Changes::Common::Shared1;
-			static constexpr BitMask Reload					= Changes::Type::GUI + Changes::Common::Shared2;
-			static constexpr BitMask All					= Filename | Reload;
+			static constexpr BitMask Filename				= Changes::Type::Script + Changes::Common::Shared1;
+			static constexpr BitMask PauseInEditor			= Changes::Type::Script + Changes::Common::Shared2;
+			static constexpr BitMask Reload					= Changes::Type::Script + Changes::Common::Shared3;
+			static constexpr BitMask All					= Filename | PauseInEditor | Reload;
 		}
 		namespace World
 		{
@@ -348,6 +349,7 @@ namespace Properties
 	Code(ChangeController,) \
 	Code(Components,) \
 	Code(Default,) \
+	Code(File,) \
 	Code(Filename,) \
 	Code(Index,) \
 	Code(Keybindings,) \
@@ -357,6 +359,7 @@ namespace Properties
 	Code(Objects,) \
 	Code(ObjectPoolSize,) \
 	Code(Scene,) \
+	Code(Source,) \
 	Code(System,) \
 	Code(Systems,) \
 	Code(Type,) \
@@ -368,6 +371,7 @@ namespace Properties
 	Code(Ambient,) \
 	Code(Audio,) \
 	Code(Banks,) \
+	Code(Event,) \
 	Code(Loop,) \
 	Code(Master,) \
 	Code(Music,) \
@@ -568,6 +572,7 @@ namespace Properties
 	Code(KeyName,) \
 	Code(Minutes,) \
 	Code(Month,) \
+	Code(PauseInEditor,) \
 	Code(Radius,) \
 	Code(Script,) \
 	Code(ScriptObject,) \
@@ -673,7 +678,8 @@ public:
 		AudioVariables()
 		{
 			impact_impulse_param_divider = 1.0f;
-			impact_impulse_volume_divider = 200.0f;
+			impact_impulse_volume_divider = 100.0f;
+			impact_min_volume_threshold = 0.1f;
 			impact_max_volume_threshold = 1.0f;
 			impact_soft_hard_threshold = 30.0f;
 			max_impact_volume = 2.0f;
@@ -696,6 +702,7 @@ public:
 
 		float impact_impulse_param_divider;
 		float impact_impulse_volume_divider;
+		float impact_min_volume_threshold;
 		float impact_max_volume_threshold;
 		float impact_soft_hard_threshold;
 		float max_impact_volume;
@@ -1001,8 +1008,6 @@ public:
 		int bloom_mipmap_limit;
 		int current_resolution_x;
 		int current_resolution_y;
-		//int csm_num_of_levels;
-		//int csm_resolution;
 		int dir_shadow_res_x;
 		int dir_shadow_res_y;
 		int lens_flare_blur_passes;
@@ -1073,6 +1078,7 @@ public:
 			gui_render = true;
 			gui_dark_style = true;
 			gui_sequence_array_reserve_size = 50;
+			about_window_font_size = 30.0f;
 			editor_asset_selection_button_size_multiplier = 2.0f;
 			editor_asset_texture_button_size_x = 60.0f;
 			editor_asset_texture_button_size_y = 60.0f;
@@ -1089,7 +1095,9 @@ public:
 			gui_file_dialog_dir_color_B = 0.314f;
 			loading_spinner_radius = 24.0f;
 			loading_spinner_speed = 16.0f;
-			loading_spinner_thickness = 3.0f;
+			loading_spinner_thickness = 3.0f; 
+			about_window_font = "OpenSans-Regular.ttf";
+			about_window_logo_texture = "logo2.png";
 			editor_button_add_texture = "button_add_3.png";
 			editor_button_add_list_texture = "button_add_from_list_1.png";
 			editor_button_arrow_down_texture = "button_arrow_down_1.png";
@@ -1107,11 +1115,14 @@ public:
 			editor_button_scripting_enabled_texture = "button_scripting_3.png";
 			editor_new_entity_name = "New Entity";
 			gui_editor_window_name = "Editor window";
+			url_github = "https://github.com/paul-akl/Praxis3D";
+			url_pauldev = "http://www.pauldev.org/project-praxis3d.html";
 		}
 		bool gui_docking_enabled;
 		bool gui_render;
 		bool gui_dark_style;
 		int gui_sequence_array_reserve_size;
+		float about_window_font_size;
 		float editor_asset_selection_button_size_multiplier;
 		float editor_asset_texture_button_size_x;
 		float editor_asset_texture_button_size_y;
@@ -1129,6 +1140,8 @@ public:
 		float loading_spinner_radius;
 		float loading_spinner_speed;
 		float loading_spinner_thickness;
+		std::string about_window_font;
+		std::string about_window_logo_texture;
 		std::string editor_button_add_texture;
 		std::string editor_button_add_list_texture;
 		std::string editor_button_arrow_down_texture;
@@ -1146,6 +1159,8 @@ public:
 		std::string editor_button_scripting_enabled_texture;
 		std::string editor_new_entity_name;
 		std::string gui_editor_window_name;
+		std::string url_github;
+		std::string url_pauldev;
 	};
 	struct InputVariables
 	{
@@ -1292,6 +1307,7 @@ public:
 		{
 			config_path = "Data\\";
 			engine_assets_path = "Default\\";
+			font_path = "Data\\Fonts\\";
 			gui_assets_path = "Default\\GUI\\";
 			map_path = "Data\\Maps\\";
 			model_path = "Data\\Models\\";
@@ -1305,6 +1321,7 @@ public:
 
 		std::string config_path;
 		std::string engine_assets_path;
+		std::string font_path;
 		std::string gui_assets_path;
 		std::string map_path;
 		std::string model_path;
@@ -1319,7 +1336,7 @@ public:
 	{
 		PhysicsVariables()
 		{
-			applied_impulse_threshold = 20.0f;
+			applied_impulse_threshold = 1.0f;
 			life_time_threshold = 2;
 		}
 		float applied_impulse_threshold;
@@ -1400,6 +1417,8 @@ public:
 			csm_penumbra_size = 1.42f;
 			csm_penumbra_size_scale_min = 1.0f;
 			csm_penumbra_size_scale_max = 2000.0f;
+			current_viewport_position_x = 0.0f;
+			current_viewport_position_y = 0.0f;
 			dir_light_quad_offset_x = 0.0f;
 			dir_light_quad_offset_y = 0.0f;
 			dir_light_quad_offset_z = 0.0f;
@@ -1410,6 +1429,8 @@ public:
 			parallax_mapping_max_steps = 32.0f;
 			csm_num_of_pcf_samples = 16;
 			csm_resolution = 2048;
+			current_viewport_size_x = 0;
+			current_viewport_size_y = 0;
 			depth_test_func = GL_LESS;
 			face_culling_mode = GL_BACK;
 			heightmap_combine_channel = 3;
@@ -1497,6 +1518,8 @@ public:
 		float csm_penumbra_size;
 		float csm_penumbra_size_scale_min;
 		float csm_penumbra_size_scale_max;
+		float current_viewport_position_x;
+		float current_viewport_position_y;
 		float dir_light_quad_offset_x;
 		float dir_light_quad_offset_y;
 		float dir_light_quad_offset_z;
@@ -1507,6 +1530,8 @@ public:
 		float parallax_mapping_max_steps;
 		int csm_num_of_pcf_samples;
 		int csm_resolution;
+		int current_viewport_size_x;
+		int current_viewport_size_y;
 		int depth_test_func;
 		int face_culling_mode;
 		int heightmap_combine_channel;

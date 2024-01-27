@@ -148,9 +148,10 @@ public:
 	BitMask getDesiredSystemChanges() { return Systems::Changes::Generic::CreateObject || Systems::Changes::Generic::DeleteObject; }
 	BitMask getPotentialSystemChanges() { return Systems::Changes::None; }
 
-	const glm::vec3 getGravity() const { return Math::toGlmVec3(m_dynamicsWorld->getGravity()); }
+	const inline glm::vec3 getGravity() const { return Math::toGlmVec3(m_dynamicsWorld->getGravity()); }
+	const inline bool getSimulationRunning() const { return m_simulationRunning; }
 
-	// Fluch the collision contacts of a rigid body (used after changing the collision shape dimensions)
+	// Flush the collision contacts of a rigid body (used after changing the collision shape dimensions)
 	void cleanProxyFromPairs(btRigidBody &p_rigidBody)
 	{
 		m_collisionBroadphase->getOverlappingPairCache()->cleanProxyFromPairs(p_rigidBody.getBroadphaseProxy(), m_collisionDispatcher);

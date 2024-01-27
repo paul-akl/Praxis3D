@@ -252,6 +252,10 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 	}
 	else
 	{
+		// Set the gobal variables for the viewport position
+		Config::m_rendererVar.current_viewport_position_x = 0.0f;
+		Config::m_rendererVar.current_viewport_position_y = 0.0f;
+
 		if(m_frameData.m_screenSize.x != Config::graphicsVar().current_resolution_x ||
 			m_frameData.m_screenSize.y != Config::graphicsVar().current_resolution_y)
 		{
@@ -266,6 +270,10 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 			m_backend.setScreenSize(m_frameData);
 		}
 	}
+
+	// Set the global variables for the current viewport size
+	Config::m_rendererVar.current_viewport_size_x = m_frameData.m_screenSize.x;
+	Config::m_rendererVar.current_viewport_size_y = m_frameData.m_screenSize.y;
 
 	// If Z-buffer near or far or FOV values have changed, flag projection matrix for updating
 	if(m_frameData.m_zFar != p_sceneObjects.m_zFar || m_frameData.m_zNear != p_sceneObjects.m_zNear || m_frameData.m_fov != p_sceneObjects.m_fov)

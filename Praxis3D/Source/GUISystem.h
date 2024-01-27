@@ -13,6 +13,7 @@ public:
 			m_GUIScenes[i] = nullptr;
 
 		m_systemName = GetString(Systems::GUI);
+		m_fonts.resize(GuiFontType::GuiFontType_NumOfTypes, nullptr);
 	}
 	~GUISystem()
 	{
@@ -24,6 +25,9 @@ public:
 	ErrorCode init()
 	{
 		ErrorCode returnCode = ErrorCode::Success;
+
+		// Load fonts
+		loadFonts();
 
 		return returnCode;
 	}
@@ -82,6 +86,47 @@ public:
 		}
 	}
 
+	ImFont *getFont(const GuiFontType p_fontType)
+	{
+		if(p_fontType == GuiFontType::GuiFontType_NumOfTypes)
+			return m_fonts[GuiFontType::GuiFontType_Default];
+
+		return m_fonts[p_fontType];
+	}
+ 
 protected:
+	void loadFonts()
+	{
+		for(unsigned int i = 0; i < GuiFontType::GuiFontType_NumOfTypes; i++)
+		{
+			switch(i)
+			{
+				case GuiFontType_Default:
+					{
+						m_fonts[i] = ImGui::GetIO().Fonts->Fonts[0];
+					}
+					break;
+				case GuiFontType_AboutWindow:
+					{
+						ImFontConfig fontConfig;
+						fontConfig.OversampleH = 2;
+						fontConfig.OversampleV = 1;
+						fontConfig.GlyphExtraSpacing.x = 1.0f;
+
+						m_fonts[i] = ImGui::GetIO().Fonts->AddFontFromFileTTF((Config::filepathVar().font_path + Config::filepathVar().engine_assets_path + Config::GUIVar().about_window_font).c_str(), Config::GUIVar().about_window_font_size, &fontConfig);
+					}
+					break;
+				default:
+					{
+						// If default is reached, it means that a case statement is missing for a given font type, so log an error and assign a default font instead
+						ErrHandlerLoc::get().log(ErrorCode::Font_type_missing_construction, ErrorSource::Source_GUI, "Font type: " + Utilities::toString(i));
+						m_fonts[i] = ImGui::GetIO().FontDefault;
+					}
+					break;
+			}
+		}
+	}
+
 	GUIScene *m_GUIScenes[EngineStateType::EngineStateType_NumOfTypes];
+	std::vector<ImFont *> m_fonts;
 };

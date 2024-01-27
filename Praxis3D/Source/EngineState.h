@@ -43,6 +43,26 @@ public:
 	inline void setSceneFilename(const std::string &p_filename) { m_sceneFilename = p_filename; }
 
 protected:
+	inline void updateSceneLoadingStatus()
+	{
+		bool loadingStatus = false;
+		auto systemScenes = m_sceneLoader.getAllSystemScenes();
+
+		for(unsigned int i = 0; i < Systems::TypeID::NumberOfSystems; i++)
+		{
+			if(systemScenes[i]->getLoadingStatus())
+				loadingStatus = true;
+		}
+
+		if(m_sceneLoader.getFirstLoad())
+		{
+			if(!loadingStatus)
+				m_sceneLoader.setFirstLoad(false);
+		}
+
+		m_sceneLoader.setSceneLoadingStatus(loadingStatus);
+	}
+
 	bool m_initialized;
 	bool m_loaded;
 	EngineStateType m_engineStateType;

@@ -207,10 +207,10 @@ public:
 				m_renderer.queueForDrawing(m_groundShader->getShaderHandle(), m_groundShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
 
 			}
+
+			// Pass the draw command so it is executed
+			m_renderer.passScreenSpaceDrawCommandsToBackend();
 		}
-		
-		// Pass the draw command so it is executed
-		m_renderer.passScreenSpaceDrawCommandsToBackend();
 		
 		p_renderPassData.swapColorInputOutputMaps();
 

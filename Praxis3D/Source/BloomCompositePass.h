@@ -46,17 +46,20 @@ public:
 
 	void update(RenderPassData &p_renderPassData, const SceneObjects &p_sceneObjects, const float p_deltaTime)
 	{
-		glDisable(GL_DEPTH_TEST);
-		
-		// Bind input color texture for reading so it can be accessed in the shaders
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GBufferTextureType::GBufferInputTexture);
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferEmissive, GBufferTextureType::GBufferEmissive);
-		
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
+		if(p_sceneObjects.m_processDrawing)
+		{
+			glDisable(GL_DEPTH_TEST);
 
-		// Perform various visual effects in the post process shader
-		m_renderer.queueForDrawing(m_bloomCompositeShader->getShaderHandle(), m_bloomCompositeShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
-		m_renderer.passScreenSpaceDrawCommandsToBackend();
+			// Bind input color texture for reading so it can be accessed in the shaders
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GBufferTextureType::GBufferInputTexture);
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferEmissive, GBufferTextureType::GBufferEmissive);
+
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
+
+			// Perform various visual effects in the post process shader
+			m_renderer.queueForDrawing(m_bloomCompositeShader->getShaderHandle(), m_bloomCompositeShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
+			m_renderer.passScreenSpaceDrawCommandsToBackend();
+		}
 
 		p_renderPassData.swapColorInputOutputMaps();
 	}

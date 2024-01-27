@@ -129,7 +129,7 @@ void PhysicsScene::exportSetup(PropertySet &p_propertySet)
 void PhysicsScene::update(const float p_deltaTime)
 {
 	// Get double buffering index
-	auto dbIndex = ClockLocator::get().getDoubleBufferingIndexBack();
+	const auto dbIndex = ClockLocator::get().getDoubleBufferingIndexBack();
 
 	// Get the world scene required for getting the entity registry
 	WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
@@ -147,7 +147,7 @@ void PhysicsScene::update(const float p_deltaTime)
 		component.m_numOfStaticCollisions[dbIndex] = 0;
 	}
 
-	if(m_simulationRunning)
+	if(m_simulationRunning && !(m_sceneLoader->getFirstLoad() && m_sceneLoader->getSceneLoadingStatus()))
 	{
 		// Perform the physics simulation for the time step of the last frame
 		m_dynamicsWorld->stepSimulation(p_deltaTime);
@@ -172,35 +172,39 @@ void PhysicsScene::internalTickCallback(btDynamicsWorld *p_world, btScalar p_tim
 	auto &entityRegistry = worldScene->getEntityRegistry();
 
 	// Get double buffering index
-	auto dbIndex = ClockLocator::get().getDoubleBufferingIndexBack();
+	const auto dbIndex = ClockLocator::get().getDoubleBufferingIndexBack();
 
+	// Go over each manifold
 	for(decltype(p_world->getDispatcher()->getNumManifolds()) manifoldIndex = 0, manifoldSize = p_world->getDispatcher()->getNumManifolds(); manifoldIndex < manifoldSize; manifoldIndex++)
 	{
-		btPersistentManifold *contactManifold = p_world->getDispatcher()->getManifoldByIndexInternal(manifoldIndex);
+		// Get contact manifold
+		const btPersistentManifold *contactManifold = p_world->getDispatcher()->getManifoldByIndexInternal(manifoldIndex);
 
+		// Get collision objects that are in contact
 		const btCollisionObject *objectA = static_cast<const btCollisionObject *>(contactManifold->getBody0());
 		const btCollisionObject *objectB = static_cast<const btCollisionObject *>(contactManifold->getBody1());
 
-		EntityID entityA = *static_cast<EntityID *>(objectA->getUserPointer());
-		EntityID entityB = *static_cast<EntityID *>(objectB->getUserPointer());
+		// Get entity IDs of objects that are in contact
+		const EntityID entityA = *static_cast<EntityID *>(objectA->getUserPointer());
+		const EntityID entityB = *static_cast<EntityID *>(objectB->getUserPointer());
 
-		bool processCollision = false;
-
+		// Go over each contact
 		for(decltype(contactManifold->getNumContacts()) contactIndex = 0, contactSize = contactManifold->getNumContacts(); contactIndex < contactSize; contactIndex++)
 		{
+			// Get collision event components that will contain the contact information
 			auto *collisionEventComponentObjectA = entityRegistry.try_get<CollisionEventComponent>(entityA);
 			auto *collisionEventComponentObjectB = entityRegistry.try_get<CollisionEventComponent>(entityB);
 
-			btManifoldPoint &manifoldPoint = contactManifold->getContactPoint(contactIndex);
+			// Get the contact point
+			const btManifoldPoint &manifoldPoint = contactManifold->getContactPoint(contactIndex);
+
+			// Check if the contact distance isn't negative and if the lifetime of the contact hasn't passed a set threshold
 			if(manifoldPoint.getDistance() < 0.0f && manifoldPoint.m_lifeTime < Config::physicsVar().life_time_threshold)
 			{
-				//std::cout << manifoldPoint.m_contactMotion1 << " | ";
-				//std::cout << manifoldPoint.m_contactMotion2 << std::endl;
-
-				//if(manifoldPoint.m_appliedImpulseLateral1 > )
-
+				// Determine whether the collision is static or dynamic based on whether the applied impulse of the collision is above a set threshold
 				if(manifoldPoint.m_appliedImpulse > Config::physicsVar().applied_impulse_threshold)
 				{
+					// Process the dynamic collision event on the first object
 					if(collisionEventComponentObjectA->m_numOfDynamicCollisions[dbIndex] < NUM_DYNAMIC_COLLISION_EVENTS)
 					{
 						collisionEventComponentObjectA->m_dynamicCollisions[dbIndex][collisionEventComponentObjectA->m_numOfDynamicCollisions[dbIndex]].m_firstObjInCollisionPair = true;
@@ -214,9 +218,11 @@ void PhysicsScene::internalTickCallback(btDynamicsWorld *p_world, btScalar p_tim
 					}
 					else
 					{
-						std::cout << entityA << " : max DYNAMIC collision events" << std::endl;
+						// Log an error if the dynamic collision event count exceeds the maximum number of supported dynamic events
+						ErrHandlerLoc::get().log(ErrorCode::Collision_max_dynamic_events, ErrorSource::Source_Physics);
 					}
 
+					// Process the dynamic collision event on the second object
 					if(collisionEventComponentObjectB->m_numOfDynamicCollisions[dbIndex] < NUM_DYNAMIC_COLLISION_EVENTS)
 					{
 						collisionEventComponentObjectB->m_dynamicCollisions[dbIndex][collisionEventComponentObjectB->m_numOfDynamicCollisions[dbIndex]].m_firstObjInCollisionPair = false;
@@ -230,12 +236,13 @@ void PhysicsScene::internalTickCallback(btDynamicsWorld *p_world, btScalar p_tim
 					}
 					else
 					{
-						std::cout << entityB << " : max DYNAMIC collision events" << std::endl;
+						// Log an error if the dynamic collision event count exceeds the maximum number of supported dynamic events
+						ErrHandlerLoc::get().log(ErrorCode::Collision_max_dynamic_events, ErrorSource::Source_Physics);
 					}
-
 				}
 				else
 				{
+					// Process the static collision event on the first object
 					if(collisionEventComponentObjectA->m_numOfStaticCollisions[dbIndex] < NUM_STATIC_COLLISION_EVENTS)
 					{
 						collisionEventComponentObjectA->m_staticCollisions[dbIndex][collisionEventComponentObjectA->m_numOfStaticCollisions[dbIndex]].m_firstObjInCollisionPair = true;
@@ -249,9 +256,11 @@ void PhysicsScene::internalTickCallback(btDynamicsWorld *p_world, btScalar p_tim
 					}
 					else
 					{
-						std::cout << entityA << " : max STATIC collision events" << std::endl;
+						// Log an error if the static collision event count exceeds the maximum number of supported static events
+						ErrHandlerLoc::get().log(ErrorCode::Collision_max_static_events, ErrorSource::Source_Physics);
 					}
 
+					// Process the static collision event on the second object
 					if(collisionEventComponentObjectB->m_numOfStaticCollisions[dbIndex] < NUM_STATIC_COLLISION_EVENTS)
 					{
 						collisionEventComponentObjectB->m_staticCollisions[dbIndex][collisionEventComponentObjectB->m_numOfStaticCollisions[dbIndex]].m_firstObjInCollisionPair = false;
@@ -265,64 +274,11 @@ void PhysicsScene::internalTickCallback(btDynamicsWorld *p_world, btScalar p_tim
 					}
 					else
 					{
-						std::cout << entityB << " : max STATIC collision events" << std::endl;
+						// Log an error if the static collision event count exceeds the maximum number of supported static events
+						ErrHandlerLoc::get().log(ErrorCode::Collision_max_static_events, ErrorSource::Source_Physics);
 					}
 				}
 			}
-			//if(pt.getDistance() < 0.f)
-			//{
-			//	const btVector3 &ptA = pt.getPositionWorldOnA();
-			//	const btVector3 &ptB = pt.getPositionWorldOnB();
-			//	const btVector3 &normalOnB = pt.m_normalWorldOnB;
-			//}
-		}
-
-		if(processCollision)
-		{
-			//const btCollisionObject *obA = static_cast<const btCollisionObject *>(contactManifold->getBody0());
-			//const btCollisionObject *obB = static_cast<const btCollisionObject *>(contactManifold->getBody1());
-
-			//EntityID entityA = *static_cast<EntityID *>(obA->getUserPointer());
-			//EntityID entityB = *static_cast<EntityID *>(obB->getUserPointer());
-
-			std::string materialTypeEntityA;
-			std::string materialTypeEntityB;
-
-			auto objectMaterialComponentA = entityRegistry.try_get<ObjectMaterialComponent>(entityA);
-			if(objectMaterialComponentA != nullptr)
-			{
-				switch(objectMaterialComponentA->getObjectMaterialType())
-				{
-				case ObjectMaterialType::Metal:
-					materialTypeEntityA = "metal";
-					break;
-				case ObjectMaterialType::Rock:
-					materialTypeEntityA = "rock";
-					break;
-				case ObjectMaterialType::Wood:
-					materialTypeEntityA = "wood";
-					break;
-				}
-			}
-
-			auto objectMaterialComponentB = entityRegistry.try_get<ObjectMaterialComponent>(entityB);
-			if(objectMaterialComponentB != nullptr)
-			{
-				switch(objectMaterialComponentB->getObjectMaterialType())
-				{
-				case ObjectMaterialType::Metal:
-					materialTypeEntityB = "metal";
-					break;
-				case ObjectMaterialType::Rock:
-					materialTypeEntityB = "rock";
-					break;
-				case ObjectMaterialType::Wood:
-					materialTypeEntityB = "wood";
-					break;
-				}
-			}
-
-			std::cout << materialTypeEntityA << " <-> " << materialTypeEntityB << std::endl;
 		}
 	}
 }

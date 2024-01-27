@@ -180,99 +180,102 @@ public:
 			m_renderer.passUpdateCommandsToBackend();
 		}
 
-		switch(m_aoData.m_aoType)
+		if(p_sceneObjects.m_processDrawing)
 		{
-			case AmbientOcclusionType_None:
-				return;
-				break;
-			case AmbientOcclusionType_SSAO:
-				{
-					//	 ____________________________
-					//	|							 |
-					//	|		   AO PASS           |
-					//	|____________________________|
-					//
-
-					// Bind the noise texture
-					m_renderer.m_backend.bindTextureForReadering(MaterialType::MaterialType_Noise, m_ssaoNoiseTexture);
-
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-					m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferPosition, GBufferTextureType::GBufferPosition);
-					m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferNormal, GBufferTextureType::GBufferNormal);
-					m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferMatProperties, GBufferTextureType::GBufferMatProperties);
-
-					m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GBufferTextureType::GBufferFinal);
-
-					// Queue and render a full screen quad using a final pass shader
-					m_renderer.queueForDrawing(m_ssaoPassShader->getShaderHandle(), m_ssaoPassShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
-					m_renderer.passScreenSpaceDrawCommandsToBackend();
-
-					//	 ____________________________
-					//	|							 |
-					//	|		  BLUR PASS          |
-					//	|____________________________|
-					//
-
-					m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferFinal, GBufferTextureType::GBufferFinal);
-					m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GBufferTextureType::GBufferMatProperties);
-
-					// Queue and render a full screen quad using a final pass shader
-					m_renderer.queueForDrawing(m_ssaoBlurShader->getShaderHandle(), m_ssaoBlurShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
-					m_renderer.passScreenSpaceDrawCommandsToBackend();
-				}
-				break;
-			case AmbientOcclusionType_HBAO:
-				{
-					//	 ____________________________
-					//	|							 |
-					//	|		   AO PASS           |
-					//	|____________________________|
-					//
-
-					// Bind the noise texture
-					m_renderer.m_backend.bindTextureForReadering(MaterialType::MaterialType_Noise, m_hbaoNoiseTexture);
-
-					//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-					//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-					m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferPosition, GBufferTextureType::GBufferPosition);
-					m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferNormal, GBufferTextureType::GBufferNormal);
-
-					m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GBufferTextureType::GBufferFinal);
-
-					// Queue and render a full screen quad using a final pass shader
-					m_renderer.queueForDrawing(m_hbaoPassShader->getShaderHandle(), m_hbaoPassShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
-					m_renderer.passScreenSpaceDrawCommandsToBackend();
-
-					//	 ____________________________
-					//	|							 |
-					//	|		  BLUR PASS          |
-					//	|____________________________|
-					//
-					// Horizontal blur
+			switch(m_aoData.m_aoType)
+			{
+				case AmbientOcclusionType_None:
+					return;
+					break;
+				case AmbientOcclusionType_SSAO:
 					{
-						m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferFinal, GBufferTextureType::GBufferInputTexture);
-						m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GBufferTextureType::GBufferIntermediate);
+						//	 ____________________________
+						//	|							 |
+						//	|		   AO PASS           |
+						//	|____________________________|
+						//
+
+						// Bind the noise texture
+						m_renderer.m_backend.bindTextureForReadering(MaterialType::MaterialType_Noise, m_ssaoNoiseTexture);
+
+						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+						m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferPosition, GBufferTextureType::GBufferPosition);
+						m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferNormal, GBufferTextureType::GBufferNormal);
+						m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferMatProperties, GBufferTextureType::GBufferMatProperties);
+
+						m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GBufferTextureType::GBufferFinal);
 
 						// Queue and render a full screen quad using a final pass shader
-						m_renderer.queueForDrawing(m_hbaoBlurHorizontalShader->getShaderHandle(), m_hbaoBlurHorizontalShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
+						m_renderer.queueForDrawing(m_ssaoPassShader->getShaderHandle(), m_ssaoPassShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
 						m_renderer.passScreenSpaceDrawCommandsToBackend();
-					}
 
-					// Vertical blur
-					{
-						m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferIntermediate, GBufferTextureType::GBufferInputTexture);
-						m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferMatProperties, GBufferTextureType::GBufferMatProperties);
+						//	 ____________________________
+						//	|							 |
+						//	|		  BLUR PASS          |
+						//	|____________________________|
+						//
+
+						m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferFinal, GBufferTextureType::GBufferFinal);
 						m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GBufferTextureType::GBufferMatProperties);
 
 						// Queue and render a full screen quad using a final pass shader
-						m_renderer.queueForDrawing(m_hbaoBlurVerticalShader->getShaderHandle(), m_hbaoBlurVerticalShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
+						m_renderer.queueForDrawing(m_ssaoBlurShader->getShaderHandle(), m_ssaoBlurShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
 						m_renderer.passScreenSpaceDrawCommandsToBackend();
 					}
-				}
-				break;
+					break;
+				case AmbientOcclusionType_HBAO:
+					{
+						//	 ____________________________
+						//	|							 |
+						//	|		   AO PASS           |
+						//	|____________________________|
+						//
+
+						// Bind the noise texture
+						m_renderer.m_backend.bindTextureForReadering(MaterialType::MaterialType_Noise, m_hbaoNoiseTexture);
+
+						//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+						//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+						m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferPosition, GBufferTextureType::GBufferPosition);
+						m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferNormal, GBufferTextureType::GBufferNormal);
+
+						m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GBufferTextureType::GBufferFinal);
+
+						// Queue and render a full screen quad using a final pass shader
+						m_renderer.queueForDrawing(m_hbaoPassShader->getShaderHandle(), m_hbaoPassShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
+						m_renderer.passScreenSpaceDrawCommandsToBackend();
+
+						//	 ____________________________
+						//	|							 |
+						//	|		  BLUR PASS          |
+						//	|____________________________|
+						//
+						// Horizontal blur
+						{
+							m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferFinal, GBufferTextureType::GBufferInputTexture);
+							m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GBufferTextureType::GBufferIntermediate);
+
+							// Queue and render a full screen quad using a final pass shader
+							m_renderer.queueForDrawing(m_hbaoBlurHorizontalShader->getShaderHandle(), m_hbaoBlurHorizontalShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
+							m_renderer.passScreenSpaceDrawCommandsToBackend();
+						}
+
+						// Vertical blur
+						{
+							m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferIntermediate, GBufferTextureType::GBufferInputTexture);
+							m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferMatProperties, GBufferTextureType::GBufferMatProperties);
+							m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(GBufferTextureType::GBufferMatProperties);
+
+							// Queue and render a full screen quad using a final pass shader
+							m_renderer.queueForDrawing(m_hbaoBlurVerticalShader->getShaderHandle(), m_hbaoBlurVerticalShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
+							m_renderer.passScreenSpaceDrawCommandsToBackend();
+						}
+					}
+					break;
+			}
 		}
 	}
 

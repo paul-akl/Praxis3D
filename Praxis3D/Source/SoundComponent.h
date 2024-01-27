@@ -19,19 +19,29 @@ public:
 	};
 	constexpr static unsigned int SoundType_NumOfTypes = 4;
 
+	enum SoundSourceType : unsigned int
+	{
+		SoundSourceType_File = 0,
+		SoundSourceType_Event
+	};
+	constexpr static unsigned int SoundSourceType_NumOfTypes = 2;
+
 	struct SoundComponentConstructionInfo : public SystemObject::SystemObjectConstructionInfo
 	{
 		SoundComponentConstructionInfo()
 		{
-			m_soundType = SoundType::SoundType_Music;
+			m_soundType = SoundType::SoundType_SoundEffect;
+			m_soundSourceType = SoundSourceType::SoundSourceType_File;
 			m_volume = 1.0f;
 			m_loop = false;
 			m_spatialized = false;
 			m_startPlaying = false;
 		}
 
-		std::string m_soundFilename;
+		// Either a filename or an event name
+		std::string m_soundName;
 		SoundType m_soundType;
+		SoundSourceType m_soundSourceType;
 		float m_volume;
 		bool m_loop,
 			 m_spatialized,
@@ -42,7 +52,10 @@ public:
 	{
 		m_sound = nullptr;
 		m_channel = nullptr;
+		m_soundEventDescription = nullptr;
+		m_soundEventInstance = nullptr;
 		m_soundType = SoundType::SoundType_Null;
+		m_soundSourceType = SoundSourceType::SoundSourceType_File;
 		m_volume = 1.0f;
 		m_loop = false;
 		m_spatialized = false;
@@ -95,12 +108,11 @@ public:
 			setActive(p_subject->getBool(this, Systems::Changes::Generic::Active));
 		}
 
-		if(CheckBitmask(p_changeType, Systems::Changes::Audio::Filename))
+		if(CheckBitmask(p_changeType, Systems::Changes::Audio::SoundName))
 		{
-			m_soundFilename = p_subject->getString(this, Systems::Changes::Audio::Filename);
+			m_soundName = p_subject->getString(this, Systems::Changes::Audio::SoundName);
 			m_changePending = true;
 			m_reloadSound = true;
-			std::cout << m_soundFilename << std::endl;
 		}
 
 		if(CheckBitmask(p_changeType, Systems::Changes::Audio::Loop))
@@ -119,6 +131,13 @@ public:
 		if(CheckBitmask(p_changeType, Systems::Changes::Audio::SoundType))
 		{
 			m_soundType = static_cast<SoundType>(p_subject->getUnsignedInt(this, Systems::Changes::Audio::SoundType));
+			m_changePending = true;
+			m_reloadSound = true;
+		}
+
+		if(CheckBitmask(p_changeType, Systems::Changes::Audio::SoundSourceType))
+		{
+			m_soundSourceType = static_cast<SoundSourceType>(p_subject->getUnsignedInt(this, Systems::Changes::Audio::SoundSourceType));
 			m_changePending = true;
 			m_reloadSound = true;
 		}
@@ -145,21 +164,30 @@ public:
 	}
 
 	const inline SoundType getSoundType() const { return m_soundType; }
-	const inline std::string &getSoundFilename() const { return m_soundFilename; }
+	const inline SoundSourceType getSoundSourceType() const { return m_soundSourceType; }
+	const inline std::string &getSoundName() const { return m_soundName; }
 	const inline float getVolume() const { return m_volume; }
 	const inline bool getLoop() const { return m_loop; }
 	const inline bool getSpatialized() const { return m_spatialized; }
 	const inline bool getStartPlaying() const { return m_startPlaying; }
 	const inline bool getPlaying() const { return m_playing; }
 	const inline std::vector<const char *> &getSoundTypeText() const { return m_soundTypeText; }
+	const inline std::vector<const char *> &getSoundSourceTypeText() const { return m_soundSourceTypeText; }
 
 private:
 	FMOD::Sound *m_sound;
 	FMOD::Channel *m_channel;
 	FMOD_CREATESOUNDEXINFO *m_soundExInfo;
 
+	FMOD::Studio::EventDescription *m_soundEventDescription; 
+	FMOD::Studio::EventInstance *m_soundEventInstance;
+
 	SoundType m_soundType;
-	std::string m_soundFilename;
+	SoundSourceType m_soundSourceType;
+
+	// Either a filename or an event name
+	std::string m_soundName;
+
 	float m_volume;
 	bool m_loop,
 		 m_spatialized,
@@ -173,4 +201,5 @@ private:
 			m_volumeChanged;
 
 	std::vector<const char *> m_soundTypeText{ "null", "Music", "Ambient", "Sound effect" };
+	std::vector<const char *> m_soundSourceTypeText{ "File", "Event" };
 };

@@ -1,5 +1,4 @@
 
-
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
 #include <ranges>
@@ -314,6 +313,26 @@ void EditorWindow::update(const float p_deltaTime)
             }
             ImGui::EndMenu();
         }
+        if(ImGui::BeginMenu("Help"))
+        {
+            if(ImGui::MenuItem("Open project page"))
+            {
+                ShellExecuteA(NULL, "open", Config::GUIVar().url_pauldev.c_str(), NULL, NULL, SW_SHOWNORMAL);
+            }
+            if(ImGui::MenuItem("Open Github page"))
+            {
+                ShellExecuteA(NULL, "open", Config::GUIVar().url_github.c_str(), NULL, NULL, SW_SHOWNORMAL);
+            }
+
+            ImGui::Separator();
+
+            if(ImGui::MenuItem("About"))
+            {
+                // Sent a message to the GUI scene to enable the about window
+                m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::GUI), DataType::DataType_AboutWindow, (void *)true);
+            }
+            ImGui::EndMenu();
+        }
 
         // Process the pressed main menu button
         processMainMenuButton(m_activatedMainMenuButton);
@@ -425,6 +444,9 @@ void EditorWindow::update(const float p_deltaTime)
 
                 // Tell the Physics scene to run the simulation
                 m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Physics), DataType::DataType_SimulationActive, (void *)true);
+
+                // Tell the Scripting scene to enable LUA components
+                m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Script), DataType::DataType_EnableLuaScripting, (void *)true);
             }
             ImGui::PopStyleColor();
 
@@ -442,6 +464,9 @@ void EditorWindow::update(const float p_deltaTime)
 
                 // Tell the Physics scene to pause the simulation
                 m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Physics), DataType::DataType_SimulationActive, (void *)false);
+
+                // Tell the Scripting scene to either enable or disable LUA components
+                m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Script), DataType::DataType_EnableLuaScripting, (void *)m_LUAScriptingEnabled);
             }
             ImGui::PopStyleColor();
 
@@ -1968,17 +1993,18 @@ void EditorWindow::update(const float p_deltaTime)
                                 m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_spatialized = soundComponent->getSpatialized();
                                 m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_startPlaying = soundComponent->getStartPlaying();
                                 m_selectedEntity.m_soundType = soundComponent->getSoundType();
+                                m_selectedEntity.m_soundSourceType = soundComponent->getSoundSourceType();
                                 m_selectedEntity.m_playing = soundComponent->getPlaying();
 
                                 // If the sound filename was changed (by file browser), send a notification to the Sound Component
                                 // Otherwise just get the current sound filename
                                 if(m_selectedEntity.m_soundFilenameModified)
                                 {
-                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Audio::Filename);
+                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Audio::SoundName);
                                     m_selectedEntity.m_soundFilenameModified = false;
                                 }
                                 else
-                                    m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_soundFilename = soundComponent->getSoundFilename();
+                                    m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_soundName = soundComponent->getSoundName();
 
                                 // Draw ACTIVE
                                 m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_active = soundComponent->isObjectActive();
@@ -1991,10 +2017,10 @@ void EditorWindow::update(const float p_deltaTime)
 
                                 // Draw SOUND FILENAME
                                 drawLeftAlignedLabelText("Filename:", inputWidgetOffset, calcTextSizedButtonOffset(1) - inputWidgetOffset - m_imguiStyle.FramePadding.x);
-                                if(ImGui::InputText("##SoundFilenameInput", &m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_soundFilename, ImGuiInputTextFlags_EnterReturnsTrue))
+                                if(ImGui::InputText("##SoundFilenameInput", &m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_soundName, ImGuiInputTextFlags_EnterReturnsTrue))
                                 {
                                     // If the sound filename was changed, send a notification to the Sound Component
-                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Audio::Filename);
+                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Audio::SoundName);
                                 }
 
                                 // Draw OPEN button
@@ -2036,6 +2062,14 @@ void EditorWindow::update(const float p_deltaTime)
                                 {
                                     // If the sound type was changed, send a notification to the Sound Component
                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Audio::SoundType);
+                                }
+
+                                // Draw SOUND SOURCE TYPE
+                                drawLeftAlignedLabelText("Sound source type:", inputWidgetOffset);
+                                if(ImGui::Combo("##SoundSourceTypePicker", &m_selectedEntity.m_soundSourceType, &(soundComponent->getSoundSourceTypeText()[0]), SoundComponent::SoundSourceType_NumOfTypes))
+                                {
+                                    // If the sound source type was changed, send a notification to the Sound Component
+                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Audio::SoundSourceType);
                                 }
 
                                 // Draw VOLUME
@@ -2143,13 +2177,23 @@ void EditorWindow::update(const float p_deltaTime)
                                     else
                                         m_selectedEntity.m_componentData.m_scriptComponents.m_luaConstructionInfo->m_luaScriptFilename = luaScript->getLuaScriptFilename();
 
-                                    // Draw ACTIVE
                                     m_selectedEntity.m_componentData.m_scriptComponents.m_luaConstructionInfo->m_active = luaComponent->isObjectActive();
+                                    m_selectedEntity.m_componentData.m_scriptComponents.m_luaConstructionInfo->m_pauseInEditor = luaComponent->pauseInEditor();
+
+                                    // Draw ACTIVE
                                     drawLeftAlignedLabelText("Active:", inputWidgetOffset);
                                     if(ImGui::Checkbox("##LUAComponentActive", &m_selectedEntity.m_componentData.m_scriptComponents.m_luaConstructionInfo->m_active))
                                     {
                                         // If the active flag was changed, send a notification to the LUA Component
                                         m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, luaComponent, Systems::Changes::Generic::Active);
+                                    }
+
+                                    // Draw PAUSE IN EDITOR
+                                    drawLeftAlignedLabelText("Pause in editor:", inputWidgetOffset);
+                                    if(ImGui::Checkbox("##LUAPauseInEditorCheckbox", &m_selectedEntity.m_componentData.m_scriptComponents.m_luaConstructionInfo->m_pauseInEditor))
+                                    {
+                                        // If the pause-in-editor flag was changed, send a notification to the LUA Component
+                                        m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, luaComponent, Systems::Changes::Script::PauseInEditor);
                                     }
 
                                     // Draw LUA FILENAME
@@ -3190,8 +3234,6 @@ void EditorWindow::update(const float p_deltaTime)
                             {
                                 ShellExecuteA(NULL, "explore", (Filesystem::getCurrentDirectory() + "\\" + Config::filepathVar().shader_path + Utilities::stripFilePath(m_selectedProgram->getShaderFilename(m_selectedShaderType))).c_str(), NULL, NULL, SW_SHOWDEFAULT);
                             }
-
-
                         }
                         ImGui::EndChild();
 
@@ -3412,6 +3454,9 @@ void EditorWindow::update(const float p_deltaTime)
 
                     m_centerWindowSize.x = (int)m_sceneViewportSize.x;
                     m_centerWindowSize.y = (int)m_sceneViewportSize.y;
+
+                    Config::m_rendererVar.current_viewport_position_x = m_sceneViewportPosition.x;
+                    Config::m_rendererVar.current_viewport_position_y = m_sceneViewportPosition.y;
 
                     // Tell the renderer the size of available window space as a render to texture resolution, so that the rendered scene fill the whole window
                     m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_RenderToTextureResolution, (void *)&m_centerWindowSize);
@@ -3847,7 +3892,7 @@ void EditorWindow::update(const float p_deltaTime)
                         if(m_fileBrowserDialog.m_filePathName.rfind(currentDirectory, 0) == 0)
                         {
                             // Set the selected file path as a relative path from current directory
-                            m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_soundFilename = m_fileBrowserDialog.m_filePathName.substr(currentDirectory.size());
+                            m_selectedEntity.m_componentData.m_audioComponents.m_soundConstructionInfo->m_soundName = m_fileBrowserDialog.m_filePathName.substr(currentDirectory.size());
 
                             // If the Lua script filename was changed, set a flag for it
                             m_selectedEntity.m_soundFilenameModified = true;
@@ -4034,6 +4079,7 @@ void EditorWindow::update(const float p_deltaTime)
 void EditorWindow::activate()
 {
     WindowLocator::get().setWindowTitle(Config::windowVar().name + " - Editor");
+    WindowLocator::get().setMouseCapture(false);
 }
 
 void EditorWindow::deactivate()
@@ -4821,6 +4867,8 @@ void EditorWindow::processMainMenuButton(MainMenuButtonType &p_mainMenuButtonTyp
         case EditorWindow::MainMenuButtonType_CloseEditor:
             // Send a notification to the engine to change the current engine state back to MainMenu
             m_systemScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_StateChange, EngineStateType::EngineStateType_MainMenu));
+            // Unload the editor state
+            m_systemScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_SceneUnload, EngineStateType::EngineStateType_Editor));
             break;
         case EditorWindow::MainMenuButtonType_Exit:
             Config::m_engineVar.running = false;
@@ -5272,7 +5320,9 @@ void EditorWindow::generateNewMap(PropertySet &p_newSceneProperties, SceneData &
     editorCameraObjectEntry.addProperty(Properties::PropertyID::ID, 2000000000);
     editorCameraObjectEntry.addProperty(Properties::PropertyID::Parent, 0);
     editorCameraObjectEntry.addPropertySet(Properties::PropertyID::Graphics).addPropertySet(Properties::PropertyID::CameraComponent);
-    editorCameraObjectEntry.addPropertySet(Properties::PropertyID::Script).addPropertySet(Properties::PropertyID::LuaComponent).addProperty(Properties::PropertyID::Filename, std::string("Camera_free_object_spawn.lua"));
+    auto &luaComponentEntry = editorCameraObjectEntry.addPropertySet(Properties::PropertyID::Script).addPropertySet(Properties::PropertyID::LuaComponent);
+    luaComponentEntry.addProperty(Properties::PropertyID::Filename, std::string("Camera_free.lua"));
+    luaComponentEntry.addProperty(Properties::PropertyID::PauseInEditor, false);
     editorCameraObjectEntry.addPropertySet(Properties::PropertyID::World).addPropertySet(Properties::PropertyID::SpatialComponent);
 
     // Add root property set for systems

@@ -148,13 +148,16 @@ void Engine::processEngineChanges()
 	auto changeControllerScene = m_engineStates[m_currentStateType]->getChangeControllerScene();
 	if(changeControllerScene->getEngineChangePending())
 	{
+		// Save the current engine state type, in case it gets changed
+		auto previousStateType = m_currentStateType;
+
 		// Go over each engine change
 		auto engineChanges = changeControllerScene->getEngineChangeQueue();
 		for(auto const &change : engineChanges)
 		{
 			switch(change.m_changeType)
 			{
-				case EngineChangeType_SceneFilename:
+				case EngineChangeType::EngineChangeType_SceneFilename:
 					{
 						// Create the state if it hasn't been created already
 						if(m_engineStates[change.m_engineStateType] == nullptr)
@@ -163,12 +166,10 @@ void Engine::processEngineChanges()
 						m_engineStates[change.m_engineStateType]->setSceneFilename(change.m_filename);
 					}
 					break;
-				case EngineChangeType_SceneLoad:
+				case EngineChangeType::EngineChangeType_SceneLoad:
 					{
 						if(initializeState(change.m_engineStateType))
 						{
-							bool stateLoaded = false;
-
 							if(change.m_sceneProperties)
 								loadState(change.m_engineStateType, change.m_sceneProperties);
 							else
@@ -176,7 +177,21 @@ void Engine::processEngineChanges()
 						}
 					}
 					break;
-				case EngineChangeType_SceneReload:
+				case EngineChangeType::EngineChangeType_SceneUnload:
+					{
+						if(m_engineStates[change.m_engineStateType] != nullptr)
+						{
+							auto engineStateType = change.m_engineStateType;
+
+							m_engineStates[engineStateType]->shutdown();
+							delete m_engineStates[engineStateType];
+							m_engineStates[engineStateType] = nullptr;
+							if(engineStateType == previousStateType)
+								return;
+						}
+					}
+					break;
+				case EngineChangeType::EngineChangeType_SceneReload:
 					{
 						std::string filename = change.m_filename;
 
@@ -203,7 +218,7 @@ void Engine::processEngineChanges()
 						return;
 					}
 					break;
-				case EngineChangeType_StateChange:
+				case EngineChangeType::EngineChangeType_StateChange:
 					{
 						if(initializeState(change.m_engineStateType))
 						{

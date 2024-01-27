@@ -71,66 +71,69 @@ public:
 
 	void update(RenderPassData &p_renderPassData, const SceneObjects &p_sceneObjects, const float p_deltaTime)
 	{
-		// Assign the bloom threshold value so it can be sent to the shader
-		m_renderer.m_frameData.m_bloomTreshold = m_bloomTreshold;
-
-		// Get the screen image buffer size
-		const unsigned int imageWidth = m_renderer.m_backend.getGeometryBuffer()->getBufferWidth();
-		const unsigned int imageHeight = m_renderer.m_backend.getGeometryBuffer()->getBufferHeight();
-
-		// Calculate mipmap size and level
-		glm::uvec2 mipmapSize = glm::uvec2(imageWidth / 2, imageHeight / 2);
-		unsigned int mipmapLevels = calculateMipmapLevels(imageWidth, imageHeight, (unsigned int)Config::graphicsVar().bloom_mipmap_limit, (unsigned int)Config::graphicsVar().bloom_downscale_limit);
-
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferFinal, GBufferTextureType::GBufferInputTexture);
-
-		// Bloom downscaling
-		for(unsigned int i = 0; i < mipmapLevels - 1; i++)
+		if(p_sceneObjects.m_processDrawing)
 		{
-			// Assign the texel size and mipmap level so it can be sent to the shader
-			m_renderer.m_frameData.m_texelSize = 1.0f / glm::vec2(mipmapSize);
-			m_renderer.m_frameData.m_mipLevel = i;
+			// Assign the bloom threshold value so it can be sent to the shader
+			m_renderer.m_frameData.m_bloomTreshold = m_bloomTreshold;
 
-			// Bind the corresponding mipmap level of the image buffer
-			m_renderer.m_backend.getGeometryBuffer()->bindBufferToImageUnitForWriting(GBufferTextureType::GBufferFinal, 0, i + 1);
+			// Get the screen image buffer size
+			const unsigned int imageWidth = m_renderer.m_backend.getGeometryBuffer()->getBufferWidth();
+			const unsigned int imageHeight = m_renderer.m_backend.getGeometryBuffer()->getBufferHeight();
 
-			const unsigned int groupX = (unsigned int)glm::ceil(mipmapSize.x / 8.0);
-			const unsigned int groupY = (unsigned int)glm::ceil(mipmapSize.y / 8.0);
+			// Calculate mipmap size and level
+			glm::uvec2 mipmapSize = glm::uvec2(imageWidth / 2, imageHeight / 2);
+			unsigned int mipmapLevels = calculateMipmapLevels(imageWidth, imageHeight, (unsigned int)Config::graphicsVar().bloom_mipmap_limit, (unsigned int)Config::graphicsVar().bloom_downscale_limit);
 
-			// Dispatch the compute shader
-			m_renderer.queueForDrawing(m_bloomDownscaleShader->getShaderHandle(), m_bloomDownscaleShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix, groupX, groupY, 1, MemoryBarrierType::MemoryBarrierType_AccessAndFetchBarrier);
-			m_renderer.passComputeDispatchCommandsToBackend();
-			
-			// Half the mipmap size as we go up the mipmap levels
-			mipmapSize = mipmapSize / 2u;
-		}
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferFinal, GBufferTextureType::GBufferInputTexture);
 
-		// Bind lens dirt texture
-		glActiveTexture(GL_TEXTURE0 + LensFlareTextureType::LensFlareTextureType_LenseDirt);
-		glBindTexture(GL_TEXTURE_2D, m_lensDirtTexture.getHandle());
+			// Bloom downscaling
+			for(unsigned int i = 0; i < mipmapLevels - 1; i++)
+			{
+				// Assign the texel size and mipmap level so it can be sent to the shader
+				m_renderer.m_frameData.m_texelSize = 1.0f / glm::vec2(mipmapSize);
+				m_renderer.m_frameData.m_mipLevel = i;
 
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferFinal, GBufferTextureType::GBufferInputTexture);
+				// Bind the corresponding mipmap level of the image buffer
+				m_renderer.m_backend.getGeometryBuffer()->bindBufferToImageUnitForWriting(GBufferTextureType::GBufferFinal, 0, i + 1);
 
-		// Bloom upscaling
-		for(unsigned int i = mipmapLevels - 1; i >= 1; i--)
-		{
-			// Recalculate the mipmap size as we go down the mipmap levels
-			mipmapSize.x = (unsigned int)glm::max(1.0, glm::floor(imageWidth / glm::pow(2u, i - 1.0)));
-			mipmapSize.y = (unsigned int)glm::max(1.0, glm::floor(imageHeight / glm::pow(2u, i - 1.0)));
+				const unsigned int groupX = (unsigned int)glm::ceil(mipmapSize.x / 8.0);
+				const unsigned int groupY = (unsigned int)glm::ceil(mipmapSize.y / 8.0);
 
-			// Assign the texel size and mipmap level so it can be sent to the shader
-			m_renderer.m_frameData.m_texelSize = 1.0f / glm::vec2(mipmapSize);
-			m_renderer.m_frameData.m_mipLevel = i;
+				// Dispatch the compute shader
+				m_renderer.queueForDrawing(m_bloomDownscaleShader->getShaderHandle(), m_bloomDownscaleShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix, groupX, groupY, 1, MemoryBarrierType::MemoryBarrierType_AccessAndFetchBarrier);
+				m_renderer.passComputeDispatchCommandsToBackend();
 
-			// Bind the corresponding mipmap level of the image buffer
-			m_renderer.m_backend.getGeometryBuffer()->bindBufferToImageUnitForWriting(GBufferTextureType::GBufferFinal, 0, i - 1);
+				// Half the mipmap size as we go up the mipmap levels
+				mipmapSize = mipmapSize / 2u;
+			}
 
-			const unsigned int groupX = (unsigned int)glm::ceil(mipmapSize.x / 8.0);
-			const unsigned int groupY = (unsigned int)glm::ceil(mipmapSize.y / 8.0);
+			// Bind lens dirt texture
+			glActiveTexture(GL_TEXTURE0 + LensFlareTextureType::LensFlareTextureType_LenseDirt);
+			glBindTexture(GL_TEXTURE_2D, m_lensDirtTexture.getHandle());
 
-			// Dispatch the compute shader
-			m_renderer.queueForDrawing(m_bloomUpscaleShader->getShaderHandle(), m_bloomUpscaleShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix, groupX, groupY, 1, MemoryBarrierType::MemoryBarrierType_AccessAndFetchBarrier);
-			m_renderer.passComputeDispatchCommandsToBackend();
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferFinal, GBufferTextureType::GBufferInputTexture);
+
+			// Bloom upscaling
+			for(unsigned int i = mipmapLevels - 1; i >= 1; i--)
+			{
+				// Recalculate the mipmap size as we go down the mipmap levels
+				mipmapSize.x = (unsigned int)glm::max(1.0, glm::floor(imageWidth / glm::pow(2u, i - 1.0)));
+				mipmapSize.y = (unsigned int)glm::max(1.0, glm::floor(imageHeight / glm::pow(2u, i - 1.0)));
+
+				// Assign the texel size and mipmap level so it can be sent to the shader
+				m_renderer.m_frameData.m_texelSize = 1.0f / glm::vec2(mipmapSize);
+				m_renderer.m_frameData.m_mipLevel = i;
+
+				// Bind the corresponding mipmap level of the image buffer
+				m_renderer.m_backend.getGeometryBuffer()->bindBufferToImageUnitForWriting(GBufferTextureType::GBufferFinal, 0, i - 1);
+
+				const unsigned int groupX = (unsigned int)glm::ceil(mipmapSize.x / 8.0);
+				const unsigned int groupY = (unsigned int)glm::ceil(mipmapSize.y / 8.0);
+
+				// Dispatch the compute shader
+				m_renderer.queueForDrawing(m_bloomUpscaleShader->getShaderHandle(), m_bloomUpscaleShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix, groupX, groupY, 1, MemoryBarrierType::MemoryBarrierType_AccessAndFetchBarrier);
+				m_renderer.passComputeDispatchCommandsToBackend();
+			}
 		}
 	}
 

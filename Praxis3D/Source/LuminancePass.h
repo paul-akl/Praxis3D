@@ -85,37 +85,40 @@ public:
 
 	void update(RenderPassData &p_renderPassData, const SceneObjects &p_sceneObjects, const float p_deltaTime)
 	{
-		// Get the screen image buffer size
-		const unsigned int imageWidth = m_renderer.m_backend.getGeometryBuffer()->getBufferWidth();
-		const unsigned int imageHeight = m_renderer.m_backend.getGeometryBuffer()->getBufferHeight();
+		if(p_sceneObjects.m_processDrawing)
+		{
+			// Get the screen image buffer size
+			const unsigned int imageWidth = m_renderer.m_backend.getGeometryBuffer()->getBufferWidth();
+			const unsigned int imageHeight = m_renderer.m_backend.getGeometryBuffer()->getBufferHeight();
 
-		// Calculate the number of groups that the compute shader should execute
-		unsigned int groupsX = static_cast<uint32_t>(glm::ceil(imageWidth / 16.0f));
-		unsigned int groupsY = static_cast<uint32_t>(glm::ceil(imageHeight / 16.0f));
+			// Calculate the number of groups that the compute shader should execute
+			unsigned int groupsX = static_cast<uint32_t>(glm::ceil(imageWidth / 16.0f));
+			unsigned int groupsY = static_cast<uint32_t>(glm::ceil(imageHeight / 16.0f));
 
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferToImageUnitForReading(GBufferTextureType::GBufferFinal, GBufferTextureType::GBufferInputTexture, 0);
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferToImageUnitForReading(GBufferTextureType::GBufferFinal, GBufferTextureType::GBufferInputTexture, 0);
 
-		m_renderer.queueForDrawing(m_luminanceHistogramShader->getShaderHandle(), m_luminanceHistogramShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix, groupsX, groupsY, 1, MemoryBarrierType::MemoryBarrierType_ShaderStorageBarrier);
-		m_renderer.passComputeDispatchCommandsToBackend();
+			m_renderer.queueForDrawing(m_luminanceHistogramShader->getShaderHandle(), m_luminanceHistogramShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix, groupsX, groupsY, 1, MemoryBarrierType::MemoryBarrierType_ShaderStorageBarrier);
+			m_renderer.passComputeDispatchCommandsToBackend();
 
-		glBindImageTexture(0, m_luminanceAverageTexture.getHandle(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_R16F);
+			glBindImageTexture(0, m_luminanceAverageTexture.getHandle(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_R16F);
 
-		m_renderer.queueForDrawing(m_luminanceAverageShader->getShaderHandle(), m_luminanceAverageShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix, 1, 1, 1, MemoryBarrierType::MemoryBarrierType_ShaderStorageBarrier);
-		m_renderer.passComputeDispatchCommandsToBackend();
+			m_renderer.queueForDrawing(m_luminanceAverageShader->getShaderHandle(), m_luminanceAverageShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix, 1, 1, 1, MemoryBarrierType::MemoryBarrierType_ShaderStorageBarrier);
+			m_renderer.passComputeDispatchCommandsToBackend();
 
-		glDisable(GL_DEPTH_TEST);
+			glDisable(GL_DEPTH_TEST);
 
-		glActiveTexture(GL_TEXTURE0 + LuminanceTextureType::LensFlareTextureType_AverageLuminance);
-		glBindTexture(GL_TEXTURE_2D, m_luminanceAverageTexture.getHandle());
+			glActiveTexture(GL_TEXTURE0 + LuminanceTextureType::LensFlareTextureType_AverageLuminance);
+			glBindTexture(GL_TEXTURE_2D, m_luminanceAverageTexture.getHandle());
 
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GBufferTextureType::GBufferInputTexture);
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GBufferTextureType::GBufferInputTexture);
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GBufferTextureType::GBufferInputTexture);
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GBufferTextureType::GBufferInputTexture);
 
-		m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
 
-		// Queue and render a full screen quad using a final pass shader
-		m_renderer.queueForDrawing(m_tonemappingShader->getShaderHandle(), m_tonemappingShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
-		m_renderer.passScreenSpaceDrawCommandsToBackend();
+			// Queue and render a full screen quad using a final pass shader
+			m_renderer.queueForDrawing(m_tonemappingShader->getShaderHandle(), m_tonemappingShader->getUniformUpdater(), p_sceneObjects.m_cameraViewMatrix);
+			m_renderer.passScreenSpaceDrawCommandsToBackend();
+		}
 
 		p_renderPassData.swapColorInputOutputMaps();
 	}

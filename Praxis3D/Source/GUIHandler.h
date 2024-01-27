@@ -152,6 +152,9 @@ protected:
 				ImGui_ImplSDL2_InitForOpenGL(windowHandle, glContextHandle);
 				ImGui_ImplOpenGL3_Init(glsl_version);
 
+				auto &imguiIO = ImGui::GetIO();
+				auto *m_defaultFont = imguiIO.Fonts->AddFontDefault();
+
 				m_initialized = true;
 			}
 			else

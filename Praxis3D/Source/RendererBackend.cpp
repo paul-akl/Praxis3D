@@ -20,6 +20,10 @@ ErrorCode RendererBackend::init(const UniformFrameData &p_frameData)
 {
 	ErrorCode returnCode = ErrorCode::Success;
 
+	// Clear the default framebuffer
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
 	// Initialize gbuffer and check if the gbuffer initialization was successful
 	if(ErrHandlerLoc::get().ifSuccessful(createFramebuffer(FramebufferType::FramebufferType_GBuffer, p_frameData), returnCode))
 	{
@@ -38,8 +42,6 @@ ErrorCode RendererBackend::init(const UniformFrameData &p_frameData)
 		else
 			glDisable(GL_DEPTH_TEST);
 
-		//glDepthFunc(GL_LESS);
-
 		// Set depth test function
 		glDepthFunc(Config::rendererVar().depth_test_func);
 	}
@@ -53,31 +55,32 @@ ErrorCode RendererBackend::createFramebuffer(const FramebufferType p_frambufferT
 	switch(p_frambufferType)
 	{
 		case FramebufferType_GBuffer:
-		{
-			if(m_gbuffer != nullptr)
-				delete m_gbuffer;
+			{
+				// Make sure there is only one gbuffer
+				if(m_gbuffer != nullptr)
+					delete m_gbuffer;
 
-			// Initialize gbuffer (and also pass the screen size to be used as the buffer size)
-			m_gbuffer = new GeometryBuffer(p_frameData);
+				// Initialize the gbuffer
+				m_gbuffer = new GeometryBuffer(p_frameData);
 
-			// Check if the gbuffer initialization was successful
-			returnError = m_gbuffer->init(p_frameData);
-			//if(ErrHandlerLoc::get().ifSuccessful(m_gbuffer->init(), returnError))
-		}
-		break;
+				// Check if the gbuffer initialization was successful
+				returnError = m_gbuffer->init(p_frameData);
+			}
+			break;
 
 		case FramebufferType_CSMBuffer:
-		{
-			if(m_csmBuffer != nullptr)
-				delete m_csmBuffer;
+			{
+				// Make sure there is only one csm buffer
+				if(m_csmBuffer != nullptr)
+					delete m_csmBuffer;
 
-			m_csmBuffer = new CSMFramebuffer(p_frameData);
+				// Initialize the csm buffer
+				m_csmBuffer = new CSMFramebuffer(p_frameData);
 
-			returnError = m_csmBuffer->init(p_frameData);
-
-		}
-		break;
-
+				// Check if the csm buffer initialization was successful
+				returnError = m_csmBuffer->init(p_frameData);
+			}
+			break;
 	}
 
 	return returnError;

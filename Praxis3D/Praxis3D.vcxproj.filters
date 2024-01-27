@@ -462,6 +462,9 @@
     <ClCompile Include="..\Dependencies\include\ImGuiColorTextEdit\LanguageDefinitions.cpp">
       <Filter>3rd Party\ImGuiColorTextEdit</Filter>
     </ClCompile>
+    <ClCompile Include="Source\AboutWindow.cpp">
+      <Filter>GUI\Objects\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ErrorCodes.h">

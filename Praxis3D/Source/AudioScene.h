@@ -100,10 +100,11 @@ public:
 		p_constructionInfo.m_name = p_component.getName();
 
 		p_constructionInfo.m_loop = p_component.m_loop;
-		p_constructionInfo.m_soundFilename = p_component.m_soundFilename;
-		p_constructionInfo.m_soundType = p_component.m_soundType;
+		p_constructionInfo.m_soundName = p_component.m_soundName;
+		p_constructionInfo.m_soundSourceType = p_component.m_soundSourceType;
 		p_constructionInfo.m_spatialized = p_component.m_spatialized;
 		p_constructionInfo.m_startPlaying = p_component.m_startPlaying;
+		p_constructionInfo.m_soundType = p_component.m_soundType;
 		p_constructionInfo.m_volume = p_component.m_volume;
 	}
 	void exportComponent(SoundListenerComponent::SoundListenerComponentConstructionInfo &p_constructionInfo, const SoundListenerComponent &p_component)

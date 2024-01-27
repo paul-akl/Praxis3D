@@ -17,17 +17,19 @@ public:
 	{
 		LuaComponentConstructionInfo()
 		{
-
+			m_pauseInEditor = true;
 		}
 
 		std::string m_luaScriptFilename;
 		std::vector<std::pair<std::string, Property>> m_variables;
+		bool m_pauseInEditor;
 	};
 
 	LuaComponent(SystemScene *p_systemScene, const std::string &p_name, const EntityID p_entityID) : SystemObject(p_systemScene, p_name, Properties::PropertyID::LuaComponent, p_entityID), m_luaSpatialData(*this), m_GUIData(*this)
 	{
-		m_luaScript = new LuaScript(m_systemScene, m_luaSpatialData, m_GUIData);
+		m_luaScript = new LuaScript(m_systemScene, this, m_luaSpatialData, m_GUIData);
 		m_luaScriptLoaded = false;
+		m_pauseInEditor = true;
 		m_luaSpatialData.setTrackLocalChanges(true);
 	}
 	~LuaComponent() 
@@ -81,6 +83,15 @@ public:
 
 	inline void update(const float p_deltaTime, const SpatialComponent &p_spatialComponent)
 	{
+		// Clear the string changes of previous frame
+		if(!m_stringChanges.empty())
+		{
+			for(auto *change : m_stringChanges)
+				delete change;
+
+			m_stringChanges.clear();
+		}
+
 		// Get the current spatial data
 		m_luaSpatialData.setSpatialData(p_spatialComponent.getSpatialDataChangeManager());
 
@@ -157,6 +168,59 @@ public:
 	BitMask getDesiredSystemChanges() final override { return Systems::Changes::None; }
 	BitMask getPotentialSystemChanges() final override { return Systems::Changes::All; }
 
+	const bool getBool(const Observer *p_observer, BitMask p_changedBits) const
+	{
+		if(m_luaScript != nullptr && m_luaScriptLoaded)
+		{
+			if(auto *changeValue = m_luaScript->getQueuedChange(p_observer, p_changedBits); changeValue != nullptr)
+				return changeValue->getBool();
+		}
+
+		return NullObjects::NullBool;
+	}	
+	const int getInt(const Observer *p_observer, BitMask p_changedBits) const
+	{
+		if(m_luaScript != nullptr && m_luaScriptLoaded)
+		{
+			if(auto *changeValue = m_luaScript->getQueuedChange(p_observer, p_changedBits); changeValue != nullptr)
+				return changeValue->getInt();
+		}
+
+		return NullObjects::NullInt;
+	}
+	const unsigned int getUnsignedInt(const Observer *p_observer, BitMask p_changedBits) const
+	{
+		if(m_luaScript != nullptr && m_luaScriptLoaded)
+		{
+			if(auto *changeValue = m_luaScript->getQueuedChange(p_observer, p_changedBits); changeValue != nullptr)
+				return (unsigned int)changeValue->getInt();
+		}
+
+		return NullObjects::NullUnsignedInt;
+	}
+	const float getFloat(const Observer *p_observer, BitMask p_changedBits) const
+	{
+		if(m_luaScript != nullptr && m_luaScriptLoaded)
+		{
+			if(auto *changeValue = m_luaScript->getQueuedChange(p_observer, p_changedBits); changeValue != nullptr)
+				return changeValue->getFloat();
+		}
+
+		return NullObjects::NullFloat;
+	}
+	const std::string &getString(const Observer *p_observer, BitMask p_changedBits)	const
+	{
+		if(m_luaScript != nullptr && m_luaScriptLoaded)
+		{
+			if(auto *changeValue = m_luaScript->getQueuedChange(p_observer, p_changedBits); changeValue != nullptr)
+			{
+				m_stringChanges.push_back(new std::string(changeValue->getString()));
+				return *m_stringChanges.back();
+			}
+		}
+
+		return NullObjects::NullString;
+	}
 	const glm::quat &getQuaternion(const Observer *p_observer, BitMask p_changedBits) const
 	{
 		return m_luaSpatialData.getQuaternion(p_observer, p_changedBits);
@@ -196,7 +260,10 @@ public:
 
 		return NullObjects::NullFunctors;
 	}
+
 	const inline LuaScript *getLuaScript() const { return m_luaScript; }
+
+	const bool pauseInEditor() const { return m_pauseInEditor; }
 
 	void changeOccurred(ObservedSubject *p_subject, BitMask p_changeType) 
 	{
@@ -221,6 +288,12 @@ public:
 					m_luaScript->reload();
 				}
 			}
+		}
+
+		if(CheckBitmask(p_changeType, Systems::Changes::Script::PauseInEditor))
+		{
+			// Get the pause in editor flag value from the observed subject
+			m_pauseInEditor = p_subject->getBool(this, Systems::Changes::Script::PauseInEditor);
 		}
 
 		if(CheckBitmask(p_changeType, Systems::Changes::Script::Reload))
@@ -271,7 +344,13 @@ public:
 private:
 	LuaScript *m_luaScript;
 	bool m_luaScriptLoaded;
+	bool m_pauseInEditor;
 
 	SpatialDataManager m_luaSpatialData;
 	GUIDataManager m_GUIData;
+
+	// Contains string changes that are retrieved by an observer. These changes need to be contained, because the strings are constructed during the change retrieval
+	// Mutable because the change retrieval function is const
+	// Needs to be made out of pointers, to maintain pointer stability if the vector is resized
+	mutable std::vector<std::string*> m_stringChanges;
 };

@@ -12,7 +12,7 @@
 #include "NullSystemObjects.h"
 #include "TaskManagerLocator.h"
 
-GUIScene::GUIScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader, Properties::PropertyID::GUI)
+GUIScene::GUIScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader, Properties::PropertyID::GUI), m_aboutWindow(this)
 {
 	 m_GUITask = nullptr;
 	 m_editorWindow = nullptr;
@@ -20,7 +20,7 @@ GUIScene::GUIScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : SystemSce
 	 m_showAboutWindow = false;
 	 m_showSettingsWindow = false;
 
-	 m_aboutWindow = new AboutWindow(this);
+	 //m_aboutWindow = new AboutWindow(this);
 }
 
 GUIScene::~GUIScene()
@@ -28,8 +28,8 @@ GUIScene::~GUIScene()
 	if(m_GUITask != nullptr)
 		delete m_GUITask;
 
-	if(m_aboutWindow != nullptr)
-		delete m_aboutWindow;
+	//if(m_aboutWindow != nullptr)
+	//	delete m_aboutWindow;
 
 	if(m_editorWindow != nullptr)
 		delete m_editorWindow;
@@ -48,7 +48,7 @@ ErrorCode GUIScene::init()
 	ImVec4(0.808f, 0.498f, 0.306f, 1.0f)*/
 
 	// Initialize the About Window
-	if(ErrorCode aboutWindowError = m_aboutWindow->init(); aboutWindowError != ErrorCode::Success)
+	if(ErrorCode aboutWindowError = m_aboutWindow.init(); aboutWindowError != ErrorCode::Success)
 		ErrHandlerLoc::get().log(aboutWindowError, ErrorSource::Source_GUI);
 
 	return ErrorCode::Success;
@@ -106,13 +106,13 @@ void GUIScene::update(const float p_deltaTime)
 		//	|____________________________|
 		//
 		// Check if any of the scenes are currently loading
-		bool loadingStatus = false;
+		/*bool loadingStatus = false;
 		for(unsigned int i = 0; i < Systems::TypeID::NumberOfSystems; i++)
 			if(m_sceneLoader->getSystemScene(static_cast<Systems::TypeID>(i))->getLoadingStatus())
-				loadingStatus = true;
+				loadingStatus = true;*/
 
 		// If any scenes are currently loading
-		if(loadingStatus)
+		if(m_sceneLoader->getSceneLoadingStatus())
 		{
 			auto &io = ImGui::GetIO();
 			ImVec2 sceneViewportCenter;
@@ -214,7 +214,7 @@ void GUIScene::update(const float p_deltaTime)
 		//
 		if(m_showAboutWindow)
 		{
-			m_aboutWindow->update(p_deltaTime);
+			m_aboutWindow.update(p_deltaTime);
 		}
 
 		//	 ____________________________
@@ -396,9 +396,9 @@ void GUIScene::receiveData(const DataType p_dataType, void *p_data, const bool p
 					m_showAboutWindow = newShowAboutWindowFlag;
 
 					if(m_showAboutWindow)
-						m_aboutWindow->activate();
+						m_aboutWindow.activate();
 					else
-						m_aboutWindow->deactivate();
+						m_aboutWindow.deactivate();
 				}
 			}
 			break;

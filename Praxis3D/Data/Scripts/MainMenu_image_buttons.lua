@@ -1,3 +1,11 @@
+--[[
+	The default main-menu screen of the engine.
+	
+	Contains full-screen engine logo, and the required FMOD logo.
+	Uses textures for buttons.
+	Spawns file-browser-dialog for loading scene files.
+	Scales with any screen size.
+]]--
 
 function init ()
 	-- Create needed variables
@@ -132,20 +140,23 @@ function update (p_deltaTime)
 	-- Make sure the mouse is released, so the buttons can be pressed
 	setMouseCapture(false)
 	
+	-- Get the current view-port size
+	screenSize = GUI.GetScreenSize()
+	
 	-- Calculate the position of the middle of the screen
-	halfScreenSizeX = graphicsVariables.current_resolution_x / 2.0
-	halfScreenSizeY = graphicsVariables.current_resolution_y / 2.0
+	halfScreenSizeX = screenSize.x / 2.0
+	halfScreenSizeY = screenSize.y / 2.0
 	
 	-- Calculate the starting position for the buttons (relative to window size, not absolute, so the buttons are always in the right place)
 	buttonPositionX = halfScreenSizeX * buttonOffsetMultX
 	buttonPositionY = halfScreenSizeY * buttonOffsetMultY
 	
 	-- Calculate engine logo size based based on texture and window size (try to fit it on screen vertically)
-	engineLogoAdjustedSizeX = praxisLogoTexture:getTextureWidth() / (praxisLogoTexture:getTextureWidth() / graphicsVariables.current_resolution_x) * praxisLogoScale
-	engineLogoAdjustedSizeY = praxisLogoTexture:getTextureHeight() / (praxisLogoTexture:getTextureWidth() / graphicsVariables.current_resolution_x) * praxisLogoScale
+	engineLogoAdjustedSizeX = praxisLogoTexture:getTextureWidth() / (praxisLogoTexture:getTextureWidth() / screenSize.x) * praxisLogoScale
+	engineLogoAdjustedSizeY = praxisLogoTexture:getTextureHeight() / (praxisLogoTexture:getTextureWidth() / screenSize.x) * praxisLogoScale
 	
 	-- Calculate fmod logo size based on texture and window size (so it scaled with the screen size)
-	fmodLogoAdjustedSizeMultAverage = ((fmodLogoTexture:getTextureHeight() / graphicsVariables.current_resolution_y) + (fmodLogoTexture:getTextureWidth() / graphicsVariables.current_resolution_x)) / 2
+	fmodLogoAdjustedSizeMultAverage = ((fmodLogoTexture:getTextureHeight() / screenSize.y) + (fmodLogoTexture:getTextureWidth() / screenSize.x)) / 2
 	fmodLogoAdjustedSizeX = fmodLogoTexture:getTextureWidth() / fmodLogoAdjustedSizeMultAverage * fmodLogoScale
 	fmodLogoAdjustedSizeY = fmodLogoTexture:getTextureHeight() / fmodLogoAdjustedSizeMultAverage * fmodLogoScale
 
@@ -156,13 +167,13 @@ function update (p_deltaTime)
 	-- Draw the background color
 	GUI.PushStyleColor(ImGuiCol.WindowBg, 0.102, 0.102, 0.102, 255.0)
 	GUI.SetNextWindowPos(0, 0)
-	GUI.SetNextWindowSize(graphicsVariables.current_resolution_x, graphicsVariables.current_resolution_y)
+	GUI.SetNextWindowSize(screenSize.x, screenSize.y)
 	GUI.Begin('BACKGROUND', bitwiseOr(ImGuiWindowFlags.NoDecoration, ImGuiWindowFlags.NoMove, ImGuiWindowFlags.NoSavedSettings, ImGuiWindowFlags.NoMouseInputs, ImGuiWindowFlags.NoFocusOnAppearing))
 	GUI.End()
 	GUI.PopStyleColor()
 	
 	-- Draw the engine logo
-	GUI.SetNextWindowPos((graphicsVariables.current_resolution_x - engineLogoAdjustedSizeX) / 2, (graphicsVariables.current_resolution_y - engineLogoAdjustedSizeY) / 2)
+	GUI.SetNextWindowPos((screenSize.x - engineLogoAdjustedSizeX) / 2, (screenSize.y - engineLogoAdjustedSizeY) / 2)
 	GUI.SetNextWindowSize(engineLogoAdjustedSizeX, engineLogoAdjustedSizeY)
 	GUI.Begin('PRAXIS LOGO', bitwiseOr(ImGuiWindowFlags.NoDecoration, ImGuiWindowFlags.NoMove, ImGuiWindowFlags.NoSavedSettings, ImGuiWindowFlags.NoBackground, ImGuiWindowFlags.NoMouseInputs))
 	GUI.Image(praxisLogoTexture, engineLogoAdjustedSizeX, engineLogoAdjustedSizeY)

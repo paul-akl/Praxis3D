@@ -10,7 +10,6 @@
 RendererScene::RendererScene(RendererSystem *p_system, SceneLoader *p_sceneLoader) : SystemScene(p_system, p_sceneLoader, Properties::PropertyID::Renderer)
 {
 	m_renderTask = new RenderTask(this, p_system->getRenderer());
-	m_firstLoadingDone = false;
 
 	m_sceneAOData.setDefaultValues();
 
@@ -572,6 +571,9 @@ void RendererScene::update(const float p_deltaTime)
 					for(decltype(loadableObjectsFromModel.size()) size = loadableObjectsFromModel.size(), i = 0; i < size; i++)
 						if(!loadableObjectsFromModel[i].isLoadedToVideoMemory())
 							loadToVideoMemoryComponent.m_objectsToLoad.emplace(loadableObjectsFromModel[i]);
+
+					// Set the loading status flag to true
+					loadingStatus = true;
 				}
 			}
 			else
@@ -643,20 +645,13 @@ void RendererScene::update(const float p_deltaTime)
 	}
 
 	m_loadingStatus = loadingStatus;
+	m_sceneObjects.m_processDrawing = true;
 
 	// If the render-to-texture is not set (i.e. no scene editor), do not process drawing while there are objects being loaded
 	// Perform only during the first initial scene loading
-	if(!m_firstLoadingDone && !m_renderTask->m_renderer.getRenderFinalToTexture())
+	if(m_sceneLoader->getFirstLoad() && !m_renderTask->m_renderer.getRenderFinalToTexture())
 	{
-		if(m_loadingStatus)
-		{
-			m_sceneObjects.m_processDrawing = false;
-		}
-		else
-		{
-			m_sceneObjects.m_processDrawing = true;
-			m_firstLoadingDone = true;
-		}
+		m_sceneObjects.m_processDrawing = !m_loadingStatus;
 	}
 
 	//	 ___________________________

@@ -322,7 +322,4 @@ private:
 	// Render-to-texture data
 	bool m_renderToTexture;
 	glm::ivec2 m_renderToTextureResolution;
-
-	// A flag tracking whether the first scene loading is done (to not trigger actions during loading after the scene was created)
-	bool m_firstLoadingDone;
 };

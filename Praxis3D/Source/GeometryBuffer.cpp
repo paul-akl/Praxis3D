@@ -129,11 +129,6 @@ ErrorCode GeometryBuffer::init(const UniformFrameData &p_frameData)
 		m_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		if(m_status != GL_FRAMEBUFFER_COMPLETE)
 			returnCode = ErrorCode::Geometrybuffer_failed;
-
-		// Restore the default FBO, so it doesn't get changed from the outside of the class
-		//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-		//glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 	}
 	return returnCode;
 }

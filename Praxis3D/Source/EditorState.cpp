@@ -68,6 +68,8 @@ void EditorState::update(Engine &p_engine)
 
 	m_objectChangeController->distributeChanges();
 	m_sceneChangeController->distributeChanges();
+
+	updateSceneLoadingStatus();
 }
 
 void EditorState::activate()

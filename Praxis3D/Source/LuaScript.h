@@ -67,17 +67,28 @@ struct Conditional
 	bool m_flag;
 };
 
+struct SingleChange
+{
+	SingleChange(const Observer *p_observer, const BitMask p_changeType, const Property &p_changeValue) : m_observer(p_observer), m_changeType(p_changeType), m_changeData(p_changeValue) { }
+
+	const Observer *m_observer;
+	BitMask m_changeType;
+	Property m_changeData;
+};
+
 class LuaScript
 {
 	friend class LuaComponent;
 public:
-	LuaScript(SystemScene *p_scriptScene, SpatialDataManager &p_spatialData, GUIDataManager &p_GUIData) : m_scriptScene(p_scriptScene), m_spatialData(p_spatialData), m_GUIData(p_GUIData)
+	LuaScript(SystemScene *p_scriptScene, SystemObject *p_luaComponent, SpatialDataManager &p_spatialData, GUIDataManager &p_GUIData) : 
+		m_scriptScene(p_scriptScene), m_luaComponent(p_luaComponent), m_spatialData(p_spatialData), m_GUIData(p_GUIData)
 	{ 
 		m_keyCommands.reserve(10);
 		m_conditionals.reserve(10);
 		m_currentChanges = Systems::Changes::None;
 	}
-	LuaScript(SystemScene *p_scriptScene, SpatialDataManager &p_spatialData, GUIDataManager &p_GUIData, std::string &p_scriptFilename) : m_scriptScene(p_scriptScene), m_spatialData(p_spatialData), m_GUIData(p_GUIData), m_luaScriptFilename(p_scriptFilename)
+	LuaScript(SystemScene *p_scriptScene, SystemObject *p_luaComponent, SpatialDataManager &p_spatialData, GUIDataManager &p_GUIData, std::string &p_scriptFilename) : 
+		m_scriptScene(p_scriptScene), m_luaComponent(p_luaComponent), m_spatialData(p_spatialData), m_GUIData(p_GUIData), m_luaScriptFilename(p_scriptFilename)
 	{
 		m_keyCommands.reserve(10);
 		m_conditionals.reserve(10);
@@ -113,6 +124,7 @@ public:
 	{
 		// Clear changes from the last update
 		clearChanges();
+		m_queuedChanges.clear();
 
 		// Clear all the GUI functors from the last update
 		m_GUIData.clearFunctors();
@@ -189,6 +201,25 @@ private:
 	// Sets the defined variables inside the lua script
 	void setLuaVariables();
 
+	template <class T_Variable>
+	inline void queueChange(SystemObject *p_observer, const BitMask p_changeType, const T_Variable p_changeValue)
+	{
+		m_queuedChanges.emplace_back(p_observer, p_changeType, Property(Properties::PropertyID::Null, p_changeValue));
+
+		m_scriptScene->getSceneLoader()->getChangeController()->sendChange(m_luaComponent, p_observer, p_changeType);
+	}
+
+	// Returns the change value matching the change type bitmask
+	// Returns nullptr if no match was found
+	inline const Property *getQueuedChange(const Observer *p_observer, const BitMask p_changeType)
+	{
+		for(decltype(m_queuedChanges.size()) i = 0, size = m_queuedChanges.size(); i < size; i++)
+			if(m_queuedChanges[i].m_changeType == p_changeType && m_queuedChanges[i].m_observer == p_observer)
+				return &m_queuedChanges[i].m_changeData;
+
+		return nullptr;
+	}
+
 	// Creates and assigns objects to be used in the lua script
 	// Should only be called from the lua script
 	void createObjectInLua(const unsigned int p_objectType, const std::string p_variableName);
@@ -212,11 +243,17 @@ private:
 	sol::table m_userTypesTable;
 	sol::table m_changeTypesTable;
 
+	// An array of queued changes, that get saved when a change is sent from a lua script
+	std::vector<SingleChange> m_queuedChanges;
+
 	// An array of variable names and their value, that get additionally defined in the lua script
 	std::vector<std::pair<std::string, Property>> m_variables;
 
 	// Pointer to the scripting scene that owns this instance; required for getting things like scene loader for entity/component creation
 	SystemScene *m_scriptScene;
+
+	// Pointer to the Lua component that owns this instance; required for sending changes
+	SystemObject *m_luaComponent;
 
 	// Contains all spatial data
 	SpatialDataManager &m_spatialData;

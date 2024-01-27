@@ -56,7 +56,7 @@ void ScriptScene::update(const float p_deltaTime)
 	// Get the world scene required for getting components
 	WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
 
-	if(m_luaScriptsEnabled)
+	if(!m_sceneLoader->getFirstLoad() && !m_sceneLoader->getSceneLoadingStatus())
 	{
 		//	 ____________________________
 		//	|							 |
@@ -70,7 +70,7 @@ void ScriptScene::update(const float p_deltaTime)
 			SpatialComponent &spatialComponent = luaAndSpatialView.get<SpatialComponent>(entity);
 
 			// Check if the script object is enabled
-			if(luaComponent.isObjectActive())
+			if(luaComponent.isObjectActive() && (!luaComponent.pauseInEditor() || m_luaScriptsEnabled))
 			{
 				// Update the object
 				luaComponent.update(p_deltaTime, spatialComponent);
@@ -88,7 +88,7 @@ void ScriptScene::update(const float p_deltaTime)
 			LuaComponent &luaComponent = luaOnlyView.get<LuaComponent>(entity);
 
 			// Check if the script object is enabled
-			if(luaComponent.isObjectActive())
+			if(luaComponent.isObjectActive() && (!luaComponent.pauseInEditor() || m_luaScriptsEnabled))
 			{
 				// Update the object
 				luaComponent.update(p_deltaTime);
@@ -197,6 +197,7 @@ SystemObject *ScriptScene::createComponent(const EntityID &p_entityID, const Lua
 
 				component.m_objectType = Properties::PropertyID::LuaComponent;
 				component.m_setActiveAfterLoading = p_constructionInfo.m_active;
+				component.m_pauseInEditor = p_constructionInfo.m_pauseInEditor;
 				component.setActive(false);
 				component.setLoadedToMemory(false);
 
