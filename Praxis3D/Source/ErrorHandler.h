@@ -102,13 +102,27 @@ private:
 
 		virtual void displayMessage(std::string p_message) { }
 	};
+
 	class CoutConsole : public ConsoleBase
 	{
 	public:
-		CoutConsole() { }
-		~CoutConsole() { }
+		CoutConsole();
+		~CoutConsole() 
+		{ 
+			restoreConsole();
+		}
 
 		void displayMessage(std::string p_message) { printf("%s\n", p_message.c_str()); }
+
+	private:
+		void setupConsole();
+		void restoreConsole();
+
+		void	*m_stdoutHandle,
+				*m_stdinHandle;
+
+		unsigned long	m_outModeInit,
+						m_inModeInit;
 	};
 	
 	ErrorData m_errorData[ErrorCode::NumberOfErrorCodes];

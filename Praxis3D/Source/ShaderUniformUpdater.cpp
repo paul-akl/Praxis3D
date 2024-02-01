@@ -144,6 +144,7 @@ ErrorCode ShaderUniformUpdater::generatePerFrameList()
 
 	// Screen size uniforms
 	uniformList.push_back(new ScreenSizeUniform(m_shaderHandle));
+	uniformList.push_back(new InverseScreenSizeUniform(m_shaderHandle));
 	uniformList.push_back(new ScreenNumOfPixelsUniform(m_shaderHandle));
 
 	// Misc

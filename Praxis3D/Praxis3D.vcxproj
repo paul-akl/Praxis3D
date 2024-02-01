@@ -36,7 +36,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PlatformToolset>v143</PlatformToolset>
@@ -63,7 +63,7 @@
     <LibraryPath>$(SolutionDir)\VC\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)Dependencies\include\;$(SolutionDir)Dependencies\include\Lua\;$(SolutionDir)Dependencies\include\imgui\;$(SolutionDir)Dependencies\include\sdl\;$(SolutionDir)Dependencies\include\bullet3\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Dependencies\include\;$(SolutionDir)Dependencies\include\Lua\;$(SolutionDir)Dependencies\include\imgui\;$(SolutionDir)Dependencies\include\sdl\;$(SolutionDir)Dependencies\include\bullet3\;$(SolutionDir)Dependencies\include\imgui_tex_inspect\;$(SolutionDir)Dependencies\include\ImGuizmo\;$(SolutionDir)Dependencies\include\ImGuiColorTextEdit\;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Dependencies\$(Platform)\$(Configuration)\lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)\Builds\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
@@ -98,15 +98,21 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <PreprocessorDefinitions>NOMINMAX;_RELEASE;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;CUSTOM_IMGUIFILEDIALOG_CONFIG="..\\..\\..\\Praxis3D\Source\EngineDefinitions.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <PreprocessorDefinitions>NOMINMAX;_RELEASE;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;CUSTOM_IMGUIFILEDIALOG_CONFIG="..\\..\\..\\Praxis3D\Source\EngineDefinitions.h";GLM_FORCE_CTOR_INIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>false</ConformanceMode>
+      <AdditionalOptions>/bigobj /MP8 %(AdditionalOptions)</AdditionalOptions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;assimp.lib;SDL2.lib;SDL2main.lib;glew32.lib;FreeImage.lib;tbb.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;SDL2.lib;SDL2main.lib;assimp-vc143-mt.lib;glew32.lib;FreeImage.lib;tbb.lib;luajit.lib;lua51.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
+      <AdditionalOptions>/VERBOSE:UNUSEDLIBS %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -116,14 +122,14 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>NOMINMAX;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;CUSTOM_IMGUIFILEDIALOG_CONFIG="..\\..\\..\\Praxis3D\Source\EngineDefinitions.h";GLM_FORCE_CTOR_INIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;CUSTOM_IMGUIFILEDIALOG_CONFIG="..\\..\\..\\Praxis3D\Source\EngineDefinitions.h";GLM_FORCE_CTOR_INIT;SOL_LUAJIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ConformanceMode>false</ConformanceMode>
       <AdditionalOptions>/bigobj /MP8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;assimp.lib;SDL2.lib;SDL2main.lib;glew32.lib;FreeImage.lib;tbb.lib;luajit.lib;lua51.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;assimp-vc143-mtd.lib;SDL2.lib;SDL2main.lib;glew32.lib;FreeImage.lib;tbb_debug.lib;luajit.lib;lua51.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
       <AdditionalOptions>/VERBOSE:UNUSEDLIBS %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -384,7 +390,6 @@
     <ClInclude Include="Source\WorldTask.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ClassDiagram.cd" />
     <None Include="Data\config.ini" />
     <Text Include="Data\error-strings-eng.data">
       <FileType>Document</FileType>
@@ -395,6 +400,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\praxis icon.ico" />
+    <Image Include="E:\Mano\My Pictures\Logo\Praxis3D_icon.ico" />
     <Image Include="icon1.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

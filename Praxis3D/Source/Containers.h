@@ -199,6 +199,67 @@ struct EntityAndComponent
 	ComponentType m_componentType;
 };
 
+// Stores settings for atmospheric light scattering
+struct AtmosphericScatteringData
+{
+	struct AtmosphericDensityLayer
+	{
+		AtmosphericDensityLayer() : AtmosphericDensityLayer(0.0f, 0.0f, 0.0f, 0.0f, 0.0f) { }
+		AtmosphericDensityLayer(float p_width, float p_expTerm, float p_expScale, float p_linearTerm, float p_constantTerm) :
+			m_width(p_width), m_expTerm(p_expTerm), m_expScale(p_expScale), m_linearTerm(p_linearTerm), m_constantTerm(p_constantTerm) { }
+
+		float m_width;
+		float m_expTerm;
+		float m_expScale;
+		float m_linearTerm;
+		float m_constantTerm;
+	};
+
+	AtmosphericScatteringData()
+	{
+		m_atmosphereBottomRadius = 6360.0f;
+		m_atmosphereTopRadius = 6420.0f;
+
+		m_rayleighScattering = glm::vec3(0.005802f, 0.013558f, 0.033100f);
+		m_mieScattering = glm::vec3(0.003996f, 0.003996f, 0.003996f);
+		m_mieExtinction = glm::vec3(0.004440f, 0.004440f, 0.004440f);
+		m_absorptionExtinction = glm::vec3(0.000650f, 0.001881f, 0.000085f);
+
+		m_rayleighDensity[0] = AtmosphericDensityLayer(0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f);
+		m_rayleighDensity[1] = AtmosphericDensityLayer(0.000000f, 1.000000f, -0.125000f, 0.000000f, 0.000000f);
+		m_mieDensity[0] = AtmosphericDensityLayer(0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f);
+		m_mieDensity[1] = AtmosphericDensityLayer(0.000000f, 1.000000f, -0.833333f, 0.000000f, 0.000000f);
+		m_absorptionDensity[0] = AtmosphericDensityLayer(25.000000f, 0.000000f, 0.000000f, 0.066667f, -0.666667f);
+		m_absorptionDensity[1] = AtmosphericDensityLayer(0.000000f, 0.000000f, 0.000000f, -0.066667f, 2.666667f);
+
+		m_planetGroundColor = glm::vec3(0.1f, 0.1f, 0.1f);
+		m_planetCenterPosition = glm::vec3(0.0f, -6360000.0f, 0.0f);
+
+		m_sunIrradiance = glm::vec3(1.474000f, 1.850400f, 1.911980f);
+		m_sunSize = 0.00935f;
+	}
+
+	// Atmosphere
+	float m_atmosphereBottomRadius;
+	float m_atmosphereTopRadius;
+	glm::vec3 m_rayleighScattering;
+	glm::vec3 m_mieScattering;
+	glm::vec3 m_mieExtinction;
+	glm::vec3 m_absorptionExtinction;
+
+	AtmosphericDensityLayer m_rayleighDensity[2];
+	AtmosphericDensityLayer m_mieDensity[2];
+	AtmosphericDensityLayer m_absorptionDensity[2];
+
+	// Ground
+	glm::vec3 m_planetGroundColor;
+	glm::vec3 m_planetCenterPosition;
+
+	// Sun
+	glm::vec3 m_sunIrradiance;
+	float m_sunSize;
+};
+
 // Stores data used for tweaking the ambient occlusion effect
 struct AmbientOcclusionData
 {

@@ -16,6 +16,8 @@ struct UniformFrameData
 		m_numPointLights = 0;
 		m_numSpotLights = 0;
 
+		m_atmScatteringDataChanged = false;
+
 		m_bloomTreshold = glm::vec4(0.0f);
 
 		m_texelSize = glm::vec2(1.0f);
@@ -24,6 +26,7 @@ struct UniformFrameData
 
 	// Framebuffer size (can be different from the window size)
 	glm::ivec2 m_screenSize;
+	glm::vec2 m_inverseScreenSize;
 
 	// Camera's position in the scene
 	glm::vec3 m_cameraPosition;
@@ -53,6 +56,10 @@ struct UniformFrameData
 	// Current number of lights in the light buffers
 	unsigned int m_numPointLights,
 				 m_numSpotLights;
+
+	// Atmospheric light scattering data
+	AtmosphericScatteringData m_atmScatteringData;
+	bool m_atmScatteringDataChanged;
 
 	// Ambient occlusion data
 	AmbientOcclusionData m_aoData;

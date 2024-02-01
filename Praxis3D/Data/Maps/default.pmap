@@ -3231,8 +3231,8 @@
 				],
 				"Volume": 
 				{
-					"Ambient": "0.2f",
-					"Master": "0.5f",
+					"Ambient": "0.3f",
+					"Master": "0.75f",
 					"Music": "0.1f",
 					"SoundEffect": "1.0f"
 				}
@@ -3264,6 +3264,88 @@
 					"Steps": "4",
 					"BlurSamples": "6",
 					"BlurSharpness": "40.0f"
+				},
+				"AtmosphericScattering":
+				{
+					"Atmosphere":
+					{
+						"Bottom": "6360.0f",
+						"Top": "6420.0f",
+						"Rayleigh":
+						{
+							"Scattering": "0.005802f, 0.013558f, 0.033100f",
+							"Density":
+							[
+								{
+									"Width": "0.0f",
+									"ExpTerm": "0.0f",
+									"ExpScale": "0.0f",
+									"LinearTerm": "0.0f",
+									"ConstantTerm": "0.0f"
+								},
+								{
+									"Width": "0.0f",
+									"ExpTerm": "1.0f",
+									"ExpScale": "-0.125f",
+									"LinearTerm": "0.0f",
+									"ConstantTerm": "0.0f"
+								}
+							]
+						},
+						"Mie":
+						{
+							"Scattering": "0.003996f, 0.003996f, 0.003996f",
+							"Extinction": "0.004440f, 0.004440f, 0.004440f",
+							"Density":
+							[
+								{
+									"Width": "0.0f",
+									"ExpTerm": "0.0f",
+									"ExpScale": "0.0f",
+									"LinearTerm": "0.0f",
+									"ConstantTerm": "0.0f"
+								},
+								{
+									"Width": "0.0f",
+									"ExpTerm": "1.0f",
+									"ExpScale": "-0.833333f",
+									"LinearTerm": "0.0f",
+									"ConstantTerm": "0.0f"
+								}
+							]
+						},
+						"Absorption":
+						{
+							"Extinction": "0.000650f, 0.001881f, 0.000085f",
+							"Density":
+							[
+								{
+									"Width": "25.0f",
+									"ExpTerm": "0.0f",
+									"ExpScale": "0.0f",
+									"LinearTerm": "0.066667f",
+									"ConstantTerm": "-0.666667f"
+								},
+								{
+									"Width": "0.0f",
+									"ExpTerm": "0.0f",
+									"ExpScale": "0.0f",
+									"LinearTerm": "-0.066667f",
+									"ConstantTerm": "2.666667f"
+								}
+							]
+						}
+					},
+					"Ground":
+					{
+						"Color": "0.1f, 0.1f, 0.1f",
+						"LocalPosition": "0.0f, -6360000.0f, 0.0f"
+					},
+					"Sun":
+					{
+						"Irradiance": "1.474000f, 1.850400f, 1.911980f",
+						"Size": "0.02935f"
+					}
 				},
 				"ObjectPoolSize": 
 				{
@@ -3308,10 +3390,10 @@
 				"ShadowMapping": 
 				{
 					"PenumbraSize": "0.72f",
-					"PenumbraScaleRange": "1.0f, 300.0f",
+					"PenumbraScaleRange": "1.0f, 200.0f",
 					"Resolution": "4096",
 					"ZClipping": "true",
-					"ZPlaneMultiplier": "10.0f",
+					"ZPlaneMultiplier": "30.0f",
 					"PCF": 
 					{
 						"Samples": "16"

@@ -1,5 +1,6 @@
 #version 430 core
 
+// Number of shadow mapping cascades, determines the amount of layers to render to
 #define NUM_OF_CASCADES 5
 #define NUM_OF_VERTICES 3
 
@@ -22,11 +23,16 @@ layout (std140) uniform CSMDataSetBuffer
 };
 
 void main()
-{          
+{
+	// Go over each vertex
 	for (int i = 0; i < NUM_OF_VERTICES; ++i)
 	{
+		// Transform the position to light-view space of the corresponding cascade (layer)
 		gl_Position = m_csmDataSet[gl_InvocationID].m_lightSpaceMatrix * gl_in[i].gl_Position;
+		
+		// Set the layer number
 		gl_Layer = gl_InvocationID;
+		
 		EmitVertex();
 	}
 	EndPrimitive();

@@ -13,6 +13,9 @@
 // Would require modifying, if the input API was changed.
 #define SCANCODES(Code) \
 Code(Key_Invalid, = SDL_SCANCODE_UNKNOWN) \
+Code(Key_Reserved1,) \
+Code(Key_Reserved2,) \
+Code(Key_Reserved3,) \
 Code(Key_A, = SDL_SCANCODE_A) \
 Code(Key_B, = SDL_SCANCODE_B) \
 Code(Key_C, = SDL_SCANCODE_C) \

@@ -146,7 +146,7 @@ protected:
 			}
 
 			// Delete the pointer to an array of pointers that was created
-			delete events;
+			delete[] events;
 		}
 	}
 

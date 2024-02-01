@@ -245,7 +245,25 @@ public:
 
 private:
 	glm::ivec2 m_screenSize;
-}; 
+};
+class InverseScreenSizeUniform : public BaseUniform
+{
+public:
+	InverseScreenSizeUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().inverseScreenSizeUniform, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		if(m_inverseScreenSize != p_uniformData.m_frameData.m_inverseScreenSize)
+		{
+			m_inverseScreenSize = p_uniformData.m_frameData.m_inverseScreenSize;
+
+			glUniform2f(m_uniformHandle, m_inverseScreenSize.x, m_inverseScreenSize.y);
+		}
+	}
+
+private:
+	glm::vec2 m_inverseScreenSize;
+};
 class ScreenNumOfPixelsUniform : public BaseUniform
 {
 public:

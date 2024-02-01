@@ -21,6 +21,8 @@
 
 RendererFrontend::RendererFrontend() : m_renderPassData(nullptr)
 {
+	m_antialiasingType = AntiAliasingType::AntiAliasingType_None;
+
 	// Disable GUI rendering until GUI render pass is set (as calling GUI functions from GUI components will crash without GUI rendering pass)
 	m_guiRenderWasEnabled = Config::GUIVar().gui_render;
 	Config::m_GUIVar.gui_render = false;
@@ -46,6 +48,13 @@ RendererFrontend::~RendererFrontend()
 ErrorCode RendererFrontend::init()
 {
 	ErrorCode returnCode = ErrorCode::Success;
+
+	// Set the anti-aliasing type from Config (if it is valid)
+	if(Config::graphicsVar().antialiasing_type >= 0 && Config::graphicsVar().antialiasing_type < AntiAliasingType::AntiAliasingType_NumOfTypes)
+		m_antialiasingType = static_cast<AntiAliasingType>(Config::graphicsVar().antialiasing_type);
+
+	// Set the anti-aliasing method based on specified type
+	setAntialiasingMethod(m_antialiasingType);
 
 	// Load all default textures from the texture loader, before a scene has started to load
 	auto texturesToLoad = Loaders::texture2D().getDefaultTextures();
@@ -233,6 +242,19 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 {
 	bool projectionMatrixNeedsUpdating = false;
 
+	// Check if the anti-aliasing type has changed
+	if(m_antialiasingType != Config::graphicsVar().antialiasing_type)
+	{
+		// Set the anti-aliasing type from Config (if it is valid)
+		if(Config::graphicsVar().antialiasing_type >= 0 && Config::graphicsVar().antialiasing_type < AntiAliasingType::AntiAliasingType_NumOfTypes)
+		{
+			m_antialiasingType = static_cast<AntiAliasingType>(Config::graphicsVar().antialiasing_type);
+
+			// Set the anti-aliasing method based on specified type
+			setAntialiasingMethod(m_antialiasingType);
+		}
+	}
+
 	// Adjust rendering resolution if the screen size has changed
 	if(m_renderPassData->m_renderFinalToTexture)
 	{
@@ -242,6 +264,10 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 			// Set the new resolution
 			m_frameData.m_screenSize.x = Config::graphicsVar().render_to_texture_resolution_x;
 			m_frameData.m_screenSize.y = Config::graphicsVar().render_to_texture_resolution_y;
+
+			// Set the inverse of the new resolution
+			m_frameData.m_inverseScreenSize.x = 1.0f / (float)m_frameData.m_screenSize.x;
+			m_frameData.m_inverseScreenSize.y = 1.0f / (float)m_frameData.m_screenSize.y;
 
 			// Update the projection matrix because it is dependent on the screen size
 			projectionMatrixNeedsUpdating = true;
@@ -262,6 +288,10 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 			// Set the new resolution
 			m_frameData.m_screenSize.x = Config::graphicsVar().current_resolution_x;
 			m_frameData.m_screenSize.y = Config::graphicsVar().current_resolution_y;
+
+			// Set the inverse of the new resolution
+			m_frameData.m_inverseScreenSize.x = 1.0f / (float)m_frameData.m_screenSize.x;
+			m_frameData.m_inverseScreenSize.y = 1.0f / (float)m_frameData.m_screenSize.y;
 
 			// Update the projection matrix because it is dependent on the screen size
 			projectionMatrixNeedsUpdating = true;
@@ -312,18 +342,7 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 	// Release all objects from video memory that are in the unload-from-GPU queue
 	for(decltype(p_sceneObjects.m_unloadFromVideoMemory.size()) i = 0, size = p_sceneObjects.m_unloadFromVideoMemory.size(); i < size; i++)
 	{
-		switch(p_sceneObjects.m_unloadFromVideoMemory[i].getType())
-		{
-			case LoadableObjectsContainer::LoadableObjectType_Model:
-				queueForUnloading(p_sceneObjects.m_unloadFromVideoMemory[i].getModelHandle());
-				break;
-			case LoadableObjectsContainer::LoadableObjectType_Shader:
-				queueForUnloading(*p_sceneObjects.m_unloadFromVideoMemory[i].getShaderProgram());
-				break;
-			case LoadableObjectsContainer::LoadableObjectType_Texture:
-				queueForUnloading(p_sceneObjects.m_unloadFromVideoMemory[i].getTextureHandle());
-				break;
-		}
+		queueForUnloading(p_sceneObjects.m_unloadFromVideoMemory[i]);
 	}
 
 	unsigned int numLoadedObjectsThisFrame = 0;

@@ -136,6 +136,98 @@ ErrorCode RendererScene::setup(const PropertySet &p_properties)
 		}
 	}
 
+	// Load atmospheric light scattering
+	if(auto &atmScatteringProperty = p_properties.getPropertySetByID(Properties::AtmosphericScattering); atmScatteringProperty)
+	{
+		if(auto &atmosphereProperty = atmScatteringProperty.getPropertySetByID(Properties::Atmosphere); atmosphereProperty)
+		{
+			for(decltype(atmosphereProperty.getNumProperties()) i = 0, size = atmosphereProperty.getNumProperties(); i < size; i++)
+			{
+				switch(atmosphereProperty[i].getPropertyID())
+				{
+					case Properties::Bottom:
+						m_sceneAtmScatteringData.m_atmosphereBottomRadius = atmosphereProperty[i].getFloat();
+						break;
+					case Properties::Top:
+						m_sceneAtmScatteringData.m_atmosphereTopRadius = atmosphereProperty[i].getFloat();
+						break;
+				}
+			}
+
+			if(auto &rayleighProperty = atmosphereProperty.getPropertySetByID(Properties::Rayleigh); rayleighProperty)
+			{
+				if(auto &scatteringProperty = rayleighProperty.getPropertyByID(Properties::Scattering); scatteringProperty)
+					m_sceneAtmScatteringData.m_rayleighScattering = scatteringProperty.getVec3f();
+
+				if(auto &densityProperty = rayleighProperty.getPropertySetByID(Properties::Density); densityProperty)
+				{
+					for(unsigned int i = 0; i < 2; i++)
+						if(densityProperty.getNumPropertySets() > i)
+							loadAtmosphericDensityLayer(densityProperty.getPropertySet(i), m_sceneAtmScatteringData.m_rayleighDensity[i]);
+				}
+			}
+
+			if(auto &mieProperty = atmosphereProperty.getPropertySetByID(Properties::Mie); mieProperty)
+			{
+				if(auto &scatteringProperty = mieProperty.getPropertyByID(Properties::Scattering); scatteringProperty)
+					m_sceneAtmScatteringData.m_mieScattering = scatteringProperty.getVec3f();
+
+				if(auto &extinctionProperty = mieProperty.getPropertyByID(Properties::Extinction); extinctionProperty)
+					m_sceneAtmScatteringData.m_mieExtinction = extinctionProperty.getVec3f();
+
+				if(auto &densityProperty = mieProperty.getPropertySetByID(Properties::Density); densityProperty)
+				{
+					for(unsigned int i = 0; i < 2; i++)
+						if(densityProperty.getNumPropertySets() > i)
+							loadAtmosphericDensityLayer(densityProperty.getPropertySet(i), m_sceneAtmScatteringData.m_mieDensity[i]);
+				}
+			}
+
+			if(auto &absorptionProperty = atmosphereProperty.getPropertySetByID(Properties::Absorption); absorptionProperty)
+			{
+				if(auto &extinctionProperty = absorptionProperty.getPropertyByID(Properties::Extinction); extinctionProperty)
+					m_sceneAtmScatteringData.m_absorptionExtinction = extinctionProperty.getVec3f();
+
+				if(auto &densityProperty = absorptionProperty.getPropertySetByID(Properties::Density); densityProperty)
+				{
+					for(unsigned int i = 0; i < 2; i++)
+						if(densityProperty.getNumPropertySets() > i)
+							loadAtmosphericDensityLayer(densityProperty.getPropertySet(i), m_sceneAtmScatteringData.m_absorptionDensity[i]);
+				}
+			}
+		}
+		if(auto &groundProperty = atmScatteringProperty.getPropertySetByID(Properties::Ground); groundProperty)
+		{
+			for(decltype(groundProperty.getNumProperties()) i = 0, size = groundProperty.getNumProperties(); i < size; i++)
+			{
+				switch(groundProperty[i].getPropertyID())
+				{
+					case Properties::Color:
+						m_sceneAtmScatteringData.m_planetGroundColor = groundProperty[i].getVec3f();
+						break;
+					case Properties::LocalPosition:
+						m_sceneAtmScatteringData.m_planetCenterPosition = groundProperty[i].getVec3f();
+						break;
+				}
+			}
+		}
+		if(auto &sunProperty = atmScatteringProperty.getPropertySetByID(Properties::Sun); sunProperty)
+		{
+			for(decltype(sunProperty.getNumProperties()) i = 0, size = sunProperty.getNumProperties(); i < size; i++)
+			{
+				switch(sunProperty[i].getPropertyID())
+				{
+					case Properties::Irradiance:
+						m_sceneAtmScatteringData.m_sunIrradiance = sunProperty[i].getVec3f();
+						break;
+					case Properties::Size:
+						m_sceneAtmScatteringData.m_sunSize = sunProperty[i].getFloat();
+						break;
+				}
+			}
+		}
+	}
+
 	// Load the rendering passes
 	auto &renderPassesProperty = p_properties.getPropertySetByID(Properties::RenderPasses);
 	if(renderPassesProperty)
@@ -271,67 +363,96 @@ void RendererScene::exportSetup(PropertySet &p_propertySet)
 	WorldScene *worldScene = static_cast<WorldScene *>(m_sceneLoader->getSystemScene(Systems::World));
 
 	// Add graphics data
-	p_propertySet.addProperty(Properties::CameraID, m_sceneObjects.m_activeCameraID);
-	p_propertySet.addProperty(Properties::StochasticSamplingSeamFix, m_miscSceneData.m_stochasticSamplingSeamFix);
+	{
+		p_propertySet.addProperty(Properties::CameraID, m_sceneObjects.m_activeCameraID);
+		p_propertySet.addProperty(Properties::StochasticSamplingSeamFix, m_miscSceneData.m_stochasticSamplingSeamFix);
+	}
 
 	// Add ambient intensity
-	auto &ambientPropertySet = p_propertySet.addPropertySet(Properties::AmbientIntensity);
-	ambientPropertySet.addProperty(Properties::DirectionalLight, m_miscSceneData.m_ambientIntensityDirectional);
-	ambientPropertySet.addProperty(Properties::PointLight, m_miscSceneData.m_ambientIntensityPoint);
-	ambientPropertySet.addProperty(Properties::SpotLight, m_miscSceneData.m_ambientIntensitySpot);
+	{
+		auto &ambientPropertySet = p_propertySet.addPropertySet(Properties::AmbientIntensity);
+		ambientPropertySet.addProperty(Properties::DirectionalLight, m_miscSceneData.m_ambientIntensityDirectional);
+		ambientPropertySet.addProperty(Properties::PointLight, m_miscSceneData.m_ambientIntensityPoint);
+		ambientPropertySet.addProperty(Properties::SpotLight, m_miscSceneData.m_ambientIntensitySpot);
+	}
 
 	// Add ambient occlusion data
-	auto &aoPropertySet = p_propertySet.addPropertySet(Properties::AmbientOcclusion);
-	aoPropertySet.addProperty(Properties::Type, AmbientOcclusionData::ambientOcclusionTypeToPropertyID(m_sceneAOData.m_aoType));
-	aoPropertySet.addProperty(Properties::Bias, m_sceneAOData.m_aoBias);
-	aoPropertySet.addProperty(Properties::Radius, m_sceneAOData.m_aoRadius);
-	aoPropertySet.addProperty(Properties::Intensity, m_sceneAOData.m_aoIntensity);
-	aoPropertySet.addProperty(Properties::Directions, m_sceneAOData.m_aoNumOfDirections);
-	aoPropertySet.addProperty(Properties::Samples, m_sceneAOData.m_aoNumOfSamples);
-	aoPropertySet.addProperty(Properties::Steps, m_sceneAOData.m_aoNumOfSteps);
-	aoPropertySet.addProperty(Properties::BlurSamples, m_sceneAOData.m_aoBlurNumOfSamples);
-	aoPropertySet.addProperty(Properties::BlurSharpness, m_sceneAOData.m_aoBlurSharpness);
+	{
+		auto &aoPropertySet = p_propertySet.addPropertySet(Properties::AmbientOcclusion);
+		aoPropertySet.addProperty(Properties::Type, AmbientOcclusionData::ambientOcclusionTypeToPropertyID(m_sceneAOData.m_aoType));
+		aoPropertySet.addProperty(Properties::Bias, m_sceneAOData.m_aoBias);
+		aoPropertySet.addProperty(Properties::Radius, m_sceneAOData.m_aoRadius);
+		aoPropertySet.addProperty(Properties::Intensity, m_sceneAOData.m_aoIntensity);
+		aoPropertySet.addProperty(Properties::Directions, m_sceneAOData.m_aoNumOfDirections);
+		aoPropertySet.addProperty(Properties::Samples, m_sceneAOData.m_aoNumOfSamples);
+		aoPropertySet.addProperty(Properties::Steps, m_sceneAOData.m_aoNumOfSteps);
+		aoPropertySet.addProperty(Properties::BlurSamples, m_sceneAOData.m_aoBlurNumOfSamples);
+		aoPropertySet.addProperty(Properties::BlurSharpness, m_sceneAOData.m_aoBlurSharpness);
+	}
+
+	// Add atmospheric light scattering data
+	{
+		auto &atmScatteringProperty = p_propertySet.addPropertySet(Properties::AtmosphericScattering);
+		{
+			auto &atmosphereProperty = atmScatteringProperty.addPropertySet(Properties::Atmosphere);
+			atmosphereProperty.addProperty(Properties::Bottom, m_sceneAtmScatteringData.m_atmosphereBottomRadius);
+			atmosphereProperty.addProperty(Properties::Top, m_sceneAtmScatteringData.m_atmosphereTopRadius);
+		}
+		{
+			auto &groundProperty = atmScatteringProperty.addPropertySet(Properties::Ground);
+			groundProperty.addProperty(Properties::Color, m_sceneAtmScatteringData.m_planetGroundColor);
+			groundProperty.addProperty(Properties::LocalPosition, m_sceneAtmScatteringData.m_planetCenterPosition);
+		}
+		{
+			auto &sunProperty = atmScatteringProperty.addPropertySet(Properties::Sun);
+			sunProperty.addProperty(Properties::Size, m_sceneAtmScatteringData.m_sunSize);
+		}
+	}
 
 	// Add object pool sizes
-	auto &objectPoolSizePropertySet = p_propertySet.addPropertySet(Properties::ObjectPoolSize);
-	objectPoolSizePropertySet.addProperty(Properties::CameraComponent, (int)worldScene->getPoolSize<CameraComponent>());
-	objectPoolSizePropertySet.addProperty(Properties::LightComponent, (int)worldScene->getPoolSize<LightComponent>());
-	objectPoolSizePropertySet.addProperty(Properties::ModelComponent, (int)worldScene->getPoolSize<ModelComponent>());
-	objectPoolSizePropertySet.addProperty(Properties::ShaderComponent, (int)worldScene->getPoolSize<ShaderComponent>());
+	{
+		auto &objectPoolSizePropertySet = p_propertySet.addPropertySet(Properties::ObjectPoolSize);
+		objectPoolSizePropertySet.addProperty(Properties::CameraComponent, (int)worldScene->getPoolSize<CameraComponent>());
+		objectPoolSizePropertySet.addProperty(Properties::LightComponent, (int)worldScene->getPoolSize<LightComponent>());
+		objectPoolSizePropertySet.addProperty(Properties::ModelComponent, (int)worldScene->getPoolSize<ModelComponent>());
+		objectPoolSizePropertySet.addProperty(Properties::ShaderComponent, (int)worldScene->getPoolSize<ShaderComponent>());
+	}
 
 	// Add rendering passes
 	exportRenderingPasses(p_propertySet, m_renderingPasses);
 
 	// Add shadow mapping data
-	auto &shadowMappingPropertySet = p_propertySet.addPropertySet(Properties::ShadowMapping);
-
-	shadowMappingPropertySet.addProperty(Properties::PenumbraSize, m_shadowMappingData.m_penumbraSize);
-	shadowMappingPropertySet.addProperty(Properties::PenumbraScaleRange, m_shadowMappingData.m_penumbraScaleRange);
-	shadowMappingPropertySet.addProperty(Properties::Resolution, (int)m_shadowMappingData.m_csmResolution);
-	shadowMappingPropertySet.addProperty(Properties::ZClipping, m_shadowMappingData.m_zClipping);
-	shadowMappingPropertySet.addProperty(Properties::ZPlaneMultiplier, m_shadowMappingData.m_csmCascadePlaneZMultiplier);
-
-	auto &pcfPropertySet = shadowMappingPropertySet.addPropertySet(Properties::PCF);
-	pcfPropertySet.addProperty(Properties::Samples, (int)m_shadowMappingData.m_numOfPCFSamples);
-
-	// Go over each CSM cascade plane
-	auto &cascadesPropertySet = shadowMappingPropertySet.addPropertySet(Properties::Cascades);
-	for(decltype(m_shadowMappingData.m_shadowCascadePlaneDistances.size()) i = 0, size = m_shadowMappingData.m_shadowCascadePlaneDistances.size(); i < size; i++)
 	{
-		// Set the export cascade type property to either Divider or Distance, based on the divider flag
-		Properties::PropertyID cascadeTypeProperty = m_shadowMappingData.m_shadowCascadePlaneDistances[i].m_distanceIsDivider ? Properties::Divider : Properties::Distance;
+		auto &shadowMappingPropertySet = p_propertySet.addPropertySet(Properties::ShadowMapping);
 
-		// Add the cascade plane array entry
-		auto &cascadeArrayEntryProperty = cascadesPropertySet.addPropertySet(Properties::ArrayEntry);
+		shadowMappingPropertySet.addProperty(Properties::PenumbraSize, m_shadowMappingData.m_penumbraSize);
+		shadowMappingPropertySet.addProperty(Properties::PenumbraScaleRange, m_shadowMappingData.m_penumbraScaleRange);
+		shadowMappingPropertySet.addProperty(Properties::Resolution, (int)m_shadowMappingData.m_csmResolution);
+		shadowMappingPropertySet.addProperty(Properties::ZClipping, m_shadowMappingData.m_zClipping);
+		shadowMappingPropertySet.addProperty(Properties::ZPlaneMultiplier, m_shadowMappingData.m_csmCascadePlaneZMultiplier);
 
-		// Add distance or divider property
-		cascadeArrayEntryProperty.addProperty(cascadeTypeProperty, m_shadowMappingData.m_shadowCascadePlaneDistances[i].m_cascadeFarDistance);
+		auto &pcfPropertySet = shadowMappingPropertySet.addPropertySet(Properties::PCF);
+		pcfPropertySet.addProperty(Properties::Samples, (int)m_shadowMappingData.m_numOfPCFSamples);
 
-		// Add max bias property
-		cascadeArrayEntryProperty.addProperty(Properties::BiasMax, m_shadowMappingData.m_shadowCascadePlaneDistances[i].m_maxBias);
+		// Go over each CSM cascade plane
+		auto &cascadesPropertySet = shadowMappingPropertySet.addPropertySet(Properties::Cascades);
+		for(decltype(m_shadowMappingData.m_shadowCascadePlaneDistances.size()) i = 0, size = m_shadowMappingData.m_shadowCascadePlaneDistances.size(); i < size; i++)
+		{
+			// Set the export cascade type property to either Divider or Distance, based on the divider flag
+			Properties::PropertyID cascadeTypeProperty = m_shadowMappingData.m_shadowCascadePlaneDistances[i].m_distanceIsDivider ? Properties::Divider : Properties::Distance;
 
-		// Add penumbra scale property
-		cascadeArrayEntryProperty.addProperty(Properties::PenumbraScale, m_shadowMappingData.m_shadowCascadePlaneDistances[i].m_penumbraScale);
+			// Add the cascade plane array entry
+			auto &cascadeArrayEntryProperty = cascadesPropertySet.addPropertySet(Properties::ArrayEntry);
+
+			// Add distance or divider property
+			cascadeArrayEntryProperty.addProperty(cascadeTypeProperty, m_shadowMappingData.m_shadowCascadePlaneDistances[i].m_cascadeFarDistance);
+
+			// Add max bias property
+			cascadeArrayEntryProperty.addProperty(Properties::BiasMax, m_shadowMappingData.m_shadowCascadePlaneDistances[i].m_maxBias);
+
+			// Add penumbra scale property
+			cascadeArrayEntryProperty.addProperty(Properties::PenumbraScale, m_shadowMappingData.m_shadowCascadePlaneDistances[i].m_penumbraScale);
+		}
 	}
 }
 
@@ -350,6 +471,9 @@ void RendererScene::activate()
 
 	// Set the AO data
 	rendererSystem->getRenderer().setAmbientOcclusionData(m_sceneAOData);
+
+	// Set the atmospheric scattering data
+	rendererSystem->getRenderer().setAtmScatteringData(m_sceneAtmScatteringData);
 
 	// Set the misc scene data
 	rendererSystem->getRenderer().setMiscSceneData(m_miscSceneData);
@@ -1106,6 +1230,23 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 {
 	switch(p_dataType)
 	{
+		case DataType::DataType_AtmScatteringData:
+			{
+				auto *atmScatteringData = static_cast<AtmosphericScatteringData *>(p_data);
+
+				// Set the new atmospheric light scattering data
+				m_sceneAtmScatteringData = *atmScatteringData;
+
+				// Send the new data to the renderer
+				auto rendererSystem = static_cast<RendererSystem *>(m_system);
+				rendererSystem->getRenderer().setAtmScatteringData(m_sceneAtmScatteringData);
+
+				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
+				if(p_deleteAfterReceiving)
+					delete atmScatteringData;
+			}
+			break;
+
 		case DataType::DataType_AmbientOcclusionData:
 			{
 				auto *aoData = static_cast<AmbientOcclusionData *>(p_data);
@@ -1284,9 +1425,9 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 
 		case DataType::DataType_UnloadTexture2D:
 			{
-				TextureLoader2D::Texture2DHandle *textureHandle = static_cast<TextureLoader2D::Texture2DHandle *>(p_data);
-				if(textureHandle->isLoadedToVideoMemory())
-					m_sceneObjects.m_unloadFromVideoMemory.emplace_back(*textureHandle);
+				unsigned int *textureHandle = static_cast<unsigned int *>(p_data);
+
+				m_sceneObjects.m_unloadFromVideoMemory.emplace_back(UnloadObjectType::UnloadObjectType_Texture, *textureHandle);
 				
 				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
 				if(p_deleteAfterReceiving)
@@ -1301,6 +1442,18 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
 				if(p_deleteAfterReceiving)
 					delete textureHandle;
+			}
+			break;
+
+		case DataType::DataType_UnloadModel:
+			{
+				unsigned int *modelHandle = static_cast<unsigned int *>(p_data);
+
+				m_sceneObjects.m_unloadFromVideoMemory.emplace_back(UnloadObjectType::UnloadObjectType_VAO, *modelHandle);
+
+				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
+				if(p_deleteAfterReceiving)
+					delete modelHandle;
 			}
 			break;
 

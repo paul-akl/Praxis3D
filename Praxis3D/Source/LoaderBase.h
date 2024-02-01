@@ -73,8 +73,8 @@ public:
 		ErrorCode m_loadingToMemoryError;
 		std::string m_filename;
 		SpinWait m_mutex;
-		size_t	m_uniqueID,
-				m_refCounter;
+		size_t m_uniqueID;
+		int m_refCounter;
 
 	private:
 		LoaderBase *m_loaderBase;

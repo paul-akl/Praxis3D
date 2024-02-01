@@ -1,20 +1,18 @@
 
-//#include <Windows.h>
+#include <Windows.h>
 
 #include "Config.h"
 #include "ConfigLoader.h"
 #include "ErrorHandler.h"
 #include "WindowLocator.h"
 
-// Predefined variables for "AddVariablePredef" macro
+// Predefined variables for "AssignErrorType" macro
 #define ERR_TYP_PREDEF m_errorTypes
 #define ERR_DATA_PREDEF m_errorData
 #define ERR_DATA_TYPE_PREDEF m_errorType
 #define ERR_HASH_PREDEF m_errHashmap
 
 #define AssignErrorType(ERROR_CODE, ERROR_TYPE) ERR_DATA_PREDEF[ERROR_CODE].ERR_DATA_TYPE_PREDEF = ERROR_TYPE; ERR_HASH_PREDEF[GetString(ERROR_CODE)] = ERROR_CODE
-// AssignErrorType(ERROR_CODE, ERROR_TYPE) ERR_TYP_PREDEF[ERROR_CODE] = ERROR_TYPE; ERR_HASH_PREDEF[GetString(ERROR_CODE)] = ERROR_CODE
-//#define AssignErrorSource(ERROR_CODE, ERROR_TYPE) ERR_TYP_PREDEF[ERROR_CODE] = ERROR_TYPE; ERR_HASH_PREDEF[GetString(ERROR_CODE)] = ERROR_CODE
 
 ErrorHandler::ErrorHandler()
 {
@@ -211,4 +209,61 @@ void ErrorHandler::log(ErrorCode p_errorCode, ErrorSource p_errorSource, std::st
 void ErrorHandler::log(const ErrorCode p_errorCode, const std::string &p_objectName, const ErrorSource p_errorSource)
 {
 	log(m_errorData[p_errorCode].m_errorType, p_errorSource, "\033[1;33m\'" + p_objectName + "\'\033[0m: " + m_errorData[p_errorCode].m_errorString);
+}
+
+ErrorHandler::CoutConsole::CoutConsole()
+{
+	m_stdoutHandle = nullptr;
+	m_stdinHandle = nullptr;
+
+	m_outModeInit = 0;
+	m_inModeInit = 0;
+
+	setupConsole();
+}
+
+void ErrorHandler::CoutConsole::setupConsole()
+{
+	DWORD outMode = 0, inMode = 0;
+	m_stdoutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	m_stdinHandle = GetStdHandle(STD_INPUT_HANDLE);
+
+	if(m_stdoutHandle == INVALID_HANDLE_VALUE || m_stdinHandle == INVALID_HANDLE_VALUE)
+	{
+		exit(GetLastError());
+	}
+
+	if(!GetConsoleMode(m_stdoutHandle, &outMode) || !GetConsoleMode(m_stdinHandle, &inMode))
+	{
+		exit(GetLastError());
+	}
+
+	m_outModeInit = outMode;
+	m_inModeInit = inMode;
+
+	// Enable ANSI escape codes
+	outMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+
+	// Set stdin as no echo and unbuffered
+	inMode &= ~(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT);
+
+	if(!SetConsoleMode(m_stdoutHandle, outMode) || !SetConsoleMode(m_stdinHandle, inMode))
+	{
+		displayMessage("Failed to enable virtual terminal for colored console text output.");
+		// ERROR
+		//exit(GetLastError());
+	}
+}
+
+void ErrorHandler::CoutConsole::restoreConsole()
+{
+	// Reset colors
+	printf("\x1b[0m");
+
+	// Reset console mode
+	if(!SetConsoleMode(m_stdoutHandle, m_outModeInit) || !SetConsoleMode(m_stdinHandle, m_inModeInit))
+	{
+		displayMessage("Failed to disable virtual terminal.");
+		//exit(GetLastError());
+	}
 }

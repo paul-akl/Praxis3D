@@ -45,7 +45,9 @@ ErrorCode Window::init()
 	// Add the current version number to the window name
 	Config::m_windowVar.name = Config::m_windowVar.name + " v" + PRAXIS3D_VERSION_STRING;
 
-	if(SDL_Init(SDL_INIT_VIDEO) < 0)
+	auto sdlError = SDL_Init(SDL_INIT_VIDEO);
+
+	if(sdlError < 0)
 		returnError = ErrorCode::SDL_video_init_failed;
 	else
 	{

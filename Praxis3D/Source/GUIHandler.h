@@ -93,7 +93,7 @@ public:
 		ImGui_ImplSDL2_Shutdown();
 		ImGui::DestroyContext();
 
-		delete m_io;
+		m_io = nullptr;
 	}
 
 	// Let the GUI process an SDL event so it can be registered

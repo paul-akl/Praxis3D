@@ -634,14 +634,14 @@ void main()
 		transmittance);
 
 	// If the view ray intersects the Sun, add the Sun radiance.
-	if(dot(viewDirection, directionalLight.m_direction) > atmScatteringParam.m_sunSize.y)
+	if(dot(viewDirection, directionalLight.m_direction) > atmScatteringParam.m_sunSize.y)// * 0.9998)
 	{
 		radiance = radiance + transmittance * GetSolarRadiance(atmScatteringParam.m_atmosphereParam);
 	}
 	
 	radiance = mix(radiance, ground_radiance, ground_alpha);
 	
+	//radiance = vec3(1.0) - exp(-radiance / atmScatteringParam.m_whitePoint);
 	//color = vec4(vec3(1.0) - exp(-radiance / atmScatteringParam.m_whitePoint * directionalLight.m_intensity), 1.0);
 	color = vec4(radiance / atmScatteringParam.m_whitePoint * directionalLight.m_intensity * 1.0, 1.0);
-	//color = vec4(radiance / atmScatteringParam.m_whitePoint, 1.0);
 }

@@ -335,8 +335,12 @@ public:
 		// Move assignment operator
 		Texture2DHandle &operator=(Texture2DHandle &&p_textureHandle) noexcept
 		{
+			if(this == &p_textureHandle)
+				return *this;
+
 			m_textureData = p_textureHandle.m_textureData;
 			m_textureData->incRefCounter();
+
 			return *this;
 		}
 
@@ -490,6 +494,7 @@ protected:
 	TextureCubemap(LoaderBase<TextureLoaderCubemap, TextureCubemap> *p_loaderBase, std::string p_combinedName, const std::string(&p_filenames)[CubemapFace_NumOfFaces], size_t p_uniqueID, unsigned int p_handle) : UniqueObject(p_loaderBase, p_uniqueID, p_combinedName), m_handle(p_handle)
 	{
 		m_mipmapLevel = 0;
+		m_size = 0;
 		m_textureWidth = 0;
 		m_textureHeight = 0;
 		m_textureFormat = TextureFormat_RGBA;
@@ -507,6 +512,7 @@ protected:
 	TextureCubemap(LoaderBase<TextureLoaderCubemap, TextureCubemap> *p_loaderBase, std::string p_combinedName, size_t p_uniqueID, unsigned int p_handle) : UniqueObject(p_loaderBase, p_uniqueID, p_combinedName), m_handle(p_handle)
 	{
 		m_mipmapLevel = 0;
+		m_size = 0;
 		m_textureWidth = 0;
 		m_textureHeight = 0;
 		m_textureFormat = TextureFormat_RGBA;

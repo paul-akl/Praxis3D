@@ -263,7 +263,10 @@ void LuaScript::setFunctions()
 	GUITable.set_function("Begin", sol::overload([this](const std::string &p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::Begin(p_v1.c_str()); }); },
 		[this](const std::string &p_v1, const int p_v2) -> const void { m_GUIData.addFunctor([=] { ImGui::Begin(p_v1.c_str(), 0, p_v2); }); },
 		[this](const std::string &p_v1, Conditional *p_v2, const int p_v3) -> const void { m_GUIData.addFunctor([=] { ImGui::Begin(p_v1.c_str(), &p_v2->m_flag, p_v3); }); }));
-	GUITable.set_function("BeginChild", [this](const std::string &p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::BeginChild(p_v1.c_str()); }); });
+	GUITable.set_function("BeginChild", sol::overload([this](const std::string &p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::BeginChild(p_v1.c_str()); }); },
+		[this](const std::string &p_v1, const glm::vec2 p_size) -> const void { m_GUIData.addFunctor([=] { ImGui::BeginChild(p_v1.c_str(), ImVec2(p_size.x, p_size.y)); }); },
+		[this](const std::string &p_v1, const glm::vec2 p_size, const bool p_border) -> const void { m_GUIData.addFunctor([=] { ImGui::BeginChild(p_v1.c_str(), ImVec2(p_size.x, p_size.y), p_border); }); },
+		[this](const std::string &p_v1, const glm::vec2 p_size, const bool p_border, const int p_flags) -> const void { m_GUIData.addFunctor([=] { ImGui::BeginChild(p_v1.c_str(), ImVec2(p_size.x, p_size.y), p_border, p_flags); }); }));
 	GUITable.set_function("BeginMenu", [this](const std::string &p_v1) -> const void { m_GUIData.addFunctor([=] { ImGui::BeginMenu(p_v1.c_str()); }); });
 	GUITable.set_function("Button", sol::overload([this](const std::string &p_v1, Conditional *p_v2) -> void { m_GUIData.addFunctor([=] { p_v2->m_flag = ImGui::Button(p_v1.c_str()); }); },
 		[this](const std::string &p_v1, const float p_v2, const float p_v3, Conditional *p_v4) -> void { m_GUIData.addFunctor([=] { p_v4->m_flag = ImGui::Button(p_v1.c_str(), ImVec2(p_v2, p_v3)); }); }));
@@ -305,6 +308,7 @@ void LuaScript::setFunctions()
 	GUITable.set_function("SetNextWindowContentSize", [this](const float p_v1, const float p_v2) -> const void { m_GUIData.addFunctor([=] { ImGui::SetNextWindowContentSize(ImVec2(p_v1, p_v2)); }); });
 	GUITable.set_function("SetNextWindowSize", [this](const float p_v1, const float p_v2) -> const void { m_GUIData.addFunctor([=] { ImGui::SetNextWindowSize(ImVec2(p_v1, p_v2)); }); });
 	GUITable.set_function("SetNextWindowSizeFullscreen", [this]() -> const void { m_GUIData.addFunctor([=] { ImGui::SetNextWindowSize(ImVec2((float)Config::rendererVar().current_viewport_size_x, (float)Config::rendererVar().current_viewport_size_y)); }); });
+	GUITable.set_function("SetNextWindowSizeFullscreenScale", [this](const float p_scaleX, const float p_scaleY) -> const void { m_GUIData.addFunctor([=] { ImGui::SetNextWindowSize(ImVec2((float)Config::rendererVar().current_viewport_size_x * p_scaleX, (float)Config::rendererVar().current_viewport_size_y * p_scaleY)); }); });
 	GUITable.set_function("SetWindowFontScale", [this](const float p_fontScale) -> const void { m_GUIData.addFunctor([=] { ImGui::SetWindowFontScale(p_fontScale); }); });
 	GUITable.set_function("ShowMetricsWindow", [this](bool p_v1) -> void { m_GUIData.addFunctor([=] { bool open = p_v1; ImGui::ShowMetricsWindow(&open); }); });
 	GUITable.set_function("SliderFloat", [this](const std::string &p_v1, float *p_v2, const float p_v3, const float p_v4) -> const void { m_GUIData.addFunctor([=] { ImGui::SliderFloat(p_v1.c_str(), p_v2, p_v3, p_v4); }); });

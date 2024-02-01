@@ -17,6 +17,8 @@
 #include "WindowLocator.h"
 #include "WorldSystem.h"
 
+// Try to run on a dedicated GPU (in cases where there's integrated and dedicated GPUs in the system),
+// by requesting the high performance power settings from both nVidia and AMD GPUs
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -32,16 +34,10 @@ int Engine::m_instances = 0;
 
 #define ENUMTOSTRING(ENUM) #ENUM
 
-Engine::Engine() //m_mainMenuState(*this), m_playstate(*this), m_editorState(*this)
+Engine::Engine()
 {
 	m_instances++;
 	m_initialized = false;
-	m_errorHandler = nullptr;
-	m_GUIHandler = nullptr;
-	m_window = nullptr;
-	m_clock = nullptr;
-	m_taskManager = nullptr;
-	m_scheduler = nullptr;
 	m_changeCtrlScene = nullptr;
 	m_sceneChangeController = nullptr;
 	m_objectChangeController = nullptr;
@@ -56,14 +52,15 @@ Engine::Engine() //m_mainMenuState(*this), m_playstate(*this), m_editorState(*th
 
 Engine::~Engine()
 {
+	// Delete engine states
 	for(unsigned int i = 0; i < EngineStateType::EngineStateType_NumOfTypes; i++)
 		if(m_engineStates[i] != nullptr)
 			delete m_engineStates[i];
 
 	// Delete systems
-	delete m_taskManager;
-	delete m_errorHandler;
-	delete m_clock;
+	for(unsigned int i = 0; i < Systems::NumberOfSystems; i++)
+		if(m_systems[i] != nullptr)
+			delete m_systems[i];
 }
 
 // Some of the initialization sequences are order sensitive. Do not change the order of calls.
@@ -111,10 +108,10 @@ void Engine::run()
 	while(true)
 	{
 		// Update the clock
-		m_clock->update();
+		m_clock.update();
 
 		// Handle window and input events
-		m_window->handleEvents();
+		m_window.handleEvents();
 
 		// Update all loaders
 		updateLoaders();
@@ -129,7 +126,7 @@ void Engine::run()
 			m_engineStates[m_currentStateType]->update(*this);
 
 			// Swap buffers. If v-sync is enabled, this call should halt for appropriate time
-			m_window->swapBuffers();
+			m_window.swapBuffers();
 		}
 		else
 		{
@@ -253,7 +250,7 @@ void Engine::updateLoaders()
 ErrorCode Engine::initServices()
 {
 	ErrorCode returnError = ErrorCode::Success;
-
+	
 	//  ___________________________________
 	// |								   |
 	// |  SERVICE LOCATORS INITIALIZATION  |
@@ -270,13 +267,12 @@ ErrorCode Engine::initServices()
 	// |	ERROR HANDLER INITIALIZATION   |
 	// |___________________________________|
 	// Create and initialize error handler
-	m_errorHandler = new ErrorHandler();
-	ErrorCode errHandlerError = m_errorHandler->init();
+	ErrorCode errHandlerError = m_errorHandler.init();
 
 	// If error handler was initialized successfully, pass it to the locator, if not, log an error
 	if(errHandlerError == ErrorCode::Success)
 	{
-		ErrHandlerLoc::provide(m_errorHandler);
+		ErrHandlerLoc::provide(&m_errorHandler);
 	}
 	else
 		printf("Error: Error handler has failed to initialize. Error code: %s\n", GetString(errHandlerError));
@@ -295,26 +291,24 @@ ErrorCode Engine::initServices()
 	// |___________________________________|
 	// Initialize clock. Still continue if there's an error, nothing would move but the engine would still run.
 	// The error handler will be responsible for outputting error and asking user if they want to continue in this case.
-	m_clock = new Clock();
-	ErrorCode clockError = m_clock->init();
+	ErrorCode clockError = m_clock.init();
 
 	// Check if clock was initialized successfully
 	if(clockError == ErrorCode::Success)
-		ClockLocator::provide(m_clock);
+		ClockLocator::provide(&m_clock);
 	else
 		ErrHandlerLoc::get().log(clockError, ErrorSource::Source_Engine);
-
+	
 	//  ___________________________________
 	// |								   |
 	// |	  WINDOW INITIALIZATION		   |
 	// |___________________________________|
 	// Initialize window system and then attempt to spawn a window
-	m_window = new Window();
-	ErrorCode windowError = m_window->init();
+	ErrorCode windowError = m_window.init();
 
 	if(windowError == ErrorCode::Success)
 	{
-		windowError = m_window->createWindow();
+		windowError = m_window.createWindow();
 
 		// If the window creation failed, we don't want to continue with the engine, so return an error
 		if(windowError != ErrorCode::Success)
@@ -324,7 +318,7 @@ ErrorCode Engine::initServices()
 		}
 
 		// Assign window class to the service locator
-		WindowLocator::provide(m_window);
+		WindowLocator::provide(&m_window);
 	}
 	else
 		ErrHandlerLoc::get().log(windowError, ErrorSource::Source_Engine);
@@ -354,13 +348,12 @@ ErrorCode Engine::initServices()
 	// |								   |
 	// |	TASK MANAGER INITIALIZATION	   |
 	// |___________________________________|
-	// Create new task manager and initialize it
-	m_taskManager = new TaskManager();
-	ErrorCode taskMgrError = m_taskManager->init();
+	// Initialize the task manager
+	ErrorCode taskMgrError = m_taskManager.init();
 
 	// If task manager initialized successfully, provide it to the locator, otherwise log an error
 	if(taskMgrError == ErrorCode::Success)
-		TaskManagerLocator::provide(m_taskManager);
+		TaskManagerLocator::provide(&m_taskManager);
 	else
 		ErrHandlerLoc::get().log(taskMgrError, ErrorSource::Source_Engine);
 
@@ -413,17 +406,16 @@ ErrorCode Engine::initServices()
 	// |___________________________________|
 	// Initialize GUI handler. Still continue if there's an error, the GUI would just be missing.
 	// The error handler will be responsible for outputting error and asking user if they want to continue in this case.
-	m_GUIHandler = new GUIHandler();
-	ErrorCode guiError = m_GUIHandler->init();
+	ErrorCode guiError = m_GUIHandler.init();
 
 	// Check if the GUI handler was initialized successfully
 	// If so, register it in GUI Handler locator and Window system
 	// and enable GUI in Window system
 	if(guiError == ErrorCode::Success)
 	{
-		GUIHandlerLocator::provide(m_GUIHandler);
-		m_window->registerGUIHandler(m_GUIHandler);
-		m_window->setEnableGUI(true);
+		GUIHandlerLocator::provide(&m_GUIHandler);
+		m_window.registerGUIHandler(&m_GUIHandler);
+		m_window.setEnableGUI(true);
 	}
 	else
 		ErrHandlerLoc::get().log(guiError, ErrorSource::Source_Engine);
@@ -518,13 +510,13 @@ void Engine::shutdown()
 			m_engineStates[i]->shutdown();
 
 	// Cancel all the tasks in background threads
-	m_taskManager->cancelBackgroundThreads();
+	m_taskManager.cancelBackgroundThreads();
 
 	// Make sure they are canceled, by waiting for them
-	m_taskManager->waitForBackgroundThreads();
+	m_taskManager.waitForBackgroundThreads();
 
 	// Shutdown the task manager
-	m_taskManager->shutdown();
+	m_taskManager.shutdown();
 
 	// Set the initialized flag to false, so the engine is not run without initializing again
 	m_initialized = false;

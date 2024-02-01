@@ -48,7 +48,7 @@ private:
 		if(!m_engineStates[p_newStateType]->isInitialized())
 		{
 			// Initialize the current state
-			ErrorCode stateInitError = m_engineStates[p_newStateType]->init(m_taskManager);
+			ErrorCode stateInitError = m_engineStates[p_newStateType]->init(&m_taskManager);
 
 			// If it failed to initialize, return to the previous state and log an error
 			if(stateInitError != ErrorCode::Success)
@@ -95,7 +95,7 @@ private:
 		if(!m_engineStates[p_newStateType]->isInitialized())
 		{
 			// Initialize the current state
-			ErrorCode stateInitError = m_engineStates[p_newStateType]->init(m_taskManager);
+			ErrorCode stateInitError = m_engineStates[p_newStateType]->init(&m_taskManager);
 
 			// If it failed to initialize, log an error
 			if(stateInitError != ErrorCode::Success)
@@ -225,14 +225,13 @@ private:
 	SystemBase *m_systems[Systems::NumberOfSystems];
 	
 	// Various required services
-	ErrorHandler *m_errorHandler;
-	GUIHandler *m_GUIHandler;
-	Window *m_window;
-	Clock *m_clock;
+	ErrorHandler m_errorHandler;
+	GUIHandler m_GUIHandler;
+	Window m_window;
+	Clock m_clock;
 
-	// Task manager and scheduler for multi-threading
-	TaskManager *m_taskManager;
-	TaskScheduler *m_scheduler;
+	// Task manager for multi-threading
+	TaskManager m_taskManager;
 
 	// Universal change controller, stores subject-observer messages between linked objects
 	UniversalScene *m_changeCtrlScene;

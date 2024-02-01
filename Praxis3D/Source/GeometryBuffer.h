@@ -160,10 +160,13 @@ protected:
 		{
 		case GBufferTextureType::GBufferPosition:
 			glBindImageTexture(p_imageUnitIndex, m_GBTextures[p_buffer], p_mipLevel, GL_FALSE, 0, p_access, Config::FramebfrVariables().gl_position_buffer_internal_format);
+			break;
 		case GBufferTextureType::GBufferDiffuse:
 			glBindImageTexture(p_imageUnitIndex, m_GBTextures[p_buffer], p_mipLevel, GL_FALSE, 0, p_access, Config::FramebfrVariables().gl_diffuse_buffer_internal_format);
+			break;
 		case GBufferTextureType::GBufferNormal:
 			glBindImageTexture(p_imageUnitIndex, m_GBTextures[p_buffer], p_mipLevel, GL_FALSE, 0, p_access, Config::FramebfrVariables().gl_normal_buffer_internal_format);
+			break;
 		case GBufferTextureType::GBufferEmissive:
 			glBindImageTexture(p_imageUnitIndex, m_GBTextures[p_buffer], p_mipLevel, GL_FALSE, 0, p_access, Config::FramebfrVariables().gl_emissive_buffer_internal_format);
 			break;

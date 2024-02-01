@@ -13,6 +13,7 @@ function init ()
 	-- CONTINUE button settings
 	continueButtonSizeX = 350.0
 	continueButtonSizeY = 64.0
+	continueButtonPositionOffsetY = 10
 	
 	-- Title text shown at the top of the window, with increased font size
 	titleBodyText = {}
@@ -31,7 +32,7 @@ function init ()
 	mainBodyText[7] = 'Dynamic points lights with emissive mapping'
 	mainBodyText[8] = 'Sky and fog using Mie and Rayleigh atmospheric light scattering'
 	mainBodyText[9] = 'HDR rendering with Uchimura tone-mapping'
-	mainBodyText[10] = 'Rigid body objects for collision detection'
+	mainBodyText[10] = 'Rigid body objects for collision detection and impact sounds'
 	mainBodyText[11] = 'Ambient sound based on day-night cycle'
 	mainBodyText[12] = ''
 	mainBodyText[13] = 'Controls:'
@@ -71,7 +72,14 @@ function update (p_deltaTime)
 		-- BEGIN WINDOW
 		GUI.Begin('##ExampleMapInfo', bitwiseOr(ImGuiWindowFlags.NoTitleBar, ImGuiWindowFlags.NoResize, ImGuiWindowFlags.NoCollapse, ImGuiWindowFlags.NoMove))
 		
+		-- Get the current screen size and calculate the size of the child window so it doesn't overlap with the CONTINUE button
 		screenSize = GUI.GetScreenSize()
+		centerWindowSize = screenSize:subVec2(Vec2.new(0.0, continueButtonSizeY + continueButtonPositionOffsetY))
+		
+		GUI.SetNextWindowPos(0, 0)
+		
+		-- BEGIN CHILD WINDOW
+		GUI.BeginChild('##ExampleMapInfoCenterWindow', centerWindowSize, false)
 		
 		-- Increase the font size for the title text
 		GUI.SetWindowFontScale(2.0)
@@ -90,6 +98,9 @@ function update (p_deltaTime)
 			GUI.TextCenterAligned(mainBodyText[i])
 		end
 		
+		-- END CHILD WINDOW
+		GUI.EndChild()
+		
 		-- Set the CONTINUE button colors and style
 		if continueButtonHovered:isChecked() then
 			GUI.PushStyleColor(ImGuiCol.Text, 0.102, 0.102, 0.102, 1.0)
@@ -106,7 +117,7 @@ function update (p_deltaTime)
 		
 		-- Set the CONTINUE button position to be centered at the bottom of the screen
 		GUI.SetCursorPosX((screenSize.x - continueButtonSizeX) * 0.5)
-		GUI.SetCursorPosY(screenSize.y - continueButtonSizeY - 10.0)
+		GUI.SetCursorPosY(screenSize.y - continueButtonSizeY - continueButtonPositionOffsetY)
 		
 		-- Draw the CONTINUE button
 		GUI.Button('Continue', continueButtonSizeX, continueButtonSizeY, continueButtonPressed)

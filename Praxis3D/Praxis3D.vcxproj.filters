@@ -968,7 +968,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\config.ini" />
-    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Praxis3D1.rc">
@@ -980,6 +979,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="..\praxis icon.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="E:\Mano\My Pictures\Logo\Praxis3D_icon.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

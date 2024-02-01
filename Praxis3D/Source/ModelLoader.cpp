@@ -381,8 +381,8 @@ ModelLoader::ModelHandle ModelLoader::load(std::string p_filename, bool p_startB
 
 void ModelLoader::unload(Model &p_object, SceneLoader &p_sceneLoader)
 {
-	// Create new model handle
-	ModelHandle *modelHandle = new ModelHandle(p_object);
+	// Get the model handle
+	unsigned int *modelHandle = new unsigned int(p_object.m_handle);
 
 	// Send a notification to graphics scene to unload the model; set deleteAfterReceiving flag to true, to transfer the ownership of the model handle pointer to the graphics scene (so it will be responsible for deleting it)
 	p_sceneLoader.getChangeController()->sendData(p_sceneLoader.getSystemScene(Systems::Graphics), DataType::DataType_UnloadModel, (void *)modelHandle, true);

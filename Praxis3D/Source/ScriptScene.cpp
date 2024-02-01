@@ -56,7 +56,7 @@ void ScriptScene::update(const float p_deltaTime)
 	// Get the world scene required for getting components
 	WorldScene *worldScene = static_cast<WorldScene*>(m_sceneLoader->getSystemScene(Systems::World));
 
-	if(!m_sceneLoader->getFirstLoad() && !m_sceneLoader->getSceneLoadingStatus())
+	if(!(m_sceneLoader->getFirstLoad() && m_sceneLoader->getSceneLoadingStatus()))
 	{
 		//	 ____________________________
 		//	|							 |

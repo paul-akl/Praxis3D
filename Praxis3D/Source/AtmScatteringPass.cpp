@@ -98,11 +98,11 @@ void AtmScatteringPass::InitModel()
 		ground_albedo.push_back(kGroundAlbedo);
 	}
 
-	m_atmScatteringModel.reset(new AtmScatteringModel(wavelengths, solar_irradiance, kSunAngularRadius,
+	m_atmScatteringModel.reset(new AtmScatteringModel(wavelengths, solar_irradiance, m_sunAngularRadius,
 		kBottomRadius, kTopRadius, { rayleigh_layer }, rayleigh_scattering,
 		{ mie_layer }, mie_scattering, mie_extinction, kMiePhaseFunctionG,
 		ozone_density, absorption_extinction, ground_albedo, max_sun_zenith_angle,
-		kLengthUnitInMeters, m_luminanceType == PRECOMPUTED ? 15 : 3,
+		m_lengthUnitInMeters, m_luminanceType == PRECOMPUTED ? 15 : 3,
 		m_useCombinedTextures, m_useHalfPrecision));
 	m_atmScatteringModel->Init();
 
@@ -189,4 +189,20 @@ void AtmScatteringPass::InitModel()
 	*/
 	// This sets 'view_from_clip', which only depends on the window size.
 	//HandleReshapeEvent(glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT));
+}
+
+void AtmScatteringPass::updateAtmScatteringData(const AtmosphericScatteringData &p_atmScatteringData)
+{
+	m_sunAngularRadius = p_atmScatteringData.m_sunSize / 2.0;
+
+	m_atmosphereParam.m_sunAngularRadius = (float)m_sunAngularRadius;
+	m_atmosphereParam.m_bottomRadius = p_atmScatteringData.m_atmosphereBottomRadius;
+	m_atmosphereParam.m_topRadius = p_atmScatteringData.m_atmosphereTopRadius;
+	m_atmosphereParam.m_groundAlbedo = p_atmScatteringData.m_planetGroundColor;
+
+	m_atmScatteringParam.m_atmosphereParam = m_atmosphereParam;
+	m_atmScatteringParam.m_earthCenter = p_atmScatteringData.m_planetCenterPosition / (float)m_lengthUnitInMeters;
+	m_atmScatteringParam.m_sunSize = glm::vec2(tan((float)m_sunAngularRadius), cos((float)m_sunAngularRadius));
+
+	//InitModel();
 }

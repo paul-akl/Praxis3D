@@ -131,8 +131,6 @@ function init ()
 	fileBrowserLoadMapOpened = false
 	fileBrowserEditMapOpened = false
 	
-	aboutWindowOpened = false
-	
 	ErrHandlerLoc.logErrorCode(ErrorCode.Initialize_success, getLuaFilename())
 end
 	
@@ -265,19 +263,21 @@ function update (p_deltaTime)
 	
 	-- Check if the EXIT button is pressed; close the engine if it is
 	if exitButtonPressed:isChecked() then
-		ErrHandlerLoc.logErrorType(ErrorType.Info, 'Exit called from MainMenu.lua')
+		ErrHandlerLoc.logErrorType(ErrorType.Info, 'Exit called from ' .. getLuaFilename())
 		setEngineRunning(false)
+		exitButtonPressed:uncheck()
 	end
 	
-	-- Check if the OPTIONS button is pressed
+	-- Check if the ABOUT button is pressed
 	if aboutButtonPressed:isChecked() then
-		aboutWindowOpened = not aboutWindowOpened
-		sendData(SystemType.GUI, DataType.DataType_AboutWindow, aboutWindowOpened)
+		sendData(SystemType.GUI, DataType.DataType_AboutWindow, true)
+		aboutButtonPressed:uncheck()
 	end
 	
 	-- Check if the OPTIONS button is pressed
 	if optionsButtonPressed:isChecked() then
-		print('OPTIONS')
+		ErrHandlerLoc.logErrorType(ErrorType.Warning, 'Options window is not implemented yet')
+		optionsButtonPressed:uncheck()
 	end
 	
 	-- Check if the EDITOR button is pressed; change the current engine state to EDITOR, if it is
@@ -285,6 +285,7 @@ function update (p_deltaTime)
 		if not fileBrowserEditMapOpened then
 			fileBrowserEditMapOpened = true
 			GUI.FileDialog(fileBrowserEditMap)
+			editorButtonPressed:uncheck()
 		end
 		--sendEngineChange(EngineChangeType.StateChange, EngineStateType.Editor)
 		--setMouseCapture(true)
@@ -294,6 +295,7 @@ function update (p_deltaTime)
 	if playButtonPressed:isChecked() then
 		sendEngineChange(EngineChangeType.StateChange, EngineStateType.Play)
 		setMouseCapture(true)
+		playButtonPressed:uncheck()
 	end
 	
 	-- Check if the LOAD button is pressed
@@ -301,6 +303,7 @@ function update (p_deltaTime)
 		if not fileBrowserLoadMapOpened then
 			fileBrowserLoadMapOpened = true
 			GUI.FileDialog(fileBrowserLoadMap)
+			loadButtonPressed:uncheck()
 		end
 	end
 	

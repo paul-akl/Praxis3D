@@ -26,8 +26,8 @@ TextureLoader2D::~TextureLoader2D()
 {
 	for(unsigned int i = 0; i < DefaultTextureType::DefaultTextureType_NumOfTypes; i++)
 	{
-		delete m_defaultTextures[i];
 		delete m_defaultTextureHandles[i];
+		delete m_defaultTextures[i];
 	}
 }
 
@@ -280,8 +280,8 @@ TextureLoader2D::Texture2DHandle TextureLoader2D::create(const std::string &p_na
 
 void TextureLoader2D::unload(Texture2D &p_object, SceneLoader &p_sceneLoader)
 {
-	// Create new texture handle
-	Texture2DHandle *textureHandle = new Texture2DHandle(&p_object);
+	// Get the texture handle
+	unsigned int *textureHandle = new unsigned int(p_object.m_handle);
 
 	// Send a notification to graphics scene to unload the texture; set deleteAfterReceiving flag to true, to transfer the ownership of the texture handle pointer to the graphics scene (so it will be responsible for deleting it)
 	p_sceneLoader.getChangeController()->sendData(p_sceneLoader.getSystemScene(Systems::Graphics), DataType::DataType_UnloadTexture2D, (void*)textureHandle, true);

@@ -174,7 +174,7 @@ ErrorCode ShaderLoader::ShaderProgram::setVariableDefinition(const ShaderVariabl
 	if(!shaderSource.empty())
 	{
 		// Find the variable starting position in the source code
-		auto variableStartPosition = shaderSource.find(p_variable.m_variableName);
+		auto variableStartPosition = shaderSource.find("#define " + p_variable.m_variableName);
 
 		// Check if the variable was found
 		if(variableStartPosition != std::string::npos)
@@ -186,7 +186,7 @@ ErrorCode ShaderLoader::ShaderProgram::setVariableDefinition(const ShaderVariabl
 			if(variableEndPosition != std::string::npos)
 			{
 				// Replace the variable and its value with the given one
-				shaderSource.replace(variableStartPosition, variableEndPosition - variableStartPosition, p_variable.m_variableName + " " + p_variable.m_variableValue);
+				shaderSource.replace(variableStartPosition, variableEndPosition - variableStartPosition, "#define " + p_variable.m_variableName + " " + p_variable.m_variableValue);
 			}
 			else
 				returnError = ErrorCode::Shader_variable_not_found;

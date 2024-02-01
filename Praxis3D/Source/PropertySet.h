@@ -567,7 +567,7 @@ private:
 	PropertyVariableType m_variableType;
 	union VariableUnion
 	{
-		VariableUnion() { }
+		VariableUnion() : m_ID(Properties::Null) { }
 		~VariableUnion() { }
 
 		bool m_bool;

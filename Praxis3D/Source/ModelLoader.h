@@ -256,6 +256,9 @@ public:
 		// Move assignment operator
 		ModelHandle &operator=(ModelHandle &&p_modelHandle) noexcept
 		{
+			if(this == &p_modelHandle)
+				return *this;
+
 			m_model = p_modelHandle.m_model;
 			m_model->incRefCounter();
 			return *this;

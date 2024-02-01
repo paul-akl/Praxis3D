@@ -32,6 +32,7 @@ enum DataType : uint32_t
 	DataType_CreateEntity,				// ComponentsConstructionInfo
 	DataType_DeleteEntity,				// EntityAndComponent
 	// Graphics
+	DataType_AtmScatteringData,			// AtmosphericScatteringData
 	DataType_AmbientOcclusionData,		// AmbientOcclusionData
 	DataType_GUIPassFunctors,			// FunctorSequence
 	DataType_MiscSceneData,				// MiscSceneData
@@ -40,10 +41,10 @@ enum DataType : uint32_t
 	DataType_ShadowMappingData,			// ShadowMappingData
 	DataType_LoadShader,				// ShaderLoader::ShaderProgram
 	DataType_LoadTexture2D,				// TextureLoader2D::Texture2DHandle
-	DataType_UnloadTexture2D,			// TextureLoader2D::Texture2DHandle
+	DataType_UnloadTexture2D,			// unsigned int
 	DataType_LoadTexture3D,
 	DataType_UnloadTexture3D,
-	DataType_UnloadModel,
+	DataType_UnloadModel,				// unsigned int
 	DataType_ModelsProperties,			// ModelComponent::ModelsProperties
 	// GUI
 	DataType_AboutWindow,				// bool
@@ -401,6 +402,7 @@ namespace Properties
 	Code(BiasMax,) \
 	Code(BlurSamples,) \
 	Code(BlurSharpness,) \
+	Code(Bottom,) \
 	Code(Camera,) \
 	Code(CameraComponent,) \
 	Code(CameraID,) \
@@ -411,6 +413,7 @@ namespace Properties
 	Code(CombinedTexture,) \
 	Code(ComputeShader,) \
 	Code(CutoffAngle,) \
+	Code(Density,) \
 	Code(Diffuse,) \
 	Code(Direction,) \
 	Code(Directions,) \
@@ -426,10 +429,12 @@ namespace Properties
 	Code(GeometryShader,) \
 	Code(Graphics,) \
 	Code(GraphicsObject,) \
+	Code(Ground,) \
 	Code(HBAO,) \
 	Code(Height,) \
 	Code(HeightScale,) \
 	Code(Intensity,) \
+	Code(Irradiance,) \
 	Code(LightComponent,) \
 	Code(Lighting,) \
 	Code(Materials,) \
@@ -478,16 +483,31 @@ namespace Properties
 	Code(StochasticSampling,) \
 	Code(StochasticSamplingScale,) \
 	Code(StochasticSamplingSeamFix,) \
+	Code(Sun,) \
 	Code(TessControlShader,) \
 	Code(TessEvaluationShader,) \
 	Code(TextureTilingFactor,) \
 	Code(TextureScale,) \
+	Code(Top,) \
 	Code(VertexShader,) \
 	Code(WrapMode,) \
 	Code(ZClipping,) \
 	Code(ZFar,) \
 	Code(ZNear,) \
 	Code(ZPlaneMultiplier,) \
+	/* Graphics atmospheric scattering*/ \
+	Code(Absorption, ) \
+	Code(Atmosphere, ) \
+	Code(AtmosphericScattering, ) \
+	Code(ConstantTerm,) \
+	Code(ExpScale,) \
+	Code(ExpTerm,) \
+	Code(Extinction,) \
+	Code(LinearTerm,) \
+	Code(Mie,) \
+	Code(Rayleigh,) \
+	Code(Scattering,) \
+	Code(Width,) \
 	/* Graphics rendering passes */ \
 	Code(AmbientOcclusionRenderPass,) \
 	Code(AtmScatteringRenderPass,) \
@@ -831,8 +851,8 @@ public:
 			gl_depth_buffer_texture_format = GL_DEPTH_COMPONENT;
 			gl_depth_buffer_texture_type = GL_FLOAT;
 
-			gl_buffers_min_filter = GL_NEAREST;
-			gl_buffers_mag_filter = GL_NEAREST;
+			gl_buffers_min_filter = GL_LINEAR;
+			gl_buffers_mag_filter = GL_LINEAR;
 			gl_buffers_wrap_s_method = GL_CLAMP_TO_EDGE;
 			gl_buffers_wrap_t_method = GL_CLAMP_TO_EDGE;
 
@@ -920,6 +940,7 @@ public:
 			eye_adaption = false;
 			multisampling = true;
 			alpha_size = 8;
+			antialiasing_type = 2;
 			ao_blur_num_of_samples = 6;
 			ao_num_of_directions = 8;
 			ao_num_of_samples = 64;
@@ -998,6 +1019,7 @@ public:
 		bool eye_adaption;
 		bool multisampling;
 		int alpha_size;
+		int antialiasing_type;
 		int ao_blur_num_of_samples;
 		int ao_num_of_directions;
 		int ao_num_of_samples;
@@ -1425,6 +1447,9 @@ public:
 			dir_light_quad_rotation_x = 180.0f;
 			dir_light_quad_rotation_y = 0.0f;
 			dir_light_quad_rotation_z = 0.0f;
+			fxaa_edge_threshold_min = 0.0312f;
+			fxaa_edge_threshold_max = 0.125f;
+			fxaa_edge_subpixel_quality = 0.75f;
 			parallax_mapping_min_steps = 8.0f;
 			parallax_mapping_max_steps = 32.0f;
 			csm_num_of_pcf_samples = 16;
@@ -1433,6 +1458,7 @@ public:
 			current_viewport_size_y = 0;
 			depth_test_func = GL_LESS;
 			face_culling_mode = GL_BACK;
+			fxaa_iterations = 12;
 			heightmap_combine_channel = 3;
 			heightmap_combine_texture = 1;
 			max_num_point_lights = 50;
@@ -1444,6 +1470,8 @@ public:
 			ssao_num_of_samples = 64;
 			depth_test = true;
 			face_culling = true;
+			fxaa_enabled = true;
+			msaa_enabled = false;
 			stochastic_sampling_seam_fix = true;
 		}
 		
@@ -1526,6 +1554,9 @@ public:
 		float dir_light_quad_rotation_x;
 		float dir_light_quad_rotation_y;
 		float dir_light_quad_rotation_z;
+		float fxaa_edge_threshold_min;
+		float fxaa_edge_threshold_max;
+		float fxaa_edge_subpixel_quality;
 		float parallax_mapping_min_steps;
 		float parallax_mapping_max_steps;
 		int csm_num_of_pcf_samples;
@@ -1534,6 +1565,7 @@ public:
 		int current_viewport_size_y;
 		int depth_test_func;
 		int face_culling_mode;
+		int fxaa_iterations;
 		int heightmap_combine_channel;
 		int heightmap_combine_texture;
 		int max_num_point_lights;
@@ -1545,6 +1577,8 @@ public:
 		int ssao_num_of_samples;
 		bool depth_test;
 		bool face_culling;
+		bool fxaa_enabled;
+		bool msaa_enabled;
 		bool stochastic_sampling_seam_fix;
 	};
 	struct ScriptVariables
@@ -1578,6 +1612,7 @@ public:
 			transposeViewMatUniform = "transposeViewMat";
 			transposeInverseViewMatUniform = "transposeInverseViewMat";
 			screenSizeUniform = "screenSize";
+			inverseScreenSizeUniform = "inverseScreenSize";
 			screenNumOfPixelsUniform = "screenNumOfPixels";
 			deltaTimeMSUniform = "deltaTimeMS";
 			deltaTimeSUniform = "deltaTimeS";
@@ -1689,6 +1724,11 @@ public:
 			testVecUniform = "testVec";
 			testFloatUniform = "testFloat";
 
+			define_fxaa = "FXAA";
+			define_fxaa_edge_threshold_min = "FXAA_EDGE_THRESHOLD_MIN";
+			define_fxaa_edge_threshold_max = "FXAA_EDGE_THRESHOLD_MAX";
+			define_fxaa_iterations = "FXAA_ITERATIONS";
+			define_fxaa_subpixel_quality = "FXAA_SUBPIXEL_QUALITY";
 			define_numOfCascades = "NUM_OF_CASCADES";
 			define_numOfPCFSamples = "NUM_OF_PCF_SAMPLES";
 			define_parallaxMapping = "PARALLAX_MAPPING";
@@ -1708,6 +1748,7 @@ public:
 		std::string transposeViewMatUniform;
 		std::string transposeInverseViewMatUniform;
 		std::string screenSizeUniform;
+		std::string inverseScreenSizeUniform;
 		std::string screenNumOfPixelsUniform;
 		std::string deltaTimeMSUniform;
 		std::string deltaTimeSUniform;
@@ -1820,6 +1861,11 @@ public:
 		std::string testFloatUniform;
 
 		// Shader #define variable names
+		std::string define_fxaa;
+		std::string define_fxaa_edge_threshold_min;
+		std::string define_fxaa_edge_threshold_max;
+		std::string define_fxaa_iterations;
+		std::string define_fxaa_subpixel_quality;
 		std::string define_numOfCascades;
 		std::string define_numOfPCFSamples;
 		std::string define_parallaxMapping;

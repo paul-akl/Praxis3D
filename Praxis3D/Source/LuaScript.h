@@ -1,7 +1,5 @@
 #pragma once
 
-#define SOL_LUAJIT 1
-
 #include "EnumFactory.h"
 #include "ErrorHandlerLocator.h"
 #include "GUIDataManager.h"

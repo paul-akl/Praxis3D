@@ -304,6 +304,14 @@ enum AmbientOcclusionType : int
 	AmbientOcclusionType_HBAO
 };
 
+enum AntiAliasingType : int
+{
+	AntiAliasingType_None = 0,
+	AntiAliasingType_MSAA,
+	AntiAliasingType_FXAA,
+	AntiAliasingType_NumOfTypes
+};
+
 enum AudioBusType : unsigned int
 {
 	AudioBusType_Ambient,

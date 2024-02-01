@@ -13,13 +13,15 @@ public:
 		m_useOzone(true),
 		m_useCombinedTextures(true),
 		m_useHalfPrecision(true),
-		m_luminanceType(NONE),
+		m_luminanceType(Luminance::NONE),
 		m_useWhiteBalance(true),
-		kSunAngularRadius(0.00935 / 2.0),
-		kLengthUnitInMeters(1000.0),
-		m_atmParamBuffer(BufferType_Uniform, BufferBindTarget_Uniform, BufferUsageHint_DynamicDraw)
+		m_sunAngularRadius(p_renderer.getFrameData().m_atmScatteringData.m_sunSize / 2.0),
+		m_lengthUnitInMeters(1000.0),
+		m_atmParamBuffer(BufferType_Uniform, BufferBindTarget_Uniform, BufferUsageHint_DynamicDraw),
+		m_skyShader(nullptr),
+		m_groundShader(nullptr)
 	{
-		kSunSolidAngle = Math::PI_DOUBLE * kSunAngularRadius * kSunAngularRadius;
+		m_sunSolidAngle = Math::PI_DOUBLE * m_sunAngularRadius * m_sunAngularRadius;
 
 		m_vertexShaderSource = R"(
 	#version 330
@@ -32,27 +34,39 @@ public:
 	gl_Position = vertex;
 	})";
 
+		const auto &rayleighDensity0 = p_renderer.getFrameData().m_atmScatteringData.m_rayleighDensity[0];
+		const auto &rayleighDensity1 = p_renderer.getFrameData().m_atmScatteringData.m_rayleighDensity[1];
+
+		const auto &mieDensity0 = p_renderer.getFrameData().m_atmScatteringData.m_mieDensity[0];
+		const auto &mieDensity1 = p_renderer.getFrameData().m_atmScatteringData.m_mieDensity[1];
+
+		const auto &absorptionDensity0 = p_renderer.getFrameData().m_atmScatteringData.m_absorptionDensity[0];
+		const auto &absorptionDensity1 = p_renderer.getFrameData().m_atmScatteringData.m_absorptionDensity[1];
+
 		m_atmosphereParam = AtmosphereParameters(
-			glm::vec3(1.474000f, 1.850400f, 1.911980f),
-			0.004675f,
-			DensityProfile(DensityProfLayer(0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f), DensityProfLayer(0.000000f, 1.000000f, -0.125000f, 0.000000f, 0.000000f)),
-			DensityProfile(DensityProfLayer(0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f), DensityProfLayer(0.000000f, 1.000000f, -0.833333f, 0.000000f, 0.000000f)),
-			DensityProfile(DensityProfLayer(25.000000f, 0.000000f, 0.000000f, 0.066667f, -0.666667f), DensityProfLayer(0.000000f, 0.000000f, 0.000000f, -0.066667f, 2.666667f)),
-			glm::vec3(0.005802f, 0.013558f, 0.033100f),
-			6360.000000f,
-			glm::vec3(0.003996f, 0.003996f, 0.003996f),
-			6420.000000f,
-			glm::vec3(0.004440f, 0.004440f, 0.004440f),
+			p_renderer.getFrameData().m_atmScatteringData.m_sunIrradiance,
+			(float)m_sunAngularRadius,
+			DensityProfile(DensityProfLayer(rayleighDensity0.m_width, rayleighDensity0.m_expTerm, rayleighDensity0.m_expScale, rayleighDensity0.m_linearTerm, rayleighDensity0.m_constantTerm), 
+				DensityProfLayer(rayleighDensity1.m_width, rayleighDensity1.m_expTerm, rayleighDensity1.m_expScale, rayleighDensity1.m_linearTerm, rayleighDensity1.m_constantTerm)),
+			DensityProfile(DensityProfLayer(mieDensity0.m_width, mieDensity0.m_expTerm, mieDensity0.m_expScale, mieDensity0.m_linearTerm, mieDensity0.m_constantTerm),
+				DensityProfLayer(mieDensity1.m_width, mieDensity1.m_expTerm, mieDensity1.m_expScale, mieDensity1.m_linearTerm, mieDensity1.m_constantTerm)),
+			DensityProfile(DensityProfLayer(absorptionDensity0.m_width, absorptionDensity0.m_expTerm, absorptionDensity0.m_expScale, absorptionDensity0.m_linearTerm, absorptionDensity0.m_constantTerm),
+				DensityProfLayer(absorptionDensity1.m_width, absorptionDensity1.m_expTerm, absorptionDensity1.m_expScale, absorptionDensity1.m_linearTerm, absorptionDensity1.m_constantTerm)),
+			p_renderer.getFrameData().m_atmScatteringData.m_rayleighScattering,
+			p_renderer.getFrameData().m_atmScatteringData.m_atmosphereBottomRadius,
+			p_renderer.getFrameData().m_atmScatteringData.m_mieScattering,
+			p_renderer.getFrameData().m_atmScatteringData.m_atmosphereTopRadius,
+			p_renderer.getFrameData().m_atmScatteringData.m_mieExtinction,
 			0.800000f,
-			glm::vec3(0.000650f, 0.001881f, 0.000085f),
+			p_renderer.getFrameData().m_atmScatteringData.m_absorptionExtinction,
 			-0.207912f,
-			glm::vec3(0.100000f, 0.100000f, 0.100000f));
+			p_renderer.getFrameData().m_atmScatteringData.m_planetGroundColor);
 
 		m_atmScatteringParam = AtmScatteringParameters(
 			m_atmosphereParam,
 			glm::vec3(1.0f, 1.0f, 1.0f),
-			glm::vec3(0.0f, -6360000.0f / 1000.0f, 0.0f),
-			glm::vec2(tan(0.00935f / 2.0f), cos(0.00935f / 2.0f)));
+			p_renderer.getFrameData().m_atmScatteringData.m_planetCenterPosition / (float)m_lengthUnitInMeters,
+			glm::vec2(tan((float)m_sunAngularRadius), cos((float)m_sunAngularRadius)));
 
 	}
 
@@ -68,7 +82,7 @@ public:
 		m_name = "Atmospheric Scattering Rendering Pass";
 		
 		// Initialize atmospheric scattering model
-		InitModel();
+		initModel();
 
 		// Create a property-set used to load sky pass shaders
 		PropertySet skyShaderProperties(Properties::Shaders);
@@ -111,6 +125,7 @@ public:
 
 		// Queue atmosphere parameters buffer to be created
 		m_renderer.queueForLoading(m_atmParamBuffer);
+		m_renderer.m_frameData.m_atmScatteringDataChanged = false;
 
 		// Check for errors and log either a successful or a failed initialization
 		if(returnError == ErrorCode::Success)
@@ -130,12 +145,25 @@ public:
 
 		if(p_sceneObjects.m_processDrawing)
 		{
+			if(m_renderer.getFrameData().m_atmScatteringDataChanged)
+			{
+				m_renderer.m_frameData.m_atmScatteringDataChanged = false;
+
+				updateAtmScatteringData(m_renderer.getFrameData().m_atmScatteringData);
+
+				// Set atmosphere parameters buffer size and data
+				m_atmParamBuffer.m_size = sizeof(AtmScatteringParameters);
+				m_atmParamBuffer.m_updateSize = sizeof(AtmScatteringParameters);
+				m_atmParamBuffer.m_data = (void *)(&m_atmScatteringParam);
+
+				// Update atmosphere parameters buffer on the GPU
+				m_renderer.queueForUpdate(m_atmParamBuffer);
+				m_renderer.passUpdateCommandsToBackend();
+			}
+
 			if(p_renderPassData.m_atmScatDoSkyPass)
 			{
-				//glDisable(GL_DEPTH_TEST);
-				//glEnable(GL_DEPTH_TEST);
 				glDepthFunc(GL_LEQUAL);
-				//glDepthMask(GL_FALSE);
 
 				// Bind output color texture for writing to
 				m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
@@ -166,10 +194,6 @@ public:
 			else
 			{
 				glDepthFunc(GL_GREATER);
-				//glDisable(GL_DEPTH_TEST);
-				//glEnable(GL_DEPTH_TEST);
-				//glDepthFunc(GL_LEQUAL);
-				//glDepthMask(GL_FALSE);
 
 				// Bind output color texture for writing to
 				m_renderer.m_backend.getGeometryBuffer()->bindBufferForWriting(p_renderPassData.getColorOutputMap());
@@ -184,12 +208,6 @@ public:
 				glBindTexture(GL_TEXTURE_3D, m_atmScatteringModel->getSingleMieTexture());
 				glActiveTexture(GL_TEXTURE0 + AtmScatteringTextureType::AtmScatteringTextureType_Transmittance);
 				glBindTexture(GL_TEXTURE_2D, m_atmScatteringModel->getTransmittanceTexture());
-
-
-				auto tex1 = m_atmScatteringModel->getIrradianceTexture();
-				auto tex2 = m_atmScatteringModel->getScatteringTexture();
-				auto tex3 = m_atmScatteringModel->getSingleMieTexture();
-				auto tex4 = m_atmScatteringModel->getTransmittanceTexture();
 
 				m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GBufferTextureType::GBufferInputTexture);
 				m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferPosition, GBufferTextureType::GBufferPosition);
@@ -233,7 +251,8 @@ private:
 		PRECOMPUTED
 	};
 
-	void InitModel();
+	void initModel();
+	void updateAtmScatteringData(const AtmosphericScatteringData &p_atmScatteringData);
 	
 	Luminance m_luminanceType;
 	bool m_useConstantSolarSpectrum;
@@ -244,13 +263,11 @@ private:
 
 	std::unique_ptr<AtmScatteringModel> m_atmScatteringModel;
 
-	double kSunAngularRadius;
-	double kSunSolidAngle;
-	double kLengthUnitInMeters;
+	double m_sunAngularRadius;
+	double m_sunSolidAngle;
+	double m_lengthUnitInMeters;
 
 	std::string m_vertexShaderSource;
-
-	//glm::vec3 m_whitePoint;
 
 	ShaderLoader::ShaderProgram	*m_skyShader;
 	ShaderLoader::ShaderProgram	*m_groundShader;

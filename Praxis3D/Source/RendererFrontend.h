@@ -64,6 +64,7 @@ public:
 	void setRenderFinalToTexture(const bool p_renderToTexture);
 	void setRenderToTextureResolution(const glm::ivec2 p_renderToTextureResolution);
 	void setRenderingPasses(const RenderingPasses &p_renderingPasses);
+	void setAtmScatteringData(const AtmosphericScatteringData &p_atmScatteringData) { m_frameData.m_atmScatteringData = p_atmScatteringData; m_frameData.m_atmScatteringDataChanged = true; }
 	void setAmbientOcclusionData(const AmbientOcclusionData &p_aoData) { m_frameData.m_aoData = p_aoData; }
 	void setMiscSceneData(const MiscSceneData &p_miscSceneData) { m_frameData.m_miscSceneData = p_miscSceneData; }
 	void setShadowMappingData(const ShadowMappingData &p_shadowMappingData) { m_frameData.m_shadowMappingData = p_shadowMappingData; }
@@ -256,6 +257,10 @@ protected:
 			p_shaderBuffer.m_data);
 	}
 
+	inline void queueForUnloading(const UnloadableObjectsContainer &p_unloadableObject)
+	{
+		m_unloadCommands.emplace_back(std::make_pair(p_unloadableObject.m_objectType, p_unloadableObject.m_handle));
+	}
 	inline void queueForUnloading(ShaderLoader::ShaderProgram &p_shader)
 	{
 		m_unloadCommands.emplace_back(std::make_pair(UnloadObjectType::UnloadObjectType_Shader, p_shader.getShaderHandle()));
@@ -355,8 +360,29 @@ protected:
 																m_frameData.m_screenSize.y);
 	}
 
+	// Sets the needed flag for the given anti-aliasing method
+	inline void setAntialiasingMethod(const AntiAliasingType p_antialiasingType)
+	{
+		switch(p_antialiasingType)
+		{
+			case AntiAliasingType_None:
+				Config::m_rendererVar.fxaa_enabled = false;
+				Config::m_rendererVar.msaa_enabled = false;
+				break;
+			case AntiAliasingType_MSAA:
+				Config::m_rendererVar.fxaa_enabled = false;
+				Config::m_rendererVar.msaa_enabled = true;
+				break;
+			case AntiAliasingType_FXAA:
+				Config::m_rendererVar.fxaa_enabled = true;
+				Config::m_rendererVar.msaa_enabled = false;
+				break;
+		}
+	}
+
 	bool m_renderingPassesSet;
 	bool m_guiRenderWasEnabled;
+	AntiAliasingType m_antialiasingType;
 
 	// Renderer backend, serves as an interface layer to GPU
 	RendererBackend m_backend;

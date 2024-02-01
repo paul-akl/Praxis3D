@@ -101,7 +101,7 @@ struct SceneObjects
 	std::vector<LoadableObjectsContainer> m_loadToVideoMemory;
 
 	// Objects that need to be removed from VRAM
-	std::vector<LoadableObjectsContainer> m_unloadFromVideoMemory;
+	std::vector<UnloadableObjectsContainer> m_unloadFromVideoMemory;
 
 	// Should the scene be drawn (otherwise only load commands are processed)
 	bool m_processDrawing;
@@ -239,6 +239,7 @@ public:
 	const inline SceneObjects &getSceneObjects() const { return m_sceneObjects; }
 	inline SceneObjects &getSceneObjects() { return m_sceneObjects; }
 	const inline RenderingPasses &getRenderingPasses() const { return m_renderingPasses; }
+	const inline AtmosphericScatteringData &getAtmScatteringData() const { return m_sceneAtmScatteringData; }
 	const inline AmbientOcclusionData &getAmbientOcclusionData() const { return m_sceneAOData; }
 	const inline MiscSceneData &getMiscSceneData() const { return m_miscSceneData; }
 	const inline ShadowMappingData &getShadowMappingData() const { return m_shadowMappingData; }
@@ -298,6 +299,31 @@ public:
 private:
 	MaterialData loadMaterialData(PropertySet &p_materialProperty, Model::MaterialArrays &p_materialArraysFromModel, MaterialType p_materialType, std::size_t p_meshIndex);
 
+	void loadAtmosphericDensityLayer(const PropertySet &p_densityProperty, AtmosphericScatteringData::AtmosphericDensityLayer &p_densityProfileLayer)
+	{
+		for(decltype(p_densityProperty.getNumProperties()) i = 0, size = p_densityProperty.getNumProperties(); i < size; i++)
+		{
+			switch(p_densityProperty[i].getPropertyID())
+			{
+				case Properties::ConstantTerm:
+					p_densityProfileLayer.m_constantTerm = p_densityProperty[i].getFloat();
+					break;
+				case Properties::LinearTerm:
+					p_densityProfileLayer.m_linearTerm = p_densityProperty[i].getFloat();
+					break;
+				case Properties::ExpScale:
+					p_densityProfileLayer.m_expScale = p_densityProperty[i].getFloat();
+					break;
+				case Properties::ExpTerm:
+					p_densityProfileLayer.m_expTerm = p_densityProperty[i].getFloat();
+					break;
+				case Properties::Width:
+					p_densityProfileLayer.m_width = p_densityProperty[i].getFloat();
+					break;
+			}
+		}
+	}
+
 	// Only one directional light present at a time
 	DirectionalLightDataSet m_directionalLight;
 
@@ -312,6 +338,9 @@ private:
 
 	// Contains misc scene settings that don't fit into other (specific) data containers
 	MiscSceneData m_miscSceneData;
+
+	// Atmospheric light scattering data
+	AtmosphericScatteringData m_sceneAtmScatteringData;
 
 	// Ambient occlusion data
 	AmbientOcclusionData m_sceneAOData;

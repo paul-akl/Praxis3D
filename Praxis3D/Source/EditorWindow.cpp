@@ -1765,8 +1765,11 @@ void EditorWindow::update(const float p_deltaTime)
                                     }
 
                                     // If the model data was modified, send the new data to the ModelComponent
-                                    if(m_selectedEntity.m_modelDataModified)
+                                    if(m_selectedEntity.m_modelDataUpdatedFromFilebrowser || m_selectedEntity.m_modelDataModified)
                                     {
+                                        m_selectedEntity.m_modelDataModified = true;
+                                        m_selectedEntity.m_modelDataUpdatedFromFilebrowser = false;
+
                                         m_systemScene->getSceneLoader()->getChangeController()->sendData(modelComponent, DataType::DataType_ModelsProperties, (void *)&m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_modelsProperties);
                                     }
                                 }
@@ -2663,6 +2666,54 @@ void EditorWindow::update(const float p_deltaTime)
 
                     // Center the separator text
                     ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextAlign, ImVec2(0.5f, 0.5f));
+
+                    int numOfAASettingsWindowItems = 2;                        
+                    switch(Config::m_graphicsVar.antialiasing_type)
+                    {
+                        case AntiAliasingType_MSAA:
+                            numOfAASettingsWindowItems = 3;
+                            break;
+                        case AntiAliasingType_FXAA:
+                            numOfAASettingsWindowItems = 6;
+                            break;
+                    }
+                    if(ImGui::BeginChild("##AASettings", ImVec2(0.0f, (m_fontSize + m_imguiStyle.FramePadding.y * 2 + m_imguiStyle.ItemSpacing.y) * numOfAASettingsWindowItems), true))
+                    {
+                        //ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextBorderSize, 0.0f);
+                        ImGui::SeparatorText("Anti-aliasing settings:");
+                        //ImGui::PopStyleVar(); //ImGuiStyleVar_SeparatorTextBorderSize
+
+                        // Draw ANTI-ALIASING TYPE
+                        drawLeftAlignedLabelText("Anti-aliasing type:", inputWidgetOffset);
+                        ImGui::Combo("##AATypePicker", &Config::m_graphicsVar.antialiasing_type, &m_antialiasingTypeText[0], (int)m_antialiasingTypeText.size());
+
+                        switch(Config::m_graphicsVar.antialiasing_type)
+                        {
+                            case AntiAliasingType_MSAA:
+                                break;
+                            case AntiAliasingType_FXAA:
+                                {
+                                    // Draw ITERATIONS
+                                    drawLeftAlignedLabelText("Iterations:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
+                                    ImGui::InputInt("##FXAAIterationsInput", &Config::m_rendererVar.fxaa_iterations);
+
+                                    // Draw SUBPIXEL QUALITY
+                                    drawLeftAlignedLabelText("Subpixel quality:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
+                                    ImGui::DragFloat("##FXAASubpixelQualityDrag", &Config::m_rendererVar.fxaa_edge_subpixel_quality, 0.01f, 0.0f, 10.0f, "%.5f");
+
+                                    // Draw EDGE THRESHOLD MIN
+                                    drawLeftAlignedLabelText("Edge threshold min:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
+                                    ImGui::DragFloat("##FXAAEdgeThresholdMinDrag", &Config::m_rendererVar.fxaa_edge_threshold_min, 0.0001f, 0.0f, 1.0f, "%.5f");
+
+                                    // Draw EDGE THRESHOLD MAX
+                                    drawLeftAlignedLabelText("Edge threshold max:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
+                                    ImGui::DragFloat("##FXAAEdgeThresholdMaxDrag", &Config::m_rendererVar.fxaa_edge_threshold_max, 0.0001f, 0.0f, 1.0f, "%.5f");
+                                }
+                                break;
+                        }
+                    }
+                    ImGui::EndChild();
+
                     ImGui::SeparatorText("Luminance settings:");
 
                     // Draw TONEMAP METHOD
@@ -3928,8 +3979,7 @@ void EditorWindow::update(const float p_deltaTime)
                                 *m_selectedEntity.m_selectedModelName = m_fileBrowserDialog.m_filePathName.substr(currentDirectory.size());
 
                                 // If the model filename was changed, set a flag for it
-                                m_selectedEntity.m_modelDataModified = true;
-                                m_selectedEntity.m_modelDataUpdateAfterLoading = true;
+                                m_selectedEntity.m_modelDataUpdatedFromFilebrowser = true;
                             }
                         }
                         else
@@ -4305,9 +4355,9 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
         m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), Systems::Changes::Graphics::ActiveCameraID);
     }
 
-    // Draw TEXTURE REPETITION SEAM FIX
-    drawLeftAlignedLabelText("Tex repetition seam fix:", inputWidgetOffset);
-    if(ImGui::Checkbox("##TexRepetitionSeamFixCheckbox", &p_sceneData.m_miscSceneData.m_stochasticSamplingSeamFix) && p_sendChanges)
+    // Draw STOCHASTIC SAMPLING SEAM FIX
+    drawLeftAlignedLabelText("Stochastic sampling seam fix:", inputWidgetOffset * 2.0f);
+    if(ImGui::Checkbox("##StochasticSamplingSeamFixCheckbox", &p_sceneData.m_miscSceneData.m_stochasticSamplingSeamFix) && p_sendChanges)
     {
         miscSceneDataChanged = true;
     }
@@ -4352,6 +4402,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
     float ambientOcclusionWindowHeight = (m_fontSize + m_imguiStyle.FramePadding.y * 2 + m_imguiStyle.ItemSpacing.y);
     ambientOcclusionWindowHeight *= p_sceneData.m_aoData.m_aoType == AmbientOcclusionType::AmbientOcclusionType_None ? 2.0f : 10.0f;
 
+    // Draw AMBIENT OCCLUSION SETTINGS
     if(ImGui::BeginChild("##AmbientOcclusionSettings", ImVec2(0.0f, ambientOcclusionWindowHeight), true))
     {
         ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextBorderSize, 0.0f);
@@ -4449,11 +4500,72 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
             m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_AmbientOcclusionData, (void *)&p_sceneData.m_aoData, false);
             p_sceneData.m_modified = true;
         }
-
     }
     ImGui::EndChild();
 
-    // Calculate ambient occlusion window height
+    // Calculate atmospheric light scattering window height
+    float atmScatteringWindowHeight = (m_fontSize + m_imguiStyle.FramePadding.y * 2 + m_imguiStyle.ItemSpacing.y) * 10.0f;
+
+    // Draw ATMOSPHERIC LIGHT SCATTERING SETTINGS
+    if(ImGui::BeginChild("##AtmScatteringSettings", ImVec2(0.0f, atmScatteringWindowHeight), true))
+    {
+        ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextBorderSize, 0.0f);
+        ImGui::SeparatorText("Atmospheric light scattering:");
+
+        bool atmScatteringDataChanged = false;
+
+        ImGui::SeparatorText("Atmosphere:");
+
+        // Draw BOTTOM RADIUS
+        drawLeftAlignedLabelText("Bottom radius:", inputWidgetOffset);
+        if(ImGui::DragFloat("##AtmBottomRadiusDrag", &p_sceneData.m_atmScatteringData.m_atmosphereBottomRadius, 10.0f, 0.0f, 1000000.0f, "%.1f") && p_sendChanges)
+        {
+            atmScatteringDataChanged = true;
+        }
+
+        // Draw TOP RADIUS
+        drawLeftAlignedLabelText("Top radius:", inputWidgetOffset);
+        if(ImGui::DragFloat("##AtmTopRadiusDrag", &p_sceneData.m_atmScatteringData.m_atmosphereTopRadius, 10.0f, 0.0f, 1000000.0f, "%.1f") && p_sendChanges)
+        {
+            atmScatteringDataChanged = true;
+        }
+
+        ImGui::SeparatorText("Ground:");
+
+        // Draw GROUND COLOR
+        drawLeftAlignedLabelText("Ground color:", inputWidgetOffset);
+        if(ImGui::ColorEdit3("##AtmGroundColorEdit", glm::value_ptr(p_sceneData.m_atmScatteringData.m_planetGroundColor), m_colorEditFlags) && p_sendChanges)
+        {
+            atmScatteringDataChanged = true;
+        }
+
+        // Draw EARTH CENTER
+        drawLeftAlignedLabelText("Earth center:", inputWidgetOffset);
+        if(ImGui::DragFloat3("##AtmEarthCenterDrag", glm::value_ptr(p_sceneData.m_atmScatteringData.m_planetCenterPosition), Config::GUIVar().editor_float_slider_speed) && p_sendChanges)
+        {
+            atmScatteringDataChanged = true;
+        }
+
+        ImGui::SeparatorText("Sun:");
+
+        // Draw SUN SIZE
+        drawLeftAlignedLabelText("Sun size:", inputWidgetOffset);
+        if(ImGui::DragFloat("##AtmSunSizeDrag", &p_sceneData.m_atmScatteringData.m_sunSize, 0.00001f, 0.0f, 10.0f, "%.5f") && p_sendChanges)
+        {
+            atmScatteringDataChanged = true;
+        }
+
+        if(atmScatteringDataChanged)
+        {
+            m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_AtmScatteringData, (void *)&p_sceneData.m_atmScatteringData, false);
+            p_sceneData.m_modified = true;
+        }
+
+        ImGui::PopStyleVar(); //ImGuiStyleVar_SeparatorTextBorderSize
+    }
+    ImGui::EndChild();
+
+    // Calculate cascaded shadow mapping window height
     float shadowMappingWindowHeight = (m_fontSize + m_imguiStyle.FramePadding.y * 2 + m_imguiStyle.ItemSpacing.y);
     shadowMappingWindowHeight *= p_sceneData.m_shadowMappingData.m_shadowMappingEnabled ? 10 + 3 * p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances.size() : 2.0f;
     shadowMappingWindowHeight += m_imguiStyle.ItemSpacing.y;
@@ -4932,6 +5044,7 @@ void EditorWindow::updateSceneData(SceneData &p_sceneData)
     // Set graphics data
     p_sceneData.m_activeCameraID = graphicsScene->getSceneObjects().m_activeCameraID;
     p_sceneData.m_aoData = graphicsScene->getAmbientOcclusionData();
+    p_sceneData.m_atmScatteringData = graphicsScene->getAtmScatteringData();
     p_sceneData.m_miscSceneData = graphicsScene->getMiscSceneData();
     p_sceneData.m_shadowMappingData = graphicsScene->getShadowMappingData();
 

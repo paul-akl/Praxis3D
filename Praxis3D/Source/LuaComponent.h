@@ -1,7 +1,5 @@
 #pragma once
 
-#define SOL_LUAJIT 1
-
 #include "ErrorHandlerLocator.h"
 #include "Filesystem.h"
 #include "InheritanceObjects.h"

@@ -149,6 +149,7 @@ void Config::init()
 	AddVariablePredef(m_graphicsVar, eye_adaption);
 	AddVariablePredef(m_graphicsVar, multisampling);
 	AddVariablePredef(m_graphicsVar, alpha_size);
+	AddVariablePredef(m_graphicsVar, antialiasing_type);
 	AddVariablePredef(m_graphicsVar, ao_blur_num_of_samples);
 	AddVariablePredef(m_graphicsVar, ao_num_of_directions);
 	AddVariablePredef(m_graphicsVar, ao_num_of_samples);
@@ -426,12 +427,16 @@ void Config::init()
 	AddVariablePredef(m_rendererVar, dir_light_quad_rotation_x);
 	AddVariablePredef(m_rendererVar, dir_light_quad_rotation_y);
 	AddVariablePredef(m_rendererVar, dir_light_quad_rotation_z);
+	AddVariablePredef(m_rendererVar, fxaa_edge_threshold_min);
+	AddVariablePredef(m_rendererVar, fxaa_edge_threshold_max);
+	AddVariablePredef(m_rendererVar, fxaa_edge_subpixel_quality);
 	AddVariablePredef(m_rendererVar, parallax_mapping_min_steps);
 	AddVariablePredef(m_rendererVar, parallax_mapping_max_steps);
 	AddVariablePredef(m_rendererVar, csm_num_of_pcf_samples);
 	AddVariablePredef(m_rendererVar, csm_resolution);
 	AddVariablePredef(m_rendererVar, depth_test_func);
 	AddVariablePredef(m_rendererVar, face_culling_mode);
+	AddVariablePredef(m_rendererVar, fxaa_iterations);
 	AddVariablePredef(m_rendererVar, heightmap_combine_channel);
 	AddVariablePredef(m_rendererVar, heightmap_combine_texture);
 	AddVariablePredef(m_rendererVar, max_num_point_lights);
@@ -443,6 +448,8 @@ void Config::init()
 	AddVariablePredef(m_rendererVar, ssao_num_of_samples);
 	AddVariablePredef(m_rendererVar, depth_test);
 	AddVariablePredef(m_rendererVar, face_culling);
+	AddVariablePredef(m_rendererVar, fxaa_enabled);
+	AddVariablePredef(m_rendererVar, msaa_enabled);
 	AddVariablePredef(m_rendererVar, stochastic_sampling_seam_fix);
 
 	// Script variables
@@ -463,6 +470,7 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, transposeViewMatUniform);
 	AddVariablePredef(m_shaderVar, transposeInverseViewMatUniform);
 	AddVariablePredef(m_shaderVar, screenSizeUniform);
+	AddVariablePredef(m_shaderVar, inverseScreenSizeUniform);
 	AddVariablePredef(m_shaderVar, screenNumOfPixelsUniform);
 	AddVariablePredef(m_shaderVar, deltaTimeMSUniform);
 	AddVariablePredef(m_shaderVar, deltaTimeSUniform);
@@ -556,6 +564,11 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, testMatUniform);
 	AddVariablePredef(m_shaderVar, testVecUniform);
 	AddVariablePredef(m_shaderVar, testFloatUniform);
+	AddVariablePredef(m_shaderVar, define_fxaa);
+	AddVariablePredef(m_shaderVar, define_fxaa_edge_threshold_min);
+	AddVariablePredef(m_shaderVar, define_fxaa_edge_threshold_max);
+	AddVariablePredef(m_shaderVar, define_fxaa_iterations);
+	AddVariablePredef(m_shaderVar, define_fxaa_subpixel_quality);
 	AddVariablePredef(m_shaderVar, define_numOfCascades);
 	AddVariablePredef(m_shaderVar, define_numOfPCFSamples);
 	AddVariablePredef(m_shaderVar, define_parallaxMapping);

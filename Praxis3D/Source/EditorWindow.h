@@ -76,6 +76,7 @@ public:
 		for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
 			m_renderingPassesTypeText.push_back(GetString(static_cast<RenderPassType>(i)));
 
+		m_antialiasingTypeText = { "None", "MSAA", "FXAA" };
 		m_ambientOcclusionTypeText = { "None", "SSAO", "HBAO" };
 		m_cascadeDistanceTypeText = { "Units", "Divider" };
 		m_luaVariableTypeStrings = { "null", "bool", "int", "float", "double", "vec2i", "vec2f", "vec3f", "vec4f", "string", "propertyID" };
@@ -702,6 +703,7 @@ private:
 			m_selectedTextureName = nullptr;
 			m_modelDataPointer = nullptr;
 			m_modelDataUpdateAfterLoading = false;
+			m_modelDataUpdatedFromFilebrowser = false;
 
 			clearComponentExistFlags();
 		}
@@ -743,6 +745,7 @@ private:
 		std::string *m_selectedTextureName;
 		std::vector<ModelData> const *m_modelDataPointer;
 		bool m_modelDataUpdateAfterLoading;
+		bool m_modelDataUpdatedFromFilebrowser;
 
 		// RigidBodyComponent data
 		int m_collisionShapeType;
@@ -798,6 +801,7 @@ private:
 		// Graphics scene
 		int m_activeCameraID;
 		AmbientOcclusionData m_aoData;
+		AtmosphericScatteringData m_atmScatteringData;
 		MiscSceneData m_miscSceneData;
 		ShadowMappingData m_shadowMappingData;
 		RenderingPasses m_renderingPasses;
@@ -1180,6 +1184,7 @@ private:
 	ImVec2 m_buttonSizedByFont;
 
 	// String arrays and other data used for ImGui Combo inputs
+	std::vector<const char *> m_antialiasingTypeText;
 	std::vector<const char *> m_ambientOcclusionTypeText;
 	std::vector<const char *> m_cascadeDistanceTypeText;
 	std::vector<const char *> m_physicalMaterialProperties;

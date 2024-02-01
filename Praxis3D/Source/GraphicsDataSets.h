@@ -288,6 +288,15 @@ struct LoadableObjectsContainer
 	std::variant<ShaderLoader::ShaderProgram *, ModelLoader::ModelHandle, TextureLoader2D::Texture2DHandle> m_loadableObject;
 };
 
+struct UnloadableObjectsContainer
+{
+	UnloadableObjectsContainer() : m_objectType(UnloadObjectType::UnloadObjectType_VAO), m_handle(0) { }
+	UnloadableObjectsContainer(const UnloadObjectType p_objectType, const unsigned int p_handle) : m_objectType(p_objectType), m_handle(p_handle) { }
+
+	UnloadObjectType m_objectType;
+	unsigned int m_handle;
+};
+
 struct RenderableMeshData
 {
 	RenderableMeshData(glm::mat4 &p_modelMatrix, MeshData &p_meshData)
@@ -576,13 +585,21 @@ struct AtmScatteringParameters
 	AtmScatteringParameters() :
 		m_whitePoint(1.0f, 1.0f, 1.0f),
 		m_earthCenter(0.0f, -6360000.0f / 1000.0f, 0.0f),
-		m_sunSize(tan(0.01935f / 2.0f), cos(0.01935f / 2.0f)) { }
+		m_sunSize(tan(0.01935f / 2.0f), cos(0.01935f / 2.0f)),
+		m_padding1(0.0f),
+		m_padding2(0.0f),
+		m_padding3(0.0f),
+		m_padding4(0.0f) { }
 
 	AtmScatteringParameters(AtmosphereParameters p_atmosphereParam) : 
 		m_atmosphereParam(p_atmosphereParam),
 		m_whitePoint(1.0f, 1.0f, 1.0f),
 		m_earthCenter(0.0f, -6360000.0f / 1000.0f, 0.0f),
-		m_sunSize(tan(0.01935f / 2.0f), cos(0.01935f / 2.0f)) { }
+		m_sunSize(tan(0.01935f / 2.0f), cos(0.01935f / 2.0f)),
+		m_padding1(0.0f),
+		m_padding2(0.0f),
+		m_padding3(0.0f),
+		m_padding4(0.0f) { }
 	
 	AtmScatteringParameters(
 		AtmosphereParameters p_atmosphereParam,
@@ -592,7 +609,11 @@ struct AtmScatteringParameters
 		m_atmosphereParam(p_atmosphereParam),
 		m_whitePoint(p_whitePoint),
 		m_earthCenter(p_earthCenter),
-		m_sunSize(p_sunSize) { }
+		m_sunSize(p_sunSize),
+		m_padding1(0.0f),
+		m_padding2(0.0f),
+		m_padding3(0.0f),
+		m_padding4(0.0f) { }
 
 	glm::vec3 m_whitePoint;
 	float m_padding1;
