@@ -399,6 +399,7 @@ namespace Properties
 	Code(AmbientOcclusion, ) \
 	Code(Attenuation,) \
 	Code(Bias,) \
+	Code(BiasScale,) \
 	Code(BiasMax,) \
 	Code(BlurSamples,) \
 	Code(BlurSharpness,) \
@@ -426,6 +427,7 @@ namespace Properties
 	Code(EnvironmentMapObject,) \
 	Code(FOV,) \
 	Code(FragmentShader,) \
+	Code(Framing,) \
 	Code(GeometryShader,) \
 	Code(Graphics,) \
 	Code(GraphicsObject,) \
@@ -955,8 +957,6 @@ public:
 			dir_shadow_res_y = 2048;
 			lens_flare_blur_passes = 5;
 			lens_flare_ghost_count = 4;
-			max_num_point_lights = 50;
-			max_num_spot_lights = 50;
 			multisample_buffers = 1;
 			multisample_samples = 1;
 			rendering_res_x = 1600;
@@ -1034,8 +1034,6 @@ public:
 		int dir_shadow_res_y;
 		int lens_flare_blur_passes;
 		int lens_flare_ghost_count;
-		int max_num_point_lights;
-		int max_num_spot_lights;
 		int multisample_buffers;
 		int multisample_samples;
 		int rendering_res_x;
@@ -1125,6 +1123,7 @@ public:
 			editor_button_arrow_down_texture = "button_arrow_down_1.png";
 			editor_button_arrow_up_texture = "button_arrow_up_1.png";
 			editor_button_delete_entry_texture = "button_delete_5.png";
+			editor_button_duplicate_entry_texture = "button_duplicate_1.png";
 			editor_button_gui_sequence_texture = "button_gui_sequence_5.png";
 			editor_button_guizmo_rotate_texture = "button_guizmo_rotate_1.png";
 			editor_button_guizmo_translate_texture = "button_guizmo_translate_2.png";
@@ -1169,6 +1168,7 @@ public:
 		std::string editor_button_arrow_down_texture;
 		std::string editor_button_arrow_up_texture;
 		std::string editor_button_delete_entry_texture;
+		std::string editor_button_duplicate_entry_texture;
 		std::string editor_button_gui_sequence_texture;
 		std::string editor_button_guizmo_rotate_texture;
 		std::string editor_button_guizmo_translate_texture;
@@ -1192,7 +1192,7 @@ public:
 			backward_editor_key = 90;
 			backward_key = 22;
 			center_key = 93;
-			clip_mouse_key = 67;
+			clip_mouse_key = 66;
 			close_window_key = 41;
 			debug_1_key = 58;
 			debug_2_key = 59;
@@ -1201,7 +1201,7 @@ public:
 			escape_key = 41;
 			forward_editor_key = 96;
 			forward_key = 26;
-			fullscreen_key = 66;
+			fullscreen_key = 68;
 			jump_key = 44;
 			left_editor_key = 92;
 			left_strafe_key = 4;
@@ -1215,7 +1215,7 @@ public:
 			sprint_key = 225;
 			up_editor_key = 95;
 			up_key = 44;
-			vsync_key = 68;
+			vsync_key = 67;
 			mouse_filter = false;
 			mouse_warp_mode = false;
 			mouse_jaw = 0.001f;
@@ -1435,6 +1435,7 @@ public:
 			ssao_pass_frag_shader = "ambientOcclusionPassSSAO.frag";
 			ssao_pass_vert_shader = "ambientOcclusionPassSSAO.vert";
 			texture_repetition_noise_texture = "gray_noise_medium.png";
+			csm_bias_scale = 0.0004f;
 			csm_max_shadow_bias = 0.0005f;
 			csm_penumbra_size = 1.42f;
 			csm_penumbra_size_scale_min = 1.0f;
@@ -1461,8 +1462,8 @@ public:
 			fxaa_iterations = 12;
 			heightmap_combine_channel = 3;
 			heightmap_combine_texture = 1;
-			max_num_point_lights = 50;
-			max_num_spot_lights = 10;
+			max_num_point_lights = 150;
+			max_num_spot_lights = 20;
 			objects_loaded_per_frame = 1;
 			parallax_mapping_method = 5;
 			render_to_texture_buffer = GBufferTextureType::GBufferEmissive;
@@ -1542,6 +1543,7 @@ public:
 		std::string ssao_pass_frag_shader;
 		std::string ssao_pass_vert_shader;
 		std::string texture_repetition_noise_texture;
+		float csm_bias_scale;
 		float csm_max_shadow_bias;
 		float csm_penumbra_size;
 		float csm_penumbra_size_scale_min;
@@ -1663,6 +1665,7 @@ public:
 			inputColorMapUniform = "inputColorMap";
 			outputColorMapUniform = "outputColorMap";
 
+			csmBiasScaleUniform = "csmBiasScale";
 			csmDepthMapUniform = "csmDepthMap";
 			csmPenumbraScaleRange = "csmPenumbraScaleRange";
 
@@ -1711,25 +1714,31 @@ public:
 			billboardScaleUniform = "billboardScale";
 			depthTypeUniform = "depthType";
 
+			AODataSetBuffer = "AODataSetBuffer";
+			atmScatParamBuffer = "AtmScatParametersBuffer";
+			CSMDataSetBuffer = "CSMDataSetBuffer";
 			eyeAdaptionRateUniform = "eyeAdaptionRate";
 			eyeAdaptionIntBrightnessUniform = "eyeAdaptionIntBrightness";
-			AODataSetBuffer = "AODataSetBuffer";
-			SSAOSampleBuffer = "SSAOSampleBuffer";
-			CSMDataSetBuffer = "CSMDataSetBuffer";
 			HDRSSBuffer = "HDRBuffer";
-			atmScatParamBuffer = "AtmScatParametersBuffer";
 			lensFlareParametersBuffer = "LensFlareParametersBuffer";
+			materialDataBuffer = "MaterialDataBuffer";
+			SSAOSampleBuffer = "SSAOSampleBuffer";
 
 			testMatUniform = "testMat";
 			testVecUniform = "testVec";
 			testFloatUniform = "testFloat";
 
+			define_alpha_discard = "ALPHA_DISCARD";
 			define_fxaa = "FXAA";
 			define_fxaa_edge_threshold_min = "FXAA_EDGE_THRESHOLD_MIN";
 			define_fxaa_edge_threshold_max = "FXAA_EDGE_THRESHOLD_MAX";
 			define_fxaa_iterations = "FXAA_ITERATIONS";
 			define_fxaa_subpixel_quality = "FXAA_SUBPIXEL_QUALITY";
+			define_maxNumOfPointLights = "MAX_NUM_POINT_LIGHTS";
+			define_maxNumOfSpotLights = "MAX_NUM_SPOT_LIGHTS";
+			define_normalMapCompression = "NORMAL_MAP_COMPRESSION";
 			define_numOfCascades = "NUM_OF_CASCADES";
+			define_numOfMaterialTypes = "NUM_OF_MATERIAL_TYPES";
 			define_numOfPCFSamples = "NUM_OF_PCF_SAMPLES";
 			define_parallaxMapping = "PARALLAX_MAPPING";
 			define_parallaxMappingMethod = "PARALLAX_MAPPING_METHOD";
@@ -1798,7 +1807,8 @@ public:
 		std::string depthMapUniform;
 		std::string inputColorMapUniform;
 		std::string outputColorMapUniform;
-		
+
+		std::string csmBiasScaleUniform;
 		std::string csmDepthMapUniform;
 		std::string csmPenumbraScaleRange;
 
@@ -1847,26 +1857,32 @@ public:
 		std::string billboardScaleUniform;
 		std::string depthTypeUniform;
 
+		std::string AODataSetBuffer;
+		std::string atmScatParamBuffer;
+		std::string CSMDataSetBuffer;
 		std::string eyeAdaptionRateUniform;
 		std::string eyeAdaptionIntBrightnessUniform;
-		std::string AODataSetBuffer;
-		std::string SSAOSampleBuffer;
-		std::string CSMDataSetBuffer;
 		std::string HDRSSBuffer;
-		std::string atmScatParamBuffer;
 		std::string lensFlareParametersBuffer;
+		std::string materialDataBuffer;
+		std::string SSAOSampleBuffer;
 
 		std::string testMatUniform;
 		std::string testVecUniform;
 		std::string testFloatUniform;
 
 		// Shader #define variable names
+		std::string define_alpha_discard;
 		std::string define_fxaa;
 		std::string define_fxaa_edge_threshold_min;
 		std::string define_fxaa_edge_threshold_max;
 		std::string define_fxaa_iterations;
 		std::string define_fxaa_subpixel_quality;
+		std::string define_maxNumOfPointLights;
+		std::string define_maxNumOfSpotLights;
+		std::string define_normalMapCompression;
 		std::string define_numOfCascades;
+		std::string define_numOfMaterialTypes;
 		std::string define_numOfPCFSamples;
 		std::string define_parallaxMapping;
 		std::string define_parallaxMappingMethod;
@@ -1899,7 +1915,15 @@ public:
 			gl_texture_magnification_mipmap = GL_LINEAR;
 			gl_texture_minification_mipmap = GL_LINEAR_MIPMAP_LINEAR;
 			number_of_mipmaps = 50;
+			texture_compression_format_rgb = TextureDataFormat::TextureDataFormat_COMPRESSED_BPTC_RGBA;
+			texture_compression_format_rgba = TextureDataFormat::TextureDataFormat_COMPRESSED_BPTC_RGBA;
+			texture_compression_format_normal = TextureDataFormat::TextureDataFormat_COMPRESSED_RGTC2_RG;
+			texture_downsample_max_resolution = 1024;
+			texture_downsample_scale = 1;
 			generate_mipmaps = true;
+			texture_compression = true;
+			texture_normal_compression = true;
+			texture_downsample = true;
 		}
 
 		std::string default_texture;
@@ -1923,7 +1947,15 @@ public:
 		int gl_texture_magnification_mipmap;
 		int gl_texture_minification_mipmap;
 		int number_of_mipmaps;
+		int texture_compression_format_rgb;
+		int texture_compression_format_rgba;
+		int texture_compression_format_normal;
+		int texture_downsample_scale;
+		int texture_downsample_max_resolution;
 		bool generate_mipmaps;
+		bool texture_compression;
+		bool texture_normal_compression;
+		bool texture_downsample;
 	};
 	struct WindowVariables
 	{
@@ -1937,8 +1969,10 @@ public:
 			window_size_fullscreen_y = 1080;
 			window_size_windowed_x = 800;
 			window_size_windowed_y = 600;
+			borderless = false;
 			fullscreen = false;
 			fullscreen_borderless = true;
+			maximized = false;
 			mouse_captured = true;
 			mouse_release_on_lost_focus = true;
 			resizable = true;
@@ -1954,8 +1988,10 @@ public:
 		int window_size_fullscreen_y;
 		int window_size_windowed_x;
 		int window_size_windowed_y;
+		bool borderless;
 		bool fullscreen;
 		bool fullscreen_borderless;
+		bool maximized;
 		bool mouse_captured;
 		bool mouse_release_on_lost_focus;
 		bool resizable;

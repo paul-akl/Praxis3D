@@ -45,10 +45,12 @@ function update (p_deltaTime)
 	end	
 	
 	if fullscreenKey:isActivated() then
-		-- Invert the corresponding bool
-		fullscreenBool = not fullscreenBool
-		-- Make the window fullscreen/windowed
-		setFullscreen(fullscreenBool)
+		if getEngineState() ~= EngineStateType.Editor then
+			-- Invert the corresponding bool
+			fullscreenBool = not fullscreenBool
+			-- Make the window fullscreen/windowed
+			setFullscreen(fullscreenBool)
+		end
 		-- Deactivate the button, so it's not triggered the next frame, unless pressed again
 		fullscreenKey:deactivate()
 	end	

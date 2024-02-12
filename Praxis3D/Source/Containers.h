@@ -410,6 +410,7 @@ struct ShadowMappingData
 	ShadowMappingData()
 	{
 		m_penumbraScaleRange = glm::vec2(Config::rendererVar().csm_penumbra_size_scale_min, Config::rendererVar().csm_penumbra_size_scale_max);
+		m_csmBiasScale = Config::rendererVar().csm_bias_scale;
 		m_csmCascadePlaneZMultiplier = 10.0f;
 		m_penumbraSize = Config::rendererVar().csm_penumbra_size;
 		m_csmResolution = Config::rendererVar().csm_resolution;
@@ -422,6 +423,7 @@ struct ShadowMappingData
 
 	// Cascaded shadow mapping data
 	glm::vec2 m_penumbraScaleRange;		// Min and Max range of penumbra size scaling based on fragment distance from the camera
+	float m_csmBiasScale;				// Value that the automatically calculated CSM bias in the shader is scaled with
 	float m_csmCascadePlaneZMultiplier;	// Multiplier for CSM cascade planes z clip distance
 	float m_penumbraSize;				// Shadow edge softness
 	unsigned int m_csmResolution;		// Resolution of CSM shadow map depth buffer

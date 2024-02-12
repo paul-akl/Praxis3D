@@ -148,6 +148,7 @@ enum MaterialType : unsigned int
 	MaterialType_Combined,
 	MaterialType_NumOfTypes,
 	MaterialType_Roughness = MaterialType_NumOfTypes,
+	MaterialType_Data,
 	MaterialType_Noise,
 	MaterialType_Metalness,
 	MaterialType_Height,
@@ -205,12 +206,14 @@ enum SSBOBinding : unsigned int
 };
 enum TextureFormat : int
 {
-	TextureFormat_Red	= GL_RED,
-	TextureFormat_Green = GL_GREEN,
-	TextureFormat_Blue	= GL_BLUE,
-	TextureFormat_Alpha = GL_ALPHA,
-	TextureFormat_RGB	= GL_RGB,
-	TextureFormat_RGBA	= GL_RGBA
+	TextureFormat_Red				= GL_RED,
+	TextureFormat_Green				= GL_GREEN,
+	TextureFormat_Blue				= GL_BLUE,
+	TextureFormat_Alpha				= GL_ALPHA,
+	TextureFormat_R					= GL_R,
+	TextureFormat_RG				= GL_RG,
+	TextureFormat_RGB				= GL_RGB,
+	TextureFormat_RGBA				= GL_RGBA
 };
 enum TextureDataType : int
 {
@@ -219,29 +222,68 @@ enum TextureDataType : int
 	TextureDataType_Int				= GL_INT,
 	TextureDataType_UnsignedByte	= GL_UNSIGNED_BYTE
 };
+/*
+BC1 --> GL_COMPRESSED_RGB_S3TC_DXT1_EXT (RGB)
+BC1 --> GL_COMPRESSED_RGBA_S3TC_DXT1_EXT (RGBA)
+BC2 --> GL_COMPRESSED_RGBA_S3TC_DXT3_EXT
+BC3 --> GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
+BC4 --> GL_COMPRESSED_RED_RGTC1
+BC5 --> GL_COMPRESSED_RG_RGTC2
+BC7 --> GL_COMPRESSED_RGBA_BPTC_UNORM
+
+ETC1 --> GL_ETC1_RGB8_OES
+ETC2 --> GL_COMPRESSED_R11_EAC (R)
+ETC2 --> GL_COMPRESSED_RG11_EAC (RG)
+ETC2 --> GL_COMPRESSED_RGB8_ETC2 (RGB)
+ETC2 --> GL_COMPRESSED_RGBA8_ETC2_EAC (RGBA)
+
+PVRTC1 --> GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG (RGB)
+PVRTC1 --> GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG (RGBA)
+PVRTC2 --> GL_COMPRESSED_RGBA_PVRTC_4BPPV2_IMG
+
+ATC	 --> GL_ATC_RGB_AMD (RGB)
+ATC	 --> GL_ATC_RGBA_INTERPOLATED_ALPHA_AMD (RGBA)
+ASTC --> GL_COMPRESSED_RGBA_ASTC_4x4_KHR
+
+BC4 is the same as ATI's ATI1N.
+BC5 is the same as ATI's "3DC", or ATI2N, or "DXN".
+*/
 enum TextureDataFormat : int
 {
-	TextureDataFormat_R8		= GL_R8,
-	TextureDataFormat_R16		= GL_R16,
-	TextureDataFormat_R16F		= GL_R16F,
-	TextureDataFormat_R32F		= GL_R32F,
-	TextureDataFormat_RG8		= GL_RG8,
-	TextureDataFormat_RG16		= GL_RG16,
-	TextureDataFormat_RG16F		= GL_RG16F,
-	TextureDataFormat_RG32F		= GL_RG32F,
-	TextureDataFormat_RGB8		= GL_RGB8,
-	TextureDataFormat_RGB16		= GL_RGB16,
-	TextureDataFormat_RGB16F	= GL_RGB16F,
-	TextureDataFormat_RGB32F	= GL_RGB32F,
-	TextureDataFormat_RGBA8		= GL_RGBA8,
-	TextureDataFormat_RGBA16	= GL_RGBA16,
-	TextureDataFormat_RGBA16SN	= GL_RGBA16_SNORM,
-	TextureDataFormat_RGBA16F	= GL_RGBA16F,
-	TextureDataFormat_RGBA32F	= GL_RGBA32F,
-	TextureDataFormat_R16I		= GL_R16I,
-	TextureDataFormat_R32I		= GL_R32I,
-	TextureDataFormat_R16UI		= GL_R16UI,
-	TextureDataFormat_R32UI		= GL_R32UI
+	TextureDataFormat_R8					= GL_R8,
+	TextureDataFormat_R16					= GL_R16,
+	TextureDataFormat_R16F					= GL_R16F,
+	TextureDataFormat_R32F					= GL_R32F,
+	TextureDataFormat_RG8					= GL_RG8,
+	TextureDataFormat_RG16					= GL_RG16,
+	TextureDataFormat_RG16F					= GL_RG16F,
+	TextureDataFormat_RG32F					= GL_RG32F,
+	TextureDataFormat_RGB8					= GL_RGB8,
+	TextureDataFormat_RGB16					= GL_RGB16,
+	TextureDataFormat_RGB16F				= GL_RGB16F,
+	TextureDataFormat_RGB32F				= GL_RGB32F,
+	TextureDataFormat_RGBA8					= GL_RGBA8,
+	TextureDataFormat_RGBA16				= GL_RGBA16,
+	TextureDataFormat_RGBA16SN				= GL_RGBA16_SNORM,
+	TextureDataFormat_RGBA16F				= GL_RGBA16F,
+	TextureDataFormat_RGBA32F				= GL_RGBA32F,
+	TextureDataFormat_R16I					= GL_R16I,
+	TextureDataFormat_R32I					= GL_R32I,
+	TextureDataFormat_R16UI					= GL_R16UI,
+	TextureDataFormat_R32UI					= GL_R32UI,
+	TextureDataFormat_COMPRESSED_RGB		= GL_COMPRESSED_RGB,
+	TextureDataFormat_COMPRESSED_RGBA		= GL_COMPRESSED_RGBA,
+	TextureDataFormat_COMPRESSED_DXT1_RGB	= GL_COMPRESSED_RGB_S3TC_DXT1_EXT,	// BC1
+	TextureDataFormat_COMPRESSED_DXT1_RGBA	= GL_COMPRESSED_RGBA_S3TC_DXT1_EXT,	// BC1
+	TextureDataFormat_COMPRESSED_DXT3_RGBA	= GL_COMPRESSED_RGBA_S3TC_DXT3_EXT,	// BC2
+	TextureDataFormat_COMPRESSED_DXT5_RGBA	= GL_COMPRESSED_RGBA_S3TC_DXT5_EXT,	// BC3
+	TextureDataFormat_COMPRESSED_RGTC1_R	= GL_COMPRESSED_RED_RGTC1,			// BC4
+	TextureDataFormat_COMPRESSED_RGTC2_RG	= GL_COMPRESSED_RG_RGTC2,			// BC5
+	TextureDataFormat_COMPRESSED_BPTC_RGBA	= GL_COMPRESSED_RGBA_BPTC_UNORM,	// BC7
+	TextureDataFormat_COMPRESSED_EAC_R		= GL_COMPRESSED_R11_EAC,			// ETC2
+	TextureDataFormat_COMPRESSED_EAC_RG		= GL_COMPRESSED_RG11_EAC,			// ETC2
+	TextureDataFormat_COMPRESSED_ETC2_RGB	= GL_COMPRESSED_RGB8_ETC2,			// ETC2
+	TextureDataFormat_COMPRESSED_ETC2_RGBA	= GL_COMPRESSED_RGBA8_ETC2_EAC		// ETC2
 };
 enum TextureFilterType : int
 {
@@ -268,7 +310,8 @@ enum UniformBufferBinding : unsigned int
 	UniformBufferBinding_LensFlareParam,
 	UniformBufferBinding_AODataSet,
 	UniformBufferBinding_SSAOSampleBuffer,
-	UniformBufferBinding_CSMMatrixBuffer
+	UniformBufferBinding_CSMMatrixBuffer,
+	UniformBufferBinding_MaterialDataBuffer
 };
 
 enum FramebufferType : unsigned int

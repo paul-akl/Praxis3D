@@ -37,10 +37,10 @@ public:
 
 	inline void queueForDrawing(const RenderableObjectData &p_object, const unsigned int p_shaderHandle, ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_viewProjMatrix)
 	{
-		// Get the neccessary handles
+		// Get the necessary handles
 		const unsigned int modelHandle = p_object.m_model.getHandle();
 
-		// Calculare model-view-projection matrix
+		// Calculate model-view-projection matrix
 		const glm::mat4 modelViewProjMatrix = p_viewProjMatrix * p_object.m_baseObjectData.m_modelMat;
 
 		// Assign the object data that is later passed to the shaders
@@ -57,22 +57,22 @@ public:
 		// Add a draw command for each mesh, using the same object data
 		for(decltype(p_object.m_model.getNumMeshes()) meshIndex = 0, numMeshes = p_object.m_model.getNumMeshes(); meshIndex < numMeshes; meshIndex++)
 		{
-			m_commands.emplace_back(std::make_pair(
-				sortKey,
-				RendererBackend::DrawCommand(
-					p_uniformUpdater,
-					objectData,
-					p_shaderHandle,
-					modelHandle,
-					p_object.m_model[meshIndex].m_numIndices,
-					p_object.m_model[meshIndex].m_baseVertex,
-					p_object.m_model[meshIndex].m_baseIndex,
-					p_object.m_materials[MaterialType_Diffuse][meshIndex].getHandle(),
-					p_object.m_materials[MaterialType_Normal][meshIndex].getHandle(),
-					p_object.m_materials[MaterialType_Emissive][meshIndex].getHandle(),
-					p_object.m_materials[MaterialType_Combined][meshIndex].getHandle(),
-					p_object.m_baseObjectData.m_textureWrapMode))
-			);
+			//m_commands.emplace_back(std::make_pair(
+			//	sortKey,
+			//	RendererBackend::DrawCommand(
+			//		p_uniformUpdater,
+			//		objectData,
+			//		p_shaderHandle,
+			//		modelHandle,
+			//		p_object.m_model[meshIndex].m_numIndices,
+			//		p_object.m_model[meshIndex].m_baseVertex,
+			//		p_object.m_model[meshIndex].m_baseIndex,
+			//		p_object.m_materials[MaterialType_Diffuse][meshIndex].getHandle(),
+			//		p_object.m_materials[MaterialType_Normal][meshIndex].getHandle(),
+			//		p_object.m_materials[MaterialType_Emissive][meshIndex].getHandle(),
+			//		p_object.m_materials[MaterialType_Combined][meshIndex].getHandle(),
+			//		p_object.m_baseObjectData.m_textureWrapMode))
+			//);
 		}
 	}
 	inline void queueForDrawing(const unsigned int p_shaderHandle, ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_viewProjMatrix)

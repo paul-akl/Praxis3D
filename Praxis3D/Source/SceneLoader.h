@@ -49,6 +49,9 @@ public:
 	// Load a single prefab from file
 	ErrorCode importPrefab(ComponentsConstructionInfo &p_constructionInfo, const std::string &p_filename, const bool p_forceReload = false);
 
+	// Export component as a prefab
+	ErrorCode exportPrefab(const EntityID p_entityID, const std::string &p_filename);
+
 	// Returns all prefabs that have been loaded during scene loading
 	const std::map<std::string, ComponentsConstructionInfo> &getPrefabs() { return m_prefabs; }
 

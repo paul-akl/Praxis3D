@@ -59,7 +59,10 @@ ErrorCode RendererFrontend::init()
 	// Load all default textures from the texture loader, before a scene has started to load
 	auto texturesToLoad = Loaders::texture2D().getDefaultTextures();
 	for(decltype(texturesToLoad.size()) size = texturesToLoad.size(), i = 0; i < size; i++)
+	{
 		queueForLoading(texturesToLoad[i]);
+		texturesToLoad[i].setLoadedToVideoMemory(true);
+	}
 
 	// If eye adaption is disabled, eye adaption rate should be set to 0
 	if(!Config::graphicsVar().eye_adaption)
@@ -328,13 +331,25 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 		switch(p_sceneObjects.m_loadToVideoMemory[i].getType())
 		{
 		case LoadableObjectsContainer::LoadableObjectType_Model:
-			queueForLoading(p_sceneObjects.m_loadToVideoMemory[i].getModelHandle());
+			if(!p_sceneObjects.m_loadToVideoMemory[i].getModelHandle().isLoadedToVideoMemory())
+			{
+				queueForLoading(p_sceneObjects.m_loadToVideoMemory[i].getModelHandle());
+				p_sceneObjects.m_loadToVideoMemory[i].getModelHandle().setLoadedToVideoMemory(true);
+			}
 			break;
 		case LoadableObjectsContainer::LoadableObjectType_Shader:
-			queueForLoading(*p_sceneObjects.m_loadToVideoMemory[i].getShaderProgram());
+			if(!p_sceneObjects.m_loadToVideoMemory[i].getShaderProgram()->isLoadedToVideoMemory())
+			{
+				queueForLoading(*p_sceneObjects.m_loadToVideoMemory[i].getShaderProgram());
+				p_sceneObjects.m_loadToVideoMemory[i].getShaderProgram()->setLoadedToVideoMemory(true);
+			}
 			break;
 		case LoadableObjectsContainer::LoadableObjectType_Texture:
-			queueForLoading(p_sceneObjects.m_loadToVideoMemory[i].getTextureHandle());
+			//if(!p_sceneObjects.m_loadToVideoMemory[i].getTextureHandle().isLoadedToVideoMemory())
+			{
+				queueForLoading(p_sceneObjects.m_loadToVideoMemory[i].getTextureHandle());
+				p_sceneObjects.m_loadToVideoMemory[i].getTextureHandle().setLoadedToVideoMemory(true);
+			}
 			break;
 		}
 	}
@@ -363,19 +378,27 @@ void RendererFrontend::renderFrame(SceneObjects &p_sceneObjects, const float p_d
 			switch(loadableObject.getType())
 			{
 			case LoadableObjectsContainer::LoadableObjectType_Model:
-				queueForLoading(loadableObject.getModelHandle());
-				loadableObject.getModelHandle().setLoadedToVideoMemory(true);
+				if(!loadableObject.getModelHandle().isLoadedToVideoMemory())
+				{
+					queueForLoading(loadableObject.getModelHandle());
+					loadableObject.getModelHandle().setLoadedToVideoMemory(true);
+				}
 				break;
 
 			case LoadableObjectsContainer::LoadableObjectType_Shader:
-				queueForLoading(*loadableObject.getShaderProgram());
-				loadableObject.getShaderProgram()->setLoadedToVideoMemory(true);
+				if(!loadableObject.getShaderProgram()->isLoadedToVideoMemory())
+				{
+					queueForLoading(*loadableObject.getShaderProgram());
+					loadableObject.getShaderProgram()->setLoadedToVideoMemory(true);
+				}
 				break;
 
 			case LoadableObjectsContainer::LoadableObjectType_Texture:
-				queueForLoading(loadableObject.getTextureHandle());
-				loadableObject.getTextureHandle().setLoadedToVideoMemory(true);
-				break;
+				if(!loadableObject.getTextureHandle().isLoadedToVideoMemory())
+				{
+					queueForLoading(loadableObject.getTextureHandle());
+					loadableObject.getTextureHandle().setLoadedToVideoMemory(true);
+				}
 			}
 
 			component.m_objectsToLoad.pop();

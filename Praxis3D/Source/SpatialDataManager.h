@@ -132,7 +132,7 @@ public:
 		// Calculate the world transform if it's outdated
 		if(!m_worldTransformUpToDate)
 		{
-			m_worldTransformNoScale = m_localSpace.m_transformMatNoScale * m_parentTransform;
+			m_worldTransformNoScale = m_parentTransform * m_localSpace.m_transformMatNoScale;
 			m_worldTransformWithScale = glm::scale(m_worldTransformNoScale, m_localSpace.m_spatialData.m_scale);
 
 			m_worldTransformUpToDate = true;

@@ -12,7 +12,7 @@ class AboutWindow
 {
 	//friend class GUIScene;
 public:
-	AboutWindow(SystemScene *p_guiSystemScene) : m_guiSystemScene(p_guiSystemScene), m_logoTexture(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().about_window_logo_texture))
+	AboutWindow(SystemScene *p_guiSystemScene) : m_guiSystemScene(p_guiSystemScene), m_logoTexture(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().about_window_logo_texture, MaterialType::MaterialType_Diffuse))
 	{
 		m_closeButtonDefaultTextColor = ImVec4(0.588f, 0.773f, 0.29f, 1.0f);
 		m_closeButtonHoveredTextColor = ImVec4(0.102f, 0.102f, 0.102f, 1.0f);

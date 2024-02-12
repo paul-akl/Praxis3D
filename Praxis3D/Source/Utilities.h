@@ -58,8 +58,8 @@ namespace Utilities
 	static std::string toStringCpp(const float p_value)
 	{
 		std::stringstream stringstream_ret;
+		stringstream_ret.precision(10);
 		stringstream_ret << p_value;
-		//std::string floatString  = stringstream_ret.str();
 
 		if(rintf(p_value) == p_value)
 			return stringstream_ret.str() + ".0f";

@@ -5,13 +5,13 @@
 class GeometryPass : public RenderPass
 {
 public:
-	GeometryPass(RendererFrontend &p_renderer) : 
+	GeometryPass(RendererFrontend &p_renderer) :
 		RenderPass(p_renderer, RenderPassType::RenderPassType_Geometry),
 		m_shaderGeometry(nullptr),
 		m_shaderGeometryStochastic(nullptr),
 		m_shaderGeometryParallaxMap(nullptr),
 		m_shaderGeometryStochasticParallaxMap(nullptr),
-		m_noiseTexture(Loaders::texture2D().load(Config::filepathVar().engine_assets_path + Config::rendererVar().texture_repetition_noise_texture)),
+		m_noiseTexture(Loaders::texture2D().load(Config::filepathVar().engine_assets_path + Config::rendererVar().texture_repetition_noise_texture, MaterialType::MaterialType_Noise)),
 		m_stochasticSamplingSeamFix(true) { }
 
 	~GeometryPass() { }
@@ -195,13 +195,13 @@ public:
 						// Go over each mesh
 						for(decltype(modelData[modelIndex].m_model.getNumMeshes()) meshIndex = 0, meshSize = modelData[modelIndex].m_model.getNumMeshes(); meshIndex < meshSize; meshIndex++)
 						{
+							// Calculate model-view-projection matrix
+							const glm::mat4 &modelMatrix = p_sceneObjects.m_models.get<SpatialComponent>(entity).getSpatialDataChangeManager().getWorldTransformWithScale();
+							const glm::mat4 modelViewProjMatrix = m_renderer.m_viewProjMatrix * modelMatrix;
+
 							// Only draw active meshes
 							if(modelData[modelIndex].m_meshes[meshIndex].m_active)
 							{
-								// Calculate model-view-projection matrix
-								const glm::mat4 &modelMatrix = p_sceneObjects.m_models.get<SpatialComponent>(entity).getSpatialDataChangeManager().getWorldTransformWithScale();
-								const glm::mat4 modelViewProjMatrix = m_renderer.m_viewProjMatrix * modelMatrix;
-
 								// Choose a shader based on whether the texture repetition and parallax mapping are turned on for the given mesh
 								if(modelData[modelIndex].m_meshes[meshIndex].m_stochasticSampling)
 								{
@@ -263,7 +263,7 @@ public:
 			m_renderer.passDrawCommandsToBackend();
 		}
 	}
-	
+
 private:
 	ErrorCode loadGeometryShaderToMemory(ShaderLoader::ShaderProgram *p_shader)
 	{
@@ -271,19 +271,26 @@ private:
 
 		if(shaderError == ErrorCode::Success)
 		{
+			// Set whether the normal texture compression is enabled in the shader
+			if(ErrorCode shaderVariableError = p_shader->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_normalMapCompression, Config::textureVar().texture_normal_compression ? 1 : 0); shaderVariableError != ErrorCode::Success)
+				ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_normalMapCompression, ErrorSource::Source_GeometryPass);
+
+			// Set the number of material types in the shader
+			if(ErrorCode shaderVariableError = p_shader->setDefineValue(Config::shaderVar().define_numOfMaterialTypes, MaterialType::MaterialType_NumOfTypes); shaderVariableError != ErrorCode::Success)
+				ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_numOfMaterialTypes, ErrorSource::Source_GeometryPass);
+
 			// Disable stochastic sampling in the shader
 			if(ErrorCode shaderVariableError = p_shader->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_stochasticSampling, 0); shaderVariableError != ErrorCode::Success)
 				ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_stochasticSampling, ErrorSource::Source_GeometryPass);
 
 			// Disable parallax mapping in the shader
-			if(ErrorCode shaderVariableError = p_shader->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_parallaxMapping, 0); shaderVariableError != ErrorCode::Success)
+			if(ErrorCode shaderVariableError = p_shader->setDefineValue(Config::shaderVar().define_parallaxMapping, 0); shaderVariableError != ErrorCode::Success)
 				ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_parallaxMapping, ErrorSource::Source_GeometryPass);
 
 			// Queue the shader to be loaded to GPU
 			m_renderer.queueForLoading(*p_shader);
-
 		}
-		
+
 		return shaderError;
 	}
 	ErrorCode loadGeometryStochasticShaderToMemory(ShaderLoader::ShaderProgram *p_shader)
@@ -292,12 +299,20 @@ private:
 
 		if(shaderError == ErrorCode::Success)
 		{
+			// Set whether the normal texture compression is enabled in the shader
+			if(ErrorCode shaderVariableError = p_shader->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_normalMapCompression, Config::textureVar().texture_normal_compression ? 1 : 0); shaderVariableError != ErrorCode::Success)
+				ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_normalMapCompression, ErrorSource::Source_GeometryPass);
+
+			// Set the number of material types in the shader
+			if(ErrorCode shaderVariableError = p_shader->setDefineValue(Config::shaderVar().define_numOfMaterialTypes, MaterialType::MaterialType_NumOfTypes); shaderVariableError != ErrorCode::Success)
+				ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_numOfMaterialTypes, ErrorSource::Source_GeometryPass);
+
 			// Enable stochastic sampling in the shader
 			if(ErrorCode shaderVariableError = p_shader->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_stochasticSampling, 1); shaderVariableError != ErrorCode::Success)
 				ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_stochasticSampling, ErrorSource::Source_GeometryPass);
 
 			// Disable parallax mapping in the shader
-			if(ErrorCode shaderVariableError = p_shader->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_parallaxMapping, 0); shaderVariableError != ErrorCode::Success)
+			if(ErrorCode shaderVariableError = p_shader->setDefineValue(Config::shaderVar().define_parallaxMapping, 0); shaderVariableError != ErrorCode::Success)
 				ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_parallaxMapping, ErrorSource::Source_GeometryPass);
 
 			// Set stochastic sampling mipmap seam fix flag in the shader
@@ -306,7 +321,6 @@ private:
 
 			// Queue the shader to be loaded to GPU
 			m_renderer.queueForLoading(*p_shader);
-
 		}
 
 		return shaderError;
@@ -317,6 +331,14 @@ private:
 
 		if(shaderError == ErrorCode::Success)
 		{
+			// Set whether the normal texture compression is enabled in the shader
+			if(ErrorCode shaderVariableError = p_shader->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_normalMapCompression, Config::textureVar().texture_normal_compression ? 1 : 0); shaderVariableError != ErrorCode::Success)
+				ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_normalMapCompression, ErrorSource::Source_GeometryPass);
+
+			// Set the number of material types in the shader
+			if(ErrorCode shaderVariableError = p_shader->setDefineValue(Config::shaderVar().define_numOfMaterialTypes, MaterialType::MaterialType_NumOfTypes); shaderVariableError != ErrorCode::Success)
+				ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_numOfMaterialTypes, ErrorSource::Source_GeometryPass);
+
 			// Disable stochastic sampling in the shader
 			if(ErrorCode shaderVariableError = p_shader->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_stochasticSampling, 0); shaderVariableError != ErrorCode::Success)
 				ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_stochasticSampling, ErrorSource::Source_GeometryPass);
@@ -331,7 +353,6 @@ private:
 
 			// Queue the shader to be loaded to GPU
 			m_renderer.queueForLoading(*p_shader);
-
 		}
 
 		return shaderError;
@@ -342,6 +363,14 @@ private:
 
 		if(shaderError == ErrorCode::Success)
 		{
+			// Set whether the normal texture compression is enabled in the shader
+			if(ErrorCode shaderVariableError = p_shader->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_normalMapCompression, Config::textureVar().texture_normal_compression ? 1 : 0); shaderVariableError != ErrorCode::Success)
+				ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_normalMapCompression, ErrorSource::Source_GeometryPass);
+
+			// Set the number of material types in the shader
+			if(ErrorCode shaderVariableError = p_shader->setDefineValue(Config::shaderVar().define_numOfMaterialTypes, MaterialType::MaterialType_NumOfTypes); shaderVariableError != ErrorCode::Success)
+				ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_numOfMaterialTypes, ErrorSource::Source_GeometryPass);
+
 			// Enable stochastic sampling in the shader
 			if(ErrorCode shaderVariableError = p_shader->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_stochasticSampling, 1); shaderVariableError != ErrorCode::Success)
 				ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_stochasticSampling, ErrorSource::Source_GeometryPass);
@@ -360,14 +389,13 @@ private:
 
 			// Queue the shader to be loaded to GPU
 			m_renderer.queueForLoading(*p_shader);
-
 		}
 
 		return shaderError;
 	}
 
 	ShaderLoader::ShaderProgram *m_shaderGeometry;
-	ShaderLoader::ShaderProgram	*m_shaderGeometryStochastic;
+	ShaderLoader::ShaderProgram *m_shaderGeometryStochastic;
 	ShaderLoader::ShaderProgram *m_shaderGeometryParallaxMap;
 	ShaderLoader::ShaderProgram *m_shaderGeometryStochasticParallaxMap;
 

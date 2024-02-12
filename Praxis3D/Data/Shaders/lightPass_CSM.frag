@@ -97,6 +97,7 @@ uniform sampler2D matPropertiesMap;
 #if SHADOW_MAPPING
 uniform sampler2DArray csmDepthMap;
 uniform vec2 csmPenumbraScaleRange;
+uniform float csmBiasScale;
 #endif
 
 uniform mat4 lightMatrixTest;
@@ -320,7 +321,7 @@ float calcCascadedShadow(vec3 p_worldPos, vec3 p_normal, vec3 p_lightDirection)
     }
 	
     // Calculate bias based on slope
-	float bias = 0.05 * tan(acos(dot(p_normal, p_lightDirection)));
+	float bias = csmBiasScale * tan(acos(dot(p_normal, p_lightDirection)));
 	bias = clamp(bias, 0.0, m_csmDataSet[layer].m_maxBias);
 	
 	// Calculate the poisson sampling scale
@@ -353,8 +354,8 @@ void main(void)
 	vec2 texCoord = calcTexCoord();
 	// Get the emissive texture color and convert it to linear space
 	vec3 emissiveColor = pow(texture(emissiveMap, texCoord).xyz, vec3(gamma));
-	// Get diffuse color (full-bright) from diffuse buffer and convert it to linear space
-	vec3 diffuseColor = pow(texture(diffuseMap, texCoord).xyz, vec3(gamma));
+	// Get diffuse color (full-bright) from diffuse buffer
+	vec3 diffuseColor = texture(diffuseMap, texCoord).xyz;
 	// Get pixel's position in world space
 	vec3 worldPos = texture(positionMap, texCoord).xyz;
 	// Get normal (in world space) and normalize it to minimize floating point approximation errors

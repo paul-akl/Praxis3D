@@ -13,7 +13,9 @@ public:
 		SingleMeshData()
 		{
 			m_meshMaterials.resize(MaterialType::MaterialType_NumOfTypes);
-			m_meshMaterialsScales.resize(MaterialType::MaterialType_NumOfTypes);
+			m_meshMaterialScales.resize(MaterialType::MaterialType_NumOfTypes, glm::vec2(1.0f));
+			m_meshMaterialFraming.resize(MaterialType::MaterialType_NumOfTypes, glm::vec2(0.0f));
+			m_meshMaterialColors.resize(MaterialType::MaterialType_NumOfTypes, glm::vec4(1.0f));
 
 			m_alphaThreshold = Config::graphicsVar().alpha_threshold;
 			m_emissiveIntensity = Config::graphicsVar().emissive_multiplier;
@@ -27,7 +29,9 @@ public:
 
 		SingleMeshData(
 			const std::vector<std::string> &p_meshMaterials, 
-			const std::vector<glm::vec2> &p_meshMaterialsScales, 
+			const std::vector<glm::vec2> &p_meshMaterialsScales,
+			const std::vector<glm::vec2> &p_meshMaterialFraming,
+			const std::vector<glm::vec4> &p_meshMaterialsColor,
 			const std::string &p_meshName, 
 			const float p_alphaThreshold, 
 			const float p_emissiveIntensity, 
@@ -38,7 +42,9 @@ public:
 			const bool p_stochasticSampling,
 			const TextureWrapType p_textureWrapMode) :
 			m_meshMaterials(p_meshMaterials),
-			m_meshMaterialsScales(p_meshMaterialsScales),
+			m_meshMaterialScales(p_meshMaterialsScales),
+			m_meshMaterialFraming(p_meshMaterialFraming),
+			m_meshMaterialColors(p_meshMaterialsColor),
 			m_meshName(p_meshName),
 			m_alphaThreshold(p_alphaThreshold),
 			m_emissiveIntensity(p_emissiveIntensity),
@@ -50,7 +56,9 @@ public:
 			m_textureWrapMode(p_textureWrapMode) { }
 
 		std::vector<std::string> m_meshMaterials;
-		std::vector<glm::vec2> m_meshMaterialsScales;
+		std::vector<glm::vec2> m_meshMaterialScales;
+		std::vector<glm::vec2> m_meshMaterialFraming;
+		std::vector<glm::vec4> m_meshMaterialColors;
 		std::string m_meshName;
 		float m_alphaThreshold;
 		float m_emissiveIntensity;
@@ -210,35 +218,43 @@ public:
 				// Go over each mesh
 				for(decltype(newModelData.m_model.getMeshSize()) meshIndex = 0, meshSize = newModelData.m_model.getMeshSize(); meshIndex < meshSize; meshIndex++)
 				{
+					// Define material data and material properties
+					std::vector<TextureLoader2D::Texture2DHandle> materials;// (MaterialType::MaterialType_NumOfTypes, Loaders::texture2D().getDefaultTexture());
+					materials.reserve(MaterialType::MaterialType_NumOfTypes);
+					MaterialData materialData;
+
 					if(m_modelsProperties->m_models[modelIndex].m_meshData.size() > meshIndex)// && m_modelsProperties->m_models[modelIndex].m_present[meshIndex] == true)
 					{
-						MaterialData materials[MaterialType::MaterialType_NumOfTypes];
-
 						// Go over each material type
 						for(unsigned int iMatType = 0; iMatType < MaterialType::MaterialType_NumOfTypes; iMatType++)
 						{
-							auto filename = materialArrayFromModel.m_materials[iMatType][meshIndex].m_filename;
+							std::string filename = materialArrayFromModel.m_materials[iMatType][meshIndex].m_filename;
 
 							if(!m_modelsProperties->m_models[modelIndex].m_meshData[meshIndex].m_meshMaterials[iMatType].empty())
 							{
 								filename = m_modelsProperties->m_models[modelIndex].m_meshData[meshIndex].m_meshMaterials[iMatType];
 							}
 
-							materials[iMatType].m_texture = Loaders::texture2D().load(filename, static_cast<MaterialType>(iMatType), false);
+							materials.push_back(Loaders::texture2D().load(filename, static_cast<MaterialType>(iMatType), false));
 
-							if(!materials[iMatType].m_texture.isLoadedToMemory())
+							if(!materials[iMatType].isLoadedToMemory())
 								m_texturesNeedLoading = true;
 
-							materials[iMatType].m_textureScale = m_modelsProperties->m_models[modelIndex].m_meshData[meshIndex].m_meshMaterialsScales[iMatType];
+							materialData.m_parameters[iMatType].m_scale = m_modelsProperties->m_models[modelIndex].m_meshData[meshIndex].m_meshMaterialScales[iMatType];
 
-							if(materials[iMatType].m_textureScale == glm::vec2(0.0f, 0.0f))
-								materials[iMatType].m_textureScale = glm::vec2(Config::graphicsVar().texture_tiling_factor, Config::graphicsVar().texture_tiling_factor);
+							if(materialData.m_parameters[iMatType].m_scale == glm::vec2(0.0f, 0.0f))
+								materialData.m_parameters[iMatType].m_scale = glm::vec2(Config::graphicsVar().texture_tiling_factor, Config::graphicsVar().texture_tiling_factor);
+
+							materialData.m_parameters[iMatType].m_framing = m_modelsProperties->m_models[modelIndex].m_meshData[meshIndex].m_meshMaterialFraming[iMatType];
+
+							materialData.m_parameters[iMatType].m_color =  m_modelsProperties->m_models[modelIndex].m_meshData[meshIndex].m_meshMaterialColors[iMatType];
 						}
 
 						// Add the data for this mesh. Include materials loaded from the model itself, if they were present, otherwise, include default textures instead
 						newModelData.m_meshes.push_back(MeshData(
 							newModelData.m_model.getMeshArray()[meshIndex],
 							materials,
+							materialData,
 							m_modelsProperties->m_models[modelIndex].m_meshData[meshIndex].m_heightScale,
 							m_modelsProperties->m_models[modelIndex].m_meshData[meshIndex].m_alphaThreshold,
 							m_modelsProperties->m_models[modelIndex].m_meshData[meshIndex].m_emissiveIntensity,
@@ -249,33 +265,29 @@ public:
 					}
 					else
 					{
-						// Define material data and material properties
-						MaterialData materials[MaterialType::MaterialType_NumOfTypes];
-
 						// Go over each material type
 						for(unsigned int iMatType = 0; iMatType < MaterialType::MaterialType_NumOfTypes; iMatType++)
 						{
-							auto filename = materialArrayFromModel.m_materials[iMatType][meshIndex].m_filename;
+							std::string filename = materialArrayFromModel.m_materials[iMatType][meshIndex].m_filename;
 
-							materials[iMatType].m_texture = Loaders::texture2D().load(filename, static_cast<MaterialType>(iMatType), false);
+							materials.push_back(Loaders::texture2D().load(filename, static_cast<MaterialType>(iMatType), false));
 
-							if(!materials[iMatType].m_texture.isLoadedToMemory())
+							if(!materials[iMatType].isLoadedToMemory())
 								m_texturesNeedLoading = true;
 
-							materials[iMatType].m_textureScale = glm::vec2(Config::graphicsVar().texture_tiling_factor, Config::graphicsVar().texture_tiling_factor);
+							materialData.m_parameters[iMatType].m_scale = glm::vec2(Config::graphicsVar().texture_tiling_factor, Config::graphicsVar().texture_tiling_factor);
 						}
 
 						newModelData.m_meshes.push_back(MeshData(
 							newModelData.m_model.getMeshArray()[meshIndex], 
-							materials, 
+							materials,
+							materialData,
 							Config::graphicsVar().height_scale, 
 							Config::graphicsVar().alpha_threshold, 
 							Config::graphicsVar().emissive_multiplier, 
 							false, Config::graphicsVar().stochastic_sampling_scale, 
 							TextureWrapType::TextureWrapType_Repeat, 
 							true));
-
-						//ErrHandlerLoc::get().log(ErrorCode::Load_to_memory_success, ErrorSource::Source_ModelComponent, m_modelsProperties->m_models[modelIndex].m_modelName);
 					}
 				}
 			}
@@ -328,7 +340,7 @@ public:
 			{
 				// Go over each material type
 				for(unsigned int iMatType = 0; iMatType < MaterialType::MaterialType_NumOfTypes; iMatType++)
-					m_modelData[modelIndex].m_meshes[meshIndex].m_materials[iMatType].m_texture.loadToMemory();
+					m_modelData[modelIndex].m_meshes[meshIndex].m_materials[iMatType].loadToMemory();
 			}
 		}
 
@@ -341,6 +353,51 @@ public:
 		{
 			delete m_modelsProperties;
 			m_modelsProperties = nullptr;
+		}
+	}
+
+	// Unload all assets from RAM (does not unload from GPU VRAM)
+	inline void unloadFromMemory()
+	{
+		unloadModelsFromMemory();
+		unloadTexturesFromMemory();
+	}
+
+	// Unload all models from RAM (does not unload from GPU VRAM)
+	void unloadModelsFromMemory()
+	{
+		// Go over each model
+		for(decltype(m_modelData.size()) modelIndex = 0, modelSize = m_modelData.size(); modelIndex < modelSize; modelIndex++)
+		{
+			//m_modelData[modelIndex].m_model.u
+			//// Load the model to memory, to be able to access all of its meshes 
+			//auto modelLoadError = m_modelData[modelIndex].m_model.loadToMemory();
+
+			//if(modelLoadError == ErrorCode::Success)
+			//	ErrHandlerLoc::get().log(ErrorCode::Load_to_memory_success, ErrorSource::Source_ModelComponent, m_modelsProperties->m_models[modelIndex].m_modelName);
+			//else
+			//	ErrHandlerLoc::get().log(ErrorCode::Load_to_memory_failure, ErrorSource::Source_ModelComponent, m_modelsProperties->m_models[modelIndex].m_modelName);
+		}
+	}
+
+	// Unload all textures from RAM (does not unload from GPU VRAM)
+	void unloadTexturesFromMemory()
+	{
+		// Go over each model
+		for(decltype(m_modelData.size()) modelIndex = 0, modelSize = m_modelData.size(); modelIndex < modelSize; modelIndex++)
+		{
+			// Get the material arrays that were loaded from the model file
+			auto &materialArrayFromModel = m_modelData[modelIndex].m_model.getMaterialArrays();
+
+			// Go over each mesh
+			for(decltype(m_modelData[modelIndex].m_meshes.size()) meshIndex = 0, meshSize = m_modelData[modelIndex].m_meshes.size(); meshIndex < meshSize; meshIndex++)
+			{
+				// Go over each material type
+				for(unsigned int iMatType = 0; iMatType < MaterialType::MaterialType_NumOfTypes; iMatType++)
+					if(m_modelData[modelIndex].m_meshes[meshIndex].m_materials[iMatType].isLoadedToMemory() && m_modelData[modelIndex].m_meshes[meshIndex].m_materials[iMatType].isLoadedToVideoMemory())
+						if(auto error = m_modelData[modelIndex].m_meshes[meshIndex].m_materials[iMatType].unloadFromMemory(); error != ErrorCode::Success)
+							ErrHandlerLoc::get().log(error, m_name, ErrorSource::Source_ModelComponent);
+			}
 		}
 	}
 
@@ -392,7 +449,7 @@ public:
 			// Go over each mesh -> go over each material -> add texture handle to the loadable object list
 			for(decltype(m_modelData[modelIndex].m_meshes.size()) meshSize = m_modelData[modelIndex].m_meshes.size(), meshIndex = 0; meshIndex < meshSize; meshIndex++)
 				for(unsigned int materialIndex = 0; materialIndex < MaterialType::MaterialType_NumOfTypes; materialIndex++)
-					loadableObjects.emplace_back(m_modelData[modelIndex].m_meshes[meshIndex].m_materials[materialIndex].m_texture);
+					loadableObjects.emplace_back(m_modelData[modelIndex].m_meshes[meshIndex].m_materials[materialIndex]);
 		}
 
 		return loadableObjects;
@@ -411,7 +468,7 @@ public:
 			{
 				for(unsigned int materialIndex = 0; materialIndex < MaterialType::MaterialType_NumOfTypes; materialIndex++)
 				{
-					if(!m_modelData[modelIndex].m_meshes[meshIndex].m_materials[materialIndex].m_texture.isLoadedToVideoMemory())
+					if(!m_modelData[modelIndex].m_meshes[meshIndex].m_materials[materialIndex].isLoadedToVideoMemory())
 						return;
 				}
 			}
@@ -447,136 +504,54 @@ public:
 				// Declaration of material and scale vectors, that are filled in during the material loop
 				std::vector<std::string> meshMaterials;
 				std::vector<glm::vec2> meshMaterialScales;
+				std::vector<glm::vec2> meshMaterialFramings;
+				std::vector<glm::vec4> meshMaterialColors;
 				bool materialPresent = false;
 
 				// Loop over each material
 				for(unsigned int materialIndex = 0; materialIndex < MaterialType::MaterialType_NumOfTypes; materialIndex++)
 				{
 					// Mark material as present if any of the textures are not default
-					if(!Loaders::texture2D().isTextureDefault(m_modelData[modelIndex].m_meshes[meshIndex].m_materials[materialIndex].m_texture))
+					if(!Loaders::texture2D().isTextureDefault(m_modelData[modelIndex].m_meshes[meshIndex].m_materials[materialIndex]))
 						materialPresent = true;
 
 					// Add texture filename
-					meshMaterials.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_materials[materialIndex].m_texture.getFilename());
+					meshMaterials.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_materials[materialIndex].getFilename());
 
 					// Add texture scale
-					meshMaterialScales.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_materials[materialIndex].m_textureScale);
+					meshMaterialScales.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_materialData.m_parameters[materialIndex].m_scale);
+
+					// Add texture framing
+					meshMaterialFramings.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_materialData.m_parameters[materialIndex].m_framing);
+
+					// Add texture color
+					meshMaterialColors.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_materialData.m_parameters[materialIndex].m_color);
 				}
 
 				newModelEntry.m_meshData.push_back(SingleMeshData(
 					meshMaterials,
 					meshMaterialScales,
+					meshMaterialFramings,
+					meshMaterialColors,
 					m_modelData[modelIndex].m_model.getMeshName(meshIndex),
 					m_modelData[modelIndex].m_meshes[meshIndex].m_alphaThreshold,
 					m_modelData[modelIndex].m_meshes[meshIndex].m_emissiveIntensity,
 					m_modelData[modelIndex].m_meshes[meshIndex].m_heightScale,
-					m_modelData[modelIndex].m_meshes[meshIndex].m_rextureRepetitionScale,
+					m_modelData[modelIndex].m_meshes[meshIndex].m_textureRepetitionScale,
 					m_modelData[modelIndex].m_meshes[meshIndex].m_active,
 					materialPresent,
 					m_modelData[modelIndex].m_meshes[meshIndex].m_stochasticSampling,
 					m_modelData[modelIndex].m_meshes[meshIndex].m_textureWrapMode
 				));
-
-				//newModelEntry.m_meshMaterials.push_back(meshMaterials);
-				//newModelEntry.m_meshMaterialsScale.push_back(meshMaterialScales);
-				//newModelEntry.m_meshNames.push_back(m_modelData[modelIndex].m_model.getMeshName(meshIndex));
-				//newModelEntry.m_alphaThreshold.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_alphaThreshold);
-				//newModelEntry.m_emissiveIntensity.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_emissiveIntensity);
-				//newModelEntry.m_heightScale.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_heightScale);
-				//newModelEntry.m_active.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_active);
-				//newModelEntry.m_present.push_back(materialPresent);
-				//newModelEntry.m_textureWrapMode.push_back(m_modelData[modelIndex].m_meshes[meshIndex].m_textureWrapMode);
-				//newModelEntry.m_numOfMeshes++;
-
-				//const std::vector<std::string> &p_meshMaterials,
-				//	const std::vector<glm::vec2> &p_meshMaterialsScales,
-				//	const std::string &p_meshName,
-				//	const float p_alphaThreshold,
-				//	const float p_emissiveIntensity,
-				//	const float p_heightScale,
-				//	const float p_textureRepetitionScale,
-				//	const bool p_active,
-				//	const bool p_present,
-				//	const bool p_textureRepetition,
-				//	const TextureWrapType p_textureWrapMode) :
 			}
 		}
-	}
+ 	}
 
 	const inline void resetLoadPending() { m_loadPending = false; }
 	const inline void resetModelsNeedsLoading() { m_modelsNeedLoading = false; }
 	const inline void resetTexturesNeedsLoading() { m_texturesNeedLoading = false; }
 
 private:
-	inline MaterialData loadMaterialData(PropertySet &p_materialProperty, Model::MaterialArrays &p_materialArraysFromModel, MaterialType p_materialType, std::size_t p_meshIndex)
-	{
-		// Declare the material data that is to be returned and a flag showing whether the material data was loaded successfully
-		MaterialData newMaterialData;
-		bool materialWasLoaded = false;
-
-		// Try to load the material from the filename retrieved from properties
-		if(p_materialProperty)
-		{
-			// Get texture filename property, check if it is valid
-			auto filenameProperty = p_materialProperty.getPropertyByID(Properties::Filename);
-			if(filenameProperty.isVariableTypeString())
-			{
-				// Get texture filename string, check if it is valid
-				auto filename = filenameProperty.getString();
-				if(!filename.empty())
-				{
-					// Get the texture and load it to memory
-					auto materialHandle = Loaders::texture2D().load(filename, p_materialType, false);
-					auto materialLoadError = materialHandle.loadToMemory();
-
-					// Check if the texture was loaded successfully
-					if(materialLoadError == ErrorCode::Success)
-					{
-						newMaterialData.m_texture = materialHandle;
-						materialWasLoaded = true;
-					}
-					else
-					{
-						ErrHandlerLoc::get().log(materialLoadError, ErrorSource::Source_Renderer);
-					}
-				}
-			}
-		}
-
-		// Try to load the material from the filename retrieved from the model
-		if(!materialWasLoaded)
-		{
-			// Check if there are enough materials, and if the material isn't default
-			if(p_materialArraysFromModel.m_numMaterials > p_meshIndex 
-				&& !p_materialArraysFromModel.m_materials[p_materialType][p_meshIndex].isEmpty() 
-				&& !p_materialArraysFromModel.m_materials[p_materialType][p_meshIndex].isDefaultMaterial())
-			{
-				// Get the texture and load it to memory
-				auto materialHandle = Loaders::texture2D().load(p_materialArraysFromModel.m_materials[p_materialType][p_meshIndex].m_filename, p_materialType, false);
-				auto materialLoadError = materialHandle.loadToMemory();
-				
-				// Check if the texture was loaded successfully
-				if(materialLoadError == ErrorCode::Success)
-				{
-					newMaterialData.m_texture = materialHandle;
-					materialWasLoaded = true;
-				}
-				else
-				{
-					ErrHandlerLoc::get().log(materialLoadError, ErrorSource::Source_Renderer);
-				}
-			}
-		}
-		
-		// All attempts to load the material were unsuccessful, so load a default material
-		if(!materialWasLoaded)
-		{
-			newMaterialData.m_texture = Loaders::texture2D().getDefaultTexture(p_materialType);
-		}
-
-		// Return the newly loaded material data
-		return newMaterialData;
-	}
 	inline void adjustMeshArraySizes()
 	{
 		// Go over each model

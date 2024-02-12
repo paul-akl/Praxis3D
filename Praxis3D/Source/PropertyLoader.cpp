@@ -268,6 +268,7 @@ void PropertyLoader::loadProperty(PropertySet &p_propertySet, const Properties::
 
 	unsigned int commas = 0;
 	unsigned int decimalPoints = 0;
+	unsigned int fCharacters = 0;
 	bool letterPresent = false;
 
 	// Iterate over the string character by character and count commas and decimal points
@@ -287,7 +288,6 @@ void PropertyLoader::loadProperty(PropertySet &p_propertySet, const Properties::
 				if(!(p_string[i] == ',' && i - 1 >= 0 && (isdigit(p_string.c_str()[i - 1]) || p_string[i - 1] == 'f') && i + 1 < size && (isdigit(p_string.c_str()[i + 1]) || p_string[i + 1] == ' ')))
 				{
 					// Allow letter "f" at the end of a float (can be between a digit and a comma or a space)
-					//if(!(p_string[i] == 'f' && i == size - 1 && i + 1 < size && (p_string[i + 1] == ',' || p_string[i + 1] == ' ')))
 					if(!(p_string[i] == 'f' && i - 1 >= 0 && isdigit(p_string.c_str()[i - 1])))
 					{
 						// Allow letter "e" for exponential notation in a float (must be followed by a minus or a plus sign)
@@ -307,6 +307,13 @@ void PropertyLoader::loadProperty(PropertySet &p_propertySet, const Properties::
 
 							return;
 						}
+						else
+						{
+							// Skip the next character after exponential notation "e" (that is minus or a plus sign)
+							i++;
+							letterPresent = true;
+							continue;
+						}
 					}
 				}
 			}
@@ -319,6 +326,8 @@ void PropertyLoader::loadProperty(PropertySet &p_propertySet, const Properties::
 			decimalPoints++;
 		if(p_string[i] == ',')
 			commas++;
+		if(p_string[i] == 'f')
+			fCharacters++;
 	}
 
 	// _________________
@@ -333,7 +342,7 @@ void PropertyLoader::loadProperty(PropertySet &p_propertySet, const Properties::
 	// _________________
 	//|	  Vec4 value	|
 	//|_________________|
-	if(decimalPoints <= 4 && commas == 3)
+	if(decimalPoints > 3 && commas == 3)
 	{
 		std::string xString, yString, zString, wString;
 
@@ -357,7 +366,7 @@ void PropertyLoader::loadProperty(PropertySet &p_propertySet, const Properties::
 	// _________________
 	//|	  Vec3 value	|
 	//|_________________|
-	if(decimalPoints <= 3 && commas == 2)
+	if(decimalPoints > 2 && commas == 2)
 	{
 		std::string xString, yString, zString;
 
@@ -378,7 +387,7 @@ void PropertyLoader::loadProperty(PropertySet &p_propertySet, const Properties::
 	// _________________
 	//|	  Vec2 value	|
 	//|_________________|
-	if(decimalPoints <= 2 && commas == 1)
+	if(decimalPoints > 1 && commas == 1)
 	{
 		std::string xString, yString;
 
@@ -394,7 +403,7 @@ void PropertyLoader::loadProperty(PropertySet &p_propertySet, const Properties::
 		return;
 	}
 
-	if(decimalPoints <= 1 && commas == 0)
+	if(decimalPoints > 0 && commas == 0)
 	{
 		// _________________
 		//|	  Float value	|

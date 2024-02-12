@@ -9,7 +9,7 @@ public:
 	PostProcessPass(RendererFrontend &p_renderer) :
 		RenderPass(p_renderer, RenderPassType::RenderPassType_NumOfTypes),
 		m_lensFlareParamBuffer(BufferType_Uniform, BufferBindTarget_Uniform, BufferUsageHint_DynamicDraw),
-		m_lensFlareGhostGradient(Loaders::texture2D().load(Config::rendererVar().lens_flare_ghost_gradient_texture))
+		m_lensFlareGhostGradient(Loaders::texture2D().load(Config::rendererVar().lens_flare_ghost_gradient_texture, MaterialType::MaterialType_Data))
 	{
 		m_lensFlareParam.m_lensFlaireDownsample = 0.0f;
 		m_lensFlareParam.m_chromaticAberration = 0.01f;

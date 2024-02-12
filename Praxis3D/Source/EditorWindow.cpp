@@ -57,16 +57,22 @@ ErrorCode EditorWindow::init()
 
 void EditorWindow::update(const float p_deltaTime)
 {
+    // Don't draw the GUI if the scene viewport is enlarged
+    if(m_enlargedSceneViewport)
+    {
+        // Process key presses
+        if(processShortcuts())
+            processMainMenuButton(m_activatedMainMenuButton);
+
+        return;
+    }
+
     // Set the docking area over the whole screen
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
     // Clear the texture inspector functor sequence from the last frame
     m_textureInspectorSequence.swapBuffer();
     m_textureInspectorSequence.getFront().clear();
-
-    // Clear the entity and component creation / deletion pools left from the previous frame
-    clearEntityAndComponentPool();
-    clearConstructionInfoPool();
 
     // Update the entity list
     updateEntityList(); 
@@ -83,15 +89,26 @@ void EditorWindow::update(const float p_deltaTime)
     // If there is a pending entity to select, iterate over each entity and find the one that needs to be selected
     if(m_pendingEntityToSelect)
     {
+        if(m_nextEntityToSelect != nullptr)
+        {
+            m_nextEntityIDToSelect = m_nextEntityToSelect->m_id;
+            m_nextEntityToSelect = nullptr;
+        }
+
         for(decltype(m_entityList.size()) size = m_entityList.size(), i = 0; i < size; i++)
-            if(m_entityList[i].m_entityID == m_nextEntityToSelect)
+            if(m_entityList[i].m_entityID == m_nextEntityIDToSelect)
                 m_selectedEntity.setEntity(m_entityList[i].m_entityID);
 
         m_pendingEntityToSelect = false;
     }
 
+    // Clear the entity and component creation / deletion pools left from the previous frame
+    clearEntityAndComponentPool();
+    clearConstructionInfoPool();
+
     if(m_showImGuiDemoWindow)
         ImGui::ShowDemoWindow();
+
     {
         ImGuiStyle *style = &ImGui::GetStyle();
         ImVec4 *colors = style->Colors;
@@ -158,7 +175,6 @@ void EditorWindow::update(const float p_deltaTime)
     ImVec2 mainMenuBarSize;
     ImGuiViewport *mainViewport = ImGui::GetMainViewport();
 
-    //RendererScene *rendererScene = static_cast<RendererScene *>(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics));
     auto *rendererScene = m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics);
 
     WorldScene *worldScene = static_cast<WorldScene *>(m_systemScene->getSceneLoader()->getSystemScene(Systems::World));
@@ -180,59 +196,8 @@ void EditorWindow::update(const float p_deltaTime)
     //	|____________________________|
     //
     {
-        // Get ImGui IO (for key presses) and modifier keys
-        ImGuiIO &imGuiIO = ImGui::GetIO();
-        auto shiftKeyPressed = imGuiIO.KeyShift;
-        auto ctrlKeyPressed = imGuiIO.ConfigMacOSXBehaviors ? imGuiIO.KeySuper : imGuiIO.KeyCtrl;
-        auto altKeyPressed = imGuiIO.ConfigMacOSXBehaviors ? imGuiIO.KeyCtrl : imGuiIO.KeyAlt;
-
-        // Shortcut for NEW
-        if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_N)))
-            m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_New;
-
-        // Shortcut for OPEN
-        if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_O)))
-            m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Open;
-
-        // Shortcut for SAVE
-        if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_S)))
-            m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Save;
-
-        // Shortcut for SAVE AS
-        if(shiftKeyPressed && ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_S)))
-            m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_SaveAs;
-
-        // Shortcut for RELOAD SCENE
-        if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_R)))
-            m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_ReloadScene;
-
-        // Shortcut for CLOSE EDITOR
-        if(ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))
-            m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_CloseEditor;
-
-        // Shortcut for EXIT
-        if(altKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F4)))
-            m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Exit;
-
-        // Shortcut for UNDO
-        if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Z)))
-            m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Undo;
-
-        // Shortcut for REDO
-        if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Y)))
-            m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Redo;
-
-        // Shortcut for CUT
-        if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_X)))
-            m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Cut;
-
-        // Shortcut for COPY
-        if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_C)))
-            m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Copy;
-
-        // Shortcut for PASTE
-        if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_V)))
-            m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Paste;
+        // Check for pressed shortcuts
+        processShortcuts();
 
         ImGui::BeginMainMenuBar();
 
@@ -246,7 +211,9 @@ void EditorWindow::update(const float p_deltaTime)
             {
                 m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Open;
             }
+            
             ImGui::Separator();
+
             if(ImGui::MenuItem("Save", "CTRL+S"))
             {
                 m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Save;
@@ -258,6 +225,13 @@ void EditorWindow::update(const float p_deltaTime)
             if(ImGui::MenuItem("Reload scene", "CTRL+R"))
             {
                 m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_ReloadScene;
+            }
+
+            ImGui::Separator();
+
+            if(ImGui::MenuItem("Export prefab...", "", false, m_selectedEntity.m_entityID != NULL_ENTITY_ID))
+            {
+                m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_ExportPrefab;
             }
 
             ImGui::Separator();
@@ -300,7 +274,25 @@ void EditorWindow::update(const float p_deltaTime)
             }
 
             ImGui::EndMenu();
-        }        
+        }       
+        if(ImGui::BeginMenu("View"))
+        {
+            if(ImGui::MenuItem("Enlarge scene viewport", "F11"))
+            {
+                m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_EnlargeSceneViewport;
+            }            
+            if(ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay))
+                ImGui::SetTooltip("Toggle fullscreen mode for the scene viewport. Press F11 to return back to regular view", ImGui::GetStyle().HoverDelayShort);
+
+            if(ImGui::MenuItem("Fullscreen mode", "SHIFT+F11"))
+            {
+                m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Fullscreen;
+            }
+            if(ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay))
+                ImGui::SetTooltip("Toggle fullscreen mode. Press SHIFT+F11 to return back to regular view", ImGui::GetStyle().HoverDelayShort);
+
+            ImGui::EndMenu();
+        }
         if(ImGui::BeginMenu("Debug"))
         {
             if(ImGui::MenuItem("Show ImGui demo window", "", m_showImGuiDemoWindow)) 
@@ -536,6 +528,9 @@ void EditorWindow::update(const float p_deltaTime)
                             m_newEntityConstructionInfo->m_name = "New entity";
                             m_newEntityConstructionInfo->m_id = 0;
 
+                            // Reset the duplicate parent flag for new entity
+                            m_duplicateParent = false;
+
                             // Open the pop-up with the new entity settings
                             m_openNewEntityPopup = true;
                         }
@@ -549,15 +544,17 @@ void EditorWindow::update(const float p_deltaTime)
                             m_newEntityWindowInitialized = true;
                             m_mousePositionOnNewEntity = ImGui::GetMousePos();
 
-                            // Assign a next available entity ID (if the new entity has a non-root parent, start the available ID search from the next ID after the parent)
-                            EntityID newEntityID = m_newEntityConstructionInfo->m_parent == 0 ? 1 : m_newEntityConstructionInfo->m_parent + 1;
-                            for(decltype(m_entityList.size()) i = 0, size = m_entityList.size(); i < size; i++)
+                            // Assign a next available entity ID (start the available ID search from the next ID after the parent)
+                            EntityID newEntityID = m_newEntityConstructionInfo->m_parent + 1;
+                            for(decltype(m_entityList.size()) i = 0, size = m_entityList.size(); i < size;)
                             {
                                 if(newEntityID == m_entityList[i].m_entityID)
                                 {
                                     newEntityID++;
                                     i = 0;
                                 }
+                                else
+                                    i++;
                             }
                             m_newEntityConstructionInfo->m_id = newEntityID;
 
@@ -576,7 +573,7 @@ void EditorWindow::update(const float p_deltaTime)
                         }
 
                         ImGui::SetNextWindowPos(m_mousePositionOnNewEntity);
-                        ImGui::SetNextWindowSize(ImVec2(400.0f, 135.0f));
+                        ImGui::SetNextWindowSize(ImVec2(400.0f, 155.0f));
                         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(m_imguiStyle.WindowPadding.x, 10.0f));
                         if(ImGui::Begin(componentTypeSelectionPopupName.c_str(), (bool *)0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
                         {
@@ -631,6 +628,8 @@ void EditorWindow::update(const float p_deltaTime)
                             drawLeftAlignedLabelText("Prefab:", inputWidgetOffset, calcTextSizedButtonOffset(1) - inputWidgetOffset - m_imguiStyle.FramePadding.x);
                             if(ImGui::InputText("##NewEntityPrefabStringInput", &m_newEntityConstructionInfo->m_prefab, ImGuiInputTextFlags_EnterReturnsTrue))
                             {
+                                // Cannot duplicate when a prefab is set
+                                m_duplicateParent = false;
                             }
 
                             // Draw PREFAB OPEN button
@@ -650,6 +649,9 @@ void EditorWindow::update(const float p_deltaTime)
                                     m_fileBrowserDialog.m_rootPath = Config::filepathVar().prefab_path;
                                     m_fileBrowserDialog.m_flags = FileBrowserDialog::FileBrowserDialogFlags::FileBrowserDialogFlags_None;
                                     m_fileBrowserDialog.m_userStringPointer = &m_newEntityConstructionInfo->m_prefab;
+
+                                    // Cannot duplicate when a prefab is set
+                                    m_duplicateParent = false;
 
                                     // Tell the GUI scene to open the file browser
                                     m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
@@ -682,11 +684,22 @@ void EditorWindow::update(const float p_deltaTime)
                                     if(ImGui::Selectable(name.c_str(), (m_selectedEntity.m_componentData.m_prefab == name), 0, ImVec2(0.0f, m_assetSelectionPopupImageSize.y)))
                                     {
                                         m_newEntityConstructionInfo->m_prefab = name;
+
+                                        // Cannot duplicate when a prefab is set
+                                        m_duplicateParent = false;
                                     }
                                 }
 
                                 ImGui::PopStyleVar(2); //ImGuiStyleVar_SelectableTextAlign, ImGuiStyleVar_FramePadding
                                 ImGui::EndPopup();
+                            }
+
+                            // Draw DUPLICATE PARENT
+                            ImGui::Text("Duplicate parent:");
+                            ImGui::SameLine();
+                            ImGui::SetCursorPosX(inputWidgetOffset);
+                            if(ImGui::Checkbox("##DuplicateParentCheckbox", &m_duplicateParent))
+                            {
                             }
 
                             // Draw CREATE button
@@ -707,11 +720,53 @@ void EditorWindow::update(const float p_deltaTime)
                                     m_newEntityConstructionInfo->m_parent = currentConstructionInfo.m_parent;
                                     m_newEntityConstructionInfo->m_prefab = currentConstructionInfo.m_prefab;
                                 }
+                                else
+                                {
+                                    // If duplicate parent flag was set, get the parent construction info
+                                    if(m_duplicateParent)
+                                    {
+                                        // Reset the duplicate parent flag for new entity
+                                        m_duplicateParent = false;
+
+                                        // Backup the current construction info
+                                        ComponentsConstructionInfo currentConstructionInfo = *m_newEntityConstructionInfo;
+
+                                        // Get the construction info of the parent entity
+                                        WorldScene *worldScene = static_cast<WorldScene *>(m_systemScene->getSceneLoader()->getSystemScene(Systems::World));
+                                        worldScene->exportEntity(currentConstructionInfo.m_parent, *m_newEntityConstructionInfo);
+
+                                        // Set the new entity name by adding a count at the end and checking if an entity of the same name doesn't exist
+                                        {
+                                            int newEntityNameCount = 2;
+                                            std::string baseEntityName = m_newEntityConstructionInfo->m_name;
+
+                                            // If the entity name ends with ' 1', replace the existing number
+                                            if(baseEntityName.size() > 2 && baseEntityName[baseEntityName.size() - 1] == '1' && baseEntityName[baseEntityName.size() - 2] == ' ')
+                                            {
+                                                baseEntityName.pop_back();  // Remove '1'
+                                                baseEntityName.pop_back();  // Remove ' '
+                                            }
+                                            std::string newEntityName = baseEntityName + " " + Utilities::toString(newEntityNameCount);
+
+                                            // Keep increasing the number at the end until there is no other entity with the same name
+                                            while(worldScene->getEntity(newEntityName) != NULL_ENTITY_ID)
+                                            {
+                                                newEntityNameCount++;
+                                                newEntityName = baseEntityName + " " + Utilities::toString(newEntityNameCount);
+                                            }
+                                            m_newEntityConstructionInfo->m_name = newEntityName;
+                                        }
+
+                                        // Re-set the previous construction info values that were set during the entity creation, as these override the values that are imported from a prefab
+                                        m_newEntityConstructionInfo->m_id = currentConstructionInfo.m_id;
+                                        m_newEntityConstructionInfo->m_parent = currentConstructionInfo.m_parent;
+                                    }
+                                }
 
                                 m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::World), DataType::DataType_CreateEntity, (void *)m_newEntityConstructionInfo, false);
 
                                 // Make the new entity be selected next frame
-                                m_nextEntityToSelect = m_newEntityConstructionInfo->m_id;
+                                m_nextEntityIDToSelect = m_newEntityConstructionInfo->m_id;
                                 m_pendingEntityToSelect = true;
 
                                 // Add the new entity construction info to the pool (so it will be deleted the next frame)
@@ -813,7 +868,7 @@ void EditorWindow::update(const float p_deltaTime)
                         // Clear the component exist flags as they are reset every frame
                         m_selectedEntity.clearComponentExistFlags();
 
-                        // Calculate widget offset used to draw a label on the left and a widget on ;he right (opposite of how ImGui draws it)
+                        // Calculate widget offset used to draw a label on the left and a widget on the right (opposite of how ImGui draws it)
                         float inputWidgetOffset = ImGui::GetCursorPosX() + ImGui::CalcItemWidth() * 0.5f + ImGui::GetStyle().ItemInnerSpacing.x;
 
                         // Calculate the offset for the collapsing header that is drawn after the delete component button of each component type
@@ -991,7 +1046,7 @@ void EditorWindow::update(const float p_deltaTime)
                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, spatialComponent, Systems::Changes::Generic::Active);
                                 }
 
-                                if(ImGui::BeginTabBar("##RightWindowTabBar", ImGuiTabBarFlags_None))
+                                if(ImGui::BeginTabBar("##SpatialComponentTabBar", ImGuiTabBarFlags_None))
                                 {
                                     if(ImGui::BeginTabItem("Local"))
                                     {
@@ -1010,6 +1065,7 @@ void EditorWindow::update(const float p_deltaTime)
                                             else
                                                 m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, spatialComponent, Systems::Changes::Spatial::LocalTransformNoScale);
                                         }
+                                        captureMouseWhileItemActive();
 
                                         // Draw ROTATION
                                         // Make sure to get the current local rotation euler angles, as they are not automatically updated
@@ -1028,6 +1084,7 @@ void EditorWindow::update(const float p_deltaTime)
                                             else
                                                 m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, spatialComponent, Systems::Changes::Spatial::LocalTransformNoScale);
                                         }
+                                        captureMouseWhileItemActive();
 
                                         // Draw SCALE
                                         drawLeftAlignedLabelText("Scale:", inputWidgetOffset);
@@ -1036,6 +1093,8 @@ void EditorWindow::update(const float p_deltaTime)
                                             // If the scale vector was changed, send a notification to the spatial component
                                             m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, spatialComponent, Systems::Changes::Spatial::LocalScale);
                                         }
+                                        captureMouseWhileItemActive();
+
                                         ImGui::EndTabItem();
                                     }
 
@@ -1178,6 +1237,7 @@ void EditorWindow::update(const float p_deltaTime)
                                     // If the FOV was changed, send a notification to the Camera Component
                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, cameraComponent, Systems::Changes::Graphics::FOV);
                                 }
+                                captureMouseWhileItemActive();
 
                                 // Draw FAR PLANE
                                 drawLeftAlignedLabelText("Far plane:", inputWidgetOffset);
@@ -1186,6 +1246,7 @@ void EditorWindow::update(const float p_deltaTime)
                                     // If the far plane was changed, send a notification to the Camera Component
                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, cameraComponent, Systems::Changes::Graphics::ZFar);
                                 }
+                                captureMouseWhileItemActive();
 
                                 // Draw NEAR PLANE
                                 drawLeftAlignedLabelText("Near plane:", inputWidgetOffset);
@@ -1194,6 +1255,7 @@ void EditorWindow::update(const float p_deltaTime)
                                     // If the near plane was changed, send a notification to the Camera Component
                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, cameraComponent, Systems::Changes::Graphics::ZNear);
                                 }
+                                captureMouseWhileItemActive();
                             }
                         }
                         auto *lightComponent = entityRegistry.try_get<LightComponent>(m_selectedEntity.m_entityID);
@@ -1276,6 +1338,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                     // If the light intensity was changed, send a notification to the Light Component
                                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, lightComponent, Systems::Changes::Graphics::Intensity);
                                                 }
+                                                captureMouseWhileItemActive();
                                             }
                                         }
                                         break;
@@ -1303,6 +1366,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                     // If the light intensity was changed, send a notification to the Light Component
                                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, lightComponent, Systems::Changes::Graphics::Intensity);
                                                 }
+                                                captureMouseWhileItemActive();
                                             }
                                         }
                                         break;
@@ -1331,6 +1395,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                     // If the light intensity was changed, send a notification to the Light Component
                                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, lightComponent, Systems::Changes::Graphics::Intensity);
                                                 }
+                                                captureMouseWhileItemActive();
 
                                                 // Draw CUTOFF ANGLE
                                                 auto cutoffAngleInDegrees = glm::degrees(m_selectedEntity.m_componentData.m_graphicsComponents.m_lightConstructionInfo->m_cutoffAngle);
@@ -1342,6 +1407,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                     // If the light cutoff angle was changed, send a notification to the Light Component
                                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, lightComponent, Systems::Changes::Graphics::CutoffAngle);
                                                 }
+                                                captureMouseWhileItemActive();
                                             }
                                         }
                                         break;
@@ -1368,40 +1434,43 @@ void EditorWindow::update(const float p_deltaTime)
                             {
                                 if(auto *loadComponent = entityRegistry.try_get<GraphicsLoadToMemoryComponent>(m_selectedEntity.m_entityID); loadComponent == nullptr)
                                 {
-                                    bool modelComponentDataNeedsUpdating = false;
+                                    if(!modelComponent->getLoadPending())
+                                    {
+                                        bool modelComponentDataNeedsUpdating = false;
 
-                                    // If the model data was modified the previous frame, set the flag to update the ModelComponent
-                                    if(m_selectedEntity.m_modelDataModified)
-                                    {
-                                        m_selectedEntity.m_modelDataModified = false;
-                                        modelComponentDataNeedsUpdating = true;
-                                    }
-                                    else
-                                    {
-                                        // If the model data was recreated (meaning model data was changed), update the ModelComponent data
-                                        auto &currentModelData = modelComponent->getModelData();
-                                        if(m_selectedEntity.m_modelDataPointer != &currentModelData)
+                                        // If the model data was modified the previous frame, set the flag to update the ModelComponent
+                                        if(m_selectedEntity.m_modelDataModified)
                                         {
-                                            m_selectedEntity.m_modelDataPointer = &currentModelData;
+                                            m_selectedEntity.m_modelDataModified = false;
                                             modelComponentDataNeedsUpdating = true;
                                         }
                                         else
                                         {
-                                            // If ModelComponent has been loaded after sending it new data, update the ModelComponent data
-                                            if(m_selectedEntity.m_modelDataUpdateAfterLoading)
-                                                if(modelComponent->isLoadedToMemory())
-                                                {
-                                                    m_selectedEntity.m_modelDataUpdateAfterLoading = false;
-                                                    modelComponentDataNeedsUpdating = true;
-                                                }
+                                            // If the model data was recreated (meaning model data was changed), update the ModelComponent data
+                                            auto &currentModelData = modelComponent->getModelData();
+                                            if(m_selectedEntity.m_modelDataPointer != &currentModelData)
+                                            {
+                                                m_selectedEntity.m_modelDataPointer = &currentModelData;
+                                                modelComponentDataNeedsUpdating = true;
+                                            }
+                                            else
+                                            {
+                                                // If ModelComponent has been loaded after sending it new data, update the ModelComponent data
+                                                if(m_selectedEntity.m_modelDataUpdateAfterLoading)
+                                                    if(modelComponent->isLoadedToMemory())
+                                                    {
+                                                        m_selectedEntity.m_modelDataUpdateAfterLoading = false;
+                                                        modelComponentDataNeedsUpdating = true;
+                                                    }
+                                            }
                                         }
-                                    }
 
-                                    // Update the Models Properties of the currently selected ModelComponent
-                                    if(modelComponentDataNeedsUpdating)
-                                    {
-                                        m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_modelsProperties.m_models.clear();
-                                        modelComponent->getModelsProperties(m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_modelsProperties);
+                                        // Update the Models Properties of the currently selected ModelComponent
+                                        if(modelComponentDataNeedsUpdating)
+                                        {
+                                            m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_modelsProperties.m_models.clear();
+                                            modelComponent->getModelsProperties(m_selectedEntity.m_componentData.m_graphicsComponents.m_modelConstructionInfo->m_modelsProperties);
+                                        }
                                     }
 
                                     // Draw ACTIVE
@@ -1511,6 +1580,33 @@ void EditorWindow::update(const float p_deltaTime)
                                                 ImGui::EndPopup();
                                             }
 
+                                            if(!modelEntry.m_meshData.empty())
+                                            {
+                                                // Draw ACTIVATE ALL MESHES
+                                                if(ImGui::Button("Activate all meshes"))
+                                                {
+                                                    // Go over each mesh and set the active flag to true
+                                                    for(decltype(modelEntry.m_meshData.size()) meshSize = modelEntry.m_meshData.size(), meshIndex = 0; meshIndex < meshSize; meshIndex++)
+                                                        modelEntry.m_meshData[meshIndex].m_active = true;
+
+                                                    // Set the modified flag
+                                                    m_selectedEntity.m_modelDataModified = true;
+                                                }
+
+                                                ImGui::SameLine();
+
+                                                // Draw DEACTIVATE ALL MESHES
+                                                if(ImGui::Button("Deactivate all meshes"))
+                                                {
+                                                    // Go over each mesh and set the active flag to false
+                                                    for(decltype(modelEntry.m_meshData.size()) meshSize = modelEntry.m_meshData.size(), meshIndex = 0; meshIndex < meshSize; meshIndex++)
+                                                        modelEntry.m_meshData[meshIndex].m_active = false;
+
+                                                    // Set the modified flag
+                                                    m_selectedEntity.m_modelDataModified = true;
+                                                }
+                                            }
+
                                             ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextAlign, ImVec2(0.5f, 0.5f));
                                             for(decltype(modelEntry.m_meshData.size()) meshSize = modelEntry.m_meshData.size(), meshIndex = 0; meshIndex < meshSize; meshIndex++)
                                             {
@@ -1522,6 +1618,8 @@ void EditorWindow::update(const float p_deltaTime)
                                                 // Draw MESH
                                                 if(ImGui::TreeNodeEx(("Mesh " + Utilities::toString(meshIndex) + meshName + ":").c_str(), ImGuiTreeNodeFlags_SpanAvailWidth)) // ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf
                                                 {
+                                                    const float cursorStartingPos = ImGui::GetCursorPosX();
+
                                                     ImGui::SeparatorText("Mesh settings:");
 
                                                     // Draw ACTIVE
@@ -1542,6 +1640,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                         // If the height scale was changed, set the modified flag
                                                         m_selectedEntity.m_modelDataModified = true;
                                                     }
+                                                    captureMouseWhileItemActive();
 
                                                     // Draw ALPHA THRESHOLD
                                                     drawLeftAlignedLabelText("Alpha Threshold:", inputWidgetOffset);
@@ -1550,6 +1649,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                         // If the alpha threshold was changed, set the modified flag
                                                         m_selectedEntity.m_modelDataModified = true;
                                                     }
+                                                    captureMouseWhileItemActive();
 
                                                     // Draw EMISSIVE INTENSITY
                                                     drawLeftAlignedLabelText("Emissive intensity:", inputWidgetOffset);
@@ -1558,10 +1658,11 @@ void EditorWindow::update(const float p_deltaTime)
                                                         // If the emissive intensity was changed, set the modified flag
                                                         m_selectedEntity.m_modelDataModified = true;
                                                     }
+                                                    captureMouseWhileItemActive();
 
-                                                    // Draw TEXTURE REPETITION
+                                                    // Draw STOCHASTIC SAMPLING
                                                     bool textureRepetition = modelEntry.m_meshData[meshIndex].m_stochasticSampling;
-                                                    drawLeftAlignedLabelText("Texture repetition:", inputWidgetOffset);
+                                                    drawLeftAlignedLabelText("Stochastic sampling:", inputWidgetOffset);
                                                     if(ImGui::Checkbox(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "TextureRepetitionCheckbox").c_str(), &textureRepetition))
                                                     {
                                                         modelEntry.m_meshData[meshIndex].m_stochasticSampling = textureRepetition;
@@ -1571,12 +1672,13 @@ void EditorWindow::update(const float p_deltaTime)
                                                     }
                                                     
                                                     // Draw TEXTURE REPETITION SALCE
-                                                    drawLeftAlignedLabelText("Repetition scale:", inputWidgetOffset);
+                                                    drawLeftAlignedLabelText("Stochastic scale:", inputWidgetOffset);
                                                     if(ImGui::DragFloat(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "TextureRepetitionScaleDrag").c_str(), &modelEntry.m_meshData[meshIndex].m_stochasticSamplingScale, Config::GUIVar().editor_float_slider_speed))
                                                     {
                                                         // If the texture repetition scale was changed, set the modified flag
                                                         m_selectedEntity.m_modelDataModified = true;
                                                     }
+                                                    captureMouseWhileItemActive();
 
                                                     // Get the current texture wrap mode
                                                     int textureWrapMode = 0;
@@ -1599,6 +1701,42 @@ void EditorWindow::update(const float p_deltaTime)
                                                         // Set the modified flag
                                                         m_selectedEntity.m_modelDataModified = true;
                                                     }
+                                               
+                                                    // Draw 2D TEXTURE SCALE
+                                                    drawLeftAlignedLabelText("2D texture scale:", inputWidgetOffset);
+                                                    if(ImGui::Checkbox(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "2DTextureScaleCheckbox").c_str(), &m_2DTextureScale))
+                                                    {
+
+                                                    }
+
+                                                    ImGui::SameLine();
+                                                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (inputWidgetOffset / 5.0f));
+
+                                                    // Draw SYNCHRONIZE TEXTURE SCALE
+                                                    ImGui::Text("Sync across all textures:");
+                                                    ImGui::SameLine();
+                                                    if(ImGui::Checkbox(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "SyncTextureScaleCheckbox").c_str(), &m_synchronizeTextureScale))
+                                                    {
+
+                                                    }
+
+                                                    // Draw 2D TEXTURE FRAMING
+                                                    drawLeftAlignedLabelText("2D texture framing:", inputWidgetOffset);
+                                                    if(ImGui::Checkbox(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "2DTextureFramingCheckbox").c_str(), &m_2DTextureFraming))
+                                                    {
+
+                                                    }
+
+                                                    ImGui::SameLine();
+                                                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (inputWidgetOffset / 5.0f));
+
+                                                    // Draw SYNCHRONIZE TEXTURE FRAMING
+                                                    ImGui::Text("Sync across all textures:");
+                                                    ImGui::SameLine();
+                                                    if(ImGui::Checkbox(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + "SyncTextureFramingCheckbox").c_str(), &m_synchronizeTextureFraming))
+                                                    {
+
+                                                    }
 
                                                     for(unsigned int materialIndex = 0; materialIndex < MaterialType::MaterialType_NumOfTypes; materialIndex++)
                                                     {
@@ -1620,11 +1758,10 @@ void EditorWindow::update(const float p_deltaTime)
                                                                 break;
                                                         }
 
-                                                        //ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextPadding, ImVec2(20.0f, 4.0f));
                                                         ImGui::SeparatorText(materialTypeName.c_str());
 
                                                         // Draw TEXTURE FILENAME
-                                                        drawLeftAlignedLabelText("Filename:", inputWidgetOffset, calcTextSizedButtonOffset(2) - inputWidgetOffset - m_imguiStyle.FramePadding.x + m_imguiStyle.IndentSpacing);
+                                                        drawLeftAlignedLabelText("Filename:", inputWidgetOffset, calcTextSizedButtonOffset(2) - inputWidgetOffset - m_imguiStyle.FramePadding.x - cursorStartingPos);
                                                         if(ImGui::InputText(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureFilenameInput").c_str(), &modelEntry.m_meshData[meshIndex].m_meshMaterials[materialIndex], ImGuiInputTextFlags_EnterReturnsTrue))
                                                         {
                                                             // If the texture filename was changed, set the modified flag
@@ -1633,7 +1770,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                         }
 
                                                         // Draw TEXTURE OPEN button
-                                                        ImGui::SameLine(calcTextSizedButtonOffset(2) + m_imguiStyle.IndentSpacing);
+                                                        ImGui::SameLine(calcTextSizedButtonOffset(2) - cursorStartingPos);
                                                         if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenFile], "##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureOpenButton", "Open a texture file"))
                                                         {
                                                             // Only open the file browser if it's not opened already
@@ -1663,7 +1800,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                         const std::string textureSelectionPopupName = "##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureSelectionPopup";
 
                                                         // Draw OPEN ASSET LIST button
-                                                        ImGui::SameLine(calcTextSizedButtonOffset(1) + m_imguiStyle.IndentSpacing);
+                                                        ImGui::SameLine(calcTextSizedButtonOffset(1) - cursorStartingPos);
                                                         if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_OpenAssetList], "##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureOpenAssetListButton", "Choose a texture from the loaded assets"))
                                                         {
                                                             // Open the pop-up with the texture asset list
@@ -1671,7 +1808,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                         }
 
                                                         // Draw TEXTURE RELOAD button
-                                                        ImGui::SameLine(calcTextSizedButtonOffset(0) + m_imguiStyle.IndentSpacing);
+                                                        ImGui::SameLine(calcTextSizedButtonOffset(0) - cursorStartingPos);
                                                         if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_Reload], "##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureReloadButton", "Reload the texture file"))
                                                         {
                                                             // Set the modified flag
@@ -1730,13 +1867,92 @@ void EditorWindow::update(const float p_deltaTime)
                                                             ImGui::EndPopup();
                                                         }
 
+                                                        // Draw TEXTURE SCALE
                                                         drawLeftAlignedLabelText("Texture scale:", inputWidgetOffset);
-                                                        if(ImGui::DragFloat2(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureScaleDrag").c_str(), glm::value_ptr(modelEntry.m_meshData[meshIndex].m_meshMaterialsScales[materialIndex]), Config::GUIVar().editor_float_slider_speed))
+                                                        if(m_2DTextureScale)
                                                         {
-                                                            // If the texture scale was changed, set the modified flag
+                                                            if(ImGui::DragFloat(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureScaleDrag").c_str(), &modelEntry.m_meshData[meshIndex].m_meshMaterialScales[materialIndex].x, Config::GUIVar().editor_float_slider_speed))
+                                                            {
+                                                                modelEntry.m_meshData[meshIndex].m_meshMaterialScales[materialIndex].y = modelEntry.m_meshData[meshIndex].m_meshMaterialScales[materialIndex].x;
+
+                                                                // Synchronize all the texture scales if a flag is set
+                                                                if(m_synchronizeTextureScale)
+                                                                {
+                                                                    auto textureScale = modelEntry.m_meshData[meshIndex].m_meshMaterialScales[materialIndex];
+                                                                    for(unsigned int i = 0; i < MaterialType::MaterialType_NumOfTypes; i++)
+                                                                        modelEntry.m_meshData[meshIndex].m_meshMaterialScales[i] = textureScale;
+                                                                }
+
+                                                                // If the texture scale was changed, set the modified flag
+                                                                m_selectedEntity.m_modelDataModified = true;
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            if(ImGui::DragFloat2(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureScaleDrag2").c_str(), glm::value_ptr(modelEntry.m_meshData[meshIndex].m_meshMaterialScales[materialIndex]), Config::GUIVar().editor_float_slider_speed))
+                                                            {
+                                                                // Synchronize all the texture scales if a flag is set
+                                                                if(m_synchronizeTextureScale)
+                                                                {
+                                                                    auto textureScale = modelEntry.m_meshData[meshIndex].m_meshMaterialScales[materialIndex];
+                                                                    for(unsigned int i = 0; i < MaterialType::MaterialType_NumOfTypes; i++)
+                                                                        modelEntry.m_meshData[meshIndex].m_meshMaterialScales[i] = textureScale;
+                                                                }
+
+                                                                // If the texture scale was changed, set the modified flag
+                                                                m_selectedEntity.m_modelDataModified = true;
+                                                            }
+                                                        }
+                                                        captureMouseWhileItemActive();
+
+                                                        // Draw TEXTURE FRAMING
+                                                        drawLeftAlignedLabelText("Texture framing:", inputWidgetOffset);
+                                                        if(m_2DTextureFraming)
+                                                        {
+                                                            if(ImGui::DragFloat(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureFramingDrag").c_str(), &modelEntry.m_meshData[meshIndex].m_meshMaterialFraming[materialIndex].x, Config::GUIVar().editor_float_slider_speed))
+                                                            {
+                                                                modelEntry.m_meshData[meshIndex].m_meshMaterialFraming[materialIndex].y = modelEntry.m_meshData[meshIndex].m_meshMaterialFraming[materialIndex].x;
+
+                                                                // Synchronize all the texture framings if a flag is set
+                                                                if(m_synchronizeTextureFraming)
+                                                                {
+                                                                    auto textureFraming = modelEntry.m_meshData[meshIndex].m_meshMaterialFraming[materialIndex];
+                                                                    for(unsigned int i = 0; i < MaterialType::MaterialType_NumOfTypes; i++)
+                                                                        modelEntry.m_meshData[meshIndex].m_meshMaterialFraming[i] = textureFraming;
+                                                                }
+
+                                                                // If the texture framing was changed, set the modified flag
+                                                                m_selectedEntity.m_modelDataModified = true;
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            if(ImGui::DragFloat2(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureFramingDrag2").c_str(), glm::value_ptr(modelEntry.m_meshData[meshIndex].m_meshMaterialFraming[materialIndex]), Config::GUIVar().editor_float_slider_speed))
+                                                            {
+                                                                // Synchronize all the texture framings if a flag is set
+                                                                if(m_synchronizeTextureFraming)
+                                                                {
+                                                                    auto textureFraming = modelEntry.m_meshData[meshIndex].m_meshMaterialFraming[materialIndex];
+                                                                    for(unsigned int i = 0; i < MaterialType::MaterialType_NumOfTypes; i++)
+                                                                        modelEntry.m_meshData[meshIndex].m_meshMaterialFraming[i] = textureFraming;
+                                                                }
+
+                                                                // If the texture framing was changed, set the modified flag
+                                                                m_selectedEntity.m_modelDataModified = true;
+                                                            }
+                                                        }
+                                                        captureMouseWhileItemActive();
+
+                                                        // Draw TEXTURE COLOR
+                                                        drawLeftAlignedLabelText("Texture color:", inputWidgetOffset);
+                                                        if(ImGui::ColorEdit4(("##" + Utilities::toString(modelIndex) + Utilities::toString(meshIndex) + Utilities::toString(materialIndex) + "TextureColorEdit").c_str(), glm::value_ptr(modelEntry.m_meshData[meshIndex].m_meshMaterialColors[materialIndex]), m_colorEditFlags))
+                                                        {
+                                                            // If the texture color was changed, set the modified flag
                                                             m_selectedEntity.m_modelDataModified = true;
                                                         }
+                                                        captureMouseWhileItemActive();
                                                     }
+
                                                     ImGui::SeparatorText("");
                                                     ImGui::TreePop();
                                                 }
@@ -1872,6 +2088,7 @@ void EditorWindow::update(const float p_deltaTime)
                                     // If the mass was changed, send a notification to the Rigid Body Component
                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Physics::Mass);
                                 }
+                                captureMouseWhileItemActive();
 
                                 // Draw FRICTION
                                 drawLeftAlignedLabelText("Friction:", inputWidgetOffset);
@@ -1880,6 +2097,7 @@ void EditorWindow::update(const float p_deltaTime)
                                     // If the friction was changed, send a notification to the Rigid Body Component
                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Physics::Friction);
                                 }
+                                captureMouseWhileItemActive();
 
                                 // Draw ROLLING FRICTION
                                 drawLeftAlignedLabelText("Rolling friction:", inputWidgetOffset);
@@ -1888,6 +2106,7 @@ void EditorWindow::update(const float p_deltaTime)
                                     // If the rolling friction was changed, send a notification to the Rigid Body Component
                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Physics::RollingFriction);
                                 }
+                                captureMouseWhileItemActive();
 
                                 // Draw SPINNING FRICTION
                                 drawLeftAlignedLabelText("Spinning friction:", inputWidgetOffset);
@@ -1896,6 +2115,7 @@ void EditorWindow::update(const float p_deltaTime)
                                     // If the spinning friction was changed, send a notification to the Rigid Body Component
                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Physics::SpinningFriction);
                                 }
+                                captureMouseWhileItemActive();
 
                                 // Draw RESTITUTION
                                 drawLeftAlignedLabelText("Restitution:", inputWidgetOffset);
@@ -1904,6 +2124,7 @@ void EditorWindow::update(const float p_deltaTime)
                                     // If the m_restitution was changed, send a notification to the Rigid Body Component
                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Physics::Restitution);
                                 }
+                                captureMouseWhileItemActive();
 
                                 // Draw COLLISION SHAPE TYPE
                                 drawLeftAlignedLabelText("Collision shape:", inputWidgetOffset);
@@ -1927,6 +2148,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                 // If the box half extents size vector was changed, send a notification to the Rigid Body Component
                                                 m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Physics::CollisionShapeSize);
                                             }
+                                            captureMouseWhileItemActive();
 
                                         }
                                         break;
@@ -1962,6 +2184,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                 // If the box half extents size vector was changed, send a notification to the Rigid Body Component
                                                 m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Physics::CollisionShapeSize);
                                             }
+                                            captureMouseWhileItemActive();
                                         }
                                         break;
                                     default:
@@ -2082,6 +2305,7 @@ void EditorWindow::update(const float p_deltaTime)
                                     // If the sound volume was changed, send a notification to the Sound Component
                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, soundComponent, Systems::Changes::Audio::Volume);
                                 }
+                                captureMouseWhileItemActive();
 
                                 // Draw LOOP
                                 drawLeftAlignedLabelText("Loop:", inputWidgetOffset);
@@ -2334,7 +2558,7 @@ void EditorWindow::update(const float p_deltaTime)
 
                                                 ImGui::SameLine();
                                                 ImGui::SetCursorPosX(offsets[1]);
-                                                ImGui::SetNextItemWidth(itemSizes[2]);
+                                                ImGui::SetNextItemWidth(itemSizes[2] - m_imguiStyle.FramePadding.x);
                                                 switch(m_selectedEntity.m_luaVariables[i].second.getVariableType())
                                                 {
                                                     case Property::PropertyVariableType::Type_null:
@@ -2360,6 +2584,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                                 m_selectedEntity.m_luaVariablesModified = true;
                                                                 m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
                                                             }
+                                                            captureMouseWhileItemActive();
                                                         }
                                                         break;
                                                     case Property::PropertyVariableType::Type_float:
@@ -2370,6 +2595,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                                 m_selectedEntity.m_luaVariablesModified = true;
                                                                 m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
                                                             }
+                                                            captureMouseWhileItemActive();
                                                         }
                                                         break;
                                                     case Property::PropertyVariableType::Type_double:
@@ -2380,6 +2606,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                                 m_selectedEntity.m_luaVariablesModified = true;
                                                                 m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
                                                             }
+                                                            captureMouseWhileItemActive();
                                                         }
                                                         break;
                                                     case Property::PropertyVariableType::Type_vec2i:
@@ -2390,6 +2617,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                                 m_selectedEntity.m_luaVariablesModified = true;
                                                                 m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
                                                             }
+                                                            captureMouseWhileItemActive();
                                                         }
                                                         break;
                                                     case Property::PropertyVariableType::Type_vec2f:
@@ -2400,6 +2628,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                                 m_selectedEntity.m_luaVariablesModified = true;
                                                                 m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
                                                             }
+                                                            captureMouseWhileItemActive();
                                                         }
                                                         break;
                                                     case Property::PropertyVariableType::Type_vec3f:
@@ -2410,6 +2639,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                                 m_selectedEntity.m_luaVariablesModified = true;
                                                                 m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
                                                             }
+                                                            captureMouseWhileItemActive();
                                                         }
                                                         break;
                                                     case Property::PropertyVariableType::Type_vec4f:
@@ -2420,6 +2650,7 @@ void EditorWindow::update(const float p_deltaTime)
                                                                 m_selectedEntity.m_luaVariablesModified = true;
                                                                 m_selectedEntity.m_luaVariables[i].second = Property(m_selectedEntity.m_luaVariables[i].second.getPropertyID(), value);
                                                             }
+                                                            captureMouseWhileItemActive();
                                                         }
                                                         break;
                                                     case Property::PropertyVariableType::Type_string:
@@ -2464,9 +2695,8 @@ void EditorWindow::update(const float p_deltaTime)
                                             m_selectedEntity.m_luaVariablesModified = true;
                                             m_selectedEntity.m_luaVariables.push_back(std::make_pair(std::string(), Property()));
                                         }
-
-                                        ImGui::EndChild();
                                     }
+                                    ImGui::EndChild();
 
                                     if(m_selectedEntity.m_luaVariablesModified)
                                     {
@@ -2723,14 +2953,17 @@ void EditorWindow::update(const float p_deltaTime)
                     // Draw LUMINANCE RANGE MIN
                     drawLeftAlignedLabelText("Luminance range min:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
                     ImGui::DragFloat("##LuminanceRangeMinDrag", &Config::m_graphicsVar.luminance_range_min, 0.001f, 0.0f, 100.0f, "%.5f");
+                    captureMouseWhileItemActive();
 
                     // Draw LUMINANCE RANGE MAX
                     drawLeftAlignedLabelText("Luminance range max:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
                     ImGui::DragFloat("##LuminanceRangeMaxDrag", &Config::m_graphicsVar.luminance_range_max, 0.001f, 0.0f, 100.0f, "%.5f");
+                    captureMouseWhileItemActive();
 
                     // Draw LUMINANCE MULTIPLIER
                     drawLeftAlignedLabelText("Luminance multiplier:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
                     ImGui::DragFloat("##LuminanceMultiplierDrag", &Config::m_graphicsVar.luminance_multiplier, 0.001f, 0.0f, 100.0f, "%.5f");
+                    captureMouseWhileItemActive();
 
                     ImGui::SeparatorText("Graphics settings:");
 
@@ -2741,14 +2974,17 @@ void EditorWindow::update(const float p_deltaTime)
                     // Draw PARALLAX LOD
                     drawLeftAlignedLabelText("Parallax LOD:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
                     ImGui::DragFloat("##ParallaxLODDrag", &Config::m_graphicsVar.LOD_parallax_mapping, 0.1f, 0.0f, 100000.0f, "%.5f");
+                    captureMouseWhileItemActive();
 
                     // Draw PARALLAX MIN STEPS
                     drawLeftAlignedLabelText("Parallax min steps:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
                     ImGui::SliderFloat("##ParallaxMinStepsDrag", &Config::m_rendererVar.parallax_mapping_min_steps, 1.0f, 128.0f, "%.0f");
+                    captureMouseWhileItemActive();
 
                     // Draw PARALLAX MAX STEPS
                     drawLeftAlignedLabelText("Parallax max steps:", inputWidgetOffset, ImGui::GetContentRegionAvail().x - inputWidgetOffset);
                     ImGui::SliderFloat("##ParallaxMaxStepsDrag", &Config::m_rendererVar.parallax_mapping_max_steps, 1.0f, 128.0f, "%.0f");
+                    captureMouseWhileItemActive();
 
                     ImGui::SeparatorText("Renderer settings:");
 
@@ -2816,11 +3052,17 @@ void EditorWindow::update(const float p_deltaTime)
                             ImGui::Text(("Texture data type: " + getTextureDataTypeString(m_textureAssets[i].first->getTextureDataType())).c_str());
                             ImGui::Text(("Texture data format: " + getTextureDataFormat(m_textureAssets[i].first->getTextureDataFormat())).c_str());
 
+                            ImGui::Text(m_textureAssets[i].first->getCompressionEnabled() ? "Compression enabled" : "Compression disabled");
+                            ImGui::Text(m_textureAssets[i].first->getDownsamplingEnabled() ? "Downsampling enabled" : "Downsampling disabled");
+
                             ImGui::Text(m_textureAssets[i].first->getMipmapEnabled() ? "Mipmap enabled" : "Mipmap disabled");
                             if(m_textureAssets[i].first->getMipmapEnabled())
                                 ImGui::Text(("Mipmap level: " + Utilities::toString(m_textureAssets[i].first->getMipmapLevel())).c_str());
 
                             ImGui::Text(("Referene counter: " + Utilities::toString(m_textureAssets[i].first->getReferenceCounter())).c_str());
+
+                            ImGui::Text(m_textureAssets[i].first->isLoadedToMemory() ? "Loaded to system memory: true" : "Loaded to system memory: false");
+                            ImGui::Text(m_textureAssets[i].first->isLoadedToVideoMemory() ? "Loaded to video memory: true" : "Loaded to video memory: false");
 
                             ImGui::Separator();
 
@@ -2931,27 +3173,6 @@ void EditorWindow::update(const float p_deltaTime)
                     ImGui::EndChild();
 
                     ImGui::SameLine();
-
-                    //if(m_selectedProgram != nullptr)
-                    //{
-                    //    if(ImGui::BeginChild("##ShaderAssetsShaderSelection", ImVec2(contentRegionWidth * 0.2f, 0), true))
-                    //    {
-                    //        ImGui::SeparatorText("Shaders:");
-                    //        for(unsigned int shaderType = 0; shaderType < ShaderType::ShaderType_NumOfTypes; shaderType++)
-                    //        {
-                    //            if(!m_selectedProgram->getShaderFilename(shaderType).empty())
-                    //            {
-                    //                if(ImGui::Selectable(m_selectedProgram->getShaderFilename(shaderType).c_str(), m_selectedShaderType == shaderType))
-                    //                {
-                    //                    m_selectedShaderType = (int)shaderType;
-                    //                }
-                    //            }
-                    //        }
-                    //    }
-                    //    ImGui::EndChild();
-                    //}
-
-                    //ImGui::SameLine();
 
                     ImGui::PopStyleVar(2); // ImGuiStyleVar_FramePadding, ImGuiStyleVar_ItemSpacing
 
@@ -3767,20 +3988,15 @@ void EditorWindow::update(const float p_deltaTime)
 
                             ImGui::NewLine();
 
-                            //ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.0f, 10.0f));
-                            //if(ImGui::BeginChild("##NewSceneSettingsWindow2"))
-                            //{
-                                drawSceneData(m_newSceneData);
-                            //    ImGui::EndChild();
-                            //}
-                            //ImGui::PopStyleVar(); // ImGuiStyleVar_FramePadding
-                            ImGui::EndChild();
+                            drawSceneData(m_newSceneData);
+
                         }
                         else
                         {
                             ImGui::PopStyleVar(); // ImGuiStyleVar_ChildBorderSize
                             ImGui::PopStyleColor(); // ImGuiCol_Border
                         }
+                        ImGui::EndChild();
 
                         ImGui::SameLine();
 
@@ -3816,9 +4032,8 @@ void EditorWindow::update(const float p_deltaTime)
                             {
                                 m_newSceneData = SceneData();
                             }
-
-                            ImGui::EndChild();
                         }
+                        ImGui::EndChild();
 
                         ImGui::EndTabItem();
                     }
@@ -3853,10 +4068,10 @@ void EditorWindow::update(const float p_deltaTime)
                     if(m_fileBrowserDialog.m_success)
                     {
                         // Get the current directory path
-                        const std::string currentDirectory = Filesystem::getCurrentDirectory() + "\\";
+                        const std::string currentDirectory = Filesystem::getCurrentDirectory() + "\\" + Config::filepathVar().script_path;
 
                         // Check if the selected file is within the current directory
-                        if(m_fileBrowserDialog.m_filePath.rfind(currentDirectory, 0) == 0)
+                        if(m_fileBrowserDialog.m_filePathName.rfind(currentDirectory, 0) == 0)
                         {
                             // Set the selected file path as a relative path from current directory
                             m_selectedEntity.m_componentData.m_scriptComponents.m_luaConstructionInfo->m_luaScriptFilename = m_fileBrowserDialog.m_filePathName.substr(currentDirectory.size());
@@ -4013,8 +4228,7 @@ void EditorWindow::update(const float p_deltaTime)
                                 *m_selectedEntity.m_selectedTextureName = m_fileBrowserDialog.m_filePathName.substr(currentDirectory.size());
 
                                 // If the texture filename was changed, set a flag for it
-                                m_selectedEntity.m_modelDataModified = true;
-                                m_selectedEntity.m_modelDataUpdateAfterLoading = true;
+                                m_selectedEntity.m_modelDataUpdatedFromFilebrowser = true;
                             }
                         }
                         else
@@ -4095,6 +4309,35 @@ void EditorWindow::update(const float p_deltaTime)
                 }
             }
             break;
+        case EditorWindow::FileBrowserActivated_SavePrefabFile:
+            {
+                // If the file browser was activated and it is now closed, process the result
+                if(m_fileBrowserDialog.m_closed)
+                {
+                    if(m_fileBrowserDialog.m_success)
+                    {
+                        // Get the current directory path
+                        const std::string currentDirectory = Filesystem::getCurrentDirectory() + "\\" + Config::filepathVar().prefab_path;
+
+                        // Check if the selected file is within the current directory
+                        if(m_fileBrowserDialog.m_filePathName.rfind(currentDirectory, 0) == 0)
+                        {
+                            if(m_selectedEntity.m_entityID != NULL_ENTITY_ID)
+                                exportPrefab(m_selectedEntity.m_entityID, m_fileBrowserDialog.m_filePathName.substr(currentDirectory.size()));
+                        }
+                        else
+                            ErrHandlerLoc::get().log(ErrorCode::Editor_path_outside_current_dir, ErrorSource::Source_GUIEditor);
+                    }
+
+                    // Remember the last opened file browser type
+                    m_previouslyOpenedFileBrowser = m_currentlyOpenedFileBrowser;
+
+                    // Reset the file browser and mark the file browser as not opened
+                    m_fileBrowserDialog.reset();
+                    m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_None;
+                }
+            }
+            break;
         case EditorWindow::FileBrowserActivated_ShaderFile:
             {
                 // If the file browser was activated and it is now closed, process the result
@@ -4148,25 +4391,29 @@ void EditorWindow::setup(EditorWindowSettings &p_editorWindowSettings)
     //	|  WARNING: ORDER DEPENDENT  |
     //	|      TEXTURE CREATION      |
     //	|____________________________|
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_pause_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_play_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_restart_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_gui_sequence_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_scripting_enabled_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_delete_entry_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_add_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_open_file_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_reload_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_open_asset_list_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_arrow_up_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_guizmo_rotate_texture));
-    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_guizmo_translate_texture));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_pause_texture, m_buttonMaterialType));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_play_texture, m_buttonMaterialType));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_restart_texture, m_buttonMaterialType));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_gui_sequence_texture, m_buttonMaterialType));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_scripting_enabled_texture, m_buttonMaterialType));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_delete_entry_texture, m_buttonMaterialType));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_add_texture, m_buttonMaterialType));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_duplicate_entry_texture, m_buttonMaterialType));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_open_file_texture, m_buttonMaterialType));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_reload_texture, m_buttonMaterialType));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_open_asset_list_texture, m_buttonMaterialType));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_arrow_up_texture, m_buttonMaterialType));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_guizmo_rotate_texture, m_buttonMaterialType));
+    m_buttonTextures.emplace_back(Loaders::texture2D().load(Config::filepathVar().gui_assets_path + Config::GUIVar().editor_button_guizmo_translate_texture, m_buttonMaterialType));
 
     assert(m_buttonTextures.size() == ButtonTextureType::ButtonTextureType_NumOfTypes && "m_buttonTextures array is different size than the number of button textures, in EditorWindow.cpp");
 
     // Load button textures to memory
     for(decltype(m_buttonTextures.size()) size = m_buttonTextures.size(), i = 0; i < size; i++)
+    {
+        m_buttonTextures[i].setEnableDownsampling(false);
         m_buttonTextures[i].loadToMemory();
+    }
 
     // Load button textures to GPU
     for(decltype(m_buttonTextures.size()) size = m_buttonTextures.size(), i = 0; i < size; i++)
@@ -4214,6 +4461,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
         p_sceneData.m_modified = true;
         m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, m_systemScene->getSceneLoader()->getSystemScene(Systems::Physics), Systems::Changes::Physics::Gravity);
     }
+    captureMouseWhileItemActive();
 
     ImGui::SeparatorText("Audio scene settings:");
 
@@ -4374,6 +4622,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
         {
             miscSceneDataChanged = true;
         }
+        captureMouseWhileItemActive();
 
         // Draw AMBIENT LIGHT INTENSITY
         drawLeftAlignedLabelText("Point light:", inputWidgetOffset);
@@ -4381,6 +4630,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
         {
             miscSceneDataChanged = true;
         }
+        captureMouseWhileItemActive();
 
         // Draw AMBIENT LIGHT INTENSITY
         drawLeftAlignedLabelText("Spot light:", inputWidgetOffset);
@@ -4388,6 +4638,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
         {
             miscSceneDataChanged = true;
         }
+        captureMouseWhileItemActive();
     }
     ImGui::EndChild();
 
@@ -4471,6 +4722,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
             {
                 aoDataChanged = true;
             }
+            captureMouseWhileItemActive();
 
             // Draw AO BIAS
             drawLeftAlignedLabelText("Bias:", inputWidgetOffset);
@@ -4478,6 +4730,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
             {
                 aoDataChanged = true;
             }
+            captureMouseWhileItemActive();
 
             // Draw AO RADIUS
             drawLeftAlignedLabelText("Radius:", inputWidgetOffset);
@@ -4485,6 +4738,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
             {
                 aoDataChanged = true;
             }
+            captureMouseWhileItemActive();
 
             // Draw AO BLUR SHARPNESS
             drawLeftAlignedLabelText("Blur sharpness:", inputWidgetOffset);
@@ -4492,6 +4746,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
             {
                 aoDataChanged = true;
             }
+            captureMouseWhileItemActive();
 
         }
 
@@ -4522,6 +4777,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
         {
             atmScatteringDataChanged = true;
         }
+        captureMouseWhileItemActive();
 
         // Draw TOP RADIUS
         drawLeftAlignedLabelText("Top radius:", inputWidgetOffset);
@@ -4529,6 +4785,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
         {
             atmScatteringDataChanged = true;
         }
+        captureMouseWhileItemActive();
 
         ImGui::SeparatorText("Ground:");
 
@@ -4554,6 +4811,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
         {
             atmScatteringDataChanged = true;
         }
+        captureMouseWhileItemActive();
 
         if(atmScatteringDataChanged)
         {
@@ -4567,7 +4825,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
 
     // Calculate cascaded shadow mapping window height
     float shadowMappingWindowHeight = (m_fontSize + m_imguiStyle.FramePadding.y * 2 + m_imguiStyle.ItemSpacing.y);
-    shadowMappingWindowHeight *= p_sceneData.m_shadowMappingData.m_shadowMappingEnabled ? 10 + 3 * p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances.size() : 2.0f;
+    shadowMappingWindowHeight *= p_sceneData.m_shadowMappingData.m_shadowMappingEnabled ? 11 + 3 * p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances.size() : 2.0f;
     shadowMappingWindowHeight += m_imguiStyle.ItemSpacing.y;
 
     if(ImGui::BeginChild("##CascadedShadowMappingSettings", ImVec2(0.0f, shadowMappingWindowHeight), true))
@@ -4595,12 +4853,21 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
                 csmDataChanged = true;
             }
 
+            // Draw BIAS SCALE
+            drawLeftAlignedLabelText("Bias scale:", inputWidgetOffset);
+            if(ImGui::DragFloat("##CSMBiasScaleDrag", &p_sceneData.m_shadowMappingData.m_csmBiasScale, 0.00001f, 0.00001f, 10.0f, "%.5f") && p_sendChanges)
+            {
+                csmDataChanged = true;
+            }
+            captureMouseWhileItemActive();
+
             // Draw PENUMBRA SIZE
             drawLeftAlignedLabelText("Penumbra size:", inputWidgetOffset);
             if(ImGui::DragFloat("##CSMPenumbraSizeDrag", &p_sceneData.m_shadowMappingData.m_penumbraSize, 0.01f, 0.01f, 10.0f, "%.3f") && p_sendChanges)
             {
                 csmDataChanged = true;
             }
+            captureMouseWhileItemActive();
 
             // Draw PENUMBRA SCALE RANGE
             drawLeftAlignedLabelText("Penumbra scale range:", inputWidgetOffset);
@@ -4608,6 +4875,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
             {
                 csmDataChanged = true;
             }
+            captureMouseWhileItemActive();
 
             // Draw RESOLUTION
             drawLeftAlignedLabelText("Resolution:", inputWidgetOffset);
@@ -4618,6 +4886,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
                 if(p_sendChanges)
                     csmDataChanged = true;
             }
+            captureMouseWhileItemActive();
 
             // Draw Z-PLANE MULTIPLIER
             drawLeftAlignedLabelText("Z-plane multiplier:", inputWidgetOffset);
@@ -4625,6 +4894,7 @@ void EditorWindow::drawSceneData(SceneData &p_sceneData, const bool p_sendChange
             {
                 csmDataChanged = true;
             }
+            captureMouseWhileItemActive();
 
             // Draw PCF SAMPLES
             drawLeftAlignedLabelText("PCF samples:", inputWidgetOffset);
@@ -4835,6 +5105,66 @@ void EditorWindow::drawEntityHierarchyEntry(EntityHierarchyEntry *p_entityEntry)
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
 
+        // Draw DUPLICATE button
+        ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - m_buttonSizedByFont.x * 3.0f - m_imguiStyle.ItemInnerSpacing.x * 2.0f);
+        if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_Duplicate], ("##" + Utilities::toString(p_entityEntry->m_entityID) + "EntityDuplicateButton").c_str(), ("Duplicate \"" + p_entityEntry->m_combinedEntityIdAndName + "\" entity").c_str()))
+        {
+            // Construction info for the new entity
+            ComponentsConstructionInfo *newEntityConstructionInfo = new ComponentsConstructionInfo();
+
+            // Get the construction info of the current entity
+            WorldScene *worldScene = static_cast<WorldScene *>(m_systemScene->getSceneLoader()->getSystemScene(Systems::World));
+            worldScene->exportEntity(p_entityEntry->m_entityID, *newEntityConstructionInfo);
+
+            // Set the new entity name by adding a count at the end and checking if an entity of the same name doesn't exist
+            {
+                int newEntityNameCount = 2;
+                std::string baseEntityName = newEntityConstructionInfo->m_name;
+
+                // If the entity name ends with ' 1', replace the existing number
+                if(baseEntityName.size() > 2 && baseEntityName[baseEntityName.size() - 1] == '1' && baseEntityName[baseEntityName.size() - 2] == ' ')
+                {
+                    baseEntityName.pop_back();  // Remove '1'
+                    baseEntityName.pop_back();  // Remove ' '
+                }
+                std::string newEntityName = baseEntityName + " " + Utilities::toString(newEntityNameCount);
+
+                // Keep increasing the number at the end until there is no other entity with the same name
+                while(worldScene->getEntity(newEntityName) != NULL_ENTITY_ID)
+                {
+                    newEntityNameCount++;
+                    newEntityName = baseEntityName + " " + Utilities::toString(newEntityNameCount);
+                }
+                newEntityConstructionInfo->m_name = newEntityName;
+            }
+
+            // Assign a next available entity ID (start the available ID search from the next ID after the parent)
+            {
+                EntityID newEntityID = newEntityConstructionInfo->m_parent + 1;
+                for(decltype(m_entityList.size()) i = 0, size = m_entityList.size(); i < size;)
+                {
+                    if(newEntityID == m_entityList[i].m_entityID)
+                    {
+                        newEntityID++;
+                        i = 0;
+                    }
+                    else
+                        i++;
+                }
+                newEntityConstructionInfo->m_id = newEntityID;
+            }
+
+
+            m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::World), DataType::DataType_CreateEntity, (void *)newEntityConstructionInfo, false);
+
+            // Make the new entity be selected next frame
+            m_nextEntityIDToSelect = newEntityConstructionInfo->m_id;
+            m_pendingEntityToSelect = true;
+
+            // Add the new entity construction info to the pool (so it will be deleted the next frame)
+            m_componentConstructionInfoPool.push_back(newEntityConstructionInfo);
+        }
+
         // Draw ENTITY ADD CHILD button
         ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - m_buttonSizedByFont.x * 2.0f - m_imguiStyle.ItemInnerSpacing.x);
         if(drawTextSizedButton(m_buttonTextures[ButtonTextureType::ButtonTextureType_Add], ("##" + Utilities::toString(p_entityEntry->m_entityID) + "EntityAddChildButton").c_str(), ("Add child entity to \"" + p_entityEntry->m_combinedEntityIdAndName + "\"").c_str()))
@@ -4845,6 +5175,9 @@ void EditorWindow::drawEntityHierarchyEntry(EntityHierarchyEntry *p_entityEntry)
                 m_newEntityConstructionInfo->m_name = "New entity";
                 m_newEntityConstructionInfo->m_id = 0;
                 m_newEntityConstructionInfo->m_parent = p_entityEntry->m_entityID;
+
+                // Reset the duplicate parent flag for new entity
+                m_duplicateParent = false;
 
                 // Open the pop-up with the new entity settings
                 m_openNewEntityPopup = true;
@@ -4877,6 +5210,77 @@ void EditorWindow::drawEntityHierarchyEntry(EntityHierarchyEntry *p_entityEntry)
     }
 }
 
+void EditorWindow::captureMouseWhileItemActive()
+{
+    // Get current item ID
+    ImGuiID itemID = ImGui::GetItemID();
+
+    // Check if the current item is active and it is not in text input mode
+    if(ImGui::IsItemActive() && !ImGui::TempInputIsActive(itemID))
+    {
+        // If the same item continue being active, don't let the mouse leave the screen
+        if(m_activeItemID == itemID)
+        {
+            const auto currentMousePosition = WindowLocator::get().getMousePosition();
+            const auto currentScreenSize = WindowLocator::get().getScreenSize() - 2;
+
+            // If the mouse is near the edge of the screen, teleport it back to the starting position
+            if(currentMousePosition.x >= currentScreenSize.x || currentMousePosition.x <= 2 ||
+                currentMousePosition.y >= currentScreenSize.y || currentMousePosition.y <= 2)
+            {
+                ImGuiContext &imGuiContext = *ImGui::GetCurrentContext();
+
+                // Teleport mouse
+                WindowLocator::get().setMousePosition(m_mousePositionBeforeCapture.x, m_mousePositionBeforeCapture.y);
+
+                // Make sure to not count the mouse teleportation as a mouse movement
+                imGuiContext.IO.MousePos = imGuiContext.IO.MousePosPrev = ImVec2((float)m_mousePositionBeforeCapture.x, (float)m_mousePositionBeforeCapture.y);
+                imGuiContext.IO.MouseDelta = ImVec2(0.0f, 0.0f);
+            }
+
+            // Hide the mouse cursor
+            ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+        }
+        else
+        {
+            // If a new item became active, remember its ID, current mouse position and start confining mouse to the screen
+            m_activeItemID = itemID;
+            m_mousePositionBeforeCapture = WindowLocator::get().getMousePosition();
+
+            // Confine mouse to the window
+            WindowLocator::get().setMouseGrab(true);
+        }
+    }
+    else
+    {
+        // If the current items was activated before and just became deactivated,
+        // return mouse settings to normal
+        if(m_activeItemID == itemID)
+        {
+            // Reset active item ID
+            m_activeItemID = -1;
+
+            // Stop confining mouse to the window
+            WindowLocator::get().setMouseGrab(false);
+
+            // Return the mouse to the starting position
+            WindowLocator::get().setMousePosition(m_mousePositionBeforeCapture.x, m_mousePositionBeforeCapture.y);
+        }
+    }
+}
+
+void EditorWindow::exportPrefab(const EntityID p_entityID, std::string p_filename)
+{
+    WorldScene *worldScene = static_cast<WorldScene *>(m_systemScene->getSceneLoader()->getSystemScene(Systems::World));
+    auto &entityRegistry = worldScene->getEntityRegistry();
+
+    // Check if entity exists
+    if(entityRegistry.try_get<MetadataComponent>(p_entityID) != nullptr)
+    {
+        m_systemScene->getSceneLoader()->exportPrefab(p_entityID, p_filename);
+    }
+}
+
 void EditorWindow::saveTextFile(TextEditorData &p_textEditorData)
 {
     // Write text to file
@@ -4884,6 +5288,73 @@ void EditorWindow::saveTextFile(TextEditorData &p_textEditorData)
 
     // Reset the text changed flag
     p_textEditorData.m_textEditor.ResetTextChanged();
+}
+
+bool EditorWindow::processShortcuts()
+{
+    // Get ImGui IO (for key presses) and modifier keys
+    ImGuiIO &imGuiIO = ImGui::GetIO();
+    auto shiftKeyPressed = imGuiIO.KeyShift;
+    auto ctrlKeyPressed = imGuiIO.ConfigMacOSXBehaviors ? imGuiIO.KeySuper : imGuiIO.KeyCtrl;
+    auto altKeyPressed = imGuiIO.ConfigMacOSXBehaviors ? imGuiIO.KeyCtrl : imGuiIO.KeyAlt;
+
+    // Shortcut for NEW
+    if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_N)))
+        m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_New;
+
+    // Shortcut for OPEN
+    if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_O)))
+        m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Open;
+
+    // Shortcut for SAVE
+    if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_S)))
+        m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Save;
+
+    // Shortcut for SAVE AS
+    if(shiftKeyPressed && ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_S)))
+        m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_SaveAs;
+
+    // Shortcut for RELOAD SCENE
+    if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_R)))
+        m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_ReloadScene;
+
+    // Shortcut for CLOSE EDITOR
+    if(ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+        m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_CloseEditor;
+
+    // Shortcut for ENLARGE SCENE VIEWPORT
+    if(ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F11)))
+        m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_EnlargeSceneViewport;
+
+    // Shortcut for FULLSCREEN
+    if(shiftKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F11)))
+        m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Fullscreen;
+
+    // Shortcut for EXIT
+    if(altKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F4)))
+        m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Exit;
+
+    // Shortcut for UNDO
+    if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Z)))
+        m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Undo;
+
+    // Shortcut for REDO
+    if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Y)))
+        m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Redo;
+
+    // Shortcut for CUT
+    if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_X)))
+        m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Cut;
+
+    // Shortcut for COPY
+    if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_C)))
+        m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Copy;
+
+    // Shortcut for PASTE
+    if(ctrlKeyPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_V)))
+        m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_Paste;
+
+    return m_activatedMainMenuButton != MainMenuButtonType::MainMenuButtonType_None;
 }
 
 void EditorWindow::processMainMenuButton(MainMenuButtonType &p_mainMenuButtonType)
@@ -4977,13 +5448,28 @@ void EditorWindow::processMainMenuButton(MainMenuButtonType &p_mainMenuButtonTyp
             m_systemScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_SceneReload, EngineStateType::EngineStateType_Editor));
             break;
         case EditorWindow::MainMenuButtonType_CloseEditor:
-            // Send a notification to the engine to change the current engine state back to MainMenu
-            m_systemScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_StateChange, EngineStateType::EngineStateType_MainMenu));
-            // Unload the editor state
-            m_systemScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_SceneUnload, EngineStateType::EngineStateType_Editor));
+            if(!m_showingExitDialog)
+            {
+                m_showingExitDialog = true;
+                ImGui::OpenPopup("##CloseEditorPopup");
+            }
             break;
         case EditorWindow::MainMenuButtonType_Exit:
-            Config::m_engineVar.running = false;
+            if(!m_showingExitDialog)
+            {
+                m_showingExitDialog = true;
+                ImGui::OpenPopup("##ExitEnginePopup");
+            }
+            break;
+        case EditorWindow::MainMenuButtonType_EnlargeSceneViewport:
+            m_enlargedSceneViewport = !m_enlargedSceneViewport;
+
+            // Tell the renderer to draw the scene to the whole viewport
+            m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_RenderToTexture, (void *)!m_enlargedSceneViewport);
+            break;
+        case EditorWindow::MainMenuButtonType_Fullscreen:
+            m_fullscreen = !m_fullscreen;
+            WindowLocator::get().setFullscreen(m_fullscreen);
             break;
         case EditorWindow::MainMenuButtonType_Undo:
             {
@@ -5015,6 +5501,91 @@ void EditorWindow::processMainMenuButton(MainMenuButtonType &p_mainMenuButtonTyp
                     m_currentlyActiveTextEditor->m_textEditor.Paste();
             }
             break;
+        case EditorWindow::MainMenuButtonType_ExportPrefab:
+            // Only open the file browser if it's not opened already
+            if(m_currentlyOpenedFileBrowser == FileBrowserActivated::FileBrowserActivated_None)
+            {
+                // Set the file browser activation to Save Scene
+                m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_SavePrefabFile;
+
+                // Define file browser variables
+                m_fileBrowserDialog.m_definedFilename = m_selectedEntity.m_componentData.m_name + ".prefab";
+                m_fileBrowserDialog.m_filter = ".prefab,.*";
+                m_fileBrowserDialog.m_title = "Save prefab";
+                m_fileBrowserDialog.m_name = "SavePrefabFileDialog";
+                m_fileBrowserDialog.m_rootPath = Config::filepathVar().prefab_path;
+                m_fileBrowserDialog.m_flags = FileBrowserDialog::FileBrowserDialogFlags::FileBrowserDialogFlags_ConfirmOverwrite;
+
+                // Tell the GUI scene to open the file browser
+                m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
+            }
+            break;
+    }
+
+    if(ImGui::BeginPopupModal("##CloseEditorPopup", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings))
+    {
+        ImGui::Text("\nYou are about to close the editor\nand go back to the main menu.");
+        ImGui::NewLine();
+        ImGui::Text("All unsaved progress will be lost.");
+        ImGui::NewLine();
+        ImGui::NewLine();
+        ImGui::Text("Continue?");
+        ImGui::NewLine();
+
+        ImGui::Separator();
+
+        if(ImGui::Button("Yes", ImVec2(120, 0)))
+        {
+            // Send a notification to the engine to change the current engine state back to MainMenu
+            m_systemScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_StateChange, EngineStateType::EngineStateType_MainMenu));
+            // Unload the editor state
+            m_systemScene->getSceneLoader()->getChangeController()->sendEngineChange(EngineChangeData(EngineChangeType::EngineChangeType_SceneUnload, EngineStateType::EngineStateType_Editor));
+
+            m_showingExitDialog = false;
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::SameLine();
+
+        if(ImGui::Button("Cancel", ImVec2(120, 0)))
+        {
+            m_showingExitDialog = false;
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+
+    if(ImGui::BeginPopupModal("##ExitEnginePopup", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings))
+    {
+        ImGui::Text("\nYou are about to exit the application.");
+        ImGui::NewLine();
+        ImGui::Text("All unsaved progress will be lost.");
+        ImGui::NewLine();
+        ImGui::NewLine();
+        ImGui::Text("Continue?");
+        ImGui::NewLine();
+
+        ImGui::Separator();
+
+        if(ImGui::Button("Yes", ImVec2(140, 0)))
+        {
+            // Exit engine
+            Config::m_engineVar.running = false;
+
+            m_showingExitDialog = false;
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::SameLine();
+
+        if(ImGui::Button("Cancel", ImVec2(140, 0)))
+        {
+            m_showingExitDialog = false;
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
     }
 
     // Reset activated button
@@ -5073,14 +5644,14 @@ void EditorWindow::updateEntityList()
         // If the metadata component is present, add it to the list
         if(metadataComponent != nullptr)
         {
-            std::string entityIdPlusName = Utilities::toString(entity) + Config::componentVar().component_name_separator + metadataComponent->getName();
+            std::string entityIdPlusName = metadataComponent->getName() + " (" + Utilities::toString(entity) + ")";
             m_entityList.emplace_back(entity, metadataComponent->getParentEntityID(), metadataComponent->getName(), entityIdPlusName);
         }
     }
 
-    // Sort the list based on entity ID, so they are shown more conveniently
+    // Sort the list based on entity name, so they are shown more conveniently
     std::sort(m_entityList.begin(), m_entityList.end(),
-        [](const EntityListEntry &p_a, const EntityListEntry &p_b) -> bool { return p_a.m_entityID < p_b.m_entityID; });
+        [](const EntityListEntry &p_a, const EntityListEntry &p_b) -> bool { return p_a.m_name < p_b.m_name; });
 }
 
 void EditorWindow::updateHierarchyList()

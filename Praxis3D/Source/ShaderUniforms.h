@@ -1148,6 +1148,24 @@ private:
 	int m_screenWidth;
 };
 
+class CSMBiasScaleUniform : public BaseUniform
+{
+public:
+	CSMBiasScaleUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().csmBiasScaleUniform, p_shaderHandle), m_csmBiasScale(0.0f) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		if(m_csmBiasScale != p_uniformData.m_frameData.m_shadowMappingData.m_csmBiasScale)
+		{
+			m_csmBiasScale = p_uniformData.m_frameData.m_shadowMappingData.m_csmBiasScale;
+
+			glUniform1f(m_uniformHandle, m_csmBiasScale);
+		}
+	}
+
+private:
+	float m_csmBiasScale;
+};
 class CSMPenumbraScaleRangeUniform : public BaseUniform
 {
 public:
@@ -1503,6 +1521,56 @@ public:
 	}
 };
 
+class AODataSetBufferUniform : public BaseUniformBlock
+{
+public:
+	AODataSetBufferUniform(unsigned int p_shaderHandle) : BaseUniformBlock(Config::shaderVar().AODataSetBuffer, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		updateBlockBinding(UniformBufferBinding::UniformBufferBinding_AODataSet);
+	}
+};
+class AtmScatParametersUniform : public BaseUniformBlock
+{
+public:
+	AtmScatParametersUniform(unsigned int p_shaderHandle) : BaseUniformBlock(Config::shaderVar().atmScatParamBuffer, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		updateBlockBinding(UniformBufferBinding::UniformBufferBinding_AtmScatParam);
+	}
+};
+class CSMMatrixBufferUniform : public BaseUniformBlock
+{
+public:
+	CSMMatrixBufferUniform(unsigned int p_shaderHandle) : BaseUniformBlock(Config::shaderVar().CSMDataSetBuffer, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		updateBlockBinding(UniformBufferBinding::UniformBufferBinding_CSMMatrixBuffer);
+	}
+};
+class LensFlareParametersUniform : public BaseUniformBlock
+{
+public:
+	LensFlareParametersUniform(unsigned int p_shaderHandle) : BaseUniformBlock(Config::shaderVar().lensFlareParametersBuffer, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		updateBlockBinding(UniformBufferBinding::UniformBufferBinding_LensFlareParam);
+	}
+};
+class MaterialDataBufferUniform : public BaseUniformBlock
+{
+public:
+	MaterialDataBufferUniform(unsigned int p_shaderHandle) : BaseUniformBlock(Config::shaderVar().materialDataBuffer, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		updateBlockBinding(UniformBufferBinding::UniformBufferBinding_MaterialDataBuffer);
+	}
+};
 class PointLightBufferUniform : public BaseUniformBlock
 {
 public:
@@ -1523,36 +1591,6 @@ public:
 		updateBlockBinding(UniformBufferBinding::UniformBufferBinding_SpotLights);
 	}
 };
-class AtmScatParametersUniform : public BaseUniformBlock
-{
-public:
-	AtmScatParametersUniform(unsigned int p_shaderHandle) : BaseUniformBlock(Config::shaderVar().atmScatParamBuffer, p_shaderHandle) { }
-
-	void update(const UniformData &p_uniformData)
-	{
-		updateBlockBinding(UniformBufferBinding::UniformBufferBinding_AtmScatParam);
-	}
-};
-class LensFlareParametersUniform : public BaseUniformBlock
-{
-public:
-	LensFlareParametersUniform(unsigned int p_shaderHandle) : BaseUniformBlock(Config::shaderVar().lensFlareParametersBuffer, p_shaderHandle) { }
-
-	void update(const UniformData &p_uniformData)
-	{
-		updateBlockBinding(UniformBufferBinding::UniformBufferBinding_LensFlareParam);
-	}
-};
-class AODataSetBufferUniform : public BaseUniformBlock
-{
-public:
-	AODataSetBufferUniform(unsigned int p_shaderHandle) : BaseUniformBlock(Config::shaderVar().AODataSetBuffer, p_shaderHandle) { }
-
-	void update(const UniformData &p_uniformData)
-	{
-		updateBlockBinding(UniformBufferBinding::UniformBufferBinding_AODataSet);
-	}
-};
 class SSAOSampleBufferUniform : public BaseUniformBlock
 {
 public:
@@ -1561,16 +1599,6 @@ public:
 	void update(const UniformData &p_uniformData)
 	{
 		updateBlockBinding(UniformBufferBinding::UniformBufferBinding_SSAOSampleBuffer);
-	}
-};
-class CSMMatrixBufferUniform : public BaseUniformBlock
-{
-public:
-	CSMMatrixBufferUniform(unsigned int p_shaderHandle) : BaseUniformBlock(Config::shaderVar().CSMDataSetBuffer, p_shaderHandle) { }
-
-	void update(const UniformData &p_uniformData)
-	{
-		updateBlockBinding(UniformBufferBinding::UniformBufferBinding_CSMMatrixBuffer);
 	}
 };
 

@@ -8,46 +8,71 @@
 #include "Math.h"
 #include "Loaders.h"
 
-// Contains data of a single material
+struct MaterialParameters
+{
+	MaterialParameters() : m_color(1.0f), m_scale(1.0f), m_framing(0.0f) { }
+
+	glm::vec4 m_color;
+	glm::vec2 m_scale;
+	glm::vec2 m_framing;
+};
+
 struct MaterialData
 {
-	MaterialData() :
-		m_texture(Loaders::texture2D().getDefaultTexture()),
-		m_textureScale(1.0f, 1.0f) { }
+	MaterialData() { }
 
-	MaterialData(TextureLoader2D::Texture2DHandle &m_texture) : 
-		m_texture(m_texture), 
-		m_textureScale(1.0f, 1.0f) { }
-
-	// Handle to a texture
-	TextureLoader2D::Texture2DHandle m_texture;
-	// Texture coordinates scale (for example, used for tilling)
-	glm::vec2 m_textureScale;
+	MaterialParameters m_parameters[MaterialType::MaterialType_NumOfTypes];
 };
 
 // Contains data of a single mesh and its materials
 struct MeshData
 {
 	MeshData(
-		const Model::Mesh &p_mesh, 
-		const MaterialData p_materials[MaterialType::MaterialType_NumOfTypes], 
-		const float p_heightScale, 
-		const float p_alphaThreshold, 
-		const float p_emissiveIntensity, 
-		const bool p_textureRepetition, 
-		const float p_rextureRepetitionScale, 
-		const TextureWrapType p_textureWrapMode, 
+		const Model::Mesh &p_mesh,
+		const float p_heightScale,
+		const float p_alphaThreshold,
+		const float p_emissiveIntensity,
+		const bool p_textureRepetition,
+		const float p_rextureRepetitionScale,
+		const TextureWrapType p_textureWrapMode,
 		const bool p_active = true) :
-		m_mesh(&p_mesh), 
+		m_mesh(&p_mesh),
+		m_materials(MaterialType::MaterialType_NumOfTypes, Loaders::texture2D().getDefaultTexture()),
 		m_heightScale(p_heightScale),
 		m_alphaThreshold(p_alphaThreshold),
 		m_emissiveIntensity(p_emissiveIntensity),
 		m_textureWrapMode(p_textureWrapMode),
 		m_stochasticSampling(p_textureRepetition),
-		m_rextureRepetitionScale(p_rextureRepetitionScale),
+		m_textureRepetitionScale(p_rextureRepetitionScale),
 		m_active(p_active)
 	{
-		std::copy(p_materials, p_materials + MaterialType::MaterialType_NumOfTypes, m_materials);
+	}
+
+	MeshData(
+		const Model::Mesh &p_mesh,
+		const std::vector<TextureLoader2D::Texture2DHandle> &p_materials,
+		const MaterialData &p_materialData,
+		const float p_heightScale, 
+		const float p_alphaThreshold, 
+		const float p_emissiveIntensity, 
+		const bool p_textureRepetition, 
+		const float p_textureRepetitionScale, 
+		const TextureWrapType p_textureWrapMode, 
+		const bool p_active = true) :
+		m_mesh(&p_mesh),
+		m_materials(p_materials),
+		m_materialData(p_materialData),
+		m_heightScale(p_heightScale),
+		m_alphaThreshold(p_alphaThreshold),
+		m_emissiveIntensity(p_emissiveIntensity),
+		m_textureWrapMode(p_textureWrapMode),
+		m_stochasticSampling(p_textureRepetition),
+		m_textureRepetitionScale(p_textureRepetitionScale),
+		m_active(p_active)
+	{
+		// Make sure the material arrays are of the right size
+		if(m_materials.size() != MaterialType::MaterialType_NumOfTypes)
+			m_materials.resize(MaterialType::MaterialType_NumOfTypes, Loaders::texture2D().getDefaultTexture());
 	}
 
 	// Texture parallax effect scale (height multiplier)
@@ -57,7 +82,7 @@ struct MeshData
 	// Multiplier for emissive texture color
 	float m_emissiveIntensity;
 	// Scale for texture repetition algorithm
-	float m_rextureRepetitionScale;
+	float m_textureRepetitionScale;
 	// Flag specifying whether the texture repetition is turned on
 	bool m_stochasticSampling;
 	// Flag denoting whether to draw the mesh
@@ -69,7 +94,8 @@ struct MeshData
 	const Model::Mesh *m_mesh;
 
 	// An array of materials of each type
-	MaterialData m_materials[MaterialType::MaterialType_NumOfTypes];
+	std::vector<TextureLoader2D::Texture2DHandle> m_materials;
+	MaterialData m_materialData;
 };
 
 // Contains data of a single model and its meshes
@@ -218,26 +244,20 @@ struct LoadableObjectsContainer
 	inline const bool isLoadedToVideoMemory() const
 	{
 		return std::visit([](auto &&p_arg) { return isLoadedToVideoMemory(p_arg); }, m_loadableObject);
+	}
 
-		//switch(m_loadableObject.index())
-		//{
-		//	case LoadableObjectsContainer::LoadableObjectType_Shader:
-		//		return std::get<ShaderLoader::ShaderProgram *>(m_loadableObject)->isLoadedToVideoMemory();
-		//		break;
-		//	case LoadableObjectsContainer::LoadableObjectType_Model:
-		//		return std::get<ModelLoader::ModelHandle>(m_loadableObject).isLoadedToVideoMemory();
-		//		break;
-		//	case LoadableObjectsContainer::LoadableObjectType_Texture:
-		//		return std::get<TextureLoader2D::Texture2DHandle>(m_loadableObject).isLoadedToVideoMemory();
-		//		break;
-		//}
-
-		//return true;
+	inline const void setLoadedToVideoMemory(const bool p_loaded)
+	{
+		std::visit([=](auto &&p_arg) { return setLoadedToVideoMemory(p_arg, p_loaded); }, m_loadableObject);
 	}
 
 	static const bool isLoadedToVideoMemory(const ShaderLoader::ShaderProgram *p_shader) { return p_shader->isLoadedToVideoMemory(); }
 	static const bool isLoadedToVideoMemory(const ModelLoader::ModelHandle &p_model) { return p_model.isLoadedToVideoMemory(); }
 	static const bool isLoadedToVideoMemory(const TextureLoader2D::Texture2DHandle &p_texture) { return p_texture.isLoadedToVideoMemory(); }
+
+	static const void setLoadedToVideoMemory(ShaderLoader::ShaderProgram *p_shader, const bool p_loaded) { p_shader->setLoadedToVideoMemory(p_loaded); }
+	static const void setLoadedToVideoMemory(ModelLoader::ModelHandle &p_model, const bool p_loaded) { p_model.setLoadedToVideoMemory(p_loaded); }
+	static const void setLoadedToVideoMemory(TextureLoader2D::Texture2DHandle &p_texture, const bool p_loaded) { p_texture.setLoadedToVideoMemory(p_loaded); }
 
 	inline const LoadableObjectType getType() const { return static_cast<LoadableObjectType>(m_loadableObject.index()); }
 

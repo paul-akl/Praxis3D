@@ -3,7 +3,7 @@
 #include "AtmScatteringShaderPass.h"
 #include "RendererScene.h"
 
-void AtmScatteringPass::InitModel()
+void AtmScatteringPass::initModel()
 {
 	// Values from "Reference Solar Spectral Irradiance: ASTM G-173", ETR column
 	// (see http://rredc.nrel.gov/solar/spectra/am1.5/ASTMG173/ASTMG173.html),
@@ -204,5 +204,5 @@ void AtmScatteringPass::updateAtmScatteringData(const AtmosphericScatteringData 
 	m_atmScatteringParam.m_earthCenter = p_atmScatteringData.m_planetCenterPosition / (float)m_lengthUnitInMeters;
 	m_atmScatteringParam.m_sunSize = glm::vec2(tan((float)m_sunAngularRadius), cos((float)m_sunAngularRadius));
 
-	//InitModel();
+	//initModel();
 }

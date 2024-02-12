@@ -11,8 +11,8 @@ public:
 		m_spotLightBuffer(BufferType_Uniform, BufferBindTarget_Uniform, BufferUsageHint_DynamicDraw),
 		m_shaderLightPass(nullptr),
 		m_shaderLightCSMPass(nullptr),
-		m_maxNumPointLights(decltype(m_pointLights.size())(Config::graphicsVar().max_num_point_lights)),
-		m_maxNumSpotLights(decltype(m_spotLights.size())(Config::graphicsVar().max_num_spot_lights)),
+		m_maxNumPointLights(decltype(m_pointLights.size())(Config::rendererVar().max_num_point_lights)),
+		m_maxNumSpotLights(decltype(m_spotLights.size())(Config::rendererVar().max_num_spot_lights)),
 		m_numOfCascades(0),
 		m_numOfPCFSamples(1),
 		m_shadowMappingEnabled(false) { }
@@ -63,6 +63,14 @@ public:
 			// Load the shader to memory
 			if(ErrorCode shaderError = m_shaderLightPass->loadToMemory(); shaderError == ErrorCode::Success)
 			{
+				// Set the max number of point lights
+				if(ErrorCode shaderVariableError = m_shaderLightPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_maxNumOfPointLights, m_maxNumPointLights); shaderVariableError != ErrorCode::Success)
+					ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_maxNumOfPointLights, ErrorSource::Source_LightingPass);
+
+				// Set the max number of spot lights
+				if(ErrorCode shaderVariableError = m_shaderLightPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_maxNumOfSpotLights, m_maxNumSpotLights); shaderVariableError != ErrorCode::Success)
+					ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_maxNumOfSpotLights, ErrorSource::Source_LightingPass);
+
 				// Disable shadow mapping
 				if(ErrorCode shaderVariableError = m_shaderLightPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_shadowMapping, 0); shaderVariableError != ErrorCode::Success)
 					ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_shadowMapping, ErrorSource::Source_LightingPass);
@@ -89,6 +97,14 @@ public:
 			// Load the shader to memory
 			if(ErrorCode shaderError = m_shaderLightCSMPass->loadToMemory(); shaderError == ErrorCode::Success)
 			{
+				// Set the max number of point lights
+				if(ErrorCode shaderVariableError = m_shaderLightCSMPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_maxNumOfPointLights, m_maxNumPointLights); shaderVariableError != ErrorCode::Success)
+					ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_maxNumOfPointLights, ErrorSource::Source_LightingPass);
+
+				// Set the max number of spot lights
+				if(ErrorCode shaderVariableError = m_shaderLightCSMPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_maxNumOfSpotLights, m_maxNumSpotLights); shaderVariableError != ErrorCode::Success)
+					ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_maxNumOfSpotLights, ErrorSource::Source_LightingPass);
+
 				// Enable shadow mapping
 				if(ErrorCode shaderVariableError = m_shaderLightCSMPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_shadowMapping, 1); shaderVariableError != ErrorCode::Success)
 					ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_shadowMapping, ErrorSource::Source_LightingPass);

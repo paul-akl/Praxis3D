@@ -31,6 +31,7 @@ public:
 			m_movementCurrentFrameY = 0;
 			m_movementPrevFrameX = 0;
 			m_movementPrevFrameY = 0;
+
 			m_wheelX = 0;
 			m_wheelY = 0;
 
@@ -53,6 +54,7 @@ public:
 		int m_movementCurrentFrameY;
 		int m_movementPrevFrameX;
 		int m_movementPrevFrameY;
+
 		int m_wheelX;
 		int m_wheelY;
 
@@ -290,11 +292,23 @@ public:
 		SDL_ShowMessageBox(&messageboxdata, &buttonID);
 	}
 
+	// Make the mouse confined to the window
+	void setMouseGrab(const bool p_grab)
+	{
+		SDL_SetWindowGrab(m_SDLWindow, p_grab ? SDL_TRUE : SDL_FALSE);
+	}
+
 	// Sets if the window should display the mouse cursor or hide it
 	void setMouseShow(const bool p_show)
 	{
 		// SDL implementation of bool is "0" or "1", so we need to "convert" the regular bool
 		SDL_ShowCursor(p_show ? SDL_ENABLE : SDL_DISABLE);
+	}
+
+	// Teleports the mouse inside the window to the given position
+	void setMousePosition(const int p_mousePositionX, const int p_mousePositionY)
+	{
+		SDL_WarpMouseInWindow(m_SDLWindow, p_mousePositionX, p_mousePositionY);
 	}
 
 	// Sets relative mouse mode (cursor becomes hidden and clipped inside the window)
@@ -360,6 +374,12 @@ public:
 		SDL_SetWindowTitle(m_SDLWindow, p_title.c_str());
 	}
 
+	// Set the borderless window mode (no window decorations)
+	void setBorderless(const bool p_borderless)
+	{
+		SDL_SetWindowBordered(m_SDLWindow, p_borderless ? SDL_TRUE : SDL_FALSE);
+	}
+
 	// Makes the window go into or out of the fullscreen mode
 	void setFullscreen(const bool p_fullscreen)
 	{
@@ -395,7 +415,16 @@ public:
 		return returnVec;
 	}
 
+	// Get the relative mouse info
 	const inline MouseInfo &getMouseInfo() const { return m_mouseInfo; }
+
+	// Get the current mouse position relative to the focus window
+	const inline glm::ivec2 getMousePosition() const
+	{
+		glm::ivec2 returnVec;
+		SDL_GetMouseState(&returnVec.x, &returnVec.y);
+		return returnVec;
+	}
 
 	SDL_Window *getSDLWindowHandle() { return m_SDLWindow; }
 	SDL_GLContext *getGLContextHandle() { return &m_GLContext; }

@@ -32,13 +32,19 @@ public:
 		m_showNewMapWindow = false;
 		m_showImGuiDemoWindow = false;
 		m_showImspinnerDemoWindow = false;
+		m_fullscreen = false;
+		m_enlargedSceneViewport = false;
+		m_showingExitDialog = false;
 		m_activatedMainMenuButton = MainMenuButtonType::MainMenuButtonType_None;
 		m_sceneState = EditorSceneState::EditorSceneState_Pause;
 		m_centerWindowSize = glm::ivec2(0);
+		m_activeItemID = -1;
+		m_mouseCaptured = false;
 
 		m_selectedTexture = nullptr;
 		m_textureInspectorTabFlags = 0;
 
+		m_buttonMaterialType = MaterialType::MaterialType_Diffuse;
 		m_colorEditFlags = ImGuiColorEditFlags_Float;
 		m_browseButtonWidth = 60.0f;
 		m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_None;
@@ -50,11 +56,13 @@ public:
 		m_selectedProgram = nullptr;
 		m_selectedShaderType = -1;
 
-		m_nextEntityToSelect = NULL_ENTITY_ID;
+		m_nextEntityIDToSelect = NULL_ENTITY_ID;
+		m_nextEntityToSelect = nullptr;
 		m_pendingEntityToSelect = false;
 
 		m_newEntityConstructionInfo = nullptr;
 		m_openNewEntityPopup = false;
+		m_duplicateParent = false;
 
 		m_newSceneSettingsTabFlags = 0;
 
@@ -69,6 +77,10 @@ public:
 		m_newEntityWindowInitialized = false;
 		m_sceneViewportPosition = ImVec2(0.0f, 0.0f);
 		m_sceneViewportSize = ImVec2(0.0f, 0.0f);
+		m_synchronizeTextureScale = true;
+		m_synchronizeTextureFraming = true;
+		m_2DTextureScale = true;
+		m_2DTextureFraming = false;
 
 		for(unsigned int i = 0; i < ObjectMaterialType::NumberOfMaterialTypes; i++)
 			m_physicalMaterialProperties.push_back(GetString(static_cast<ObjectMaterialType>(i)));
@@ -481,6 +493,7 @@ private:
 		ButtonTextureType_ScriptingEnable,
 		ButtonTextureType_DeleteEntry,
 		ButtonTextureType_Add,
+		ButtonTextureType_Duplicate,
 		ButtonTextureType_OpenFile,
 		ButtonTextureType_Reload,
 		ButtonTextureType_OpenAssetList,
@@ -505,6 +518,7 @@ private:
 		FileBrowserActivated_TextureFile,
 		FileBrowserActivated_AudioBankFile,
 		FileBrowserActivated_PrefabFile,
+		FileBrowserActivated_SavePrefabFile,
 		FileBrowserActivated_ShaderFile
 	};
 	enum MainMenuButtonType : unsigned int
@@ -517,11 +531,14 @@ private:
 		MainMenuButtonType_ReloadScene,
 		MainMenuButtonType_CloseEditor,
 		MainMenuButtonType_Exit,
+		MainMenuButtonType_EnlargeSceneViewport,
+		MainMenuButtonType_Fullscreen,
 		MainMenuButtonType_Undo,
 		MainMenuButtonType_Redo,
 		MainMenuButtonType_Cut,
 		MainMenuButtonType_Copy,
-		MainMenuButtonType_Paste
+		MainMenuButtonType_Paste,
+		MainMenuButtonType_ExportPrefab
 	};
 	enum KeyType : unsigned int
 	{
@@ -942,6 +959,10 @@ private:
 
 		return returnBool;
 	}
+	
+	// Hides and locks the mouse to the screen while an item (like a float drag) is active
+	// Returns the mouse to the original position after the mouse button is released
+	void captureMouseWhileItemActive();
 
 	// Calculates the offset for a square text-sized button from the right side of the edge 
 	// (p_buttonIndex is the button count from the right side)
@@ -981,7 +1002,9 @@ private:
 		}
 	}
 
+	void exportPrefab(const EntityID p_entityID, std::string p_filename);
 	void saveTextFile(TextEditorData &p_textEditorData);
+	bool processShortcuts();
 	void processMainMenuButton(MainMenuButtonType &p_mainMenuButtonType);
 	void updateSceneData(SceneData &p_sceneData);
 	void updateEntityList();
@@ -1006,6 +1029,12 @@ private:
 			break;
 		case TextureFormat_Alpha:
 			return "Alpha";
+			break;
+		case TextureFormat_R:
+			return "R";
+			break;
+		case TextureFormat_RG:
+			return "RG";
 			break;
 		case TextureFormat_RGB:
 			return "RGB";
@@ -1102,6 +1131,45 @@ private:
 			case TextureDataFormat::TextureDataFormat_R32UI:
 				return "R32UI";
 				break;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_RGB:
+				return "COMPRESSED RGB";
+				break;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_RGBA:
+				return "COMPRESSED RGBA";
+				break;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_DXT1_RGB:
+				return "DXT1 RGB (BC1)";
+				break;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_DXT1_RGBA:
+				return "DXT1 RGBA (BC1)";
+				break;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_DXT3_RGBA:
+				return "DXT3 RGBA (BC2)";
+				break;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_DXT5_RGBA:
+				return "DXT5 RGBA (BC3)";
+				break;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_RGTC1_R:
+				return "RGTC1 R (BC4)";
+				break;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_RGTC2_RG:
+				return "RGTC2 RG (BC5)";
+				break;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_BPTC_RGBA:
+				return "BPTC RGBA (BC7)";
+				break;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_EAC_R:
+				return "EAC R11 (ETC2)";
+				break;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_EAC_RG:
+				return "EAC RG11 (ETC2)";
+				break;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_ETC2_RGB:
+				return "ETC2 RGB8 (ETC2)";
+				break;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_ETC2_RGBA:
+				return "ETC2 RGBA8 (ETC2)";
+				break;
 		}
 		return "";
 	}
@@ -1114,12 +1182,20 @@ private:
 	bool m_showNewMapWindow;
 	bool m_showImGuiDemoWindow;
 	bool m_showImspinnerDemoWindow;
+	bool m_fullscreen;
+	bool m_enlargedSceneViewport;
+	bool m_showingExitDialog;
 
 	MainMenuButtonType m_activatedMainMenuButton;
 	EditorSceneState m_sceneState;
 	glm::ivec2 m_centerWindowSize;
+	ImGuiID m_activeItemID;
+
+	bool m_mouseCaptured;
+	glm::ivec2 m_mousePositionBeforeCapture;
 
 	// GUI settings
+	MaterialType m_buttonMaterialType;
 	ImGuiColorEditFlags m_colorEditFlags;
 	float m_browseButtonWidth;
 	FileBrowserActivated m_currentlyOpenedFileBrowser;
@@ -1134,6 +1210,10 @@ private:
 	bool m_newEntityWindowInitialized;
 	ImVec2 m_sceneViewportPosition;
 	ImVec2 m_sceneViewportSize;
+	bool m_synchronizeTextureScale;
+	bool m_synchronizeTextureFraming;
+	bool m_2DTextureScale;
+	bool m_2DTextureFraming;
 
 	// Assets variables
 	std::vector<std::pair<const Texture2D *, std::string>> m_textureAssets;
@@ -1160,7 +1240,8 @@ private:
 	EntityHierarchyEntry m_rootEntityHierarchyEntry;
 	SelectedEntity m_selectedEntity;
 	SceneData m_currentSceneData;
-	EntityID m_nextEntityToSelect;
+	EntityID m_nextEntityIDToSelect; 
+	ComponentsConstructionInfo *m_nextEntityToSelect;
 	bool m_pendingEntityToSelect;
 
 	// Used to hold entity and component data for component creation / deletion until the next frame, after sending the data as a change
@@ -1168,6 +1249,7 @@ private:
 	std::vector<ComponentsConstructionInfo*> m_componentConstructionInfoPool;
 	ComponentsConstructionInfo *m_newEntityConstructionInfo;
 	bool m_openNewEntityPopup;
+	bool m_duplicateParent;
 
 	// New scene settings
 	SceneData m_newSceneData;

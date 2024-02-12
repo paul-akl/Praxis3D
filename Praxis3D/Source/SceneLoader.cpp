@@ -294,6 +294,28 @@ ErrorCode SceneLoader::importPrefab(ComponentsConstructionInfo &p_constructionIn
 	return returnError;
 }
 
+ErrorCode SceneLoader::exportPrefab(const EntityID p_entityID, const std::string &p_filename)
+{
+	ErrorCode returnError = ErrorCode::Success;
+
+	// Get the world scene required for getting the entity registry
+	WorldScene *worldScene = static_cast<WorldScene *>(m_systemScenes[Systems::World]);
+
+	// Export the entity to the Construction Info
+	ComponentsConstructionInfo constructionInfo;
+	worldScene->exportEntity(p_entityID, constructionInfo);
+
+	// Export the Construction Info to the Property Set
+	PropertySet rootPropertySet(Properties::Default);
+	exportToProperties(constructionInfo, rootPropertySet);
+
+	// Save properties to a file
+	PropertyLoader savedProperties(Config::filepathVar().prefab_path + p_filename);
+	returnError = savedProperties.saveToFile(rootPropertySet);
+
+	return returnError;
+}
+
 ErrorCode SceneLoader::importFromFile(ComponentsConstructionInfo &p_constructionInfo, const std::string &p_filename)
 {
 	ErrorCode returnError = ErrorCode::Success;
@@ -743,18 +765,21 @@ void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_con
 												// Check if an entry for the current material type was present within the properties
 												if(materialProperties[iMatType])
 												{
-													// Get texture filename property, check if it is valid
-													auto filenameProperty = materialProperties[iMatType].getPropertyByID(Properties::Filename);
-													if(filenameProperty.isVariableTypeString())
-													{
-														// Get texture filename string, check if it is valid
+													// Get texture color, if it is present
+													if(auto colorProperty = materialProperties[iMatType].getPropertyByID(Properties::Color); colorProperty)
+														newModelEntry.m_meshData[meshDataIndex].m_meshMaterialColors[iMatType] = colorProperty.getVec4f();
+													
+													// Get texture filename, if it is valid
+													if(auto filenameProperty = materialProperties[iMatType].getPropertyByID(Properties::Filename); filenameProperty.isVariableTypeString())
 														newModelEntry.m_meshData[meshDataIndex].m_meshMaterials[iMatType] = filenameProperty.getString();
-													}
 
-													// Get texture scale property, check if it is valid
-													auto scaleProperty = materialProperties[iMatType].getPropertyByID(Properties::TextureScale);
-													if(scaleProperty)
-														newModelEntry.m_meshData[meshDataIndex].m_meshMaterialsScales[iMatType] = scaleProperty.getVec2f();
+													// Get texture framing, if it is present
+													if(auto framingProperty = materialProperties[iMatType].getPropertyByID(Properties::Framing); framingProperty)
+														newModelEntry.m_meshData[meshDataIndex].m_meshMaterialFraming[iMatType] = framingProperty.getVec2f();
+
+													// Get texture scale, if it is present
+													if(auto scaleProperty = materialProperties[iMatType].getPropertyByID(Properties::TextureScale); scaleProperty)
+														newModelEntry.m_meshData[meshDataIndex].m_meshMaterialScales[iMatType] = scaleProperty.getVec2f();
 												}
 											}
 										}
@@ -1313,8 +1338,10 @@ void SceneLoader::exportToProperties(const GraphicsComponentsConstructionInfo &p
 								auto &materialPropertySet = materialsPropertySet.addPropertySet(materialPropertyID);
 
 								// Add material data
+								materialPropertySet.addProperty(Properties::PropertyID::Color, model.m_meshData[i].m_meshMaterialColors[materialType]);
 								materialPropertySet.addProperty(Properties::PropertyID::Filename, model.m_meshData[i].m_meshMaterials[materialType]);
-								materialPropertySet.addProperty(Properties::PropertyID::TextureScale, model.m_meshData[i].m_meshMaterialsScales[materialType]);
+								materialPropertySet.addProperty(Properties::PropertyID::Framing, model.m_meshData[i].m_meshMaterialFraming[materialType]);
+								materialPropertySet.addProperty(Properties::PropertyID::TextureScale, model.m_meshData[i].m_meshMaterialScales[materialType]);
 							}
 						}
 					}

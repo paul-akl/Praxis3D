@@ -170,6 +170,7 @@ ErrorCode ShaderUniformUpdater::generatePerFrameList()
 	uniformList.push_back(new BloomTresholdUniform(m_shaderHandle));
 
 	// CSM
+	uniformList.push_back(new CSMBiasScaleUniform(m_shaderHandle));
 	uniformList.push_back(new CSMPenumbraScaleRangeUniform(m_shaderHandle));
 	
 	// Luminance
@@ -242,22 +243,25 @@ ErrorCode ShaderUniformUpdater::generateUniformBlockList()
 	// Make a vector of uniform classes and populate it
 	std::vector<BaseUniformBlock*> uniformBlockList;
 
-	// Light buffers
-	uniformBlockList.push_back(new PointLightBufferUniform(m_shaderHandle));
-	uniformBlockList.push_back(new SpotLightBufferUniform(m_shaderHandle));
-
 	// Ambient occlusion buffer
 	uniformBlockList.push_back(new AODataSetBufferUniform(m_shaderHandle));
 	uniformBlockList.push_back(new SSAOSampleBufferUniform(m_shaderHandle));
 
 	// Atmospheric scattering buffer
 	uniformBlockList.push_back(new AtmScatParametersUniform(m_shaderHandle));
-	
-	// Lens flare effect parameters buffer
-	uniformBlockList.push_back(new LensFlareParametersUniform(m_shaderHandle));
 
 	// Cascaded shadow mapping matrix buffer
 	uniformBlockList.push_back(new CSMMatrixBufferUniform(m_shaderHandle));
+
+	// Lens flare effect parameters buffer
+	uniformBlockList.push_back(new LensFlareParametersUniform(m_shaderHandle));
+
+	// Light buffers
+	uniformBlockList.push_back(new PointLightBufferUniform(m_shaderHandle));
+	uniformBlockList.push_back(new SpotLightBufferUniform(m_shaderHandle));
+
+	// Material data buffer
+	uniformBlockList.push_back(new MaterialDataBufferUniform(m_shaderHandle));
 
 	// Go through each uniform and check if it is valid
 	// If it is, add it to the update list, if not, delete it

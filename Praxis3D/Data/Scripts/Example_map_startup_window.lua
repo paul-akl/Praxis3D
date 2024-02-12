@@ -42,10 +42,11 @@ function init ()
 	mainBodyText[17] = '[D] - strafe right'
 	mainBodyText[18] = '[C] - move upward'
 	mainBodyText[19] = '[SPACE] - move downward'
-	mainBodyText[20] = '[F9] - toggle fullscreen'
-	mainBodyText[21] = '[F11] - toggle v-sync'
-	mainBodyText[22] = '[ESC] - go back to main-menu'
-	mainBodyTextSize = 22
+	mainBodyText[20] = '[F9] - toggle mouse capture'
+	mainBodyText[21] = '[F10] - toggle v-sync'
+	mainBodyText[22] = '[F11] - toggle fullscreen'
+	mainBodyText[23] = '[ESC] - go back to main-menu'
+	mainBodyTextSize = 23
 	
 	-- Pause physics simulation while this GUI window is showing
 	sendData(SystemType.Physics, DataType.DataType_SimulationActive, false)

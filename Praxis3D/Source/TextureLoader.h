@@ -56,6 +56,9 @@ public:
 	inline TextureFormat getTextureFormat()			const { return m_textureFormat; }
 	inline TextureDataFormat getTextureDataFormat() const { return m_textureDataFormat; }
 	inline TextureDataType getTextureDataType()		const { return m_textureDataType; }
+	
+	inline bool getCompressionEnabled()				const { return m_enableCompression; }
+	inline bool getDownsamplingEnabled()			const { return m_enableDownsampling; }
 	inline bool getMipmapEnabled()					const { return m_enableMipmap; }
 	inline int getMipmapLevel()						const { return m_mipmapLevel; }
 	inline const void *getPixelData()				const { return m_pixelData; }
@@ -99,11 +102,10 @@ public:
 	}
 
 protected:
-	Texture2D(LoaderBase<TextureLoader2D, Texture2D> *p_loaderBase, std::string p_filename, size_t p_uniqueID, unsigned int p_handle) : UniqueObject(p_loaderBase, p_uniqueID, p_filename), m_handle(p_handle)
+	Texture2D(LoaderBase<TextureLoader2D, Texture2D> *p_loaderBase, const std::string p_filename, const size_t p_uniqueID, const unsigned int p_handle, const MaterialType p_materialType) : UniqueObject(p_loaderBase, p_uniqueID, p_filename), m_handle(p_handle), m_materialType(p_materialType)
 	{
 		m_size = 0;
 		m_loadedFromFile = false;
-		m_enableMipmap = Config::textureVar().generate_mipmaps;
 		m_mipmapLevel = 0;
 		m_textureWidth = 0;
 		m_textureHeight = 0;
@@ -113,16 +115,30 @@ protected:
 		m_textureDataFormat = TextureDataFormat::TextureDataFormat_RGBA8;
 		m_textureDataType = TextureDataType::TextureDataType_UnsignedByte;
 
-		if(m_enableMipmap)
+		switch(m_materialType)
 		{
-			m_magnificationFilter = convertToTextureFilterType(Config::textureVar().gl_texture_magnification_mipmap);
-			m_minificationFilter = convertToTextureFilterType(Config::textureVar().gl_texture_minification_mipmap);
+			case MaterialType_Normal:
+				m_enableCompression = Config::textureVar().texture_normal_compression;
+				m_enableDownsampling = Config::textureVar().texture_downsample;
+				m_enableMipmap = Config::textureVar().generate_mipmaps;
+				break;
+			case MaterialType_Noise:
+			case MaterialType_Data:
+				m_enableCompression = false;
+				m_enableDownsampling = false;
+				m_enableMipmap = false;
+				break;
+			case MaterialType_Diffuse:
+			case MaterialType_Emissive:
+			case MaterialType_Combined:
+			default:
+				m_enableCompression = Config::textureVar().texture_compression;
+				m_enableDownsampling = Config::textureVar().texture_downsample;
+				m_enableMipmap = Config::textureVar().generate_mipmaps;
+				break;
 		}
-		else
-		{
-			m_magnificationFilter = convertToTextureFilterType(Config::textureVar().gl_texture_magnification);
-			m_minificationFilter = convertToTextureFilterType(Config::textureVar().gl_texture_minification);
-		}
+
+		setEnableMipmapping(Config::textureVar().generate_mipmaps);
 	}
 
 	// Loads pixel data (using the filename) from HDD to RAM, re-factors it
@@ -146,38 +162,165 @@ protected:
 			if(m_bitmap)
 			{
 				// Calculate the number of bytes per pixel
-				unsigned int bytesPerPixel = FreeImage_GetLine(m_bitmap) / FreeImage_GetWidth(m_bitmap);
+				const unsigned int bytesPerPixel = FreeImage_GetLine(m_bitmap) / FreeImage_GetWidth(m_bitmap);
 				// Calculate the number of samples per pixel
-				unsigned int samplesPerPixel = bytesPerPixel / sizeof(BYTE);
+				const unsigned int samplesPerPixel = bytesPerPixel / sizeof(BYTE);
 
 				// Only supporting 24bits or 32bits per pixel
 				if(samplesPerPixel == 3)
 				{
-					m_textureFormat = TextureFormat_RGB;
-					m_textureDataFormat = TextureDataFormat_RGB8;
-					m_bitmap = FreeImage_ConvertTo24Bits(m_bitmap);
+					// 3 color channels
+					m_textureFormat = TextureFormat::TextureFormat_RGB;
+
+					// Save the original bitmap
+					auto *oldBitmap = m_bitmap;
+
+					// Convert to 24 bits for RGB
+					m_bitmap = FreeImage_ConvertTo24Bits(oldBitmap);
+
+					//Unload the original bitmap
+					FreeImage_Unload(oldBitmap);
+
+					// Should the texture compression be used
+					if(m_enableCompression && Config::textureVar().texture_compression)
+					{
+						// Assign texture compression method based on the material type
+						switch(m_materialType)
+						{
+							case MaterialType_Normal:
+								m_textureDataFormat = s_textureCompressionFormatNormal;
+								break;
+							case MaterialType_Noise:
+							case MaterialType_Data:
+								m_textureDataFormat = TextureDataFormat::TextureDataFormat_RGB8;
+								break;
+							case MaterialType_Diffuse:
+							case MaterialType_Emissive:
+							case MaterialType_Combined:
+							default:
+								m_textureDataFormat = s_textureCompressionFormatRGB;
+								break;
+						}
+					}
+					else
+						m_textureDataFormat = TextureDataFormat::TextureDataFormat_RGB8;	// No texture compression
 				}
 				else
 				{
-					m_textureFormat = TextureFormat_RGBA;
-					m_textureDataFormat = TextureDataFormat_RGBA8;
-					m_bitmap = FreeImage_ConvertTo32Bits(m_bitmap);
+					// 4 color channels
+					m_textureFormat = TextureFormat::TextureFormat_RGBA;
+
+					// Save the original bitmap
+					auto *oldBitmap = m_bitmap;
+
+					// Convert to 24 bits for RGB
+					m_bitmap = FreeImage_ConvertTo32Bits(oldBitmap);
+
+					//Unload the original bitmap
+					FreeImage_Unload(oldBitmap);
+
+					// Should the texture compression be used
+					if(m_enableCompression && Config::textureVar().texture_compression)
+					{
+						// Assign texture compression method based on the material type
+						switch(m_materialType)
+						{
+							case MaterialType_Normal:
+								m_textureDataFormat = s_textureCompressionFormatNormal;
+								break;
+							case MaterialType_Noise:
+							case MaterialType_Data:
+								m_textureDataFormat = TextureDataFormat::TextureDataFormat_RGBA8;
+								break;
+							case MaterialType_Diffuse:
+							case MaterialType_Emissive:
+							case MaterialType_Combined:
+							default:
+								m_textureDataFormat = s_textureCompressionFormatRGBA;
+								break;
+						}
+					}
+					else
+						m_textureDataFormat = TextureDataFormat::TextureDataFormat_RGBA8;	// No texture compression
 				}
 
-				// Get texture width, height and size
+				// Get texture width, height
 				m_textureWidth = FreeImage_GetWidth(m_bitmap);
 				m_textureHeight = FreeImage_GetHeight(m_bitmap);
-				m_size = m_textureWidth * m_textureHeight;
-				
-				// Texture data passed to the GPU must be in an unsigned char array format
-				//m_pixelData = (unsigned char *)FreeImage_GetBits(m_bitmap);
-				auto pixelData = FreeImage_GetBits(m_bitmap);
 
-				// Temp variable for swapping color channels
-				unsigned char blue = 0;
+				// Calculate texture size
+				m_size = m_textureWidth * m_textureHeight;
+
+				if(m_enableDownsampling)
+				{
+					unsigned int downsampleScale = 1;
+
+					if(Config::textureVar().texture_downsample_scale > 1)
+					{
+						// Set the defined scale
+						downsampleScale = (unsigned int)Config::textureVar().texture_downsample_scale;
+
+						// Downsample the texture
+						//auto *newBitmap = FreeImage_Rescale(m_bitmap, m_textureWidth / downsampleScale, m_textureHeight / downsampleScale);
+
+						//// Calculate new texture width, height and size
+						//m_textureWidth = FreeImage_GetWidth(newBitmap);
+						//m_textureHeight = FreeImage_GetHeight(newBitmap);
+
+						//// Unload the original texture
+						//FreeImage_Unload(m_bitmap);
+
+						//// Set the downsampled texture as the current one
+						//m_bitmap = newBitmap;
+					}
+					else
+					{
+						if(Config::textureVar().texture_downsample_max_resolution > 0)
+						{
+							const unsigned int maxResolution = (unsigned int)Config::textureVar().texture_downsample_max_resolution;
+
+							// Check if texture resolution is higher than the maximum allowed
+							if(m_textureWidth > maxResolution)
+							{
+								downsampleScale = m_textureWidth / maxResolution;
+							}
+							else
+							{
+								if(m_textureHeight > maxResolution)
+								{
+									downsampleScale = m_textureHeight / maxResolution;
+								}
+							}
+						}
+					}
+
+					// If downsample is scale is higher than 1, perform the downsample on the texture
+					if(downsampleScale > 1)
+					{
+						// Downsample the texture
+						auto *newBitmap = FreeImage_Rescale(m_bitmap, m_textureWidth / downsampleScale, m_textureHeight / downsampleScale);
+
+						// Unload the original texture
+						FreeImage_Unload(m_bitmap);
+
+						// Set the downsampled texture as the current one
+						m_bitmap = newBitmap;
+
+						// Recalculate texture dimensions and size
+						m_textureWidth = FreeImage_GetWidth(m_bitmap);
+						m_textureHeight = FreeImage_GetHeight(m_bitmap);
+						m_size = m_textureWidth * m_textureHeight;
+					}
+				}
+
+				// Texture data passed to the GPU must be in an unsigned char array format
+				auto pixelData = FreeImage_GetBits(m_bitmap);
 
 				// Define number of channels per pixel
 				const unsigned int numChan = m_textureFormat == TextureFormat_RGB ? 3 : 4;
+
+				// Temp variable for swapping color channels
+				unsigned char blue = 0;
 
 				// FreeImage loads in BGR format, therefore swap of bytes is needed (Or usage of GL_BGR)
 				for(unsigned int i = 0; i < m_size; i++)
@@ -188,6 +331,21 @@ protected:
 				}
 
 				m_pixelData = pixelData;
+
+				//if(m_materialType == MaterialType_Normal && samplesPerPixel == 3)
+				//{
+				//	m_textureFormat = TextureFormat::TextureFormat_RG;
+				//	auto *oldPixelData = pixelData;
+				//	unsigned char *newData = new unsigned char[m_size * 2];
+
+				//	for(unsigned int i = 0; i < m_size; i++)
+				//	{
+				//		pixelData[i * 2 + 0] = oldPixelData[i * samplesPerPixel + 0];
+				//		pixelData[i * 2 + 1] = oldPixelData[i * samplesPerPixel + 1];
+				//	}
+
+				//	m_pixelData = newData;
+				//}
 
 				setLoadedToMemory(true);
 				m_loadedFromFile = true;
@@ -208,7 +366,7 @@ protected:
 		ErrorCode returnError = ErrorCode::Success;
 
 		// Release memory if it hasn't been freed already
-		if(m_bitmap)
+		if(m_bitmap != nullptr)
 		{
 			FreeImage_Unload(m_bitmap);
 			m_bitmap = nullptr;
@@ -218,13 +376,22 @@ protected:
 		return returnError;
 	}
 
-	// Deletes texture from GPU VRAM
-	/*ErrorCode unloadVideoMemory()
+	// Set whether the mipmapping is enabled. Also sets the appropriate magnification and minification filtering
+	void setEnableMipmapping(const bool p_enableCompression)
 	{
-		ErrorCode returnError = ErrorCode::Success;
-		glDeleteTextures(1, &m_handle);
-		return returnError;
-	}*/
+		m_enableMipmap = p_enableCompression;
+
+		if(m_enableMipmap)
+		{
+			m_magnificationFilter = convertToTextureFilterType(Config::textureVar().gl_texture_magnification_mipmap);
+			m_minificationFilter = convertToTextureFilterType(Config::textureVar().gl_texture_minification_mipmap);
+		}
+		else
+		{
+			m_magnificationFilter = convertToTextureFilterType(Config::textureVar().gl_texture_magnification);
+			m_minificationFilter = convertToTextureFilterType(Config::textureVar().gl_texture_minification);
+		}
+	}
 
 	// Copies the pixel data from source channel from passed texture, to the destination channel
 	// Repeats the texture, if the passed texture size does not match
@@ -265,12 +432,19 @@ protected:
 	const inline void *getData() { return (void*)m_pixelData; }
 
 protected:
+	inline static TextureDataFormat s_textureCompressionFormatRGB = TextureDataFormat::TextureDataFormat_RGB8;
+	inline static TextureDataFormat s_textureCompressionFormatRGBA = TextureDataFormat::TextureDataFormat_RGBA8;
+	inline static TextureDataFormat s_textureCompressionFormatNormal = TextureDataFormat::TextureDataFormat_RGB8;
+
+	MaterialType m_materialType;
 	TextureFormat m_textureFormat;
 	TextureDataFormat m_textureDataFormat;
 	TextureDataType m_textureDataType;
 	TextureFilterType m_magnificationFilter;
 	TextureFilterType m_minificationFilter;
 	bool m_loadedFromFile;
+	bool m_enableCompression;
+	bool m_enableDownsampling;
 	bool m_enableMipmap;
 	int m_mipmapLevel;
 
@@ -287,6 +461,7 @@ class TextureLoader2D : public LoaderBase<TextureLoader2D, Texture2D>
 public:
 	class Texture2DHandle
 	{
+		friend struct LoadableObjectsContainer;
 		friend class CommandBuffer;
 		friend class TextureLoader2D;
 		friend class RendererFrontend;
@@ -307,7 +482,13 @@ public:
 
 			return returnError;
 		}
-		
+
+		// Deletes pixel data stored in RAM. Does not delete the texture that is loaded on GPU VRAM
+		ErrorCode unloadFromMemory()
+		{
+			return m_textureData->unloadMemory();
+		}
+
 		void setColorChannel(const Texture2DHandle &p_textureHandle, TextureColorChannelOffset p_destChannel, TextureColorChannelOffset p_sourceChannel = ColorOffset_Red)
 		{
 			// If both textures have pixel data loaded
@@ -350,12 +531,15 @@ public:
 		// Has the texture been already loaded to video memory (GPU VRAM)
 		const inline bool isLoadedToVideoMemory() const { return m_textureData->isLoadedToVideoMemory(); }
 
+		// Has the texture been queued to be loaded to video memory (GPU VRAM)
+		inline const bool isQueuedLoadToVideoMemory() const { return m_textureData->isQueuedLoadToVideoMemory(); }
+
 		// Getters
 		inline unsigned int getTextureHeight() const { return m_textureData->m_textureHeight; }
 		inline unsigned int getTextureWidth() const { return m_textureData->m_textureWidth; }
 		inline unsigned int getHandle() const { return m_textureData->m_handle; }
 		inline int getMipmapLevel() const { return m_textureData->m_mipmapLevel; }
-		inline std::string getFilename() const { return m_textureData->m_filename; }
+		inline std::string &getFilename() const { return m_textureData->m_filename; }
 		inline TextureFormat getTextureFormat() const { return m_textureData->m_textureFormat; }
 		inline TextureDataFormat getTextureDataFormat() const { return m_textureData->m_textureDataFormat; }
 		inline TextureDataType getTextureDataType() const { return m_textureData->m_textureDataType; }
@@ -366,6 +550,9 @@ public:
 		const inline bool isLoadedFromFile() const { return m_textureData->m_loadedFromFile; }
 
 		// Setters
+		inline void setEnableCompression(const bool p_enableCompression) { m_textureData->m_enableCompression = p_enableCompression; }
+		inline void setEnableDownsampling(const bool p_enableDownsampling) { m_textureData->m_enableDownsampling = p_enableDownsampling; }
+		inline void setEnableMipmapping(const bool p_enableMipmapping) { m_textureData->setEnableMipmapping(p_enableMipmapping); }
 		inline void setPixelData(void *p_pixelData) { m_textureData->setPixelData(p_pixelData); }
 		inline void setHandle(unsigned int p_handle) { m_textureData->m_handle = p_handle; }
 		inline void setMagnificationFilterType(const TextureFilterType p_filterType) { m_textureData->m_magnificationFilter = p_filterType; }
@@ -394,8 +581,6 @@ public:
 	ErrorCode init();
 
 	Texture2DHandle load(const std::string &p_filename, MaterialType p_materialType, bool p_startBackgroundLoading = true);
-	Texture2DHandle load(const std::string &p_filename, unsigned int p_textureHandle);
-	Texture2DHandle load(const std::string &p_filename);
 	Texture2DHandle create(const std::string &p_name, const unsigned int p_width, const unsigned int p_height, const TextureFormat p_textureFormat, const TextureDataFormat p_textureDataFormat, const TextureDataType p_textureDataType, const bool p_createMipmap = false, const void *p_data = NULL);
 
 	Texture2DHandle getDefaultTexture(MaterialType p_materialType = MaterialType::MaterialType_Diffuse)
@@ -416,6 +601,8 @@ public:
 			returnTexture = m_defaultTextures[DefaultTextureType::DefaultTextureType_RMHA];
 			break;
 		case MaterialType_Roughness:
+			break;
+		case MaterialType_Data:
 			break;
 		case MaterialType_Metalness:
 			break;
@@ -452,6 +639,84 @@ protected:
 		DefaultTextureType_RMHA,
 		DefaultTextureType_NumOfTypes
 	};
+
+	// Convert an int to TextureDataFormat enum. If no enum is matched, TextureDataFormat_RGBA8 is returned
+	TextureDataFormat intToTextureDataFormat(const int p_format)
+	{
+		switch(p_format)
+		{
+			case TextureDataFormat::TextureDataFormat_R8:
+				return TextureDataFormat::TextureDataFormat_R8;
+			case TextureDataFormat::TextureDataFormat_R16:
+				return TextureDataFormat::TextureDataFormat_R16;
+			case TextureDataFormat::TextureDataFormat_R16F:
+				return TextureDataFormat::TextureDataFormat_R16F;
+			case TextureDataFormat::TextureDataFormat_R32F:
+				return TextureDataFormat::TextureDataFormat_R32F;
+			case TextureDataFormat::TextureDataFormat_RG8:
+				return TextureDataFormat::TextureDataFormat_RG8;
+			case TextureDataFormat::TextureDataFormat_RG16:
+				return TextureDataFormat::TextureDataFormat_RG16;
+			case TextureDataFormat::TextureDataFormat_RG16F:
+				return TextureDataFormat::TextureDataFormat_RG16F;
+			case TextureDataFormat::TextureDataFormat_RG32F:
+				return TextureDataFormat::TextureDataFormat_RG32F;
+			case TextureDataFormat::TextureDataFormat_RGB8:
+				return TextureDataFormat::TextureDataFormat_RGB8;
+			case TextureDataFormat::TextureDataFormat_RGB16:
+				return TextureDataFormat::TextureDataFormat_RGB16;
+			case TextureDataFormat::TextureDataFormat_RGB16F:
+				return TextureDataFormat::TextureDataFormat_RGB16F;
+			case TextureDataFormat::TextureDataFormat_RGB32F:
+				return TextureDataFormat::TextureDataFormat_RGB32F;
+			case TextureDataFormat::TextureDataFormat_RGBA8:
+				return TextureDataFormat::TextureDataFormat_RGBA8;
+			case TextureDataFormat::TextureDataFormat_RGBA16:
+				return TextureDataFormat::TextureDataFormat_RGBA16;
+			case TextureDataFormat::TextureDataFormat_RGBA16SN:
+				return TextureDataFormat::TextureDataFormat_RGBA16SN;
+			case TextureDataFormat::TextureDataFormat_RGBA16F:
+				return TextureDataFormat::TextureDataFormat_RGBA16F;
+			case TextureDataFormat::TextureDataFormat_RGBA32F:
+				return TextureDataFormat::TextureDataFormat_RGBA32F;
+			case TextureDataFormat::TextureDataFormat_R16I:
+				return TextureDataFormat::TextureDataFormat_R16I;
+			case TextureDataFormat::TextureDataFormat_R32I:
+				return TextureDataFormat::TextureDataFormat_R32I;
+			case TextureDataFormat::TextureDataFormat_R16UI:
+				return TextureDataFormat::TextureDataFormat_R16UI;
+			case TextureDataFormat::TextureDataFormat_R32UI:
+				return TextureDataFormat::TextureDataFormat_R32UI;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_RGB:
+				return TextureDataFormat::TextureDataFormat_COMPRESSED_RGB;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_RGBA:
+				return TextureDataFormat::TextureDataFormat_COMPRESSED_RGBA;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_DXT1_RGB:
+				return TextureDataFormat::TextureDataFormat_COMPRESSED_DXT1_RGB;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_DXT1_RGBA:
+				return TextureDataFormat::TextureDataFormat_COMPRESSED_DXT1_RGBA;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_DXT3_RGBA:
+				return TextureDataFormat::TextureDataFormat_COMPRESSED_DXT3_RGBA;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_DXT5_RGBA:
+				return TextureDataFormat::TextureDataFormat_COMPRESSED_DXT5_RGBA;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_RGTC1_R:
+				return TextureDataFormat::TextureDataFormat_COMPRESSED_RGTC1_R;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_RGTC2_RG:
+				return TextureDataFormat::TextureDataFormat_COMPRESSED_RGTC2_RG;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_BPTC_RGBA:
+				return TextureDataFormat::TextureDataFormat_COMPRESSED_BPTC_RGBA;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_EAC_R:
+				return TextureDataFormat::TextureDataFormat_COMPRESSED_EAC_R;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_EAC_RG:
+				return TextureDataFormat::TextureDataFormat_COMPRESSED_EAC_RG;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_ETC2_RGB:
+				return TextureDataFormat::TextureDataFormat_COMPRESSED_ETC2_RGB;
+			case TextureDataFormat::TextureDataFormat_COMPRESSED_ETC2_RGBA:
+				return TextureDataFormat::TextureDataFormat_COMPRESSED_ETC2_RGBA;	
+		}
+
+		return TextureDataFormat::TextureDataFormat_RGBA8;
+	}
 
 	void unload(Texture2D &p_object, SceneLoader &p_sceneLoader);
 

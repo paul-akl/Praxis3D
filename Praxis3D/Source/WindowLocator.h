@@ -38,13 +38,19 @@ public:
 		// Spawns an error box with only an "ok" button
 		virtual void spawnErrorBox(std::string p_title, std::string p_message) { }
 
+		// Make the mouse confined to the window
+		virtual void setMouseGrab(const bool p_grab) { }
+
 		// Sets if the window should display the mouse cursor or hide it
 		virtual void setMouseShow(bool p_show) { }
+
+		// Teleports the mouse inside the window to the given position
+		virtual void setMousePosition(const int p_mousePositionX, const int p_mousePositionY) { }
 
 		// Makes the window go into or out of full screen mode
 		virtual void setFullscreen(bool p_capture) { }
 
-		// Sets the mode of mouse being captures inside the window
+		// Sets the mode of mouse being captured inside the window
 		virtual void setMouseCapture(bool p_capture) { }
 
 		// Sets the vertical synchronization
@@ -55,6 +61,9 @@ public:
 
 		// Current info about mouse
 		virtual const Window::MouseInfo &getMouseInfo() const { return m_mouseInfo; }
+
+		// Get the current mouse position relative to the focus window
+		virtual const glm::ivec2 getMousePosition() const { return glm::ivec2(0, 0); }
 
 		// Get the handle to SDL Window; returns nullptr if it's not present
 		virtual SDL_Window *getSDLWindowHandle() { return nullptr; }
@@ -100,8 +109,14 @@ public:
 		// Spawns an error box with only an "ok" button
 		virtual void spawnErrorBox(std::string p_title, std::string p_message) { return m_window->spawnErrorBox(p_title, p_message); }
 
+		// Make the mouse confined to the window
+		void setMouseGrab(const bool p_grab) { m_window->setMouseGrab(p_grab); }
+
 		// Sets if the window should display the mouse cursor or hide it
 		void setMouseShow(bool p_show) { m_window->setMouseShow(p_show); }
+
+		// Teleports the mouse inside the window to the given position
+		void setMousePosition(const int p_mousePositionX, const int p_mousePositionY) { m_window->setMousePosition(p_mousePositionX, p_mousePositionY); }
 
 		// Makes the window go into or out of full screen mode
 		virtual void setFullscreen(bool p_capture)
@@ -137,6 +152,9 @@ public:
 
 		// Current info about mouse
 		const Window::MouseInfo &getMouseInfo() const { return m_window->getMouseInfo(); }
+
+		// Get the current mouse position relative to the focus window
+		const inline glm::ivec2 getMousePosition() const { return m_window->getMousePosition(); }
 
 		// Get the handle to SDL Window
 		SDL_Window *getSDLWindowHandle() { return m_window->getSDLWindowHandle(); }

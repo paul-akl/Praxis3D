@@ -10,7 +10,7 @@
 			{
 				"LuaComponent": 
 				{
-					"PauseInEditor": "false",
+					"PauseInEditor": "true",
 					"Active": "true",
 					"Filename": "Window_controls.lua"
 				}
@@ -55,21 +55,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
 											"TextureScale": "400.0f, 400.0f"
 										}
@@ -144,21 +148,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
 											"TextureScale": "400.0f, 400.0f"
 										}
@@ -233,21 +241,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
 											"TextureScale": "400.0f, 400.0f"
 										}
@@ -322,21 +334,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
 											"TextureScale": "400.0f, 400.0f"
 										}
@@ -411,21 +427,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
 											"TextureScale": "400.0f, 400.0f"
 										}
@@ -500,21 +520,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
 											"TextureScale": "400.0f, 400.0f"
 										}
@@ -589,21 +613,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
 											"TextureScale": "400.0f, 400.0f"
 										}
@@ -678,21 +706,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
 											"TextureScale": "400.0f, 400.0f"
 										}
@@ -767,21 +799,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
 											"TextureScale": "400.0f, 400.0f"
 										}
@@ -856,23 +892,27 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_1_alb.png",
-											"TextureScale": "2.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_1_RMHA.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										}
 									}
 								}
@@ -945,23 +985,27 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_1_alb.png",
-											"TextureScale": "2.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_1_RMHA.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										}
 									}
 								}
@@ -1034,23 +1078,27 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_1_alb.png",
-											"TextureScale": "2.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_1_RMHA.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										}
 									}
 								}
@@ -1123,23 +1171,27 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_1_alb.png",
-											"TextureScale": "2.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_1_RMHA.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										}
 									}
 								}
@@ -1212,23 +1264,27 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_1_alb.png",
-											"TextureScale": "2.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_1_RMHA.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										}
 									}
 								}
@@ -1301,23 +1357,27 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_1_alb.png",
-											"TextureScale": "2.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_1_RMHA.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										}
 									}
 								}
@@ -1390,23 +1450,27 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_1_alb.png",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_1_RMHA.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										}
 									}
 								}
@@ -1479,23 +1543,27 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_1_alb.png",
-											"TextureScale": "2.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_1_RMHA.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										}
 									}
 								}
@@ -1568,23 +1636,27 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_yellow_alb.png",
-											"TextureScale": "2.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_2_RMHA.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										}
 									}
 								}
@@ -1657,23 +1729,27 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_green_alb.png",
-											"TextureScale": "2.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_2_RMHA.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										}
 									}
 								}
@@ -1746,23 +1822,27 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_teal_alb.png",
-											"TextureScale": "2.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_2_RMHA.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										}
 									}
 								}
@@ -1835,23 +1915,27 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\orange_alb.png",
-											"TextureScale": "4.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "2.0f, 2.0f"
 										}
 									}
 								}
@@ -1923,23 +2007,27 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_yellow_alb.png",
-											"TextureScale": "4.0f, 1.0f"
+											"TextureScale": "4.0f, 4.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "4.0f, 4.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "4.0f, 4.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_2_RMHA.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "4.0f, 4.0f"
 										}
 									}
 								}
@@ -2006,23 +2094,27 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_yellow_alb.png",
-											"TextureScale": "4.0f, 1.0f"
+											"TextureScale": "4.0f, 4.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "4.0f, 4.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "4.0f, 4.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_2_RMHA.png",
-											"TextureScale": "1.0f, 1.0f"
+											"TextureScale": "4.0f, 4.0f"
 										}
 									}
 								}
@@ -2096,21 +2188,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\red_alb.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\red_alb.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\metal_rough_RMHA.png",
 											"TextureScale": "1.0f, 1.0f"
 										}
@@ -2191,21 +2287,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\green_alb.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\green_alb.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\metal_rough_RMHA.png",
 											"TextureScale": "1.0f, 1.0f"
 										}
@@ -2286,21 +2386,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\blue_alb.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\blue_alb.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\metal_rough_RMHA.png",
 											"TextureScale": "1.0f, 1.0f"
 										}
@@ -2381,21 +2485,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\yellow_alb.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\yellow_alb.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\metal_rough_RMHA.png",
 											"TextureScale": "1.0f, 1.0f"
 										}
@@ -2476,21 +2584,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\teal_alb.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\teal_alb.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\metal_rough_RMHA.png",
 											"TextureScale": "1.0f, 1.0f"
 										}
@@ -2564,21 +2676,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
 											"TextureScale": "4.0f, 1.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
 											"TextureScale": "1.0f, 1.0f"
 										}
@@ -2661,21 +2777,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\white_alb.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\white_alb.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\metal_RMHA.png",
 											"TextureScale": "1.0f, 1.0f"
 										}
@@ -2734,21 +2854,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\white_alb.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\white_alb.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\metal_RMHA.png",
 											"TextureScale": "1.0f, 1.0f"
 										}
@@ -2799,21 +2923,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
 											"TextureScale": "4.0f, 1.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
 											"TextureScale": "1.0f, 1.0f"
 										}
@@ -2896,21 +3024,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\white_alb.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\white_alb.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\metal_RMHA.png",
 											"TextureScale": "1.0f, 1.0f"
 										}
@@ -2969,21 +3101,25 @@
 									{
 										"Diffuse": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\white_alb.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Normal": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\white_alb.png",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
+											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\metal_RMHA.png",
 											"TextureScale": "1.0f, 1.0f"
 										}
@@ -3265,85 +3401,85 @@
 					"BlurSamples": "6",
 					"BlurSharpness": "40.0f"
 				},
-				"AtmosphericScattering":
+				"AtmosphericScattering": 
 				{
-					"Atmosphere":
+					"Atmosphere": 
 					{
 						"Bottom": "6360.0f",
 						"Top": "6420.0f",
-						"Rayleigh":
+						"Scattering": "0.005802f, 0.013558f, 0.0331f",
+						"Rayleigh": 
 						{
-							"Scattering": "0.005802f, 0.013558f, 0.033100f",
-							"Density":
+							"Density": 
 							[
 								{
-									"Width": "0.0f",
-									"ExpTerm": "0.0f",
-									"ExpScale": "0.0f",
+									"ConstantTerm": "0.0f",
 									"LinearTerm": "0.0f",
-									"ConstantTerm": "0.0f"
+									"ExpScale": "0.0f",
+									"ExpTerm": "0.0f",
+									"Width": "0.0f"
 								},
 								{
-									"Width": "0.0f",
-									"ExpTerm": "1.0f",
+									"ConstantTerm": "0.0f",
+									"LinearTerm": "0.0f",
 									"ExpScale": "-0.125f",
-									"LinearTerm": "0.0f",
-									"ConstantTerm": "0.0f"
-								}
-							]
-						},
-						"Mie":
-						{
-							"Scattering": "0.003996f, 0.003996f, 0.003996f",
-							"Extinction": "0.004440f, 0.004440f, 0.004440f",
-							"Density":
-							[
-								{
-									"Width": "0.0f",
-									"ExpTerm": "0.0f",
-									"ExpScale": "0.0f",
-									"LinearTerm": "0.0f",
-									"ConstantTerm": "0.0f"
-								},
-								{
-									"Width": "0.0f",
 									"ExpTerm": "1.0f",
-									"ExpScale": "-0.833333f",
-									"LinearTerm": "0.0f",
-									"ConstantTerm": "0.0f"
+									"Width": "0.0f"
 								}
 							]
 						},
-						"Absorption":
+						"Mie": 
 						{
-							"Extinction": "0.000650f, 0.001881f, 0.000085f",
-							"Density":
+							"Extinction": "0.00444f, 0.00444f, 0.00444f",
+							"Scattering": "0.003996f, 0.003996f, 0.003996f",
+							"Density": 
 							[
 								{
-									"Width": "25.0f",
-									"ExpTerm": "0.0f",
+									"ConstantTerm": "0.0f",
+									"LinearTerm": "0.0f",
 									"ExpScale": "0.0f",
-									"LinearTerm": "0.066667f",
-									"ConstantTerm": "-0.666667f"
+									"ExpTerm": "0.0f",
+									"Width": "0.0f"
 								},
 								{
-									"Width": "0.0f",
-									"ExpTerm": "0.0f",
+									"ConstantTerm": "0.0f",
+									"LinearTerm": "0.0f",
+									"ExpScale": "-0.833333f",
+									"ExpTerm": "1.0f",
+									"Width": "0.0f"
+								}
+							]
+						},
+						"Absorption": 
+						{
+							"Extinction": "0.00065f, 0.001881f, 8.5e-05f",
+							"Density": 
+							[
+								{
+									"ConstantTerm": "-0.666667f",
+									"LinearTerm": "0.066667f",
 									"ExpScale": "0.0f",
+									"ExpTerm": "0.0f",
+									"Width": "25.0f"
+								},
+								{
+									"ConstantTerm": "2.66667f",
 									"LinearTerm": "-0.066667f",
-									"ConstantTerm": "2.666667f"
+									"ExpScale": "0.0f",
+									"ExpTerm": "0.0f",
+									"Width": "0.0f"
 								}
 							]
 						}
 					},
-					"Ground":
+					"Ground": 
 					{
 						"Color": "0.1f, 0.1f, 0.1f",
-						"LocalPosition": "0.0f, -6360000.0f, 0.0f"
+						"LocalPosition": "0.0f, -6.36e+06.0f, 0.0f"
 					},
-					"Sun":
+					"Sun": 
 					{
-						"Irradiance": "1.474000f, 1.850400f, 1.911980f",
+						"Irradiance": "1.474f, 1.8504f, 1.91198f",
 						"Size": "0.02935f"
 					}
 				},
@@ -3389,11 +3525,12 @@
 				],
 				"ShadowMapping": 
 				{
+					"BiasScale": "0.00015f",
 					"PenumbraSize": "0.72f",
-					"PenumbraScaleRange": "1.0f, 200.0f",
+					"PenumbraScaleRange": "1.0f, 1.0f",
 					"Resolution": "4096",
 					"ZClipping": "true",
-					"ZPlaneMultiplier": "30.0f",
+					"ZPlaneMultiplier": "10.0f",
 					"PCF": 
 					{
 						"Samples": "16"
@@ -3402,42 +3539,42 @@
 					[
 						{
 							"Distance": "8.0f",
-							"BiasMax": "0.00075f",
+							"BiasMax": "0.0075f",
 							"PenumbraScale": "1.0f"
 						},
 						{
 							"Distance": "16.0f",
-							"BiasMax": "0.0005f",
+							"BiasMax": "0.005f",
 							"PenumbraScale": "1.0f"
 						},
 						{
 							"Distance": "32.0f",
-							"BiasMax": "0.0005f",
+							"BiasMax": "0.005f",
 							"PenumbraScale": "1.0f"
 						},
 						{
 							"Distance": "64.0f",
-							"BiasMax": "0.0005f",
+							"BiasMax": "0.005f",
 							"PenumbraScale": "1.0f"
 						},
 						{
 							"Distance": "128.0f",
-							"BiasMax": "0.0005f",
+							"BiasMax": "0.005f",
 							"PenumbraScale": "1.0f"
 						},
 						{
 							"Distance": "256.0f",
-							"BiasMax": "0.0005f",
+							"BiasMax": "0.005f",
 							"PenumbraScale": "2.0f"
 						},
 						{
 							"Distance": "512.0f",
-							"BiasMax": "0.0005f",
+							"BiasMax": "0.005f",
 							"PenumbraScale": "1.0f"
 						},
 						{
 							"Divider": "1.0f",
-							"BiasMax": "0.0005f",
+							"BiasMax": "0.005f",
 							"PenumbraScale": "1.0f"
 						}
 					]

@@ -62,6 +62,7 @@ public:
 					const unsigned int p_matNormal,
 					const unsigned int p_matEmissive,
 					const unsigned int p_matCombined,
+					const MaterialData p_materialData,
 					const int p_matWrapMode) :
 
 			m_uniformUpdater(&p_uniformUpdater), 
@@ -75,6 +76,7 @@ public:
 			m_matNormal(p_matNormal),
 			m_matEmissive(p_matEmissive),
 			m_matCombined(p_matCombined),
+			m_materialData(p_materialData),
 			m_matWrapMode(p_matWrapMode) { }
 
 		ShaderUniformUpdater *m_uniformUpdater;
@@ -87,12 +89,14 @@ public:
 		unsigned int m_baseVertex;
 		unsigned int m_baseIndex;
 
-		int m_matWrapMode;
-
 		unsigned int m_matDiffuse;
 		unsigned int m_matNormal;
 		unsigned int m_matEmissive;
 		unsigned int m_matCombined;
+
+		MaterialData m_materialData;
+
+		int m_matWrapMode;
 	};
 
 	// Screen-space draw command is used to render a full-screen triangle, intended for
@@ -490,6 +494,28 @@ protected:
 		unsigned int m_lastMeshUpdate;
 	};
 	
+	// Holds buffer parameters
+	struct BufferData
+	{
+		BufferData()
+		{
+			m_bufferType = BufferType::BufferType_Uniform;
+			m_bufferBindTarget = BufferBindTarget::BufferBindTarget_Uniform;
+			m_bufferUsage = BufferUsageHint::BufferUsageHint_DynamicDraw;
+			m_bindingIndex = 0;
+			m_size = 0;
+			m_handle = 0;
+		}
+
+		BufferType m_bufferType;
+		BufferBindTarget m_bufferBindTarget;
+		BufferUsageHint m_bufferUsage;
+		unsigned int m_bindingIndex;
+		int64_t m_size;
+
+		unsigned int m_handle;
+	};
+
 	// Handle binding functions
 	inline void bindShader(const unsigned int p_shaderHandle)
 	{
@@ -648,7 +674,7 @@ protected:
 			break;
 		}
 	}
-	inline void processCommand(LoadCommand &p_command, const UniformFrameData &p_frameData)
+	inline void processCommand(LoadCommand &p_command)
 	{
 		switch(p_command.m_objectType)
 		{
@@ -1016,6 +1042,8 @@ protected:
 	CurrentState m_rendererState;
 
 	static SingleTriangle m_fullscreenTriangle;
+
+	BufferData m_materialDataBuffer;
 
 	GeometryBuffer *m_gbuffer;
 	CSMFramebuffer *m_csmBuffer;

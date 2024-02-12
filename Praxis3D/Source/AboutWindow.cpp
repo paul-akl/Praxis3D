@@ -7,6 +7,7 @@ ErrorCode AboutWindow::init()
 	ErrorCode returnError = ErrorCode::Success;
 	
 	// Load the logo texture
+	m_logoTexture.setEnableDownsampling(false);
 	m_logoTexture.loadToMemory();
 	m_guiSystemScene->getSceneLoader()->getChangeController()->sendData(m_guiSystemScene->getSceneLoader()->getSystemScene(Systems::Graphics), DataType::DataType_LoadTexture2D, (void *)&m_logoTexture);
 

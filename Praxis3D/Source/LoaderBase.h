@@ -22,6 +22,7 @@ public:
 			: m_loaderBase(p_loaderBase), m_uniqueID(p_uniqueIDs), m_filename(p_filename)
 		{
 			m_loadingToMemoryError = ErrorCode::Failure;
+			m_queuedLoadToVideoMemory = false;
 			m_loadedToMemory = false;
 			m_loadedToVideoMemory = false;
 			m_beingLoaded = false;
@@ -48,16 +49,18 @@ public:
 		}
 
 		// Setters
-		inline void setLoadedToMemory(bool p_loaded)		{ m_loadedToMemory = p_loaded;		}
-		inline void setLoadedToVideoMemory(bool p_loaded)	{ m_loadedToVideoMemory = p_loaded; }
-		inline void setUniqueID(unsigned int p_uniqueID)	{ m_uniqueID = p_uniqueID;			}
+		inline void setQueuedLoadToVideoMemory(const bool p_queued) { m_queuedLoadToVideoMemory = p_queued; }
+		inline void setLoadedToMemory(const bool p_loaded)			{ m_loadedToMemory = p_loaded;			}
+		inline void setLoadedToVideoMemory(const bool p_loaded)		{ m_loadedToVideoMemory = p_loaded;		}
+		inline void setUniqueID(const unsigned int p_uniqueID)		{ m_uniqueID = p_uniqueID;				}
 
 		// Getters
-		inline const bool isLoadedToMemory() const		{ return m_loadedToMemory;			}
-		inline const bool isLoadedToVideoMemory() const { return m_loadedToVideoMemory;		}
-		inline const unsigned int getUniqueID()	const	{ return (unsigned int)m_uniqueID;	}
-		inline const std::string &getFilename() const	{ return m_filename;				}
-		inline size_t getReferenceCounter() const		{ return m_refCounter;				}
+		inline const bool isQueuedLoadToVideoMemory() const { return m_queuedLoadToVideoMemory;	}
+		inline const bool isLoadedToMemory() const			{ return m_loadedToMemory;			}
+		inline const bool isLoadedToVideoMemory() const		{ return m_loadedToVideoMemory;		}
+		inline const unsigned int getUniqueID()	const		{ return (unsigned int)m_uniqueID;	}
+		inline const std::string &getFilename() const		{ return m_filename;				}
+		inline size_t getReferenceCounter() const			{ return m_refCounter;				}
 
 		// Equality operator; compares filenames
 		inline bool operator==(std::string p_string) { return m_filename == p_string; }
@@ -67,6 +70,7 @@ public:
 		inline const bool isBeingLoaded() { return m_beingLoaded; }
 
 		std::atomic_bool	m_beingLoaded,
+							m_queuedLoadToVideoMemory,
 							m_loadedToMemory,
 							m_loadedToVideoMemory;
 
@@ -80,7 +84,10 @@ public:
 		LoaderBase *m_loaderBase;
 	};
 
-	LoaderBase() : m_queueIsEmpty(true) { }
+	LoaderBase() : m_queueIsEmpty(true) 
+	{ 
+		m_objectPool.reserve(SETTING_LOADER_RESERVE_SIZE);
+	}
 	~LoaderBase()
 	{
 		// Swap the queue with an empty one, effectively clearing it
@@ -156,7 +163,7 @@ public:
 protected:
 	virtual void unload(TObject &p_object, SceneLoader &p_sceneLoader) { }
 
-	// Queue and object to be removed from memory
+	// Queue an object to be removed from memory
 	inline void queueUnload(UniqueObject &p_object)
 	{
 		m_objectUnloadQueue.push(&p_object);

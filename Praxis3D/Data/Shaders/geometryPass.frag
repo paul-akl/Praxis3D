@@ -1,5 +1,13 @@
 #version 430 core
 
+#define NUM_OF_MATERIAL_TYPES 4
+#define MATERIAL_TYPE_DIFFUSE 0
+#define MATERIAL_TYPE_NORMAL 1
+#define MATERIAL_TYPE_EMISSIVE 2
+#define MATERIAL_TYPE_COMBINED 3
+
+#define NORMAL_MAP_COMPRESSION 1
+
 #define STOCHASTIC_SAMPLING 0
 #define STOCHASTIC_SAMPLING_MIPMAP_SEAM_FIX 1
 
@@ -12,8 +20,22 @@
 #define PARALLAX_SCALE_THRESHOLD 0.001
 #define MIN_ROUGHNESS 0.001
 
+const float SRGB_GAMMA = 1.0 / 2.2;
+
 // Some drivers require the following
 //precision highp float;
+
+struct MaterialData
+{
+	vec4 m_color;
+	vec2 m_scale;
+	vec2 m_framing;
+};
+
+layout (std140) uniform MaterialDataBuffer
+{
+	MaterialData m_materialData[NUM_OF_MATERIAL_TYPES];
+};
 
 // Geometry buffers
 layout(location = 0) out vec3 positionBuffer;
@@ -25,7 +47,7 @@ layout(location = 4) out vec4 matPropertiesBuffer;
 // Variables from vertex shader
 in mat3 TBN;
 in mat3 normalMatrix;
-in vec2 texCoord;
+in vec2 texCoord[NUM_OF_MATERIAL_TYPES];
 in vec3 fragPos;
 in vec3 normal;
 in vec3 tangentFragPos;
@@ -53,43 +75,22 @@ uniform sampler2D noiseTexture;
 uniform float alphaThreshold;
 uniform float emissiveMultiplier;
 uniform float emissiveThreshold;
+uniform float gamma;
 uniform float heightScale;
 uniform float stochasticSamplingScale;
 uniform ivec2 screenSize;
 uniform vec2 pomNumOfSteps;	// Parallax Occlusion Mapping number of depth steps (x = min, y = max)
 
-/*
-vec2 steepParallaxMapping(vec2 texCoords, vec3 viewDir)
-{ 
-    // number of depth layers
-    const float minLayers = 10;
-    const float maxLayers = 20;
-    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));  
-    // calculate the size of each layer
-    float layerDepth = 1.0 / numLayers;
-    // depth of current layer
-    float currentLayerDepth = 0.0;
-    // the amount to shift the texture coordinates per layer (from vector P)
-    vec2 P = viewDir.xy / viewDir.z * height_scale; 
-    vec2 deltaTexCoords = P / numLayers;
-  
-    // get initial values
-    vec2  currentTexCoords     = texCoords;
-    float currentDepthMapValue = texture(depthMap, currentTexCoords).r;
-      
-    while(currentLayerDepth < currentDepthMapValue)
-    {
-        // shift texture coordinates along direction of P
-        currentTexCoords -= deltaTexCoords;
-        // get depthmap value at current texture coordinates
-        currentDepthMapValue = texture(depthMap, currentTexCoords).r;  
-        // get depth of next layer
-        currentLayerDepth += layerDepth;  
-    }
-    
-    return currentTexCoords;
-}*/
-
+// Converts a linear rgb color to a srgb color (approximated, but fast)
+vec4 rgbToSrgbApprox(vec4 p_color) 
+{
+    return vec4(pow(p_color.rgb, vec3(gamma)), p_color.a);
+}
+// Converts a linear rgb color to a srgb color (approximated, but fast)
+vec3 rgbToSrgbApprox(vec3 p_color) 
+{
+    return pow(p_color, vec3(gamma));
+}
 
 float sum(vec3 p_value) 
 {
@@ -165,7 +166,7 @@ float getAmbientOcclusion(const vec2 p_texCoords)
 	return sampleTexture(combinedTexture, p_texCoords).a;
 }
 
-vec3 getNormalFromMap(vec2 p_texCoord, vec3 p_worldPos)
+vec3 getTBNNormalFromMap(vec2 p_texCoord, vec3 p_worldPos)
 {
     vec3 tangentNormal = texture(normalTexture, p_texCoord).xyz * 2.0 - 1.0;
 
@@ -435,12 +436,24 @@ vec2 calcParallaxOcclusionMapping(const vec2 p_texCoords, const vec3 p_viewDir)
     return prevTexCoords * weight + currentTexCoords * (1.0 - weight);
 }
 
-void main(void)
+vec3 getNormalFromMap(vec2 p_texCoord)
 {
-	float height = getHeight(texCoord);
+#if NORMAL_MAP_COMPRESSION
+	// Get compressed normal (X and Y)
+	vec2 normalCompressed = sampleTexture(normalTexture, p_texCoord).rg;
+	// Reconstruct Z
+	return vec3(normalCompressed.x, normalCompressed.y, sqrt(1 - dot(normalCompressed.x * normalCompressed.y, normalCompressed.x * normalCompressed.y)));
+	//return vec3(normalCompressed.x, normalCompressed.y, sqrt(1 - clamp(dot(normalCompressed.x * normalCompressed.x, normalCompressed.y * normalCompressed.y), 0.0, 1.0)));
+	//return vec3(normalCompressed.x, normalCompressed.y, sqrt(1 - (normalCompressed.x * normalCompressed.x - normalCompressed.y * normalCompressed.y)));
+#else
+	return sampleTexture(normalTexture, p_texCoord).rgb;
+#endif
+}
+
+void main(void)
+{	
+	vec2 newCoords = texCoord[MATERIAL_TYPE_DIFFUSE];
 	
-	vec2 newCoords = texCoord;
-		
 #if PARALLAX_MAPPING
 	vec3 viewDirNew = normalize(tangentCameraPos - tangentFragPos);
 	
@@ -457,26 +470,46 @@ void main(void)
 #endif
 
 #endif
-	
-	// Get diffuse color
-	vec4 diffuseColor = sampleTexture(diffuseTexture, newCoords);
+
+	// Get diffuse color convert it to linear space and multiply by tint color
+	vec4 diffuseColor = rgbToSrgbApprox(sampleTexture(diffuseTexture, newCoords)) * m_materialData[MATERIAL_TYPE_DIFFUSE].m_color;
 	
 	// Discard fragment if the diffuse alpha color value is smaller than alpha threshold
 	if(diffuseColor.a < alphaThreshold)
 		discard;
+	
+#if PARALLAX_MAPPING
+
+	// Get material properties values with the new coordinates
+	// R - roughness
+	// G - metalness
+	// B - height
+	// A - ambient occlusion
+	vec4 combinedTextureColor = sampleTexture(combinedTexture, newCoords) * m_materialData[MATERIAL_TYPE_COMBINED].m_color;
+	
+	// Get the emissive color with the new coordinates
+	vec4 emissiveColor = sampleTexture(emissiveTexture, newCoords) * m_materialData[MATERIAL_TYPE_EMISSIVE].m_color;
+	
+	// Get the normal map values
+	//vec3 normalColor = sampleTexture(normalTexture, newCoords).rgb * m_materialData[MATERIAL_TYPE_NORMAL].m_color.rgb;
+	vec3 normalColor = getNormalFromMap(newCoords) * m_materialData[MATERIAL_TYPE_NORMAL].m_color.rgb;
+	
+#else
 	
 	// Get material properties values with the new coordinates
 	// R - roughness
 	// G - metalness
 	// B - height
 	// A - ambient occlusion
-	vec4 combinedTextureColor = sampleTexture(combinedTexture, newCoords);
+	vec4 combinedTextureColor = sampleTexture(combinedTexture, texCoord[MATERIAL_TYPE_COMBINED]) * m_materialData[MATERIAL_TYPE_COMBINED].m_color;
 	
 	// Get the emissive color with the new coordinates
-	vec4 emissiveColor = sampleTexture(emissiveTexture, newCoords);
+	vec4 emissiveColor = sampleTexture(emissiveTexture, texCoord[MATERIAL_TYPE_EMISSIVE]) * m_materialData[MATERIAL_TYPE_EMISSIVE].m_color;
 	
 	// Get the normal map values
-	vec3 normalColor = sampleTexture(normalTexture, newCoords).rgb;
+	vec3 normalColor = getNormalFromMap(texCoord[MATERIAL_TYPE_NORMAL]) * m_materialData[MATERIAL_TYPE_NORMAL].m_color.rgb;
+
+#endif
 	
 	// Use emissive alpha channel as an intensity multiplier
 	emissiveColor *= emissiveMultiplier;// * emissiveColor.a;

@@ -12,6 +12,7 @@ public:
 	ShadowMappingPass(RendererFrontend &p_renderer) :
 		RenderPass(p_renderer, RenderPassType::RenderPassType_ShadowMapping),
 		m_csmPassShader(nullptr),
+		m_csmPassAlphaDiscardShader(nullptr),
 		m_csmDataSetUniformBuffer(BufferType_Uniform, BufferBindTarget_Uniform, BufferUsageHint_DynamicDraw)
 	{
 		m_numOfCascades = (unsigned int)p_renderer.m_frameData.m_shadowMappingData.m_shadowCascadePlaneDistances.size();
@@ -40,6 +41,7 @@ public:
 		{
 			// Create a property-set used to load the shader
 			PropertySet shaderProperties(Properties::Shaders);
+			shaderProperties.addProperty(Properties::Name, std::string("csmPass"));
 			shaderProperties.addProperty(Properties::FragmentShader, Config::rendererVar().csm_pass_frag_shader);
 			shaderProperties.addProperty(Properties::GeometryShader, Config::rendererVar().csm_pass_geom_shader);
 			shaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().csm_pass_vert_shader);
@@ -50,11 +52,46 @@ public:
 			// Load the shader to memory
 			if(ErrorCode shaderError = m_csmPassShader->loadToMemory(); shaderError == ErrorCode::Success)
 			{
+				// Disable alpha discard in the shader
+				if(ErrorCode shaderVariableError = m_csmPassShader->setDefineValue(ShaderType::ShaderType_Geometry, Config::shaderVar().define_alpha_discard, 0); shaderVariableError != ErrorCode::Success)
+					ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_alpha_discard, ErrorSource::Source_ShadowMappingPass);
+
+				// Set the number of shadow cascades in the shader
 				if(ErrorCode shaderVariableError = m_csmPassShader->setDefineValue(ShaderType::ShaderType_Geometry, Config::shaderVar().define_numOfCascades, m_numOfCascades); shaderVariableError != ErrorCode::Success)
 					ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_numOfCascades, ErrorSource::Source_ShadowMappingPass);
 
 				// Queue the shader to be loaded to GPU
 				m_renderer.queueForLoading(*m_csmPassShader);
+			}
+			else
+				returnError = shaderError;
+		}
+
+		// Create the Cascaded Shadow Mapping with Alpha Discard pass shader
+		{
+			// Create a property-set used to load the shader
+			PropertySet shaderProperties(Properties::Shaders);
+			shaderProperties.addProperty(Properties::Name, std::string("csmPass_AlphaDiscard"));
+			shaderProperties.addProperty(Properties::FragmentShader, Config::rendererVar().csm_pass_frag_shader);
+			shaderProperties.addProperty(Properties::GeometryShader, Config::rendererVar().csm_pass_geom_shader);
+			shaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().csm_pass_vert_shader);
+
+			// Create the shader
+			m_csmPassAlphaDiscardShader = Loaders::shader().load(shaderProperties);
+
+			// Load the shader to memory
+			if(ErrorCode shaderError = m_csmPassAlphaDiscardShader->loadToMemory(); shaderError == ErrorCode::Success)
+			{
+				// Enable alpha discard in the shader
+				if(ErrorCode shaderVariableError = m_csmPassAlphaDiscardShader->setDefineValue(ShaderType::ShaderType_Geometry, Config::shaderVar().define_alpha_discard, 1); shaderVariableError != ErrorCode::Success)
+					ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_alpha_discard, ErrorSource::Source_ShadowMappingPass);
+
+				// Set the number of shadow cascades in the shader
+				if(ErrorCode shaderVariableError = m_csmPassAlphaDiscardShader->setDefineValue(ShaderType::ShaderType_Geometry, Config::shaderVar().define_numOfCascades, m_numOfCascades); shaderVariableError != ErrorCode::Success)
+					ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_numOfCascades, ErrorSource::Source_ShadowMappingPass);
+
+				// Queue the shader to be loaded to GPU
+				m_renderer.queueForLoading(*m_csmPassAlphaDiscardShader);
 			}
 			else
 				returnError = shaderError;
@@ -151,13 +188,30 @@ public:
 					SpatialComponent &spatialData = p_sceneObjects.m_models.get<SpatialComponent>(entity);
 					auto &modelData = model.getModelData();
 
-					for(decltype(modelData.size()) i = 0, size = modelData.size(); i < size; i++)
+					// Go over each model
+					for(decltype(modelData.size()) modelIndex = 0, modelSize = modelData.size(); modelIndex < modelSize; modelIndex++)
 					{
-						m_renderer.queueForDrawing(modelData[i],
-							csmShaderHandle,
-							csmUniformUpdater,
-							spatialData.getSpatialDataChangeManager().getWorldTransformWithScale(),
-							m_renderer.m_viewProjMatrix);
+						// Calculate model-view-projection matrix
+						const glm::mat4 &modelMatrix = p_sceneObjects.m_models.get<SpatialComponent>(entity).getSpatialDataChangeManager().getWorldTransformWithScale();
+
+						// Go over each mesh
+						for(decltype(modelData[modelIndex].m_model.getNumMeshes()) meshIndex = 0, meshSize = modelData[modelIndex].m_model.getNumMeshes(); meshIndex < meshSize; meshIndex++)
+						{
+							// Only draw active meshes
+							if(modelData[modelIndex].m_meshes[meshIndex].m_active)
+							{
+								if(modelData[modelIndex].m_meshes[meshIndex].m_alphaThreshold > 0.0f)
+								{
+									// ALPHA DISCARD enabled
+									m_renderer.queueForDrawing(modelData[modelIndex].m_model[meshIndex], modelData[modelIndex].m_meshes[meshIndex], modelData[modelIndex].m_model.getHandle(), m_csmPassAlphaDiscardShader->getShaderHandle(), m_csmPassAlphaDiscardShader->getUniformUpdater(), modelMatrix, modelMatrix);
+								}
+								else
+								{
+									// ALPHA DISCARD disabled
+									m_renderer.queueForDrawing(modelData[modelIndex].m_model[meshIndex], modelData[modelIndex].m_meshes[meshIndex], modelData[modelIndex].m_model.getHandle(), m_csmPassShader->getShaderHandle(), m_csmPassShader->getUniformUpdater(), modelMatrix, modelMatrix);
+								}
+							}
+						}
 					}
 				}
 			}
@@ -446,6 +500,7 @@ private:
 
 	// Cascaded shadow map pass shaders
 	ShaderLoader::ShaderProgram *m_csmPassShader;
+	ShaderLoader::ShaderProgram *m_csmPassAlphaDiscardShader;
 
 	// CSM uniform buffer
 	RendererFrontend::ShaderBuffer m_csmDataSetUniformBuffer;

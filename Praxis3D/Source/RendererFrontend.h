@@ -96,8 +96,8 @@ protected:
 			p_meshData.m_heightScale,
 			p_meshData.m_alphaThreshold,
 			p_meshData.m_emissiveIntensity,
-			p_meshData.m_materials[MaterialType::MaterialType_Diffuse].m_textureScale.x,
-			p_meshData.m_rextureRepetitionScale);
+			p_meshData.m_materialData.m_parameters[MaterialType::MaterialType_Diffuse].m_scale.x,
+			p_meshData.m_textureRepetitionScale);
 
 		m_drawCommands.emplace_back(
 			sortKey,
@@ -109,10 +109,11 @@ protected:
 				p_mesh.m_numIndices,
 				p_mesh.m_baseVertex,
 				p_mesh.m_baseIndex,
-				p_meshData.m_materials[MaterialType::MaterialType_Diffuse].m_texture.getHandle(),
-				p_meshData.m_materials[MaterialType::MaterialType_Normal].m_texture.getHandle(),
-				p_meshData.m_materials[MaterialType::MaterialType_Emissive].m_texture.getHandle(),
-				p_meshData.m_materials[MaterialType::MaterialType_Combined].m_texture.getHandle(),
+				p_meshData.m_materials[MaterialType::MaterialType_Diffuse].getHandle(),
+				p_meshData.m_materials[MaterialType::MaterialType_Normal].getHandle(),
+				p_meshData.m_materials[MaterialType::MaterialType_Emissive].getHandle(),
+				p_meshData.m_materials[MaterialType::MaterialType_Combined].getHandle(),
+				p_meshData.m_materialData,
 				p_meshData.m_textureWrapMode)
 		);
 	}
@@ -191,26 +192,26 @@ protected:
 	inline void queueForLoading(ModelLoader::ModelHandle &p_model)
 	{
 		m_loadCommands.emplace_back(p_model.getFilename(),
-									p_model.m_model->m_handle,
-									p_model.m_model->m_buffers,
-									p_model.m_model->m_numElements,
-									p_model.m_model->m_bufferSize,
-									p_model.m_model->getData());
+			p_model.m_model->m_handle,
+			p_model.m_model->m_buffers,
+			p_model.m_model->m_numElements,
+			p_model.m_model->m_bufferSize,
+			p_model.m_model->getData());
 	}
 	inline void queueForLoading(TextureLoader2D::Texture2DHandle &p_texture)
 	{
 		m_loadCommands.emplace_back(p_texture.getFilename(),
-									p_texture.getHandleRef(),
-									p_texture.getTextureFormat(),
-									p_texture.getTextureDataFormat(),
-									p_texture.getTextureDataType(),
-									p_texture.getMagnificationFilterType(),
-									p_texture.getMinificationFilterType(),
-									p_texture.getEnableMipmap(),
-									p_texture.getMipmapLevel(),
-									p_texture.getTextureWidth(),
-									p_texture.getTextureHeight(),
-									p_texture.getData());
+			p_texture.getHandleRef(),
+			p_texture.getTextureFormat(),
+			p_texture.getTextureDataFormat(),
+			p_texture.getTextureDataType(),
+			p_texture.getMagnificationFilterType(),
+			p_texture.getMinificationFilterType(),
+			p_texture.getEnableMipmap(),
+			p_texture.getMipmapLevel(),
+			p_texture.getTextureWidth(),
+			p_texture.getTextureHeight(),
+			p_texture.getData());
 	}
 	inline void queueForLoading(TextureLoaderCubemap::TextureCubemapHandle p_texture)
 	{

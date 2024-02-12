@@ -159,6 +159,7 @@ public:
 	};
 	class ShaderProgram
 	{
+		friend struct LoadableObjectsContainer;
 		friend class CommandBuffer;
 		friend class ShaderLoader;
 		friend class RendererFrontend;
@@ -332,7 +333,7 @@ public:
 		}
 		~ShaderProgram();
 
-		void setLoadedToVideoMemory(bool p_loaded) { m_loadedToVideoMemory = p_loaded; }
+		void setLoadedToVideoMemory(const bool p_loaded) { m_loadedToVideoMemory = p_loaded; }
 		void saveVariableDefinition(const ShaderVariableDefinition &p_variable)
 		{
 			bool variableSet = false;

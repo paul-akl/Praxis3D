@@ -1,6 +1,24 @@
 #version 430 core
 
+#define NUM_OF_MATERIAL_TYPES 4
+#define MATERIAL_TYPE_DIFFUSE 0
+#define MATERIAL_TYPE_NORMAL 1
+#define MATERIAL_TYPE_EMISSIVE 2
+#define MATERIAL_TYPE_COMBINED 3
+
 #define PARALLAX_MAPPING 0
+
+struct MaterialData
+{
+	vec4 m_color;
+	vec2 m_scale;
+	vec2 m_framing;
+};
+
+layout (std140) uniform MaterialDataBuffer
+{
+	MaterialData m_materialData[NUM_OF_MATERIAL_TYPES];
+};
 
 // Mesh buffers
 layout(location = 0) in vec3 vertexPosition;
@@ -12,7 +30,7 @@ layout(location = 4) in vec3 vertexBitangent;
 // Variables passed to fragment shader
 out mat3 TBN;
 out mat3 normalMatrix;
-out vec2 texCoord;
+out vec2 texCoord[NUM_OF_MATERIAL_TYPES];
 out vec3 fragPos;
 out vec3 normal;
 out vec3 tangentFragPos;
@@ -47,7 +65,10 @@ void main(void)
 	parallaxScale = heightScale;
 	
 	// Multiply texture coordinates by the tiling factor. The higher the factor, the denser the tiling
-	texCoord = textureCoord * textureTilingFactor;
+	for(int i = 0; i < NUM_OF_MATERIAL_TYPES; i++)
+	{
+		texCoord[i] = (textureCoord + m_materialData[i].m_framing) * m_materialData[i].m_scale;
+	}
 		
 	// Compute TBN matrix components
 	vec3 T = normalize(normalMatrix * vertexTangent);

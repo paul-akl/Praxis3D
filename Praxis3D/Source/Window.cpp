@@ -68,8 +68,9 @@ ErrorCode Window::init()
 			SDL_DisplayMode displayMode;
 			SDL_GetCurrentDisplayMode(Config::windowVar().default_display, &displayMode);
 
-			ErrHandlerLoc::get().log(ErrorType::Info, ErrorSource::Source_Window, "Number of screens: " + Utilities::toString(numDisplays));
-			ErrHandlerLoc::get().log(ErrorType::Info, ErrorSource::Source_Window, "Current screen resolution: " + Utilities::toString(displayMode.w) + "x" + Utilities::toString(displayMode.h));
+			ErrHandlerLoc::get().log(ErrorType::Info, ErrorSource::Source_Window, "Number of displays: " + Utilities::toString(numDisplays));
+			ErrHandlerLoc::get().log(ErrorType::Info, ErrorSource::Source_Window, "Current display resolution: " + Utilities::toString(displayMode.w) + "x" + Utilities::toString(displayMode.h));
+			ErrHandlerLoc::get().log(ErrorType::Info, ErrorSource::Source_Window, "Current display refresh rate: " + Utilities::toString(displayMode.refresh_rate + "Hz"));
 
 			// Check if the resolution in config doesn't extend beyond current display resolution
 			if(Config::windowVar().window_size_fullscreen_x > displayMode.w)
@@ -118,13 +119,25 @@ ErrorCode Window::createWindow()
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, Config::graphicsVar().multisample_buffers);
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, Config::graphicsVar().multisample_samples);
 
-	// Set the re-sizable window flag if it is set on
-	unsigned int flags = Config::windowVar().resizable ? flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE : SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
+	// Assign the required window flags
+	unsigned int windowFlags = SDL_WindowFlags::SDL_WINDOW_OPENGL | SDL_WindowFlags::SDL_WINDOW_SHOWN;
+
+	// Set the border-less window flag (no window decorations)
+	if(Config::windowVar().borderless)
+		windowFlags |= SDL_WindowFlags::SDL_WINDOW_BORDERLESS;
+
+	// Set the maximized window flag (spawn window maximized)
+	if(Config::windowVar().maximized)
+		windowFlags |= SDL_WindowFlags::SDL_WINDOW_MAXIMIZED;
+
+	// Set the re-sizable window flag
+	if(Config::windowVar().resizable)
+		windowFlags |= SDL_WindowFlags::SDL_WINDOW_RESIZABLE;
 
 	// Spawn a window
 	m_SDLWindow = SDL_CreateWindow(Config::windowVar().name.c_str(),
 								   Config::windowVar().window_position_x, Config::windowVar().window_position_y,
-								   Config::graphicsVar().current_resolution_x, Config::graphicsVar().current_resolution_y, flags);
+								   Config::graphicsVar().current_resolution_x, Config::graphicsVar().current_resolution_y, windowFlags);
 
 	// Check if the creation of the window was successful
 	if(!m_SDLWindow)

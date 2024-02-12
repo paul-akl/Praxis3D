@@ -160,8 +160,6 @@ void Config::init()
 	AddVariablePredef(m_graphicsVar, dir_shadow_res_y);
 	AddVariablePredef(m_graphicsVar, lens_flare_blur_passes);
 	AddVariablePredef(m_graphicsVar, lens_flare_ghost_count);
-	AddVariablePredef(m_graphicsVar, max_num_point_lights);
-	AddVariablePredef(m_graphicsVar, max_num_spot_lights);
 	AddVariablePredef(m_graphicsVar, multisample_buffers);
 	AddVariablePredef(m_graphicsVar, multisample_samples);
 	AddVariablePredef(m_graphicsVar, rendering_res_x);
@@ -247,7 +245,8 @@ void Config::init()
 	AddVariablePredef(m_GUIVar, editor_button_add_list_texture);
 	AddVariablePredef(m_GUIVar, editor_button_arrow_down_texture);
 	AddVariablePredef(m_GUIVar, editor_button_arrow_up_texture);
-	AddVariablePredef(m_GUIVar, editor_button_delete_entry_texture); 
+	AddVariablePredef(m_GUIVar, editor_button_delete_entry_texture);
+	AddVariablePredef(m_GUIVar, editor_button_duplicate_entry_texture);
 	AddVariablePredef(m_GUIVar, editor_button_gui_sequence_texture);
 	AddVariablePredef(m_GUIVar, editor_button_guizmo_rotate_texture);
 	AddVariablePredef(m_GUIVar, editor_button_guizmo_translate_texture);
@@ -386,6 +385,7 @@ void Config::init()
 	AddVariablePredef(m_rendererVar, bloom_composite_pass_frag_shader);
 	AddVariablePredef(m_rendererVar, blur_pass_vert_shader);
 	AddVariablePredef(m_rendererVar, blur_pass_frag_shader);
+	AddVariablePredef(m_rendererVar, csm_bias_scale);
 	AddVariablePredef(m_rendererVar, csm_pass_frag_shader);
 	AddVariablePredef(m_rendererVar, csm_pass_geom_shader);
 	AddVariablePredef(m_rendererVar, csm_pass_vert_shader);
@@ -516,6 +516,7 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, depthMapUniform);
 	AddVariablePredef(m_shaderVar, inputColorMapUniform);
 	AddVariablePredef(m_shaderVar, outputColorMapUniform);
+	AddVariablePredef(m_shaderVar, csmBiasScaleUniform);
 	AddVariablePredef(m_shaderVar, csmDepthMapUniform);
 	AddVariablePredef(m_shaderVar, csmPenumbraScaleRange);
 	AddVariablePredef(m_shaderVar, sunGlowTextureUniform);
@@ -553,23 +554,29 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, fogColorUniform);
 	AddVariablePredef(m_shaderVar, billboardScaleUniform);
 	AddVariablePredef(m_shaderVar, depthTypeUniform);
+	AddVariablePredef(m_shaderVar, AODataSetBuffer);
+	AddVariablePredef(m_shaderVar, atmScatParamBuffer);
+	AddVariablePredef(m_shaderVar, CSMDataSetBuffer);
 	AddVariablePredef(m_shaderVar, eyeAdaptionRateUniform);
 	AddVariablePredef(m_shaderVar, eyeAdaptionIntBrightnessUniform);
-	AddVariablePredef(m_shaderVar, AODataSetBuffer);
-	AddVariablePredef(m_shaderVar, SSAOSampleBuffer);
-	AddVariablePredef(m_shaderVar, CSMDataSetBuffer);
 	AddVariablePredef(m_shaderVar, HDRSSBuffer);
-	AddVariablePredef(m_shaderVar, atmScatParamBuffer);
 	AddVariablePredef(m_shaderVar, lensFlareParametersBuffer);
+	AddVariablePredef(m_shaderVar, materialDataBuffer);
+	AddVariablePredef(m_shaderVar, SSAOSampleBuffer);
 	AddVariablePredef(m_shaderVar, testMatUniform);
 	AddVariablePredef(m_shaderVar, testVecUniform);
 	AddVariablePredef(m_shaderVar, testFloatUniform);
+	AddVariablePredef(m_shaderVar, define_alpha_discard);
 	AddVariablePredef(m_shaderVar, define_fxaa);
 	AddVariablePredef(m_shaderVar, define_fxaa_edge_threshold_min);
 	AddVariablePredef(m_shaderVar, define_fxaa_edge_threshold_max);
 	AddVariablePredef(m_shaderVar, define_fxaa_iterations);
 	AddVariablePredef(m_shaderVar, define_fxaa_subpixel_quality);
+	AddVariablePredef(m_shaderVar, define_maxNumOfPointLights);
+	AddVariablePredef(m_shaderVar, define_maxNumOfSpotLights);
+	AddVariablePredef(m_shaderVar, define_normalMapCompression);
 	AddVariablePredef(m_shaderVar, define_numOfCascades);
+	AddVariablePredef(m_shaderVar, define_numOfMaterialTypes);
 	AddVariablePredef(m_shaderVar, define_numOfPCFSamples);
 	AddVariablePredef(m_shaderVar, define_parallaxMapping);
 	AddVariablePredef(m_shaderVar, define_parallaxMappingMethod);
@@ -599,7 +606,15 @@ void Config::init()
 	AddVariablePredef(m_textureVar, gl_texture_magnification_mipmap);
 	AddVariablePredef(m_textureVar, gl_texture_minification_mipmap);
 	AddVariablePredef(m_textureVar, number_of_mipmaps);
+	AddVariablePredef(m_textureVar, texture_compression_format_rgb);
+	AddVariablePredef(m_textureVar, texture_compression_format_rgba);
+	AddVariablePredef(m_textureVar, texture_compression_format_normal);
+	AddVariablePredef(m_textureVar, texture_downsample_max_resolution);
+	AddVariablePredef(m_textureVar, texture_downsample_scale);
 	AddVariablePredef(m_textureVar, generate_mipmaps);
+	AddVariablePredef(m_textureVar, texture_compression);
+	AddVariablePredef(m_textureVar, texture_normal_compression);
+	AddVariablePredef(m_textureVar, texture_downsample);
 
 	// Window variables
 	AddVariablePredef(m_windowVar, name);
@@ -610,8 +625,10 @@ void Config::init()
 	AddVariablePredef(m_windowVar, window_size_fullscreen_y);
 	AddVariablePredef(m_windowVar, window_size_windowed_x);
 	AddVariablePredef(m_windowVar, window_size_windowed_y);
+	AddVariablePredef(m_windowVar, borderless);
 	AddVariablePredef(m_windowVar, fullscreen);
 	AddVariablePredef(m_windowVar, fullscreen_borderless);
+	AddVariablePredef(m_windowVar, maximized);
 	AddVariablePredef(m_windowVar, mouse_captured);
 	AddVariablePredef(m_windowVar, mouse_release_on_lost_focus);
 	AddVariablePredef(m_windowVar, resizable);

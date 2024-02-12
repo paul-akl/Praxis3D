@@ -8,6 +8,7 @@
 #include "WindowLocator.h"
 
 #include <functional>
+#include <random>
 #include <sol/sol.hpp>
 
 namespace LuaDefinitions
@@ -63,6 +64,34 @@ struct Conditional
 	inline void set(const bool p_flag) { m_flag = p_flag; }
 
 	bool m_flag;
+};
+
+struct RandomIntGenerator
+{
+	RandomIntGenerator(const int p_min, const int p_max, const int p_seed) : m_generator(p_seed), m_distribution(p_min, p_max) { }
+	RandomIntGenerator(const int p_min, const int p_max) : m_distribution(p_min, p_max) 
+	{ 
+		m_generator.seed((unsigned int)time(NULL));
+	}
+
+	int generate() { return m_distribution(m_generator); }
+
+	std::mt19937 m_generator;
+	std::uniform_int_distribution<int> m_distribution;
+};
+
+struct RandomFloatGenerator
+{
+	RandomFloatGenerator(const float p_min, const float p_max, const int p_seed) : m_generator(p_seed), m_distribution(p_min, p_max) { }
+	RandomFloatGenerator(const float p_min, const float p_max) : m_distribution(p_min, p_max)
+	{
+		m_generator.seed((unsigned int)time(NULL));
+	}
+
+	float generate() { return m_distribution(m_generator); }
+
+	std::mt19937 m_generator;
+	std::uniform_real_distribution<float> m_distribution;
 };
 
 struct SingleChange

@@ -35,65 +35,93 @@ function init ()
 	
 	-- Load button textures
 	buttonLoadTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_load_0.png')
+	buttonLoadTexture:setEnableMipmapping(false)
+	buttonLoadTexture:setEnableDownsampling(false)
 	buttonLoadTexture:loadToMemory()
 	buttonLoadTexture:loadToVideoMemory()
 	
 	buttonLoadPressedTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_load_1.png')
+	buttonLoadPressedTexture:setEnableMipmapping(false)
+	buttonLoadPressedTexture:setEnableDownsampling(false)
 	buttonLoadPressedTexture:loadToMemory()
 	buttonLoadPressedTexture:loadToVideoMemory()
 	
 	-- Play button textures
 	buttonPlayTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_play_0.png')
+	buttonPlayTexture:setEnableMipmapping(false)
+	buttonPlayTexture:setEnableDownsampling(false)
 	buttonPlayTexture:loadToMemory()
 	buttonPlayTexture:loadToVideoMemory()
 	
 	buttonPlayPressedTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_play_1.png')
+	buttonPlayPressedTexture:setEnableMipmapping(false)
+	buttonPlayPressedTexture:setEnableDownsampling(false)
 	buttonPlayPressedTexture:loadToMemory()
 	buttonPlayPressedTexture:loadToVideoMemory()
 	
 	-- Editor button textures
 	buttonEditorTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_editor_0.png')
+	buttonEditorTexture:setEnableMipmapping(false)
+	buttonEditorTexture:setEnableDownsampling(false)
 	buttonEditorTexture:loadToMemory()
 	buttonEditorTexture:loadToVideoMemory()
 	
 	buttonEditorPressedTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_editor_1.png')
+	buttonEditorPressedTexture:setEnableMipmapping(false)
+	buttonEditorPressedTexture:setEnableDownsampling(false)
 	buttonEditorPressedTexture:loadToMemory()
 	buttonEditorPressedTexture:loadToVideoMemory()
 	
 	-- Options button textures
 	buttonOptionsTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_options_0.png')
+	buttonOptionsTexture:setEnableMipmapping(false)
+	buttonOptionsTexture:setEnableDownsampling(false)
 	buttonOptionsTexture:loadToMemory()
 	buttonOptionsTexture:loadToVideoMemory()
 	
 	buttonOptionsPressedTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_options_1.png')
+	buttonOptionsPressedTexture:setEnableMipmapping(false)
+	buttonOptionsPressedTexture:setEnableDownsampling(false)
 	buttonOptionsPressedTexture:loadToMemory()
 	buttonOptionsPressedTexture:loadToVideoMemory()
 	
 	-- About button textures
 	buttonAboutTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_about_0.png')
+	buttonAboutTexture:setEnableMipmapping(false)
+	buttonAboutTexture:setEnableDownsampling(false)
 	buttonAboutTexture:loadToMemory()
 	buttonAboutTexture:loadToVideoMemory()
 	
 	buttonAboutPressedTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_about_1.png')
+	buttonAboutPressedTexture:setEnableMipmapping(false)
+	buttonAboutPressedTexture:setEnableDownsampling(false)
 	buttonAboutPressedTexture:loadToMemory()
 	buttonAboutPressedTexture:loadToVideoMemory()
 	
 	-- Exit button textures
 	buttonExitTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_exit_0.png')
+	buttonExitTexture:setEnableMipmapping(false)
+	buttonExitTexture:setEnableDownsampling(false)
 	buttonExitTexture:loadToMemory()
 	buttonExitTexture:loadToVideoMemory()
 	
 	buttonExitPressedTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'button_exit_1.png')
+	buttonExitPressedTexture:setEnableMipmapping(false)
+	buttonExitPressedTexture:setEnableDownsampling(false)
 	buttonExitPressedTexture:loadToMemory()
 	buttonExitPressedTexture:loadToVideoMemory()
 	
 	-- Engine logo texture
 	praxisLogoTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'logo1.png')
+	praxisLogoTexture:setEnableMipmapping(false)
+	praxisLogoTexture:setEnableDownsampling(false)
 	praxisLogoTexture:loadToMemory()
 	praxisLogoTexture:loadToVideoMemory()
 	
 	-- Fmod logo texture
 	fmodLogoTexture = loadTexture2D(pathsVariables.gui_assets_path .. 'FMOD Logo White - Black Background.png')
+	fmodLogoTexture:setEnableMipmapping(false)
+	fmodLogoTexture:setEnableDownsampling(false)
 	fmodLogoTexture:loadToMemory()
 	fmodLogoTexture:loadToVideoMemory()
 	

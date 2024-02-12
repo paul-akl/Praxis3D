@@ -279,12 +279,17 @@ ErrorCode RendererScene::setup(const PropertySet &p_properties)
 		{
 			switch(shadowMappingProperty[i].getPropertyID())
 			{
+				// Set CSM bias scale
+				case Properties::BiasScale:
+					m_shadowMappingData.m_csmBiasScale = shadowMappingProperty[i].getFloat();
+					break;
+
 				// Set CSM penumbra size (shadow edge softness)
 				case Properties::PenumbraSize:
 					m_shadowMappingData.m_penumbraSize = shadowMappingProperty[i].getFloat();
 					break;
 
-					// Set CSM penumbra size scale range
+				// Set CSM penumbra size scale range
 				case Properties::PenumbraScaleRange:
 					m_shadowMappingData.m_penumbraScaleRange = shadowMappingProperty[i].getVec2f();
 					break;
@@ -397,6 +402,58 @@ void RendererScene::exportSetup(PropertySet &p_propertySet)
 			auto &atmosphereProperty = atmScatteringProperty.addPropertySet(Properties::Atmosphere);
 			atmosphereProperty.addProperty(Properties::Bottom, m_sceneAtmScatteringData.m_atmosphereBottomRadius);
 			atmosphereProperty.addProperty(Properties::Top, m_sceneAtmScatteringData.m_atmosphereTopRadius);
+
+			{
+				auto &rayleighProperty = atmosphereProperty.addPropertySet(Properties::Rayleigh);
+				atmosphereProperty.addProperty(Properties::Scattering, m_sceneAtmScatteringData.m_rayleighScattering);
+
+				auto &densityProperty = rayleighProperty.addPropertySet(Properties::Density);
+				for(unsigned int i = 0; i < 2; i++)
+				{
+					auto &layerProperty = densityProperty.addPropertySet(Properties::ArrayEntry);
+
+					layerProperty.addProperty(Properties::ConstantTerm, m_sceneAtmScatteringData.m_rayleighDensity[i].m_constantTerm);
+					layerProperty.addProperty(Properties::LinearTerm, m_sceneAtmScatteringData.m_rayleighDensity[i].m_linearTerm);
+					layerProperty.addProperty(Properties::ExpScale, m_sceneAtmScatteringData.m_rayleighDensity[i].m_expScale);
+					layerProperty.addProperty(Properties::ExpTerm, m_sceneAtmScatteringData.m_rayleighDensity[i].m_expTerm);
+					layerProperty.addProperty(Properties::Width, m_sceneAtmScatteringData.m_rayleighDensity[i].m_width);
+				}
+			}
+
+			{
+				auto &mieProperty = atmosphereProperty.addPropertySet(Properties::Mie);
+				mieProperty.addProperty(Properties::Extinction, m_sceneAtmScatteringData.m_mieExtinction);
+				mieProperty.addProperty(Properties::Scattering, m_sceneAtmScatteringData.m_mieScattering);
+
+				auto &densityProperty = mieProperty.addPropertySet(Properties::Density);
+				for(unsigned int i = 0; i < 2; i++)
+				{
+					auto &layerProperty = densityProperty.addPropertySet(Properties::ArrayEntry);
+
+					layerProperty.addProperty(Properties::ConstantTerm, m_sceneAtmScatteringData.m_mieDensity[i].m_constantTerm);
+					layerProperty.addProperty(Properties::LinearTerm, m_sceneAtmScatteringData.m_mieDensity[i].m_linearTerm);
+					layerProperty.addProperty(Properties::ExpScale, m_sceneAtmScatteringData.m_mieDensity[i].m_expScale);
+					layerProperty.addProperty(Properties::ExpTerm, m_sceneAtmScatteringData.m_mieDensity[i].m_expTerm);
+					layerProperty.addProperty(Properties::Width, m_sceneAtmScatteringData.m_mieDensity[i].m_width);
+				}
+			}
+
+			{
+				auto &absorptionProperty = atmosphereProperty.addPropertySet(Properties::Absorption);
+				absorptionProperty.addProperty(Properties::Extinction, m_sceneAtmScatteringData.m_absorptionExtinction);
+
+				auto &densityProperty = absorptionProperty.addPropertySet(Properties::Density);
+				for(unsigned int i = 0; i < 2; i++)
+				{
+					auto &layerProperty = densityProperty.addPropertySet(Properties::ArrayEntry);
+
+					layerProperty.addProperty(Properties::ConstantTerm, m_sceneAtmScatteringData.m_absorptionDensity[i].m_constantTerm);
+					layerProperty.addProperty(Properties::LinearTerm, m_sceneAtmScatteringData.m_absorptionDensity[i].m_linearTerm);
+					layerProperty.addProperty(Properties::ExpScale, m_sceneAtmScatteringData.m_absorptionDensity[i].m_expScale);
+					layerProperty.addProperty(Properties::ExpTerm, m_sceneAtmScatteringData.m_absorptionDensity[i].m_expTerm);
+					layerProperty.addProperty(Properties::Width, m_sceneAtmScatteringData.m_absorptionDensity[i].m_width);
+				}
+			}
 		}
 		{
 			auto &groundProperty = atmScatteringProperty.addPropertySet(Properties::Ground);
@@ -405,6 +462,7 @@ void RendererScene::exportSetup(PropertySet &p_propertySet)
 		}
 		{
 			auto &sunProperty = atmScatteringProperty.addPropertySet(Properties::Sun);
+			sunProperty.addProperty(Properties::Irradiance, m_sceneAtmScatteringData.m_sunIrradiance);
 			sunProperty.addProperty(Properties::Size, m_sceneAtmScatteringData.m_sunSize);
 		}
 	}
@@ -425,6 +483,7 @@ void RendererScene::exportSetup(PropertySet &p_propertySet)
 	{
 		auto &shadowMappingPropertySet = p_propertySet.addPropertySet(Properties::ShadowMapping);
 
+		shadowMappingPropertySet.addProperty(Properties::BiasScale, m_shadowMappingData.m_csmBiasScale);
 		shadowMappingPropertySet.addProperty(Properties::PenumbraSize, m_shadowMappingData.m_penumbraSize);
 		shadowMappingPropertySet.addProperty(Properties::PenumbraScaleRange, m_shadowMappingData.m_penumbraScaleRange);
 		shadowMappingPropertySet.addProperty(Properties::Resolution, (int)m_shadowMappingData.m_csmResolution);
@@ -634,12 +693,18 @@ void RendererScene::update(const float p_deltaTime)
 			// Set model component as loaded to video memory, if it is present
 			auto modelComponent = entityRegistry.try_get<ModelComponent>(entity);
 			if(modelComponent != nullptr)
+			{
 				modelComponent->setLoadedToVideoMemory(true);
+				//modelComponent->unloadFromMemory();
+			}
 
 			// Set shader component as loaded to video memory, if it is present
 			auto shaderComponent = entityRegistry.try_get<ShaderComponent>(entity);
 			if(shaderComponent != nullptr)
+			{
 				shaderComponent->setLoadedToVideoMemory(true);
+				//shaderComponent->unloadFromMemory();
+			}
 
 			// Remove load-to-video-memory component to mark the entity as loaded to GPU
 			worldScene->removeComponent<GraphicsLoadToVideoMemoryComponent>(entity);
@@ -693,8 +758,12 @@ void RendererScene::update(const float p_deltaTime)
 
 					// Iterate over all loadable objects from the model component, and if any of them are not loaded to video memory already, add them to the to-load list
 					for(decltype(loadableObjectsFromModel.size()) size = loadableObjectsFromModel.size(), i = 0; i < size; i++)
+					{
 						if(!loadableObjectsFromModel[i].isLoadedToVideoMemory())
+						{
 							loadToVideoMemoryComponent.m_objectsToLoad.emplace(loadableObjectsFromModel[i]);
+						}
+					}
 
 					// Set the loading status flag to true
 					loadingStatus = true;

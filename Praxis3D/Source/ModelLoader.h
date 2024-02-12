@@ -216,6 +216,7 @@ public:
 	// and hiding internal data from outside classes. Private constructor.
 	class ModelHandle
 	{
+		friend struct LoadableObjectsContainer;
 		friend class CommandBuffer;
 		friend class ModelLoader;
 		friend class RendererFrontend;
@@ -274,7 +275,7 @@ public:
 		inline MeshIterator getMeshIterator() const					{ return MeshIterator(*m_model);			}
 		inline const size_t getMeshSize() const						{ return m_model->m_numMeshes;				}
 		inline unsigned int getHandle() const						{ return m_model->m_handle;					}
-		inline std::string getFilename() const						{ return m_model->m_filename;				}
+		inline std::string &getFilename() const						{ return m_model->m_filename;				}
 		inline const bool isLoadedToMemory() const					{ return m_model->isLoadedToMemory();		}
 		inline const bool isLoadedToVideoMemory() const				{ return m_model->isLoadedToVideoMemory();	}
 		inline std::string getMeshName(size_t p_meshIndex) const

@@ -331,7 +331,7 @@ void LuaScript::setFunctions()
 	m_luaState.set_function("setWindowTitle", [](const std::string &p_v1) -> const void { WindowLocator::get().setWindowTitle(p_v1); });
 
 	// Loader functions
-	m_luaState.set_function("loadTexture2D", [](const std::string &p_v1) -> TextureLoader2D::Texture2DHandle { return Loaders::texture2D().load(p_v1); });
+	m_luaState.set_function("loadTexture2D", [](const std::string &p_v1) -> TextureLoader2D::Texture2DHandle { return Loaders::texture2D().load(p_v1, MaterialType::MaterialType_Diffuse); });
 
 	// LuaScript callbacks
 	m_luaState.set_function("getLuaFilename", &LuaScript::getLuaScriptFilename, this);
@@ -349,6 +349,7 @@ void LuaScript::setFunctions()
 		[this](const glm::vec4 &p_v1, const glm::vec4 &p_v2) -> float { return glm::dot(p_v1, p_v2); }));
 	m_luaState.set_function("linearInterpolation", sol::overload([](const float p_value, const float p_domainMin, const float p_domainMax) -> const float { return (p_value - p_domainMin) / (p_domainMax - p_domainMin); },
 		[this](const float p_value, const float p_domainMin, const float p_domainMax, const float p_rangeMin, const float p_rangeMax) -> const float { return glm::mix(p_rangeMin, p_rangeMax, (p_value - p_domainMin) / (p_domainMax - p_domainMin)); }));
+	m_luaState.set_function("rand", [=]() -> int { return rand(); } );
 	m_luaState.set_function("toRadianF", sol::resolve<float(const float)>(&glm::radians));
 	m_luaState.set_function("toRadianVec3", sol::resolve<glm::vec3(const glm::vec3 &)>(&glm::radians));
 	m_luaState.set_function("toRadianVec4", sol::resolve<glm::vec4(const glm::vec4 &)>(&glm::radians));
@@ -382,6 +383,12 @@ void LuaScript::setUsertypes()
 		"SceneUnload", EngineChangeType::EngineChangeType_SceneUnload,
 		"SceneReload", EngineChangeType::EngineChangeType_SceneReload,
 		"StateChange", EngineChangeType::EngineChangeType_StateChange);
+
+	m_luaState.new_enum("MaterialType",
+		"Diffuse", MaterialType::MaterialType_Diffuse,
+		"Normal", MaterialType::MaterialType_Normal,
+		"Emissive", MaterialType::MaterialType_Emissive,
+		"Combined", MaterialType::MaterialType_Combined);
 
 	m_luaState.new_enum("SystemType",
 		GetString(Systems::TypeID::Null), Systems::TypeID::Null,
@@ -631,6 +638,15 @@ void LuaScript::setUsertypes()
 		"calculateLocalRotationEuler", &SpatialDataManager::calculateLocalRotationEuler,
 		"calculateLocalRotationQuaternion", &SpatialDataManager::calculateLocalRotationQuaternion);
 
+	// Random numbers
+	m_luaState.new_usertype<RandomIntGenerator>("RandomIntGenerator",
+		sol::constructors<RandomIntGenerator(int, int), RandomIntGenerator(int, int, int)>(),
+		"generate", &RandomIntGenerator::generate);
+
+	m_luaState.new_usertype<RandomFloatGenerator>("RandomFloatGenerator",
+		sol::constructors<RandomFloatGenerator(float, float), RandomFloatGenerator(float, float, int)>(),
+		"generate", &RandomFloatGenerator::generate);
+
 	// Input types
 	m_luaState.new_usertype<Window::MouseInfo>("MouseInfo",
 		"m_movementCurrentFrameX", &Window::MouseInfo::m_movementCurrentFrameX,
@@ -719,7 +735,8 @@ void LuaScript::setUsertypes()
 
 	m_luaState.new_usertype<ModelComponent::ModelComponentConstructionInfo>("ModelComponentConstructionInfo",
 		"m_active", &ModelComponent::ModelComponentConstructionInfo::m_active,
-		"m_name", &ModelComponent::ModelComponentConstructionInfo::m_name);
+		"m_name", &ModelComponent::ModelComponentConstructionInfo::m_name,
+		"setMaterialColor", [=](ModelComponent::ModelComponentConstructionInfo &p_this, const int p_modelIndex, const int p_meshIndex, const MaterialType p_materialType, const glm::vec4 &p_color) -> void { p_this.m_modelsProperties.m_models[p_modelIndex].m_meshData[p_meshIndex].m_meshMaterialColors[p_materialType] = p_color; });
 
 	m_luaState.new_usertype<ShaderComponent::ShaderComponentConstructionInfo>("ShaderComponentConstructionInfo",
 		"m_active", &ShaderComponent::ShaderComponentConstructionInfo::m_active,
@@ -762,7 +779,10 @@ void LuaScript::setUsertypes()
 		"getTextureWidth", &TextureLoader2D::Texture2DHandle::getTextureWidth,
 		"getFilename", &TextureLoader2D::Texture2DHandle::getFilename,
 		"getEnableMipmap", &TextureLoader2D::Texture2DHandle::getEnableMipmap,
-		"getHandle", &TextureLoader2D::Texture2DHandle::getHandle);
+		"getHandle", &TextureLoader2D::Texture2DHandle::getHandle,
+		"setEnableCompression", &TextureLoader2D::Texture2DHandle::setEnableCompression,
+		"setEnableDownsampling", &TextureLoader2D::Texture2DHandle::setEnableDownsampling,
+		"setEnableMipmapping", &TextureLoader2D::Texture2DHandle::setEnableMipmapping);
 
 	// GUI types
 	m_luaState.new_usertype<FileBrowserDialog>("FileBrowserDialog",

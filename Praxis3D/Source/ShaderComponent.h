@@ -31,6 +31,9 @@ public:
 
 	void loadToMemory() { }
 
+	// Unload all assets from RAM (does not unload from GPU VRAM)
+	inline void unloadFromMemory() { }
+
 	BitMask getSystemType() { return Systems::Graphics; }
 
 	void update(const float p_deltaTime) { }

@@ -163,4 +163,32 @@ namespace Math
 			p_mat[8], p_mat[9], p_mat[10], p_mat[11],
 			p_mat[12], p_mat[13], p_mat[14], p_mat[15]);
 	}
+
+	// Perform an approximate gamma correction on the RGB color
+	const inline glm::vec3 gammaCorrectionApprox(const glm::vec3 &p_rgb, const float p_gamma) noexcept { return glm::pow(p_rgb, glm::vec3(p_gamma)); }
+
+	// Perform an approximate gamma correction on the RGBA color
+	const inline glm::vec4 gammaCorrectionApprox(const glm::vec4 &p_rgba, const float p_gamma) noexcept { return glm::pow(p_rgba, glm::vec4(p_gamma)); }
+
+	// Perform an accurate gamma correction on the RGB color
+	const inline glm::vec3 gammaCorrectionAccurate(const glm::vec3 &p_rgb, const float p_gamma = 2.4f) noexcept
+	{ 
+		const glm::vec3 lo = p_rgb * 12.92f;
+		const glm::vec3 hi = pow(abs(p_rgb), glm::vec3(1.0f / p_gamma)) * 1.055f - 0.055f;
+		return mix(hi, lo, glm::vec3(glm::lessThanEqual(p_rgb, glm::vec3(0.0031308f))));
+	}	
+	
+	// Perform an accurate gamma correction on the RGBA color
+	const inline glm::vec4 gammaCorrectionAccurate(const glm::vec4 &p_rgba, const float p_gamma = 2.4f) noexcept
+	{
+		const glm::vec4 lo = p_rgba * 12.92f;
+		const glm::vec4 hi = pow(abs(p_rgba), glm::vec4(1.0f / p_gamma)) * 1.055f - 0.055f;
+		return mix(hi, lo, glm::vec4(glm::lessThanEqual(p_rgba, glm::vec4(0.0031308f))));
+	}	
+	
+	// Perform an accurate gamma correction on the RGBA color, while not affecting the alpha channel
+	const inline glm::vec4 gammaCorrectionAccurateNoAlpha(const glm::vec4 &p_rgba, const float p_gamma = 2.4f) noexcept
+	{
+		return glm::vec4(gammaCorrectionAccurate(glm::vec3(p_rgba)), p_rgba.a);
+	}
 }

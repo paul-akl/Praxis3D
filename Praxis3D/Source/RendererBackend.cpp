@@ -6,10 +6,18 @@ RendererBackend::RendererBackend()
 {
 	m_gbuffer = nullptr;
 	m_csmBuffer = nullptr;
+
+	m_materialDataBuffer.m_bindingIndex = UniformBufferBinding::UniformBufferBinding_MaterialDataBuffer;
+	m_materialDataBuffer.m_bufferBindTarget = BufferBindTarget::BufferBindTarget_Uniform;
+	m_materialDataBuffer.m_bufferType = BufferType::BufferType_Uniform;
+	m_materialDataBuffer.m_bufferUsage = BufferUsageHint::BufferUsageHint_DynamicDraw;
+	m_materialDataBuffer.m_size = sizeof(MaterialData);
 }
 
 RendererBackend::~RendererBackend()
 {
+	processCommand(UnloadObjectType::UnloadObjectType_Buffer, 1, &m_materialDataBuffer.m_handle);
+
 	if(m_gbuffer != nullptr)
 		delete m_gbuffer;
 	if(m_csmBuffer != nullptr)
@@ -44,6 +52,17 @@ ErrorCode RendererBackend::init(const UniformFrameData &p_frameData)
 
 		// Set depth test function
 		glDepthFunc(Config::rendererVar().depth_test_func);
+
+		// Create the material data buffer
+		LoadCommand bufferLoadCommand(m_materialDataBuffer.m_handle,
+			m_materialDataBuffer.m_bufferType,
+			m_materialDataBuffer.m_bufferBindTarget,
+			m_materialDataBuffer.m_bufferUsage,
+			m_materialDataBuffer.m_bindingIndex,
+			m_materialDataBuffer.m_size,
+			0);
+
+		processCommand(bufferLoadCommand);
 	}
 	return returnCode;
 }
@@ -98,7 +117,7 @@ void RendererBackend::processLoading(LoadCommands &p_loadCommands, const Uniform
 {
 	for(decltype(p_loadCommands.size()) i = 0, size = p_loadCommands.size(); i < size; i++)
 	{
-		processCommand(p_loadCommands[i], p_frameData);
+		processCommand(p_loadCommands[i]);
 	}
 }
 
@@ -138,6 +157,18 @@ void RendererBackend::processDrawing(const DrawCommands &p_drawCommands, const U
 		frameUniformUpdate(shaderHandle, uniformUpdater, uniformObjectData, p_frameData);
 		modelUniformUpdate(shaderHandle, uniformUpdater, uniformObjectData, p_frameData);
 		meshUniformUpdate(shaderHandle, uniformUpdater, uniformObjectData, p_frameData);
+
+		// Update material data buffer
+		BufferUpdateCommand materialDataUpdateCommand(
+			m_materialDataBuffer.m_handle, 
+			0, 
+			m_materialDataBuffer.m_size, 
+			(const void *)&p_drawCommands[i].second.m_materialData, 
+			BufferUpdateType::BufferUpdate_Data, 
+			m_materialDataBuffer.m_bufferType, 
+			m_materialDataBuffer.m_bufferUsage);
+
+		processCommand(materialDataUpdateCommand, p_frameData);
 
 		// Bind VAO
 		bindVAO(p_drawCommands[i].second.m_modelHandle);
