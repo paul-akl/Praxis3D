@@ -30,7 +30,6 @@ in vec2 v_texCoord[];
 out vec2 g_texCoord;
 #endif
 
-
 void main()
 {
 	// Go over each vertex

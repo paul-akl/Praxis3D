@@ -385,6 +385,9 @@ std::string TextEditor::GetText(const Coordinates& aStart, const Coordinates& aE
 		}
 	}
 
+	// Erase the NULL characters that are left because the text editor works with chars internally
+	result.erase(std::find(result.begin(), result.end(), '\0'), result.end());
+
 	return result;
 }
 

@@ -3,6 +3,8 @@
 #include <sstream>
 
 #include <iostream>
+#include <stdlib.h>     /* srand, rand */
+#include <time.h>       /* time */
 
 #include "AudioSystem.h"
 #include "ClockLocator.h"
@@ -42,6 +44,10 @@ Engine::Engine()
 	m_sceneChangeController = nullptr;
 	m_objectChangeController = nullptr;
 	m_currentStateType = Config::engineVar().engineState;
+
+	// Seed the random number generator
+	srand((unsigned int)time(NULL));
+	rand();
 
 	for(unsigned int i = 0; i < EngineStateType::EngineStateType_NumOfTypes; i++)
 		m_engineStates[i] = nullptr;

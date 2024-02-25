@@ -47,3 +47,5 @@ compileData.scor.t0000
 !Praxis3D/Data/Materials/Default/**
 !Praxis3D/Data/Models/Default/**
 !Praxis3D/Data/Sounds/Default/**
+*.exp
+Builds/x64/Release/Praxis3D.exp

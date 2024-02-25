@@ -42,9 +42,15 @@ public:
 			// Create a property-set used to load the shader
 			PropertySet shaderProperties(Properties::Shaders);
 			shaderProperties.addProperty(Properties::Name, std::string("csmPass"));
-			shaderProperties.addProperty(Properties::FragmentShader, Config::rendererVar().csm_pass_frag_shader);
-			shaderProperties.addProperty(Properties::GeometryShader, Config::rendererVar().csm_pass_geom_shader);
-			shaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().csm_pass_vert_shader);
+
+#if CSM_USE_MULTILAYER_DRAW
+			shaderProperties.addProperty(Properties::FragmentShader, Config::rendererVar().csm_pass_layered_frag_shader);
+			shaderProperties.addProperty(Properties::GeometryShader, Config::rendererVar().csm_pass_layered_geom_shader);
+			shaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().csm_pass_layered_vert_shader);
+#else
+			shaderProperties.addProperty(Properties::FragmentShader, Config::rendererVar().csm_pass_single_frag_shader);
+			shaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().csm_pass_single_vert_shader);
+#endif
 
 			// Create the shader
 			m_csmPassShader = Loaders::shader().load(shaderProperties);
@@ -53,7 +59,7 @@ public:
 			if(ErrorCode shaderError = m_csmPassShader->loadToMemory(); shaderError == ErrorCode::Success)
 			{
 				// Disable alpha discard in the shader
-				if(ErrorCode shaderVariableError = m_csmPassShader->setDefineValue(ShaderType::ShaderType_Geometry, Config::shaderVar().define_alpha_discard, 0); shaderVariableError != ErrorCode::Success)
+				if(ErrorCode shaderVariableError = m_csmPassShader->setDefineValue(Config::shaderVar().define_alpha_discard, 0); shaderVariableError != ErrorCode::Success)
 					ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_alpha_discard, ErrorSource::Source_ShadowMappingPass);
 
 				// Set the number of shadow cascades in the shader
@@ -72,9 +78,15 @@ public:
 			// Create a property-set used to load the shader
 			PropertySet shaderProperties(Properties::Shaders);
 			shaderProperties.addProperty(Properties::Name, std::string("csmPass_AlphaDiscard"));
-			shaderProperties.addProperty(Properties::FragmentShader, Config::rendererVar().csm_pass_frag_shader);
-			shaderProperties.addProperty(Properties::GeometryShader, Config::rendererVar().csm_pass_geom_shader);
-			shaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().csm_pass_vert_shader);
+
+#if CSM_USE_MULTILAYER_DRAW
+			shaderProperties.addProperty(Properties::FragmentShader, Config::rendererVar().csm_pass_layered_frag_shader);
+			shaderProperties.addProperty(Properties::GeometryShader, Config::rendererVar().csm_pass_layered_geom_shader);
+			shaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().csm_pass_layered_vert_shader);
+#else
+			shaderProperties.addProperty(Properties::FragmentShader, Config::rendererVar().csm_pass_single_frag_shader);
+			shaderProperties.addProperty(Properties::VertexShader, Config::rendererVar().csm_pass_single_vert_shader);
+#endif
 
 			// Create the shader
 			m_csmPassAlphaDiscardShader = Loaders::shader().load(shaderProperties);
@@ -83,7 +95,7 @@ public:
 			if(ErrorCode shaderError = m_csmPassAlphaDiscardShader->loadToMemory(); shaderError == ErrorCode::Success)
 			{
 				// Enable alpha discard in the shader
-				if(ErrorCode shaderVariableError = m_csmPassAlphaDiscardShader->setDefineValue(ShaderType::ShaderType_Geometry, Config::shaderVar().define_alpha_discard, 1); shaderVariableError != ErrorCode::Success)
+				if(ErrorCode shaderVariableError = m_csmPassAlphaDiscardShader->setDefineValue(Config::shaderVar().define_alpha_discard, 1); shaderVariableError != ErrorCode::Success)
 					ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_alpha_discard, ErrorSource::Source_ShadowMappingPass);
 
 				// Set the number of shadow cascades in the shader
@@ -175,9 +187,7 @@ public:
 			if(shadowMappingData.m_zClipping)
 				glEnable(GL_DEPTH_CLAMP);
 
-			// Get known shader details
-			auto csmShaderHandle = m_csmPassShader->getShaderHandle();
-			auto &csmUniformUpdater = m_csmPassShader->getUniformUpdater();
+#if CSM_USE_MULTILAYER_DRAW
 
 			// Iterate over all objects to be rendered with CSM shader
 			for(auto entity : p_sceneObjects.m_models)
@@ -203,18 +213,101 @@ public:
 								if(modelData[modelIndex].m_meshes[meshIndex].m_alphaThreshold > 0.0f)
 								{
 									// ALPHA DISCARD enabled
-									m_renderer.queueForDrawing(modelData[modelIndex].m_model[meshIndex], modelData[modelIndex].m_meshes[meshIndex], modelData[modelIndex].m_model.getHandle(), m_csmPassAlphaDiscardShader->getShaderHandle(), m_csmPassAlphaDiscardShader->getUniformUpdater(), modelMatrix, modelMatrix);
+									m_renderer.queueForDrawing(
+										modelData[modelIndex].m_model[meshIndex], 
+										modelData[modelIndex].m_meshes[meshIndex], 
+										modelData[modelIndex].m_model.getHandle(), 
+										m_csmPassAlphaDiscardShader->getShaderHandle(), 
+										m_csmPassAlphaDiscardShader->getUniformUpdater(), 
+										DrawCommandTextureBinding::DrawCommandTextureBinding_DiffuseOnly,
+										modelData[modelIndex].m_shadowFaceCulling, 
+										modelMatrix, 
+										modelMatrix);
 								}
 								else
 								{
 									// ALPHA DISCARD disabled
-									m_renderer.queueForDrawing(modelData[modelIndex].m_model[meshIndex], modelData[modelIndex].m_meshes[meshIndex], modelData[modelIndex].m_model.getHandle(), m_csmPassShader->getShaderHandle(), m_csmPassShader->getUniformUpdater(), modelMatrix, modelMatrix);
+									m_renderer.queueForDrawing(
+										modelData[modelIndex].m_model[meshIndex], 
+										modelData[modelIndex].m_meshes[meshIndex], 
+										modelData[modelIndex].m_model.getHandle(), 
+										m_csmPassShader->getShaderHandle(), 
+										m_csmPassShader->getUniformUpdater(), 
+										DrawCommandTextureBinding::DrawCommandTextureBinding_None,
+										modelData[modelIndex].m_shadowFaceCulling,
+										modelMatrix, 
+										modelMatrix);
 								}
 							}
 						}
 					}
 				}
 			}
+#else
+			for(decltype(m_csmDataSet.size()) i = 0, size = m_csmDataSet.size(); i < size; i++)
+			{
+				glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_renderer.m_backend.getCSMFramebuffer()->m_depthBuffers, 0, (GLint)i);
+				glClear(GL_DEPTH_BUFFER_BIT);	// Make sure to clear the depth buffer for the new frame
+
+				// Iterate over all objects to be rendered with CSM shader
+				for(auto entity : p_sceneObjects.m_models)
+				{
+					ModelComponent &model = p_sceneObjects.m_models.get<ModelComponent>(entity);
+					if(model.isObjectActive())
+					{
+						SpatialComponent &spatialData = p_sceneObjects.m_models.get<SpatialComponent>(entity);
+						auto &modelData = model.getModelData();
+
+						// Go over each model
+						for(decltype(modelData.size()) modelIndex = 0, modelSize = modelData.size(); modelIndex < modelSize; modelIndex++)
+						{
+							// Calculate model-view-projection matrix
+							const glm::mat4 &modelMatrix = m_csmDataSet[i].m_lightSpaceMatrix * p_sceneObjects.m_models.get<SpatialComponent>(entity).getSpatialDataChangeManager().getWorldTransformWithScale();
+
+							// Go over each mesh
+							for(decltype(modelData[modelIndex].m_model.getNumMeshes()) meshIndex = 0, meshSize = modelData[modelIndex].m_model.getNumMeshes(); meshIndex < meshSize; meshIndex++)
+							{
+								// Only draw active meshes
+								if(modelData[modelIndex].m_meshes[meshIndex].m_active)
+								{
+									if(modelData[modelIndex].m_meshes[meshIndex].m_alphaThreshold > 0.0f)
+									{
+										// ALPHA DISCARD enabled
+										m_renderer.queueForDrawing(
+											modelData[modelIndex].m_model[meshIndex], 
+											modelData[modelIndex].m_meshes[meshIndex], 
+											modelData[modelIndex].m_model.getHandle(), 
+											m_csmPassAlphaDiscardShader->getShaderHandle(),
+											m_csmPassAlphaDiscardShader->getUniformUpdater(),
+											DrawCommandTextureBinding::DrawCommandTextureBinding_DiffuseOnly,
+											modelData[modelIndex].m_shadowFaceCulling,
+											modelMatrix, 
+											modelMatrix);
+									}
+									else
+									{
+										// ALPHA DISCARD disabled
+										m_renderer.queueForDrawing(
+											modelData[modelIndex].m_model[meshIndex], 
+											modelData[modelIndex].m_meshes[meshIndex], 
+											modelData[modelIndex].m_model.getHandle(), 
+											m_csmPassShader->getShaderHandle(),
+											m_csmPassShader->getUniformUpdater(),
+											DrawCommandTextureBinding::DrawCommandTextureBinding_None,
+											modelData[modelIndex].m_shadowFaceCulling,
+											modelMatrix, 
+											modelMatrix);
+									}
+								}
+							}
+						}
+					}
+				}
+
+				// Pass all the draw commands to be executed
+				m_renderer.passDrawCommandsToBackend();
+			}
+#endif
 
 			// Iterate over all objects to be rendered with a custom shader
 			//for(auto entity : p_sceneObjects.m_modelsWithShaders)

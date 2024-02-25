@@ -1,3 +1,15 @@
+/*
+	Geometry pass shader, fragment (geometryPass.frag)
+	Geometry stage of the deferred rendering, draws scene objects to fill the geometry buffers:
+		position data,
+		albedo (diffuse) color,
+		normal data,
+		emissive color,
+		combined material data (RMHA - roughness, metalness, height, ambien-occlusion)
+	Reconstructs the XYZ normal from a compressed normal texture holding XY.
+	Performs Parallax Occlusion Mapping, if defined.
+	Performs alpha discard, if defined.
+*/
 #version 430 core
 
 #define NUM_OF_MATERIAL_TYPES 4
@@ -185,14 +197,14 @@ vec3 getTBNNormalFromMap(vec2 p_texCoord, vec3 p_worldPos)
 
 vec3 barycentricToModelPosition(vec2 p_texCoords, vec3 p_vertex0, vec3 p_vertex1, vec3 p_vertex2) 
 {
-    vec3 barycentric = vec3(1.0 - p_texCoords.x - p_texCoords.y, p_texCoords.x, p_texCoords.y);
+    const vec3 barycentric = vec3(1.0 - p_texCoords.x - p_texCoords.y, p_texCoords.x, p_texCoords.y);
     return barycentric.x * p_vertex0 + barycentric.y * p_vertex1 + barycentric.z * p_vertex2;
 }
 
 vec2 calcSimpleParallaxMapping(vec2 p_texCoords, vec3 p_viewDir)
 {
-	float height =  getHeight(p_texCoords) * heightScale;    
-    vec2 p = p_viewDir.xy * height;
+	const float height =  getHeight(p_texCoords) * heightScale;    
+    const vec2 p = p_viewDir.xy * height;
     return p_texCoords - p;
 }
 
@@ -485,14 +497,14 @@ void main(void)
 	// G - metalness
 	// B - height
 	// A - ambient occlusion
-	vec4 combinedTextureColor = sampleTexture(combinedTexture, newCoords) * m_materialData[MATERIAL_TYPE_COMBINED].m_color;
+	const vec4 combinedTextureColor = sampleTexture(combinedTexture, newCoords) * m_materialData[MATERIAL_TYPE_COMBINED].m_color;
 	
 	// Get the emissive color with the new coordinates
 	vec4 emissiveColor = sampleTexture(emissiveTexture, newCoords) * m_materialData[MATERIAL_TYPE_EMISSIVE].m_color;
 	
 	// Get the normal map values
 	//vec3 normalColor = sampleTexture(normalTexture, newCoords).rgb * m_materialData[MATERIAL_TYPE_NORMAL].m_color.rgb;
-	vec3 normalColor = getNormalFromMap(newCoords) * m_materialData[MATERIAL_TYPE_NORMAL].m_color.rgb;
+	const vec3 normalColor = getNormalFromMap(newCoords) * m_materialData[MATERIAL_TYPE_NORMAL].m_color.rgb;
 	
 #else
 	
@@ -501,13 +513,13 @@ void main(void)
 	// G - metalness
 	// B - height
 	// A - ambient occlusion
-	vec4 combinedTextureColor = sampleTexture(combinedTexture, texCoord[MATERIAL_TYPE_COMBINED]) * m_materialData[MATERIAL_TYPE_COMBINED].m_color;
+	const vec4 combinedTextureColor = sampleTexture(combinedTexture, texCoord[MATERIAL_TYPE_COMBINED]) * m_materialData[MATERIAL_TYPE_COMBINED].m_color;
 	
 	// Get the emissive color with the new coordinates
 	vec4 emissiveColor = sampleTexture(emissiveTexture, texCoord[MATERIAL_TYPE_EMISSIVE]) * m_materialData[MATERIAL_TYPE_EMISSIVE].m_color;
 	
 	// Get the normal map values
-	vec3 normalColor = getNormalFromMap(texCoord[MATERIAL_TYPE_NORMAL]) * m_materialData[MATERIAL_TYPE_NORMAL].m_color.rgb;
+	const vec3 normalColor = getNormalFromMap(texCoord[MATERIAL_TYPE_NORMAL]) * m_materialData[MATERIAL_TYPE_NORMAL].m_color.rgb;
 
 #endif
 	

@@ -27,6 +27,7 @@ class RendererFrontend
 	friend class ReflectionPass;
 	friend class ShadowMappingPass;
 	friend class SkyPass;
+	friend class TonemappingPass;
 public:
 	// A handle for a uniform or shader storage buffer
 	struct ShaderBuffer
@@ -80,7 +81,7 @@ public:
 	const inline UniformFrameData &getFrameData() const { return m_frameData; }
 	
 protected:
-	inline void queueForDrawing(const Model::Mesh &p_mesh, const MeshData &p_meshData, const uint32_t p_modelHandle, const uint32_t p_shaderHandle, ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_modelMatrix, const glm::mat4 &p_modelViewProjMatrix)
+	inline void queueForDrawing(const Model::Mesh &p_mesh, const MeshData &p_meshData, const uint32_t p_modelHandle, const uint32_t p_shaderHandle, ShaderUniformUpdater &p_uniformUpdater, const DrawCommandTextureBinding p_textureBindingType, const FaceCullingSettings p_faceCulling, const glm::mat4 &p_modelMatrix, const glm::mat4 &p_modelViewProjMatrix)
 	{
 		// Calculate the sort key, by combining lower 16 bits of shader handle and model handle
 		// sortkey = 64 bits total
@@ -113,11 +114,13 @@ protected:
 				p_meshData.m_materials[MaterialType::MaterialType_Normal].getHandle(),
 				p_meshData.m_materials[MaterialType::MaterialType_Emissive].getHandle(),
 				p_meshData.m_materials[MaterialType::MaterialType_Combined].getHandle(),
+				p_faceCulling,
 				p_meshData.m_materialData,
+				p_textureBindingType,
 				p_meshData.m_textureWrapMode)
 		);
 	}
-	inline void queueForDrawing(const ModelData &p_modelData, const unsigned int p_shaderHandle, ShaderUniformUpdater &p_uniformUpdater, const glm::mat4 &p_modelMatrix, const glm::mat4 &p_viewProjMatrix)
+	inline void queueForDrawing(const ModelData &p_modelData, const unsigned int p_shaderHandle, ShaderUniformUpdater &p_uniformUpdater, const DrawCommandTextureBinding p_textureBindingType, const glm::mat4 &p_modelMatrix, const glm::mat4 &p_viewProjMatrix)
 	{
 		// Get the necessary handles
 		const unsigned int modelHandle = p_modelData.m_model.getHandle();
@@ -130,7 +133,7 @@ protected:
 		{
 			if(p_modelData.m_meshes[meshIndex].m_active)
 			{
-				queueForDrawing(p_modelData.m_model[meshIndex], p_modelData.m_meshes[meshIndex], modelHandle, p_shaderHandle, p_uniformUpdater, p_modelMatrix, modelViewProjMatrix);
+				queueForDrawing(p_modelData.m_model[meshIndex], p_modelData.m_meshes[meshIndex], modelHandle, p_shaderHandle, p_uniformUpdater, p_textureBindingType, p_modelData.m_drawFaceCulling, p_modelMatrix, modelViewProjMatrix);
 			}
 		}
 	}

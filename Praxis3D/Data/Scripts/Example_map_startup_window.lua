@@ -65,6 +65,7 @@ function update (p_deltaTime)
 		
 		-- Set GUI colors
 		GUI.PushStyleColor(ImGuiCol.WindowBg, 0.102, 0.102, 0.102, 0.9)
+		GUI.PushStyleColor(ImGuiCol.ChildBg, 0.0, 0.0, 0.0, 0.0)
 		
 		-- Set the GUI window to be fullscreen
 		GUI.SetNextWindowPos(0, 0)

@@ -1,10 +1,13 @@
 
+#include <mutex>          // std::mutex
+#include <thread>         // std::thread
 #include <utility>
 #include <vector>
 
 #include "ComponentConstructorInfo.h"
 #include "PropertyLoader.h"
 #include "SceneLoader.h"
+#include "Version.h"
 
 SceneLoader::SceneLoader(const EngineStateType p_engineStateType) : m_engineStateType(p_engineStateType)
 {
@@ -29,6 +32,20 @@ ErrorCode SceneLoader::loadFromProperties(const PropertySet &p_sceneProperties)
 
 	// Get systems property set
 	auto &systemProperties = p_sceneProperties.getPropertySetByID(Properties::Systems);
+
+	// Get the scene engine version
+	m_sceneEngineVersion.reset();
+	if(const auto &versionPropertySet = p_sceneProperties.getPropertySetByID(Properties::Version); versionPropertySet)
+	{
+		if(const auto &majorVersionProperty = versionPropertySet.getPropertyByID(Properties::Major); majorVersionProperty)
+			m_sceneEngineVersion.m_major = majorVersionProperty.getInt();
+
+		if(const auto &minorVersionProperty = versionPropertySet.getPropertyByID(Properties::Major); minorVersionProperty)
+			m_sceneEngineVersion.m_minor = minorVersionProperty.getInt();
+
+		if(const auto &patchVersionProperty = versionPropertySet.getPropertyByID(Properties::Major); patchVersionProperty)
+			m_sceneEngineVersion.m_patch = patchVersionProperty.getInt();
+	}
 
 	// Iterate over all systems scenes
 	for(int sysIndex = 0; sysIndex < Systems::NumberOfSystems; sysIndex++)
@@ -134,15 +151,13 @@ ErrorCode SceneLoader::loadFromFile(const std::string &p_filename)
 
 ErrorCode SceneLoader::saveToFile(const std::string p_filename)
 {
-	std::string filename;
-
 	if(!p_filename.empty())
-		filename = Config::filepathVar().map_path + p_filename;
-	else
-		filename = m_filename;
+		m_filename = p_filename;
 
-	if(!filename.empty())
+	if(!m_filename.empty())
 	{
+		std::string filename = Config::filepathVar().map_path + m_filename;
+
 		// Get the world scene required for getting the entity registry
 		WorldScene *worldScene = static_cast<WorldScene *>(m_systemScenes[Systems::World]);
 
@@ -151,6 +166,15 @@ ErrorCode SceneLoader::saveToFile(const std::string p_filename)
 
 		// Add root property set for the whole file
 		PropertySet rootPropertySet(Properties::Default);
+
+		// Add scene loaded properties
+		rootPropertySet.addProperty(Properties::LoadInBackground, m_loadInBackground);
+
+		// Add engine version properties
+		auto &versionPropertySet = rootPropertySet.addPropertySet(Properties::Version);
+		versionPropertySet.addProperty(Properties::Major, (int)PRAXIS3D_VERSION_MAJOR);
+		versionPropertySet.addProperty(Properties::Minor, (int)PRAXIS3D_VERSION_MINOR);
+		versionPropertySet.addProperty(Properties::Patch, (int)PRAXIS3D_VERSION_PATCH);
 
 		// Add root property set game objects
 		auto &gameObjects = rootPropertySet.addPropertySet(Properties::GameObject);
@@ -178,9 +202,6 @@ ErrorCode SceneLoader::saveToFile(const std::string p_filename)
 			// Export the Construction Info to the Property Set
 			exportToProperties(constructionInfo, gameObjectEntry);
 		}
-
-		// Add scene loaded properties
-		rootPropertySet.addProperty(Properties::LoadInBackground, m_loadInBackground);
 
 		// Add root property set for systems
 		auto &rootSystemsPropertySet = rootPropertySet.addPropertySet(Properties::Systems);
@@ -242,6 +263,12 @@ ErrorCode SceneLoader::importPrefab(ComponentsConstructionInfo &p_constructionIn
 	// Check if the given filename isn't empty
 	if(!p_filename.empty())
 	{
+		//m_mtx.lock();
+		// Make sure calls from other threads are locked, while current call is in progress
+		// This is needed as the prefab that is being requested might be currently being imported
+		// Mutex prevents duplicate prefabs being loaded, and same data being changed.
+		SpinWait::Lock lock(m_mutex);
+
 		// Search for the given prefab (it might have been loaded before, already)
 		auto prefabIterator = m_prefabs.find(p_filename);
 
@@ -255,10 +282,6 @@ ErrorCode SceneLoader::importPrefab(ComponentsConstructionInfo &p_constructionIn
 		}
 		else // If the prefab doesn't exist in the map, import it
 		{
-			// Make sure calls from other threads are locked, while current call is in progress
-			// This is needed as the prefab that is being requested might be currently being imported
-			// Mutex prevents duplicate prefabs being loaded, and same data being changed.
-			SpinWait::Lock lock(m_mutex);
 
 			// Search for the prefab again, as it might have been imported from another thread call before mutex lock was released
 			auto prefabIteratorNew = m_prefabs.find(p_filename);
@@ -287,6 +310,8 @@ ErrorCode SceneLoader::importPrefab(ComponentsConstructionInfo &p_constructionIn
 				}
 			}
 		}
+
+		//m_mtx.unlock();
 	}
 	else
 		returnError = ErrorCode::Filename_empty;
@@ -671,6 +696,52 @@ void SceneLoader::importFromProperties(GraphicsComponentsConstructionInfo &p_con
 
 							// Assign the model filename
 							newModelEntry.m_modelName = modelName;
+
+							// Get face culling settings for drawing
+							if(auto faceCullingProperty = modelsProperty.getPropertySet(iModel).getPropertySetByID(Properties::FaceCullingDraw); faceCullingProperty)
+							{
+								// Get the enable flag, if it is present
+								if(auto enableProperty = faceCullingProperty.getPropertyByID(Properties::Enabled); enableProperty)
+									newModelEntry.m_drawFaceCulling.m_faceCullingEnabled = enableProperty.getBool();
+
+								// Get face culling mode
+								if(auto faceCullingModeProperty = faceCullingProperty.getPropertyByID(Properties::Type); faceCullingModeProperty)
+								{
+									switch(faceCullingModeProperty.getID())
+									{
+										case Properties::Front:
+											newModelEntry.m_drawFaceCulling.m_backFaceCulling = false;
+											break;
+										case Properties::Back:
+										default:
+											newModelEntry.m_drawFaceCulling.m_backFaceCulling = true;
+											break;
+									}
+								}
+							}
+
+							// Get face culling settings for shadow mapping
+							if(auto faceCullingProperty = modelsProperty.getPropertySet(iModel).getPropertySetByID(Properties::FaceCullingShadow); faceCullingProperty)
+							{
+								// Get the enable flag, if it is present
+								if(auto enableProperty = faceCullingProperty.getPropertyByID(Properties::Enabled); enableProperty)
+									newModelEntry.m_shadowFaceCulling.m_faceCullingEnabled = enableProperty.getBool();
+
+								// Get face culling mode
+								if(auto faceCullingModeProperty = faceCullingProperty.getPropertyByID(Properties::Type); faceCullingModeProperty)
+								{
+									switch(faceCullingModeProperty.getID())
+									{
+										case Properties::Front:
+											newModelEntry.m_shadowFaceCulling.m_backFaceCulling = false;
+											break;
+										case Properties::Back:
+										default:
+											newModelEntry.m_shadowFaceCulling.m_backFaceCulling = true;
+											break;
+									}
+								}
+							}
 
 							// Get meshes property
 							auto &meshesProperty = modelsProperty.getPropertySet(iModel).getPropertySetByID(Properties::Meshes);
@@ -1267,8 +1338,28 @@ void SceneLoader::exportToProperties(const GraphicsComponentsConstructionInfo &p
 			{
 				auto &modelPropertyArrayEntry = modelsPropertySet.addPropertySet(Properties::ArrayEntry);
 
-				// Add model data
+				// Add model filename
 				modelPropertyArrayEntry.addProperty(Properties::PropertyID::Filename, model.m_modelName);
+
+				// Add face culling data for drawing
+				{
+					auto &faceCullingPropertySet = modelPropertyArrayEntry.addPropertySet(Properties::FaceCullingDraw);
+					faceCullingPropertySet.addProperty(Properties::PropertyID::Enabled, model.m_drawFaceCulling.m_faceCullingEnabled);
+					if(model.m_drawFaceCulling.m_backFaceCulling)
+						faceCullingPropertySet.addProperty(Properties::PropertyID::Type, Properties::PropertyID::Back);
+					else
+						faceCullingPropertySet.addProperty(Properties::PropertyID::Type, Properties::PropertyID::Front);
+				}
+
+				// Add face culling data for shadow mapping
+				{
+					auto &faceCullingPropertySet = modelPropertyArrayEntry.addPropertySet(Properties::FaceCullingShadow);
+					faceCullingPropertySet.addProperty(Properties::PropertyID::Enabled, model.m_shadowFaceCulling.m_faceCullingEnabled);
+					if(model.m_shadowFaceCulling.m_backFaceCulling)
+						faceCullingPropertySet.addProperty(Properties::PropertyID::Type, Properties::PropertyID::Back);
+					else
+						faceCullingPropertySet.addProperty(Properties::PropertyID::Type, Properties::PropertyID::Front);
+				}
 
 				// Create Meshes entry
 				auto &meshesPropertySet = modelPropertyArrayEntry.addPropertySet(Properties::PropertyID::Meshes);

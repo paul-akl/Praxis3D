@@ -643,5 +643,5 @@ void main()
 	
 	//radiance = vec3(1.0) - exp(-radiance / atmScatteringParam.m_whitePoint);
 	//color = vec4(vec3(1.0) - exp(-radiance / atmScatteringParam.m_whitePoint * directionalLight.m_intensity), 1.0);
-	color = vec4(radiance / atmScatteringParam.m_whitePoint * directionalLight.m_intensity * 1.0, 1.0);
+	color = vec4(radiance / atmScatteringParam.m_whitePoint * directionalLight.m_intensity * 0.5, 1.0);
 }

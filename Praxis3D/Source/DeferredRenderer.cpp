@@ -94,21 +94,21 @@ ErrorCode DeferredRenderer::init()
 		m_fullscreenTriangle.load();
 
 		// Enable / disable face culling
-		if(Config::rendererVar().face_culling)
-			glEnable(GL_CULL_FACE);
-		else
-			glDisable(GL_CULL_FACE);
+		//if(Config::rendererVar().face_culling)
+		//	glEnable(GL_CULL_FACE);
+		//else
+		//	glDisable(GL_CULL_FACE);
 
 		// Enable / disable depth test
-		if(Config::rendererVar().depth_test)
-			glEnable(GL_DEPTH_TEST);
-		else
-			glDisable(GL_DEPTH_TEST);
+		//if(Config::rendererVar().depth_test)
+		//	glEnable(GL_DEPTH_TEST);
+		//else
+		//	glDisable(GL_DEPTH_TEST);
 
-		glDepthFunc(GL_LESS);
+		//glDepthFunc(GL_LESS);
 
 		// Set face culling mode
-		glCullFace(Config::rendererVar().face_culling_mode);
+		//glCullFace(Config::rendererVar().face_culling_mode);
 
 		// Set depth test function
 		glDepthFunc(Config::rendererVar().depth_test_func);

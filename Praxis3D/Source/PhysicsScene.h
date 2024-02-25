@@ -179,6 +179,12 @@ private:
 		return false;
 	}
 
+	inline void resetErrors()
+	{
+		m_maxDynamicCollisionsErrorIssued = false;
+		m_maxStaticCollisionsErrorIssued = false;
+	}
+
 	PhysicsTask *m_physicsTask;
 
 	// Collision configuration
@@ -196,4 +202,6 @@ private:
 	static PhysicsScene *s_currentPhysicsScene;
 
 	bool m_simulationRunning;
+	bool m_maxDynamicCollisionsErrorIssued;
+	bool m_maxStaticCollisionsErrorIssued;
 };

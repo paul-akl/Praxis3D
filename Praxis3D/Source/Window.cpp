@@ -134,10 +134,18 @@ ErrorCode Window::createWindow()
 	if(Config::windowVar().resizable)
 		windowFlags |= SDL_WindowFlags::SDL_WINDOW_RESIZABLE;
 
+	// Define window position to either a set value or a centered position
+	const int windowPositionX = Config::windowVar().window_position_centered ? SDL_WINDOWPOS_CENTERED : Config::windowVar().window_position_x;
+	const int windowPositionY = Config::windowVar().window_position_centered ? SDL_WINDOWPOS_CENTERED : Config::windowVar().window_position_y;
+
 	// Spawn a window
-	m_SDLWindow = SDL_CreateWindow(Config::windowVar().name.c_str(),
-								   Config::windowVar().window_position_x, Config::windowVar().window_position_y,
-								   Config::graphicsVar().current_resolution_x, Config::graphicsVar().current_resolution_y, windowFlags);
+	m_SDLWindow = SDL_CreateWindow(	
+		Config::windowVar().name.c_str(),
+		windowPositionX, 
+		windowPositionY,
+		Config::graphicsVar().current_resolution_x, 
+		Config::graphicsVar().current_resolution_y, 
+		windowFlags);
 
 	// Check if the creation of the window was successful
 	if(!m_SDLWindow)

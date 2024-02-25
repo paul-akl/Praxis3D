@@ -3,6 +3,7 @@
 	
 	Inputs:
 	rotationSpeed - (float) speed of rotation
+	rotationMax	  - (float) stop rotating when the accumulated angle maximum is reached
 	rotationAxis1 - (vec3f) first axis of rotation	
 	rotationAxis2 - (vec3f) second axis of rotation
 	syncWithPhysicsSimulation - (bool) stop rotating when the physics simulation is paused
@@ -13,6 +14,14 @@ function init ()
 	create(Types.SpatialDataManager, 'spatialData');
 	
 	doRotation = true
+	limitRotation = false
+	totalAngleRotated = 0.0
+	totalAngleLimit = 0.0
+	
+	if rotationMax then
+		limitRotation = true
+		totalAngleLimit = rotationMax
+	end
 	
 	speed = rotationSpeed
 	if speed == 0 then
@@ -27,6 +36,12 @@ function update (p_deltaTime)
 	-- If the sync-with-physics-simulation flag is set, perform rotation only when physics simulation is running
 	if syncWithPhysicsSimulation then
 		doRotation = getPhysicsSimulationRunning()
+	end
+	
+	if limitRotation then
+		if totalAngleRotated > totalAngleLimit then
+			doRotation = false
+		end
 	end
 	
 	if doRotation then
@@ -44,6 +59,10 @@ function update (p_deltaTime)
 		
 		-- Update spatial data with the new matrix
 		spatialData:setLocalTransform(localTransformMat4)
+		
+		if limitRotation then
+			totalAngleRotated = totalAngleRotated + angle
+		end
 	end
 	
 end

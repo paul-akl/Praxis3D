@@ -113,6 +113,7 @@ public:
 		m_keyCommands.reserve(10);
 		m_conditionals.reserve(10);
 		m_currentChanges = Systems::Changes::None;
+		resetErrorFlag();
 	}
 	LuaScript(SystemScene *p_scriptScene, SystemObject *p_luaComponent, SpatialDataManager &p_spatialData, GUIDataManager &p_GUIData, std::string &p_scriptFilename) : 
 		m_scriptScene(p_scriptScene), m_luaComponent(p_luaComponent), m_spatialData(p_spatialData), m_GUIData(p_GUIData), m_luaScriptFilename(p_scriptFilename)
@@ -120,44 +121,87 @@ public:
 		m_keyCommands.reserve(10);
 		m_conditionals.reserve(10);
 		m_currentChanges = Systems::Changes::None;
+		resetErrorFlag();
 	}
 	~LuaScript();
 
 	ErrorCode init()
 	{
+		ErrorCode returnError = ErrorCode::Success;
+
+		resetErrorFlag();
+
 		// Initialize Lua state
 		m_luaState.open_libraries(sol::lib::base);
 
 		// Load script file
-		m_luaState.script_file(Config::filepathVar().script_path + m_luaScriptFilename);
+		if(auto loadScriptError = m_luaState.script_file(Config::filepathVar().script_path + m_luaScriptFilename); loadScriptError.valid())
+		{
+			// Set enum definitions and function call-backs, and define C++ user-types in Lua
+			setDefinitions();
+			setFunctions();
+			setUsertypes();
+			setLuaVariables();
 
-		// Set enum definitions and function call-backs, and define C++ user-types in Lua
-		setDefinitions();
-		setFunctions();
-		setUsertypes();
-		setLuaVariables();
+			// Get function references that are inside the Lua script
+			m_luaInit = m_luaState[Config::scriptVar().iniFunctionName];
+			m_luaUpdate = m_luaState[Config::scriptVar().updateFunctionName];
 
-		// Get function references that are inside the Lua script
-		m_luaInit = m_luaState[Config::scriptVar().iniFunctionName];
-		m_luaUpdate = m_luaState[Config::scriptVar().updateFunctionName];
+			// Initialize the Lua script
+			if(auto initError = m_luaInit(); !initError.valid())
+			{
+				sol::error error = initError;
+				std::string errorString = error.what();
 
-		// Initialize the Lua script
-		m_luaInit();
+				ErrHandlerLoc().get().log(ErrorCode::Lua_init_func_failed, ErrorSource::Source_LuaScript, errorString);
 
-		return ErrorCode::Success;
+				returnError = ErrorCode::Lua_init_func_failed;
+			}
+		}
+		else
+		{
+			sol::error error = loadScriptError;
+			std::string errorString = error.what();
+
+			ErrHandlerLoc().get().log(ErrorCode::Lua_load_script_failed, ErrorSource::Source_LuaScript, errorString);
+
+			returnError = ErrorCode::Lua_load_script_failed;
+		}
+
+		return returnError;
 	}
 
 	inline void update(const float p_deltaTime)
 	{
-		// Clear changes from the last update
-		clearChanges();
-		m_queuedChanges.clear();
+		if(!m_updateFuncGeneratedError)
+		{
+			// Clear changes from the last update
+			clearChanges();
+			m_queuedChanges.clear();
 
-		// Clear all the GUI functors from the last update
-		m_GUIData.clearFunctors();
+			// Clear all the GUI functors from the last update
+			m_GUIData.clearFunctors();
 
-		// Call update function in the lua script
-		m_luaUpdate(p_deltaTime);
+			// Call update function in the lua script
+			if(!Config::scriptVar().luaUpdateErrorsEveryFrame && m_updateFuncRanWithNoErrors)
+			{
+				m_luaUpdate(p_deltaTime);
+			}
+			else
+			{
+				// Check for errors if the update function is called for the first time
+				if(auto updateError = m_luaUpdate(p_deltaTime); !updateError.valid())
+				{
+					sol::error error = updateError;
+					std::string errorString = error.what();
+
+					ErrHandlerLoc().get().log(ErrorCode::Lua_update_func_failed, ErrorSource::Source_LuaScript, errorString);
+					m_updateFuncGeneratedError = true;
+				}
+				else
+					m_updateFuncRanWithNoErrors = true;
+			}
+		}
 	}
 
 	// Clears the currently registered changes. They are also cleared at the beginning of each update call
@@ -258,13 +302,24 @@ private:
 		m_currentChanges += p_packer.get();
 	}
 
+	// Errors flags should be reset after reinitializing
+	void resetErrorFlag()
+	{
+		m_updateFuncGeneratedError = false;
+		m_updateFuncRanWithNoErrors = false;
+	}
+
+	// Used to stop running after an error is generated
+	bool m_updateFuncGeneratedError;
+	bool m_updateFuncRanWithNoErrors;
+
 	// Lua state for the loaded script
 	sol::state m_luaState;
 	std::string m_luaScriptFilename;
 
 	// Function binds that call functions inside the lua script
-	sol::function m_luaInit;
-	sol::function m_luaUpdate;
+	sol::protected_function m_luaInit;
+	sol::protected_function m_luaUpdate;
 
 	// Tables for variable definitions
 	sol::table m_userTypesTable;

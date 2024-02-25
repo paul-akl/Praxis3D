@@ -456,6 +456,11 @@ void AudioScene::update(const float p_deltaTime)
 			}
 		}
 
+		// Get the number of active impact event audio instances
+		int impactAudioInstanceCounts[ObjectMaterialType::NumberOfMaterialTypes];
+		for(int i = 0; i < ObjectMaterialType::NumberOfMaterialTypes; i++)
+			m_impactEvents[i]->getInstanceCount(&impactAudioInstanceCounts[i]);
+
 		//	 ___________________________
 		//	|							|
 		//	|  COLLISION EVENTS UPDATE	|
@@ -477,35 +482,39 @@ void AudioScene::update(const float p_deltaTime)
 
 				auto &materialComponent = collisionEventMaterialSpatialView.get<ObjectMaterialComponent>(entity);
 
-				// Go over each collision of the entity
-				for(size_t i = 0, size = collisionComponent.m_numOfDynamicCollisions[frontIndex]; i < size; i++)
+				// Limit the number of concurrent impact event audio instances
+				if(impactAudioInstanceCounts[materialComponent.getObjectMaterialType()] <= Config::audioVar().max_impact_audio_instances)
 				{
-					//if(collisionComponent.m_dynamicCollisions[frontIndex][i].m_firstObjInCollisionPair)
+					// Go over each collision of the entity
+					for(size_t i = 0, size = collisionComponent.m_numOfDynamicCollisions[frontIndex]; i < size; i++)
 					{
-						// Get the transform matrix
-						glm::mat4 transformMatrix;
-						collisionComponent.m_dynamicCollisions[frontIndex][i].m_worldTransform.getOpenGLMatrix(glm::value_ptr(transformMatrix));
-						const glm::mat3 translateMatrix = glm::mat3(transformMatrix) * parentTranslateMatrix;
+						//if(collisionComponent.m_dynamicCollisions[frontIndex][i].m_firstObjInCollisionPair)
+						{
+							// Get the transform matrix
+							glm::mat4 transformMatrix;
+							collisionComponent.m_dynamicCollisions[frontIndex][i].m_worldTransform.getOpenGLMatrix(glm::value_ptr(transformMatrix));
+							const glm::mat3 translateMatrix = glm::mat3(transformMatrix) * parentTranslateMatrix;
 
-						// Get 3D attributes
-						FMOD_3D_ATTRIBUTES spatialAttributes;
-						spatialAttributes.position = Math::toFmodVector(transformMatrix[3] + parentPosition);
-						spatialAttributes.velocity = Math::toFmodVector(collisionComponent.m_dynamicCollisions[frontIndex][i].m_velocity);
-						spatialAttributes.forward = Math::toFmodVector(glm::vec3(0.0f, 0.0f, -1.0f) * translateMatrix);
-						spatialAttributes.up = Math::toFmodVector(glm::vec3(0.0f, 1.0f, 0.0f) * translateMatrix);
-						const float volume = glm::clamp(collisionComponent.m_dynamicCollisions[frontIndex][i].m_appliedImpulse / Config::audioVar().impact_impulse_volume_divider, Config::audioVar().impact_min_volume_threshold, Config::audioVar().impact_max_volume_threshold);
+							// Get 3D attributes
+							FMOD_3D_ATTRIBUTES spatialAttributes;
+							spatialAttributes.position = Math::toFmodVector(transformMatrix[3] + parentPosition);
+							spatialAttributes.velocity = Math::toFmodVector(collisionComponent.m_dynamicCollisions[frontIndex][i].m_velocity);
+							spatialAttributes.forward = Math::toFmodVector(glm::vec3(0.0f, 0.0f, -1.0f) * translateMatrix);
+							spatialAttributes.up = Math::toFmodVector(glm::vec3(0.0f, 1.0f, 0.0f) * translateMatrix);
+							const float volume = glm::clamp(collisionComponent.m_dynamicCollisions[frontIndex][i].m_appliedImpulse / Config::audioVar().impact_impulse_volume_divider, Config::audioVar().impact_min_volume_threshold, Config::audioVar().impact_max_volume_threshold);
 
-						// Create an event (sound) instance
-						FMOD::Studio::EventInstance *eventInstance;
-						m_impactEvents[materialComponent.getObjectMaterialType()]->createInstance(&eventInstance);
+							// Create an event (sound) instance
+							FMOD::Studio::EventInstance *eventInstance;
+							m_impactEvents[materialComponent.getObjectMaterialType()]->createInstance(&eventInstance);
 
-						// Set sound parameters and play the sound
-						eventInstance->setParameterByName("Impulse", collisionComponent.m_dynamicCollisions[frontIndex][i].m_appliedImpulse / Config::audioVar().impact_impulse_param_divider);
-						eventInstance->setVolume(volume);
-						eventInstance->set3DAttributes(&spatialAttributes);
-						eventInstance->start();
-						eventInstance->setPaused(false);
-						eventInstance->release();
+							// Set sound parameters and play the sound
+							eventInstance->setParameterByName("Impulse", collisionComponent.m_dynamicCollisions[frontIndex][i].m_appliedImpulse / Config::audioVar().impact_impulse_param_divider);
+							eventInstance->setVolume(volume);
+							eventInstance->set3DAttributes(&spatialAttributes);
+							eventInstance->start();
+							eventInstance->setPaused(false);
+							eventInstance->release();
+						}
 					}
 				}
 			}

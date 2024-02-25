@@ -45,6 +45,9 @@ ErrorHandler::ErrorHandler()
 	AssignErrorType(Universal_scene_extend_null, Error);
 	AssignErrorType(Universal_scene_extend_duplicate, Error);
 	AssignErrorType(Window_handle_missing, Error);
+	AssignErrorType(Lua_init_func_failed, Warning);
+	AssignErrorType(Lua_load_script_failed, Warning);
+	AssignErrorType(Lua_update_func_failed, Warning);
 	AssignErrorType(AssimpScene_failed, Error);
 	AssignErrorType(ObjectPool_full, Warning); 
 	AssignErrorType(Collision_invalid, Warning);
@@ -122,6 +125,9 @@ ErrorCode ErrorHandler::init()
 		for(int i = ErrorCode::NumberOfErrorCodes + ErrorSource::Source_NumberOfErrorSources,
 			size = ErrorSource::Source_NumberOfErrorSources + ErrorCode::NumberOfErrorCodes + ErrorType::NumberOfErrorTypes; i < size; i++)
 			m_errorTypeStrings[i - ErrorCode::NumberOfErrorCodes - ErrorSource::Source_NumberOfErrorSources] = it.getValue(i).getString();
+
+		if(Config::engineVar().log_store_logs)
+			m_logData.setMaxLogs(Config::engineVar().log_max_num_of_logs);
 	}
 
 	return ErrorCode::Success;
@@ -152,43 +158,46 @@ void ErrorHandler::log(ErrorType p_errorType, ErrorSource p_errorSource, std::st
 		std::string displayMessage;
 		switch(p_errorType)
 		{
-		case ErrorType::Info:
-		{
-			m_console->displayMessage("\033[1;32m[" + m_errorTypeStrings[p_errorType] + "] \033[1;36m[" + m_errorSources[p_errorSource] + "]\033[0;37m: " + p_error + ".\033[0m");
-			break;
-		}
+			case ErrorType::Info:
+				{
+					m_logData.addLogMessage(p_errorType, p_errorSource, p_error);
+					m_console->displayMessage("\033[1;32m[" + m_errorTypeStrings[p_errorType] + "] \033[1;36m[" + m_errorSources[p_errorSource] + "]\033[0;37m: " + p_error + ".\033[0m");
+					break;
+				}
 
-		case ErrorType::Warning:
-		{
-			m_console->displayMessage("\033[31m[" + m_errorTypeStrings[p_errorType] + "] \033[1;36m[" + m_errorSources[p_errorSource] + "]\033[0;37m: " + p_error + ".\033[0m");
-			break;
-		}
+			case ErrorType::Warning:
+				{
+					m_logData.addLogMessage(p_errorType, p_errorSource, p_error);
+					m_console->displayMessage("\033[31m[" + m_errorTypeStrings[p_errorType] + "] \033[1;36m[" + m_errorSources[p_errorSource] + "]\033[0;37m: " + p_error + ".\033[0m");
+					break;
+				}
 
-		case ErrorType::Error:
-		{
-			// Remove a 'new line' character if it's present, as it would break the formating
-			if(p_error[p_error.size() - 1] == '\n')
-				p_error.pop_back();
+			case ErrorType::Error:
+				{
+					// Remove a 'new line' character if it's present, as it would break the formating
+					if(p_error[p_error.size() - 1] == '\n')
+						p_error.pop_back();
 
-			// TODO make the error question data driven
-			if(!WindowLocator().get().spawnYesNoErrorBox(m_errorTypeStrings[p_errorType] + ": " + m_errorSources[p_errorSource], m_errorSources[p_errorSource] + ": " + p_error + ".\n\nWould you like to continue?"))
-				Config::m_engineVar.running = false;
+					// TODO make the error question data driven
+					if(!WindowLocator().get().spawnYesNoErrorBox(m_errorTypeStrings[p_errorType] + ": " + m_errorSources[p_errorSource], m_errorSources[p_errorSource] + ": " + p_error + ".\n\nWould you like to continue?"))
+						Config::m_engineVar.running = false;
 
-			//m_console->displayMessage("\033[31m[" + m_errorTypeStrings[p_errorType] + "] [" + m_errorSources[p_errorSource] + "]: " + p_error + ".\033[0m");
-			m_console->displayMessage("\033[31m[" + m_errorTypeStrings[p_errorType] + "] \033[1;36m[" + m_errorSources[p_errorSource] + "]\033[0;37m: " + p_error + ".\033[0m");
-			break;
-		}
+					m_logData.addLogMessage(p_errorType, p_errorSource, p_error);
+					m_console->displayMessage("\033[31m[" + m_errorTypeStrings[p_errorType] + "] \033[1;36m[" + m_errorSources[p_errorSource] + "]\033[0;37m: " + p_error + ".\033[0m");
+					break;
+				}
 
-		case ErrorType::FatalError:
-		{
-			WindowLocator().get().spawnErrorBox(m_errorTypeStrings[p_errorType] + ": " + m_errorSources[p_errorSource], m_errorSources[p_errorSource] + ": " + p_error + ".");
-			Config::m_engineVar.running = false;
+			case ErrorType::FatalError:
+				{
+					m_logData.addLogMessage(p_errorType, p_errorSource, p_error);
+					WindowLocator().get().spawnErrorBox(m_errorTypeStrings[p_errorType] + ": " + m_errorSources[p_errorSource], m_errorSources[p_errorSource] + ": " + p_error + ".");
+					Config::m_engineVar.running = false;
 
-			break;
-		}
+					break;
+				}
 
-		default:
-			break;
+			default:
+				break;
 		}
 	}
 }

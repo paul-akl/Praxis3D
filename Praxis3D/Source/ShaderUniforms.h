@@ -1017,43 +1017,70 @@ public:
 class DiffuseTextureUniform : public BaseUniform
 {
 public:
-	DiffuseTextureUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().diffuseTextureUniform, p_shaderHandle) { }
+	DiffuseTextureUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().diffuseTextureUniform, p_shaderHandle), m_uniformSet(false) { }
 
 	void update(const UniformData &p_uniformData)
 	{
-		//glUniform1i(m_uniformHandle, p_uniformData.getDiffuseTexturePos());
-		glUniform1i(m_uniformHandle, MaterialType_Diffuse);
+		if(!m_uniformSet)
+		{
+			m_uniformSet = true;
+			glUniform1i(m_uniformHandle, MaterialType_Diffuse);
+		}
 	}
+
+private:
+	bool m_uniformSet;
 };
 class NormalTextureUniform : public BaseUniform
 {
 public:
-	NormalTextureUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().normalTextureUniform, p_shaderHandle) { }
+	NormalTextureUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().normalTextureUniform, p_shaderHandle), m_uniformSet(false) { }
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform1i(m_uniformHandle, MaterialType::MaterialType_Normal);
+		if(!m_uniformSet)
+		{
+			m_uniformSet = true;
+			glUniform1i(m_uniformHandle, MaterialType_Normal);
+		}
 	}
+
+private:
+	bool m_uniformSet;
 };
 class EmissiveTextureUniform : public BaseUniform
 {
 public:
-	EmissiveTextureUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().emissiveTextureUniform, p_shaderHandle) { }
+	EmissiveTextureUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().emissiveTextureUniform, p_shaderHandle), m_uniformSet(false) { }
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform1i(m_uniformHandle, MaterialType::MaterialType_Emissive);
+		if(!m_uniformSet)
+		{
+			m_uniformSet = true;
+			glUniform1i(m_uniformHandle, MaterialType_Emissive);
+		}
 	}
+
+private:
+	bool m_uniformSet;
 };
 class CombinedTextureUniform : public BaseUniform
 {
 public:
-	CombinedTextureUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().combinedTextureUniform, p_shaderHandle) { }
+	CombinedTextureUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().combinedTextureUniform, p_shaderHandle), m_uniformSet(false) { }
 
 	void update(const UniformData &p_uniformData)
 	{
-		glUniform1i(m_uniformHandle, MaterialType::MaterialType_Combined);
+		if(!m_uniformSet)
+		{
+			m_uniformSet = true;
+			glUniform1i(m_uniformHandle, MaterialType_Combined);
+		}
 	}
+
+private:
+	bool m_uniformSet;
 };
 
 class NoiseTextureUniform : public BaseUniform

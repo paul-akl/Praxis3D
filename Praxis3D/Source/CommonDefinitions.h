@@ -65,6 +65,12 @@ enum CommandType : unsigned int
 	CommandType_Bind,
 	CommandType_Load
 };
+enum DrawCommandTextureBinding
+{
+	DrawCommandTextureBinding_None,
+	DrawCommandTextureBinding_DiffuseOnly,
+	DrawCommandTextureBinding_All
+};
 enum MemoryBarrierType : unsigned int
 {
 	MemoryBarrierType_All,
@@ -84,6 +90,7 @@ enum MemoryBarrierType : unsigned int
 	Code(RenderPassType_LenseFlare,) \
 	Code(RenderPassType_LenseFlareComposite,) \
 	Code(RenderPassType_Luminance,) \
+	Code(RenderPassType_Tonemapping,) \
 	Code(RenderPassType_Final,) \
 	Code(RenderPassType_GUI,) \
 	Code(RenderPassType_AmbientOcclusion,) \
@@ -369,6 +376,12 @@ enum GuiFontType : unsigned int
 	GuiFontType_Default = 0,
 	GuiFontType_AboutWindow,
 	GuiFontType_NumOfTypes
+};
+enum GuiColorPallet : int
+{
+	GuiColorPallet_Default = 0,
+	GuiColorPallet_Green,
+	GuiColorPallet_NumOfPallets
 };
 
 #define OBJ_MATERIAL_ID(Code) \

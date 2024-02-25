@@ -39,10 +39,16 @@ ErrorCode RendererBackend::init(const UniformFrameData &p_frameData)
 		m_fullscreenTriangle.load();
 
 		// Enable / disable face culling
-		if(Config::rendererVar().face_culling)
+		if(m_rendererState.m_lastFaceCullingSettings.m_faceCullingEnabled)
 			glEnable(GL_CULL_FACE);
 		else
 			glDisable(GL_CULL_FACE);
+
+		// Set face culling face type
+		if(m_rendererState.m_lastFaceCullingSettings.m_backFaceCulling)
+			glCullFace(GL_BACK);
+		else
+			glCullFace(GL_FRONT);
 
 		// Enable / disable depth test
 		if(Config::rendererVar().depth_test)
@@ -142,6 +148,11 @@ void RendererBackend::processDrawing(const DrawCommands &p_drawCommands, const U
 
 	for(decltype(p_drawCommands.size()) i = 0, size = p_drawCommands.size(); i < size; i++)
 	{
+		// Set face culling settings
+		setFaceCullEnable(p_drawCommands[i].second.m_faceCullingSettings.m_faceCullingEnabled);
+		if(p_drawCommands[i].second.m_faceCullingSettings.m_faceCullingEnabled)
+			setBackFaceCull(p_drawCommands[i].second.m_faceCullingSettings.m_backFaceCulling);
+
 		// Get uniform data
 		const UniformObjectData &uniformObjectData = p_drawCommands[i].second.m_uniformObjectData;
 
@@ -159,40 +170,86 @@ void RendererBackend::processDrawing(const DrawCommands &p_drawCommands, const U
 		meshUniformUpdate(shaderHandle, uniformUpdater, uniformObjectData, p_frameData);
 
 		// Update material data buffer
-		BufferUpdateCommand materialDataUpdateCommand(
-			m_materialDataBuffer.m_handle, 
-			0, 
-			m_materialDataBuffer.m_size, 
-			(const void *)&p_drawCommands[i].second.m_materialData, 
-			BufferUpdateType::BufferUpdate_Data, 
-			m_materialDataBuffer.m_bufferType, 
-			m_materialDataBuffer.m_bufferUsage);
+		if(p_drawCommands[i].second.m_textureBindingType != DrawCommandTextureBinding_None)
+		{
+			if(m_rendererState.m_materialData != p_drawCommands[i].second.m_materialData)
+			{
+				m_rendererState.m_materialData = p_drawCommands[i].second.m_materialData;
 
-		processCommand(materialDataUpdateCommand, p_frameData);
+				BufferUpdateCommand materialDataUpdateCommand(
+					m_materialDataBuffer.m_handle,
+					0,
+					m_materialDataBuffer.m_size,
+					(const void *)&p_drawCommands[i].second.m_materialData,
+					BufferUpdateType::BufferUpdate_Data,
+					m_materialDataBuffer.m_bufferType,
+					m_materialDataBuffer.m_bufferUsage);
+
+				processCommand(materialDataUpdateCommand, p_frameData);
+			}
+		}
 
 		// Bind VAO
 		bindVAO(p_drawCommands[i].second.m_modelHandle);
 
 		// Bind textures
-		glActiveTexture(GL_TEXTURE0 + MaterialType_Diffuse);
-		glBindTexture(GL_TEXTURE_2D, p_drawCommands[i].second.m_matDiffuse);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, p_drawCommands[i].second.m_matWrapMode);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, p_drawCommands[i].second.m_matWrapMode);
+		switch(p_drawCommands[i].second.m_textureBindingType)
+		{
+			case DrawCommandTextureBinding_None:
+			default:
+				break;
+			case DrawCommandTextureBinding_DiffuseOnly:
+				{
+					if(m_rendererState.m_lastBoundTextures[MaterialType::MaterialType_Diffuse] != p_drawCommands[i].second.m_matDiffuse)
+					{
+						m_rendererState.m_lastBoundTextures[MaterialType::MaterialType_Diffuse] = p_drawCommands[i].second.m_matDiffuse;
+						glActiveTexture(GL_TEXTURE0 + MaterialType_Diffuse);
+						glBindTexture(GL_TEXTURE_2D, p_drawCommands[i].second.m_matDiffuse);
+						//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, p_drawCommands[i].second.m_matWrapMode);
+						//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, p_drawCommands[i].second.m_matWrapMode);
+					}
+				}
+				break;
+			case DrawCommandTextureBinding_All:
+				{
+					if(m_rendererState.m_lastBoundTextures[MaterialType::MaterialType_Diffuse] != p_drawCommands[i].second.m_matDiffuse)
+					{
+						m_rendererState.m_lastBoundTextures[MaterialType::MaterialType_Diffuse] = p_drawCommands[i].second.m_matDiffuse;
+						glActiveTexture(GL_TEXTURE0 + MaterialType_Diffuse);
+						glBindTexture(GL_TEXTURE_2D, p_drawCommands[i].second.m_matDiffuse);
+						//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, p_drawCommands[i].second.m_matWrapMode);
+						//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, p_drawCommands[i].second.m_matWrapMode);
+					}
 
-		glActiveTexture(GL_TEXTURE0 + MaterialType_Normal);
-		glBindTexture(GL_TEXTURE_2D, p_drawCommands[i].second.m_matNormal);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, p_drawCommands[i].second.m_matWrapMode);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, p_drawCommands[i].second.m_matWrapMode);
+					if(m_rendererState.m_lastBoundTextures[MaterialType::MaterialType_Normal] != p_drawCommands[i].second.m_matNormal)
+					{
+						m_rendererState.m_lastBoundTextures[MaterialType::MaterialType_Normal] = p_drawCommands[i].second.m_matNormal;
+						glActiveTexture(GL_TEXTURE0 + MaterialType_Normal);
+						glBindTexture(GL_TEXTURE_2D, p_drawCommands[i].second.m_matNormal);
+						//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, p_drawCommands[i].second.m_matWrapMode);
+						//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, p_drawCommands[i].second.m_matWrapMode);
+					}
 
-		glActiveTexture(GL_TEXTURE0 + MaterialType_Combined);
-		glBindTexture(GL_TEXTURE_2D, p_drawCommands[i].second.m_matCombined);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, p_drawCommands[i].second.m_matWrapMode);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, p_drawCommands[i].second.m_matWrapMode);
+					if(m_rendererState.m_lastBoundTextures[MaterialType::MaterialType_Emissive] != p_drawCommands[i].second.m_matEmissive)
+					{
+						m_rendererState.m_lastBoundTextures[MaterialType::MaterialType_Emissive] = p_drawCommands[i].second.m_matEmissive;
+						glActiveTexture(GL_TEXTURE0 + MaterialType_Emissive);
+						glBindTexture(GL_TEXTURE_2D, p_drawCommands[i].second.m_matEmissive);
+						//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, p_drawCommands[i].second.m_matWrapMode);
+						//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, p_drawCommands[i].second.m_matWrapMode);
+					}
 
-		glActiveTexture(GL_TEXTURE0 + MaterialType_Emissive);
-		glBindTexture(GL_TEXTURE_2D, p_drawCommands[i].second.m_matEmissive);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, p_drawCommands[i].second.m_matWrapMode);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, p_drawCommands[i].second.m_matWrapMode);
+					if(m_rendererState.m_lastBoundTextures[MaterialType::MaterialType_Combined] != p_drawCommands[i].second.m_matCombined)
+					{
+						m_rendererState.m_lastBoundTextures[MaterialType::MaterialType_Combined] = p_drawCommands[i].second.m_matCombined;
+						glActiveTexture(GL_TEXTURE0 + MaterialType_Combined);
+						glBindTexture(GL_TEXTURE_2D, p_drawCommands[i].second.m_matCombined);
+						//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, p_drawCommands[i].second.m_matWrapMode);
+						//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, p_drawCommands[i].second.m_matWrapMode);
+					}
+				}
+				break;
+		}
 		
 		// Draw the geometry
 		glDrawElementsBaseVertex(GL_TRIANGLES,
@@ -279,4 +336,3 @@ void RendererBackend::processDrawing(const ComputeDispatchCommands &p_computeDis
 		glMemoryBarrier(memoryBarrierBit);
 	}
 }
-

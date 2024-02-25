@@ -285,6 +285,9 @@ public:
 				case RenderPassType::RenderPassType_ShadowMapping:
 					renderPassTypeProperty = Properties::ShadowMappingPass;
 					break;
+				case RenderPassType::RenderPassType_Tonemapping:
+					renderPassTypeProperty = Properties::TonemappingPass;
+					break;
 			}
 
 			// Add the rendering pass array entry and rendering pass type

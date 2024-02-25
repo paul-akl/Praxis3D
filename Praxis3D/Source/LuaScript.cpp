@@ -226,7 +226,9 @@ void LuaScript::setFunctions()
 	m_luaState.set_function("getEntityID", [this](const std::string &p_filename) -> EntityID { return static_cast<WorldScene *>(m_scriptScene->getSceneLoader()->getSystemScene(Systems::World))->getEntity(p_filename); });
 	m_luaState.set_function("isEntityIDValid", [](const EntityID p_entityID) -> bool { return p_entityID != NULL_ENTITY_ID; });
 	m_luaState.set_function("createEntity", [this](const ComponentsConstructionInfo &p_constructionInfo) -> EntityID { return static_cast<WorldScene *>(m_scriptScene->getSceneLoader()->getSystemScene(Systems::World))->createEntity(p_constructionInfo); });
-	m_luaState.set_function("importPrefab", [this](ComponentsConstructionInfo &p_constructionInfo, const std::string &p_filename) -> bool { return m_scriptScene->getSceneLoader()->importPrefab(p_constructionInfo, p_filename) == ErrorCode::Success; });
+	m_luaState.set_function("importPrefab", sol::overload(
+		[this](ComponentsConstructionInfo &p_constructionInfo, const std::string &p_filename) -> bool { return m_scriptScene->getSceneLoader()->importPrefab(p_constructionInfo, p_filename, false) == ErrorCode::Success; },
+		[this](ComponentsConstructionInfo &p_constructionInfo, const std::string &p_filename, const bool p_forceReload) -> bool { return m_scriptScene->getSceneLoader()->importPrefab(p_constructionInfo, p_filename, p_forceReload) == ErrorCode::Success; }));
 
 	// Entity component functions
 	m_luaState.set_function("getSoundComponent", [this](const EntityID p_entityID) -> SoundComponent *{ return static_cast<WorldScene *>(m_scriptScene->getSceneLoader()->getSystemScene(Systems::World))->getEntityRegistry().try_get<SoundComponent>(p_entityID); });
@@ -356,6 +358,9 @@ void LuaScript::setFunctions()
 	m_luaState.set_function("toDegreesF", sol::resolve<float(const float)>(&glm::degrees));
 	m_luaState.set_function("toDegreesVec3", sol::resolve<glm::vec3(const glm::vec3 &)>(&glm::degrees));
 	m_luaState.set_function("toDegreesVec4", sol::resolve<glm::vec4(const glm::vec4 &)>(&glm::degrees));
+
+	// Misc
+	m_luaState.set_function("time", [=]() -> int { return (int)time(NULL); });
 
 	// Physics functions
 	m_luaState.set_function("getPhysicsSimulationRunning", [this]() -> const bool { return static_cast<PhysicsScene *>(m_scriptScene->getSceneLoader()->getSystemScene(Systems::Physics))->getSimulationRunning(); });
@@ -669,6 +674,7 @@ void LuaScript::setUsertypes()
 
 	// Component construction info
 	m_luaState.new_usertype<ComponentsConstructionInfo>("ComponentsConstructionInfo",
+		sol::constructors<ComponentsConstructionInfo()>(),
 		sol::meta_function::garbage_collect, sol::destructor(&ComponentsConstructionInfo::deleteConstructionInfo),
 		"m_name", &ComponentsConstructionInfo::m_name,
 		"m_id", &ComponentsConstructionInfo::m_id,

@@ -99,7 +99,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <PreprocessorDefinitions>NOMINMAX;_RELEASE;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;CUSTOM_IMGUIFILEDIALOG_CONFIG="..\\..\\..\\Praxis3D\Source\EngineDefinitions.h";GLM_FORCE_CTOR_INIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;NDEBUG;_RELEASE;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;CUSTOM_IMGUIFILEDIALOG_CONFIG="..\\..\\..\\Praxis3D\Source\EngineDefinitions.h";GLM_FORCE_CTOR_INIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <AdditionalOptions>/bigobj /MP8 %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -176,6 +176,7 @@
     <ClCompile Include="Source\GUIHandler.cpp" />
     <ClCompile Include="Source\GUIHandlerLocator.cpp" />
     <ClCompile Include="Source\GUIScene.cpp" />
+    <ClCompile Include="Source\GUISystem.cpp" />
     <ClCompile Include="Source\GUITask.cpp" />
     <ClCompile Include="Source\Input.cpp" />
     <ClCompile Include="Source\KeyCommand.cpp" />
@@ -377,6 +378,7 @@
     <ClInclude Include="Source\TaskManagerLocator.h" />
     <ClInclude Include="Source\TaskScheduler.h" />
     <ClInclude Include="Source\TextureLoader.h" />
+    <ClInclude Include="Source\TonemappingPass.h" />
     <ClInclude Include="Source\UniformData.h" />
     <ClInclude Include="Source\ObjectRegister.h" />
     <ClInclude Include="Source\Universal.h" />

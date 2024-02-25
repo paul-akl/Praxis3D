@@ -1,5 +1,7 @@
 #pragma once
 
+#include <windows.h>
+
 class SpinWait
 {
 	friend class Lock;
@@ -23,6 +25,7 @@ public:
 	};
 
 protected:
-	unsigned int m_lock[8];
+	//unsigned int m_lock[8];
+	CRITICAL_SECTION m_lock;
 };
 

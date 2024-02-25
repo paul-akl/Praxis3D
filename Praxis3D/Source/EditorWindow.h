@@ -62,7 +62,10 @@ public:
 
 		m_newEntityConstructionInfo = nullptr;
 		m_openNewEntityPopup = false;
+		m_openEntityRightClickOptionsPopup = false;
 		m_duplicateParent = false;
+
+		resetActivateAllComponentFlags();
 
 		m_newSceneSettingsTabFlags = 0;
 
@@ -82,11 +85,15 @@ public:
 		m_2DTextureScale = true;
 		m_2DTextureFraming = false;
 
+		m_numOfLogs = 0;
+
 		for(unsigned int i = 0; i < ObjectMaterialType::NumberOfMaterialTypes; i++)
 			m_physicalMaterialProperties.push_back(GetString(static_cast<ObjectMaterialType>(i)));
 
 		for(unsigned int i = 0; i < RenderPassType::RenderPassType_NumOfTypes; i++)
 			m_renderingPassesTypeText.push_back(GetString(static_cast<RenderPassType>(i)));
+
+		m_entityRightClickOptionsPopup = "EntityRightClickOptionsPopup";
 
 		m_antialiasingTypeText = { "None", "MSAA", "FXAA" };
 		m_ambientOcclusionTypeText = { "None", "SSAO", "HBAO" };
@@ -524,6 +531,9 @@ private:
 	enum MainMenuButtonType : unsigned int
 	{
 		MainMenuButtonType_None = 0,
+		MainMenuButtonType_Play,
+		MainMenuButtonType_Pause,
+		MainMenuButtonType_Restart,
 		MainMenuButtonType_New,
 		MainMenuButtonType_Open,
 		MainMenuButtonType_Save,
@@ -799,8 +809,9 @@ private:
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_AtmScattering);
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_Lighting);
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_AtmScattering);
-			m_renderingPasses.push_back(RenderPassType::RenderPassType_Bloom);
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_Luminance);
+			m_renderingPasses.push_back(RenderPassType::RenderPassType_Bloom);
+			m_renderingPasses.push_back(RenderPassType::RenderPassType_Tonemapping);
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_Final);
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_GUI);
 
@@ -810,6 +821,7 @@ private:
 		// General
 		bool m_loadInBackground;
 		bool m_modified;
+		std::string m_sceneFilename;
 
 		// Audio scene
 		std::vector<std::string> m_audioBanks;
@@ -899,6 +911,7 @@ private:
 	};
 
 	void drawSceneData(SceneData &p_sceneData, const bool p_sendChanges = false);
+	void drawEntityHierarchy(EntityHierarchyEntry *p_rootEntry);
 	void drawEntityHierarchyEntry(EntityHierarchyEntry *p_entityEntry);
 	inline void drawLeftAlignedLabelText(const char *p_labelText, float p_nextWidgetOffset)
 	{
@@ -959,7 +972,27 @@ private:
 
 		return returnBool;
 	}
-	
+	inline void drawExportPrefabFileBrowser()
+	{
+		// Only open the file browser if it's not opened already
+		if(m_currentlyOpenedFileBrowser == FileBrowserActivated::FileBrowserActivated_None)
+		{
+			// Set the file browser activation to Save Scene
+			m_currentlyOpenedFileBrowser = FileBrowserActivated::FileBrowserActivated_SavePrefabFile;
+
+			// Define file browser variables
+			m_fileBrowserDialog.m_definedFilename = m_selectedEntity.m_componentData.m_name + ".prefab";
+			m_fileBrowserDialog.m_filter = ".prefab,.*";
+			m_fileBrowserDialog.m_title = "Save prefab";
+			m_fileBrowserDialog.m_name = "SavePrefabFileDialog";
+			m_fileBrowserDialog.m_rootPath = Config::filepathVar().prefab_path;
+			m_fileBrowserDialog.m_flags = FileBrowserDialog::FileBrowserDialogFlags::FileBrowserDialogFlags_ConfirmOverwrite;
+
+			// Tell the GUI scene to open the file browser
+			m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene, DataType::DataType_FileBrowserDialog, (void *)&m_fileBrowserDialog);
+		}
+	}
+
 	// Hides and locks the mouse to the screen while an item (like a float drag) is active
 	// Returns the mouse to the original position after the mouse button is released
 	void captureMouseWhileItemActive();
@@ -1001,6 +1034,12 @@ private:
 			m_componentConstructionInfoPool.clear();
 		}
 	}
+	inline void resetActivateAllComponentFlags()
+	{
+		m_lightComponentActivateAllSet = false;
+		m_modelComponentActivateAllSet = false;
+		m_rigidBodyComponentActivateAllSet = false;
+	}
 
 	void exportPrefab(const EntityID p_entityID, std::string p_filename);
 	void saveTextFile(TextEditorData &p_textEditorData);
@@ -1011,6 +1050,108 @@ private:
 	void updateHierarchyList();
 	void updateComponentList();
 	void updateAssetLists();
+
+	void duplicateEntity(const EntityID p_entityID)
+	{
+		// Construction info for the new entity
+		ComponentsConstructionInfo *newEntityConstructionInfo = new ComponentsConstructionInfo();
+
+		// Get the construction info of the current entity
+		WorldScene *worldScene = static_cast<WorldScene *>(m_systemScene->getSceneLoader()->getSystemScene(Systems::World));
+		worldScene->exportEntity(p_entityID, *newEntityConstructionInfo);
+
+		// Set the new entity name by adding a count at the end and checking if an entity of the same name doesn't exist
+		{
+			int newEntityNameCount = 2;
+			std::string baseEntityName = newEntityConstructionInfo->m_name;
+
+			// If the entity name ends with ' 1', replace the existing number
+			if(baseEntityName.size() > 2 && baseEntityName[baseEntityName.size() - 1] == '1' && baseEntityName[baseEntityName.size() - 2] == ' ')
+			{
+				baseEntityName.pop_back();  // Remove '1'
+				baseEntityName.pop_back();  // Remove ' '
+			}
+			std::string newEntityName = baseEntityName + " " + Utilities::toString(newEntityNameCount);
+
+			// Keep increasing the number at the end until there is no other entity with the same name
+			while(worldScene->getEntity(newEntityName) != NULL_ENTITY_ID)
+			{
+				newEntityNameCount++;
+				newEntityName = baseEntityName + " " + Utilities::toString(newEntityNameCount);
+			}
+			newEntityConstructionInfo->m_name = newEntityName;
+		}
+
+		// Assign a next available entity ID (start the available ID search from the next ID after the parent)
+		{
+			EntityID newEntityID = newEntityConstructionInfo->m_parent + 1;
+			for(decltype(m_entityList.size()) i = 0, size = m_entityList.size(); i < size;)
+			{
+				if(newEntityID == m_entityList[i].m_entityID)
+				{
+					newEntityID++;
+					i = 0;
+				}
+				else
+					i++;
+			}
+			newEntityConstructionInfo->m_id = newEntityID;
+		}
+
+
+		m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::World), DataType::DataType_CreateEntity, (void *)newEntityConstructionInfo, false);
+
+		// Make the new entity be selected next frame
+		m_nextEntityIDToSelect = newEntityConstructionInfo->m_id;
+		m_pendingEntityToSelect = true;
+
+		// Add the new entity construction info to the pool (so it will be deleted the next frame)
+		m_componentConstructionInfoPool.push_back(newEntityConstructionInfo);
+	}
+	void deleteEntityAndChildren(const EntityID p_entityID)
+	{
+		// Get entity children
+		std::vector<EntityID> childrenEntityIDs;
+		if(p_entityID != 0)
+			childrenEntityIDs.push_back(p_entityID);
+		if(auto *entityListEntry = getEntityListEntry(p_entityID); entityListEntry != nullptr)
+			getEntityChildren(childrenEntityIDs, *entityListEntry);
+
+		// Do not allow the deletion of root entity
+		for(decltype(childrenEntityIDs.size()) i = 0, size = childrenEntityIDs.size(); i < size; i++)
+		{
+			// Create a container with the entity ID and the component type, add it to the pool (so it can be deleted next frame) and send a Delete Entity change with the attached container
+			EntityAndComponent *deleteComponentData = new EntityAndComponent(childrenEntityIDs[i], ComponentType::ComponentType_Entity);
+			m_entityAndComponentPool.push_back(deleteComponentData);
+			m_systemScene->getSceneLoader()->getChangeController()->sendData(m_systemScene->getSceneLoader()->getSystemScene(Systems::World), DataType::DataType_DeleteEntity, (void *)deleteComponentData, false);
+		}
+	}
+	EntityListEntry *getEntityListEntry(const EntityID p_entityID)
+	{
+		for(decltype(m_entityList.size()) i = 0, size = m_entityList.size(); i < size; i++)
+		{
+			if(m_entityList[i].m_entityID == p_entityID)
+			{
+				return &m_entityList[i];
+			}
+		}
+
+		return nullptr;
+	}
+	inline void getEntityChildren(std::vector<EntityID> &p_children, const EntityListEntry &p_entityHierarchyEntry)
+	{
+		for(decltype(m_entityList.size()) i = 0, size = m_entityList.size(); i < size; i++)
+		{
+			if(m_entityList[i].m_parentEntityID == p_entityHierarchyEntry.m_entityID)
+			{
+				p_children.push_back(m_entityList[i].m_entityID);
+
+				// Do not process the root node as it will cause an infinite loop
+				if(p_entityHierarchyEntry.m_entityID != 0)
+					getEntityChildren(p_children, m_entityList[i]);
+			}
+		}
+	}
 
 	void generateNewMap(PropertySet &p_newSceneProperties, SceneData &p_sceneData);
 
@@ -1215,6 +1356,9 @@ private:
 	bool m_2DTextureScale;
 	bool m_2DTextureFraming;
 
+	// Console settings
+	std::size_t m_numOfLogs;
+
 	// Assets variables
 	std::vector<std::pair<const Texture2D *, std::string>> m_textureAssets;
 	std::vector<std::pair<Model *, std::string>> m_modelAssets;
@@ -1249,7 +1393,11 @@ private:
 	std::vector<ComponentsConstructionInfo*> m_componentConstructionInfoPool;
 	ComponentsConstructionInfo *m_newEntityConstructionInfo;
 	bool m_openNewEntityPopup;
+	bool m_openEntityRightClickOptionsPopup;
 	bool m_duplicateParent;
+	bool m_lightComponentActivateAllSet;
+	bool m_modelComponentActivateAllSet;
+	bool m_rigidBodyComponentActivateAllSet;
 
 	// New scene settings
 	SceneData m_newSceneData;
@@ -1264,6 +1412,9 @@ private:
 
 	// Square button size that is the same height as text
 	ImVec2 m_buttonSizedByFont;
+
+	// Names for ImGui widgets
+	const char *m_entityRightClickOptionsPopup;
 
 	// String arrays and other data used for ImGui Combo inputs
 	std::vector<const char *> m_antialiasingTypeText;

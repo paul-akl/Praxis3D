@@ -9,10 +9,10 @@
 // Discard fragments based on transparency
 #define ALPHA_DISCARD 1
 
-// Mesh buffers
-layout(location = 0) in vec3 vertexPosition;
-
 #if ALPHA_DISCARD
+uniform sampler2D diffuseTexture;
+uniform float alphaThreshold;
+
 struct MaterialData
 {
 	vec4 m_color;
@@ -25,19 +25,19 @@ layout (std140) uniform MaterialDataBuffer
 	MaterialData m_materialData[NUM_OF_MATERIAL_TYPES];
 };
 
-layout(location = 2) in vec2 textureCoord;
-
-out vec2 v_texCoord;
+in vec2 texCoord;
 #endif
 
-uniform mat4 modelMat;
-uniform mat4 MVP;
-
-void main(void) 
+void main()
 {
-	gl_Position = modelMat * vec4(vertexPosition, 1.0);
-	
 #if ALPHA_DISCARD
-	v_texCoord = (textureCoord + m_materialData[MATERIAL_TYPE_DIFFUSE].m_framing) * m_materialData[MATERIAL_TYPE_DIFFUSE].m_scale;
+
+	// Get fragment alpha value
+	float alpha = texture(diffuseTexture, texCoord).a * m_materialData[MATERIAL_TYPE_DIFFUSE].m_color.a;
+	
+	// Discard fragment if the diffuse alpha color value is smaller than alpha threshold
+	if(alpha < alphaThreshold)
+		discard;
+
 #endif
 }

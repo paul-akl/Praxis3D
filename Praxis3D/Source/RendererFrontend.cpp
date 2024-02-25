@@ -18,6 +18,7 @@
 #include "RendererFrontend.h"
 #include "ShadowMappingPass.h"
 #include "SkyPass.h"
+#include "TonemappingPass.h"
 
 RendererFrontend::RendererFrontend() : m_renderPassData(nullptr)
 {
@@ -122,77 +123,82 @@ void RendererFrontend::setRenderingPasses(const RenderingPasses &p_renderingPass
 	{
 		switch(p_renderingPasses[i])
 		{
-			case RenderPassType_Geometry:
-				if(m_allRenderPasses[RenderPassType_Geometry] == nullptr)
-					m_allRenderPasses[RenderPassType_Geometry] = new GeometryPass(*this);
+			case RenderPassType::RenderPassType_Geometry:
+				if(m_allRenderPasses[RenderPassType::RenderPassType_Geometry] == nullptr)
+					m_allRenderPasses[RenderPassType::RenderPassType_Geometry] = new GeometryPass(*this);
 				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_Geometry]);
 				break;
-			case RenderPassType_ShadowMapping:
-				if(m_allRenderPasses[RenderPassType_ShadowMapping] == nullptr)
-					m_allRenderPasses[RenderPassType_ShadowMapping] = new ShadowMappingPass(*this);
+			case RenderPassType::RenderPassType_ShadowMapping:
+				if(m_allRenderPasses[RenderPassType::RenderPassType_ShadowMapping] == nullptr)
+					m_allRenderPasses[RenderPassType::RenderPassType_ShadowMapping] = new ShadowMappingPass(*this);
 				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_ShadowMapping]);
 				shadowMappingPassSet = true;
 				break;
-			case RenderPassType_Lighting:
-				if(m_allRenderPasses[RenderPassType_Lighting] == nullptr)
-					m_allRenderPasses[RenderPassType_Lighting] = new LightingPass(*this);
+			case RenderPassType::RenderPassType_Lighting:
+				if(m_allRenderPasses[RenderPassType::RenderPassType_Lighting] == nullptr)
+					m_allRenderPasses[RenderPassType::RenderPassType_Lighting] = new LightingPass(*this);
 				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_Lighting]);
 				break;
-			case RenderPassType_AtmScattering:
-				if(m_allRenderPasses[RenderPassType_AtmScattering] == nullptr)
-					m_allRenderPasses[RenderPassType_AtmScattering] = new AtmScatteringPass(*this);
-				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_AtmScattering]);
+			case RenderPassType::RenderPassType_AtmScattering:
+				if(m_allRenderPasses[RenderPassType::RenderPassType_AtmScattering] == nullptr)
+					m_allRenderPasses[RenderPassType::RenderPassType_AtmScattering] = new AtmScatteringPass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType::RenderPassType_AtmScattering]);
 				break;
-			case RenderPassType_HdrMapping:
-				if(m_allRenderPasses[RenderPassType_HdrMapping] == nullptr)
-					m_allRenderPasses[RenderPassType_HdrMapping] = new HdrMappingPass(*this);
-				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_HdrMapping]);
+			case RenderPassType::RenderPassType_HdrMapping:
+				if(m_allRenderPasses[RenderPassType::RenderPassType_HdrMapping] == nullptr)
+					m_allRenderPasses[RenderPassType::RenderPassType_HdrMapping] = new HdrMappingPass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType::RenderPassType_HdrMapping]);
 				break;
-			case RenderPassType_Blur:
-				if(m_allRenderPasses[RenderPassType_Blur] == nullptr)
-					m_allRenderPasses[RenderPassType_Blur] = new BlurPass(*this);
-				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_Blur]);
+			case RenderPassType::RenderPassType_Blur:
+				if(m_allRenderPasses[RenderPassType::RenderPassType_Blur] == nullptr)
+					m_allRenderPasses[RenderPassType::RenderPassType_Blur] = new BlurPass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType::RenderPassType_Blur]);
 				break;
-			case RenderPassType_Bloom:
-				if(m_allRenderPasses[RenderPassType_Bloom] == nullptr)
-					m_allRenderPasses[RenderPassType_Bloom] = new BloomPass(*this);
-				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_Bloom]);
+			case RenderPassType::RenderPassType_Bloom:
+				if(m_allRenderPasses[RenderPassType::RenderPassType_Bloom] == nullptr)
+					m_allRenderPasses[RenderPassType::RenderPassType_Bloom] = new BloomPass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType::RenderPassType_Bloom]);
 				break;
-			case RenderPassType_BloomComposite:
-				if(m_allRenderPasses[RenderPassType_BloomComposite] == nullptr)
-					m_allRenderPasses[RenderPassType_BloomComposite] = new BloomCompositePass(*this);
-				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_BloomComposite]);
+			case RenderPassType::RenderPassType_BloomComposite:
+				if(m_allRenderPasses[RenderPassType::RenderPassType_BloomComposite] == nullptr)
+					m_allRenderPasses[RenderPassType::RenderPassType_BloomComposite] = new BloomCompositePass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType::RenderPassType_BloomComposite]);
 				break;
-			case RenderPassType_LenseFlare:
-				if(m_allRenderPasses[RenderPassType_LenseFlare] == nullptr)
-					m_allRenderPasses[RenderPassType_LenseFlare] = new LenseFlarePass(*this);
-				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_LenseFlare]);
+			case RenderPassType::RenderPassType_LenseFlare:
+				if(m_allRenderPasses[RenderPassType::RenderPassType_LenseFlare] == nullptr)
+					m_allRenderPasses[RenderPassType::RenderPassType_LenseFlare] = new LenseFlarePass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType::RenderPassType_LenseFlare]);
 				break;
-			case RenderPassType_LenseFlareComposite:
-				if(m_allRenderPasses[RenderPassType_LenseFlareComposite] == nullptr)
-					m_allRenderPasses[RenderPassType_LenseFlareComposite] = new LenseFlareCompositePass(*this);
-				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_LenseFlareComposite]);
+			case RenderPassType::RenderPassType_LenseFlareComposite:
+				if(m_allRenderPasses[RenderPassType::RenderPassType_LenseFlareComposite] == nullptr)
+					m_allRenderPasses[RenderPassType::RenderPassType_LenseFlareComposite] = new LenseFlareCompositePass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType::RenderPassType_LenseFlareComposite]);
 				break;
-			case RenderPassType_Luminance:
-				if(m_allRenderPasses[RenderPassType_Luminance] == nullptr)
-					m_allRenderPasses[RenderPassType_Luminance] = new LuminancePass(*this);
-				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_Luminance]);
+			case RenderPassType::RenderPassType_Luminance:
+				if(m_allRenderPasses[RenderPassType::RenderPassType_Luminance] == nullptr)
+					m_allRenderPasses[RenderPassType::RenderPassType_Luminance] = new LuminancePass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType::RenderPassType_Luminance]);
 				break;
-			case RenderPassType_Final:
-				if(m_allRenderPasses[RenderPassType_Final] == nullptr)
-					m_allRenderPasses[RenderPassType_Final] = new FinalPass(*this);
-				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_Final]);
+			case RenderPassType::RenderPassType_Final:
+				if(m_allRenderPasses[RenderPassType::RenderPassType_Final] == nullptr)
+					m_allRenderPasses[RenderPassType::RenderPassType_Final] = new FinalPass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType::RenderPassType_Final]);
 				break;
-			case RenderPassType_GUI:
-				if(m_allRenderPasses[RenderPassType_GUI] == nullptr)
-					m_allRenderPasses[RenderPassType_GUI] = new GUIPass(*this);
-				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_GUI]);
+			case RenderPassType::RenderPassType_GUI:
+				if(m_allRenderPasses[RenderPassType::RenderPassType_GUI] == nullptr)
+					m_allRenderPasses[RenderPassType::RenderPassType_GUI] = new GUIPass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType::RenderPassType_GUI]);
 				guiRenderPassSet = true;
 				break;
-			case RenderPassType_AmbientOcclusion:
-				if(m_allRenderPasses[RenderPassType_AmbientOcclusion] == nullptr)
-					m_allRenderPasses[RenderPassType_AmbientOcclusion] = new AmbientOcclusionPass(*this);
-				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_AmbientOcclusion]);
+			case RenderPassType::RenderPassType_AmbientOcclusion:
+				if(m_allRenderPasses[RenderPassType::RenderPassType_AmbientOcclusion] == nullptr)
+					m_allRenderPasses[RenderPassType::RenderPassType_AmbientOcclusion] = new AmbientOcclusionPass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType::RenderPassType_AmbientOcclusion]);
+				break;
+			case RenderPassType::RenderPassType_Tonemapping:
+				if(m_allRenderPasses[RenderPassType::RenderPassType_Tonemapping] == nullptr)
+					m_allRenderPasses[RenderPassType::RenderPassType_Tonemapping] = new TonemappingPass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType::RenderPassType_Tonemapping]);
 				break;
 		}
 	}

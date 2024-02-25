@@ -512,7 +512,7 @@ public:
 	const inline bool operator==(const Property &p_property) const noexcept { return (m_propertyID == p_property.m_propertyID); }
 	const inline bool operator<(const Property &p_property) const noexcept { return (m_propertyID < p_property.m_propertyID); }
 
-	// Cope assignment operator
+	// Copy assignment operator
 	inline Property &operator=(const Property &p_property) noexcept
 	{
 		m_propertyID = p_property.m_propertyID;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>          // std::mutex
+
 #include "ErrorHandlerLocator.h"
 #include "NullSystemObjects.h"
 #include "PropertySet.h"
@@ -102,6 +104,7 @@ private:
 
 	// Mutex used to block calls from other threads while import operation is in progress
 	SpinWait m_mutex;
+	std::mutex m_mtx;
 
 	// Contains all the prefabs that have already been imported before. Saves the time of importing them again, upon requesting
 	std::map<std::string, ComponentsConstructionInfo> m_prefabs;
@@ -126,5 +129,8 @@ private:
 
 	// Denotes whether this is the first time that scenes are loading
 	bool m_firstLoad;
+
+	// Version of the engine that was used to export the scene
+	EngineVersion m_sceneEngineVersion;
 };
 

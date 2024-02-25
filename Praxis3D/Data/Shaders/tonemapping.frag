@@ -1,4 +1,10 @@
+/*
+	Tonemapping pass shader, fragment (tonemapping.frag)
+	Performs one of several defined tonemapping methods and gamma-correction
+*/
 #version 430 core
+
+#define TONEMAPPING_METHOD 0
 
 out vec4 outputColor;
 
@@ -55,7 +61,7 @@ vec3 convertXYZ2Yxy(vec3 p_xyz)
 {
 	// Reference:
 	// http://www.brucelindbloom.com/index.html?Eqn_XYZ_to_xyY.html
-	float inv = 1.0 / dot(p_xyz, vec3(1.0, 1.0, 1.0));
+	const float inv = 1.0 / dot(p_xyz, vec3(1.0, 1.0, 1.0));
 	return vec3(p_xyz.y, p_xyz.x * inv, p_xyz.y * inv);
 }
 
@@ -85,9 +91,9 @@ vec3 convertYxy2RGB(vec3 p_Yxy)
 
 vec3 gammaCorrectionAccurate(vec3 p_color)
 {
-	vec3 lo  = p_color * 12.92;
-	vec3 hi  = pow(abs(p_color), splatVec3(1.0 / 2.4) ) * 1.055 - 0.055;
-	vec3 rgb = mix(hi, lo, vec3(lessThanEqual(p_color, splatVec3(0.0031308))));
+	const vec3 lo  = p_color * 12.92;
+	const vec3 hi  = pow(abs(p_color), splatVec3(1.0 / 2.4) ) * 1.055 - 0.055;
+	const vec3 rgb = mix(hi, lo, vec3(lessThanEqual(p_color, splatVec3(0.0031308))));
 	return rgb;
 }
 
@@ -98,9 +104,9 @@ vec3 gammaCorrection(vec3 p_color, float p_gamma)
 
 vec3 compensateByLuminance(vec3 p_color, float p_luminance)
 {
-	float KeyValue = 1.03 - (2.0 / (log10(p_luminance + 1.0) + 2.0));
-    float ExposureValue = log2(KeyValue / p_luminance);// + _ManualBias;
-    return p_color * exp2(ExposureValue);
+	const float keyValue = 1.03 - (2.0 / (log10(p_luminance + 1.0) + 2.0));
+    const float exposureValue = log2(keyValue / p_luminance);// + _ManualBias;
+    return p_color * exp2(exposureValue);
 }
 
 // Simple reinhard tone mapping
@@ -123,12 +129,12 @@ vec3 tonemap_filmic(vec3 p_color)
 {
 	// http://www.gdcvault.com/play/1012459/Uncharted_2__HDR_Lighting
 	// http://filmicgames.com/archives/75 - the coefficients are from here
-	float A = 0.15; // Shoulder Strength
-	float B = 0.50; // Linear Strength
-	float C = 0.10; // Linear Angle
-	float D = 0.20; // Toe Strength
-	float E = 0.02; // Toe Numerator
-	float F = 0.30; // Toe Denominator
+	const float A = 0.15; // Shoulder Strength
+	const float B = 0.50; // Linear Strength
+	const float C = 0.10; // Linear Angle
+	const float D = 0.20; // Toe Strength
+	const float E = 0.02; // Toe Numerator
+	const float F = 0.30; // Toe Denominator
 	
 	return ((p_color * (A * p_color + C * B) + D * E) / (p_color * (A * p_color + B) + D * F)) - E / F; // E/F = Toe Angle
 }
@@ -138,16 +144,18 @@ vec3 tonemap_filmic(vec3 p_color)
 // It produces bright and vibrant images with high contrast.
 vec3 tonemap_Uncharted2(vec3 p_color)
 {
-	float A = 0.15;
-	float B = 0.50;
-	float C = 0.10;
-	float D = 0.20;
-	float E = 0.02;
-	float F = 0.30;
-	float W = 11.2;
+	const float A = 0.15;
+	const float B = 0.50;
+	const float C = 0.10;
+	const float D = 0.20;
+	const float E = 0.02;
+	const float F = 0.30;
+	const float W = 11.2;
 	p_color = ((p_color * (A * p_color + C * B) + D * E) / (p_color * (A * p_color + B) + D * F)) - E / F;
-	float white = ((W * (A * W + C * B) + D * E) / (W * (A * W + B) + D * F)) - E / F;
+	
+	const float white = ((W * (A * W + C * B) + D * E) / (W * (A * W + B) + D * F)) - E / F;
 	p_color /= white;
+	
 	return p_color;
 }
 
@@ -203,21 +211,21 @@ float calculateUchimura(float p_color, float p_maxBrightness, float p_contrast, 
 	// Uchimura 2017, "HDR theory and practice"
 	// Math: https://www.desmos.com/calculator/gslcdxvipg
 	// Source: https://www.slideshare.net/nikuque/hdr-theory-and-practicce-jp
-	float l0 = ((p_maxBrightness - p_start) * p_length) / p_contrast;
-	float L0 = p_start - p_start / p_contrast;
-	float L1 = p_start + (1.0 - p_start) / p_contrast;
-	float S0 = p_start + l0;
-	float S1 = p_start + p_contrast * l0;
-	float C2 = (p_contrast * p_maxBrightness) / (p_maxBrightness - S1);
-	float CP = -C2 / p_maxBrightness;
+	const float l0 = ((p_maxBrightness - p_start) * p_length) / p_contrast;
+	const float L0 = p_start - p_start / p_contrast;
+	const float L1 = p_start + (1.0 - p_start) / p_contrast;
+	const float S0 = p_start + l0;
+	const float S1 = p_start + p_contrast * l0;
+	const float C2 = (p_contrast * p_maxBrightness) / (p_maxBrightness - S1);
+	const float CP = -C2 / p_maxBrightness;
 
-	float w0 = 1.0 - smoothstep(0.0, p_start, p_color);
-	float w2 = step(p_start + l0, p_color);
-	float w1 = 1.0 - w0 - w2;
+	const float w0 = 1.0 - smoothstep(0.0, p_start, p_color);
+	const float w2 = step(p_start + l0, p_color);
+	const float w1 = 1.0 - w0 - w2;
 
-	float T = p_start * pow(p_color / p_start, p_black) + p_pedestal;
-	float S = p_maxBrightness - (p_maxBrightness - S1) * exp(CP * (p_color - S0));
-	float L = p_start + p_contrast * (p_color - p_start);
+	const float T = p_start * pow(p_color / p_start, p_black) + p_pedestal;
+	const float S = p_maxBrightness - (p_maxBrightness - S1) * exp(CP * (p_color - S0));
+	const float L = p_start + p_contrast * (p_color - p_start);
 
 	return T * w0 + L * w1 + S * w2;
 }
@@ -245,81 +253,64 @@ float tonemap_Uchimura(float p_color)
 void main(void)
 {	
 	// Calculate screen-space texture coordinates, for buffer access
-	vec2 texCoord = calcTexCoord();
+	const vec2 texCoord = calcTexCoord();
 
 	// Get the color of the current fragment
 	vec3 fragmentColor = texture2D(inputColorMap, texCoord).xyz;
-
-	// Get the average scene luminance
-	float luminance = texture2D(averageLuminanceTexture, vec2(0.0, 0.0)).r * luminanceMultiplier;
 	
-	// Perform exposure compensation by converting the color from RGB to Yxy color space and adjusting the luminosity component
-	vec3 colorYxy = convertRGB2Yxy(fragmentColor);
-	colorYxy.x /= (9.6 * luminance + 0.0001);
-	fragmentColor = convertYxy2RGB(colorYxy);
-	
-	// Perform tonemapping, choosing the method based on a uniform
-	switch(tonemapMethod) 
-	{
-		// No tonemapping
-		case 0:
+	// No tonemapping
+#if TONEMAPPING_METHOD == 0
+#endif 
 		
-		break;
-		
-		// Simple reinhard tonemapping
-		case 1:
-			fragmentColor = tonemap_reinhard(fragmentColor);
-			fragmentColor.x = tonemap_ACES(fragmentColor.x);
-			fragmentColor.y = tonemap_ACES(fragmentColor.y);
-			fragmentColor.z = tonemap_ACES(fragmentColor.z);
-		break;
+	// Simple reinhard tonemapping
+#if TONEMAPPING_METHOD == 1
+	fragmentColor = tonemap_reinhard(fragmentColor);
+#endif 
 			
-		// Reinhard with white point tonemapping
-		case 2:	
-			float whitePoint = 3.0f;
-			whitePoint = whitePoint * whitePoint;
-			
-			fragmentColor = tonemap_reinhardWhitePoint(fragmentColor, whitePoint);
-		break;
+	// Reinhard with white point tonemapping
+#if TONEMAPPING_METHOD == 2
+	float whitePoint = 3.0f;
+	whitePoint = whitePoint * whitePoint;
+	fragmentColor = tonemap_reinhardWhitePoint(fragmentColor, whitePoint);
+#endif 
 		
-		// Filmic tonemapping
-		case 3:
-			fragmentColor = tonemap_filmic(fragmentColor);
-		break;
+	// Filmic tonemapping
+#if TONEMAPPING_METHOD == 3
+	fragmentColor = tonemap_filmic(fragmentColor);
+#endif 
 		
-		// Uncharted 2 tonemapping
-		case 4:
-			fragmentColor = tonemap_Uncharted2(fragmentColor);
-		break;
+	// Uncharted 2 tonemapping
+#if TONEMAPPING_METHOD == 4
+	fragmentColor = tonemap_Uncharted2(fragmentColor);
+#endif 
 		
-		// Unreal 3 tonemapping
-		case 5:
-			fragmentColor.x = tonemap_Unreal(fragmentColor.x);
-			fragmentColor.y = tonemap_Unreal(fragmentColor.y);
-			fragmentColor.z = tonemap_Unreal(fragmentColor.z);
-		break;
+	// Unreal 3 tonemapping
+#if TONEMAPPING_METHOD == 5
+	fragmentColor.x = tonemap_Unreal(fragmentColor.x);
+	fragmentColor.y = tonemap_Unreal(fragmentColor.y);
+	fragmentColor.z = tonemap_Unreal(fragmentColor.z);
+#endif 
 		
-		// ACES tonemapping
-		case 6:
-			fragmentColor.x = tonemap_ACES(fragmentColor.x);
-			fragmentColor.y = tonemap_ACES(fragmentColor.y);
-			fragmentColor.z = tonemap_ACES(fragmentColor.z);
-		break;
+	// ACES tonemapping
+#if TONEMAPPING_METHOD == 6
+	fragmentColor.x = tonemap_ACES(fragmentColor.x);
+	fragmentColor.y = tonemap_ACES(fragmentColor.y);
+	fragmentColor.z = tonemap_ACES(fragmentColor.z);
+#endif 
 		
-		// Lottes tonemapping
-		case 7:
-			fragmentColor.x = tonemap_Lottes(fragmentColor.x);
-			fragmentColor.y = tonemap_Lottes(fragmentColor.y);
-			fragmentColor.z = tonemap_Lottes(fragmentColor.z);
-		break;
+	// Lottes tonemapping
+#if TONEMAPPING_METHOD == 7
+	fragmentColor.x = tonemap_Lottes(fragmentColor.x);
+	fragmentColor.y = tonemap_Lottes(fragmentColor.y);
+	fragmentColor.z = tonemap_Lottes(fragmentColor.z);
+#endif 
 		
-		// Uchimura tonemapping
-		case 8:
-			fragmentColor.x = tonemap_Uchimura(fragmentColor.x);
-			fragmentColor.y = tonemap_Uchimura(fragmentColor.y);
-			fragmentColor.z = tonemap_Uchimura(fragmentColor.z);
-		break;
-	}
+	// Uchimura tonemapping
+#if TONEMAPPING_METHOD == 8
+	fragmentColor.x = tonemap_Uchimura(fragmentColor.x);
+	fragmentColor.y = tonemap_Uchimura(fragmentColor.y);
+	fragmentColor.z = tonemap_Uchimura(fragmentColor.z);
+#endif 
 	
 	// Perform gamma correction
 	fragmentColor = gammaCorrectionAccurate(fragmentColor);

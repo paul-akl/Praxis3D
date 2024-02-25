@@ -134,7 +134,7 @@ public:
 
 		for(unsigned int currentTask = 0; currentTask < p_count; currentTask++)
 		{
-#ifdef SETTING_MULTITHREADING_ENABLED
+#if SETTING_MULTITHREADING_ENABLED
 			if(p_tasks[currentTask]->isPrimaryThreadOnly())
 			{
 				m_primaryThreadSystemTaskList.push_back(p_tasks[currentTask]);
@@ -173,7 +173,7 @@ public:
 	inline void startBackgroundThread(const Function& p_func)
 	{
 		// If multi-threading is enabled 
-#ifdef SETTING_MULTITHREADING_ENABLED
+#if SETTING_MULTITHREADING_ENABLED
 		m_backgroundTaskGroup.run(p_func);
 #else
 		p_func();
@@ -186,7 +186,7 @@ public:
 	inline void parallelFor(Index p_first, Index p_last, Index p_step, const Function& p_func)
 	{
 		// If multi-threading is enabled 
-#ifdef SETTING_MULTITHREADING_ENABLED
+#if SETTING_MULTITHREADING_ENABLED
 		tbb::parallel_for(p_first, p_last, p_step, p_func);
 #else
 		for(Index i = p_first; i < p_last; i += p_step)

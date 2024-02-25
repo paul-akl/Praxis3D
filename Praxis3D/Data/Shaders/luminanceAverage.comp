@@ -1,3 +1,7 @@
+/*
+	Luminance average shader, compute (luminanceAverage.comp)
+	Calculates the average luminance value of the scene, by counting all the incremented values in each bin of the histogram buffer.
+*/
 #version 460
 
 #define GROUP_SIZE 256

@@ -12,6 +12,13 @@ struct MaterialParameters
 {
 	MaterialParameters() : m_color(1.0f), m_scale(1.0f), m_framing(0.0f) { }
 
+	inline bool operator==(const MaterialParameters &p_matOaram)
+	{
+		return	m_color == p_matOaram.m_color &&
+				m_scale == p_matOaram.m_scale &&
+				m_framing == p_matOaram.m_framing;
+	}
+
 	glm::vec4 m_color;
 	glm::vec2 m_scale;
 	glm::vec2 m_framing;
@@ -20,6 +27,15 @@ struct MaterialParameters
 struct MaterialData
 {
 	MaterialData() { }
+
+	inline bool operator==(const MaterialData &p_matData)
+	{
+		for(unsigned int i = 0; i < MaterialType::MaterialType_NumOfTypes; i++)
+			if(m_parameters[i] != p_matData.m_parameters[i])
+				return false;
+
+		return true;
+	}
 
 	MaterialParameters m_parameters[MaterialType::MaterialType_NumOfTypes];
 };
@@ -102,11 +118,23 @@ struct MeshData
 struct ModelData
 {
 	ModelData(ModelLoader::ModelHandle p_model) : m_model(p_model) { }
+	ModelData(
+		ModelLoader::ModelHandle p_model,
+		const FaceCullingSettings p_drawFaceCulling,
+		const FaceCullingSettings p_shadowFaceCulling) :
+		m_drawFaceCulling(p_drawFaceCulling),
+		m_shadowFaceCulling(p_shadowFaceCulling),
+		m_model(p_model) { }
 
 	// Handle to a model
 	ModelLoader::ModelHandle m_model;
+
 	// An array of meshes
 	std::vector<MeshData> m_meshes;
+
+	// Face culling settings
+	FaceCullingSettings m_drawFaceCulling;
+	FaceCullingSettings m_shadowFaceCulling;
 };
 
 // Contains model data and spatial data; needed by the renderer to draw a model using default shaders

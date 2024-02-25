@@ -1,5 +1,11 @@
 {
 	"LoadInBackground": "true",
+	"Version": 
+	{
+		"Major": "0",
+		"Minor": "2",
+		"Patch": "5"
+	},
 	"GameObject": 
 	[
 		{
@@ -40,6 +46,16 @@
 					[
 						{
 							"Filename": "Default\plane.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -57,24 +73,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										}
 									}
@@ -133,6 +153,16 @@
 					[
 						{
 							"Filename": "Default\plane.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -150,24 +180,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										}
 									}
@@ -226,6 +260,16 @@
 					[
 						{
 							"Filename": "Default\plane.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -243,24 +287,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										}
 									}
@@ -319,6 +367,16 @@
 					[
 						{
 							"Filename": "Default\plane.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -336,24 +394,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										}
 									}
@@ -412,6 +474,16 @@
 					[
 						{
 							"Filename": "Default\plane.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -429,24 +501,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										}
 									}
@@ -505,6 +581,16 @@
 					[
 						{
 							"Filename": "Default\plane.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -522,24 +608,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										}
 									}
@@ -598,6 +688,16 @@
 					[
 						{
 							"Filename": "Default\plane.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -615,24 +715,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										}
 									}
@@ -691,6 +795,16 @@
 					[
 						{
 							"Filename": "Default\plane.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -708,24 +822,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										}
 									}
@@ -784,6 +902,16 @@
 					[
 						{
 							"Filename": "Default\plane.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -801,24 +929,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "400.0f, 400.0f"
 										}
 									}
@@ -877,6 +1009,16 @@
 					[
 						{
 							"Filename": "Default\cube.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -894,24 +1036,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_1_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_1_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										}
 									}
@@ -949,9 +1095,9 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "5.0002f, 2.0f, 29.996f",
-					"LocalRotation": "1.92908e-05f, -0.233349f, -0.000159582f",
-					"LocalRotationQuaternion": "0.999998f, 1.65508e-07f, -0.00203635f, -1.39227e-06f",
+					"LocalPosition": "5.000199795f, 2.0f, 29.99600029f",
+					"LocalRotation": "1.929084101e-05f, -0.2333489358f, -0.0001595820067f",
+					"LocalRotationQuaternion": "0.9999979138f, 1.655081263e-07f, -0.002036352176f, -1.392269951e-06f",
 					"LocalScale": "2.0f, 2.0f, 2.0f"
 				}
 			}
@@ -970,6 +1116,16 @@
 					[
 						{
 							"Filename": "Default\cube.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -987,24 +1143,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_1_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_1_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										}
 									}
@@ -1042,9 +1202,9 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "0.00257387f, 1.99999f, 29.9871f",
-					"LocalRotation": "0.000140975f, 0.214498f, 0.000389868f",
-					"LocalRotationQuaternion": "0.999998f, 1.22387e-06f, 0.00187185f, 3.39993e-06f",
+					"LocalPosition": "0.00257386989f, 1.999989986f, 29.9871006f",
+					"LocalRotation": "0.0001409753604f, 0.214498654f, 0.0003898684809f",
+					"LocalRotationQuaternion": "0.9999982119f, 1.223871323e-06f, 0.001871852786f, 3.399935395e-06f",
 					"LocalScale": "2.0f, 2.0f, 2.0f"
 				}
 			}
@@ -1063,6 +1223,16 @@
 					[
 						{
 							"Filename": "Default\cube.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -1080,24 +1250,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_1_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_1_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										}
 									}
@@ -1135,9 +1309,9 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "-5.00142f, 1.99987f, 29.989f",
-					"LocalRotation": "-0.00116673f, -0.371206f, -0.00294637f",
-					"LocalRotationQuaternion": "0.999995f, -1.02649e-05f, -0.00323938f, -2.57448e-05f",
+					"LocalPosition": "-5.001420021f, 1.999869943f, 29.98900032f",
+					"LocalRotation": "-0.0011667324f, -0.3712061644f, -0.002946372144f",
+					"LocalRotationQuaternion": "0.9999947548f, -1.026489736e-05f, -0.003239379032f, -2.574479186e-05f",
 					"LocalScale": "2.0f, 2.0f, 2.0f"
 				}
 			}
@@ -1156,6 +1330,16 @@
 					[
 						{
 							"Filename": "Default\cube.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -1173,24 +1357,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_1_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_1_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										}
 									}
@@ -1228,9 +1416,9 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "-9.99597f, 1.99999f, 29.9966f",
-					"LocalRotation": "0.000212867f, 0.401212f, 0.000299044f",
-					"LocalRotationQuaternion": "0.999994f, 1.84847e-06f, 0.00350123f, 2.60313e-06f",
+					"LocalPosition": "-9.995969772f, 1.999989986f, 29.9965992f",
+					"LocalRotation": "0.0002128674969f, 0.401212424f, 0.0002990440989f",
+					"LocalRotationQuaternion": "0.9999938607f, 1.848470902e-06f, 0.003501231549f, 2.603131861e-06f",
 					"LocalScale": "2.0f, 2.0f, 2.0f"
 				}
 			}
@@ -1249,6 +1437,16 @@
 					[
 						{
 							"Filename": "Default\cube.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -1266,24 +1464,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_1_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_1_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										}
 									}
@@ -1321,9 +1523,9 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "-13.1083f, 2.0f, 26.1834f",
-					"LocalRotation": "-1.25699e-05f, 51.1743f, 2.62711e-06f",
-					"LocalRotationQuaternion": "0.901929f, -1.08837e-07f, 0.431883f, 6.80522e-08f",
+					"LocalPosition": "-13.10830021f, 2.0f, 26.1833992f",
+					"LocalRotation": "-1.256995165e-05f, 51.1742897f, 2.627106142e-06f",
+					"LocalRotationQuaternion": "0.9019294381f, -1.088370922e-07f, 0.4318834245f, 6.805228026e-08f",
 					"LocalScale": "2.0f, 2.0f, 2.0f"
 				}
 			}
@@ -1342,6 +1544,16 @@
 					[
 						{
 							"Filename": "Default\cube.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -1359,24 +1571,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_1_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_1_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										}
 									}
@@ -1414,9 +1630,9 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "-5.00195f, 9.99971f, 29.9628f",
-					"LocalRotation": "-0.000637965f, 1.04207f, -0.00352236f",
-					"LocalRotationQuaternion": "0.999959f, -5.28754e-06f, 0.00909369f, -3.06865e-05f",
+					"LocalPosition": "-5.001949787f, 9.999710083f, 29.96279907f",
+					"LocalRotation": "-0.0006379653933f, 1.042075038f, -0.003522363724f",
+					"LocalRotationQuaternion": "0.9999586344f, -5.287542081e-06f, 0.00909369532f, -3.068652222e-05f",
 					"LocalScale": "2.0f, 2.0f, 2.0f"
 				}
 			}
@@ -1435,6 +1651,16 @@
 					[
 						{
 							"Filename": "Default\cube.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -1452,24 +1678,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_1_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_1_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										}
 									}
@@ -1507,9 +1737,9 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "-0.00398701f, 9.99982f, 29.9635f",
-					"LocalRotation": "-0.000446748f, 0.248925f, 0.00264634f",
-					"LocalRotationQuaternion": "0.999998f, -3.94877e-06f, 0.00217228f, 2.31021e-05f",
+					"LocalPosition": "-0.003987010103f, 9.999819756f, 29.96349907f",
+					"LocalRotation": "-0.0004467484832f, 0.2489252836f, 0.002646344248f",
+					"LocalRotationQuaternion": "0.9999976158f, -3.948772701e-06f, 0.002172281267f, 2.310212403e-05f",
 					"LocalScale": "2.0f, 2.0f, 2.0f"
 				}
 			}
@@ -1528,6 +1758,16 @@
 					[
 						{
 							"Filename": "Default\cube.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -1545,24 +1785,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_1_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_1_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										}
 									}
@@ -1600,9 +1844,9 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "-2.4678f, 13.9997f, 29.958f",
-					"LocalRotation": "-0.000598173f, -0.246163f, 0.00164424f",
-					"LocalRotationQuaternion": "0.999998f, -5.18921e-06f, -0.00214818f, 1.43375e-05f",
+					"LocalPosition": "-2.467799902f, 13.99969959f, 29.95800018f",
+					"LocalRotation": "-0.0005981734721f, -0.2461639196f, 0.001644247794f",
+					"LocalRotationQuaternion": "0.9999976754f, -5.189212516e-06f, -0.002148183761f, 1.433752186e-05f",
 					"LocalScale": "2.0f, 2.0f, 2.0f"
 				}
 			}
@@ -1621,6 +1865,16 @@
 					[
 						{
 							"Filename": "Default\cube.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -1638,24 +1892,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_yellow_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_2_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										}
 									}
@@ -1693,9 +1951,9 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "-2.46419f, 5.9998f, 29.9807f",
-					"LocalRotation": "-0.00105935f, 0.157044f, -0.00147593f",
-					"LocalRotationQuaternion": "0.999999f, -9.22691e-06f, 0.00137047f, -1.28672e-05f",
+					"LocalPosition": "-2.464190006f, 5.999800205f, 29.98069954f",
+					"LocalRotation": "-0.001059349859f, 0.1570443362f, -0.001475926023f",
+					"LocalRotationQuaternion": "0.9999990463f, -9.226911061e-06f, 0.00137047004f, -1.286720089e-05f",
 					"LocalScale": "2.0f, 2.0f, 2.0f"
 				}
 			}
@@ -1714,6 +1972,16 @@
 					[
 						{
 							"Filename": "Default\cube.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -1731,24 +1999,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_green_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_2_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										}
 									}
@@ -1786,9 +2058,9 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "2.49464f, 5.99992f, 29.9737f",
-					"LocalRotation": "-0.000101108f, 0.599909f, 0.00232151f",
-					"LocalRotationQuaternion": "0.999986f, -9.8838e-07f, 0.00523517f, 2.02633e-05f",
+					"LocalPosition": "2.494640112f, 5.999919891f, 29.97369957f",
+					"LocalRotation": "-0.0001011079294f, 0.599909246f, 0.002321506385f",
+					"LocalRotationQuaternion": "0.9999862909f, -9.883801795e-07f, 0.005235171877f, 2.026330731e-05f",
 					"LocalScale": "2.0f, 2.0f, 2.0f"
 				}
 			}
@@ -1807,6 +2079,16 @@
 					[
 						{
 							"Filename": "Default\cube.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -1824,24 +2106,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_teal_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_2_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										}
 									}
@@ -1879,9 +2165,9 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "-7.50043f, 5.9999f, 29.9871f",
-					"LocalRotation": "-0.000940943f, 0.479645f, -0.00309981f",
-					"LocalRotationQuaternion": "0.999991f, -8.09798e-06f, 0.00418568f, -2.70163e-05f",
+					"LocalPosition": "-7.500430107f, 5.999899864f, 29.9871006f",
+					"LocalRotation": "-0.0009409444756f, 0.4796450734f, -0.003099808237f",
+					"LocalRotationQuaternion": "0.9999912381f, -8.097990758e-06f, 0.004185680766f, -2.701632366e-05f",
 					"LocalScale": "2.0f, 2.0f, 2.0f"
 				}
 			}
@@ -1900,6 +2186,16 @@
 					[
 						{
 							"Filename": "Default\cube.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -1917,24 +2213,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\orange_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "2.0f, 2.0f"
 										}
 									}
@@ -1972,9 +2272,9 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "17.3766f, 2.00006f, 31.3525f",
-					"LocalRotation": "0.0f, -31.5152f, 0.0f",
-					"LocalRotationQuaternion": "0.962419f, 0.0f, -0.271568f, 0.0f",
+					"LocalPosition": "17.37660027f, 2.000060081f, 31.35250092f",
+					"LocalRotation": "0.0f, -31.51519012f, 0.0f",
+					"LocalRotationQuaternion": "0.9624192715f, 0.0f, -0.2715680003f, 0.0f",
 					"LocalScale": "2.0f, 2.0f, 2.0f"
 				}
 			}
@@ -1992,6 +2292,16 @@
 					[
 						{
 							"Filename": "Default\sphereHighpoly.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -2009,24 +2319,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_yellow_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "4.0f, 4.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "4.0f, 4.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "4.0f, 4.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_2_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "4.0f, 4.0f"
 										}
 									}
@@ -2041,11 +2355,11 @@
 				"RigidBodyComponent": 
 				{
 					"Active": "true",
-					"Friction": "0.85f",
+					"Friction": "0.8500000238f",
 					"Kinematic": "false",
 					"Mass": "2.0f",
 					"Restitution": "1.0f",
-					"RollingFriction": "0.001f",
+					"RollingFriction": "0.001000000047f",
 					"SpinningFriction": "1.0f",
 					"CollisionShape": 
 					{
@@ -2059,9 +2373,9 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "-0.261543f, 18.7009f, 30.0f",
-					"LocalRotation": "0.584159f, 65.048f, -179.714f",
-					"LocalRotationQuaternion": "0.000638762f, -0.537655f, 0.00295783f, 0.843159f",
+					"LocalPosition": "-0.2099999934f, 19.44134521f, 29.97999954f",
+					"LocalRotation": "0.5841588974f, 65.0480423f, -179.7143097f",
+					"LocalRotationQuaternion": "0.0006387620815f, -0.5376552343f, 0.002957831137f, 0.8431593776f",
 					"LocalScale": "1.0f, 1.0f, 1.0f"
 				}
 			}
@@ -2079,6 +2393,16 @@
 					[
 						{
 							"Filename": "Default\sphereHighpoly.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -2096,24 +2420,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_yellow_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "4.0f, 4.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "4.0f, 4.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "4.0f, 4.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_2_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "4.0f, 4.0f"
 										}
 									}
@@ -2128,11 +2456,11 @@
 				"RigidBodyComponent": 
 				{
 					"Active": "true",
-					"Friction": "0.85f",
+					"Friction": "0.8500000238f",
 					"Kinematic": "false",
 					"Mass": "2.0f",
 					"Restitution": "1.0f",
-					"RollingFriction": "0.001f",
+					"RollingFriction": "0.001000000047f",
 					"SpinningFriction": "1.0f",
 					"CollisionShape": 
 					{
@@ -2146,9 +2474,9 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "-4.95439f, 18.7009f, 27.759f",
-					"LocalRotation": "0.584159f, 65.048f, -179.714f",
-					"LocalRotationQuaternion": "0.000638762f, -0.537655f, 0.00295783f, 0.843159f",
+					"LocalPosition": "-4.954390049f, 18.70089912f, 27.75900078f",
+					"LocalRotation": "0.5841588974f, 65.0480423f, -179.7143097f",
+					"LocalRotationQuaternion": "0.0006387620815f, -0.5376552343f, 0.002957831137f, 0.8431593776f",
 					"LocalScale": "1.0f, 1.0f, 1.0f"
 				}
 			}
@@ -2173,13 +2501,23 @@
 					[
 						{
 							"Filename": "Default\sphereHighpoly.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
 									"Index": "0",
 									"Active": "true",
 									"AlphaThreshold": "0.0f",
-									"EmissiveIntensity": "1.27f",
+									"EmissiveIntensity": "1.269999981f",
 									"HeightScale": "0.0f",
 									"StochasticSampling": "false",
 									"StochasticSamplingScale": "1.0f",
@@ -2190,24 +2528,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\red_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\red_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\metal_rough_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										}
 									}
@@ -2222,11 +2564,11 @@
 				"RigidBodyComponent": 
 				{
 					"Active": "true",
-					"Friction": "0.8f",
+					"Friction": "0.8000000119f",
 					"Kinematic": "false",
 					"Mass": "2.0f",
 					"Restitution": "1.0f",
-					"RollingFriction": "0.001f",
+					"RollingFriction": "0.001000000047f",
 					"SpinningFriction": "1.0f",
 					"CollisionShape": 
 					{
@@ -2245,7 +2587,7 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "-12.1755f, 8.16299f, 24.2044f",
+					"LocalPosition": "-12.17549992f, 8.162989616f, 24.20439911f",
 					"LocalRotation": "0.0f, -0.0f, 0.0f",
 					"LocalRotationQuaternion": "1.0f, 0.0f, 0.0f, 0.0f",
 					"LocalScale": "0.5f, 0.5f, 0.5f"
@@ -2272,13 +2614,23 @@
 					[
 						{
 							"Filename": "Default\sphereHighpoly.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
 									"Index": "0",
 									"Active": "true",
 									"AlphaThreshold": "0.0f",
-									"EmissiveIntensity": "1.43f",
+									"EmissiveIntensity": "1.429999948f",
 									"HeightScale": "0.0f",
 									"StochasticSampling": "false",
 									"StochasticSamplingScale": "1.0f",
@@ -2289,24 +2641,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\green_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\green_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\metal_rough_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										}
 									}
@@ -2321,11 +2677,11 @@
 				"RigidBodyComponent": 
 				{
 					"Active": "true",
-					"Friction": "0.8f",
+					"Friction": "0.8000000119f",
 					"Kinematic": "false",
 					"Mass": "2.0f",
 					"Restitution": "1.0f",
-					"RollingFriction": "0.01f",
+					"RollingFriction": "0.009999999776f",
 					"SpinningFriction": "1.0f",
 					"CollisionShape": 
 					{
@@ -2344,7 +2700,7 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "-10.84f, 13.5852f, 25.1219f",
+					"LocalPosition": "-10.84000015f, 13.58520031f, 25.12190056f",
 					"LocalRotation": "0.0f, -0.0f, 0.0f",
 					"LocalRotationQuaternion": "1.0f, 0.0f, 0.0f, 0.0f",
 					"LocalScale": "0.5f, 0.5f, 0.5f"
@@ -2371,13 +2727,23 @@
 					[
 						{
 							"Filename": "Default\sphereHighpoly.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
 									"Index": "0",
 									"Active": "true",
 									"AlphaThreshold": "0.0f",
-									"EmissiveIntensity": "1.24f",
+									"EmissiveIntensity": "1.24000001f",
 									"HeightScale": "0.0f",
 									"StochasticSampling": "false",
 									"StochasticSamplingScale": "1.0f",
@@ -2388,24 +2754,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\blue_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\blue_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\metal_rough_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										}
 									}
@@ -2420,11 +2790,11 @@
 				"RigidBodyComponent": 
 				{
 					"Active": "true",
-					"Friction": "0.8f",
+					"Friction": "0.8000000119f",
 					"Kinematic": "false",
 					"Mass": "2.0f",
 					"Restitution": "1.0f",
-					"RollingFriction": "0.001f",
+					"RollingFriction": "0.001000000047f",
 					"SpinningFriction": "1.0f",
 					"CollisionShape": 
 					{
@@ -2443,7 +2813,7 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "-9.92098f, 12.7392f, 25.8597f",
+					"LocalPosition": "-9.920980453f, 12.73919964f, 25.85969925f",
 					"LocalRotation": "0.0f, -0.0f, 0.0f",
 					"LocalRotationQuaternion": "1.0f, 0.0f, 0.0f, 0.0f",
 					"LocalScale": "0.5f, 0.5f, 0.5f"
@@ -2470,13 +2840,23 @@
 					[
 						{
 							"Filename": "Default\sphereHighpoly.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
 									"Index": "0",
 									"Active": "true",
 									"AlphaThreshold": "0.0f",
-									"EmissiveIntensity": "1.49f",
+									"EmissiveIntensity": "1.49000001f",
 									"HeightScale": "0.0f",
 									"StochasticSampling": "false",
 									"StochasticSamplingScale": "1.0f",
@@ -2487,24 +2867,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\yellow_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\yellow_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\metal_rough_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										}
 									}
@@ -2519,11 +2903,11 @@
 				"RigidBodyComponent": 
 				{
 					"Active": "true",
-					"Friction": "0.8f",
+					"Friction": "0.8000000119f",
 					"Kinematic": "false",
 					"Mass": "2.0f",
 					"Restitution": "1.0f",
-					"RollingFriction": "0.001f",
+					"RollingFriction": "0.001000000047f",
 					"SpinningFriction": "1.0f",
 					"CollisionShape": 
 					{
@@ -2542,7 +2926,7 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "-5.62246f, 15.8857f, 32.2f",
+					"LocalPosition": "-5.622459888f, 15.88570023f, 32.20000076f",
 					"LocalRotation": "0.0f, -0.0f, 0.0f",
 					"LocalRotationQuaternion": "1.0f, 0.0f, 0.0f, 0.0f",
 					"LocalScale": "0.5f, 0.5f, 0.5f"
@@ -2569,13 +2953,23 @@
 					[
 						{
 							"Filename": "Default\sphereHighpoly.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
 									"Index": "0",
 									"Active": "true",
 									"AlphaThreshold": "0.0f",
-									"EmissiveIntensity": "1.44f",
+									"EmissiveIntensity": "1.440000057f",
 									"HeightScale": "0.0f",
 									"StochasticSampling": "false",
 									"StochasticSamplingScale": "1.0f",
@@ -2586,24 +2980,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\teal_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\teal_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\metal_rough_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										}
 									}
@@ -2618,11 +3016,11 @@
 				"RigidBodyComponent": 
 				{
 					"Active": "true",
-					"Friction": "0.8f",
+					"Friction": "0.8000000119f",
 					"Kinematic": "false",
 					"Mass": "2.0f",
 					"Restitution": "1.0f",
-					"RollingFriction": "0.001f",
+					"RollingFriction": "0.001000000047f",
 					"SpinningFriction": "1.0f",
 					"CollisionShape": 
 					{
@@ -2641,7 +3039,7 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "1.06096f, 15.9303f, 32.2f",
+					"LocalPosition": "1.060960054f, 15.93029976f, 32.20000076f",
 					"LocalRotation": "0.0f, -0.0f, 0.0f",
 					"LocalRotationQuaternion": "1.0f, 0.0f, 0.0f, 0.0f",
 					"LocalScale": "0.5f, 0.5f, 0.5f"
@@ -2661,6 +3059,16 @@
 					[
 						{
 							"Filename": "Default\cube.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -2678,24 +3086,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "4.0f, 1.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										}
 									}
@@ -2735,8 +3147,8 @@
 				{
 					"Active": "true",
 					"LocalPosition": "100.0f, 5.0f, 0.0f",
-					"LocalRotation": "-2.92591e-13f, 0.0f, 0.0f",
-					"LocalRotationQuaternion": "1.0f, -2.55334e-15f, 0.0f, 0.0f",
+					"LocalRotation": "-2.925912008e-13f, 0.0f, 0.0f",
+					"LocalRotationQuaternion": "1.0f, -2.55333995e-15f, 0.0f, 0.0f",
 					"LocalScale": "3.0f, 0.75f, 0.75f"
 				}
 			}
@@ -2762,13 +3174,23 @@
 					[
 						{
 							"Filename": "Default\sphereHighpoly.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
 									"Index": "0",
 									"Active": "true",
 									"AlphaThreshold": "0.0f",
-									"EmissiveIntensity": "1.6f",
+									"EmissiveIntensity": "1.600000024f",
 									"HeightScale": "0.0f",
 									"StochasticSampling": "false",
 									"StochasticSamplingScale": "1.0f",
@@ -2779,24 +3201,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\white_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\white_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\metal_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										}
 									}
@@ -2813,7 +3239,7 @@
 					"Active": "true",
 					"LocalPosition": "3.0f, 0.0f, 0.0f",
 					"LocalRotation": "0.0f, 90.0f, 0.0f",
-					"LocalRotationQuaternion": "0.707107f, 0.0f, 0.707107f, 0.0f",
+					"LocalRotationQuaternion": "0.7071070075f, 0.0f, 0.7071070075f, 0.0f",
 					"LocalScale": "0.5f, 0.5f, 0.5f"
 				}
 			}
@@ -2839,13 +3265,23 @@
 					[
 						{
 							"Filename": "Default\sphereHighpoly.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
 									"Index": "0",
 									"Active": "true",
 									"AlphaThreshold": "0.0f",
-									"EmissiveIntensity": "1.6f",
+									"EmissiveIntensity": "1.600000024f",
 									"HeightScale": "0.0f",
 									"StochasticSampling": "false",
 									"StochasticSamplingScale": "1.0f",
@@ -2856,24 +3292,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\white_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\white_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\metal_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										}
 									}
@@ -2890,7 +3330,7 @@
 					"Active": "true",
 					"LocalPosition": "-3.0f, 0.0f, 0.0f",
 					"LocalRotation": "0.0f, -90.0f, 0.0f",
-					"LocalRotationQuaternion": "0.707107f, 0.0f, -0.707107f, 0.0f",
+					"LocalRotationQuaternion": "0.7071070075f, 0.0f, -0.7071070075f, 0.0f",
 					"LocalScale": "0.5f, 0.5f, 0.5f"
 				}
 			}
@@ -2908,6 +3348,16 @@
 					[
 						{
 							"Filename": "Default\cube.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
@@ -2925,24 +3375,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\grid_gray_2_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "4.0f, 1.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_emissive.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										}
 									}
@@ -3009,13 +3463,23 @@
 					[
 						{
 							"Filename": "Default\sphereHighpoly.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
 									"Index": "0",
 									"Active": "true",
 									"AlphaThreshold": "0.0f",
-									"EmissiveIntensity": "1.6f",
+									"EmissiveIntensity": "1.600000024f",
 									"HeightScale": "0.0f",
 									"StochasticSampling": "false",
 									"StochasticSamplingScale": "1.0f",
@@ -3026,24 +3490,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\white_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\white_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\metal_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										}
 									}
@@ -3060,7 +3528,7 @@
 					"Active": "true",
 					"LocalPosition": "3.0f, 0.0f, 0.0f",
 					"LocalRotation": "0.0f, 90.0f, 0.0f",
-					"LocalRotationQuaternion": "0.707107f, 0.0f, 0.707107f, 0.0f",
+					"LocalRotationQuaternion": "0.7071070075f, 0.0f, 0.7071070075f, 0.0f",
 					"LocalScale": "0.5f, 0.5f, 0.5f"
 				}
 			}
@@ -3086,13 +3554,23 @@
 					[
 						{
 							"Filename": "Default\sphereHighpoly.fbx",
+							"FaceCullingDraw": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
+							"FaceCullingShadow": 
+							{
+								"Enabled": "true",
+								"Type": "Back"
+							},
 							"Meshes": 
 							[
 								{
 									"Index": "0",
 									"Active": "true",
 									"AlphaThreshold": "0.0f",
-									"EmissiveIntensity": "1.6f",
+									"EmissiveIntensity": "1.600000024f",
 									"HeightScale": "0.0f",
 									"StochasticSampling": "false",
 									"StochasticSamplingScale": "1.0f",
@@ -3103,24 +3581,28 @@
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\white_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Normal": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\default_normal.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"Emissive": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\white_alb.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										},
 										"RMHAO": 
 										{
 											"Color": "1.0f, 1.0f, 1.0f, 1.0f",
 											"Filename": "Default\metal_RMHA.png",
+											"Framing": "0.0f, 0.0f",
 											"TextureScale": "1.0f, 1.0f"
 										}
 									}
@@ -3137,7 +3619,7 @@
 					"Active": "true",
 					"LocalPosition": "-3.0f, 0.0f, 0.0f",
 					"LocalRotation": "0.0f, -90.0f, 0.0f",
-					"LocalRotationQuaternion": "0.707107f, 0.0f, -0.707107f, 0.0f",
+					"LocalRotationQuaternion": "0.7071070075f, 0.0f, -0.7071070075f, 0.0f",
 					"LocalScale": "0.5f, 0.5f, 0.5f"
 				}
 			}
@@ -3160,7 +3642,7 @@
 				{
 					"Active": "true",
 					"CameraID": "1",
-					"FOV": "90.0f",
+					"FOV": "70.0f",
 					"ZFar": "4000.0f",
 					"ZNear": "0.5f"
 				}
@@ -3190,9 +3672,9 @@
 				"SpatialComponent": 
 				{
 					"Active": "true",
-					"LocalPosition": "-1.33628f, 8.73796f, 3.85384f",
-					"LocalRotation": "175.977f, -2.05774f, -179.87f",
-					"LocalRotationQuaternion": "-0.017989f, -0.000506373f, 0.999005f, 0.0350705f",
+					"LocalPosition": "-1.336279988f, 8.737959862f, 3.853840113f",
+					"LocalRotation": "175.9765167f, -2.057746172f, -179.8695984f",
+					"LocalRotationQuaternion": "-0.01798901893f, -0.0005063730059f, 0.9990050197f, 0.03507050127f",
 					"LocalScale": "1.0f, 1.0f, 1.0f"
 				}
 			}
@@ -3245,8 +3727,8 @@
 				{
 					"Active": "true",
 					"LocalPosition": "0.0f, 0.0f, 0.0f",
-					"LocalRotation": "-50f, -59.9991f, -0.000375651f",
-					"LocalRotationQuaternion": "0.784888f, -0.366001f, -0.453147f, -0.211309f",
+					"LocalRotation": "-49.99998856f, -59.99914169f, -0.0003756511724f",
+					"LocalRotationQuaternion": "0.7848880291f, -0.3660010099f, -0.4531469941f, -0.2113090008f",
 					"LocalScale": "1.0f, 1.0f, 1.0f"
 				}
 			}
@@ -3278,7 +3760,7 @@
 						},
 						{
 							"Name": "dayNightTransitionRange",
-							"Value": "0.1f"
+							"Value": "0.1000000015f"
 						}
 					]
 				}
@@ -3367,9 +3849,9 @@
 				],
 				"Volume": 
 				{
-					"Ambient": "0.3f",
+					"Ambient": "0.3000000119f",
 					"Master": "0.75f",
-					"Music": "0.1f",
+					"Music": "0.1000000015f",
 					"SoundEffect": "1.0f"
 				}
 			},
@@ -3385,14 +3867,14 @@
 				"StochasticSamplingSeamFix": "true",
 				"AmbientIntensity": 
 				{
-					"DirectionalLight": "0.1f",
-					"PointLight": "0.1f",
-					"SpotLight": "0.1f"
+					"DirectionalLight": "0.1000000015f",
+					"PointLight": "0.1000000015f",
+					"SpotLight": "0.1000000015f"
 				},
 				"AmbientOcclusion": 
 				{
 					"Type": "HBAO",
-					"Bias": "0.1f",
+					"Bias": "0.1000000015f",
 					"Radius": "2.0f",
 					"Intensity": "2.0f",
 					"Directions": "8",
@@ -3407,7 +3889,7 @@
 					{
 						"Bottom": "6360.0f",
 						"Top": "6420.0f",
-						"Scattering": "0.005802f, 0.013558f, 0.0331f",
+						"Scattering": "0.005801999941f, 0.01355800033f, 0.03310000151f",
 						"Rayleigh": 
 						{
 							"Density": 
@@ -3430,8 +3912,8 @@
 						},
 						"Mie": 
 						{
-							"Extinction": "0.00444f, 0.00444f, 0.00444f",
-							"Scattering": "0.003996f, 0.003996f, 0.003996f",
+							"Extinction": "0.004439999815f, 0.004439999815f, 0.004439999815f",
+							"Scattering": "0.00399600016f, 0.00399600016f, 0.00399600016f",
 							"Density": 
 							[
 								{
@@ -3444,7 +3926,7 @@
 								{
 									"ConstantTerm": "0.0f",
 									"LinearTerm": "0.0f",
-									"ExpScale": "-0.833333f",
+									"ExpScale": "-0.8333330154f",
 									"ExpTerm": "1.0f",
 									"Width": "0.0f"
 								}
@@ -3452,19 +3934,19 @@
 						},
 						"Absorption": 
 						{
-							"Extinction": "0.00065f, 0.001881f, 8.5e-05f",
+							"Extinction": "0.0006500000018f, 0.001881000004f, 8.499999967e-05f",
 							"Density": 
 							[
 								{
-									"ConstantTerm": "-0.666667f",
-									"LinearTerm": "0.066667f",
+									"ConstantTerm": "-0.6666669846f",
+									"LinearTerm": "0.06666699797f",
 									"ExpScale": "0.0f",
 									"ExpTerm": "0.0f",
 									"Width": "25.0f"
 								},
 								{
-									"ConstantTerm": "2.66667f",
-									"LinearTerm": "-0.066667f",
+									"ConstantTerm": "2.666670084f",
+									"LinearTerm": "-0.06666699797f",
 									"ExpScale": "0.0f",
 									"ExpTerm": "0.0f",
 									"Width": "0.0f"
@@ -3474,13 +3956,13 @@
 					},
 					"Ground": 
 					{
-						"Color": "0.1f, 0.1f, 0.1f",
-						"LocalPosition": "0.0f, -6.36e+06.0f, 0.0f"
+						"Color": "0.1000000015f, 0.1000000015f, 0.1000000015f",
+						"LocalPosition": "0.0f, -6360000.0f, 0.0f"
 					},
 					"Sun": 
 					{
-						"Irradiance": "1.474f, 1.8504f, 1.91198f",
-						"Size": "0.02935f"
+						"Irradiance": "1.473999977f, 1.850399971f, 1.911980033f",
+						"Size": "0.0293499995f"
 					}
 				},
 				"ObjectPoolSize": 
@@ -3511,10 +3993,13 @@
 						"Type": "AtmScatteringRenderPass"
 					},
 					{
+						"Type": "LuminanceRenderPass"
+					},
+					{
 						"Type": "BloomRenderPass"
 					},
 					{
-						"Type": "LuminanceRenderPass"
+						"Type": "TonemappingPass"
 					},
 					{
 						"Type": "FinalRenderPass"
@@ -3525,8 +4010,8 @@
 				],
 				"ShadowMapping": 
 				{
-					"BiasScale": "0.00015f",
-					"PenumbraSize": "0.72f",
+					"BiasScale": "0.0001500000071f",
+					"PenumbraSize": "0.7200000286f",
 					"PenumbraScaleRange": "1.0f, 1.0f",
 					"Resolution": "4096",
 					"ZClipping": "true",
@@ -3539,42 +4024,42 @@
 					[
 						{
 							"Distance": "8.0f",
-							"BiasMax": "0.0075f",
+							"BiasMax": "0.007499999832f",
 							"PenumbraScale": "1.0f"
 						},
 						{
 							"Distance": "16.0f",
-							"BiasMax": "0.005f",
+							"BiasMax": "0.004999999888f",
 							"PenumbraScale": "1.0f"
 						},
 						{
 							"Distance": "32.0f",
-							"BiasMax": "0.005f",
+							"BiasMax": "0.004999999888f",
 							"PenumbraScale": "1.0f"
 						},
 						{
 							"Distance": "64.0f",
-							"BiasMax": "0.005f",
+							"BiasMax": "0.004999999888f",
 							"PenumbraScale": "1.0f"
 						},
 						{
 							"Distance": "128.0f",
-							"BiasMax": "0.005f",
+							"BiasMax": "0.004999999888f",
 							"PenumbraScale": "1.0f"
 						},
 						{
 							"Distance": "256.0f",
-							"BiasMax": "0.005f",
+							"BiasMax": "0.004999999888f",
 							"PenumbraScale": "2.0f"
 						},
 						{
 							"Distance": "512.0f",
-							"BiasMax": "0.005f",
+							"BiasMax": "0.004999999888f",
 							"PenumbraScale": "1.0f"
 						},
 						{
 							"Divider": "1.0f",
-							"BiasMax": "0.005f",
+							"BiasMax": "0.004999999888f",
 							"PenumbraScale": "1.0f"
 						}
 					]
@@ -3601,7 +4086,7 @@
 		{
 			"Scene": 
 			{
-				"Gravity": "0.0f, -9.8f, 0.0f",
+				"Gravity": "0.0f, -9.800000191f, 0.0f",
 				"ObjectPoolSize": 
 				{
 					"RigidBodyComponent": "28",

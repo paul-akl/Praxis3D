@@ -28,17 +28,17 @@ public:
 		}
 
 		SingleMeshData(
-			const std::vector<std::string> &p_meshMaterials, 
+			const std::vector<std::string> &p_meshMaterials,
 			const std::vector<glm::vec2> &p_meshMaterialsScales,
 			const std::vector<glm::vec2> &p_meshMaterialFraming,
 			const std::vector<glm::vec4> &p_meshMaterialsColor,
-			const std::string &p_meshName, 
-			const float p_alphaThreshold, 
-			const float p_emissiveIntensity, 
-			const float p_heightScale, 
+			const std::string &p_meshName,
+			const float p_alphaThreshold,
+			const float p_emissiveIntensity,
+			const float p_heightScale,
 			const float p_stochasticSamplingScale,
-			const bool p_active, 
-			const bool p_present, 
+			const bool p_active,
+			const bool p_present,
 			const bool p_stochasticSampling,
 			const TextureWrapType p_textureWrapMode) :
 			m_meshMaterials(p_meshMaterials),
@@ -71,78 +71,30 @@ public:
 	};
 	struct MeshProperties
 	{
-		MeshProperties()
-		{
-			//m_numOfMeshes = 0;
-		}
+		MeshProperties() { }
+		MeshProperties(
+			const FaceCullingSettings p_drawFaceCulling, 
+			const FaceCullingSettings p_shadowFaceCulling) : 
+			m_drawFaceCulling(p_drawFaceCulling), 
+			m_shadowFaceCulling(p_shadowFaceCulling) { }
 
 		void resize(const std::size_t p_size)
 		{
 			if(p_size > m_meshData.size())
 				m_meshData.resize(p_size);
-			//if(p_size > m_numOfMeshes)
-			//{
-			//	m_numOfMeshes = p_size;
-
-			//	// Resize mesh materials
-			//	if(p_size > m_meshMaterials.size())
-			//	{
-			//		std::vector<std::string> emptyStrings(MaterialType::MaterialType_NumOfTypes);
-			//		m_meshMaterials.resize(p_size, emptyStrings);
-			//	}
-
-			//	// Resize mesh materials scale and initialize each element to 1.0f
-			//	const auto oldSize = m_meshMaterialsScale.size();
-			//	if(p_size > oldSize)
-			//	{
-			//		std::vector<glm::vec2> emptyVec2(MaterialType::MaterialType_NumOfTypes, glm::vec2(1.0f, 1.0f));
-			//		m_meshMaterialsScale.resize(p_size, emptyVec2);
-			//	}
-
-			//	// Resize mesh material alpha threshold and initialize each element to 0.0f
-			//	if(p_size > m_alphaThreshold.size())
-			//		m_alphaThreshold.resize(p_size, Config::graphicsVar().alpha_threshold);
-
-			//	// Resize mesh material emissive intensity initialize each element to 0.0f
-			//	if(p_size > m_emissiveIntensity.size())
-			//		m_emissiveIntensity.resize(p_size, Config::graphicsVar().emissive_multiplier);
-
-			//	// Resize mesh material height scale and initialize each element to 1.0f
-			//	if(p_size > m_heightScale.size())
-			//		m_heightScale.resize(p_size, Config::graphicsVar().height_scale);
-
-			//	// Resize the "mesh is active" array and initialize each element to true
-			//	if(p_size > m_active.size())
-			//		m_active.resize(p_size, true);
-
-			//	// Resize the "mesh is present" array and initialize each element to false
-			//	if(p_size > m_present.size())
-			//		m_present.resize(p_size, false);
-
-			//	// Resize the texture wrap mode array and initialize each element to Repeat
-			//	if(p_size > m_textureWrapMode.size())
-			//		m_textureWrapMode.resize(p_size, TextureWrapType::TextureWrapType_Repeat);
-			//}
 		}
 
 		void clear()
 		{
-			//m_numOfMeshes = 0;
 			m_modelName.clear();
 			m_meshData.clear();
-			//m_meshMaterials.clear();
-			//m_meshMaterialsScale.clear();
-			//m_alphaThreshold.clear();
-			//m_emissiveIntensity.clear();
-			//m_heightScale.clear();
-			//m_active.clear();
-			//m_present.clear();
-			//m_textureWrapMode.clear();
 		}
 
 		std::string m_modelName;
-
 		std::vector<SingleMeshData> m_meshData;
+
+		FaceCullingSettings m_drawFaceCulling;
+		FaceCullingSettings m_shadowFaceCulling;
 	};
 	struct ModelsProperties
 	{
@@ -195,7 +147,13 @@ public:
 				// Add a new model data entry, and get a reference to it
 				m_modelData.emplace_back(Loaders::model().load(m_modelsProperties->m_models[modelIndex].m_modelName, false));
 
-				if(!m_modelData.back().m_model.isLoadedToMemory())
+				auto &newModel = m_modelData.back();
+
+				// Add face culling settings
+				newModel.m_drawFaceCulling = m_modelsProperties->m_models[modelIndex].m_drawFaceCulling;
+				newModel.m_shadowFaceCulling = m_modelsProperties->m_models[modelIndex].m_shadowFaceCulling;
+
+				if(!newModel.m_model.isLoadedToMemory())
 					m_modelsNeedLoading = true;
 			}
 		}
@@ -497,6 +455,10 @@ public:
 
 			// Add model filename to the models properties
 			newModelEntry.m_modelName = m_modelData[modelIndex].m_model.getFilename();
+
+			// Add face culling settings
+			newModelEntry.m_drawFaceCulling = m_modelData[modelIndex].m_drawFaceCulling;
+			newModelEntry.m_shadowFaceCulling = m_modelData[modelIndex].m_shadowFaceCulling;
 
 			// Loop over each mesh
 			for(decltype(m_modelData[modelIndex].m_meshes.size()) meshSize = m_modelData[modelIndex].m_meshes.size(), meshIndex = 0; meshIndex < meshSize; meshIndex++)

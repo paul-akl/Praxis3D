@@ -30,11 +30,15 @@ struct WorldComponentsConstructionInfo
 	void deleteConstructionInfo()
 	{
 		if(m_spatialConstructionInfo != nullptr)
+		{
 			delete m_spatialConstructionInfo;
+		}
 		m_spatialConstructionInfo = nullptr;
 
 		if(m_objectMaterialConstructionInfo != nullptr)
+		{
 			delete m_objectMaterialConstructionInfo;
+		}
 		m_objectMaterialConstructionInfo = nullptr;
 	}
 

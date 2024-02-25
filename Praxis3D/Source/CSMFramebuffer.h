@@ -107,10 +107,8 @@ public:
 		glViewport(0, 0, m_bufferWidth, m_bufferHeight);
 		glDepthMask(GL_TRUE);
 		glEnable(GL_DEPTH_TEST);		// Enable depth testing, as this is much like a regular forward render pass
+		glDepthFunc(GL_LEQUAL);
 		glClear(GL_DEPTH_BUFFER_BIT);	// Make sure to clear the depth buffer for the new frame
-		glDisable(GL_CULL_FACE);
-		//glDepthFunc(GL_LEQUAL);
-		//glCullFace(GL_FRONT);			// peter panning
 	}
 
 	// Buffer binding functions

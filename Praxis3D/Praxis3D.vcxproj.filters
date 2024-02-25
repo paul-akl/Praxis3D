@@ -465,6 +465,9 @@
     <ClCompile Include="Source\AboutWindow.cpp">
       <Filter>GUI\Objects\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\GUISystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ErrorCodes.h">
@@ -964,6 +967,9 @@
     </ClInclude>
     <ClInclude Include="Source\AboutWindow.h">
       <Filter>GUI\Objects\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TonemappingPass.h">
+      <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

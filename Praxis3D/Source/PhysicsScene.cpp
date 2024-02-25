@@ -15,6 +15,7 @@ PhysicsScene::PhysicsScene(SystemBase *p_system, SceneLoader *p_sceneLoader) : S
 	m_collisionBroadphase = nullptr;
 	m_dynamicsWorld = nullptr;
 	m_simulationRunning = true;
+	resetErrors();
 }
 
 PhysicsScene::~PhysicsScene()
@@ -71,7 +72,7 @@ ErrorCode PhysicsScene::init()
 	// collision configuration contains default setup for memory , collision setup . Advanced users can create their own configuration .
 	m_collisionConfiguration = new btDefaultCollisionConfiguration();
 
-	// use the default collision dispatcher . For parallel processing you can use a diffent dispatcher(see Extras / BulletMultiThreaded)
+	// use the default collision dispatcher . For parallel processing you can use a different dispatcher (see Extras / BulletMultiThreaded)
 	m_collisionDispatcher = new btCollisionDispatcher(m_collisionConfiguration);
 
 	// btDbvtBroadphase is a good general purpose broadphase . You can also try out btAxis3Sweep .
@@ -128,6 +129,9 @@ void PhysicsScene::exportSetup(PropertySet &p_propertySet)
 
 void PhysicsScene::update(const float p_deltaTime)
 {
+	// Reset errors for this frame
+	resetErrors();
+
 	// Get double buffering index
 	const auto dbIndex = ClockLocator::get().getDoubleBufferingIndexBack();
 
@@ -218,8 +222,13 @@ void PhysicsScene::internalTickCallback(btDynamicsWorld *p_world, btScalar p_tim
 					}
 					else
 					{
-						// Log an error if the dynamic collision event count exceeds the maximum number of supported dynamic events
-						ErrHandlerLoc::get().log(ErrorCode::Collision_max_dynamic_events, ErrorSource::Source_Physics);
+						if(!m_maxDynamicCollisionsErrorIssued)
+						{
+							m_maxDynamicCollisionsErrorIssued = true;
+
+							// Log an error if the dynamic collision event count exceeds the maximum number of supported dynamic events
+							ErrHandlerLoc::get().log(ErrorCode::Collision_max_dynamic_events, ErrorSource::Source_Physics);
+						}
 					}
 
 					// Process the dynamic collision event on the second object
@@ -236,8 +245,13 @@ void PhysicsScene::internalTickCallback(btDynamicsWorld *p_world, btScalar p_tim
 					}
 					else
 					{
-						// Log an error if the dynamic collision event count exceeds the maximum number of supported dynamic events
-						ErrHandlerLoc::get().log(ErrorCode::Collision_max_dynamic_events, ErrorSource::Source_Physics);
+						if(!m_maxStaticCollisionsErrorIssued)
+						{
+							m_maxStaticCollisionsErrorIssued = true;
+
+							// Log an error if the dynamic collision event count exceeds the maximum number of supported dynamic events
+							ErrHandlerLoc::get().log(ErrorCode::Collision_max_dynamic_events, ErrorSource::Source_Physics);
+						}
 					}
 				}
 				else

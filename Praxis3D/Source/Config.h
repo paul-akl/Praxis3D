@@ -36,6 +36,7 @@ enum DataType : uint32_t
 	DataType_AmbientOcclusionData,		// AmbientOcclusionData
 	DataType_GUIPassFunctors,			// FunctorSequence
 	DataType_MiscSceneData,				// MiscSceneData
+	DataType_RenderingPasses,			// RenderingPasses
 	DataType_RenderToTexture,			// bool
 	DataType_RenderToTextureResolution, // glm::ivec2
 	DataType_ShadowMappingData,			// ShadowMappingData
@@ -350,15 +351,19 @@ namespace Properties
 	Code(ChangeController,) \
 	Code(Components,) \
 	Code(Default,) \
+	Code(Enabled,) \
 	Code(File,) \
 	Code(Filename,) \
 	Code(Index,) \
 	Code(Keybindings,) \
 	Code(LoadInBackground,) \
+	Code(Major,) \
+	Code(Minor,) \
 	Code(Name,) \
 	Code(None,) \
 	Code(Objects,) \
 	Code(ObjectPoolSize,) \
+	Code(Patch,) \
 	Code(Scene,) \
 	Code(Source,) \
 	Code(System,) \
@@ -368,6 +373,7 @@ namespace Properties
 	Code(UniversalScene,) \
 	Code(Value,) \
 	Code(Variables,) \
+	Code(Version,) \
 	/* Audio */ \
 	Code(Ambient,) \
 	Code(Audio,) \
@@ -398,6 +404,7 @@ namespace Properties
 	Code(AmbientIntensity, ) \
 	Code(AmbientOcclusion, ) \
 	Code(Attenuation,) \
+	Code(Back,) \
 	Code(Bias,) \
 	Code(BiasScale,) \
 	Code(BiasMax,) \
@@ -425,9 +432,12 @@ namespace Properties
 	Code(EmissiveIntensity,) \
 	Code(EnvironmentMapDynamic,) \
 	Code(EnvironmentMapObject,) \
+	Code(FaceCullingDraw,) \
+	Code(FaceCullingShadow,) \
 	Code(FOV,) \
 	Code(FragmentShader,) \
 	Code(Framing,) \
+	Code(Front,) \
 	Code(GeometryShader,) \
 	Code(Graphics,) \
 	Code(GraphicsObject,) \
@@ -448,9 +458,6 @@ namespace Properties
 	Code(ModelComponent,) \
 	Code(ModelObject,) \
 	Code(ModelPoolSize,) \
-	Code(NegativeX,) \
-	Code(NegativeY,) \
-	Code(NegativeZ,) \
 	Code(Normal,) \
 	Code(ParallaxHeightScale,) \
 	Code(PenumbraScale,) \
@@ -459,9 +466,6 @@ namespace Properties
 	Code(PCF,) \
 	Code(PointLight,) \
 	Code(PointLightPoolSize,) \
-	Code(PositiveX,) \
-	Code(PositiveY,) \
-	Code(PositiveZ,) \
 	Code(PostProcess,) \
 	Code(Renderer,) \
 	Code(Rendering,) \
@@ -490,6 +494,7 @@ namespace Properties
 	Code(TessEvaluationShader,) \
 	Code(TextureTilingFactor,) \
 	Code(TextureScale,) \
+	Code(TonemappingPass,) \
 	Code(Top,) \
 	Code(VertexShader,) \
 	Code(WrapMode,) \
@@ -709,6 +714,7 @@ public:
 			volume_master = 0.5f;
 			volume_music = 1.0f;
 			volume_sfx = 1.0f;
+			max_impact_audio_instances = 10;
 			num_audio_channels = 32;
 			bus_name_ambient = "Ambient";
 			bus_name_master = "";
@@ -732,6 +738,7 @@ public:
 		float volume_master;
 		float volume_music;
 		float volume_sfx;
+		int max_impact_audio_instances;
 		int num_audio_channels;
 		std::string bus_name_ambient;
 		std::string bus_name_master;
@@ -789,11 +796,13 @@ public:
 			gl_context_major_version = 3;
 			gl_context_minor_version = 3;
 			loaders_num_of_unload_per_frame = 1;
+			log_max_num_of_logs = 200;
 			object_directory_init_pool_size = 1000;
 			smoothing_tick_samples = 100;
 			task_scheduler_clock_frequency = 120;
 			running = true;
 			loadingState = true;
+			log_store_logs = true;
 			editorState = false;
 			engineState = EngineStateType::EngineStateType_MainMenu;
 		}
@@ -809,11 +818,13 @@ public:
 		int gl_context_major_version;
 		int gl_context_minor_version;
 		int loaders_num_of_unload_per_frame;
+		int log_max_num_of_logs;
 		int object_directory_init_pool_size;
 		int smoothing_tick_samples;
 		int task_scheduler_clock_frequency;
 		bool running;
 		bool loadingState;
+		bool log_store_logs;
 		bool editorState;
 		EngineStateType engineState;
 	};
@@ -1097,6 +1108,7 @@ public:
 			gui_docking_enabled = true;
 			gui_render = true;
 			gui_dark_style = true;
+			gui_color_pallet = 1;
 			gui_sequence_array_reserve_size = 50;
 			about_window_font_size = 30.0f;
 			editor_asset_selection_button_size_multiplier = 2.0f;
@@ -1142,6 +1154,7 @@ public:
 		bool gui_docking_enabled;
 		bool gui_render;
 		bool gui_dark_style;
+		int gui_color_pallet;
 		int gui_sequence_array_reserve_size;
 		float about_window_font_size;
 		float editor_asset_selection_button_size_multiplier;
@@ -1383,6 +1396,8 @@ public:
 			spot_light_cone = "cone.3ds";
 			stencil_pass_vert_shader = "stencilPass.vert";
 			stencil_pass_frag_shader = "stencilPass.frag";
+			exposure_adaptation_frag_shader = "exposureAdaptation.frag";
+			exposure_adaptation_vert_shader = "exposureAdaptation.vert";
 			geometry_pass_vert_shader = "geometryPass.vert";
 			geometry_pass_frag_shader = "geometryPass.frag";
 			geom_billboard_vert_shader = "geomBillboard.vert";
@@ -1404,9 +1419,11 @@ public:
 			bloom_upscale_comp_shader = "bloomUpscale.comp";
 			blur_pass_vert_shader = "blurPass.vert";
 			blur_pass_frag_shader = "blurPass.frag";
-			csm_pass_frag_shader = "csmPass.frag";
-			csm_pass_geom_shader = "csmPass.geom";
-			csm_pass_vert_shader = "csmPass.vert";
+			csm_pass_layered_frag_shader = "csmPassLayered.frag";
+			csm_pass_layered_geom_shader = "csmPassLayered.geom";
+			csm_pass_layered_vert_shader = "csmPassLayered.vert";
+			csm_pass_single_frag_shader = "csmPassSingle.frag";
+			csm_pass_single_vert_shader = "csmPassSingle.vert";
 			hbao_blur_horizontal_frag_shader = "ambientOcclusionBlurHBAOhorizontal.frag";
 			hbao_blur_horizontal_vert_shader = "ambientOcclusionBlurHBAO.vert";
 			hbao_blur_vertical_frag_shader = "ambientOcclusionBlurHBAOvertical.frag";
@@ -1417,10 +1434,8 @@ public:
 			lense_flare_comp_pass_frag_shader = "lenseFlareCompositePass.frag";
 			lense_flare_pass_vert_shader = "lenseFlarePass.vert";
 			lense_flare_pass_frag_shader = "lenseFlarePass.frag";
-			light_pass_csm_vert_shader = "lightPass_CSM.vert";
-			light_pass_csm_frag_shader = "lightPass_CSM.frag";
-			light_pass_vert_shader = "lightPass_CSM.vert";
-			light_pass_frag_shader = "lightPass_CSM.frag";
+			light_pass_vert_shader = "lightPass.vert";
+			light_pass_frag_shader = "lightPass.frag";
 			final_pass_vert_shader = "finalPass.vert";
 			final_pass_frag_shader = "finalPass.frag";
 			postProcess_pass_vert_shader = "postProcessPass.vert";
@@ -1462,13 +1477,15 @@ public:
 			fxaa_iterations = 12;
 			heightmap_combine_channel = 3;
 			heightmap_combine_texture = 1;
-			max_num_point_lights = 150;
-			max_num_spot_lights = 20;
+			max_num_point_lights = 450;
+			max_num_spot_lights = 50;
 			objects_loaded_per_frame = 1;
 			parallax_mapping_method = 5;
 			render_to_texture_buffer = GBufferTextureType::GBufferEmissive;
 			shader_pool_size = 10;
 			ssao_num_of_samples = 64;
+			csm_face_culling = true;
+			csm_front_face_culling = true;
 			depth_test = true;
 			face_culling = true;
 			fxaa_enabled = true;
@@ -1491,6 +1508,8 @@ public:
 		std::string spot_light_cone;
 		std::string stencil_pass_vert_shader;
 		std::string stencil_pass_frag_shader;
+		std::string exposure_adaptation_frag_shader;
+		std::string exposure_adaptation_vert_shader;
 		std::string geometry_pass_vert_shader;
 		std::string geometry_pass_frag_shader;
 		std::string geom_billboard_vert_shader;
@@ -1512,9 +1531,11 @@ public:
 		std::string bloom_upscale_comp_shader;
 		std::string blur_pass_vert_shader;
 		std::string blur_pass_frag_shader;
-		std::string csm_pass_frag_shader;
-		std::string csm_pass_geom_shader;
-		std::string csm_pass_vert_shader;
+		std::string csm_pass_layered_frag_shader;
+		std::string csm_pass_layered_geom_shader;
+		std::string csm_pass_layered_vert_shader;
+		std::string csm_pass_single_frag_shader;
+		std::string csm_pass_single_vert_shader;
 		std::string hbao_blur_horizontal_frag_shader;
 		std::string hbao_blur_horizontal_vert_shader;
 		std::string hbao_blur_vertical_frag_shader;
@@ -1525,8 +1546,6 @@ public:
 		std::string lense_flare_comp_pass_frag_shader;
 		std::string lense_flare_pass_vert_shader;
 		std::string lense_flare_pass_frag_shader;
-		std::string light_pass_csm_vert_shader;
-		std::string light_pass_csm_frag_shader;
 		std::string light_pass_vert_shader;
 		std::string light_pass_frag_shader;
 		std::string final_pass_vert_shader;
@@ -1577,6 +1596,8 @@ public:
 		int render_to_texture_buffer;
 		int shader_pool_size;
 		int ssao_num_of_samples;
+		bool csm_face_culling;
+		bool csm_front_face_culling;
 		bool depth_test;
 		bool face_culling;
 		bool fxaa_enabled;
@@ -1592,6 +1613,7 @@ public:
 			updateFunctionName = "update";
 			createObjectFunctionName = "create";
 			userTypeTableName = "Types";
+			luaUpdateErrorsEveryFrame = true;
 		}
 
 		std::string defaultScriptFilename;
@@ -1599,6 +1621,7 @@ public:
 		std::string updateFunctionName;
 		std::string createObjectFunctionName;
 		std::string userTypeTableName;
+		bool luaUpdateErrorsEveryFrame;
 	};
 	struct ShaderVariables
 	{
@@ -1745,6 +1768,7 @@ public:
 			define_shadowMapping = "SHADOW_MAPPING";
 			define_stochasticSampling = "STOCHASTIC_SAMPLING";
 			define_stochasticSamplingSeamFix = "STOCHASTIC_SAMPLING_MIPMAP_SEAM_FIX";
+			define_tonemappingMethod = "TONEMAPPING_METHOD";
 		}
 
 		std::string atmScatProjMatUniform;
@@ -1889,6 +1913,7 @@ public:
 		std::string define_shadowMapping;
 		std::string define_stochasticSampling;
 		std::string define_stochasticSamplingSeamFix;
+		std::string define_tonemappingMethod;
 	};
 	struct TextureVariables
 	{
@@ -1978,6 +2003,7 @@ public:
 			resizable = true;
 			vertical_sync = true;
 			window_in_focus = true;
+			window_position_centered = true;
 		}
 
 		std::string name;
@@ -1997,6 +2023,7 @@ public:
 		bool resizable;
 		bool vertical_sync;
 		bool window_in_focus;
+		bool window_position_centered;
 	};
 
 	const inline static AudioVariables		&audioVar()			{ return m_audioVar;		}

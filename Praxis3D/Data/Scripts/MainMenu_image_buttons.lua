@@ -162,6 +162,22 @@ function init ()
 	ErrHandlerLoc.logErrorCode(ErrorCode.Initialize_success, getLuaFilename())
 end
 	
+function drawLoadingScreen()
+	-- Draw the background color
+	GUI.PushStyleColor(ImGuiCol.WindowBg, 0.102, 0.102, 0.102, 255.0)
+	GUI.SetNextWindowPos(0, 0)
+	GUI.SetNextWindowSize(screenSize.x, screenSize.y)
+	GUI.Begin('##LoadingScreen', bitwiseOr(ImGuiWindowFlags.NoDecoration, ImGuiWindowFlags.NoMove, ImGuiWindowFlags.NoSavedSettings, ImGuiWindowFlags.NoMouseInputs))
+	
+	-- Set the CONTINUE button position to be centered at the bottom of the screen
+	GUI.SetCursorPosX((screenSize.x) * 0.5)
+	GUI.SetCursorPosY((screenSize.y) * 0.5)
+	GUI.Text('Loading...')
+	
+	GUI.End()
+	GUI.PopStyleColor()
+end
+	
 function update (p_deltaTime)
 	-- Make sure the mouse is released, so the buttons can be pressed
 	setMouseCapture(false)

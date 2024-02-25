@@ -1,3 +1,7 @@
+/*
+	Luminance histogram shader, compute (luminanceHistogram.comp)
+	Calculates the luminance histogram of the scene by converting color to luminance and incrementing the corresponding bin in the histogram buffer.
+*/
 #version 460
 
 #define GROUP_SIZE 256

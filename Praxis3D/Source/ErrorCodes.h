@@ -65,6 +65,10 @@ DECLARE_ENUM(ErrorType, ERROR_TYPES)
 	Code(Universal_scene_extend_null,) \
 	Code(Universal_scene_extend_duplicate,) \
 	Code(Window_handle_missing,) \
+	/* LUA errors */ \
+	Code(Lua_init_func_failed,) \
+	Code(Lua_load_script_failed,) \
+	Code(Lua_update_func_failed,) \
 	/* Model loader errors */ \
 	Code(AssimpScene_failed,) \
 	/* Object pool errors */ \

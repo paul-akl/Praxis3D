@@ -17,20 +17,22 @@ SpinWait::SpinWait()
 	// exponential backoff technique, and supports cooperative behavior in case 
 	// of oversubscription)
 
-	int result = ::InitializeCriticalSectionAndSpinCount(reinterpret_cast<LPCRITICAL_SECTION>(m_lock), 1000);
-
-	//result;
+	//auto result = ::InitializeCriticalSectionAndSpinCount(reinterpret_cast<LPCRITICAL_SECTION>(m_lock), 1000);
+	auto result = ::InitializeCriticalSectionAndSpinCount(&m_lock, 1000);
 }
 SpinWait::~SpinWait()
 {
-	::DeleteCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_lock));
+	//::DeleteCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_lock));
+	::DeleteCriticalSection(&m_lock);
 }
 
 SpinWait::Lock::Lock(SpinWait &p_spinWait, bool p_readOnly) : m_spinWait(p_spinWait)
 {
-	::EnterCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_spinWait.m_lock));
+	//::EnterCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_spinWait.m_lock));
+	::EnterCriticalSection(&m_spinWait.m_lock);
 }
 SpinWait::Lock::~Lock()
 {
-	::LeaveCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_spinWait.m_lock));
+	//::LeaveCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_spinWait.m_lock));
+	::LeaveCriticalSection(&m_spinWait.m_lock);
 }

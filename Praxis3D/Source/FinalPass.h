@@ -6,7 +6,9 @@
 class FinalPass : public RenderPass
 {
 public:
-	FinalPass(RendererFrontend &p_renderer) : RenderPass(p_renderer, RenderPassType::RenderPassType_Final) 
+	FinalPass(RendererFrontend &p_renderer) : 
+		RenderPass(p_renderer, RenderPassType::RenderPassType_Final),
+		m_shaderFinalPass(nullptr)
 	{
 		updateFxaaSettings();
 	}
@@ -82,7 +84,7 @@ public:
 			m_renderer.passLoadCommandsToBackend();
 		}
 
-		glDepthFunc(GL_LEQUAL);
+		//glDepthFunc(GL_LEQUAL);
 		glDisable(GL_DEPTH_TEST);
 		
 		// Bind final texture for reading so it can be accessed in the shaders
@@ -115,27 +117,27 @@ private:
 		if(shaderError == ErrorCode::Success)
 		{
 			// Enable or disable the FXAA
-			if(ErrorCode shaderVariableError = m_shaderFinalPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_fxaa, m_fxaaEnabled ? 1 : 0); shaderVariableError != ErrorCode::Success)
+			if(ErrorCode shaderVariableError = p_shader->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_fxaa, m_fxaaEnabled ? 1 : 0); shaderVariableError != ErrorCode::Success)
 				ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_fxaa, ErrorSource::Source_FinalPass);
 
 			// Set the minimum FXAA edge threshold
-			if(ErrorCode shaderVariableError = m_shaderFinalPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_fxaa_edge_threshold_min, m_fxaaEdgeThresholdMin); shaderVariableError != ErrorCode::Success)
+			if(ErrorCode shaderVariableError = p_shader->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_fxaa_edge_threshold_min, m_fxaaEdgeThresholdMin); shaderVariableError != ErrorCode::Success)
 				ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_fxaa_edge_threshold_min, ErrorSource::Source_FinalPass);
 
 			// Set the maximum FXAA edge threshold
-			if(ErrorCode shaderVariableError = m_shaderFinalPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_fxaa_edge_threshold_max, m_fxaaEdgeThresholdMax); shaderVariableError != ErrorCode::Success)
+			if(ErrorCode shaderVariableError = p_shader->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_fxaa_edge_threshold_max, m_fxaaEdgeThresholdMax); shaderVariableError != ErrorCode::Success)
 				ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_fxaa_edge_threshold_max, ErrorSource::Source_FinalPass);
 
 			// Set the number of FXAA iterations
-			if(ErrorCode shaderVariableError = m_shaderFinalPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_fxaa_iterations, m_fxaaIterations); shaderVariableError != ErrorCode::Success)
+			if(ErrorCode shaderVariableError = p_shader->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_fxaa_iterations, m_fxaaIterations); shaderVariableError != ErrorCode::Success)
 				ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_fxaa_iterations, ErrorSource::Source_FinalPass);
 
 			// Set the FXAA sub-pixel quality
-			if(ErrorCode shaderVariableError = m_shaderFinalPass->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_fxaa_subpixel_quality, m_fxaaSubpixelQuality); shaderVariableError != ErrorCode::Success)
+			if(ErrorCode shaderVariableError = p_shader->setDefineValue(ShaderType::ShaderType_Fragment, Config::shaderVar().define_fxaa_subpixel_quality, m_fxaaSubpixelQuality); shaderVariableError != ErrorCode::Success)
 				ErrHandlerLoc::get().log(shaderVariableError, Config::shaderVar().define_fxaa_subpixel_quality, ErrorSource::Source_FinalPass);
 
 			// Queue the shader to be loaded to GPU
-			m_renderer.queueForLoading(*m_shaderFinalPass);
+			m_renderer.queueForLoading(*p_shader);
 		}
 
 		return shaderError;

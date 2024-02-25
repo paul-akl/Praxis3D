@@ -1,3 +1,15 @@
+/*
+	Geometry pass shader, vertex (geometryPass.vert)
+	Geometry stage of the deferred rendering, draws scene objects to fill the geometry buffers:
+		position data,
+		albedo (diffuse) color,
+		normal data,
+		emissive color,
+		combined material data (RMHA - roughness, metalness, height, ambien-occlusion)
+	Reconstructs the XYZ normal from a compressed normal texture holding XY.
+	Performs Parallax Occlusion Mapping, if defined.
+	Performs alpha discard, if defined.
+*/
 #version 430 core
 
 #define NUM_OF_MATERIAL_TYPES 4
@@ -71,16 +83,16 @@ void main(void)
 	}
 		
 	// Compute TBN matrix components
-	vec3 T = normalize(normalMatrix * vertexTangent);
-    vec3 B = normalize(normalMatrix * vertexBitangent);
-    vec3 N = normalize(normalMatrix * vertexNormal);
+	const vec3 T = normalize(normalMatrix * vertexTangent);
+    const vec3 B = normalize(normalMatrix * vertexBitangent);
+    const vec3 N = normalize(normalMatrix * vertexNormal);
 	
 	// Compute TBN matrix
     TBN = (mat3(T, B, N));
 	
 #if PARALLAX_MAPPING
 	// Calculate TBN needed for tangent space (used for parallax mapping)
-	mat3 tangentTBN = transpose(TBN);
+	const mat3 tangentTBN = transpose(TBN);
 	
 	// Calculate variables needed for parallax mapping
     tangentCameraPos = tangentTBN * cameraPosVec;

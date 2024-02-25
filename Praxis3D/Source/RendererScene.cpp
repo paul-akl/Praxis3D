@@ -267,6 +267,9 @@ ErrorCode RendererScene::setup(const PropertySet &p_properties)
 					case Properties::ShadowMappingPass:
 						m_renderingPasses.push_back(RenderPassType::RenderPassType_ShadowMapping);
 						break;
+					case Properties::TonemappingPass:
+						m_renderingPasses.push_back(RenderPassType::RenderPassType_Tonemapping);
+						break;
 				}
 			}
 		}
@@ -1429,6 +1432,23 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
 				if(p_deleteAfterReceiving)
 					delete miscSceneData;
+			}
+			break;
+
+		case DataType::DataType_RenderingPasses:
+			{
+				RenderingPasses *renderingPasses = static_cast<RenderingPasses*>(p_data);
+				if(!renderingPasses->empty())
+				{
+					m_renderingPasses = *renderingPasses;
+
+					// Set rendering passes
+					static_cast<RendererSystem *>(m_system)->setRenderingPasses(m_renderingPasses);
+				}
+
+				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
+				if(p_deleteAfterReceiving)
+					delete renderingPasses;
 			}
 			break;
 

@@ -1,3 +1,7 @@
+/*
+	Bloom downscale shader, compute (bloomDownscale.comp)
+	Performs downscaling going from the largest to the smallest mipmap level, while also averaging the color (using on Karis-Average)
+*/
 #version 460
 
 #define GROUP_SIZE         8
@@ -76,6 +80,7 @@ void main()
         vec2 uv_offset = vec2(i % TILE_SIZE, i / TILE_SIZE) * texelSize;
         
         vec4 color = textureLod(inputColorMap, uv + uv_offset, mipLevel);
+		
         storeLDS(i, color);
     }
 

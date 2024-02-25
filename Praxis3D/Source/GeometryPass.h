@@ -139,15 +139,15 @@ public:
 		//glDisable(GL_CULL_FACE);
 
 		// Enable / disable face culling
-		if(Config::rendererVar().face_culling)
-		{
-			glEnable(GL_CULL_FACE);
+		//if(Config::rendererVar().face_culling)
+		//{
+		//	glEnable(GL_CULL_FACE);
 
-			// Set face culling mode
-			glCullFace(Config::rendererVar().face_culling_mode);
-		}
-		else
-			glDisable(GL_CULL_FACE);
+		//	// Set face culling mode
+		//	glCullFace(Config::rendererVar().face_culling_mode);
+		//}
+		//else
+		//	glDisable(GL_CULL_FACE);
 
 
 		//glDepthMask(GL_TRUE);
@@ -156,6 +156,8 @@ public:
 		// Set input and output color maps for this frame
 		p_renderPassData.setColorInputMap(GBufferTextureType::GBufferIntermediate);
 		p_renderPassData.setColorOutputMap(GBufferTextureType::GBufferFinal);
+		//p_renderPassData.setColorInputMap(GBufferTextureType::GBufferFinal);
+		//p_renderPassData.setColorOutputMap(GBufferTextureType::GBufferIntermediate);
 
 		// Bind the geometry framebuffer to be used
 		m_renderer.m_backend.getGeometryBuffer()->bindFramebufferForWriting(GeometryBuffer::GBufferFramebufferType::FramebufferGeometry);
@@ -208,12 +210,30 @@ public:
 									if(modelData[modelIndex].m_meshes[meshIndex].m_heightScale > 0.0f)
 									{
 										// TEXTURE REPETITION and PARALLAX MAPPING enabled
-										m_renderer.queueForDrawing(modelData[modelIndex].m_model[meshIndex], modelData[modelIndex].m_meshes[meshIndex], modelData[modelIndex].m_model.getHandle(), m_shaderGeometryStochasticParallaxMap->getShaderHandle(), m_shaderGeometryStochasticParallaxMap->getUniformUpdater(), modelMatrix, modelViewProjMatrix);
+										m_renderer.queueForDrawing(
+											modelData[modelIndex].m_model[meshIndex], 
+											modelData[modelIndex].m_meshes[meshIndex], 
+											modelData[modelIndex].m_model.getHandle(), 
+											m_shaderGeometryStochasticParallaxMap->getShaderHandle(), 
+											m_shaderGeometryStochasticParallaxMap->getUniformUpdater(), 
+											DrawCommandTextureBinding::DrawCommandTextureBinding_All,
+											modelData[modelIndex].m_drawFaceCulling,
+											modelMatrix, 
+											modelViewProjMatrix);
 									}
 									else
 									{
 										// TEXTURE REPETITION enabled
-										m_renderer.queueForDrawing(modelData[modelIndex].m_model[meshIndex], modelData[modelIndex].m_meshes[meshIndex], modelData[modelIndex].m_model.getHandle(), m_shaderGeometryStochastic->getShaderHandle(), m_shaderGeometryStochastic->getUniformUpdater(), modelMatrix, modelViewProjMatrix);
+										m_renderer.queueForDrawing(
+											modelData[modelIndex].m_model[meshIndex], 
+											modelData[modelIndex].m_meshes[meshIndex], 
+											modelData[modelIndex].m_model.getHandle(), 
+											m_shaderGeometryStochastic->getShaderHandle(), 
+											m_shaderGeometryStochastic->getUniformUpdater(), 
+											DrawCommandTextureBinding::DrawCommandTextureBinding_All,
+											modelData[modelIndex].m_drawFaceCulling,
+											modelMatrix, 
+											modelViewProjMatrix);
 									}
 								}
 								else
@@ -221,12 +241,30 @@ public:
 									if(modelData[modelIndex].m_meshes[meshIndex].m_heightScale > 0.0f)
 									{
 										// PARALLAX MAPPING enabled
-										m_renderer.queueForDrawing(modelData[modelIndex].m_model[meshIndex], modelData[modelIndex].m_meshes[meshIndex], modelData[modelIndex].m_model.getHandle(), m_shaderGeometryParallaxMap->getShaderHandle(), m_shaderGeometryParallaxMap->getUniformUpdater(), modelMatrix, modelViewProjMatrix);
+										m_renderer.queueForDrawing(
+											modelData[modelIndex].m_model[meshIndex], 
+											modelData[modelIndex].m_meshes[meshIndex], 
+											modelData[modelIndex].m_model.getHandle(), 
+											m_shaderGeometryParallaxMap->getShaderHandle(),
+											m_shaderGeometryParallaxMap->getUniformUpdater(), 
+											DrawCommandTextureBinding::DrawCommandTextureBinding_All,
+											modelData[modelIndex].m_drawFaceCulling,
+											modelMatrix, 
+											modelViewProjMatrix);
 									}
 									else
 									{
 										// Regular geometry pass
-										m_renderer.queueForDrawing(modelData[modelIndex].m_model[meshIndex], modelData[modelIndex].m_meshes[meshIndex], modelData[modelIndex].m_model.getHandle(), geomShaderHandle, geomUniformUpdater, modelMatrix, modelViewProjMatrix);
+										m_renderer.queueForDrawing(
+											modelData[modelIndex].m_model[meshIndex], 
+											modelData[modelIndex].m_meshes[meshIndex], 
+											modelData[modelIndex].m_model.getHandle(), 
+											geomShaderHandle, 
+											geomUniformUpdater, 
+											DrawCommandTextureBinding::DrawCommandTextureBinding_All,
+											modelData[modelIndex].m_drawFaceCulling,
+											modelMatrix, 
+											modelViewProjMatrix);
 									}
 								}
 							}
@@ -252,6 +290,7 @@ public:
 							m_renderer.queueForDrawing(modelData[i],
 								shader.getShaderData()->m_shader.getShaderHandle(),
 								shader.getShaderData()->m_shader.getUniformUpdater(),
+								DrawCommandTextureBinding::DrawCommandTextureBinding_All,
 								spatialData.getSpatialDataChangeManager().getWorldTransformWithScale(),
 								m_renderer.m_viewProjMatrix);
 						}

@@ -1,6 +1,6 @@
 /*
-	Final pass shader, vertex (finalPass.vert)
-	Performs FXAA anti-aliasing. Also used to copy color data to the default framebuffer to show on screen.
+	Exposure adaptation shader, vertex (exposureAdaptation.vert)
+	Adjusts exposure by converting the color from RGB to Yxy color space and adjusting the luminosity component based on average scene luminance value.
 */
 #version 430 core
 

@@ -63,7 +63,8 @@ void Config::init()
 	AddVariablePredef(m_audioVar, volume_ambient);
 	AddVariablePredef(m_audioVar, volume_master);
 	AddVariablePredef(m_audioVar, volume_music);
-	AddVariablePredef(m_audioVar, volume_sfx); 
+	AddVariablePredef(m_audioVar, volume_sfx);
+	AddVariablePredef(m_audioVar, max_impact_audio_instances);
 	AddVariablePredef(m_audioVar, num_audio_channels);
 	AddVariablePredef(m_audioVar, bus_name_ambient);
 	AddVariablePredef(m_audioVar, bus_name_master);
@@ -96,9 +97,11 @@ void Config::init()
 	AddVariablePredef(m_engineVar, gl_context_major_version);
 	AddVariablePredef(m_engineVar, gl_context_minor_version);
 	AddVariablePredef(m_engineVar, loaders_num_of_unload_per_frame);
+	AddVariablePredef(m_engineVar, log_max_num_of_logs);
 	AddVariablePredef(m_engineVar, object_directory_init_pool_size);
 	AddVariablePredef(m_engineVar, smoothing_tick_samples);
 	AddVariablePredef(m_engineVar, task_scheduler_clock_frequency);
+	AddVariablePredef(m_engineVar, log_store_logs);
 
 	// Frame-buffer variables
 	AddVariablePredef(m_framebfrVar, gl_position_buffer_internal_format);
@@ -220,6 +223,7 @@ void Config::init()
 	AddVariablePredef(m_GUIVar, gui_docking_enabled);
 	AddVariablePredef(m_GUIVar, gui_render);
 	AddVariablePredef(m_GUIVar, gui_dark_style);
+	AddVariablePredef(m_GUIVar, gui_color_pallet);
 	AddVariablePredef(m_GUIVar, gui_sequence_array_reserve_size);
 	AddVariablePredef(m_GUIVar, about_window_font_size);
 	AddVariablePredef(m_GUIVar, editor_asset_selection_button_size_multiplier);
@@ -386,9 +390,11 @@ void Config::init()
 	AddVariablePredef(m_rendererVar, blur_pass_vert_shader);
 	AddVariablePredef(m_rendererVar, blur_pass_frag_shader);
 	AddVariablePredef(m_rendererVar, csm_bias_scale);
-	AddVariablePredef(m_rendererVar, csm_pass_frag_shader);
-	AddVariablePredef(m_rendererVar, csm_pass_geom_shader);
-	AddVariablePredef(m_rendererVar, csm_pass_vert_shader);
+	AddVariablePredef(m_rendererVar, csm_pass_layered_frag_shader);
+	AddVariablePredef(m_rendererVar, csm_pass_layered_geom_shader);
+	AddVariablePredef(m_rendererVar, csm_pass_layered_vert_shader);
+	AddVariablePredef(m_rendererVar, csm_pass_single_frag_shader);
+	AddVariablePredef(m_rendererVar, csm_pass_single_vert_shader);
 	AddVariablePredef(m_rendererVar, hbao_blur_horizontal_frag_shader);
 	AddVariablePredef(m_rendererVar, hbao_blur_horizontal_vert_shader);
 	AddVariablePredef(m_rendererVar, hbao_blur_vertical_frag_shader);
@@ -399,8 +405,6 @@ void Config::init()
 	AddVariablePredef(m_rendererVar, lense_flare_comp_pass_frag_shader);
 	AddVariablePredef(m_rendererVar, lense_flare_pass_vert_shader);
 	AddVariablePredef(m_rendererVar, lense_flare_pass_frag_shader);
-	AddVariablePredef(m_rendererVar, light_pass_csm_vert_shader);
-	AddVariablePredef(m_rendererVar, light_pass_csm_frag_shader);
 	AddVariablePredef(m_rendererVar, light_pass_vert_shader);
 	AddVariablePredef(m_rendererVar, light_pass_frag_shader);
 	AddVariablePredef(m_rendererVar, final_pass_vert_shader);
@@ -434,6 +438,8 @@ void Config::init()
 	AddVariablePredef(m_rendererVar, parallax_mapping_max_steps);
 	AddVariablePredef(m_rendererVar, csm_num_of_pcf_samples);
 	AddVariablePredef(m_rendererVar, csm_resolution);
+	AddVariablePredef(m_rendererVar, csm_face_culling);
+	AddVariablePredef(m_rendererVar, csm_front_face_culling);
 	AddVariablePredef(m_rendererVar, depth_test_func);
 	AddVariablePredef(m_rendererVar, face_culling_mode);
 	AddVariablePredef(m_rendererVar, fxaa_iterations);
@@ -458,6 +464,7 @@ void Config::init()
 	AddVariablePredef(m_scriptVar, updateFunctionName);
 	AddVariablePredef(m_scriptVar, createObjectFunctionName);
 	AddVariablePredef(m_scriptVar, userTypeTableName);
+	AddVariablePredef(m_scriptVar, luaUpdateErrorsEveryFrame);
 
 	// Shader variables
 	AddVariablePredef(m_shaderVar, atmScatProjMatUniform);
@@ -583,6 +590,7 @@ void Config::init()
 	AddVariablePredef(m_shaderVar, define_shadowMapping);
 	AddVariablePredef(m_shaderVar, define_stochasticSampling);
 	AddVariablePredef(m_shaderVar, define_stochasticSamplingSeamFix);
+	AddVariablePredef(m_shaderVar, define_tonemappingMethod);
 
 	// Texture variables
 	AddVariablePredef(m_textureVar, default_texture);
@@ -633,6 +641,8 @@ void Config::init()
 	AddVariablePredef(m_windowVar, mouse_release_on_lost_focus);
 	AddVariablePredef(m_windowVar, resizable);
 	AddVariablePredef(m_windowVar, vertical_sync);
+	AddVariablePredef(m_windowVar, window_in_focus);
+	AddVariablePredef(m_windowVar, window_position_centered);
 
 	for(int i = Properties::Null; i < Properties::NumberOfPropertyIDs; i++)
 	{

@@ -1,6 +1,6 @@
 /*
-	Tonemapping pass shader, vertex (tonemapping.vert)
-	Performs one of several defined tonemapping methods and gamma-correction
+	Passthrough shader, vertex (passthrough.vert)
+	Simply copies color from the input texture to the output texture.
 */
 #version 430 core
 

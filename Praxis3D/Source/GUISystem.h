@@ -14,6 +14,15 @@ public:
 
 		m_systemName = GetString(Systems::GUI);
 		m_fonts.resize(GuiFontType::GuiFontType_NumOfTypes, nullptr);
+
+		// Set the color pallet
+		if(Config::GUIVar().gui_color_pallet >= 0 && Config::GUIVar().gui_color_pallet < GuiColorPallet::GuiColorPallet_NumOfPallets)
+			m_currentColorPallet = static_cast<GuiColorPallet>(Config::GUIVar().gui_color_pallet);
+		else
+			m_currentColorPallet = GuiColorPallet::GuiColorPallet_Default;
+
+		// Set the GUI colors
+		setColorPallet(m_currentColorPallet);
 	}
 	~GUISystem()
 	{
@@ -127,6 +136,9 @@ protected:
 		}
 	}
 
+	void setColorPallet(const GuiColorPallet p_colorPallet);
+
 	GUIScene *m_GUIScenes[EngineStateType::EngineStateType_NumOfTypes];
 	std::vector<ImFont *> m_fonts;
+	GuiColorPallet m_currentColorPallet;
 };

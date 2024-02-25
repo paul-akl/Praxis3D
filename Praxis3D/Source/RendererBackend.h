@@ -62,7 +62,9 @@ public:
 					const unsigned int p_matNormal,
 					const unsigned int p_matEmissive,
 					const unsigned int p_matCombined,
+					const FaceCullingSettings p_faceCulling,
 					const MaterialData p_materialData,
+					const DrawCommandTextureBinding p_textureBindingType,
 					const int p_matWrapMode) :
 
 			m_uniformUpdater(&p_uniformUpdater), 
@@ -76,7 +78,9 @@ public:
 			m_matNormal(p_matNormal),
 			m_matEmissive(p_matEmissive),
 			m_matCombined(p_matCombined),
+			m_faceCullingSettings(p_faceCulling),
 			m_materialData(p_materialData),
+			m_textureBindingType(p_textureBindingType),
 			m_matWrapMode(p_matWrapMode) { }
 
 		ShaderUniformUpdater *m_uniformUpdater;
@@ -94,7 +98,10 @@ public:
 		unsigned int m_matEmissive;
 		unsigned int m_matCombined;
 
+		FaceCullingSettings m_faceCullingSettings;
+
 		MaterialData m_materialData;
+		DrawCommandTextureBinding m_textureBindingType;
 
 		int m_matWrapMode;
 	};
@@ -482,6 +489,14 @@ protected:
 			m_lastFrameUpdate = 0;
 			m_lastModelUpdate = 0;
 			m_lastMeshUpdate = 0;
+
+			resetBoundTextures();
+		}
+
+		inline void resetBoundTextures()
+		{
+			for(unsigned int i = 0; i < MaterialType::MaterialType_NumOfTypes; i++)
+				m_lastBoundTextures[i] = 0;
 		}
 
 		unsigned int m_boundUniformBuffer;
@@ -492,6 +507,12 @@ protected:
 		unsigned int m_lastFrameUpdate;
 		unsigned int m_lastModelUpdate;
 		unsigned int m_lastMeshUpdate;
+
+		unsigned int m_lastBoundTextures[MaterialType::MaterialType_NumOfTypes];
+
+		FaceCullingSettings m_lastFaceCullingSettings;
+
+		MaterialData m_materialData;
 	};
 	
 	// Holds buffer parameters
@@ -525,6 +546,9 @@ protected:
 			// Bind the shader
 			glUseProgram(p_shaderHandle);
 			m_rendererState.m_boundShader = p_shaderHandle;
+
+			// Reset the bound textures because the shader changed
+			m_rendererState.resetBoundTextures();
 		}
 	}
 	inline void bindVAO(const unsigned int p_VAO)
@@ -535,6 +559,33 @@ protected:
 			// Bind the VAO
 			glBindVertexArray(p_VAO);
 			m_rendererState.m_boundVAO = p_VAO;
+		}
+	}
+	inline void setFaceCullEnable(const bool p_enable)
+	{
+		if(m_rendererState.m_lastFaceCullingSettings.m_faceCullingEnabled != p_enable)
+		{
+			m_rendererState.m_lastFaceCullingSettings.m_faceCullingEnabled = p_enable;
+
+			// Enable / disable face culling
+			if(p_enable)
+				glEnable(GL_CULL_FACE);
+			else
+				glDisable(GL_CULL_FACE);
+		}
+	}
+	inline void setBackFaceCull(const bool p_cullBackFace)
+	{
+		if(m_rendererState.m_lastFaceCullingSettings.m_faceCullingEnabled && 
+			m_rendererState.m_lastFaceCullingSettings.m_backFaceCulling != p_cullBackFace)
+		{
+			m_rendererState.m_lastFaceCullingSettings.m_backFaceCulling = p_cullBackFace;
+
+			// Set face culling face type
+			if(p_cullBackFace)
+				glCullFace(GL_BACK);
+			else
+				glCullFace(GL_FRONT);
 		}
 	}
 	inline void resetVAO() 

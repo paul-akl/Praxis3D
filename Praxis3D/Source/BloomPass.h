@@ -84,11 +84,15 @@ public:
 			glm::uvec2 mipmapSize = glm::uvec2(imageWidth / 2, imageHeight / 2);
 			unsigned int mipmapLevels = calculateMipmapLevels(imageWidth, imageHeight, (unsigned int)Config::graphicsVar().bloom_mipmap_limit, (unsigned int)Config::graphicsVar().bloom_downscale_limit);
 
-			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferFinal, GBufferTextureType::GBufferInputTexture);
+			//m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferFinal, GBufferTextureType::GBufferInputTexture);
+			m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(p_renderPassData.getColorInputMap(), GBufferTextureType::GBufferInputTexture);
 
 			// Bloom downscaling
 			for(unsigned int i = 0; i < mipmapLevels - 1; i++)
 			{
+				if(i > 0)
+					m_renderer.m_backend.getGeometryBuffer()->bindBufferForReading(GBufferTextureType::GBufferFinal, GBufferTextureType::GBufferInputTexture);
+
 				// Assign the texel size and mipmap level so it can be sent to the shader
 				m_renderer.m_frameData.m_texelSize = 1.0f / glm::vec2(mipmapSize);
 				m_renderer.m_frameData.m_mipLevel = i;
@@ -135,6 +139,9 @@ public:
 				m_renderer.passComputeDispatchCommandsToBackend();
 			}
 		}
+
+		if(p_renderPassData.getColorInputMap() != GBufferTextureType::GBufferFinal)
+			p_renderPassData.swapColorInputOutputMaps();
 	}
 
 private:

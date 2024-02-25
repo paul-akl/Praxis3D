@@ -7,6 +7,191 @@
 #include "Math.h"
 #include "PropertySet.h"
 
+// Stores two template objects to be used for double buffering
+template <class T_Object>
+struct DoubleBufferedContainer
+{
+	DoubleBufferedContainer()
+	{
+		m_swapFlag = false;
+	}
+
+	T_Object &getFront() { return m_buffers[(int)m_swapFlag]; }
+	T_Object &getBack() { return m_buffers[(int)!m_swapFlag]; }
+
+	void swapBuffer() { m_swapFlag = !m_swapFlag; }
+
+	bool m_swapFlag;
+
+	T_Object m_buffers[2];
+};
+
+// Contains GUI settings for an editor window
+struct EditorWindowSettings
+{
+	EditorWindowSettings()
+	{
+		m_enabled = true;
+	}
+
+	bool m_enabled;
+};
+
+// Stores an engine change type and all associated data needed for that change
+struct EngineChangeData
+{
+	EngineChangeData(const EngineChangeType p_changeType = EngineChangeType::EngineChangeType_None, const EngineStateType p_engineStateType = EngineStateType::EngineStateType_Default) : m_changeType(p_changeType), m_engineStateType(p_engineStateType) { }
+	EngineChangeData(const EngineChangeType p_changeType, const EngineStateType p_engineStateType, const std::string &p_filename) : m_changeType(p_changeType), m_engineStateType(p_engineStateType), m_filename(p_filename) { }
+	EngineChangeData(const EngineChangeType p_changeType, const EngineStateType p_engineStateType, const PropertySet &p_sceneProperties) : m_changeType(p_changeType), m_engineStateType(p_engineStateType), m_sceneProperties(p_sceneProperties) { }
+	~EngineChangeData() { }
+
+	void setChangeType(const EngineChangeType p_changeType) { m_changeType = p_changeType; }
+	void setEngineStateType(const EngineStateType p_engineStateType) { m_engineStateType = p_engineStateType; }
+	void setFilename(const std::string &p_filename) { m_filename = p_filename; }
+
+	EngineChangeType m_changeType;
+	EngineStateType m_engineStateType;
+	std::string m_filename;
+	PropertySet m_sceneProperties;
+};
+
+// Contains Major, Minor and Patch engine version values
+struct EngineVersion
+{
+	EngineVersion() : m_major(-1), m_minor(-1), m_patch(-1) { }
+	EngineVersion(const int p_major, const int p_minor, const int p_patch) :
+		m_major(p_major), m_minor(p_minor), m_patch(p_patch) { }
+
+	void reset()
+	{
+		m_major = -1;
+		m_minor = -1;
+		m_patch = -1;
+	}
+
+	inline int getVersionSingleFormat() const noexcept
+	{
+		if(valid())
+			return (m_major * 1000000) + (m_minor * 1000) + m_patch;
+
+		return 0;
+	}
+
+	inline bool valid() const noexcept
+	{
+		if(m_major < 0)
+			return false;
+		if(m_minor < 0)
+			return false;
+		if(m_patch < 0)
+			return false;
+		return true;
+	}
+
+	inline explicit operator bool() const noexcept { return valid(); }
+
+	const inline bool operator==(const EngineVersion &p_version) const noexcept
+	{
+		return (getVersionSingleFormat() == p_version.getVersionSingleFormat());
+	}
+	const inline bool operator<(const EngineVersion &p_version) const noexcept
+	{
+		return (getVersionSingleFormat() < p_version.getVersionSingleFormat());
+	}
+	const inline bool operator>(const EngineVersion &p_version) const noexcept
+	{
+		return (getVersionSingleFormat() > p_version.getVersionSingleFormat());
+	}
+
+	int m_major;
+	int m_minor;
+	int m_patch;
+};
+
+// Stores an entity ID and a component type, used for sending data to create / delete components
+struct EntityAndComponent
+{
+	//EntityAndComponent() : m_entityID(NULL_ENTITY_ID), m_componentType(ComponentType::ComponentType_None) { }
+	EntityAndComponent(const EntityID p_entityID, const ComponentType p_componentType) : m_entityID(p_entityID), m_componentType(p_componentType) { }
+
+	EntityID m_entityID;
+	ComponentType m_componentType;
+};
+
+// Stores settings for face culling
+struct FaceCullingSettings
+{
+	FaceCullingSettings() : m_faceCullingEnabled(true), m_backFaceCulling(true) { }
+	FaceCullingSettings(const bool p_faceCullingEnabled, const bool p_backFaceCulling) : m_faceCullingEnabled(p_faceCullingEnabled), m_backFaceCulling(p_backFaceCulling) { }
+
+	bool m_faceCullingEnabled;
+	bool m_backFaceCulling;
+};
+
+// Stores a vector of std::functions (Functors) and methods to add, clear and get them
+struct FunctorSequence
+{
+	FunctorSequence() { }
+
+	template<typename Functor>
+	inline void addFunctor(Functor p_functor) { m_functors.push_back(p_functor); }
+
+	const Functors &getFunctors() const { return m_functors; }
+
+	void clear() { m_functors.clear(); }
+
+	Functors m_functors;
+};
+
+// Stores all GUI data
+struct GUIData
+{
+	GUIData()
+	{
+		clear();
+	}
+
+	// Set all the data to default
+	void clear()
+	{
+		m_functors.clear();
+	}
+
+	Functors m_functors;
+};
+
+// Packs a single unsigned 64bit int into two unsigned 32bit ints
+struct Int64Packer
+{
+	Int64Packer() : x(0), y(0) { }
+	Int64Packer(unsigned __int64 p_int) { set(p_int); }
+
+	inline void set(const unsigned __int64 p_int)
+	{
+		x = (unsigned __int32)(p_int >> 32);
+		y = (unsigned __int32)p_int;
+	}
+
+	inline unsigned __int64 get() const { return ((unsigned __int64)x) << 32 | y; }
+
+	unsigned __int32 x, y;
+};
+
+// Stores all physics data
+struct PhysicsData
+{
+	PhysicsData()
+	{
+		clear();
+	}
+
+	// Set all the data to default
+	void clear()
+	{
+
+	}
+};
+
 // Stores all spatial data (position, rotation, scale)
 struct SpatialData
 {	
@@ -77,127 +262,11 @@ struct SpatialTransformData
 	glm::mat4 m_transformMatNoScale;
 };
 
-// Stores all GUI data
-struct GUIData
-{
-	GUIData()
-	{
-		clear();
-	}	
-
-	// Set all the data to default
-	void clear()
-	{
-		m_functors.clear();
-	}
-
-	Functors m_functors;
-};
-
-// Stores all physics data
-struct PhysicsData
-{
-	PhysicsData()
-	{
-		clear();
-	}
-
-	// Set all the data to default
-	void clear()
-	{
-
-	}
-};
-
-// Packs a single unsigned 64bit int into two unsigned 32bit ints
-struct Int64Packer
-{
-	Int64Packer() : x(0), y(0) { }
-	Int64Packer(unsigned __int64 p_int) { set(p_int); }
-
-	inline void set(const unsigned __int64 p_int)
-	{
-		x = (unsigned __int32)(p_int >> 32);
-		y = (unsigned __int32)p_int;
-	}
-
-	inline unsigned __int64 get() const { return ((unsigned __int64)x) << 32 | y; }
-
-	unsigned __int32 x, y;
-};
-
-// Contains GUI settings for an editor window
-struct EditorWindowSettings
-{
-	EditorWindowSettings()
-	{
-		m_enabled = true;
-	}
-
-	bool m_enabled;
-};
-
-// Stores a vector of std::functions (Functors) and methods to add, clear and get them
-struct FunctorSequence
-{
-	FunctorSequence() { }
-
-	template<typename Functor>
-	inline void addFunctor(Functor p_functor) { m_functors.push_back(p_functor); }
-
-	const Functors &getFunctors() const { return m_functors; }
-
-	void clear() { m_functors.clear(); }
-
-	Functors m_functors;
-};
-
-// Stores two template objects to be used for double buffering
-template <class T_Object>
-struct DoubleBufferedContainer
-{
-	DoubleBufferedContainer() 
-	{
-		m_swapFlag = false;
-	}
-
-	T_Object &getFront() { return m_buffers[(int)m_swapFlag]; }
-	T_Object &getBack() { return m_buffers[(int)!m_swapFlag]; }
-
-	void swapBuffer() { m_swapFlag = !m_swapFlag; }
-
-	bool m_swapFlag;
-
-	T_Object m_buffers[2];
-};
-
-// Stores an engine change type and all associated data needed for that change
-struct EngineChangeData
-{
-	EngineChangeData(const EngineChangeType p_changeType = EngineChangeType::EngineChangeType_None, const EngineStateType p_engineStateType = EngineStateType::EngineStateType_Default) : m_changeType(p_changeType), m_engineStateType(p_engineStateType) { }
-	EngineChangeData(const EngineChangeType p_changeType, const EngineStateType p_engineStateType, const std::string &p_filename) : m_changeType(p_changeType), m_engineStateType(p_engineStateType), m_filename(p_filename) { }
-	EngineChangeData(const EngineChangeType p_changeType, const EngineStateType p_engineStateType, const PropertySet &p_sceneProperties) : m_changeType(p_changeType), m_engineStateType(p_engineStateType), m_sceneProperties(p_sceneProperties) { }
-	~EngineChangeData() { }
-
-	void setChangeType(const EngineChangeType p_changeType) { m_changeType = p_changeType; }
-	void setEngineStateType(const EngineStateType p_engineStateType) { m_engineStateType = p_engineStateType; }
-	void setFilename(const std::string &p_filename) { m_filename = p_filename; }
-
-	EngineChangeType m_changeType;
-	EngineStateType m_engineStateType;
-	std::string m_filename;
-	PropertySet m_sceneProperties;
-};
-
-// Stores an entity ID and a component type, used for sending data to create / delete components
-struct EntityAndComponent
-{
-	//EntityAndComponent() : m_entityID(NULL_ENTITY_ID), m_componentType(ComponentType::ComponentType_None) { }
-	EntityAndComponent(const EntityID p_entityID, const ComponentType p_componentType) : m_entityID(p_entityID), m_componentType(p_componentType) { }
-
-	EntityID m_entityID;
-	ComponentType m_componentType;
-};
+/*	 _______________________________
+	|								|
+	|   Renderer data containers:	|
+	|_______________________________|
+*/
 
 // Stores settings for atmospheric light scattering
 struct AtmosphericScatteringData
