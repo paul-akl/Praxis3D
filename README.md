@@ -6,7 +6,7 @@ Written in C++/20, using OpenGL graphics API.
 Shaders are coded in GLSL and gameplay scripts in LUA.
 Scene files are saved in a modified JSON format.
 
-More information and media can be found at the [project page](http://pauldev.org/project-praxis3d.html).
+More information and media can be found at the [project page](https://pauldev.org/project-praxis3d.html).
 
 ### In-game demo video (YouTube link):
 [![Praxis3D-demo](https://img.youtube.com/vi/VWo4p8f9otY/0.jpg)](https://www.youtube.com/watch?v=VWo4p8f9otY)
@@ -52,7 +52,7 @@ They will contain all the required DLLs and minimal assets to run a demo map.
 ![Praxis3D-2](https://i.imgur.com/ALJ0bMm.jpg)
 ![Praxis3D-3](https://i.imgur.com/TsIDcI1.jpg)
 ![Praxis3D-4](https://i.imgur.com/1MMKrDY.jpg)
-![Praxis3D-5](https://i.imgur.com/undefined.jpg)
+![Praxis3D-5](https://i.imgur.com/USlG6HK.jpg)
 ![Praxis3D-6](https://i.imgur.com/whdZFYq.jpg)
 ![Praxis3D-7](https://i.imgur.com/ssr3XVr.jpg)
 ![Praxis3D-8](https://i.imgur.com/LChDbaX.jpg)
