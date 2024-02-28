@@ -48,7 +48,7 @@ They will contain all the required DLLs and minimal assets to run a demo map.
 
 ## Screenshots:
 
-![Praxis3D-1](https://i.imgur.com/kexWaxK.jpg)
+![Praxis3D-1](https://i.imgur.com/N2ODD7U.jpg)
 ![Praxis3D-2](https://i.imgur.com/ALJ0bMm.jpg)
 ![Praxis3D-3](https://i.imgur.com/TsIDcI1.jpg)
 ![Praxis3D-4](https://i.imgur.com/1MMKrDY.jpg)
