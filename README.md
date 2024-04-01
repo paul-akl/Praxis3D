@@ -6,11 +6,13 @@ Written in C++/20, using OpenGL graphics API.
 Shaders are coded in GLSL and gameplay scripts in LUA.
 Scene files are saved in a modified JSON format.
 
-More information and media can be found at the [project page](https://pauldev.org/project-praxis3d.html).
+More information and media can be found at the [project page](https://pauldev.org/project-praxis3d).
 
 ### In-game demo video (YouTube link):
 [![Praxis3D-demo](https://img.youtube.com/vi/VWo4p8f9otY/0.jpg)](https://www.youtube.com/watch?v=VWo4p8f9otY)
 
+### Map editor demo video (YouTube link):
+[![Praxis3D-editor-demo](https://img.youtube.com/vi/hpmvm1jxZAc/0.jpg)](https://www.youtube.com/watch?v=hpmvm1jxZAc)
 
 ## Main features:
 - Atmospheric light scattering
@@ -116,9 +118,4 @@ DEALINGS IN THE SOFTWARE.
 
 ## Contacts:
 
-Ways to reach me can be found at my [website](http://pauldev.org/contact.html).
-### Contacts ###
-
-www.pauldev.org
-
-paulcodedev@gmail.com
+Ways to reach me can be found at my [website](https://pauldev.org/contact).
