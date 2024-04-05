@@ -1,4 +1,4 @@
-![Praxis3D-logo](https://i.imgur.com/5vsuh0X.png)
+![Praxis3D-logo](https://i.imgur.com/kSdU1DW.png)
 
 A work-in-progress 3D game engine. Its purpose is to serve as a testbed for new ideas and implementations. My aim is to improve my skills and learn everything I can by exposing myself to every part of a game engine. I have been working on it during my free time for quite a while, motivated only by my passion for programming and problem-solving.
 
