@@ -5,7 +5,13 @@ function init ()
 	create(Types.SpatialDataManager, 'spatialData');
 		
 	enabled = false
-	moveSpeed = 2.0
+	--moveSpeed = 2.0
+	
+	if sunMoveSpeed then
+		moveSpeed = sunMoveSpeed
+	else
+		moveSpeed = 5.0
+	end
 	
 	create(Types.KeyCommand, 'forwardKey')
 	create(Types.KeyCommand, 'backwardKey')
@@ -24,11 +30,13 @@ function update (p_deltaTime)
 	
 	if forwardKey:isActivated() then
 		eulerAngle.x = eulerAngle.x + (moveSpeed * p_deltaTime)
+		--eulerAngle.y = eulerAngle.y + (moveSpeed * p_deltaTime)
 		angleChanged = true
 	end	
 	
 	if backwardKey:isActivated() then
 		eulerAngle.x = eulerAngle.x - (moveSpeed * p_deltaTime)
+		--eulerAngle.y = eulerAngle.y - (moveSpeed * p_deltaTime)
 		angleChanged = true
 	end	
 	

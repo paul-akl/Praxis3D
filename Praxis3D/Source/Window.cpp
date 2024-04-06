@@ -192,7 +192,9 @@ void Window::handleEvents()
 		else
 		{
 			// If GUI is enabled, send the event to it
-			if(m_enableGUI && !Config::m_windowVar.mouse_captured)
+			// A fix for right mouse button being stuck down (in ImGui) when moving the camera around in the editor, which forces mouse capturing and in turn doesn't send the mouse up events to ImGui:
+			// send the mouse button up events to ImGui even when mouse capturing is turned on
+			if(m_enableGUI && (!Config::m_windowVar.mouse_captured || SDLEvent.type == SDL_MOUSEBUTTONUP))
 				m_guiHandler->processSDLEvent(SDLEvent);
 				
 			handleSDLEvent(SDLEvent);
@@ -356,8 +358,8 @@ void Window::handleSDLEvent(const SDL_Event &p_SDLEvent)
 						m_binds[Scancode::Mouse_x2].activate();
 						break;
 				}
-				break;
 			}
+			break;
 		}
 
 	case SDL_MOUSEBUTTONUP:

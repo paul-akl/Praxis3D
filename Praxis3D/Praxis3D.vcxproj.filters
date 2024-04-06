@@ -466,7 +466,7 @@
       <Filter>GUI\Objects\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\GUISystem.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>GUI\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

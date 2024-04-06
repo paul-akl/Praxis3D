@@ -122,10 +122,11 @@ public:
 		p_constructionInfo.m_name = p_component.getName();
 
 		p_constructionInfo.m_friction = p_component.getRigidBody()->getFriction();
-		p_constructionInfo.m_kinematic = p_component.getRigidBody()->isKinematicObject();
+		p_constructionInfo.m_rollingFriction = p_component.getRigidBody()->getRollingFriction();
+		p_constructionInfo.m_spinningFriction = p_component.getRigidBody()->getSpinningFriction();
 		p_constructionInfo.m_mass = p_component.getRigidBody()->getMass();
 		p_constructionInfo.m_restitution = p_component.getRigidBody()->getRestitution();
-		p_constructionInfo.m_rollingFriction = p_component.getRigidBody()->getRollingFriction();
+		p_constructionInfo.m_kinematic = p_component.getRigidBody()->isKinematicObject();
 		p_constructionInfo.m_collisionShapeType = p_component.getCollisionShapeType();
 		p_constructionInfo.m_collisionShapeSize = p_component.getCollisionShapeSize();
 		p_constructionInfo.m_linearVelocity = Math::toGlmVec3(p_component.getRigidBody()->getLinearVelocity());

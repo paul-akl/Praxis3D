@@ -305,7 +305,8 @@ struct AtmosphericScatteringData
 		m_planetCenterPosition = glm::vec3(0.0f, -6360000.0f, 0.0f);
 
 		m_sunIrradiance = glm::vec3(1.474000f, 1.850400f, 1.911980f);
-		m_sunSize = 0.00935f;
+		m_sunSize = 0.02935f;
+		//m_sunSize = 0.00935f; old value
 	}
 
 	// Atmosphere
@@ -486,6 +487,28 @@ struct ShadowMappingData
 		m_numOfPCFSamples = Config::rendererVar().csm_num_of_pcf_samples;
 		m_shadowMappingEnabled = false;
 		m_zClipping = false;
+	}
+
+	void setDefaultValues()
+	{
+		m_penumbraScaleRange = glm::vec2(Config::rendererVar().csm_penumbra_size_scale_min, Config::rendererVar().csm_penumbra_size_scale_max);
+		m_csmBiasScale = Config::rendererVar().csm_bias_scale;
+		m_csmCascadePlaneZMultiplier = 10.0f;
+		m_penumbraSize = Config::rendererVar().csm_penumbra_size;
+		m_csmResolution = Config::rendererVar().csm_resolution;
+		m_numOfPCFSamples = Config::rendererVar().csm_num_of_pcf_samples;
+		m_shadowMappingEnabled = true;
+		m_zClipping = true;
+
+		// Populate the cascade vector with default entries
+		m_shadowCascadePlaneDistances.emplace_back(8.0f, false, 0.0075f, 1.0f);
+		m_shadowCascadePlaneDistances.emplace_back(16.0f, false, 0.0005f, 1.0f);
+		m_shadowCascadePlaneDistances.emplace_back(32.0f, false, 0.0005f, 1.0f);
+		m_shadowCascadePlaneDistances.emplace_back(64.0f, false, 0.0005f, 1.0f);
+		m_shadowCascadePlaneDistances.emplace_back(128.0f, false, 0.0005f, 1.0f);
+		m_shadowCascadePlaneDistances.emplace_back(256.0f, false, 0.0005f, 1.0f);
+		m_shadowCascadePlaneDistances.emplace_back(512.0f, false, 0.0005f, 1.0f);
+		m_shadowCascadePlaneDistances.emplace_back(1.0f, true, 0.0005f, 1.0f);
 	}
 
 	std::vector<ShadowCascadeData> m_shadowCascadePlaneDistances;

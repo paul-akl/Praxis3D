@@ -385,18 +385,25 @@ SystemObject *PhysicsScene::createComponent(const EntityID &p_entityID, const Ri
 			switch(component.m_collisionShapeType)
 			{
 				case RigidBodyComponent::CollisionShapeType::CollisionShapeType_Box:
-				{
-					btVector3 boxHalfExtents = Math::toBtVector3(p_constructionInfo.m_collisionShapeSize);
-					component.m_collisionShape.m_boxShape = new btBoxShape(boxHalfExtents);
-				}
-				break;
+					{
+						btVector3 boxHalfExtents = Math::toBtVector3(p_constructionInfo.m_collisionShapeSize);
+						component.m_collisionShape.m_boxShape = new btBoxShape(boxHalfExtents);
+					}
+					break;
 
 				case RigidBodyComponent::CollisionShapeType::CollisionShapeType_Sphere:
-				{
-					float radius = p_constructionInfo.m_collisionShapeSize.x;
-					component.m_collisionShape.m_sphereShape = new btSphereShape(radius);
-				}
-				break;
+					{
+						float radius = p_constructionInfo.m_collisionShapeSize.x;
+						component.m_collisionShape.m_sphereShape = new btSphereShape(radius);
+					}
+					break;
+
+				case RigidBodyComponent::CollisionShapeType::CollisionShapeType_Cylinder:
+					{
+						btVector3 cylinderHalfExtents = Math::toBtVector3(p_constructionInfo.m_collisionShapeSize);
+						component.m_collisionShape.m_cylinderShape = new btCylinderShape(cylinderHalfExtents);
+					}
+					break;
 			}
 
 			// Success on the loaded collision shape

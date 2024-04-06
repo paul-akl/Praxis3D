@@ -319,8 +319,14 @@ namespace Systems
 			static constexpr BitMask Kinematic				= Changes::Type::Physics + Changes::Common::Shared8;
 			static constexpr BitMask Gravity				= Changes::Type::Physics + Changes::Common::Shared9;
 
-			static constexpr BitMask All					= CollisionShapeType | CollisionShapeSize | Friction | RollingFriction | 
+			static constexpr BitMask Impulse				= Changes::Type::Physics + Changes::Common::Shared10;
+			static constexpr BitMask Torque					= Changes::Type::Physics + Changes::Common::Shared11;
+
+			static constexpr BitMask AllDynamic				= Impulse | Torque;
+			static constexpr BitMask AllStatic				= CollisionShapeType | CollisionShapeSize | Friction | RollingFriction |
 																SpinningFriction | Mass | Restitution | Kinematic | Gravity;
+
+			static constexpr BitMask All					= AllDynamic | AllStatic;
 		}
 		namespace Script
 		{
@@ -976,7 +982,7 @@ public:
 			render_to_texture_resolution_y = 900;
 			tonemap_method = 6;
 			alpha_threshold = 0.0f;
-			ambient_intensity_directional = 0.3f;
+			ambient_intensity_directional = 0.1f;
 			ambient_intensity_point = 0.1f;
 			ambient_intensity_spot = 0.1f;
 			ao_hbao_bias = 0.1f;
@@ -1450,9 +1456,9 @@ public:
 			ssao_pass_frag_shader = "ambientOcclusionPassSSAO.frag";
 			ssao_pass_vert_shader = "ambientOcclusionPassSSAO.vert";
 			texture_repetition_noise_texture = "gray_noise_medium.png";
-			csm_bias_scale = 0.0004f;
+			csm_bias_scale = 0.00015f;
 			csm_max_shadow_bias = 0.0005f;
-			csm_penumbra_size = 1.42f;
+			csm_penumbra_size = 0.720f;
 			csm_penumbra_size_scale_min = 1.0f;
 			csm_penumbra_size_scale_max = 2000.0f;
 			current_viewport_position_x = 0.0f;
@@ -1469,7 +1475,7 @@ public:
 			parallax_mapping_min_steps = 8.0f;
 			parallax_mapping_max_steps = 32.0f;
 			csm_num_of_pcf_samples = 16;
-			csm_resolution = 2048;
+			csm_resolution = 4096;
 			current_viewport_size_x = 0;
 			current_viewport_size_y = 0;
 			depth_test_func = GL_LESS;

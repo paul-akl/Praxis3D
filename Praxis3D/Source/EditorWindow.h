@@ -803,6 +803,8 @@ private:
 
 			m_aoData.setDefaultValues();
 
+			m_shadowMappingData.setDefaultValues();
+
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_ShadowMapping);
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_Geometry);
 			m_renderingPasses.push_back(RenderPassType::RenderPassType_AmbientOcclusion);

@@ -92,6 +92,9 @@ void RigidBodyComponent::changeOccurred(ObservedSubject *p_subject, BitMask p_ch
 		case CollisionShapeType::CollisionShapeType_ConvexHull:
 			break;
 		case CollisionShapeType::CollisionShapeType_Cylinder:
+			m_collisionShape.m_cylinderShape->setImplicitShapeDimensions(Math::toBtVector3(
+				p_subject->getVec3(this, Systems::Changes::Physics::CollisionShapeSize) - glm::vec3(m_collisionShape.m_cylinderShape->getMargin())));
+			static_cast<PhysicsScene *>(m_systemScene)->cleanProxyFromPairs(*m_rigidBody);
 			break;
 		case CollisionShapeType::CollisionShapeType_Sphere:
 			m_collisionShape.m_sphereShape->setImplicitShapeDimensions(Math::toBtVector3(
@@ -129,6 +132,8 @@ void RigidBodyComponent::changeOccurred(ObservedSubject *p_subject, BitMask p_ch
 				case CollisionShapeType::CollisionShapeType_ConvexHull:
 					break;
 				case CollisionShapeType::CollisionShapeType_Cylinder:
+					m_collisionShape.m_cylinderShape = new btCylinderShape(Math::toBtVector3(oldCollisionShapeSize));
+					m_rigidBody->setCollisionShape(m_collisionShape.m_cylinderShape);
 					break;
 				case CollisionShapeType::CollisionShapeType_Sphere:
 					m_collisionShape.m_sphereShape = new btSphereShape(oldCollisionShapeSize.x);
@@ -200,6 +205,21 @@ void RigidBodyComponent::changeOccurred(ObservedSubject *p_subject, BitMask p_ch
 			//Obj->BodyRigid->setAngularVelocity(btVector3(0, 0, 0));
 			//Obj->BodyRigid->setActivationState(WANTS_DEACTIVATION);
 			//Globals::phySoftWorld->addRigidBody(Obj->BodyRigid);
+		}
+	}
+
+
+	//if(CheckBitmask(p_changeType, Systems::Changes::Physics::AllDynamic))
+	{
+		if(CheckBitmask(p_changeType, Systems::Changes::Physics::Impulse))
+		{
+
+		}
+
+		if(CheckBitmask(p_changeType, Systems::Changes::Physics::Torque))
+		{
+			m_rigidBody->applyTorqueImpulse(Math::toBtVector3(p_subject->getVec3(this, Systems::Changes::Spatial::LocalPosition)));
+			m_rigidBody->activate(true);
 		}
 	}
 

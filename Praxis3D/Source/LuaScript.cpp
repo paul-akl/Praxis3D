@@ -210,6 +210,11 @@ void LuaScript::setDefinitions()
 
 	// Create entries for GUI changes
 	m_changeTypesTable[sol::update_if_empty]["GUI"]["Sequence"] = Int64Packer(Systems::Changes::GUI::Sequence);
+
+	// Create entries for PHYSICS changes
+	sol::table physicsChanges = m_changeTypesTable["Physics"].get_or_create<sol::table>();
+	physicsChanges[sol::update_if_empty]["Impulse"] = Int64Packer(Systems::Changes::Physics::Impulse);
+	physicsChanges[sol::update_if_empty]["Torque"] = Int64Packer(Systems::Changes::Physics::Torque);
 }
 
 void LuaScript::setFunctions()
@@ -220,6 +225,7 @@ void LuaScript::setFunctions()
 		[this](SystemObject *p_observer, const Int64Packer &p_changeType, const bool p_v1) -> const void { this->queueChange(p_observer, p_changeType.get(), p_v1); },
 		[this](SystemObject *p_observer, const Int64Packer &p_changeType, const int p_v1) -> const void { this->queueChange(p_observer, p_changeType.get(), p_v1); },
 		[this](SystemObject *p_observer, const Int64Packer &p_changeType, const float p_v1) -> const void { this->queueChange(p_observer, p_changeType.get(), p_v1); },
+		[this](SystemObject *p_observer, const Int64Packer &p_changeType, const glm::vec3 p_v1) -> const void { this->queueChange(p_observer, p_changeType.get(), p_v1); },
 		[this](SystemObject *p_observer, const Int64Packer &p_changeType, const std::string &p_v1) -> const void { this->queueChange(p_observer, p_changeType.get(), p_v1); }));
 
 	// Entity functions
@@ -231,10 +237,12 @@ void LuaScript::setFunctions()
 		[this](ComponentsConstructionInfo &p_constructionInfo, const std::string &p_filename, const bool p_forceReload) -> bool { return m_scriptScene->getSceneLoader()->importPrefab(p_constructionInfo, p_filename, p_forceReload) == ErrorCode::Success; }));
 
 	// Entity component functions
+	m_luaState.set_function("getRigidBodyComponent", [this](const EntityID p_entityID) -> RigidBodyComponent *{ return static_cast<WorldScene *>(m_scriptScene->getSceneLoader()->getSystemScene(Systems::World))->getEntityRegistry().try_get<RigidBodyComponent>(p_entityID); });
 	m_luaState.set_function("getSoundComponent", [this](const EntityID p_entityID) -> SoundComponent *{ return static_cast<WorldScene *>(m_scriptScene->getSceneLoader()->getSystemScene(Systems::World))->getEntityRegistry().try_get<SoundComponent>(p_entityID); });
 	m_luaState.set_function("getSpatialComponent", [this](const EntityID p_entityID) -> SpatialComponent *{ return static_cast<WorldScene *>(m_scriptScene->getSceneLoader()->getSystemScene(Systems::World))->getEntityRegistry().try_get<SpatialComponent>(p_entityID); });
 
 	// Entity component system object functions
+	m_luaState.set_function("getRigidBodyComponentSystemObject", [this](const EntityID p_entityID) -> SystemObject *{ return static_cast<WorldScene *>(m_scriptScene->getSceneLoader()->getSystemScene(Systems::World))->getEntityRegistry().try_get<RigidBodyComponent>(p_entityID); });
 	m_luaState.set_function("getSoundComponentSystemObject", [this](const EntityID p_entityID) -> SystemObject * { return static_cast<WorldScene *>(m_scriptScene->getSceneLoader()->getSystemScene(Systems::World))->getEntityRegistry().try_get<SoundComponent>(p_entityID); });
 	m_luaState.set_function("getSpatialComponentSystemObject", [this](const EntityID p_entityID) -> SystemObject *{ return static_cast<WorldScene *>(m_scriptScene->getSceneLoader()->getSystemScene(Systems::World))->getEntityRegistry().try_get<SpatialComponent>(p_entityID); });
 

@@ -2421,7 +2421,28 @@ void EditorWindow::update(const float p_deltaTime)
                                             break;
                                         case RigidBodyComponent::CollisionShapeType::CollisionShapeType_Cylinder:
                                             {
+                                                // Get the collision shape data
+                                                m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeSize = rigidBodyComponent->getCollisionShapeSize();
 
+                                                // Draw CYLINDER RADIUS
+                                                drawLeftAlignedLabelText("Cylinder radius:", inputWidgetOffset);
+                                                if(ImGui::DragFloat("##CylinderRadiusDrag", &m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeSize.x, Config::GUIVar().editor_float_slider_speed))
+                                                {
+                                                    m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeSize.z = m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeSize.x;
+
+                                                    // If the cylinder half extents size vector was changed, send a notification to the Rigid Body Component
+                                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Physics::CollisionShapeSize);
+                                                }
+                                                captureMouseWhileItemActive();
+
+                                                // Draw CYLINDER HEIGHT
+                                                drawLeftAlignedLabelText("Cylinder height:", inputWidgetOffset);
+                                                if(ImGui::DragFloat("##CylinderHeightDrag", &m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeSize.y, Config::GUIVar().editor_float_slider_speed))
+                                                {
+                                                    // If the cylinder half extents size vector was changed, send a notification to the Rigid Body Component
+                                                    m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Physics::CollisionShapeSize);
+                                                }
+                                                captureMouseWhileItemActive();
                                             }
                                             break;
                                         case RigidBodyComponent::CollisionShapeType::CollisionShapeType_Sphere:
@@ -2431,9 +2452,12 @@ void EditorWindow::update(const float p_deltaTime)
 
                                                 // Draw SPHERE RADIUS
                                                 drawLeftAlignedLabelText("Sphere radius:", inputWidgetOffset);
-                                                if(ImGui::DragFloat3("##SphereRadiusDrag", glm::value_ptr(m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeSize), Config::GUIVar().editor_float_slider_speed, 0.0f, 10000.0f))
+                                                if(ImGui::DragFloat("##SphereRadiusDrag", &m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeSize.x, Config::GUIVar().editor_float_slider_speed))
                                                 {
-                                                    // If the box half extents size vector was changed, send a notification to the Rigid Body Component
+                                                    m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeSize.y = m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeSize.x;
+                                                    m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeSize.z = m_selectedEntity.m_componentData.m_physicsComponents.m_rigidBodyConstructionInfo->m_collisionShapeSize.x;
+
+                                                    // If the sphere size vector was changed, send a notification to the Rigid Body Component
                                                     m_systemScene->getSceneLoader()->getChangeController()->sendChange(this, rigidBodyComponent, Systems::Changes::Physics::CollisionShapeSize);
                                                 }
                                                 captureMouseWhileItemActive();
@@ -3452,7 +3476,7 @@ void EditorWindow::update(const float p_deltaTime)
                         if(ImGui::BeginChild("##ShaderAssetsUniformUpdate", ImVec2(contentRegionWidth * 0.2f, 0), true))
                         {
                             // Calculate widget offset used to draw a label on the left and a widget on the right (opposite of how ImGui draws it)
-                            float inputWidgetOffset = ImGui::GetCursorPosX() + ImGui::CalcItemWidth() * 0.75f + ImGui::GetStyle().ItemInnerSpacing.x;
+                            float inputWidgetOffset = ImGui::GetCursorPosX() + ImGui::CalcTextSize("Updates per frame:").x + ImGui::GetStyle().ItemInnerSpacing.x + ImGui::GetStyle().IndentSpacing;
 
                             ImGui::SeparatorText("Uniform updater:");
 
@@ -3802,7 +3826,7 @@ void EditorWindow::update(const float p_deltaTime)
                         ImGui::SeparatorText("Lua scripts:");
                         for(decltype(m_luaScriptAssets.size()) i = 0, size = m_luaScriptAssets.size(); i < size; i++)
                         {
-                            if(ImGui::Selectable(m_luaScriptAssets[i].second.c_str(), m_selectedLuaScript != NULL_ENTITY_ID ? m_luaScriptAssets[i].first == m_selectedLuaScript : false))
+                            if(ImGui::Selectable((m_luaScriptAssets[i].second + " (" + Utilities::toString(m_luaScriptAssets[i].first) + ")").c_str(), m_selectedLuaScript != NULL_ENTITY_ID ? m_luaScriptAssets[i].first == m_selectedLuaScript : false))
                             {
                                 m_selectedLuaScript = m_luaScriptAssets[i].first;
                             }
@@ -4138,11 +4162,15 @@ void EditorWindow::update(const float p_deltaTime)
 
                     // If the mouse is hovering over the viewport, stop capturing it, so the engine can handle mouse events
                     if(ImGui::IsItemHovered())
+                    {
                         ImGui::CaptureMouseFromApp(false);
+                    }
 
                     // If the viewport is focused, stop capturing key presses, so the engine can handle keyboard events
                     if(ImGui::IsItemFocused())
+                    {
                         ImGui::CaptureKeyboardFromApp(false);
+                    }
 
                     ImGui::EndTabItem();
                 }
@@ -4299,7 +4327,7 @@ void EditorWindow::update(const float p_deltaTime)
 
                         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.26f, 0.26f, 0.26f, 1.0f));
                         ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f);
-                        if(ImGui::BeginChild("##NewSceneSettingsWindow", ImVec2(contentRegionSize.x * 0.6f, contentRegionSize.y * 0.9f), true))
+                        if(ImGui::BeginChild("##NewSceneSettingsWindow", ImVec2(contentRegionSize.x * 0.6f, contentRegionSize.y - m_imguiStyle.FramePadding.y), true))
                         {
                             ImGui::PopStyleVar(); // ImGuiStyleVar_ChildBorderSize
                             ImGui::PopStyleColor(); // ImGuiCol_Border
@@ -6372,20 +6400,28 @@ void EditorWindow::generateNewMap(PropertySet &p_newSceneProperties, SceneData &
     dirLightObjectEntry.addProperty(Properties::PropertyID::Name, std::string("Sun"));
     dirLightObjectEntry.addProperty(Properties::PropertyID::ID, 1);
     dirLightObjectEntry.addProperty(Properties::PropertyID::Parent, 0);
-    dirLightObjectEntry.addPropertySet(Properties::PropertyID::World).addPropertySet(Properties::PropertyID::SpatialComponent);
+    dirLightObjectEntry.addPropertySet(Properties::PropertyID::World).addPropertySet(Properties::PropertyID::SpatialComponent).addProperty(Properties::PropertyID::LocalRotation, glm::vec3(140.0f, 10.0f, 180.0f));
     auto &lightComponentEntry = dirLightObjectEntry.addPropertySet(Properties::PropertyID::Graphics).addPropertySet(Properties::PropertyID::LightComponent);
     lightComponentEntry.addProperty(Properties::PropertyID::Type, Properties::PropertyID::DirectionalLight);
     lightComponentEntry.addProperty(Properties::PropertyID::Intensity, 10.0f);
 
+    // Create camera entity
     auto &editorCameraObjectEntry = gameObjects.addPropertySet(Properties::ArrayEntry);
     editorCameraObjectEntry.addProperty(Properties::PropertyID::Name, std::string("EditorCamera"));
-    editorCameraObjectEntry.addProperty(Properties::PropertyID::ID, 2000000000);
+    editorCameraObjectEntry.addProperty(Properties::PropertyID::ID, 20000000);
     editorCameraObjectEntry.addProperty(Properties::PropertyID::Parent, 0);
     editorCameraObjectEntry.addPropertySet(Properties::PropertyID::Graphics).addPropertySet(Properties::PropertyID::CameraComponent);
     auto &luaComponentEntry = editorCameraObjectEntry.addPropertySet(Properties::PropertyID::Script).addPropertySet(Properties::PropertyID::LuaComponent);
     luaComponentEntry.addProperty(Properties::PropertyID::Filename, std::string("Camera_free.lua"));
     luaComponentEntry.addProperty(Properties::PropertyID::PauseInEditor, false);
-    editorCameraObjectEntry.addPropertySet(Properties::PropertyID::World).addPropertySet(Properties::PropertyID::SpatialComponent);
+    auto &luaVariables = luaComponentEntry.addPropertySet(Properties::PropertyID::Variables);
+    auto &cameraSpeed = luaVariables.addPropertySet(Properties::PropertyID::ArrayEntry);
+    cameraSpeed.addProperty(Properties::PropertyID::Name, std::string("cameraSpeed"));
+    cameraSpeed.addProperty(Properties::PropertyID::Value, 10.0f);
+    auto &cameraSpeedMult = luaVariables.addPropertySet(Properties::PropertyID::ArrayEntry);
+    cameraSpeedMult.addProperty(Properties::PropertyID::Name, std::string("cameraSpeedMultiplier"));
+    cameraSpeedMult.addProperty(Properties::PropertyID::Value, 100.0f);
+    editorCameraObjectEntry.addPropertySet(Properties::PropertyID::World).addPropertySet(Properties::PropertyID::SpatialComponent).addProperty(Properties::PropertyID::LocalPosition, glm::vec3(0.0f, 15.0f, 0.0f));
 
     // Add root property set for systems
     auto &rootSystemsPropertySet = p_newSceneProperties.addPropertySet(Properties::Systems);
@@ -6447,6 +6483,8 @@ void EditorWindow::generateNewMap(PropertySet &p_newSceneProperties, SceneData &
     shadowMappingPropertySet.addProperty(Properties::PropertyID::ZClipping, p_sceneData.m_shadowMappingData.m_zClipping);
     shadowMappingPropertySet.addProperty(Properties::PropertyID::ZPlaneMultiplier, p_sceneData.m_shadowMappingData.m_csmCascadePlaneZMultiplier);
     shadowMappingPropertySet.addPropertySet(Properties::PCF).addProperty(Properties::PropertyID::Samples, (int)p_sceneData.m_shadowMappingData.m_numOfPCFSamples);
+
+    // Add shadow mapping cascades
     auto &cascadesPropertySet = shadowMappingPropertySet.addPropertySet(Properties::PropertyID::Cascades);
     for(auto &cascade : p_sceneData.m_shadowMappingData.m_shadowCascadePlaneDistances)
     {

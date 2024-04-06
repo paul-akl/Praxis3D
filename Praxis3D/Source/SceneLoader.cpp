@@ -944,41 +944,56 @@ void SceneLoader::importFromProperties(PhysicsComponentsConstructionInfo &p_cons
 				{
 					switch(typeProperty.getID())
 					{
-					case Properties::Box:
-					{
-						// Get the size property
-						auto const &sizeProperty = collisionShapeProperty.getPropertyByID(Properties::Size);
+						case Properties::Box:
+							{
+								// Get the size property
+								auto const &sizeProperty = collisionShapeProperty.getPropertyByID(Properties::Size);
 
-						// If the size was not given, leave it to a default 0.5f all around (so it gets to the final 1.0/1.0/1.0 dimension)
-						if(sizeProperty)
-							p_constructionInfo.m_rigidBodyConstructionInfo->m_collisionShapeSize = sizeProperty.getVec3f();
-						else
-							ErrHandlerLoc().get().log(ErrorCode::Property_missing_size, p_name, ErrorSource::Source_RigidBodyComponent);
+								// If the size was not given, leave it to a default 0.5f all around (so it gets to the final 1.0/1.0/1.0 dimension)
+								if(sizeProperty)
+									p_constructionInfo.m_rigidBodyConstructionInfo->m_collisionShapeSize = sizeProperty.getVec3f();
+								else
+									ErrHandlerLoc().get().log(ErrorCode::Property_missing_size, p_name, ErrorSource::Source_RigidBodyComponent);
 
-						p_constructionInfo.m_rigidBodyConstructionInfo->m_collisionShapeType = RigidBodyComponent::CollisionShapeType::CollisionShapeType_Box;
-					}
-					break;
+								p_constructionInfo.m_rigidBodyConstructionInfo->m_collisionShapeType = RigidBodyComponent::CollisionShapeType::CollisionShapeType_Box;
+							}
+							break;
 
-					case Properties::Sphere:
-					{
-						// Get the size property
-						auto const &sizeProperty = collisionShapeProperty.getPropertyByID(Properties::Size);
+						case Properties::Cylinder:
+							{
+								// Get the size property
+								auto const &sizeProperty = collisionShapeProperty.getPropertyByID(Properties::Size);
 
-						// If the size was not given, leave it to a default radius of 0.5f (which makes the sphere diameter equal to 1.0)
-						if(sizeProperty)
-							p_constructionInfo.m_rigidBodyConstructionInfo->m_collisionShapeSize = sizeProperty.getVec3f();
-						else
-							ErrHandlerLoc().get().log(ErrorCode::Property_missing_radius, p_name, ErrorSource::Source_RigidBodyComponent);
+								// If the size was not given, leave it to a default radius of 0.5f (which makes the sphere diameter equal to 1.0)
+								if(sizeProperty)
+									p_constructionInfo.m_rigidBodyConstructionInfo->m_collisionShapeSize = sizeProperty.getVec3f();
+								else
+									ErrHandlerLoc().get().log(ErrorCode::Property_missing_size, p_name, ErrorSource::Source_RigidBodyComponent);
 
-						p_constructionInfo.m_rigidBodyConstructionInfo->m_collisionShapeType = RigidBodyComponent::CollisionShapeType::CollisionShapeType_Sphere;
-					}
-					break;
+								p_constructionInfo.m_rigidBodyConstructionInfo->m_collisionShapeType = RigidBodyComponent::CollisionShapeType::CollisionShapeType_Cylinder;
+							}
+							break;
 
-					default:
+						case Properties::Sphere:
+							{
+								// Get the size property
+								auto const &sizeProperty = collisionShapeProperty.getPropertyByID(Properties::Size);
 
-						// If this is reached, the collision shape type was not valid
-						ErrHandlerLoc().get().log(ErrorCode::Collision_invalid, p_name, ErrorSource::Source_RigidBodyComponent);
-						break;
+								// If the size was not given, leave it to a default radius of 0.5f (which makes the sphere diameter equal to 1.0)
+								if(sizeProperty)
+									p_constructionInfo.m_rigidBodyConstructionInfo->m_collisionShapeSize = sizeProperty.getVec3f();
+								else
+									ErrHandlerLoc().get().log(ErrorCode::Property_missing_radius, p_name, ErrorSource::Source_RigidBodyComponent);
+
+								p_constructionInfo.m_rigidBodyConstructionInfo->m_collisionShapeType = RigidBodyComponent::CollisionShapeType::CollisionShapeType_Sphere;
+							}
+							break;
+
+						default:
+
+							// If this is reached, the collision shape type was not valid
+							ErrHandlerLoc().get().log(ErrorCode::Collision_invalid, p_name, ErrorSource::Source_RigidBodyComponent);
+							break;
 					}
 				}
 				else
