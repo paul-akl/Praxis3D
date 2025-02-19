@@ -21,7 +21,7 @@ public:
 
 	// Calls any member function of SystemTask that is passed as an argument, and forwards all passed parameters
 	template<typename T_Func, typename... T_Args>
-	void execute(T_Func &p_func, T_Args&&... p_args)
+	void execute(T_Func &&p_func, T_Args&&... p_args)
 	{
 		// If multithreading is enabled, execute tasks over threads in parallel
 		if(m_multithreadingEnabled)

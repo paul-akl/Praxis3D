@@ -100,7 +100,7 @@
       <SDLCheck>true</SDLCheck>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PreprocessorDefinitions>NOMINMAX;NDEBUG;_RELEASE;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;CUSTOM_IMGUIFILEDIALOG_CONFIG="..\\..\\..\\Praxis3D\Source\EngineDefinitions.h";GLM_FORCE_CTOR_INIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>false</ConformanceMode>
+      <ConformanceMode>true</ConformanceMode>
       <AdditionalOptions>/bigobj /MP8 %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WholeProgramOptimization>true</WholeProgramOptimization>

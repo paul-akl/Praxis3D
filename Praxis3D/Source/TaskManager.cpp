@@ -216,29 +216,11 @@ void TaskManager::issueJobsForSystemTasks(SystemTask **p_tasks, unsigned int p_c
 				//if(getPerformanceHint(p_tasks[currentTask]) == (PerformanceHint)perfHint)
 				//{
 					// This task can be run on an arbitrary thread - allocate it 
-					//TaskManagerGlobal::GenericCallbackTask<TaskManager::JobFunct> *systemTask
+					auto *systemTask = new(m_systemTasksRoot->allocate_additional_child_of(*m_systemTasksRoot)) TaskManagerGlobal::GenericCallbackTask(&SystemTask::update, p_tasks[currentTask], p_deltaTime);
+
+					//TaskManagerGlobal::GenericCallbackTaskFunctor<decltype(std::bind(&SystemTask::update, p_tasks[currentTask], p_deltaTime))> *systemTask
 					//	= new(m_systemTasksRoot->allocate_additional_child_of(*m_systemTasksRoot))
-					//	TaskManagerGlobal::GenericCallbackTask<TaskManager::JobFunct>(systemTaskCallback, p_tasks[currentTask]);
-
-					//std::bind(p_func, currentTask, std::forward<T_Type>(p_args)...)
-
-					//auto test = std::bind(&SystemTask::update, p_tasks[currentTask], p_deltaTime);
-
-					//TaskManagerGlobal::GenericCallbackTask2<std::function<void(SystemTask *)>> *systemTask = new(m_systemTasksRoot->allocate_additional_child_of(*m_systemTasksRoot)) TaskManagerGlobal::GenericCallbackTask2<std::function<void(SystemTask *)>>(std::bind(&SystemTask::update, p_tasks[currentTask], p_deltaTime));
-					//TaskManagerGlobal::GenericCallbackTask2<std::function<void()>> *systemTask = new(m_systemTasksRoot->allocate_additional_child_of(*m_systemTasksRoot)) TaskManagerGlobal::GenericCallbackTask2<std::function<void()>>(std::bind(&SystemTask::update, p_tasks[currentTask], p_deltaTime));
-
-					//TaskManagerGlobal::GenericCallbackTask3<void(SystemTask::*)(SystemTask*, float), SystemTask*, float> *systemTask = new(m_systemTasksRoot->allocate_additional_child_of(*m_systemTasksRoot))
-					//	TaskManagerGlobal::GenericCallbackTask3<void(SystemTask::*)(SystemTask*, float), SystemTask*, float>(&SystemTask::update, p_tasks[currentTask], p_deltaTime);
-
-					//auto test = std::bind(&SystemTask::update, p_tasks[currentTask], p_deltaTime);
-
-					TaskManagerGlobal::GenericCallbackTaskFunctor<decltype(std::bind(&SystemTask::update, p_tasks[currentTask], p_deltaTime))> *systemTask
-						= new(m_systemTasksRoot->allocate_additional_child_of(*m_systemTasksRoot))
-						TaskManagerGlobal::GenericCallbackTaskFunctor<decltype(std::bind(&SystemTask::update, p_tasks[currentTask], p_deltaTime))>(std::bind(&SystemTask::update, p_tasks[currentTask], p_deltaTime));
-
-
-					//TaskManagerGlobal::GenericCallbackTask<TaskManager::JobFunct> *systemTask
-					//	= new(m_systemTasksRoot->allocate_additional_child_of(*m_systemTasksRoot))TaskManagerGlobal::GenericCallbackTask<TaskManager::JobFunct>(systemTaskCallback2, std::function<void(SystemTask*, float)>(&SystemTask::update), p_tasks[currentTask], p_deltaTime);
+					//	TaskManagerGlobal::GenericCallbackTaskFunctor<decltype(std::bind(&SystemTask::update, p_tasks[currentTask], p_deltaTime))>(std::bind(&SystemTask::update, p_tasks[currentTask], p_deltaTime));
 
 					// TODO ASSERT ERROR
 					assert(systemTask != nullptr);

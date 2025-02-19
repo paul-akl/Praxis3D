@@ -6103,7 +6103,7 @@ void EditorWindow::updateHierarchyList()
             for(decltype(newChildrenFromPreviousRun.size()) childrenSize = newChildrenFromPreviousRun.size(), childrenIndex = 0; childrenIndex < childrenSize; childrenIndex++)
             {
                 // Go over each entity left, that haven't been added as children
-                auto &parentlessEntity = parentlessEntityList.begin();
+                auto parentlessEntity = parentlessEntityList.begin();
                 while(parentlessEntity != parentlessEntityList.end())
                 {
                     // If the entity ID of the current child and the parent entity ID of the parent-less entity matches, add the parent-less entity as a child

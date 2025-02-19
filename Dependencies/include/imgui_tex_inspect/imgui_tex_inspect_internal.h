@@ -82,7 +82,7 @@ struct Inspector
     bool Initialized = false;
 
     // Texture
-    ImTextureID Texture = ImTextureID{};
+    ImTextureID Texture = 0;
     ImVec2 TextureSize = {0, 0};        // Size in texels of texture
     float PixelAspectRatio = 1;         // Values other than 1 not supported yet
 

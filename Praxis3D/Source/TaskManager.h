@@ -30,6 +30,41 @@ inline PerformanceHint getPerformanceHint(SystemTask *p_task)
 	return Task_NoPerformanceHint;
 }
 
+namespace TaskManagerGlobal
+{
+	// Stores a function pointer (usually TaskManager::JobFunct) and a single parameter
+	template <typename Func, typename... Args>
+	class GenericCallbackTask : public tbb::task
+	{
+	private:
+		Func m_function;
+		std::tuple<Args...> m_arguments; // Store arguments in a tuple
+
+	public:
+		// Constructor: Use perfect forwarding to capture the function and its arguments.
+		template <typename F, typename... A>
+		GenericCallbackTask(F &&p_function, A&&... p_arguments)
+			: m_function(std::forward<F>(p_function))
+			, m_arguments(std::forward_as_tuple(std::forward<A>(p_arguments)...)) // Use forward_as_tuple
+		{
+		}
+
+		tbb::task *execute()
+		{
+			//TODO ERROR
+			assert(m_function != nullptr);
+
+			std::apply(m_function, m_arguments);
+
+			return NULL;
+		}
+	};
+
+	// Helper function to make creating the functor easier (deduction guide)
+	template <typename F, typename... Args>
+	GenericCallbackTask(F &&, Args&&...) -> GenericCallbackTask<F, Args...>;
+}
+
 class TaskManager
 {
 public:
@@ -141,11 +176,7 @@ public:
 			}
 			else
 			{
-				auto test = std::bind(p_func, p_tasks[currentTask], std::forward<T_Args>(p_args)...);
-
-				TaskManagerGlobal::GenericCallbackTaskFunctor<decltype(test)> *systemTask
-					= new(m_systemTasksRoot->allocate_additional_child_of(*m_systemTasksRoot))
-					TaskManagerGlobal::GenericCallbackTaskFunctor<decltype(test)>(test);
+				auto *systemTask = new(m_systemTasksRoot->allocate_additional_child_of(*m_systemTasksRoot)) TaskManagerGlobal::GenericCallbackTask(p_func, p_tasks[currentTask], std::forward<T_Args>(p_args)...);
 				
 				// TODO ASSERT ERROR
 				assert(systemTask != nullptr);
@@ -258,45 +289,6 @@ namespace TaskManagerGlobal
 
 	protected:
 		void *m_param;
-	};
-
-	// Stores a function pointer (usually TaskManager::JobFunct) and a single parameter
-	template<typename T_Func>
-	class GenericCallbackTask : public tbb::task, public GenericCallbackData
-	{
-	public:
-		GenericCallbackTask(T_Func p_ptr, void *p_param) : GenericCallbackData(p_param), m_ptr(p_ptr) { }
-
-		tbb::task *execute()
-		{
-			//TODO ERROR
-			assert(m_ptr != nullptr);
-
-			m_ptr(m_param);
-
-			return NULL;
-		}
-
-	protected:
-		T_Func m_ptr;
-	};
-
-	// Stores a function pointer (to be used with std::bind, so the function pointer already contains all the parameters it needs)
-	template<typename T_Func>
-	class GenericCallbackTaskFunctor : public tbb::task
-	{
-	public:
-		GenericCallbackTaskFunctor(T_Func &p_func) : m_func(p_func) { }
-
-		tbb::task *execute()
-		{
-			m_func();
-
-			return NULL;
-		}
-
-	private:
-		T_Func m_func;
 	};
 
 	class SynchronizeTask : public tbb::task

@@ -17,7 +17,7 @@ struct ComponentsConstructionInfo
 		m_parent = 0;
 	}
 
-	ComponentsConstructionInfo(ComponentsConstructionInfo &p_other)
+	ComponentsConstructionInfo(const ComponentsConstructionInfo &p_other)
 	{
 		completeCopy(p_other);
 	}
