@@ -43,6 +43,28 @@ More information and media can be found at the [project page](https://pauldev.or
 
 Project is self-contained - all dependencies are included (with the exception of [FMOD](https://www.fmod.com/download), as its license prohibits redistribution) and all settings within the Visual Studio project files are configured for an out of the box compilation in **Visual Studio 2022**. Windows OS and Visual Studio IDE only.
 
+### CMake
+
+The included CMake presets build the same Windows x64 Visual Studio target. FMOD remains a required external dependency because it cannot be redistributed. Its untracked SDK files belong in `external/fmod/` with headers under `include/fmod/`, import libraries (`fmod_vc.lib` and `fmodstudio_vc.lib`) under `lib/x64/Debug/` and `lib/x64/Release/`, and runtime DLLs under `bin/x64/Debug/` and `bin/x64/Release/`. Alternatively, pass `-DFMOD_ROOT=<path>` for an equivalent layout.
+
+Configure and build with:
+
+```powershell
+cmake --preset debug
+cmake --build --preset debug
+```
+
+The executable is written to `out/build/debug/bin/Debug/`; Visual Studio launches it with `Praxis3D/` as its working directory, so it uses the original `Data/` folder without copying it. Release uses `cmake --preset release` and `cmake --build --preset release`.
+
+To create a standalone Release folder containing the executable, FMOD runtime DLLs, `Data`, `README.md`, and `LICENSE.md`, run:
+
+```powershell
+cmake --preset release
+cmake --build --preset release-install
+```
+
+The install is written to `out/install/Praxis3D/`.
+
 ## Releases:
 
 If you want to try out running the engine, but don't want to build it yourself, the compiled binaries of some of the versions are going to be uploaded as releases.

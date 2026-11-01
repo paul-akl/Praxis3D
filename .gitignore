@@ -1,8 +1,7 @@
 .vs/
 VC/
-Dependencies/include/fmod/
-Dependencies/x64/Debug/lib/fmod/
-Dependencies/x64/Release/lib/fmod/
+out/
+external/fmod/
 Builds/x64/Debug/*.exp
 Builds/x64/Debug/*.lib
 Praxis3D/x64/

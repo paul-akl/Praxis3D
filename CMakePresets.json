@@ -1,0 +1,50 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "cacheVariables": {
+        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+      }
+    },
+    {
+      "name": "debug",
+      "displayName": "Praxis3D Debug",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/out/build/debug"
+    },
+    {
+      "name": "release",
+      "displayName": "Praxis3D Release",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/out/build/release",
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/Praxis3D"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release",
+      "configuration": "Release"
+    },
+    {
+      "name": "release-install",
+      "displayName": "Build and install Praxis3D Release",
+      "configurePreset": "release",
+      "configuration": "Release",
+      "targets": [
+        "install"
+      ]
+    }
+  ]
+}

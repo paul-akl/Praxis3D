@@ -1,10 +1,12 @@
 #pragma once
 
+#if defined(_MSC_VER) && !defined(PRAXIS3D_CMAKE_BUILD)
 #pragma comment(lib, "fmod/fmod_vc.lib")
 //#pragma comment(lib, "fmod/fmodL_vc.lib")
 #pragma comment(lib, "fmod/fmodstudio_vc.lib")
 //#pragma comment(lib, "fmod/fmodstudioL_vc.lib")
 //#pragma comment(lib, "fmod/fsbank_vc.lib")
+#endif
 
 #include <fmod/fmod.hpp>
 #include <fmod/fmod_errors.h>

@@ -1,7 +1,7 @@
 #pragma once
 
 // TODO: add release and debug libs based on compile configuration
-#ifdef _DEBUG
+#if defined(_DEBUG) && !defined(PRAXIS3D_CMAKE_BUILD)
 #pragma comment(lib, "bullet/Bullet3Collision_x64_debug.lib")
 #pragma comment(lib, "bullet/Bullet3Common_x64_debug.lib")
 #pragma comment(lib, "bullet/Bullet3Dynamics_x64_debug.lib")
@@ -15,7 +15,7 @@
 #pragma comment(lib, "bullet/LinearMath_x64_debug.lib")
 #endif
 
-#ifdef _RELEASE
+#if defined(_RELEASE) && !defined(PRAXIS3D_CMAKE_BUILD)
 #pragma comment(lib, "bullet/Bullet3Collision_x64_release.lib")
 #pragma comment(lib, "bullet/Bullet3Common_x64_release.lib")
 #pragma comment(lib, "bullet/Bullet3Dynamics_x64_release.lib")
