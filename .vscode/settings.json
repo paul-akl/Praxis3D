@@ -1,0 +1,12 @@
+{
+  "cmake.useCMakePresets": "always",
+  "cmake.debugConfig": {
+    "cwd": "${workspaceFolder}/Praxis3D",
+    "environment": [
+      {
+        "name": "PATH",
+        "value": "${workspaceFolder}\\Builds\\x64\\${command:cmake.buildType};${workspaceFolder}\\external\\fmod\\bin\\x64\\${command:cmake.buildType};${env:PATH}"
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Praxis3D (CMake Debug)",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}\\out\\build\\debug\\bin\\Debug\\Praxis3D.exe",
+      "cwd": "${workspaceFolder}\\Praxis3D",
+      "environment": [
+        {
+          "name": "PATH",
+          "value": "${workspaceFolder}\\Builds\\x64\\Debug;${workspaceFolder}\\external\\fmod\\bin\\x64\\Debug;${env:PATH}"
+        }
+      ],
+      "stopAtEntry": false,
+      "externalConsole": false,
+      "preLaunchTask": "CMake: build Praxis3D Debug"
+    }
+  ]
+}
