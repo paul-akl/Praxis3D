@@ -24,6 +24,7 @@ DeferredRenderer::DeferredRenderer()
 }
 DeferredRenderer::~DeferredRenderer()
 {
+	m_fullscreenTriangle.unload();
 	delete m_gbuffer;
 }
 

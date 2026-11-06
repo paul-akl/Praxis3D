@@ -135,7 +135,7 @@ function update (p_deltaTime)
 		-- Return to the previous font
 		GUI.PopFont()
 		
-		GUI.PopStyleColor()	-- WindowBg
+		GUI.PopStyleColor(2)	-- WindowBg, ChildBg
 		
 		-- If the CONTINUE button was pressed, stop showing this window
 		if continueButtonPressed:isChecked() then

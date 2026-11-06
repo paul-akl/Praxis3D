@@ -19,10 +19,20 @@ public:
 	{
 	public:
 		SingleTriangle() : m_vao(0), m_vbo(0) { }
-		~SingleTriangle()
+		~SingleTriangle() = default;
+
+		inline void unload()
 		{
-			glDeleteBuffers(1, &m_vbo);
-			glDeleteBuffers(1, &m_vao);
+			if(m_vbo != 0)
+			{
+				glDeleteBuffers(1, &m_vbo);
+				m_vbo = 0;
+			}
+			if(m_vao != 0)
+			{
+				glDeleteVertexArrays(1, &m_vao);
+				m_vao = 0;
+			}
 		}
 
 		// Creates an empty buffer, assigns a VAO

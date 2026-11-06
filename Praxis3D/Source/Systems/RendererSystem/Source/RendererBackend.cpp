@@ -16,6 +16,8 @@ RendererBackend::RendererBackend()
 
 RendererBackend::~RendererBackend()
 {
+	m_fullscreenTriangle.unload();
+
 	processCommand(UnloadObjectType::UnloadObjectType_Buffer, 1, &m_materialDataBuffer.m_handle);
 
 	if(m_gbuffer != nullptr)
