@@ -20,6 +20,23 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "CMake: build Praxis3D Release",
+      "type": "shell",
+      "command": "cmake",
+      "args": [
+        "--build",
+        "--preset",
+        "release",
+        "--target",
+        "Praxis3D"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$msCompile",
+      "group": "build"
     }
   ]
 }

@@ -4,8 +4,7 @@
     {
       "name": "base",
       "hidden": true,
-      "generator": "Visual Studio 17 2022",
-      "architecture": "x64",
+      "generator": "Ninja",
       "cacheVariables": {
         "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>"
       }
@@ -14,7 +13,10 @@
       "name": "debug",
       "displayName": "Praxis3D Debug",
       "inherits": "base",
-      "binaryDir": "${sourceDir}/out/build/debug"
+      "binaryDir": "${sourceDir}/out/build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
     },
     {
       "name": "release",
@@ -22,6 +24,7 @@
       "inherits": "base",
       "binaryDir": "${sourceDir}/out/build/release",
       "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/Praxis3D"
       }
     }
