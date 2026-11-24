@@ -639,10 +639,12 @@ void RendererScene::update(const float p_deltaTime)
 				component.importTextures();
 				if(!component.getTexturesNeedsLoading())
 				{
-					// Reset load pending flag
+					// Everything the component needs is already in RAM
 					component.resetLoadPending();
 					component.setLoadedToMemory(true);
-					component.setLoadedToVideoMemory(true);
+
+					worldScene->addComponent<GraphicsLoadToMemoryComponent>(entity, entity);
+					loadingStatus = true;
 				}
 				else
 				{
@@ -688,35 +690,41 @@ void RendererScene::update(const float p_deltaTime)
 	//
 	// Remove the load-to-video-memory component for entities that have already been loaded during the previous frame
 	auto loadToVideoMemoryView = entityRegistry.view<GraphicsLoadToVideoMemoryComponent>(entt::exclude<GraphicsLoadToMemoryComponent>);
+
+	// Collect the entities first, since removing components while iterating a view over the
+	// same component type invalidates its iterator and can silently skip entities
+	std::vector<EntityID> entitiesLoadedToVideoMemory;
 	for(auto entity : loadToVideoMemoryView)
 	{
-		auto &loadToVideoMemoryComponent = loadToVideoMemoryView.get<GraphicsLoadToVideoMemoryComponent>(entity);
-		if(loadToVideoMemoryComponent.m_loaded)
-		{
-			// Set model component as loaded to video memory, if it is present
-			auto modelComponent = entityRegistry.try_get<ModelComponent>(entity);
-			if(modelComponent != nullptr)
-			{
-				modelComponent->setLoadedToVideoMemory(true);
-				//modelComponent->unloadFromMemory();
-			}
-
-			// Set shader component as loaded to video memory, if it is present
-			auto shaderComponent = entityRegistry.try_get<ShaderComponent>(entity);
-			if(shaderComponent != nullptr)
-			{
-				shaderComponent->setLoadedToVideoMemory(true);
-				//shaderComponent->unloadFromMemory();
-			}
-
-			// Remove load-to-video-memory component to mark the entity as loaded to GPU
-			worldScene->removeComponent<GraphicsLoadToVideoMemoryComponent>(entity);
-		}
+		if(loadToVideoMemoryView.get<GraphicsLoadToVideoMemoryComponent>(entity).m_loaded)
+			entitiesLoadedToVideoMemory.push_back(entity);
 		else
 		{
 			// Set the loading status flag to true
 			loadingStatus = true;
 		}
+	}
+
+	for(auto entity : entitiesLoadedToVideoMemory)
+	{
+		// Set model component as loaded to video memory, if it is present
+		auto modelComponent = entityRegistry.try_get<ModelComponent>(entity);
+		if(modelComponent != nullptr)
+		{
+			modelComponent->setLoadedToVideoMemory(true);
+			//modelComponent->unloadFromMemory();
+		}
+
+		// Set shader component as loaded to video memory, if it is present
+		auto shaderComponent = entityRegistry.try_get<ShaderComponent>(entity);
+		if(shaderComponent != nullptr)
+		{
+			shaderComponent->setLoadedToVideoMemory(true);
+			//shaderComponent->unloadFromMemory();
+		}
+
+		// Remove load-to-video-memory component to mark the entity as loaded to GPU
+		worldScene->removeComponent<GraphicsLoadToVideoMemoryComponent>(entity);
 	}
 
 	//	 _______________________________
@@ -728,9 +736,16 @@ void RendererScene::update(const float p_deltaTime)
 	// Check the entities that are being loaded to memory
 	// If they have already been loaded, remove the load-to-memory component and add the load-to-video-memory component, so they can be loaded to GPU in the renderer
 	auto modelAndLoadView = entityRegistry.view<ModelComponent, GraphicsLoadToMemoryComponent>();
+
+	// Collect the entities first, since components are added/removed inside the loop below,
+	// which would otherwise invalidate the view's iterator and skip entities
+	std::vector<EntityID> entitiesLoadingToMemory;
 	for(auto entity : modelAndLoadView)
+		entitiesLoadingToMemory.push_back(entity);
+
+	for(auto entity : entitiesLoadingToMemory)
 	{
-		auto &modelComponent = modelAndLoadView.get<ModelComponent>(entity);
+		auto &modelComponent = entityRegistry.get<ModelComponent>(entity);
 		auto shaderComponent = entityRegistry.try_get<ShaderComponent>(entity);
 
 		// In addition to model component, the entity might contain a shader component too
@@ -780,62 +795,54 @@ void RendererScene::update(const float p_deltaTime)
 		}
 		else
 		{
-			// Perform a check on model component that marks an object if it is loaded to memory
-			if(!modelComponent.isLoadedToMemory())
-				modelComponent.performCheckIsLoadedToMemory();
-
-			// If the model component has loaded to memory already, add to load queue
-			if(shaderComponent->isLoadedToMemory())
-			{
-				// Perform a check on shader component that marks an object if it is loaded to memory
-				if(!shaderComponent->isLoadedToMemory())
-					shaderComponent->performCheckIsLoadedToMemory();
-
-				// If the shader component has loaded to memory already, add to load queue
-				if(shaderComponent->isLoadedToMemory())
-				{
-					// Remove the load-to-memory component, signifying that it has already been loaded to memory
-					worldScene->removeComponent<GraphicsLoadToMemoryComponent>(entity);
-
-					// Make the components active, so it is processed in the renderer
-					modelComponent.setActive(modelComponent.m_setActiveAfterLoading);
-					shaderComponent->setActive(shaderComponent->m_setActiveAfterLoading);
-
-					// Do not add the load-to-video-memory component if the object is already loaded to GPU
-					modelComponent.performCheckIsLoadedToVideoMemory();
-					shaderComponent->performCheckIsLoadedToVideoMemory();
-					if(!modelComponent.isLoadedToVideoMemory() || !shaderComponent->isLoadedToVideoMemory())
-					{
-						auto &loadToVideoMemoryComponent = worldScene->addComponent<GraphicsLoadToVideoMemoryComponent>(entity, entity);
-
-						if(!modelComponent.isLoadedToVideoMemory())
-						{
-							// Get all loadable objects from the model component
-							auto loadableObjectsFromModel = modelComponent.getLoadableObjects();
-
-								// Iterate over all loadable objects from the model component, and if any of them are not loaded to video memory already, add them to the to-load list
-								for(decltype(loadableObjectsFromModel.size()) size = loadableObjectsFromModel.size(), i = 0; i < size; i++)
-									if(!loadableObjectsFromModel[i].isLoadedToVideoMemory())
-										loadToVideoMemoryComponent.m_objectsToLoad.emplace(loadableObjectsFromModel[i]);
-						}
-
-						if(!shaderComponent->isLoadedToVideoMemory())
-						{
-							// Get all loadable objects from the shader component
-							auto loadableObjectsFromShader = shaderComponent->getLoadableObjects();
-
-							// Iterate over all loadable objects from the shader component, and if any of them are not loaded to video memory already, add them to the to-load list
-							for(decltype(loadableObjectsFromShader.size()) size = loadableObjectsFromShader.size(), i = 0; i < size; i++)
-								if(!loadableObjectsFromShader[i].isLoadedToVideoMemory())
-									loadToVideoMemoryComponent.m_objectsToLoad.emplace(loadableObjectsFromShader[i]);
-						}
-					}
-				}
-			}
-			else
+			// Both the model and the shader have to be loaded to RAM before either of them
+			// can be queued for loading to video memory
+			if(!modelComponent.isLoadedToMemory() || !shaderComponent->isLoadedToMemory())
 			{
 				// Set the loading status flag to true
 				loadingStatus = true;
+			}
+			else
+			{
+				// Remove the load-to-memory component, signifying that it has already been loaded to memory
+				worldScene->removeComponent<GraphicsLoadToMemoryComponent>(entity);
+
+				// Make the components active, so they are processed in the renderer
+				modelComponent.setActive(modelComponent.m_setActiveAfterLoading);
+				shaderComponent->setActive(shaderComponent->m_setActiveAfterLoading);
+
+				// Do not add the load-to-video-memory component if the object is already loaded to GPU
+				modelComponent.performCheckIsLoadedToVideoMemory();
+				shaderComponent->performCheckIsLoadedToVideoMemory();
+				if(!modelComponent.isLoadedToVideoMemory() || !shaderComponent->isLoadedToVideoMemory())
+				{
+					auto &loadToVideoMemoryComponent = worldScene->addComponent<GraphicsLoadToVideoMemoryComponent>(entity, entity);
+
+					if(!modelComponent.isLoadedToVideoMemory())
+					{
+						// Get all loadable objects from the model component
+						auto loadableObjectsFromModel = modelComponent.getLoadableObjects();
+
+						// Iterate over all loadable objects from the model component, and if any of them are not loaded to video memory already, add them to the to-load list
+						for(decltype(loadableObjectsFromModel.size()) size = loadableObjectsFromModel.size(), i = 0; i < size; i++)
+							if(!loadableObjectsFromModel[i].isLoadedToVideoMemory())
+								loadToVideoMemoryComponent.m_objectsToLoad.emplace(loadableObjectsFromModel[i]);
+					}
+
+					if(!shaderComponent->isLoadedToVideoMemory())
+					{
+						// Get all loadable objects from the shader component
+						auto loadableObjectsFromShader = shaderComponent->getLoadableObjects();
+
+						// Iterate over all loadable objects from the shader component, and if any of them are not loaded to video memory already, add them to the to-load list
+						for(decltype(loadableObjectsFromShader.size()) size = loadableObjectsFromShader.size(), i = 0; i < size; i++)
+							if(!loadableObjectsFromShader[i].isLoadedToVideoMemory())
+								loadToVideoMemoryComponent.m_objectsToLoad.emplace(loadableObjectsFromShader[i]);
+					}
+
+					// Set the loading status flag to true
+					loadingStatus = true;
+				}
 			}
 		}
 	}
@@ -1178,8 +1185,8 @@ SystemObject *RendererScene::createComponent(const EntityID &p_entityID, const S
 			}
 
 			// Set the component as loaded, because the load function was called
-			//component.setLoadedToMemory(true);
-			// 
+			component.setLoadedToMemory(true);
+
 			// Add the load-to-memory component signifying that it is currently being loaded to memory
 			worldScene->addComponent<GraphicsLoadToMemoryComponent>(p_entityID, p_entityID);
 

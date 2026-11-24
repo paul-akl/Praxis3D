@@ -226,24 +226,14 @@ public:
 		ModelHandle(ModelHandle &&p_modelHandle) noexcept : m_model(p_modelHandle.m_model) { m_model->incRefCounter(); }
 		~ModelHandle() { m_model->decRefCounter(); }
 		
-		// Loads data from HDD to RAM and restructures it to be used to fill buffers later
+		// Loads data from HDD to RAM and restructure it to be used to fill buffers later
+		// Model::loadToMemory acquires the lock and checks the loaded state while holding it,
+		// so a model shared by several components is only loaded once
 		ErrorCode loadToMemory(bool p_setLoadedToMemoryFlag = true)
 		{
-			ErrorCode returnError = ErrorCode::Success;
+			(void)p_setLoadedToMemoryFlag;
 
-			//TODO: wait for the object to load, if it is currently being loaded
-			// If it's not loaded to memory already and is not currently being loaded, call load
-			if(!m_model->isLoadedToMemory() && !m_model->isBeingLoaded())
-			{
-				returnError = m_model->loadToMemory();
-
-				// If the setLoadedToMemory flag is true and loading was successful, set the flag
-				if(p_setLoadedToMemoryFlag)
-					if(returnError == ErrorCode::Success)
-						m_model->setLoadedToMemory(true);
-			}
-
-			return returnError;
+			return m_model->loadToMemory();
 		}
 		
 		// Copy assignment operator

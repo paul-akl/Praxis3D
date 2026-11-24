@@ -29,7 +29,14 @@ public:
 
 	ErrorCode init() { return ErrorCode::Success; }
 
-	void loadToMemory() { }
+	void loadToMemory()
+	{
+		// Load the shader source to RAM
+		if(m_shaderData != nullptr)
+			m_shaderData->m_shader.loadToMemory();
+
+		setLoadedToMemory(true);
+	}
 
 	// Unload all assets from RAM (does not unload from GPU VRAM)
 	inline void unloadFromMemory() { }
@@ -114,12 +121,9 @@ public:
 	void performCheckIsLoadedToVideoMemory()
 	{
 		if(m_shaderData != nullptr)
-		{
-			if(m_shaderData->m_shader.isLoadedToVideoMemory())
-				return;
-			else
-				setLoadedToVideoMemory(true);
-		}
+			setLoadedToVideoMemory(m_shaderData->m_shader.isLoadedToVideoMemory());
+		else
+			setLoadedToVideoMemory(true);
 	}
 
 	const inline ShaderData *getShaderData() const { return m_shaderData; }

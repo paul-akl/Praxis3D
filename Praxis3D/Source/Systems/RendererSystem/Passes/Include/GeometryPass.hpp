@@ -281,7 +281,7 @@ public:
 				{
 					SpatialComponent &spatialData = p_sceneObjects.m_modelsWithShaders.get<SpatialComponent>(entity);
 					ShaderComponent &shader = p_sceneObjects.m_modelsWithShaders.get<ShaderComponent>(entity);
-					if(shader.isLoadedToVideoMemory())
+					if(shader.isLoadedToVideoMemory() && shader.getShaderData() != nullptr)
 					{
 						auto &modelData = model.getModelData();
 

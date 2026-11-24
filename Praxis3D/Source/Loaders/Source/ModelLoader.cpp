@@ -17,20 +17,18 @@ const int Model::m_numElements[ModelBuffer_NumAllTypes] = { 3, 3, 2, 3, 3, 0 };
 
 ErrorCode Model::loadToMemory()
 {
-	// If the model is not currently already being loaded in another thread
-	if(!m_isBeingLoaded)
-	{
-		// Make sure another thread doesn't start another instance of loading
-		m_isBeingLoaded = true;
+	// Lock first and check the loaded state while holding the lock. 
+	SpinWait::Lock lock(m_mutex);
 
-		// Lock calls from other treads
-		SpinWait::Lock lock(m_mutex);
+	// Another thread may have finished loading this model while we were waiting for the lock
+	if(isLoadedToMemory())
+		return ErrorCode::Success;
 
-		// To not cause crashes from outside code, since meshes will be modified when loading
-		//m_currentNumMeshes = 0;
+	// Make sure another thread doesn't start another instance of loading
+	m_isBeingLoaded = true;
 
-		// Assign flags for assimp loader
-		unsigned int assimpFlags = 0;
+	// Assign flags for assimp loader
+	unsigned int assimpFlags = 0;
 
 		if(Config::modelVar().calcTangentSpace)
 			assimpFlags |= aiPostProcessSteps::aiProcess_CalcTangentSpace;
@@ -80,15 +78,14 @@ ErrorCode Model::loadToMemory()
 			}
 		}
 
-		m_isBeingLoaded = false;
-	}
-	else
-	{
-		// Wait for loading in another thread to finish before continuing
-		SpinWait::Lock lock(m_mutex);
-	}
+		// Mark the model as loaded while the lock is still held, so a thread that was
+		// waiting on the lock sees a finished load instead of starting a second one
+		if(m_loadingToMemoryError == ErrorCode::Success)
+			setLoadedToMemory(true);
 
-	return m_loadingToMemoryError;
+		m_isBeingLoaded = false;
+
+		return m_loadingToMemoryError;
 }
 ErrorCode Model::unloadMemory()
 {
@@ -121,6 +118,10 @@ void Model::loadFromFile()
 ErrorCode Model::loadFromScene(const aiScene &p_assimpScene)
 {
 	ErrorCode returnError = ErrorCode::Success;
+
+	// Reset the counters, since this can be called more than once on the same object
+	m_numVertices = 0;
+	m_numMeshes = 0;
 
 	// Reserve space in the vectors for every mesh
 	m_meshPool.resize(p_assimpScene.mNumMeshes);
@@ -156,7 +157,7 @@ ErrorCode Model::loadFromScene(const aiScene &p_assimpScene)
 	m_bufferSize[ModelBuffer_TexCoord]		= sizeof(m_texCoords[0])	* m_numVertices;
 	m_bufferSize[ModelBuffer_Tangents]		= sizeof(m_tangents[0])		* m_numVertices;
 	m_bufferSize[ModelBuffer_Bitangents]	= sizeof(m_bitangents[0])	* m_numVertices;
-	m_bufferSize[ModelBuffer_Index]			= sizeof(m_indices[0])		* m_numVertices;
+	m_bufferSize[ModelBuffer_Index]			= sizeof(m_indices[0])		* numIndicesTotal;
 
 	// Deal with each mesh
 	returnError = loadMeshes(p_assimpScene);
@@ -236,7 +237,7 @@ ErrorCode Model::loadMeshes(const aiScene &p_assimpScene)
 					glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
 					glm::vec3 bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
 
-					// Orthogonalize using Gram–Schmidt process, to make tangents and bitangents smooth based on normal
+					// Orthogonalize using Gramï¿½Schmidt process, to make tangents and bitangents smooth based on normal
 					m_tangents[verticeIndex - 2] = glm::normalize(tangent - n0 * glm::dot(n0, tangent));
 					m_tangents[verticeIndex - 1] = glm::normalize(tangent - n1 * glm::dot(n1, tangent));
 					m_tangents[verticeIndex - 0] = glm::normalize(tangent - n2 * glm::dot(n2, tangent));
