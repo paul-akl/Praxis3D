@@ -1,0 +1,10 @@
+# clangd/clang knows _m_prefetch as a builtin, and the MSVC 14.5x (VS 2026)
+# toolset declares it in <intrin.h> on x64 too, so every TU that pulls in MSVC
+# STL headers fails analysis with "definition of builtin function '_m_prefetch'".
+# -fno-builtin alone does not stop that diagnostic (ms-compat builtin path),
+# so also suppress it by name. Applies to clangd analysis only; MSVC builds
+# are unaffected.
+CompileFlags:
+  Add: [-fno-builtin-_m_prefetch]
+Diagnostics:
+  Suppress: [builtin_definition]

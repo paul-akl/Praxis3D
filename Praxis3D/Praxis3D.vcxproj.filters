@@ -420,7 +420,7 @@
     <ClCompile Include="Source\EngineState.cpp">
       <Filter>Engine States\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\CommonDefinitions.cpp">
+    <ClCompile Include="Source\Definitions\Source Files\CommonDefinitions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\FmodErrorCodes.cpp">
@@ -470,361 +470,361 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\ErrorCodes.h">
+    <ClInclude Include="Source\ErrorCodes.hpp">
       <Filter>Error Handler\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ErrorHandler.h">
+    <ClInclude Include="Source\ErrorHandler.hpp">
       <Filter>Error Handler\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ConfigLoader.h">
+    <ClInclude Include="Source\ConfigLoader.hpp">
       <Filter>Loaders\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\LoaderBase.h">
+    <ClInclude Include="Source\LoaderBase.hpp">
       <Filter>Loaders\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ModelLoader.h">
+    <ClInclude Include="Source\ModelLoader.hpp">
       <Filter>Loaders\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\PropertyLoader.h">
+    <ClInclude Include="Source\PropertyLoader.hpp">
       <Filter>Loaders\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\SceneLoader.h">
+    <ClInclude Include="Source\SceneLoader.hpp">
       <Filter>Loaders\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ShaderLoader.h">
+    <ClInclude Include="Source\ShaderLoader.hpp">
       <Filter>Loaders\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\TextureLoader.h">
+    <ClInclude Include="Source\TextureLoader.hpp">
       <Filter>Loaders\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\SpinWait.h">
+    <ClInclude Include="Source\SpinWait.hpp">
       <Filter>Task Systems\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\TaskManager.h">
+    <ClInclude Include="Source\TaskManager.hpp">
       <Filter>Task Systems\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\TaskScheduler.h">
+    <ClInclude Include="Source\TaskScheduler.hpp">
       <Filter>Task Systems\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ClockLocator.h">
+    <ClInclude Include="Source\ClockLocator.hpp">
       <Filter>Service Locators\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ErrorHandlerLocator.h">
+    <ClInclude Include="Source\ErrorHandlerLocator.hpp">
       <Filter>Service Locators\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Loaders.h">
+    <ClInclude Include="Source\Loaders.hpp">
       <Filter>Service Locators\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\TaskManagerLocator.h">
+    <ClInclude Include="Source\TaskManagerLocator.hpp">
       <Filter>Service Locators\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\WindowLocator.h">
+    <ClInclude Include="Source\WindowLocator.hpp">
       <Filter>Service Locators\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ScriptScene.h">
+    <ClInclude Include="Source\ScriptScene.hpp">
       <Filter>Scripting\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ScriptSystem.h">
+    <ClInclude Include="Source\ScriptSystem.hpp">
       <Filter>Scripting\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ScriptTask.h">
+    <ClInclude Include="Source\ScriptTask.hpp">
       <Filter>Scripting\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\BaseScriptObject.h">
+    <ClInclude Include="Source\BaseScriptObject.hpp">
       <Filter>Scripting\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\CameraScript.h">
+    <ClInclude Include="Source\CameraScript.hpp">
       <Filter>Scripting\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\DebugUIScript.h">
+    <ClInclude Include="Source\DebugUIScript.hpp">
       <Filter>Scripting\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\DeferredRenderer.h">
+    <ClInclude Include="Source\DeferredRenderer.hpp">
       <Filter>Renderer\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Framebuffer.h">
+    <ClInclude Include="Source\Framebuffer.hpp">
       <Filter>Renderer\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GeometryBuffer.h">
+    <ClInclude Include="Source\GeometryBuffer.hpp">
       <Filter>Renderer\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Renderer.h">
+    <ClInclude Include="Source\Renderer.hpp">
       <Filter>Renderer\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RendererScene.h">
+    <ClInclude Include="Source\RendererScene.hpp">
       <Filter>Renderer\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RendererSystem.h">
+    <ClInclude Include="Source\RendererSystem.hpp">
       <Filter>Renderer\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderTask.h">
+    <ClInclude Include="Source\RenderTask.hpp">
       <Filter>Renderer\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderTaskBase.h">
+    <ClInclude Include="Source\RenderTaskBase.hpp">
       <Filter>Renderer\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\BaseGraphicsObjects.h">
+    <ClInclude Include="Source\BaseGraphicsObjects.hpp">
       <Filter>Renderer\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ShaderUniforms.h">
+    <ClInclude Include="Source\ShaderUniforms.hpp">
       <Filter>Shaders\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ShaderUniformUpdater.h">
+    <ClInclude Include="Source\ShaderUniformUpdater.hpp">
       <Filter>Shaders\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ChangeController.h">
+    <ClInclude Include="Source\ChangeController.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Clock.h">
+    <ClInclude Include="Source\Clock.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Config.h">
+    <ClInclude Include="Source\Config.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Engine.h">
+    <ClInclude Include="Source\Engine.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\EngineDefinitions.h">
+    <ClInclude Include="Source\EngineDefinitions.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\EnumFactory.h">
+    <ClInclude Include="Source\EnumFactory.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Input.h">
+    <ClInclude Include="Source\Input.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\KeyCommand.h">
+    <ClInclude Include="Source\KeyCommand.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Math.h">
+    <ClInclude Include="Source\Math.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\NullSystemObjects.h">
+    <ClInclude Include="Source\NullSystemObjects.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ObjectPool.h">
+    <ClInclude Include="Source\ObjectPool.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ObserverBase.h">
+    <ClInclude Include="Source\ObserverBase.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\PropertySet.h">
+    <ClInclude Include="Source\PropertySet.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Scancodes.h">
+    <ClInclude Include="Source\Scancodes.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ServiceBase.h">
+    <ClInclude Include="Source\ServiceBase.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\System.h">
+    <ClInclude Include="Source\System.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Universal.h">
+    <ClInclude Include="Source\Universal.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Utilities.h">
+    <ClInclude Include="Source\Utilities.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Window.h">
+    <ClInclude Include="Source\Window.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ModelGraphicsObjects.h">
+    <ClInclude Include="Source\ModelGraphicsObjects.hpp">
       <Filter>Renderer\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\CameraGraphicsObject.h">
+    <ClInclude Include="Source\CameraGraphicsObject.hpp">
       <Filter>Renderer\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ShaderGraphicsObjects.h">
+    <ClInclude Include="Source\ShaderGraphicsObjects.hpp">
       <Filter>Renderer\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\LightingGraphicsObjects.h">
+    <ClInclude Include="Source\LightingGraphicsObjects.hpp">
       <Filter>Renderer\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GraphicsDataSets.h">
+    <ClInclude Include="Source\GraphicsDataSets.hpp">
       <Filter>Renderer\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\DebugMoveScript.h">
+    <ClInclude Include="Source\DebugMoveScript.hpp">
       <Filter>Scripting\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\EngineState.h">
+    <ClInclude Include="Source\EngineState.hpp">
       <Filter>Engine States\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\PlayState.h">
+    <ClInclude Include="Source\PlayState.hpp">
       <Filter>Engine States\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\WorldEditObject.h">
+    <ClInclude Include="Source\WorldEditObject.hpp">
       <Filter>Scripting\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\SolarTimeScript.h">
+    <ClInclude Include="Source\SolarTimeScript.hpp">
       <Filter>Scripting\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
+    <ClInclude Include="resource.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\EnvironmentMapObjects.h">
+    <ClInclude Include="Source\EnvironmentMapObjects.hpp">
       <Filter>Renderer\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RendererBackend.h">
+    <ClInclude Include="Source\RendererBackend.hpp">
       <Filter>Renderer\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RendererFrontend.h">
+    <ClInclude Include="Source\RendererFrontend.hpp">
       <Filter>Renderer\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\CommonDefinitions.h">
+    <ClInclude Include="Source\Definitions\Header Files\CommonDefinitions.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\UniformData.h">
+    <ClInclude Include="Source\UniformData.hpp">
       <Filter>Renderer\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPassBase.h">
+    <ClInclude Include="Source\RenderPassBase.hpp">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GeometryPass.h">
+    <ClInclude Include="Source\GeometryPass.hpp">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\LightingPass.h">
+    <ClInclude Include="Source\LightingPass.hpp">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\FinalPass.h">
+    <ClInclude Include="Source\FinalPass.hpp">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ReflectionPass.h">
+    <ClInclude Include="Source\ReflectionPass.hpp">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\CommandBuffer.h">
+    <ClInclude Include="Source\CommandBuffer.hpp">
       <Filter>Renderer\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ObjectDirectory.h">
+    <ClInclude Include="Source\ObjectDirectory.hpp">
       <Filter>Service Locators\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource1.h">
+    <ClInclude Include="resource1.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\BlurPass.h">
+    <ClInclude Include="Source\BlurPass.hpp">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\DebugRotateScript.h">
+    <ClInclude Include="Source\DebugRotateScript.hpp">
       <Filter>Scripting\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\SkyPass.h">
+    <ClInclude Include="Source\SkyPass.hpp">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\HdrMappingPass.h">
+    <ClInclude Include="Source\HdrMappingPass.hpp">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\PostProcessPass.h">
+    <ClInclude Include="Source\PostProcessPass.hpp">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\AtmScatteringModel.h">
+    <ClInclude Include="Source\AtmScatteringModel.hpp">
       <Filter>Renderer\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\AtmScatteringConstants.h">
+    <ClInclude Include="Source\AtmScatteringConstants.hpp">
       <Filter>Renderer\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\AtmScatteringShaderFunctions.h">
+    <ClInclude Include="Source\AtmScatteringShaderFunctions.hpp">
       <Filter>Shaders\Shader Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\AtmScatteringShaderDefinitions.h">
+    <ClInclude Include="Source\AtmScatteringShaderDefinitions.hpp">
       <Filter>Shaders\Shader Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\AtmScatteringPass.h">
+    <ClInclude Include="Source\AtmScatteringPass.hpp">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\AtmScatteringShaderPass.h">
+    <ClInclude Include="Source\AtmScatteringShaderPass.hpp">
       <Filter>Shaders\Shader Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\SunScript.h">
+    <ClInclude Include="Source\SunScript.hpp">
       <Filter>Scripting\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\BloomCompositePass.h">
+    <ClInclude Include="Source\BloomCompositePass.hpp">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\LenseFlarePass.h">
+    <ClInclude Include="Source\LenseFlarePass.hpp">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\LenseFlareCompositePass.h">
+    <ClInclude Include="Source\LenseFlareCompositePass.hpp">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Filesystem.h">
+    <ClInclude Include="Source\Filesystem.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\WorldScene.h">
+    <ClInclude Include="Source\WorldScene.hpp">
       <Filter>World\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GameObject.h">
+    <ClInclude Include="Source\GameObject.hpp">
       <Filter>World\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Source\WorldTask.h">
+    <ClInclude Include="Source\WorldTask.hpp">
       <Filter>World\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Containers.h">
+    <ClInclude Include="Source\Definitions\Header Files\Containers.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GraphicsObject.h">
+    <ClInclude Include="Source\GraphicsObject.hpp">
       <Filter>Renderer\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ObjectRegister.h">
+    <ClInclude Include="Source\ObjectRegister.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\BaseGraphicsComponent.h">
+    <ClInclude Include="Source\BaseGraphicsComponent.hpp">
       <Filter>Renderer\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ModelComponent.h">
+    <ClInclude Include="Source\ModelComponent.hpp">
       <Filter>Renderer\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ShaderComponent.h">
+    <ClInclude Include="Source\ShaderComponent.hpp">
       <Filter>Renderer\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\CameraComponent.h">
+    <ClInclude Include="Source\CameraComponent.hpp">
       <Filter>Renderer\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\LightComponent.h">
+    <ClInclude Include="Source\LightComponent.hpp">
       <Filter>Renderer\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GameLogicObject.h">
+    <ClInclude Include="Source\GameLogicObject.hpp">
       <Filter>Scripting\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\InheritanceObjects.h">
+    <ClInclude Include="Source\InheritanceObjects.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\NullObjects.h">
+    <ClInclude Include="Source\NullObjects.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\WorldSystem.h">
+    <ClInclude Include="Source\WorldSystem.hpp">
       <Filter>World\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ScriptObject.h">
+    <ClInclude Include="Source\ScriptObject.hpp">
       <Filter>Scripting\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\LuaComponent.h">
+    <ClInclude Include="Source\LuaComponent.hpp">
       <Filter>Scripting\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\LuaScript.h">
+    <ClInclude Include="Source\LuaScript.hpp">
       <Filter>Scripting\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GUIScene.h">
+    <ClInclude Include="Source\GUIScene.hpp">
       <Filter>GUI\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GUITask.h">
+    <ClInclude Include="Source\GUITask.hpp">
       <Filter>GUI\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GUISystem.h">
+    <ClInclude Include="Source\GUISystem.hpp">
       <Filter>GUI\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\PhysicsSystem.h">
+    <ClInclude Include="Source\PhysicsSystem.hpp">
       <Filter>Physics\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\PhysicsScene.h">
+    <ClInclude Include="Source\PhysicsScene.hpp">
       <Filter>Physics\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\PhysicsTask.h">
+    <ClInclude Include="Source\PhysicsTask.hpp">
       <Filter>Physics\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GUIHandler.h">
+    <ClInclude Include="Source\GUIHandler.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GUIHandlerLocator.h">
+    <ClInclude Include="Source\GUIHandlerLocator.hpp">
       <Filter>Service Locators\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Dependencies\include\imgui\imconfig.h">
@@ -842,97 +842,97 @@
     <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3_loader.h">
       <Filter>3rd Party\imgui\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GUIPass.h">
+    <ClInclude Include="Source\GUIPass.hpp">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GUICommandBuffer.h">
+    <ClInclude Include="Source\GUICommandBuffer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GUIObject.h">
+    <ClInclude Include="Source\GUIObject.hpp">
       <Filter>GUI\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GUISequenceComponent.h">
+    <ClInclude Include="Source\GUISequenceComponent.hpp">
       <Filter>GUI\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\SpatialDataManager.h">
+    <ClInclude Include="Source\SpatialDataManager.hpp">
       <Filter>Data Managers</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GUIDataManager.h">
+    <ClInclude Include="Source\GUIDataManager.hpp">
       <Filter>Data Managers</Filter>
     </ClInclude>
-    <ClInclude Include="Source\PhysicsDataManager.h">
+    <ClInclude Include="Source\PhysicsDataManager.hpp">
       <Filter>Data Managers</Filter>
     </ClInclude>
-    <ClInclude Include="Source\PhysicsObject.h">
+    <ClInclude Include="Source\PhysicsObject.hpp">
       <Filter>Physics\Components\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\PhysicsMotionState.h">
+    <ClInclude Include="Source\PhysicsMotionState.hpp">
       <Filter>Physics\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RigidBodyComponent.h">
+    <ClInclude Include="Source\RigidBodyComponent.hpp">
       <Filter>Physics\Components\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\CollisionShapeComponent.h">
+    <ClInclude Include="Source\CollisionShapeComponent.hpp">
       <Filter>Physics\Components\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\SpatialComponent.h">
+    <ClInclude Include="Source\SpatialComponent.hpp">
       <Filter>World\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GameObjectComponent.h">
+    <ClInclude Include="Source\GameObjectComponent.hpp">
       <Filter>World\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Source\EntityViewDefinitions.h">
+    <ClInclude Include="Source\EntityViewDefinitions.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\BloomPass.h">
+    <ClInclude Include="Source\BloomPass.hpp">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\LuminancePass.h">
+    <ClInclude Include="Source\LuminancePass.hpp">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ComponentConstructorInfo.h">
+    <ClInclude Include="Source\ComponentConstructorInfo.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\AudioScene.h">
+    <ClInclude Include="Source\AudioScene.hpp">
       <Filter>Audio\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\AudioTask.h">
+    <ClInclude Include="Source\AudioTask.hpp">
       <Filter>Audio\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\AudioSystem.h">
+    <ClInclude Include="Source\AudioSystem.hpp">
       <Filter>Audio\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\MainMenuState.h">
+    <ClInclude Include="Source\MainMenuState.hpp">
       <Filter>Engine States\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GraphicsLoadComponents.h">
+    <ClInclude Include="Source\GraphicsLoadComponents.hpp">
       <Filter>Renderer\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\SoundComponent.h">
+    <ClInclude Include="Source\SoundComponent.hpp">
       <Filter>Audio\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ObjectMaterialComponent.h">
+    <ClInclude Include="Source\ObjectMaterialComponent.hpp">
       <Filter>World\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Source\CollisionEventComponent.h">
+    <ClInclude Include="Source\CollisionEventComponent.hpp">
       <Filter>Physics\Components\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\SoundListenerComponent.h">
+    <ClInclude Include="Source\SoundListenerComponent.hpp">
       <Filter>Audio\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Source\FmodErrorCodes.h">
+    <ClInclude Include="Source\FmodErrorCodes.hpp">
       <Filter>Audio\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ImpactSoundComponent.h">
+    <ClInclude Include="Source\ImpactSoundComponent.hpp">
       <Filter>Audio\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Source\EditorState.h">
+    <ClInclude Include="Source\EditorState.hpp">
       <Filter>Engine States\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\EditorWindow.h">
+    <ClInclude Include="Source\EditorWindow.hpp">
       <Filter>GUI\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\MetadataComponent.h">
+    <ClInclude Include="Source\MetadataComponent.hpp">
       <Filter>World\Components</Filter>
     </ClInclude>
     <ClInclude Include="..\Dependencies\include\imgui_tex_inspect\imgui_tex_inspect.h">
@@ -950,25 +950,25 @@
     <ClInclude Include="..\Dependencies\include\ImGuizmo\ImGuizmo.h">
       <Filter>3rd Party\ImGuizmo</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Version.h">
+    <ClInclude Include="Source\Version.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_sdl2.h">
       <Filter>3rd Party\imgui\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\AmbientOcclusionPass.h">
+    <ClInclude Include="Source\AmbientOcclusionPass.hpp">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ShadowMappingPass.h">
+    <ClInclude Include="Source\ShadowMappingPass.hpp">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\CSMFramebuffer.h">
+    <ClInclude Include="Source\CSMFramebuffer.hpp">
       <Filter>Renderer\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\AboutWindow.h">
+    <ClInclude Include="Source\AboutWindow.hpp">
       <Filter>GUI\Objects\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\TonemappingPass.h">
+    <ClInclude Include="Source\TonemappingPass.hpp">
       <Filter>Renderer\Render Passes\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
