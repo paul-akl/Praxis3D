@@ -234,6 +234,10 @@ public:
 
 	// Getters
 	const unsigned int getUnsignedInt(const Observer *p_observer, BitMask p_changedBits) const;
+
+	// Returns true and fills in the picked entity ID if a picking result is available, then clears the result
+	bool consumePickedEntity(EntityID &p_entityID);
+
 	SystemTask *getSystemTask() { return m_renderTask; }
 	Systems::TypeID getSystemType() { return Systems::Graphics; }
 	const inline SceneObjects &getSceneObjects() const { return m_sceneObjects; }
@@ -281,6 +285,9 @@ public:
 					break;
 				case RenderPassType::RenderPassType_Luminance:
 					renderPassTypeProperty = Properties::LuminanceRenderPass;
+					break;
+				case RenderPassType::RenderPassType_Picking:
+					renderPassTypeProperty = Properties::PickingRenderPass;
 					break;
 				case RenderPassType::RenderPassType_ShadowMapping:
 					renderPassTypeProperty = Properties::ShadowMappingPass;

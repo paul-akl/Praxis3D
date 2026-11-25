@@ -94,6 +94,7 @@ enum MemoryBarrierType : unsigned int
 	Code(RenderPassType_Final,) \
 	Code(RenderPassType_GUI,) \
 	Code(RenderPassType_AmbientOcclusion,) \
+	Code(RenderPassType_Picking,) \
 	Code(RenderPassType_NumOfTypes,)
 DECLARE_ENUM(RenderPassType, RENDER_PASS_TYPE)
 typedef std::vector<RenderPassType> RenderingPasses;
@@ -324,7 +325,8 @@ enum UniformBufferBinding : unsigned int
 enum FramebufferType : unsigned int
 {
 	FramebufferType_GBuffer = 0,
-	FramebufferType_CSMBuffer
+	FramebufferType_CSMBuffer,
+	FramebufferType_PickingBuffer
 };
 enum GBufferTextureType : unsigned int
 {

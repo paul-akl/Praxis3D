@@ -6,6 +6,7 @@ RendererBackend::RendererBackend()
 {
 	m_gbuffer = nullptr;
 	m_csmBuffer = nullptr;
+	m_pickingBuffer = nullptr;
 
 	m_materialDataBuffer.m_bindingIndex = UniformBufferBinding::UniformBufferBinding_MaterialDataBuffer;
 	m_materialDataBuffer.m_bufferBindTarget = BufferBindTarget::BufferBindTarget_Uniform;
@@ -24,6 +25,8 @@ RendererBackend::~RendererBackend()
 		delete m_gbuffer;
 	if(m_csmBuffer != nullptr)
 		delete m_csmBuffer;
+	if(m_pickingBuffer != nullptr)
+		delete m_pickingBuffer;
 }
 
 ErrorCode RendererBackend::init(const UniformFrameData &p_frameData)
@@ -106,6 +109,21 @@ ErrorCode RendererBackend::createFramebuffer(const FramebufferType p_frambufferT
 
 				// Check if the csm buffer initialization was successful
 				returnError = m_csmBuffer->init(p_frameData);
+			}
+			break;
+
+		case FramebufferType_PickingBuffer:
+			{
+				// Create the picking buffer only once, since it is resized instead of re-created
+				if(m_pickingBuffer == nullptr)
+				{
+					m_pickingBuffer = new PickingFramebuffer(
+						(unsigned int)p_frameData.m_screenSize.x,
+						(unsigned int)p_frameData.m_screenSize.y);
+
+					// Check if the picking buffer initialization was successful
+					returnError = m_pickingBuffer->init(p_frameData);
+				}
 			}
 			break;
 	}

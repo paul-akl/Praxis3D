@@ -264,6 +264,9 @@ ErrorCode RendererScene::setup(const PropertySet &p_properties)
 					case Properties::LuminanceRenderPass:
 						m_renderingPasses.push_back(RenderPassType::RenderPassType_Luminance);
 						break;
+					case Properties::PickingRenderPass:
+						m_renderingPasses.push_back(RenderPassType::RenderPassType_Picking);
+						break;
 					case Properties::ShadowMappingPass:
 						m_renderingPasses.push_back(RenderPassType::RenderPassType_ShadowMapping);
 						break;
@@ -1478,6 +1481,17 @@ void RendererScene::receiveData(const DataType p_dataType, void *p_data, const b
 			}
 			break;
 
+		case DataType::DataType_PickingRequest:
+			{
+				auto *pickPixel = static_cast<glm::ivec2 *>(p_data);
+				static_cast<RendererSystem *>(m_system)->getRenderer().requestPicking(*pickPixel);
+
+				// Delete the received data if it has been marked for deletion (ownership transfered upon receiving)
+				if(p_deleteAfterReceiving)
+					delete pickPixel;
+			}
+			break;
+
 		case DataType::DataType_ShadowMappingData:
 			{
 				auto *shadowMappingData = static_cast<ShadowMappingData *>(p_data);
@@ -1591,6 +1605,11 @@ const unsigned int RendererScene::getUnsignedInt(const Observer *p_observer, Bit
 const glm::mat4 &RendererScene::getViewMatrix() const
 {
 	return static_cast<RendererSystem *>(m_system)->getRenderer().getFrameData().m_viewMatrix;
+}
+
+bool RendererScene::consumePickedEntity(EntityID &p_entityID)
+{
+	return static_cast<RendererSystem *>(m_system)->getRenderer().consumePickingResult(p_entityID);
 }
 
 const glm::mat4 &RendererScene::getProjectionMatrix() const

@@ -487,6 +487,16 @@ public:
 private:
 	float m_currentStochasticSamplingScale;
 };
+class EntityIDUniform : public BaseUniform
+{
+public:
+	EntityIDUniform(unsigned int p_shaderHandle) : BaseUniform(Config::shaderVar().entityIDUniform, p_shaderHandle) { }
+
+	void update(const UniformData &p_uniformData)
+	{
+		glUniform1ui(m_uniformHandle, p_uniformData.m_objectData.m_entityID);
+	}
+};
 class EyeAdaptionRateUniform : public BaseUniform
 {
 public:

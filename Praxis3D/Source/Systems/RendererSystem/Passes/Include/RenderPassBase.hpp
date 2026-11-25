@@ -1,5 +1,7 @@
 #pragma once
 
+#include <atomic>
+
 #include "Systems/RendererSystem/Include/CommandBuffer.hpp"
 #include "Loaders/Include/Config.hpp"
 #include "Systems/RendererSystem/Include/RendererFrontend.hpp"
@@ -26,6 +28,11 @@ struct RenderPassData
 		m_atmScatDoSkyPass = true;
 		m_blurDoBlending = false;
 		m_renderFinalToTexture = false;
+
+		m_pickRequested = false;
+		m_pickPixel = glm::ivec2(0);
+		m_pickResult = 0;
+		m_lastConsumedPickSequence = 0;
 	}
 
 	inline void swapColorInputOutputMaps()
@@ -45,6 +52,37 @@ struct RenderPassData
 	inline void setIntermediateMap(GBufferTextureType p_intermediateMap)		{ m_intermediateMap = p_intermediateMap;		}
 	inline void setRenderFinalToTexture(const bool p_renderToTexture)			{ m_renderFinalToTexture = p_renderToTexture;	}
 	inline void setGUIPassFunctorSequence(FunctorSequence *p_functorSequence)	{ m_GUIPassFunctorSequence = p_functorSequence; }
+
+	// Object picking
+	inline void requestPicking(const glm::ivec2 p_pixel)
+	{
+		m_pickRequested = true;
+		m_pickPixel = p_pixel;
+	}
+	inline void setPickingResult(const EntityID p_entityID)
+	{
+		m_pickRequested = false;
+
+		// Increment the sequence number so the consumer can tell new results apart from
+		// previously consumed ones, and store the entity ID in the lower 32 bits
+		const uint64_t sequence = (m_pickResult.load(std::memory_order_relaxed) >> 32) + 1;
+		m_pickResult.store((sequence << 32) | (uint64_t)p_entityID, std::memory_order_release);
+	}
+
+	// Returns true and fills in the picked entity ID if a new picking result is available
+	inline bool consumePickingResult(EntityID &p_entityID)
+	{
+		const uint64_t result = m_pickResult.load(std::memory_order_acquire);
+		const uint64_t sequence = result >> 32;
+
+		if(sequence == m_lastConsumedPickSequence)
+			return false;
+
+		m_lastConsumedPickSequence = sequence;
+		p_entityID = (EntityID)(result & 0xffffffffu);
+
+		return true;
+	}
 
 	// Getters
 	const inline GBufferTextureType getColorInputMap() const	{ return m_colorInputMap;			}
@@ -73,6 +111,14 @@ struct RenderPassData
 
 	// Used to pass GUI calls to the GUI pass that require to be called from the main (graphics) thread
 	FunctorSequence *m_GUIPassFunctorSequence;
+
+	// Object picking request (set via RendererFrontend::requestPicking) and its result.
+	// The result is packed as (sequence number << 32 | entity ID), so it can be written by the
+	// graphics thread and consumed by the GUI thread without a lock
+	bool m_pickRequested;
+	glm::ivec2 m_pickPixel;
+	std::atomic<uint64_t> m_pickResult;
+	uint64_t m_lastConsumedPickSequence;
 
 	unsigned int m_numOfBlurPasses;
 	bool m_atmScatDoSkyPass;

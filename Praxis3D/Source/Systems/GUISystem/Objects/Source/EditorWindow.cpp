@@ -86,6 +86,17 @@ void EditorWindow::update(const float p_deltaTime)
     // Update the asset lists
     updateAssetLists();
 
+    // If the renderer completed a picking request, select the picked entity (or clear the
+    // selection if nothing was picked) on this frame
+    {
+        EntityID pickedEntityID = NULL_ENTITY_ID;
+        if(static_cast<RendererScene *>(m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics))->consumePickedEntity(pickedEntityID))
+        {
+            m_nextEntityIDToSelect = pickedEntityID;
+            m_pendingEntityToSelect = true;
+        }
+    }
+
     // If there is a pending entity to select, iterate over each entity and find the one that needs to be selected
     if(m_pendingEntityToSelect)
     {
@@ -95,9 +106,13 @@ void EditorWindow::update(const float p_deltaTime)
             m_nextEntityToSelect = nullptr;
         }
 
-        for(decltype(m_entityList.size()) size = m_entityList.size(), i = 0; i < size; i++)
-            if(m_entityList[i].m_entityID == m_nextEntityIDToSelect)
-                m_selectedEntity.setEntity(m_entityList[i].m_entityID);
+        // A null entity ID means that nothing was picked, so clear the current selection
+        if(m_nextEntityIDToSelect == NULL_ENTITY_ID)
+            m_selectedEntity.unselect();
+        else
+            for(decltype(m_entityList.size()) size = m_entityList.size(), i = 0; i < size; i++)
+                if(m_entityList[i].m_entityID == m_nextEntityIDToSelect)
+                    m_selectedEntity.setEntity(m_entityList[i].m_entityID);
 
         m_pendingEntityToSelect = false;
     }
@@ -4158,6 +4173,34 @@ void EditorWindow::update(const float p_deltaTime)
                         }
                         else
                             ImGuizmo::Enable(false);
+                    }
+
+                    //	 ____________________________
+                    //	|							 |
+                    //	|	   OBJECT PICKING        |
+                    //	|____________________________|
+                    //
+                    // Query the gizmo after it has been drawn, so that dragging a gizmo handle
+                    // never triggers a selection change
+                    if(ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
+                    {
+                        const ImVec2 mousePosition = ImGui::GetIO().MousePos;
+
+                        // Convert the mouse position into the render target's pixel space.
+                        // The render target's origin is in the bottom-left corner, while the
+                        // ImGui coordinates start in the top-left corner of the viewport
+                        const int pixelX = (int)(mousePosition.x - m_sceneViewportPosition.x);
+                        const int pixelYFromTop = (int)(mousePosition.y - m_sceneViewportPosition.y);
+
+                        if(pixelX >= 0 && pixelYFromTop >= 0 && pixelX < m_centerWindowSize.x && pixelYFromTop < m_centerWindowSize.y)
+                        {
+                            const glm::ivec2 pickPixel(pixelX, m_centerWindowSize.y - 1 - pixelYFromTop);
+
+                            // Tell the graphics scene to determine which entity is under the mouse
+                            m_systemScene->getSceneLoader()->getChangeController()->sendData(
+                                m_systemScene->getSceneLoader()->getSystemScene(Systems::Graphics),
+                                DataType::DataType_PickingRequest, (void *)&pickPixel, false);
+                        }
                     }
 
                     // If the mouse is hovering over the viewport, stop capturing it, so the engine can handle mouse events

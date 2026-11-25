@@ -216,6 +216,9 @@ ErrorCode ShaderUniformUpdater::generatePerModelList()
 	uniformList.push_back(new NumOFTexelsUniform(m_shaderHandle));
 	uniformList.push_back(new TextureTilingFactorUniform(m_shaderHandle));
 	uniformList.push_back(new StochasticSamplingScaleUniform(m_shaderHandle));
+
+	// Entity ID, used by the picking pass to write the entity ID to the ID buffer
+	uniformList.push_back(new EntityIDUniform(m_shaderHandle));
 	
 	// Test uniforms, used for debugging, etc
 	uniformList.push_back(new TestMatUniform(m_shaderHandle));
