@@ -37,6 +37,16 @@ Guidelines:
 
 ---
 
+## [0.2.8] - [Unreleased]
+
+### Changed
+- EditorWindow refactoring - split into multiple source files.
+
+### Fixed
+- Scene being rendered into the picking buffer after object picking.
+
+---
+
 ## [0.2.7] - 2026-11-26
 
 ### Added
@@ -91,6 +101,7 @@ Guidelines:
 ---
 
 [Unreleased]: https://github.com/paul-akl/Praxis3D/compare/v0.2.7...HEAD
-[0.2.7]: https://github.com/paul-akl/Praxis3D
+[0.2.8]: https://github.com/paul-akl/Praxis3D/releases/tag/v0.2.8
+[0.2.7]: https://github.com/paul-akl/Praxis3D/releases/tag/v0.2.7
 [0.2.6]: https://github.com/paul-akl/Praxis3D/releases/tag/v0.2.6
 [0.2.5]: https://github.com/paul-akl/Praxis3D/releases/tag/v0.2.5
