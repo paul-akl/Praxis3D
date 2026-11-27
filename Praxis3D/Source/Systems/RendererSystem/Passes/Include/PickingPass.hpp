@@ -172,7 +172,9 @@ public:
 
 		p_renderPassData.setPickingResult(pickedEntityID);
 
-		// Restore the state that the following passes expect
+		// Restore the state that the following passes expect.
+		// Rebound geometry buffer specifically, so the scene is not rendered to the picking buffer
+		m_renderer.m_backend.getGeometryBuffer()->bindFramebufferForWriting(GeometryBuffer::GBufferFramebufferType::FramebufferGeometry);
 		glViewport(0, 0, m_renderer.m_frameData.m_screenSize.x, m_renderer.m_frameData.m_screenSize.y);
 		glDepthFunc(Config::rendererVar().depth_test_func);
 	}

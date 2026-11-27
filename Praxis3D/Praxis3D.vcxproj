@@ -167,6 +167,13 @@
     <ClCompile Include="Source\Systems\RendererSystem\Source\DeferredRenderer.cpp" />
     <ClCompile Include="Source\Engine\States\Source\EditorState.cpp" />
     <ClCompile Include="Source\Systems\GUISystem\Objects\Source\EditorWindow.cpp" />
+    <ClCompile Include="Source\Systems\GUISystem\Objects\Source\EditorWindowAssetBrowser.cpp" />
+    <ClCompile Include="Source\Systems\GUISystem\Objects\Source\EditorWindowFileDialog.cpp" />
+    <ClCompile Include="Source\Systems\GUISystem\Objects\Source\EditorWindowHierarchy.cpp" />
+    <ClCompile Include="Source\Systems\GUISystem\Objects\Source\EditorWindowInspector.cpp" />
+    <ClCompile Include="Source\Systems\GUISystem\Objects\Source\EditorWindowMenu.cpp" />
+    <ClCompile Include="Source\Systems\GUISystem\Objects\Source\EditorWindowSceneSettings.cpp" />
+    <ClCompile Include="Source\Systems\GUISystem\Objects\Source\EditorWindowViewport.cpp" />
     <ClCompile Include="Source\Engine\Source\Engine.cpp" />
     <ClCompile Include="Source\Engine\States\Source\EngineState.cpp" />
     <ClCompile Include="Source\ErrorHandler\Source\ErrorCodes.cpp" />
@@ -272,6 +279,8 @@
     <ClInclude Include="Source\Systems\ScriptingSystem\Objects\Include\DebugUIScript.hpp" />
     <ClInclude Include="Source\Systems\RendererSystem\Include\DeferredRenderer.hpp" />
     <ClInclude Include="Source\Systems\GUISystem\Objects\Include\EditorWindow.hpp" />
+    <ClInclude Include="Source\Systems\GUISystem\Objects\Include\EditorWindowTypes.hpp" />
+    <ClInclude Include="Source\Systems\GUISystem\Objects\Include\EditorWindowWidgets.hpp" />
     <ClInclude Include="Source\Engine\States\Include\EditorState.hpp" />
     <ClInclude Include="Source\Engine\Include\Engine.hpp" />
     <ClInclude Include="Source\Engine\Include\EngineDefinitions.hpp" />
