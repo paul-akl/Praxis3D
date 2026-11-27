@@ -39,6 +39,7 @@ enum DataType : uint32_t
 	DataType_RenderingPasses,			// RenderingPasses
 	DataType_RenderToTexture,			// bool
 	DataType_RenderToTextureResolution, // glm::ivec2
+	DataType_PickingRequest,			// glm::ivec2
 	DataType_ShadowMappingData,			// ShadowMappingData
 	DataType_LoadShader,				// ShaderLoader::ShaderProgram
 	DataType_LoadTexture2D,				// TextureLoader2D::Texture2DHandle
@@ -530,6 +531,7 @@ namespace Properties
 	Code(GUIRenderPass,) \
 	Code(LightingRenderPass,) \
 	Code(LuminanceRenderPass,) \
+	Code(PickingRenderPass,) \
 	Code(ShadowMappingPass,) \
 	/* GUI */ \
 	Code(EditorWindow,) \
@@ -1455,6 +1457,8 @@ public:
 			ssao_blur_vert_shader = "ambientOcclusionBlurSSAO.vert";
 			ssao_pass_frag_shader = "ambientOcclusionPassSSAO.frag";
 			ssao_pass_vert_shader = "ambientOcclusionPassSSAO.vert";
+			picking_pass_vert_shader = "objectPicking.vert";
+			picking_pass_frag_shader = "objectPicking.frag";
 			texture_repetition_noise_texture = "gray_noise_medium.png";
 			csm_bias_scale = 0.00015f;
 			csm_max_shadow_bias = 0.0005f;
@@ -1567,6 +1571,8 @@ public:
 		std::string ssao_blur_vert_shader;
 		std::string ssao_pass_frag_shader;
 		std::string ssao_pass_vert_shader;
+		std::string picking_pass_vert_shader;
+		std::string picking_pass_frag_shader;
 		std::string texture_repetition_noise_texture;
 		float csm_bias_scale;
 		float csm_max_shadow_bias;
@@ -1742,6 +1748,7 @@ public:
 			fogColorUniform = "fogColor";
 			billboardScaleUniform = "billboardScale";
 			depthTypeUniform = "depthType";
+			entityIDUniform = "entityID";
 
 			AODataSetBuffer = "AODataSetBuffer";
 			atmScatParamBuffer = "AtmScatParametersBuffer";
@@ -1886,6 +1893,7 @@ public:
 		std::string fogColorUniform;
 		std::string billboardScaleUniform;
 		std::string depthTypeUniform;
+		std::string entityIDUniform;
 
 		std::string AODataSetBuffer;
 		std::string atmScatParamBuffer;

@@ -5,6 +5,7 @@
 
 #include "Loaders/Include/Config.hpp"
 #include "CSMFramebuffer.hpp"
+#include "PickingFramebuffer.hpp"
 #include "Systems/RendererSystem/Include/GeometryBuffer.hpp"
 #include "Loaders/Include/Loaders.hpp"
 #include "Shaders/Include/ShaderUniformUpdater.hpp"
@@ -458,6 +459,10 @@ public:
 		// Set gbuffer textures size
 		m_gbuffer->setBufferSize((unsigned int)p_frameData.m_screenSize.x, (unsigned int)p_frameData.m_screenSize.y);
 
+		// Keep the picking buffer at the same resolution, if it has been created
+		if(m_pickingBuffer != nullptr)
+			m_pickingBuffer->setBufferSize((unsigned int)p_frameData.m_screenSize.x, (unsigned int)p_frameData.m_screenSize.y);
+
 		// Set the viewport
 		glViewport(0, 0, p_frameData.m_screenSize.x, p_frameData.m_screenSize.y);
 	}
@@ -477,6 +482,7 @@ public:
 
 	inline CSMFramebuffer *getCSMFramebuffer() { return m_csmBuffer; }
 	inline GeometryBuffer *getGeometryBuffer() { return m_gbuffer; }
+	inline PickingFramebuffer *getPickingFramebuffer() { return m_pickingBuffer; }
 
 	inline unsigned int getFramebufferTextureHandle(GBufferTextureType p_bufferType) const { return m_gbuffer->getBufferTextureHandle(p_bufferType); }
 
@@ -1108,4 +1114,5 @@ protected:
 
 	GeometryBuffer *m_gbuffer;
 	CSMFramebuffer *m_csmBuffer;
+	PickingFramebuffer *m_pickingBuffer;
 };

@@ -13,6 +13,7 @@
 #include "Systems/RendererSystem/Passes/Include/LuminancePass.hpp"
 #include "Systems/RendererSystem/Passes/Include/FinalPass.hpp"
 #include "Systems/RendererSystem/Passes/Include/HdrMappingPass.hpp"
+#include "Systems/RendererSystem/Passes/Include/PickingPass.hpp"
 #include "Systems/RendererSystem/Passes/Include/PostProcessPass.hpp"
 #include "Systems/RendererSystem/Passes/Include/ReflectionPass.hpp"
 #include "Systems/RendererSystem/Include/RendererFrontend.hpp"
@@ -110,6 +111,17 @@ void RendererFrontend::setRenderToTextureResolution(const glm::ivec2 p_renderToT
 	Config::m_graphicsVar.render_to_texture_resolution_y = p_renderToTextureResolution.y;
 }
 
+void RendererFrontend::requestPicking(const glm::ivec2 p_pixel)
+{
+	if(m_renderPassData != nullptr)
+		m_renderPassData->requestPicking(p_pixel);
+}
+
+bool RendererFrontend::consumePickingResult(EntityID &p_entityID)
+{
+	return (m_renderPassData != nullptr) ? m_renderPassData->consumePickingResult(p_entityID) : false;
+}
+
 void RendererFrontend::setRenderingPasses(const RenderingPasses &p_renderingPasses)
 {
 	m_renderingPassesSet = true;
@@ -198,7 +210,12 @@ void RendererFrontend::setRenderingPasses(const RenderingPasses &p_renderingPass
 			case RenderPassType::RenderPassType_Tonemapping:
 				if(m_allRenderPasses[RenderPassType::RenderPassType_Tonemapping] == nullptr)
 					m_allRenderPasses[RenderPassType::RenderPassType_Tonemapping] = new TonemappingPass(*this);
-				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType::RenderPassType_Tonemapping]);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_Tonemapping]);
+				break;
+			case RenderPassType::RenderPassType_Picking:
+				if(m_allRenderPasses[RenderPassType::RenderPassType_Picking] == nullptr)
+					m_allRenderPasses[RenderPassType::RenderPassType_Picking] = new PickingPass(*this);
+				m_activeRenderPasses.push_back(m_allRenderPasses[RenderPassType_Picking]);
 				break;
 		}
 	}

@@ -23,6 +23,7 @@ class RendererFrontend
 	friend class LenseFlarePass;
 	friend class LightingPass;
 	friend class LuminancePass;
+	friend class PickingPass;
 	friend class PostProcessPass;
 	friend class ReflectionPass;
 	friend class ShadowMappingPass;
@@ -70,6 +71,11 @@ public:
 	void setMiscSceneData(const MiscSceneData &p_miscSceneData) { m_frameData.m_miscSceneData = p_miscSceneData; }
 	void setShadowMappingData(const ShadowMappingData &p_shadowMappingData) { m_frameData.m_shadowMappingData = p_shadowMappingData; }
 
+	// Object picking: requests the entity under the given pixel (render target space, origin
+	// in the bottom-left corner) to be determined in the current frame, and consumes the result
+	void requestPicking(const glm::ivec2 p_pixel);
+	bool consumePickingResult(EntityID &p_entityID);
+
 	const RenderingPasses getRenderingPasses();
 	const ShadowMappingData &getShadowMappingData() const { return m_frameData.m_shadowMappingData; }
 
@@ -81,7 +87,7 @@ public:
 	const inline UniformFrameData &getFrameData() const { return m_frameData; }
 	
 protected:
-	inline void queueForDrawing(const Model::Mesh &p_mesh, const MeshData &p_meshData, const uint32_t p_modelHandle, const uint32_t p_shaderHandle, ShaderUniformUpdater &p_uniformUpdater, const DrawCommandTextureBinding p_textureBindingType, const FaceCullingSettings p_faceCulling, const glm::mat4 &p_modelMatrix, const glm::mat4 &p_modelViewProjMatrix)
+	inline void queueForDrawing(const Model::Mesh &p_mesh, const MeshData &p_meshData, const uint32_t p_modelHandle, const uint32_t p_shaderHandle, ShaderUniformUpdater &p_uniformUpdater, const DrawCommandTextureBinding p_textureBindingType, const FaceCullingSettings p_faceCulling, const glm::mat4 &p_modelMatrix, const glm::mat4 &p_modelViewProjMatrix, const EntityID p_entityID = NULL_ENTITY_ID)
 	{
 		// Calculate the sort key, by combining lower 16 bits of shader handle and model handle
 		// sortkey = 64 bits total
@@ -98,7 +104,8 @@ protected:
 			p_meshData.m_alphaThreshold,
 			p_meshData.m_emissiveIntensity,
 			p_meshData.m_materialData.m_parameters[MaterialType::MaterialType_Diffuse].m_scale.x,
-			p_meshData.m_textureRepetitionScale);
+			p_meshData.m_textureRepetitionScale,
+			p_entityID);
 
 		m_drawCommands.emplace_back(
 			sortKey,
@@ -120,7 +127,7 @@ protected:
 				p_meshData.m_textureWrapMode)
 		);
 	}
-	inline void queueForDrawing(const ModelData &p_modelData, const unsigned int p_shaderHandle, ShaderUniformUpdater &p_uniformUpdater, const DrawCommandTextureBinding p_textureBindingType, const glm::mat4 &p_modelMatrix, const glm::mat4 &p_viewProjMatrix)
+	inline void queueForDrawing(const ModelData &p_modelData, const unsigned int p_shaderHandle, ShaderUniformUpdater &p_uniformUpdater, const DrawCommandTextureBinding p_textureBindingType, const glm::mat4 &p_modelMatrix, const glm::mat4 &p_viewProjMatrix, const EntityID p_entityID = NULL_ENTITY_ID)
 	{
 		// Get the necessary handles
 		const unsigned int modelHandle = p_modelData.m_model.getHandle();
@@ -133,7 +140,7 @@ protected:
 		{
 			if(p_modelData.m_meshes[meshIndex].m_active)
 			{
-				queueForDrawing(p_modelData.m_model[meshIndex], p_modelData.m_meshes[meshIndex], modelHandle, p_shaderHandle, p_uniformUpdater, p_textureBindingType, p_modelData.m_drawFaceCulling, p_modelMatrix, modelViewProjMatrix);
+				queueForDrawing(p_modelData.m_model[meshIndex], p_modelData.m_meshes[meshIndex], modelHandle, p_shaderHandle, p_uniformUpdater, p_textureBindingType, p_modelData.m_drawFaceCulling, p_modelMatrix, modelViewProjMatrix, p_entityID);
 			}
 		}
 	}

@@ -222,7 +222,8 @@ public:
 										DrawCommandTextureBinding::DrawCommandTextureBinding_DiffuseOnly,
 										modelData[modelIndex].m_shadowFaceCulling, 
 										modelMatrix, 
-										modelMatrix);
+										modelMatrix,
+										entity);
 								}
 								else
 								{
@@ -236,7 +237,8 @@ public:
 										DrawCommandTextureBinding::DrawCommandTextureBinding_None,
 										modelData[modelIndex].m_shadowFaceCulling,
 										modelMatrix, 
-										modelMatrix);
+										modelMatrix,
+										entity);
 								}
 							}
 						}
@@ -282,7 +284,8 @@ public:
 											DrawCommandTextureBinding::DrawCommandTextureBinding_DiffuseOnly,
 											modelData[modelIndex].m_shadowFaceCulling,
 											modelMatrix, 
-											modelMatrix);
+											modelMatrix,
+											entity);
 									}
 									else
 									{
@@ -296,7 +299,8 @@ public:
 											DrawCommandTextureBinding::DrawCommandTextureBinding_None,
 											modelData[modelIndex].m_shadowFaceCulling,
 											modelMatrix, 
-											modelMatrix);
+											modelMatrix,
+											entity);
 									}
 								}
 							}

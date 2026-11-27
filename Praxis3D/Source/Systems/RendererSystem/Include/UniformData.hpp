@@ -85,6 +85,7 @@ struct UniformObjectData
 		m_emissiveIntensity = 0.0f;
 		m_textureTilingFactor = 1.0f;
 		m_stochasticSamplingScale = 1.0f;
+		m_entityID = 0;
 	}
 
 	UniformObjectData(const glm::mat4 &p_modelMat,
@@ -93,7 +94,8 @@ struct UniformObjectData
 					  float p_alphaThreshold = 0.0f,
 					  float p_emissiveIntensity = 0.0f,
 					  float p_textureTilingFactor = 1.0f, 
-					  float p_stochasticSamplingScale = 1.0f)
+					  float p_stochasticSamplingScale = 1.0f,
+					  unsigned int p_entityID = 0)
 	{
 		m_heightScale = p_heightScale;
 		m_alphaThreshold = p_alphaThreshold;
@@ -103,6 +105,8 @@ struct UniformObjectData
 
 		m_modelMat = p_modelMat;
 		m_modelViewProjMatrix = p_modelViewProjMatrix;
+
+		m_entityID = p_entityID;
 	}
 
 	glm::mat4	m_modelMat,
@@ -113,6 +117,9 @@ struct UniformObjectData
 			m_emissiveIntensity,
 			m_textureTilingFactor,
 			m_stochasticSamplingScale;
+
+	// ID of the entity that the object belongs to, written to the ID buffer during the picking pass
+	unsigned int m_entityID;
 };
 
 struct UniformData

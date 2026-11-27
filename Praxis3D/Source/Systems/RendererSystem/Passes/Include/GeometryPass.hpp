@@ -219,7 +219,8 @@ public:
 											DrawCommandTextureBinding::DrawCommandTextureBinding_All,
 											modelData[modelIndex].m_drawFaceCulling,
 											modelMatrix, 
-											modelViewProjMatrix);
+											modelViewProjMatrix,
+											entity);
 									}
 									else
 									{
@@ -233,7 +234,8 @@ public:
 											DrawCommandTextureBinding::DrawCommandTextureBinding_All,
 											modelData[modelIndex].m_drawFaceCulling,
 											modelMatrix, 
-											modelViewProjMatrix);
+											modelViewProjMatrix,
+											entity);
 									}
 								}
 								else
@@ -250,7 +252,8 @@ public:
 											DrawCommandTextureBinding::DrawCommandTextureBinding_All,
 											modelData[modelIndex].m_drawFaceCulling,
 											modelMatrix, 
-											modelViewProjMatrix);
+											modelViewProjMatrix,
+											entity);
 									}
 									else
 									{
@@ -264,7 +267,8 @@ public:
 											DrawCommandTextureBinding::DrawCommandTextureBinding_All,
 											modelData[modelIndex].m_drawFaceCulling,
 											modelMatrix, 
-											modelViewProjMatrix);
+											modelViewProjMatrix,
+											entity);
 									}
 								}
 							}
@@ -292,7 +296,8 @@ public:
 								shader.getShaderData()->m_shader.getUniformUpdater(),
 								DrawCommandTextureBinding::DrawCommandTextureBinding_All,
 								spatialData.getSpatialDataChangeManager().getWorldTransformWithScale(),
-								m_renderer.m_viewProjMatrix);
+								m_renderer.m_viewProjMatrix,
+								entity);
 						}
 					}
 				}
