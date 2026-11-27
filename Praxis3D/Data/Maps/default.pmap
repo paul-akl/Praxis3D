@@ -3981,6 +3981,9 @@
 						"Type": "GeometryRenderPass"
 					},
 					{
+						"Type": "PickingRenderPass"
+					},
+					{
 						"Type": "AmbientOcclusionRenderPass"
 					},
 					{
